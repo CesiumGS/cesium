@@ -91,6 +91,26 @@ define(['../Core/Clock',
     });
 
     /**
+     * Duplicates a DynamicClock instance.
+     * @memberof DynamicClock
+     *
+     * @param {DynamicClock} [result] The object onto which to store the result.
+     * @returns {DynamicClock} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicClock.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicClock();
+        }
+        result.startTime = this.startTime;
+        result.stopTime = this.stopTime;
+        result.currentTime = this.currentTime;
+        result.clockRange = this.clockRange;
+        result.clockStep = this.clockStep;
+        result.multiplier = this.multiplier;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

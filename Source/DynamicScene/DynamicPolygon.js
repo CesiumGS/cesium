@@ -54,6 +54,22 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicPolygon instance.
+     * @memberof DynamicPolygon
+     *
+     * @param {DynamicPolygon} [result] The object onto which to store the result.
+     * @returns {DynamicPolygon} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicPolygon.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicPolygon();
+        }
+        result.show = this.show;
+        result.material = this.material;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

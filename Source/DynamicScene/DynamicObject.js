@@ -315,12 +315,16 @@ define(['../Core/createGuid',
             if (name !== 'availability') {
                 var target = this[name];
                 var source = objectToMerge[name];
-                if (defined(target)) {
-                    if (typeof target.merge === 'function' && defined(source)) {
-                        target.merge(source);
+                if (defined(source)) {
+                    if (defined(target)) {
+                        if (defined(target.merge)) {
+                            target.merge(source);
+                        }
+                    } else if (defined(source.merge) && defined(source.clone)) {
+                        this[name] = source.clone();
+                    } else {
+                        this[name] = source;
                     }
-                } else {
-                    this[name] = source;
                 }
             }
         }

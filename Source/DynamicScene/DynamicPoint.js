@@ -77,6 +77,25 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicPoint instance.
+     * @memberof DynamicPoint
+     *
+     * @param {DynamicPoint} [result] The object onto which to store the result.
+     * @returns {DynamicPoint} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicPoint.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicPoint();
+        }
+        result.color = this.color;
+        result.pixelSize = this.pixelSize;
+        result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
+        result.show = this.show;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

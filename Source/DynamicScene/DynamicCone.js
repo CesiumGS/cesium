@@ -142,6 +142,33 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicCone instance.
+     * @memberof DynamicCone
+     *
+     * @param {DynamicCone} [result] The object onto which to store the result.
+     * @returns {DynamicCone} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicCone.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicCone();
+        }
+        result.show = this.show;
+        result.innerHalfAngle = this.innerHalfAngle;
+        result.outerHalfAngle = this.outerHalfAngle;
+        result.minimumClockAngle = this.minimumClockAngle;
+        result.maximumClockAngle = this.maximumClockAngle;
+        result.radius = this.radius;
+        result.showIntersection = this.showIntersection;
+        result.intersectionColor = this.intersectionColor;
+        result.intersectionWidth = this.intersectionWidth;
+        result.capMaterial = this.capMaterial;
+        result.innerMaterial = this.innerMaterial;
+        result.outerMaterial = this.outerMaterial;
+        result.silhouetteMaterial = this.silhouetteMaterial;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

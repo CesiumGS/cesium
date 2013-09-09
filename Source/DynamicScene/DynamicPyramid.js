@@ -94,6 +94,27 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicPyramid instance.
+     * @memberof DynamicPyramid
+     *
+     * @param {DynamicPyramid} [result] The object onto which to store the result.
+     * @returns {DynamicPyramid} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicPyramid.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicPyramid();
+        }
+        result.show = this.show;
+        result.directions = this.directions;
+        result.radius = this.radius;
+        result.showIntersection = this.showIntersection;
+        result.intersectionColor = this.intersectionColor;
+        result.intersectionWidth = this.intersectionWidth;
+        result.material = this.material;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

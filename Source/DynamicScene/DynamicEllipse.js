@@ -73,6 +73,23 @@ define(['../Core/Cartesian3',
     });
 
     /**
+     * Duplicates a DynamicEllipse instance.
+     * @memberof DynamicEllipse
+     *
+     * @param {DynamicEllipse} [result] The object onto which to store the result.
+     * @returns {DynamicEllipse} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicEllipse.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicEllipse();
+        }
+        result.bearing = this.bearing;
+        result.semiMajorAxis = this.semiMajorAxis;
+        result.semiMinorAxis = this.semiMinorAxis;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

@@ -1,6 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/CompositeDynamicObjectCollection',
+         'DynamicScene/CompositePositionProperty',
+         'DynamicScene/CompositeProperty',
+         'DynamicScene/DynamicBillboard',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicObject',
          'Core/JulianDate',
@@ -10,6 +13,9 @@ defineSuite([
          'Scene/HorizontalOrigin'
      ], function(
          CompositeDynamicObjectCollection,
+         CompositePositionProperty,
+         CompositeProperty,
+         DynamicBillboard,
          DynamicObjectCollection,
          DynamicObject,
          JulianDate,
@@ -35,7 +41,7 @@ defineSuite([
     it('constructor has expected defaults', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(composite.collectionChanged).toBeDefined();
-        expect(composite.getLength()).toEqual(0);
+        expect(composite.getCollectionsLength()).toEqual(0);
         expect(composite.getObjects().length).toEqual(0);
     });
 
@@ -146,7 +152,7 @@ defineSuite([
 
         dynamicObjectCollection.add(dynamicObject);
         dynamicObjectCollection.add(dynamicObject2);
-        composite.removeAll();
+        composite.removeAllCollections();
         expect(composite.getObjects().length).toEqual(0);
     });
 
@@ -162,7 +168,7 @@ defineSuite([
         dynamicObjectCollection.add(dynamicObject2);
 
         composite.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
-        composite.removeAll();
+        composite.removeAllCollections();
 
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
@@ -170,7 +176,7 @@ defineSuite([
         expect(listener.removed[1].id).toBe(dynamicObject2.id);
         expect(listener.added.length).toEqual(0);
 
-        composite.removeAll();
+        composite.removeAllCollections();
         expect(listener.timesCalled).toEqual(1);
 
         composite.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
@@ -190,17 +196,17 @@ defineSuite([
         composite.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
         composite.suspendEvents();
-        composite.removeAll();
+        composite.removeAllCollections();
         composite.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
         expect(listener.removed[0].id).toBe(dynamicObject.id);
         expect(listener.removed[1].id).toBe(dynamicObject2.id);
         expect(listener.added.length).toEqual(0);
-        expect(composite.getLength()).toEqual(0);
+        expect(composite.getCollectionsLength()).toEqual(0);
 
         composite.suspendEvents();
-        composite.add(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection);
         dynamicObjectCollection.removeAll();
         composite.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
@@ -217,7 +223,7 @@ defineSuite([
         dynamicObjectCollection.add(dynamicObject2);
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.add(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection);
         expect(composite.getById(dynamicObject.id).id).toEqual(dynamicObject.id);
         expect(composite.getById(dynamicObject2.id).id).toEqual(dynamicObject2.id);
     });
@@ -230,7 +236,7 @@ defineSuite([
     it('computeAvailability returns infinite with no data.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var composite = new CompositeDynamicObjectCollection();
-        composite.add(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(Iso8601.MINIMUM_VALUE);
         expect(availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
@@ -248,7 +254,7 @@ defineSuite([
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.add(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
@@ -266,10 +272,108 @@ defineSuite([
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.add(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
+    });
+
+    it('coarse property compositing works', function() {
+        var composite = new CompositeDynamicObjectCollection();
+
+        var collection1 = new DynamicObjectCollection();
+        var collection2 = new DynamicObjectCollection();
+        var collection3 = new DynamicObjectCollection();
+
+        //Add collections in reverse order to lower numbers of priority
+        composite.addCollection(collection3);
+        composite.addCollection(collection2);
+        composite.addCollection(collection1);
+
+        //Start with an object in the middle with defined position and orientation
+        var dynamicObject2 = new DynamicObject();
+        collection2.add(dynamicObject2);
+        dynamicObject2.position = new CompositePositionProperty();
+        dynamicObject2.orientation = new CompositeProperty();
+
+        //Initial composite should match both properties
+        var compositeObject = composite.getById(dynamicObject2.id);
+        expect(compositeObject).toBeDefined();
+        expect(composite.getObjects().length).toEqual(1);
+        expect(compositeObject.position).toBe(dynamicObject2.position);
+        expect(compositeObject.orientation).toBe(dynamicObject2.orientation);
+
+        //Add a lower-priority object with position and viewFrom.
+        var dynamicObject3 = new DynamicObject(dynamicObject2.id);
+        collection3.add(dynamicObject3);
+        dynamicObject3.position = new CompositePositionProperty();
+        dynamicObject3.viewFrom = new CompositeProperty();
+
+        //We keep the orientation and position from higher priority dynamicObject2
+        //But add the viewFrom from 3.
+        expect(composite.getObjects().length).toEqual(1);
+        expect(compositeObject.position).toBe(dynamicObject2.position);
+        expect(compositeObject.orientation).toBe(dynamicObject2.orientation);
+        expect(compositeObject.viewFrom).toBe(dynamicObject3.viewFrom);
+
+        //Add a higher priority object with position and vertexPositions
+        var dynamicObject1 = new DynamicObject(dynamicObject2.id);
+        collection1.add(dynamicObject1);
+        dynamicObject1.position = new CompositePositionProperty();
+        dynamicObject1.vertexPositions = new CompositeProperty();
+
+        //We now use the position and vertexPositions from the higher priority
+        //object with other properties unchanged.
+        expect(composite.getObjects().length).toEqual(1);
+        expect(compositeObject.position).toBe(dynamicObject1.position);
+        expect(compositeObject.vertexPositions).toBe(dynamicObject1.vertexPositions);
+        expect(compositeObject.orientation).toBe(dynamicObject2.orientation);
+        expect(compositeObject.viewFrom).toBe(dynamicObject3.viewFrom);
+    });
+
+    it('fine property compositing works', function() {
+        var id = 'test';
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject1 = new DynamicObject(id);
+        dynamicObject1.billboard = new DynamicBillboard();
+        collection1.add(dynamicObject1);
+
+        var collection2 = new DynamicObjectCollection();
+        var dynamicObject2 = new DynamicObject(id);
+        dynamicObject2.billboard = new DynamicBillboard();
+        collection2.add(dynamicObject2);
+
+        var collection3 = new DynamicObjectCollection();
+        var dynamicObject3 = new DynamicObject(id);
+        dynamicObject3.billboard = new DynamicBillboard();
+        collection3.add(dynamicObject3);
+
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(collection3);
+        composite.addCollection(collection2);
+        composite.addCollection(collection1);
+
+        var compositeObject = composite.getById(id);
+
+        // Start with an object in the middle with defined billboard
+        dynamicObject2.billboard.show = new CompositeProperty();
+        expect(compositeObject.billboard.show).toBe(dynamicObject2.billboard.show);
+
+        dynamicObject3.billboard.show = new CompositeProperty();
+        expect(compositeObject.billboard.show).toBe(dynamicObject2.billboard.show);
+
+        dynamicObject1.billboard.show = new CompositeProperty();
+        expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
+
+        dynamicObject2.billboard.show = undefined;
+        expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
+
+        dynamicObject1.billboard.show = undefined;
+        expect(compositeObject.billboard.show).toBe(dynamicObject3.billboard.show);
+
+        dynamicObject3.billboard.show = undefined;
+        expect(compositeObject.billboard.show).toBeUndefined();
     });
 
     it('resumeEvents throws if no matching suspendEvents ', function() {

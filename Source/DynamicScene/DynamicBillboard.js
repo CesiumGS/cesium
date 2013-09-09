@@ -118,6 +118,30 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicBillboard instance.
+     * @memberof DynamicBillboard
+     *
+     * @param {DynamicBillboard} [result] The object onto which to store the result.
+     * @returns {DynamicBillboard} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicBillboard.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicBillboard();
+        }
+        result.color = this._color;
+        result.eyeOffset = this._eyeOffset;
+        result.horizontalOrigin = this._horizontalOrigin;
+        result.image = this._image;
+        result.pixelOffset = this._pixelOffset;
+        result.scale = this._scale;
+        result.rotation = this._rotation;
+        result.alignedAxis = this._alignedAxis;
+        result.show = this._show;
+        result.verticalOrigin = this._verticalOrigin;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *

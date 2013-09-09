@@ -14,10 +14,130 @@ define(['../Core/defined',
         DynamicObjectCollection) {
     "use strict";
 
-    function subscribe(dynamicObject) {
+    function createCallback(that, dynamicObject, propertyName) {
+        return function(property, subPropertyName, newValue, oldValue) {
+            var id = dynamicObject.id;
+            var composite = that._composite;
+            var compositeObject = composite.getById(id);
+            var compositeProperty = compositeObject[propertyName];
+            var collections = that._collectionsCopy;
+            var collectionsLength = collections.length;
+            for ( var q = collectionsLength - 1; q >= 0; q--) {
+                var object = collections[q].getById(dynamicObject.id);
+                if (defined(object)) {
+                    var objectProperty = object[propertyName];
+                    if (defined(objectProperty)) {
+                        var objectSubProperty = objectProperty[subPropertyName];
+                        if (defined(objectSubProperty)) {
+                            compositeProperty[subPropertyName] = objectSubProperty;
+                            return;
+                        }
+                    }
+                }
+            }
+            compositeProperty[subPropertyName] = undefined;
+        };
     }
 
-    function unsubscribe(dynamicObject) {
+    function observeProperty(that, dynamicObject, propertyName, property, eventHash) {
+        if (defined(property) && defined(property.propertyAssigned)) {
+            var subPropertyAssigned = createCallback(that, dynamicObject, propertyName);
+            eventHash[propertyName] = property.propertyAssigned.addEventListener(subPropertyAssigned);
+        }
+    }
+
+    function subscribe(that, dynamicObject) {
+        dynamicObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+
+        var eventHash = dynamicObject._compositeEvents;
+        if (!defined(eventHash)) {
+            eventHash = {};
+        }
+        dynamicObject._compositeEvents = eventHash;
+
+        var properties = dynamicObject.propertyNames;
+        var length = properties.length;
+        for ( var i = 0; i < length; i++) {
+            var propertyName = properties[i];
+            observeProperty(that, dynamicObject, propertyName, dynamicObject[propertyName], eventHash);
+        }
+    }
+
+    function unsubscribe(that, dynamicObject) {
+        dynamicObject.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+
+        var eventHash = dynamicObject._compositeEvents;
+
+        var properties = dynamicObject.propertyNames;
+        var length = properties.length;
+        for ( var i = 0; i < length; i++) {
+            var propertyName = properties[i];
+            var unsubscribeFunc = eventHash[propertyName];
+            if (defined(unsubscribeFunc)) {
+                unsubscribeFunc();
+            }
+            eventHash[propertyName] = undefined;
+        }
+    }
+
+    function recomposite(that) {
+        var collections = that._collections;
+        var collectionsLength = collections.length;
+
+        var collectionsCopy = that._collectionsCopy;
+        var collectionsCopyLength = collectionsCopy.length;
+
+        var i;
+        var object;
+        var objects;
+        var iObjects;
+        var collection;
+        var composite = that._composite;
+        var newObjects = new DynamicObjectCollection();
+
+        for (i = 0; i < collectionsCopyLength; i++) {
+            collection = collectionsCopy[i];
+            collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+            objects = collection.getObjects();
+            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                unsubscribe(that, object);
+            }
+        }
+
+        for (i = collectionsLength - 1; i >= 0; i--) {
+            collection = collections[i];
+            collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+
+            //Merge all of the existing objects.
+            objects = collection.getObjects();
+            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                subscribe(that, object);
+
+                var compositeObject = newObjects.getById(object.id);
+                if (!defined(compositeObject)) {
+                    compositeObject = composite.getById(object.id);
+                    if (!defined(compositeObject)) {
+                        compositeObject = new DynamicObject(object.id);
+                    } else {
+                        compositeObject.clean();
+                    }
+                    newObjects.add(compositeObject);
+                }
+                compositeObject.merge(object);
+            }
+        }
+        that._collectionsCopy = collections.slice(0);
+
+        composite.suspendEvents();
+        composite.removeAll();
+        var newObjectsArray = newObjects.getObjects();
+        for (i = 0; i < newObjectsArray.length; i++) {
+            composite.add(newObjectsArray[i]);
+        }
+        composite.resumeEvents();
+        return true;
     }
 
     /**
@@ -39,7 +159,8 @@ define(['../Core/defined',
         this._composite = new DynamicObjectCollection();
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
-        mergeIfNeeded(this);
+        this._hash = {};
+        recomposite(this);
     };
 
     /**
@@ -53,7 +174,7 @@ define(['../Core/defined',
      * @exception {DeveloperError} collection is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
-    CompositeDynamicObjectCollection.prototype.add = function(collection, index) {
+    CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
         if (!defined(collection)) {
             throw new DeveloperError('collection is required.');
         }
@@ -70,7 +191,7 @@ define(['../Core/defined',
             this._collections.splice(index, 0, collection);
         }
 
-        mergeIfNeeded(this);
+        recomposite(this);
     };
 
     /**
@@ -82,11 +203,11 @@ define(['../Core/defined',
      * @returns {Boolean} true if the collection was in the composite and was removed,
      *                    false if the collection was not in the composite.
      */
-    CompositeDynamicObjectCollection.prototype.remove = function(collection) {
+    CompositeDynamicObjectCollection.prototype.removeCollection = function(collection) {
         var index = this._collections.indexOf(collection);
         if (index !== -1) {
             this._collections.splice(index, 1);
-            mergeIfNeeded(this);
+            recomposite(this);
             return true;
         }
         return false;
@@ -96,9 +217,9 @@ define(['../Core/defined',
      * Removes all collections from this composite.
      * @memberof CompositeDynamicObjectCollection
      */
-    CompositeDynamicObjectCollection.prototype.removeAll = function() {
+    CompositeDynamicObjectCollection.prototype.removeAllCollections = function() {
         this._collections.length = [];
-        mergeIfNeeded(this);
+        recomposite(this);
     };
 
     /**
@@ -108,7 +229,7 @@ define(['../Core/defined',
      * @param {DynamicObjectCollection} collection the collection to check for.
      * @returns {Boolean} true if the composite contains the collection, false otherwise.
      */
-    CompositeDynamicObjectCollection.prototype.contains = function(collection) {
+    CompositeDynamicObjectCollection.prototype.containsCollection = function(collection) {
         return this.indexOf(collection) !== -1;
     };
 
@@ -119,7 +240,7 @@ define(['../Core/defined',
      * @param {DynamicObjectCollection} collection The collection to find the index of.
      * @returns {Number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
      */
-    CompositeDynamicObjectCollection.prototype.indexOf = function(collection) {
+    CompositeDynamicObjectCollection.prototype.indexOfCollection = function(collection) {
         return this._collections.indexOf(collection);
     };
 
@@ -131,7 +252,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} index is required.
      */
-    CompositeDynamicObjectCollection.prototype.get = function(index) {
+    CompositeDynamicObjectCollection.prototype.getCollection = function(index) {
         if (!defined(index)) {
             throw new DeveloperError('index is required.', 'index');
         }
@@ -143,7 +264,7 @@ define(['../Core/defined',
      * Gets the number of collections in this composite.
      * @memberof CompositeDynamicObjectCollection
      */
-    CompositeDynamicObjectCollection.prototype.getLength = function() {
+    CompositeDynamicObjectCollection.prototype.getCollectionsLength = function() {
         return this._collections.length;
     };
 
@@ -173,7 +294,7 @@ define(['../Core/defined',
         arr[i] = arr[j];
         arr[j] = temp;
 
-        mergeIfNeeded(composite);
+        recomposite(composite);
     }
 
     /**
@@ -184,7 +305,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} collection is not in this composite.
      */
-    CompositeDynamicObjectCollection.prototype.raise = function(collection) {
+    CompositeDynamicObjectCollection.prototype.raiseCollection = function(collection) {
         var index = getCollectionIndex(this._collections, collection);
         swapCollections(this, index, index + 1);
     };
@@ -197,7 +318,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} collection is not in this composite.
      */
-    CompositeDynamicObjectCollection.prototype.lower = function(collection) {
+    CompositeDynamicObjectCollection.prototype.lowerCollection = function(collection) {
         var index = getCollectionIndex(this._collections, collection);
         swapCollections(this, index, index - 1);
     };
@@ -210,7 +331,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} collection is not in this composite.
      */
-    CompositeDynamicObjectCollection.prototype.raiseToTop = function(collection) {
+    CompositeDynamicObjectCollection.prototype.raiseCollectionToTop = function(collection) {
         var index = getCollectionIndex(this._collections, collection);
         if (index === this._collections.length - 1) {
             return;
@@ -218,7 +339,7 @@ define(['../Core/defined',
         this._collections.splice(index, 1);
         this._collections.push(collection);
 
-        mergeIfNeeded(this);
+        recomposite(this);
     };
 
     /**
@@ -229,7 +350,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} collection is not in this composite.
      */
-    CompositeDynamicObjectCollection.prototype.lowerToBottom = function(collection) {
+    CompositeDynamicObjectCollection.prototype.lowerCollectionToBottom = function(collection) {
         var index = getCollectionIndex(this._collections, collection);
         if (index === 0) {
             return;
@@ -237,9 +358,8 @@ define(['../Core/defined',
         this._collections.splice(index, 1);
         this._collections.splice(0, 0, collection);
 
-        mergeIfNeeded(this);
+        recomposite(this);
     };
-
 
     defineProperties(CompositeDynamicObjectCollection.prototype, {
         /**
@@ -293,7 +413,6 @@ define(['../Core/defined',
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
     CompositeDynamicObjectCollection.prototype.computeAvailability = function() {
-        mergeIfNeeded(this);
         return this._composite.computeAvailability();
     };
 
@@ -307,7 +426,6 @@ define(['../Core/defined',
      * @exception {DeveloperError} id is required.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
-        mergeIfNeeded(this);
         return this._composite.getById(id);
     };
 
@@ -319,158 +437,50 @@ define(['../Core/defined',
      * @returns {Array} the array of DynamicObject instances in the collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
-        mergeIfNeeded(this);
         return this._composite.getObjects();
     };
 
-    function mergeIfNeeded(that) {
-        var collections = that._collections;
-        var collectionsLength = collections.length;
-
-        var collectionsCopy = that._collectionsCopy;
-        var collectionsCopyLength = collectionsCopy.length;
-
-        var i;
-        if (collectionsLength === collectionsCopyLength) {
-            var identical = true;
-            for (i = 0; i < collectionsLength; i++) {
-                if (collections[i] !== collectionsCopy[i]) {
-                    identical = false;
-                    break;
-                }
-            }
-            if (identical) {
-                return false;
-            }
-        }
-
-        var object;
-        var objects;
-        var iObjects;
-        var collection;
-        var composite = that._composite;
-        var newObjects = new DynamicObjectCollection();
-
-        for (i = 0; i < collectionsCopyLength; i++) {
-            collection = collectionsCopy[i];
-            collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
-            objects = collection.getObjects();
-            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                object = objects[iObjects];
-                object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
-                unsubscribe(object);
-            }
-        }
-
-        for (i = collectionsLength - 1; i >= 0; i--) {
-            collection = collections[i];
-            collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
-
-            //Merge all of the existing objects.
-            objects = collection.getObjects();
-            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                object = objects[iObjects];
-                object.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
-                subscribe(object);
-
-                var compositeObject = newObjects.getById(object.id);
-                if (!defined(compositeObject)) {
-                    compositeObject = composite.getById(object.id);
-                    if (!defined(compositeObject)) {
-                        compositeObject = new DynamicObject(object.id);
-                    } else {
-                        compositeObject.clean();
-                    }
-                    newObjects.add(compositeObject);
-                }
-                compositeObject.merge(object);
-            }
-        }
-        that._collectionsCopy = collections.slice(0);
-
-        composite.suspendEvents();
-        composite.removeAll();
-        var newObjectsArray = newObjects.getObjects();
-        for (i = 0; i < newObjectsArray.length; i++) {
-            composite.add(newObjectsArray[i]);
-        }
-        composite.resumeEvents();
-        return true;
-    }
-
     CompositeDynamicObjectCollection.prototype._propertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        //If we have a pending full merge, just do it and return.
-        if (mergeIfNeeded(this)) {
-            return;
-        }
-
         var id = dynamicObject.id;
         var composite = this._composite;
         var compositeObject = composite.getById(id);
         var compositeProperty = compositeObject[propertyName];
 
-        if (defined(compositeProperty) && defined(compositeProperty.clean)) {
-            compositeProperty.clean();
-        } else {
-            compositeProperty = undefined;
+        var eventHash = dynamicObject._compositeEvents;
+        var oldEvent = eventHash[propertyName];
+        if (defined(oldEvent)) {
+            oldEvent();
         }
+        observeProperty(this, dynamicObject, propertyName, dynamicObject[propertyName], eventHash);
 
         var collections = this._collectionsCopy;
         var collectionsLength = collections.length;
+        var firstTime = true;
         for ( var q = collectionsLength - 1; q >= 0; q--) {
             var object = collections[q].getById(dynamicObject.id);
             if (defined(object)) {
                 var property = object[propertyName];
                 if (defined(property)) {
-                    if (!defined(compositeProperty)) {
-                        compositeProperty = property;
-                        continue;
+                    if (firstTime) {
+                        firstTime = false;
+                        //We only want to clone if the property is also mergeable.
+                        //This ensures that leaf properties are referenced and not copied,
+                        //which is the entire point of compositing.
+                        if (defined(property.merge) && defined(property.clone)) {
+                            compositeProperty = property.clone(compositeProperty);
+                        } else {
+                            compositeProperty = property;
+                            break;
+                        }
                     }
-                    if (defined(compositeProperty.merge)) {
-                        compositeProperty.merge(property);
-                    } else {
-                        break;
-                    }
+                    compositeProperty.merge(property);
                 }
             }
         }
         compositeObject[propertyName] = compositeProperty;
     };
 
-    CompositeDynamicObjectCollection.prototype._subPropertyChanged = function(dynamicObject, propertyName, property, subPropertyName, newValue, oldValue) {
-        //If we have a pending full merge, just do it and return.
-        if (mergeIfNeeded(this)) {
-            return;
-        }
-
-        var id = dynamicObject.id;
-        var composite = this._composite;
-        var compositeObject = composite.getById(id);
-        var compositeProperty = compositeObject[propertyName];
-        var collections = this._collectionsCopy;
-        var collectionsLength = collections.length;
-        for ( var q = collectionsLength - 1; q >= 0; q--) {
-            var object = collections[q].getById(dynamicObject.id);
-            if (defined(object)) {
-                var objectProperty = object[propertyName];
-                if (defined(objectProperty)) {
-                    var objectSubProperty = objectProperty[subPropertyName];
-                    if (defined(objectSubProperty)) {
-                        compositeProperty[subPropertyName] = objectSubProperty;
-                        return;
-                    }
-                }
-            }
-        }
-        compositeProperty[subPropertyName] = undefined;
-    };
-
     CompositeDynamicObjectCollection.prototype._onCollectionChanged = function(collection, added, removed) {
-        //If we have a pending full merge, just do it and return.
-        if (mergeIfNeeded(this)) {
-            return;
-        }
-
         var collections = this._collectionsCopy;
         var collectionsLength = collections.length;
         var composite = this._composite;
@@ -483,8 +493,7 @@ define(['../Core/defined',
         var removedLength = removed.length;
         for (i = 0; i < removedLength; i++) {
             var removedObject = removed[i];
-            removedObject.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
-            unsubscribe(removedObject);
+            unsubscribe(this, removedObject);
 
             var removedId = removedObject.id;
             //Check if the removed object exists in any of the remaining collections
@@ -509,8 +518,7 @@ define(['../Core/defined',
         var addedLength = added.length;
         for (i = 0; i < addedLength; i++) {
             var addedObject = added[i];
-            addedObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
-            subscribe(addedObject);
+            subscribe(this, addedObject);
 
             var addedId = addedObject.id;
             //We know the added object exists in at least one collection,

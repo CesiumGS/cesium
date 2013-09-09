@@ -133,6 +133,32 @@ define(['../Core/defaultValue',
     });
 
     /**
+     * Duplicates a DynamicLabel instance.
+     * @memberof DynamicLabel
+     *
+     * @param {DynamicLabel} [result] The object onto which to store the result.
+     * @returns {DynamicLabel} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicLabel.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicLabel();
+        }
+        result.text = this.text;
+        result.font = this.font;
+        result.show = this.show;
+        result.style = this.style;
+        result.fillColor = this.fillColor;
+        result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
+        result.scale = this.scale;
+        result.horizontalOrigin = this.horizontalOrigin;
+        result.verticalOrigin = this.verticalOrigin;
+        result.eyeOffset = this.eyeOffset;
+        result.pixelOffset = this.pixelOffset;
+        return result;
+    };
+
+    /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
      *
