@@ -2,6 +2,10 @@
 define(function() {
     "use strict";
 
+    /**
+     * Used to consistently define all DynamicScene graphics objects.
+     * @private
+     */
     function createObservableProperty(name, privateName) {
         return {
             get : function() {

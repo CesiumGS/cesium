@@ -46,6 +46,14 @@ define(['../Core/defined',
         }
     }
 
+    function unobserveProperty(propertyName, eventHash) {
+        var unsubscribeFunc = eventHash[propertyName];
+        if (defined(unsubscribeFunc)) {
+            unsubscribeFunc();
+            eventHash[propertyName] = undefined;
+        }
+    }
+
     function subscribe(that, dynamicObject) {
         dynamicObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
 
@@ -67,16 +75,11 @@ define(['../Core/defined',
         dynamicObject.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
 
         var eventHash = dynamicObject._compositeEvents;
-
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
         for ( var i = 0; i < length; i++) {
             var propertyName = properties[i];
-            var unsubscribeFunc = eventHash[propertyName];
-            if (defined(unsubscribeFunc)) {
-                unsubscribeFunc();
-            }
-            eventHash[propertyName] = undefined;
+            unobserveProperty(propertyName, eventHash);
         }
     }
 
@@ -447,10 +450,7 @@ define(['../Core/defined',
         var compositeProperty = compositeObject[propertyName];
 
         var eventHash = dynamicObject._compositeEvents;
-        var oldEvent = eventHash[propertyName];
-        if (defined(oldEvent)) {
-            oldEvent();
-        }
+        unobserveProperty(propertyName, eventHash);
         observeProperty(this, dynamicObject, propertyName, dynamicObject[propertyName], eventHash);
 
         var collections = this._collectionsCopy;
