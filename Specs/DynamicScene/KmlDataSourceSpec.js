@@ -308,7 +308,6 @@ defineSuite(['DynamicScene/KmlDataSource',
         var material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
         polygon.material = material;
-        var time = new JulianDate();
         var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
         <kml xmlns="http://www.opengis.net/kml/2.2">\
         <Placemark>\

@@ -176,7 +176,7 @@ define(['../Core/createGuid',
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node){
-      //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
+        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
