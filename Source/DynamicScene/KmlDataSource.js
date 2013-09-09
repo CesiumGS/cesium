@@ -192,11 +192,6 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
-        var polygon = new DynamicPolygon();
-        var material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
-        polygon.material = material;
-        dynamicObject.polygon = polygon;
     }
 
     function processGxTrack(dataSource, dynamicObject, kml, node){
