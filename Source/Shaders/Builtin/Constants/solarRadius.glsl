@@ -10,4 +10,4 @@
  * // GLSL declaration
  * const float czm_solarRadius = ...;
  */
-const float czm_solarRadius = 699500000.0;
+const float czm_solarRadius = 695500000.0;
