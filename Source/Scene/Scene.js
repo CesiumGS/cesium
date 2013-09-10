@@ -22,6 +22,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -62,6 +63,7 @@ define([
         GeometryInstance,
         GeometryPipeline,
         ColorGeometryInstanceAttribute,
+        ShowGeometryInstanceAttribute,
         Context,
         ClearCommand,
         PassState,
@@ -940,6 +942,11 @@ define([
                 primitive.setShow(false);
             } else if (defined(primitive.show)) {
                 primitive.show = false;
+            } else if (defined(primitive.primitive) && defined(primitive.id)) {
+                var attributes = primitive.primitive.getGeometryInstanceAttributes(primitive.id);
+                if (defined(attributes) && defined(attributes.show)) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(false);
+                }
             }
 
             primitive = this.pick(windowPosition);
@@ -949,8 +956,13 @@ define([
         for ( var i = 0; i < pickedPrimitives.length; ++i) {
             if (typeof pickedPrimitives[i].setShow === 'function') {
                 pickedPrimitives[i].setShow(true);
-            } else {
+            } else if (defined(primitive.show)) {
                 pickedPrimitives[i].show = true;
+            } else if (defined(primitive.primitive) && defined(primitive.id)) {
+                var attr = primitive.primitive.getGeometryInstanceAttributes(primitive.id);
+                if (defined(attr) && defined(attr.show)) {
+                    attr.show = ShowGeometryInstanceAttribute.toValue(true);
+                }
             }
         }
 
