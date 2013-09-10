@@ -25,6 +25,8 @@ define([
      * @see EllipsoidSurfaceAppearance
      * @see PerInstanceColorAppearance
      * @see DebugAppearance
+     * @see PolylineColorAppearance
+     * @see PolylineMaterialAppearance
      */
     var Appearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

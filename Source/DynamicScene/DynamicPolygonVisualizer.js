@@ -210,6 +210,7 @@ define([
             } else {
                 polygonVisualizerIndex = dynamicPolygonVisualizer._polygonCollection.length;
                 polygon = new Polygon();
+                polygon.asynchronous = false;
                 dynamicPolygonVisualizer._polygonCollection.push(polygon);
                 dynamicPolygonVisualizer._primitives.add(polygon);
             }
