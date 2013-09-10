@@ -434,8 +434,22 @@ define([
 
         Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.negate(tile.southwestCornerCartesian, cartesian3Scratch), cartesian3Scratch), tile.westNormal);
         Cartesian3.normalize(Cartesian3.cross(Cartesian3.negate(tile.northeastCornerCartesian,cartesian3Scratch), Cartesian3.UNIT_Z, cartesian3Scratch), tile.eastNormal);
-        Cartesian3.normalize(Cartesian3.cross(ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch), Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch), tile.southNormal);
-        Cartesian3.normalize(Cartesian3.cross(ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch), Cartesian3.subtract(tile.northeastCornerCartesian, northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch), tile.northNormal);
+        Cartesian3.normalize(
+          Cartesian3.cross(
+            ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch),
+            Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch2),
+            cartesian3Scratch
+          ),
+          tile.southNormal
+        );
+        Cartesian3.normalize(
+          Cartesian3.cross(
+            ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch),
+            Cartesian3.subtract(tile.northeastCornerCartesian, northwestCornerCartesian, cartesian3Scratch2),
+            cartesian3Scratch
+          ),
+          tile.northNormal
+        );
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
