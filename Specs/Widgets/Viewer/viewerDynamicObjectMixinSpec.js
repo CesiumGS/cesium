@@ -2,16 +2,18 @@
 defineSuite([
          'Widgets/Viewer/viewerDynamicObjectMixin',
          'Core/Cartesian3',
+         'DynamicScene/ConstantPositionProperty',
+         'DynamicScene/ConstantProperty',
          'DynamicScene/DynamicObject',
          'Scene/CameraFlightPath',
-         'DynamicScene/ConstantProperty',
          'Widgets/Viewer/Viewer'
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
+         ConstantPositionProperty,
+         ConstantProperty,
          DynamicObject,
          CameraFlightPath,
-         ConstantProperty,
          Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -59,8 +61,8 @@ defineSuite([
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
-        dynamicObject.balloon = new MockProperty('<span>content</span>');
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.balloon = new ConstantProperty('<span>content</span>');
 
         viewer.balloonedObject = dynamicObject;
         expect(viewer.balloonedObject).toBe(dynamicObject);

@@ -67,7 +67,7 @@ define([
         //Balloon
         var balloonContainer = document.createElement('div');
         balloonContainer.className = 'cesium-viewer-balloonContainer';
-        viewer._viewerContainer.appendChild(balloonContainer);
+        viewer.container.appendChild(balloonContainer);
 
         var balloon = new Balloon(balloonContainer, viewer.scene);
         var balloonViewModel = balloon.viewModel;
@@ -85,7 +85,7 @@ define([
                 dynamicObjectView.update(clock.currentTime);
             }
             if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined') {
-                balloonViewModel.position = balloonedObject.position.getValueCartesian(clock.currentTime);
+                balloonViewModel.position = balloonedObject.position.getValue(clock.currentTime, balloonViewModel.position);
                 balloonViewModel.update();
             }
         }
@@ -93,9 +93,7 @@ define([
 
         function pickAndTrackObject(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
-            if (defined(pickedPrimitive) &&
-                defined(pickedPrimitive.dynamicObject) &&
-                defined(pickedPrimitive.dynamicObject.position)) {
+            if (defined(pickedPrimitive) && defined(pickedPrimitive.dynamicObject) && defined(pickedPrimitive.dynamicObject.position)) {
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
             }
         }
@@ -178,7 +176,7 @@ define([
                     var position;
                     if (typeof value !== 'undefined') {
                         if (typeof value.position !== 'undefined') {
-                            position = value.position.getValueCartesian(viewer.clock.currentTime);
+                            position = value.position.getValue(viewer.clock.currentTime);
                         }
 
                         if (typeof value.balloon !== 'undefined') {
@@ -194,6 +192,7 @@ define([
                     balloonViewModel.position = position;
                     balloonViewModel.showBalloon = typeof content !== 'undefined';
                 }
+            }
         });
 
         //Wrap destroy to clean up event subscriptions.
