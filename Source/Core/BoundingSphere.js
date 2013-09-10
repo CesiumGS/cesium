@@ -83,7 +83,7 @@ define([
         }
 
         if (!defined(positions) || positions.length === 0) {
-            result.center = Cartesian3.clone(Cartesian3.ZEROi, result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }
