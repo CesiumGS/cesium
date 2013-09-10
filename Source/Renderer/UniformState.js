@@ -128,6 +128,7 @@ define([
         this._cameraRight = new Cartesian3();
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
+        this._eyeHeight2D = new Cartesian2();
     };
 
     function setView(uniformState, matrix) {
@@ -244,8 +245,12 @@ define([
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
+            this._eyeHeight2D.x = this._frustum2DWidth * 0.5;
+            this._eyeHeight2D.y = this._eyeHeight2D.x * this._eyeHeight2D.x;
         } else {
             this._frustum2DWidth = 0.0;
+            this._eyeHeight2D.x = 0.0;
+            this._eyeHeight2D.y = 0.0;
         }
 
         setSunAndMoonDirections(this, frameState);
@@ -359,7 +364,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see UniformState#setModel
      * @see czm_model
@@ -373,7 +378,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The inverse model matrix.
+     * @returns {Matrix4} The inverse model matrix.
      *
      * @see UniformState#setModel
      * @see UniformState#getModel
@@ -394,7 +399,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see czm_view
      */
@@ -409,7 +414,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The 3D view matrix.
+     * @returns {Matrix4} The 3D view matrix.
      *
      * @see czm_view3D
      */
@@ -431,7 +436,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The 3x3 rotation matrix of the current view matrix.
+     * @returns {Matrix3} The 3x3 rotation matrix of the current view matrix.
      *
      * @see UniformState#getView
      * @see czm_viewRotation
@@ -445,7 +450,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The 3x3 rotation matrix of the current 3D view matrix.
+     * @returns {Matrix3} The 3x3 rotation matrix of the current 3D view matrix.
      *
      * @see UniformState#getView3D
      * @see czm_viewRotation3D
@@ -461,7 +466,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The 4x4 inverse-view matrix that transforms from eye to world coordinates.
+     * @returns {Matrix4} The 4x4 inverse-view matrix that transforms from eye to world coordinates.
      *
      * @see czm_inverseView
      */
@@ -476,7 +481,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.
+     * @returns {Matrix4} The 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.
      *
      * @see czm_inverseView3D
      */
@@ -494,7 +499,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The 3x3 rotation matrix of the current inverse-view matrix.
+     * @returns {Matrix3} The 3x3 rotation matrix of the current inverse-view matrix.
      *
      * @see UniformState#getInverseView
      * @see czm_inverseViewRotation
@@ -508,7 +513,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The 3x3 rotation matrix of the current 3D inverse-view matrix.
+     * @returns {Matrix3} The 3x3 rotation matrix of the current 3D inverse-view matrix.
      *
      * @see UniformState#getInverseView3D
      * @see czm_inverseViewRotation3D
@@ -523,7 +528,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see UniformState#setProjection
      * @see czm_projection
@@ -545,7 +550,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see czm_inverseProjection
      */
@@ -559,7 +564,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see UniformState#setInfiniteProjection
      * @see czm_infiniteProjection
@@ -582,7 +587,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The model-view matrix.
+     * @returns {Matrix4} The model-view matrix.
      *
      * @see czm_modelView
      */
@@ -605,7 +610,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The 3D model-view matrix.
+     * @returns {Matrix4} The 3D model-view matrix.
      *
      * @see czm_modelView3D
      */
@@ -644,7 +649,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The model-view relative to eye matrix.
+     * @returns {Matrix4} The model-view relative to eye matrix.
      *
      * @see czm_modelViewRelativeToEye
      */
@@ -666,7 +671,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The inverse of the model-view matrix.
+     * @returns {Matrix4} The inverse of the model-view matrix.
      *
      * @see czm_inverseModelView
      */
@@ -689,7 +694,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The inverse of the 3D model-view matrix.
+     * @returns {Matrix4} The inverse of the 3D model-view matrix.
      *
      * @see czm_inverseModelView3D
      */
@@ -711,7 +716,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see czm_viewProjection
      */
@@ -733,7 +738,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see czm_modelViewProjection
      */
@@ -755,7 +760,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} The model-view-projection relative to eye matrix.
+     * @returns {Matrix4} The model-view-projection relative to eye matrix.
      *
      * @see czm_modelViewProjectionRelativeToEye
      */
@@ -777,7 +782,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix4} DOC_TBA.
+     * @returns {Matrix4} DOC_TBA.
      *
      * @see czm_modelViewProjection
      */
@@ -803,7 +808,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The normal transformation matrix.
+     * @returns {Matrix3} The normal transformation matrix.
      *
      * @see czm_normal
      */
@@ -829,7 +834,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The normal transformation matrix.
+     * @returns {Matrix3} The normal transformation matrix.
      *
      * @see czm_normal3D
      */
@@ -852,7 +857,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The inverse normal transformation matrix.
+     * @returns {Matrix3} The inverse normal transformation matrix.
      *
      * @see czm_inverseNormal
      */
@@ -877,7 +882,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The inverse normal transformation matrix.
+     * @returns {Matrix3} The inverse normal transformation matrix.
      *
      * @see czm_inverseNormal3D
      */
@@ -892,7 +897,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
+     * @returns {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
      *
      * @see czm_entireFrustum
      * @see UniformState#getCurrentFrustum
@@ -907,7 +912,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
+     * @returns {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
      *
      * @see czm_currentFrustum
      * @see UniformState#getEntireFrustum
@@ -917,11 +922,26 @@ define([
     };
 
     /**
+     * Returns the the height (<code>x</code>) and the height squared (<code>y</code>)
+     * in meters of the camera above the 2D world plane. This uniform is only valid
+     * when the {@link SceneMode} equal to <code>SCENE2D</code>.
+     *
+     * @memberof UniformState
+     *
+     * @returns {Cartesian2} Height and height squared above the 2D world plane for SCENE2D {@link SceneMode}.
+     *
+     * @see czm_eyeHeight2D
+     */
+    UniformState.prototype.getEyeHeight2D = function() {
+        return this._eyeHeight2D;
+    };
+
+    /**
      * Returns the size of a pixel in meters at a distance of one meter from the camera.
      *
      * @memberof UniformState
      *
-     * @return {Number} Returns the size of a pixel in meters at a distance of one meter from the camera.
+     * @returns {Number} Returns the size of a pixel in meters at a distance of one meter from the camera.
      *
      * @see czm_pixelSizeInMeters
      */
@@ -934,7 +954,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} The sun position in 3D world coordinates at the current scene time.
+     * @returns {Cartesian3} The sun position in 3D world coordinates at the current scene time.
      *
      * @see czm_sunPositionWC
      */
@@ -947,7 +967,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} The sun position in 2D world coordinates at the current scene time.
+     * @returns {Cartesian3} The sun position in 2D world coordinates at the current scene time.
      *
      * @see czm_sunPositionColumbusView
      */
@@ -961,7 +981,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} A normalized vector to the sun in 3D world coordinates at the current scene time.
+     * @returns {Cartesian3} A normalized vector to the sun in 3D world coordinates at the current scene time.
      *
      * @see czm_sunDirectionWC
      */
@@ -976,7 +996,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} A normalized vector to the sun in eye coordinates at the current scene time.
+     * @returns {Cartesian3} A normalized vector to the sun in eye coordinates at the current scene time.
      *
      * @see czm_sunDirectionEC
      */
@@ -991,7 +1011,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
+     * @returns {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
      *
      * @see czm_moonDirectionEC
      */
@@ -1015,7 +1035,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} The high bits of the camera position.
+     * @returns {Cartesian3} The high bits of the camera position.
      *
      * @see UniformState#getEncodedCameraPositionMCLow
      */
@@ -1029,7 +1049,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian3} The low bits of the camera position.
+     * @returns {Cartesian3} The low bits of the camera position.
      *
      * @see UniformState#getEncodedCameraPositionMCHigh
      */
@@ -1043,7 +1063,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {FrameState} The current frame state.
+     * @returns {FrameState} The current frame state.
      *
      * @see czm_frameNumber
      */
@@ -1057,7 +1077,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Matrix3} The transform from TEME to pseudo-fixed.
+     * @returns {Matrix3} The transform from TEME to pseudo-fixed.
      *
      * @see czm_temeToPseudoFixed
      */

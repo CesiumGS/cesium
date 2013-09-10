@@ -5,14 +5,16 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Scene/Polygon',
-        '../Scene/Material'
+        '../Scene/Material',
+        './MaterialProperty'
        ], function(
          Cartesian3,
          defined,
          DeveloperError,
          destroyObject,
          Polygon,
-         Material) {
+         Material,
+         MaterialProperty) {
     "use strict";
 
     /**
@@ -138,7 +140,7 @@ define([
      *
      * @memberof DynamicPolygonVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPolygonVisualizer#destroy
      */
@@ -156,7 +158,7 @@ define([
      *
      * @memberof DynamicPolygonVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -208,6 +210,7 @@ define([
             } else {
                 polygonVisualizerIndex = dynamicPolygonVisualizer._polygonCollection.length;
                 polygon = new Polygon();
+                polygon.asynchronous = false;
                 dynamicPolygonVisualizer._polygonCollection.push(polygon);
                 dynamicPolygonVisualizer._primitives.add(polygon);
             }
@@ -224,9 +227,9 @@ define([
 
         var vertexPositions;
         if (hasVertexPostions) {
-            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+            vertexPositions = vertexPositionsProperty.getValue(time);
         } else {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
         }
 
         if (polygon._visualizerPositions !== vertexPositions && //
@@ -236,10 +239,7 @@ define([
             polygon._visualizerPositions = vertexPositions;
         }
 
-        var material = dynamicPolygon.material;
-        if (defined(material)) {
-            polygon.material = material.getValue(time, context, polygon.material);
-        }
+        polygon.material = MaterialProperty.getValue(time, context, dynamicPolygon.material, polygon.material);
     }
 
     DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

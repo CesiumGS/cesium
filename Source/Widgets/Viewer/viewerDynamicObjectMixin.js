@@ -5,6 +5,7 @@ define([
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
+        '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
@@ -17,6 +18,7 @@ define([
         defined,
         DeveloperError,
         defineProperties,
+        Event,
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
@@ -55,6 +57,9 @@ define([
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
+        if (viewer.hasOwnProperty('onObjectTracked')) {
+            throw new DeveloperError('onObjectTracked is already defined by another mixin.');
+        }
         if (viewer.hasOwnProperty('balloonedObject')) {
             throw new DeveloperError('balloonedObject is already defined by another mixin.');
         }
@@ -69,6 +74,7 @@ define([
         viewer._balloon = balloon;
 
         var eventHelper = new EventHelper();
+        var onObjectTracked = new Event();
         var trackedObject;
         var dynamicObjectView;
         var balloonedObject;
@@ -127,13 +133,6 @@ define([
                     return trackedObject;
                 },
                 set : function(value) {
-                    if (trackedObject !== value) {
-                        trackedObject = value;
-                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
-                        //Hide the balloon if it's not the object we are following.
-                        balloonViewModel.showBalloon = balloonedObject === trackedObject;
-                    }
-
                     var sceneMode = viewer.scene.getFrameState().mode;
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                         viewer.scene.getScreenSpaceCameraController().enableTranslate = !defined(value);
@@ -142,9 +141,29 @@ define([
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
                         viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
                     }
+
+                    if (trackedObject !== value) {
+                        trackedObject = value;
+                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                        onObjectTracked.raiseEvent(viewer, value);
+                        //Hide the balloon if it's not the object we are following.
+                        balloonViewModel.showBalloon = balloonedObject === trackedObject;
+                    }
                 }
             },
 
+            /**
+             * Gets an event that will be raised when an object is tracked by the camera.  The event
+             * has two parameters: a reference to the viewer instance, and the newly tracked object.
+             *
+             * @memberof viewerDynamicObjectMixin.prototype
+             * @type {Event}
+             */
+            onObjectTracked : {
+                get : function() {
+                    return onObjectTracked;
+                }
+            },
             /**
              * Gets or sets the object instance for which to display a balloon
              * @memberof viewerDynamicObjectMixin.prototype
@@ -175,7 +194,6 @@ define([
                     balloonViewModel.position = position;
                     balloonViewModel.showBalloon = typeof content !== 'undefined';
                 }
-            }
         });
 
         //Wrap destroy to clean up event subscriptions.

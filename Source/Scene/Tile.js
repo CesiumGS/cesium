@@ -232,7 +232,7 @@ define([
      *
      * @memberof Tile
      *
-     * @return {Array} The list of child tiles.
+     * @returns {Array} The list of child tiles.
      */
     Tile.prototype.getChildren = function() {
         if (!defined(this.children)) {
@@ -698,8 +698,8 @@ define([
 
             if (!defined(waterMaskData.sampler)) {
                 waterMaskData.sampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });

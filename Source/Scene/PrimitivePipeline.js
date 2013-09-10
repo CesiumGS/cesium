@@ -201,14 +201,27 @@ define([
         var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
+        var attributes = geometry.attributes;
+        var name;
         if (!allow3DOnly) {
-            // Compute 2D positions
-            GeometryPipeline.projectTo2D(geometry, projection);
+            for (name in attributes) {
+                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                    var name3D = name + '3D';
+                    var name2D = name + '2D';
 
-            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+                    // Compute 2D positions
+                    GeometryPipeline.projectTo2D(geometry, name, name3D, name2D, projection);
+
+                    GeometryPipeline.encodeAttribute(geometry, name3D, name3D + 'High', name3D + 'Low');
+                    GeometryPipeline.encodeAttribute(geometry, name2D, name2D + 'High', name2D + 'Low');
+                }
+            }
         } else {
-            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+            for (name in attributes) {
+                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                    GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
+                }
+            }
         }
 
         if (!uintIndexSupport) {

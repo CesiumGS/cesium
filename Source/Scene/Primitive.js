@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -15,11 +16,13 @@ define([
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
         '../Core/Queue',
+        '../Core/clone',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/CullFace',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -27,6 +30,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         destroyObject,
         Matrix4,
@@ -40,11 +44,13 @@ define([
         TaskProcessor,
         GeographicProjection,
         Queue,
+        clone,
         BufferUsage,
         VertexLayout,
         CommandLists,
         DrawCommand,
         createShaderSource,
+        CullFace,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -249,8 +255,10 @@ define([
 
         this._va = [];
         this._attributeIndices = undefined;
+        this._primitiveType = undefined;
 
-        this._rs = undefined;
+        this._frontFaceRS = undefined;
+        this._backFaceRS = undefined;
         this._sp = undefined;
 
         this._pickSP = undefined;
@@ -316,44 +324,57 @@ define([
         });
     }
 
+    var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
+
     function createColumbusViewShader(primitive, vertexShaderSource) {
-        var attributes;
-        if (!primitive._allow3DOnly) {
-            attributes =
-                'attribute vec3 position2DHigh;\n' +
-                'attribute vec3 position2DLow;\n';
-        } else {
-            attributes = '';
+        var match;
+
+        var forwardDecl = '';
+        var attributes = '';
+        var computeFunctions = '';
+
+        while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
+            var name = match[1];
+
+            var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
+            forwardDecl += functionName + ';\n';
+
+            if (!primitive._allow3DOnly) {
+                attributes +=
+                    'attribute vec3 ' + name + '2DHigh;\n' +
+                    'attribute vec3 ' + name + '2DLow;\n';
+
+                computeFunctions +=
+                    functionName + '\n' +
+                    '{\n' +
+                    '    vec4 p;\n' +
+                    '    if (czm_morphTime == 1.0)\n' +
+                    '    {\n' +
+                    '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                    '    }\n' +
+                    '    else if (czm_morphTime == 0.0)\n' +
+                    '    {\n' +
+                    '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                    '    }\n' +
+                    '    else\n' +
+                    '    {\n' +
+                    '        p = czm_columbusViewMorph(\n' +
+                    '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                    '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                    '                czm_morphTime);\n' +
+                    '    }\n' +
+                    '    return p;\n' +
+                    '}\n\n';
+            } else {
+                computeFunctions +=
+                    functionName + '\n' +
+                    '{\n' +
+                    '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                    '}\n\n';
+            }
         }
 
-        var computePosition =
-            '\nvec4 czm_computePosition()\n' +
-            '{\n';
-        if (!primitive._allow3DOnly) {
-            computePosition +=
-                '    vec4 p;\n' +
-                '    if (czm_morphTime == 1.0)\n' +
-                '    {\n' +
-                '        p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
-                '    }\n' +
-                '    else if (czm_morphTime == 0.0)\n' +
-                '    {\n' +
-                '        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
-                '    }\n' +
-                '    else\n' +
-                '    {\n' +
-                '        p = czm_columbusViewMorph(\n' +
-                '                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
-                '                czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
-                '                czm_morphTime);\n' +
-                '    }\n' +
-                '    return p;\n';
-        } else {
-            computePosition += '    return czm_translateRelativeToEye(position3DHigh, position3DLow);\n';
-        }
-        computePosition += '}\n\n';
-
-        return attributes + vertexShaderSource + computePosition;
+        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -625,24 +646,7 @@ define([
             }
 
             this._va = va;
-
-            for (i = 0; i < length; ++i) {
-                geometry = geometries[i];
-
-                // renderState, shaderProgram, and uniformMap for commands are set below.
-
-                colorCommand = new DrawCommand();
-                colorCommand.owner = this;
-                colorCommand.primitiveType = geometry.primitiveType;
-                colorCommand.vertexArray = this._va[i];
-                colorCommands.push(colorCommand);
-
-                pickCommand = new DrawCommand();
-                pickCommand.owner = this;
-                pickCommand.primitiveType = geometry.primitiveType;
-                pickCommand.vertexArray = this._va[i];
-                pickCommands.push(pickCommand);
-            }
+            this._primitiveType = geometries[0].primitiveType;
 
             if (this._releaseGeometryInstances) {
                 this.geometryInstances = undefined;
@@ -674,7 +678,19 @@ define([
         }
 
         if (createRS) {
-            this._rs = context.createRenderState(appearance.renderState);
+            if (appearance.closed && appearance.translucent) {
+                var rs = clone(appearance.renderState, false);
+                rs.cull = {
+                    enabled : true,
+                    face : CullFace.BACK
+                };
+                this._frontFaceRS = context.createRenderState(rs);
+
+                rs.cull.face = CullFace.FRONT;
+                this._backFaceRS = context.createRenderState(rs);
+            } else {
+                this._frontFaceRS = context.createRenderState(appearance.renderState);
+            }
         }
 
         if (createSP) {
@@ -694,17 +710,66 @@ define([
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
+            if (defined(this._backFaceRS)) {
+                colorCommands.length = this._va.length * 2;
+                pickCommands.length = this._va.length * 2;
+            } else {
+                colorCommands.length = this._va.length;
+                pickCommands.length = this._va.length;
+            }
+
             length = colorCommands.length;
+            var vaIndex = 0;
             for (i = 0; i < length; ++i) {
+                if (defined(this._backFaceRS)) {
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand();
+                    }
+                    colorCommand.owner = this;
+                    colorCommand.primitiveType = this._primitiveType;
+                    colorCommand.vertexArray = this._va[vaIndex];
+                    colorCommand.renderState = this._backFaceRS;
+                    colorCommand.shaderProgram = this._sp;
+                    colorCommand.uniformMap = uniforms;
+
+                    pickCommand = pickCommands[i];
+                    if (!defined(pickCommand)) {
+                        pickCommand = pickCommands[i] = new DrawCommand();
+                    }
+                    pickCommand.owner = this;
+                    pickCommand.primitiveType = this._primitiveType;
+                    pickCommand.vertexArray = this._va[vaIndex];
+                    pickCommand.renderState = this._backFaceRS;
+                    pickCommand.shaderProgram = this._pickSP;
+                    pickCommand.uniformMap = uniforms;
+
+                    ++i;
+                }
+
                 colorCommand = colorCommands[i];
-                colorCommand.renderState = this._rs;
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand();
+                }
+                colorCommand.owner = this;
+                colorCommand.primitiveType = this._primitiveType;
+                colorCommand.vertexArray = this._va[vaIndex];
+                colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
                 pickCommand = pickCommands[i];
-                pickCommand.renderState = this._rs;
+                if (!defined(pickCommand)) {
+                    pickCommand = pickCommands[i] = new DrawCommand();
+                }
+                pickCommand.owner = this;
+                pickCommand.primitiveType = this._primitiveType;
+                pickCommand.vertexArray = this._va[vaIndex];
+                pickCommand.renderState = this._frontFaceRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
+
+                ++vaIndex;
             }
         }
 
@@ -828,14 +893,21 @@ define([
 
         var perInstanceAttributes = this._perInstanceAttributeIndices[index];
         var attributes = {};
+        var properties = {};
+        var hasProperties = false;
 
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
-                Object.defineProperty(attributes, name, {
+                hasProperties = true;
+                properties[name] = {
                     get : createGetFunction(name, perInstanceAttributes),
                     set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
-                });
+                };
             }
+        }
+
+        if (hasProperties) {
+            defineProperties(attributes, properties);
         }
 
         this._lastPerInstanceAttributeIndex = index;
@@ -852,7 +924,7 @@ define([
      *
      * @memberof Primitive
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Primitive#destroy
      */
@@ -871,7 +943,7 @@ define([
      *
      * @memberof Primitive
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

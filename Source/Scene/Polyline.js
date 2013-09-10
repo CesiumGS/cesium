@@ -89,7 +89,7 @@ define([
      *
      * @memberof Polyline
      *
-     * @return {Boolean} <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
      *
      * @see Polyline#setShow
      */
@@ -125,7 +125,7 @@ define([
      *
      * @memberof Polyline
      *
-     * @return {Array} The polyline's positions.
+     * @returns {Array} The polyline's positions.
      *
      * @see Polyline#setPositions
      */
@@ -241,7 +241,7 @@ define([
      *
      * @memberof Polyline
      *
-     * @return {Number} The width of the polyline.
+     * @returns {Number} The width of the polyline.
      *
      * @see Polyline#setWidth
      *

@@ -112,7 +112,7 @@ define(function () {
 	 *   - promiseOrValue's value after it is fulfilled
 	 *   - promiseOrValue's reason after it is rejected
 	 * @param {*} promiseOrValue the rejected value of the returned {@link Promise}
-	 * @return {Promise} rejected {@link Promise}
+	 * @returns {Promise} rejected {@link Promise}
 	 */
 	function reject(promiseOrValue) {
 		return when(promiseOrValue, rejected);
@@ -136,7 +136,7 @@ define(function () {
 		 * Shortcut for .then(onFulfilledOrRejected, onFulfilledOrRejected, onProgress)
 		 * @param {function?} [onFulfilledOrRejected]
 		 * @param {function?} [onProgress]
-		 * @return {Promise}
+		 * @returns {Promise}
 		 */
 		always: function(onFulfilledOrRejected, onProgress) {
 			return this.then(onFulfilledOrRejected, onFulfilledOrRejected, onProgress);
@@ -145,7 +145,7 @@ define(function () {
 		/**
 		 * Register a rejection handler.  Shortcut for .then(undefined, onRejected)
 		 * @param {function?} onRejected
-		 * @return {Promise}
+		 * @returns {Promise}
 		 */
 		otherwise: function(onRejected) {
 			return this.then(undef, onRejected);
@@ -154,7 +154,7 @@ define(function () {
 		/**
 		 * Shortcut for .then(function() { return value; })
 		 * @param  {*} value
-		 * @return {Promise} a promise that:
+		 * @returns {Promise} a promise that:
 		 *  - is fulfilled if value is not a promise, or
 		 *  - if value is a promise, will fulfill with its value, or reject
 		 *    with its reason.
@@ -170,7 +170,7 @@ define(function () {
 		 * for the onFulfilled to be called with the array as its argument list
 		 * i.e. onFulfilled.spread(undefined, array).
 		 * @param {function} onFulfilled function to receive spread arguments
-		 * @return {Promise}
+		 * @returns {Promise}
 		 */
 		spread: function(onFulfilled) {
 			return this.then(function(array) {
@@ -187,7 +187,7 @@ define(function () {
 	 * @private
 	 *
 	 * @param {*} value
-	 * @return {Promise} fulfilled promise
+	 * @returns {Promise} fulfilled promise
 	 */
 	function fulfilled(value) {
 		var p = new Promise(function(onFulfilled) {
@@ -208,7 +208,7 @@ define(function () {
 	 * @private
 	 *
 	 * @param {*} reason
-	 * @return {Promise} rejected promise
+	 * @returns {Promise} rejected promise
 	 */
 	function rejected(reason) {
 		var p = new Promise(function(_, onRejected) {
@@ -230,7 +230,7 @@ define(function () {
 	 * then. The resolver has resolve, reject, and progress.  The promise
 	 * only has then.
 	 *
-	 * @return {Deferred}
+	 * @returns {Deferred}
 	 */
 	function defer() {
 		var deferred, promise, handlers, progressHandlers,
@@ -345,7 +345,7 @@ define(function () {
 		 * @param {function?} [onFulfilled] resolution handler
 		 * @param {function?} [onRejected] rejection handler
 		 * @param {function?} [onProgress] progress handler
-		 * @return {Promise} new promise
+		 * @returns {Promise} new promise
 		 */
 		function then(onFulfilled, onRejected, onProgress) {
 			// TODO: Promises/A+ check typeof onFulfilled, onRejected, onProgress
@@ -509,7 +509,7 @@ define(function () {
 
 	/**
 	 * Joins multiple promises into a single returned promise.
-	 * @return {Promise} a promise that will fulfill when *all* the input promises
+	 * @returns {Promise} a promise that will fulfill when *all* the input promises
 	 * have fulfilled, or will reject when *any one* of the input promises rejects.
 	 */
 	function join(/* ...promises */) {

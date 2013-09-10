@@ -93,7 +93,7 @@ define([
      * Returns the array of control points.
      *
      * @memberof CatmullRomSpline
-     * @return {Array} The array of control points.
+     * @returns {Array} The array of control points.
      */
     CatmullRomSpline.prototype.getControlPoints = function() {
         return this._points;
@@ -104,7 +104,7 @@ define([
      *
      * @memberof CatmullRomSpline
      *
-     * @return {Cartesian3} The tangent of the first control point.
+     * @returns {Cartesian3} The tangent of the first control point.
      *
      * @see CatmullRomSpline#getEndTangent
      */
@@ -117,7 +117,7 @@ define([
      *
      * @memberof CatmullRomSpline
      *
-     * @return {Cartesian3} The tangent of the last control point.
+     * @returns {Cartesian3} The tangent of the last control point.
      *
      * @see CatmullRomSpline#getStartTangent
      */
@@ -170,7 +170,7 @@ define([
      * where <code>a<sub>0</sub></code> and <code>a<sub>n</sub></code> are the time properties of first and
      * last elements in the array given during construction, respectively.
      *
-     * @return {Cartesian3} The point on the curve at the given <code>time</code>.
+     * @returns {Cartesian3} The point on the curve at the given <code>time</code>.
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles

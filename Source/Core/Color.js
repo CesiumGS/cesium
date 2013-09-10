@@ -44,6 +44,8 @@ define([
      *
      * @constructor
      * @alias Color
+     *
+     * @see Packable
      */
     var Color = function(red, green, blue, alpha) {
         /**
@@ -81,7 +83,7 @@ define([
      * @param {Number} [green=255] The green component.
      * @param {Number} [blue=255] The blue component.
      * @param {Number} [alpha=255] The alpha component.
-     * @return {Color} A new color instance.
+     * @returns {Color} A new color instance.
      */
     Color.fromBytes = function(red, green, blue, alpha) {
         red = Color.byteToFloat(defaultValue(red, 255.0));
@@ -107,7 +109,7 @@ define([
      * @memberof Color
      *
      * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
-     * @return {Color} A new color instance.
+     * @returns {Color} A new color instance.
      *
      * @example
      * var color = Color.fromRgba(0x67ADDFFF);
@@ -128,7 +130,7 @@ define([
      * @param {Number} [saturation=0] The saturation value 0...1
      * @param {Number} [lightness=0] The lightness value 0...1
      * @param {Number} [alpha=1.0] The alpha component 0...1
-     * @return {Color} The color object.
+     * @returns {Color} The color object.
      *
      * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
      */
@@ -179,7 +181,7 @@ define([
      * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
      *
-     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     * @returns {Color} The modified result parameter or a new instance if result was undefined.
      *
      * @exception {DeveloperError} minimumRed must be less than or equal to maximumRed.
      * @exception {DeveloperError} minimumGreen must be less than or equal to maximumGreen.
@@ -277,7 +279,7 @@ define([
      * @memberof Color
      *
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
-     * @return {Color} The color object, or undefined if the string was not a valid CSS color.
+     * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
      *
      * @exception {DeveloperError} color is required.
      *
@@ -331,12 +333,73 @@ define([
     };
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    Color.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Color
+     *
+     * @param {Color} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    Color.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.red;
+        array[startingIndex++] = value.green;
+        array[startingIndex++] = value.blue;
+        array[startingIndex] = value.alpha;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Color
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Color} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
+    Color.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Color();
+        }
+        result.red = array[startingIndex++];
+        result.green = array[startingIndex++];
+        result.blue = array[startingIndex++];
+        result.alpha = array[startingIndex];
+        return result;
+    };
+
+    /**
      * Converts a 'byte' color component in the range of 0 to 255 into
      * a 'float' color component in the range of 0 to 1.0.
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @return {number} The converted number.
+     * @returns {number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -348,7 +411,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @return {number} The converted number.
+     * @returns {number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -360,7 +423,7 @@ define([
      *
      * @param {Color} color The Color to duplicate.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
+     * @returns {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
      */
     Color.clone = function(color, result) {
         if (!defined(color)) {
@@ -382,7 +445,7 @@ define([
      *
      * @param {Color} left The first Color to compare for equality.
      * @param {Color} right The second Color to compare for equality.
-     * @return {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
      */
     Color.equals = function(left, right) {
         return (left === right) || //
@@ -399,7 +462,7 @@ define([
      * @memberof Color
      *
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     * @returns {Color} The modified result parameter or a new instance if result was undefined.
      */
     Color.prototype.clone = function(result) {
         return Color.clone(this, result);
@@ -410,7 +473,7 @@ define([
      * @memberof Color
      *
      * @param {Color} other The Color to compare for equality.
-     * @return {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
      */
     Color.prototype.equals = function(other) {
         return Color.equals(this, other);
@@ -422,7 +485,7 @@ define([
      *
      * @param {Color} other The Color to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the Colors are equal within the specified epsilon; otherwise, <code>false</code>.
      */
     Color.prototype.equalsEpsilon = function(other, epsilon) {
         return (this === other) || //
@@ -437,7 +500,7 @@ define([
      * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
      * @memberof Color
      *
-     * @return {String} A string representing this Color in the format '(red, green, blue, alpha)'.
+     * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
      */
     Color.prototype.toString = function() {
         return '(' + this.red + ', ' + this.green + ', ' + this.blue + ', ' + this.alpha + ')';
@@ -447,7 +510,7 @@ define([
      * Creates a string containing the CSS color value for this color.
      * @memberof Color
      *
-     * @return {String} The CSS equivalent of this color.
+     * @returns {String} The CSS equivalent of this color.
      * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
      */
     Color.prototype.toCssColorString = function() {
@@ -465,7 +528,7 @@ define([
      * that are in the range of 0 to 255.
      * @memberof Color
      *
-     * @return {Array} An array containing the red, green, blue, alpha values in the range 0 to 255.
+     * @returns {Array} An array containing the red, green, blue, alpha values in the range 0 to 255.
      */
     Color.prototype.toBytes = function() {
         var red = Color.floatToByte(this.red);
@@ -481,7 +544,7 @@ define([
      *
      * @memberof Color
      *
-     * @return {Number} A single numeric unsigned 32-bit RGBA value.
+     * @returns {Number} A single numeric unsigned 32-bit RGBA value.
      *
      * @example
      * var rgba = Color.BLUE.toRgba();

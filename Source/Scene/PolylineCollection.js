@@ -23,6 +23,7 @@ define([
         './Material',
         './SceneMode',
         './Polyline',
+        '../Shaders/PolylineCommon',
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS'
     ], function(
@@ -49,6 +50,7 @@ define([
         Material,
         SceneMode,
         Polyline,
+        PolylineCommon,
         PolylineVS,
         PolylineFS) {
     "use strict";
@@ -179,7 +181,7 @@ define([
      *
      * @param {Object}[polyline=undefined] A template describing the polyline's properties as shown in Example 1.
      *
-     * @return {Polyline} The polyline that was added to the collection.
+     * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
      * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
@@ -217,7 +219,7 @@ define([
      *
      * @param {Polyline} polyline The polyline to remove.
      *
-     * @return {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
      * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
      * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
@@ -289,7 +291,7 @@ define([
      *
      * @param {Polyline} polyline The polyline to check for.
      *
-     * @return {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
      */
@@ -308,7 +310,7 @@ define([
      *
      * @param {Number} index The zero-based index of the polyline.
      *
-     * @return {Polyline} The polyline at the specified index.
+     * @returns {Polyline} The polyline at the specified index.
      *
      * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
@@ -343,7 +345,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {Number} The number of polylines in this collection.
+     * @returns {Number} The number of polylines in this collection.
      *
      * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
@@ -604,7 +606,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see PolylineCollection#destroy
      */
@@ -622,7 +624,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -1037,10 +1039,11 @@ define([
             return;
         }
 
+        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsPick, attributeIndices);
+        this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeIndices);
+        this.pickShaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsPick, attributeIndices);
     };
 
     function intersectsIDL(polyline) {
