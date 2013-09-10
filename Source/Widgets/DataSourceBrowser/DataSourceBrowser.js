@@ -57,7 +57,7 @@ define([
 
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
-        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightString }');
+        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(25) }');
         element.appendChild(dataSourcesContainer);
 
         var dataSourcesToolbar = document.createElement('div');
@@ -110,7 +110,7 @@ click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $paren
         var activeDataSourcePanelContainer = document.createElement('div');
         activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
-style : { maxHeight : dataSourceBrowserViewModel.maxHeightString },\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(45) },\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
              data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');

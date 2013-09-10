@@ -148,24 +148,19 @@ define([
             },
             set : function(value) {
                 this._maxHeight = value;
-
-                //var maxHeight = (value - 25).toString() + 'px';
-                //this._dataSourcesContainer.style.maxHeight = maxHeight;
-                //this._activeDataSourcePanelContainer.style.maxHeight = maxHeight;
-            }
-        },
-
-        /**
-         * Gets the maximum height of panels within the widget, in CSS-ready form.
-         * @memberof DataSourceBrowserViewModel.prototype
-         * @type {Number}
-         */
-        maxHeightString : {
-            get : function() {
-                return (this._maxHeight - 25).toString() + 'px';
             }
         }
     });
+
+    /**
+     * Gets the maximum height of panels within the widget, minus an offset, in CSS-ready form.
+     * @param {Number} offset The offset in pixels.
+     * @memberof DataSourceBrowserViewModel.prototype
+     * @type {Number}
+     */
+    DataSourceBrowserViewModel.prototype.maxHeightOffset = function(offset) {
+        return (this._maxHeight - offset).toString() + 'px';
+    };
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this);
