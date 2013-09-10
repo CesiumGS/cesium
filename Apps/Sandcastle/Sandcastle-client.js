@@ -66,8 +66,23 @@
     window.onerror = function(errorMsg, url, lineNumber) {
         var rawErrorMsg = errorMsg;
         if (typeof lineNumber !== 'undefined') {
-            if (typeof url !== 'undefined' && url && url.indexOf(Sandcastle.bucket) < 0) {
-                errorMsg += ' (on line ' + lineNumber + ' of ' + url + ')';
+            if (lineNumber < 1 || (typeof url !== 'undefined' && url && url.indexOf(Sandcastle.bucket) < 0)) {
+                if (lineNumber) {
+                    errorMsg += ' (on line ' + lineNumber + ' of ' + url + ')';
+                }
+
+                // Change lineNumber to the local one for highlighting.
+                try {
+                    var pos = rawErrorMsg.indexOf(Sandcastle.bucket + ':');
+                    if (pos < 0) {
+                        pos = rawErrorMsg.indexOf('<anonymous>');
+                    }
+                    if (pos >= 0) {
+                        pos += 12;
+                        lineNumber = parseInt(rawErrorMsg.substring(pos), 10);
+                    }
+                } catch (ex) {
+                }
             } else {
                 errorMsg += ' (on line ' + lineNumber + ')';
             }
