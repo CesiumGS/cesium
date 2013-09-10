@@ -869,14 +869,6 @@ define([
             var tilt = this.getTilt();
             angle = angle - tilt;
 
-            /*
-            if (tilt + angle > CesiumMath.PI_OVER_TWO) {
-                angle = tilt - CesiumMath.PI_OVER_TWO;
-            } else if (tilt + angle < 0.0) {
-                angle = -tilt;
-            }
-            */
-
             this.look(camera.right, angle);
         }
     };
