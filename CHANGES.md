@@ -9,6 +9,8 @@ Beta Releases
 * Breaking changes:
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
 * Added `CorridorOutlineGeometry`.
+* Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
+* Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Made sun size accurate.
@@ -39,7 +41,8 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
           * `ConstantPositionProperty` - a `PositionProperty` whose value does not change in respect to the `ReferenceFrame` in which is it defined.
           * `SampledPositionProperty` - a `SampledProperty` for positions.
           * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
-    * Removed `processCzml`, use `CzmlDataSource` instead.    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
+    * Removed `processCzml`, use `CzmlDataSource` instead.
+    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
