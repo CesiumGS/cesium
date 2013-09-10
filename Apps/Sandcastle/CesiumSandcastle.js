@@ -22,6 +22,7 @@ require({
     'dojo/dom-class',
     'dojo/dom-construct',
     'dojo/io-query',
+    'dojo/query',
     'dojo/_base/fx',
     'dojo/_base/window',
     'dojo/_base/xhr',
@@ -53,6 +54,7 @@ require({
     domClass,
     domConstruct,
     ioQuery,
+    query,
     fx,
     win,
     xhr,
@@ -391,6 +393,22 @@ require({
     function hideGallery() {
         closeGalleryTooltip();
         tabs.selectChild(registry.byId('logContainer'));
+    }
+
+    function registerScroll(demoContainer){
+        if (typeof document.onmousewheel !== 'undefined') {
+            demoContainer.addEventListener('mousewheel', function(e) {
+                if (typeof e.wheelDelta !== 'undefined' && e.wheelDelta) {
+                    demoContainer.scrollLeft -= e.wheelDelta * 70 / 120;
+                }
+            }, false);
+        } else {
+            demoContainer.addEventListener('DOMMouseScroll', function(e) {
+                if (typeof e.detail !== 'undefined' && e.detail) {
+                    demoContainer.scrollLeft += e.detail * 70 / 3;
+                }
+            }, false);
+        }
     }
 
     CodeMirror.commands.runCesium = function(cm) {
@@ -777,20 +795,10 @@ require({
         }
     });
 
-    var demosContainer = dom.byId('demosContainer');
-    if (typeof document.onmousewheel !== 'undefined') {
-        demosContainer.addEventListener('mousewheel', function(e) {
-            if (typeof e.wheelDelta !== 'undefined' && e.wheelDelta) {
-                demosContainer.scrollLeft -= e.wheelDelta * 70 / 120;
-            }
-        }, false);
-    } else {
-        demosContainer.addEventListener('DOMMouseScroll', function(e) {
-            if (typeof e.detail !== 'undefined' && e.detail) {
-                demosContainer.scrollLeft += e.detail * 70 / 3;
-            }
-        }, false);
-    }
+    var demoContainers = query('.demosContainer');
+    demoContainers.forEach(function(demoContainer){
+        registerScroll(demoContainer);
+    });
 
     var galleryContainer = registry.byId('innerPanel');
     galleryContainer.demoTileHeightRule = demoTileHeightRule;
@@ -819,6 +827,7 @@ require({
         xhr.get({
             url : 'gallery/' + window.encodeURIComponent(demo.name) + '.html',
             handleAs : 'text',
+            sync: true,
             error : function(error) {
                 appendConsole('consoleError', error);
                 galleryError = true;
@@ -890,8 +899,6 @@ require({
 
     function addFileToGallery(index) {
         var searchDemos = dom.byId('searchDemos');
-        var demos = dom.byId('demos');
-        createGalleryButton(index, demos, '');
         createGalleryButton(index, searchDemos, 'searchDemo');
         loadDemoFromFile(index);
     }
@@ -901,14 +908,16 @@ require({
         if (demo.label !== '') {
             var labels = demo.label.split(",");
             for (var j = 0; j < labels.length; j++) {
-                labels[j] = labels[j].trim();
-                if(!dom.byId(labels[j] + 'Demos')) {
+                var label = labels[j];
+                label = label.trim();
+                if(!dom.byId(label + 'Demos')) {
                     new ContentPane({
-                        content:'<div class="demosContainer"><div class="demos" id="' + labels[j] + 'Demos"></div></div>',
-                        title: labels[j]
+                        content:'<div id="' + label + 'Container" class="demosContainer"><div class="demos" id="' + label + 'Demos"></div></div>',
+                        title: label
                         }).placeAt("innerPanel");
+                    registerScroll(dom.byId(label + 'Container'));
                 }
-                var tabName = labels[j] + 'Demos';
+                var tabName = label + 'Demos';
                 var tab = dom.byId(tabName);
                 createGalleryButton(index, tab, tabName);
             }
@@ -979,6 +988,17 @@ require({
             }
         }
 
+        new ContentPane({
+            content:'<div id="allContainer" class="demosContainer"><div class="demos" id="allDemos"></div></div>',
+            title: 'All'
+            }).placeAt("innerPanel");
+        registerScroll(dom.byId('allContainer'));
+
+        var demos = dom.byId('allDemos');
+        for (i = 0; i < len; ++i) {
+            createGalleryButton(i, demos, 'all');
+        }
+
         if (!queryInGalleryIndex) {
             gallery_demos.push({
                 name : queryName,
@@ -989,5 +1009,6 @@ require({
     }
     dom.byId('searchDemos').appendChild(galleryErrorMsg);
     var searchContainer = registry.byId('searchContainer');
+
     hideSearchContainer();
 });

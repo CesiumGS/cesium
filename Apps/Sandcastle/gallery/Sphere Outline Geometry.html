@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Geometry and Appearances.">
+    <meta name="cesium-sandcastle-labels" content="Geometry Examples">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+
+    // Create box and ellipsoid boxes, and use the instance's
+    // modelMatrix to scale and position them.
+    var radius = 0.75;
+    var sphereGeometry = new Cesium.SphereGeometry({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        radius : radius
+    });
+
+    var sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
+        radius : radius,
+        stackPartitions : 6,
+        slicePartitions : 5
+    });
+
+    var instances = [];
+    var outlineInstances = [];
+    var i;
+    var sphereModelMatrix;
+    for (i = 0; i < 5; ++i) {
+        var height = 100000.0 + (200000.0 * i);
+        sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-98.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry : sphereGeometry,
+            modelMatrix : sphereModelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+            }
+        }));
+        outlineInstances.push(new Cesium.GeometryInstance({
+            geometry : sphereOutlineGeometry,
+            modelMatrix : sphereModelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            }
+        }));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : instances,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : outlineInstances,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

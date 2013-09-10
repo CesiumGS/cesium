@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Cylinder Outline">
+    <meta name="cesium-sandcastle-labels" content="Geometry Examples">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+
+    // Combine instances for an extent, polygon, ellipse, and circle into a single primitive.
+    // cylinder
+    var length = 400000.0;
+    var topRadius = 150000.0;
+    var bottomRadius = 150000.0;
+    var modelMatrix1 = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0))), new Cesium.Cartesian3(0.0, 0.0, length/2.0));
+    var cylinderOutline1 = new Cesium.GeometryInstance({
+        geometry : new Cesium.CylinderOutlineGeometry({
+            length : length,
+            topRadius : topRadius,
+            bottomRadius : bottomRadius
+        }),
+        modelMatrix : modelMatrix1,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+
+    var modelMatrix2 = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 40.0))), new Cesium.Cartesian3(0.0, 0.0, length/2.0));
+    
+    var cylinderOutline2 = new Cesium.GeometryInstance({
+        geometry : new Cesium.CylinderOutlineGeometry({
+            length : length,
+            topRadius : topRadius,
+            bottomRadius : bottomRadius,
+            numberOfVerticalLines: 0
+        }),
+        modelMatrix : modelMatrix2,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+    
+
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [cylinderOutline1, cylinderOutline2],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+    
+    var fillGeometry = new Cesium.CylinderGeometry({
+        length : length,
+        topRadius : topRadius,
+        bottomRadius : bottomRadius,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    });
+    var fill1 = new Cesium.GeometryInstance({
+        geometry : fillGeometry,
+        modelMatrix : modelMatrix1,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
+    });
+    
+    var fill2 = new Cesium.GeometryInstance({
+        geometry : fillGeometry,
+        modelMatrix : modelMatrix2,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [fill1, fill2],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

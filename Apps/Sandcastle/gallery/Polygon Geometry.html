@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Geometry and Appearances.">
+    <meta name="cesium-sandcastle-labels" content="Geometry Examples">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+
+    var positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-107.0, 27.0),
+        Cesium.Cartographic.fromDegrees(-107.0, 22.0),
+        Cesium.Cartographic.fromDegrees(-102.0, 23.0),
+        Cesium.Cartographic.fromDegrees(-97.0, 21.0),
+        Cesium.Cartographic.fromDegrees(-97.0, 25.0)
+    ]);
+    
+    var polygonInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonGeometry.fromPositions({
+            positions : positions,
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [polygonInstance],
+        appearance : new Cesium.EllipsoidSurfaceAppearance({
+            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+        })
+    }));
+
+    var polygonHierarchy = {
+        positions : ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-109.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+        ]),
+        holes : [{
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-107.0, 31.0),
+                Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-97.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+            ]),
+            holes : [{
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cesium.Cartographic.fromDegrees(-105.0, 33.0),
+                    Cesium.Cartographic.fromDegrees(-99.0, 33.0),
+                    Cesium.Cartographic.fromDegrees(-99.0, 37.0),
+                    Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+                ]),
+                holes : [{
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cesium.Cartographic.fromDegrees(-103.0, 34.0),
+                        Cesium.Cartographic.fromDegrees(-101.0, 34.0),
+                        Cesium.Cartographic.fromDegrees(-101.0, 36.0),
+                        Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+                    ])
+                }]
+            }]
+        }]
+    };
+    polygonInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : polygonHierarchy,
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [polygonInstance],
+        appearance : new Cesium.EllipsoidSurfaceAppearance({
+            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+        })
+    }));
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>
