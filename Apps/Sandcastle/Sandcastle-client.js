@@ -1,6 +1,6 @@
 (function() {
     "use strict";
-    /*global console,Sandcastle*/
+    /*global console,Sandcastle,window*/
 
     window.parent.postMessage('reload', '*');
 
@@ -27,6 +27,9 @@
             if (typeof d1.stack === 'string') {
                 var stack = d1.stack;
                 var pos = stack.indexOf(Sandcastle.bucket);
+                if (pos < 0) {
+                    pos = stack.indexOf('<anonymous>');
+                }
                 if (pos >= 0) {
                     var lineStart = stack.indexOf(':', pos);
                     if (lineStart > pos) {
@@ -89,6 +92,9 @@
             var stack = new Error().stack.toString();
             var pos = stack.indexOf(Sandcastle.bucket + ':');
             var lineNumber;
+            if (pos < 0) {
+                pos = stack.indexOf('<anonymous>');
+            }
             if (pos >= 0) {
                 pos += 12;
                 lineNumber = parseInt(stack.substring(pos), 10);
