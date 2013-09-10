@@ -83,7 +83,7 @@ define([
         }
 
         if (!defined(positions) || positions.length === 0) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZEROi, result.center);
             result.radius = 0.0;
             return result;
         }
@@ -343,13 +343,13 @@ define([
         }
 
         if (!defined(positions) || positions.length === 0) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }
 
         if (!defined(center)) {
-            center = Cartesian3.ZERO;
+            center = Cartesian3.clone(Cartesian3.ZERO);
         }
 
         if (!defined(stride)) {
@@ -518,7 +518,7 @@ define([
             result = new BoundingSphere();
         }
 
-        var center = result.center;
+        var center = Cartesian3.clone(result.center);
         Cartesian3.add(corner, oppositeCorner, center);
         Cartesian3.multiplyByScalar(center, 0.5, center);
         result.radius = Cartesian3.distance(center, oppositeCorner);
@@ -688,7 +688,7 @@ define([
         return Intersect.INSIDE;
     };
 
-    var transformCart4 = Cartesian4.UNIT_W.clone();
+    var transformCart4 = Cartesian4.clone(Cartesian4.UNIT_W);
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
