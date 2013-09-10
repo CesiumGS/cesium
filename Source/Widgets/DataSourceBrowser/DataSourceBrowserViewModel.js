@@ -44,6 +44,7 @@ define([
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._onObjectSelected = new Event();
+        this._maxHeight = 500;
 
         this._addDataSourceCommand = createCommand(function() {
             that._dataSourcePanelViewModel.activeDataSourcePanel = undefined;
@@ -61,7 +62,7 @@ define([
 
         this._dataSourceViewModels = [];
 
-        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels']);
+        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels', '_maxHeight']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -133,6 +134,35 @@ define([
         dataSources : {
             get : function() {
                 return this._dataSourceCollection;
+            }
+        },
+
+        /**
+         * Gets or sets the maximum height of the widget in pixels.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Number}
+         */
+        maxHeight : {
+            get : function() {
+                return this._maxHeight;
+            },
+            set : function(value) {
+                this._maxHeight = value;
+
+                //var maxHeight = (value - 25).toString() + 'px';
+                //this._dataSourcesContainer.style.maxHeight = maxHeight;
+                //this._activeDataSourcePanelContainer.style.maxHeight = maxHeight;
+            }
+        },
+
+        /**
+         * Gets the maximum height of panels within the widget, in CSS-ready form.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Number}
+         */
+        maxHeightString : {
+            get : function() {
+                return (this._maxHeight - 25).toString() + 'px';
             }
         }
     });

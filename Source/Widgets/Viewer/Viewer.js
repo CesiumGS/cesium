@@ -630,7 +630,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (defined(this._dataSourceBrowser)) {
-            this._dataSourceBrowser.maxHeight = panelMaxHeight;
+            this._dataSourceBrowser.viewModel.maxHeight = panelMaxHeight;
         }
 
         var timelineExists = defined(this._timeline);

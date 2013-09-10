@@ -31,7 +31,6 @@ define([
         container = getElement(container);
 
         this._container = container;
-        this._maxHeight = '500px';
 
         var viewModel = new DataSourceBrowserViewModel(dataSourceCollection);
         this._viewModel = viewModel;
@@ -58,8 +57,8 @@ define([
 
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
+        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightString }');
         element.appendChild(dataSourcesContainer);
-        this._dataSourcesContainer = dataSourcesContainer;
 
         var dataSourcesToolbar = document.createElement('div');
         dataSourcesToolbar.className = 'cesium-dataSourceBrowser-dataSourcesToolbar';
@@ -88,7 +87,6 @@ with: dataSourcePanelViewModel,\
 css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourcePanelViewModel.visible,\
        "cesium-dataSourceBrowser-dataSourcePanelContainer-hidden" : !dataSourcePanelViewModel.visible }');
         element.appendChild(dataSourcePanelContainer);
-        this._dataSourcePanelContainer = dataSourcePanelContainer;
 
         var dataSourcePanelHeader = document.createElement('div');
         dataSourcePanelHeader.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-header';
@@ -112,6 +110,7 @@ click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $paren
         var activeDataSourcePanelContainer = document.createElement('div');
         activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightString },\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
              data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');
@@ -171,25 +170,6 @@ text: error');
         viewModel : {
             get : function() {
                 return this._viewModel;
-            }
-        },
-
-        /**
-         * Gets or sets the maximum height of the widget.
-         * @memberof DataSourceBrowser.prototype
-         *
-         * @type {DataSourceBrowserViewModel}
-         */
-        maxHeight : {
-            get : function() {
-                return this._maxHeight;
-            },
-            set : function(value) {
-                this._maxHeight = value;
-
-                var maxHeight = (value - 25).toString() + 'px';
-                this._dataSourcesContainer.style.maxHeight = maxHeight;
-                this._dataSourcePanelContainer.style.maxHeight = maxHeight;
             }
         }
     });

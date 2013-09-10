@@ -54,15 +54,24 @@
     overflow-y: auto;
 }
 
-.cesium-dataSourceBrowser-dataSourcesContainer,.cesium-dataSourceBrowser-dataSourcePanelContainer {
+.cesium-dataSourceBrowser-dataSourcesContainer {
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
     border-radius: 10px;
     overflow: auto;
     width: 360px;
     max-height: 500px;
-    float: left;
-    margin-right: 10px;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer {
+    position: absolute;
+    top: 0;
+    left: 380px;
+    background-color: rgba(38, 38, 38, 0.75);
+    padding: 6px;
+    border-radius: 10px;
+    overflow: auto;
+    width: 360px;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {

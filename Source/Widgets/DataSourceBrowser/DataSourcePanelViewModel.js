@@ -111,6 +111,18 @@ define([
             get : function() {
                 return this._cancelCommand;
             }
+        },
+
+        /**
+         * Gets the DataSourceBrowserViewModel.
+         * @memberof DataSourcePanelViewModel.prototype
+         *
+         * @type {DataSourceBrowserViewModel}
+         */
+        dataSourceBrowserViewModel : {
+            get : function() {
+                return this._dataSourceBrowserViewModel;
+            }
         }
     });
 
