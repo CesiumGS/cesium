@@ -44,6 +44,7 @@ define([
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._onObjectSelected = new Event();
+        this._maxHeight = 500;
 
         this._addDataSourceCommand = createCommand(function() {
             that._dataSourcePanelViewModel.activeDataSourcePanel = undefined;
@@ -61,7 +62,7 @@ define([
 
         this._dataSourceViewModels = [];
 
-        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels']);
+        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels', '_maxHeight']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -134,8 +135,32 @@ define([
             get : function() {
                 return this._dataSourceCollection;
             }
+        },
+
+        /**
+         * Gets or sets the maximum height of the widget in pixels.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Number}
+         */
+        maxHeight : {
+            get : function() {
+                return this._maxHeight;
+            },
+            set : function(value) {
+                this._maxHeight = value;
+            }
         }
     });
+
+    /**
+     * Gets the maximum height of panels within the widget, minus an offset, in CSS-ready form.
+     * @param {Number} offset The offset in pixels.
+     * @memberof DataSourceBrowserViewModel.prototype
+     * @type {Number}
+     */
+    DataSourceBrowserViewModel.prototype.maxHeightOffset = function(offset) {
+        return (this._maxHeight - offset).toString() + 'px';
+    };
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this);
@@ -145,8 +170,17 @@ define([
         var objects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = objects.length; i < len; ++i) {
             var object = objects[i];
-            var dynamicObjectViewModel = new DataSourceViewModel(object.id, this, object);
-            dataSourceViewModel.children.push(dynamicObjectViewModel);
+            if (defined(object.position)) {
+                var name = object.id;
+                if (defined(object.label) && defined(object.label.text)) {
+                    // TODO: Check if text is a ConstantProperty.
+                    name = object.label.text.getValue(0);
+                } else if (object.id.substring(0, 16) === '/Application/STK') {
+                    name = object.id.substring(object.id.lastIndexOf('/') + 1);
+                }
+                var dynamicObjectViewModel = new DataSourceViewModel(name, this, object);
+                dataSourceViewModel.children.push(dynamicObjectViewModel);
+            }
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);

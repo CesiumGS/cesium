@@ -24,6 +24,10 @@ define([
         knockout.defineProperty(this, 'hasChildren', function() {
             return that.children.length > 0;
         });
+
+        knockout.defineProperty(this, 'isSelected', function() {
+            return rootViewModel.selectedItem === that;
+        });
     };
 
     DataSourceViewModel.prototype.select = function() {
