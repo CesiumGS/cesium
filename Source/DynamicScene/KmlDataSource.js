@@ -12,11 +12,13 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/JulianDate',
+        '../Core/TimeInterval',
         '../Core/loadXML',
         './ConstantProperty',
         './ConstantPositionProperty',
         './ColorMaterialProperty',
         './SampledPositionProperty',
+        './TimeIntervalCollectionProperty',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -41,11 +43,13 @@ define(['../Core/createGuid',
         Event,
         Iso8601,
         JulianDate,
+        TimeInterval,
         loadXML,
         ConstantProperty,
         ConstantPositionProperty,
         ColorMaterialProperty,
         SampledPositionProperty,
+        TimeIntervalCollectionProperty,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -146,10 +150,10 @@ define(['../Core/createGuid',
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
             var node = placemark.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(geometryTypes.hasOwnProperty(node.nodeName)){
+            if(featureTypes.hasOwnProperty(node.nodeName)){
                 placemark.geometry = node.nodeName;
                 var geometryType = placemark.geometry;
-                var geometryHandler = geometryTypes[geometryType];
+                var geometryHandler = featureTypes[geometryType];
                 if (!defined(geometryHandler)) {
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
@@ -217,10 +221,10 @@ define(['../Core/createGuid',
         for(var i = 0, len = node.childNodes.length; i < len; i++){
             var innerNode = node.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(geometryTypes.hasOwnProperty(innerNode.nodeName)){
+            if(featureTypes.hasOwnProperty(innerNode.nodeName)){
                 kml.geometry = innerNode.nodeName;
                 var geometryType = kml.geometry;
-                var geometryHandler = geometryTypes[geometryType];
+                var geometryHandler = featureTypes[geometryType];
                 if (geometryHandler !== processGxTrack) {
                     throw new DeveloperError('gx:MultiTrack takes one or more gx:Track elements');
                 }
@@ -248,10 +252,10 @@ define(['../Core/createGuid',
         for(var i = 0, len = node.childNodes.length; i < len; i++){
             var innerNode = node.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(geometryTypes.hasOwnProperty(innerNode.nodeName)){
+            if(featureTypes.hasOwnProperty(innerNode.nodeName)){
                 kml.geometry = innerNode.nodeName;
                 var geometryType = kml.geometry;
-                var geometryHandler = geometryTypes[geometryType];
+                var geometryHandler = featureTypes[geometryType];
                 if (!defined(geometryHandler)) {
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
@@ -272,15 +276,50 @@ define(['../Core/createGuid',
         }
     }
 
+    function processTimeSpan(dataSource, dynamicObject, kml, node){
+        var beginEl = defined(node.getElementsByTagName('begin')) ? node.getElementsByTagName('begin')[0] :  undefined ;
+        var endEl = defined(node.getElementsByTagName('end')) ? node.getElementsByTagName('end')[0] :  undefined ;
+        var beginDate = defined(beginEl) ? new Date(beginEl.textContent) : undefined;
+        var endDate = defined(endEl) ? new Date(endEl.textContent) : undefined;
+        var interval;
+        if(!defined(beginDate) && !defined(endDate)){
+            throw new DeveloperError('TimeSpan requires a begin and/or end date');
+        }
+        if(defined(beginDate) && defined(endDate)){
+            if(endDate > beginDate){
+                interval = new TimeInterval(JulianDate.fromDate(beginDate), JulianDate.fromDate(endDate), true, true, true);
+            } else {
+                throw new DeveloperError('End date must be larger than Begin date');
+            }
+        } else if(defined(beginDate)){
+            interval = new TimeInterval(JulianDate.fromDate(beginDate), Iso8601.MAXIMUM_VALUE, true, false, true);
+        } else {
+            interval =  new TimeInterval(Iso8601.MINIMUM_VALUE, JulianDate.fromDate(endDate), false, true, true);
+        }
+        var properties = Object.getOwnPropertyNames(dynamicObject);
+        //iterate all attributes of the dynamicObject in order to assign the TimeInterval
+        for(var i = 0; i < properties.length; i++){
+            var graphicType = dynamicObject[properties[i]];
+            if(typeof graphicType === 'object'){
+                //need to create a new TimeIntervalCollectionProperty if none is defined yet
+                if(!defined(graphicType.show)){
+                    graphicType.show = new TimeIntervalCollectionProperty();
+                }
+                graphicType.show.intervals.addInterval(interval);
+            }
+        }
+    }
+
     //Object that holds all supported Geometry
-    var geometryTypes = {
+    var featureTypes = {
             Point : processPoint,
             LineString : processLineString,
             LinearRing : processLinearRing,
             Polygon: processPolygon,
             'gx:Track': processGxTrack,
             'gx:MultiTrack': processGxMultiTrack,
-            MultiGeometry: processMultiGeometry
+            MultiGeometry: processMultiGeometry,
+            TimeSpan: processTimeSpan
             //TODO Model, gxTrack, gxMultitrack
     };
 

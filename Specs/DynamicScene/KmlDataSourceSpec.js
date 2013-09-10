@@ -814,6 +814,80 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(billboard.image.getValue()).toEqual('http://test.invalid/images/Earth_Station.png');
     });
 
+    it('handles TimeSpan', function() {
+        var timeKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <Style>\
+            <IconStyle>\
+            <Icon>\
+            </Icon>\
+            </IconStyle>\
+            </Style>\
+                <TimeSpan>\
+                    <begin>1876-08-01</begin>\
+                </TimeSpan>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(timeKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var billboard = objects[0].billboard;
+        expect(billboard.show).toBeDefined();
+        //TODO Test the interval itself
+    });
+
+    it('processTimeSpan throws with empty dates', function() {
+        var timeKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <Style>\
+            <IconStyle>\
+            <Icon>\
+            </Icon>\
+            </IconStyle>\
+            </Style>\
+                <TimeSpan></TimeSpan>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(timeKml);
+        }).toThrow();
+    });
+
+    it('processTimeSpan throws when End date is larger than Begin date', function() {
+        var timeKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <Style>\
+            <IconStyle>\
+            <Icon>\
+            </Icon>\
+            </IconStyle>\
+            </Style>\
+                <TimeSpan>\
+                    <begin>1941-12-07</begin>\
+                    <end>1945-08-06</end>\
+                </TimeSpan>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(timeKml);
+        }).toThrow();
+    });
+
     it('load throws with undefined KML', function() {
         var dataSource = new KmlDataSource();
         expect(function() {
