@@ -7,7 +7,7 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
-   * If your application uses Bing Maps imagery, you must supply a Bing Maps API key for your application prior to deployment.  If you do not supply a Bing Maps API key, a message is now written to the console reminding you to do so. 
+   * If your application uses Bing Maps imagery, you must supply a Bing Maps key for your application as soon as possible and prior to deployment.  If you do not supply a Bing Maps key, a message is now written to the console reminding you to do so. 
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.

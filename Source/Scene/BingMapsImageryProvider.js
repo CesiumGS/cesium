@@ -36,13 +36,13 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Bing Maps server hosting the imagery.
-     * @param {String} [description.key] The Bing Maps API key for your application, which can be
+     * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
-     *        If this parameter is not provided, {@link BingMapsImageryProvider.defaultApiKey} is used.
-     *        If {@link BingMapsImageryProvider.defaultApiKey} is undefined as well, a message is
+     *        If this parameter is not provided, {@link BingMapsImageryProvider.defaultKey} is used.
+     *        If {@link BingMapsImageryProvider.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
-     *        key prior to deploying your application.  Please do not deploy an application that uses
-     *        Bing Maps imagery without creating a separate API key for your application.
+     *        key as soon as possible.  Please do not deploy an application that uses
+     *        Bing Maps imagery without creating a separate key for your application.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
@@ -83,10 +83,10 @@ define([
             throw new DeveloperError('description.url is required.');
         }
 
-        this._key = defaultValue(description.key, BingMapsImageryProvider.defaultApiKey);
+        this._key = defaultValue(description.key, BingMapsImageryProvider.defaultKey);
         if (!defined(this._key)) {
             this._key = 'Aj1ony_-Typ-KjG9SJWiKSHY23U1KmK7yAmZa9lDmuF2osXWkcZ22VPsqmCt0TCt';
-            console.log('This application is using Cesium\'s default Bing Maps API key.  Please create a new key for the application prior to deployment by visiting https://www.bingmapsportal.com/, and provide your key to Cesium by setting the BingMapsImageryProvider.defaultApiKey or Cesium.BingMapsImageryProvider.defaultApiKey property.');
+            console.log('This application is using Cesium\'s default Bing Maps key.  Please create a new key for the application as soon as possible and prior to deployment by visiting https://www.bingmapsportal.com/, and provide your key to Cesium by setting the BingMapsImageryProvider.defaultKey or Cesium.BingMapsImageryProvider.defaultKey property.');
         }
 
         this._url = description.url;
@@ -169,15 +169,16 @@ define([
     /**
      * The default Bing Maps API key to use if one is not provided to the
      * {@link BingMapsImageryProvider} constructor.  If this property is undefined,
-     * Cesium's default key is used, which is only suitable for use in development.
+     * Cesium's default key is used, which is only suitable for use early in development.
      * Please generate your own key by visiting
      * <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>
-     * prior to deployment.  When Cesium's default key is used, a message is printed
-     * to the console each time {@link BingMapsImageryProvider} is constructed.
+     * as soon as possible and prior to deployment.  When Cesium's default key is used,
+     * a message is printed to the console each time {@link BingMapsImageryProvider}
+     * is constructed.
      *
      * @type {String}
      */
-    BingMapsImageryProvider.defaultApiKey = undefined;
+    BingMapsImageryProvider.defaultKey = undefined;
 
     /**
      * Gets the name of the Bing Maps server url hosting the imagery.
