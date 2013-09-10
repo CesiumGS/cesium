@@ -858,31 +858,26 @@ defineSuite(['DynamicScene/KmlDataSource',
             </kml>';
 
         var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(timeKml, "text/xml"));
         expect(function() {
             dataSource.load(timeKml);
         }).toThrow();
     });
 
-    it('processTimeSpan throws when End date is larger than Begin date', function() {
+    it('processTimeSpan throws when End date is smaller than Begin date', function() {
         var timeKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Placemark>\
-            <Style>\
-            <IconStyle>\
-            <Icon>\
-            </Icon>\
-            </IconStyle>\
-            </Style>\
-                <TimeSpan>\
-                    <begin>1941-12-07</begin>\
-                    <end>1945-08-06</end>\
-                </TimeSpan>\
+            <TimeSpan>\
+            <begin>1945-08-06</begin><end>1941-12-07</end>\
+            </TimeSpan>\
             </Placemark>\
             </Document>\
             </kml>';
 
         var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(timeKml, "text/xml"));
         expect(function() {
             dataSource.load(timeKml);
         }).toThrow();
