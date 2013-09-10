@@ -73,6 +73,14 @@ define([
             return !finishing() && defined(that.activeDataSourcePanel);
         }));
 
+        this._cancelCommand = createCommand(function() {
+            that.error = '';
+            that.activeDataSourcePanel = undefined;
+            that.visible = false;
+        }, knockout.computed(function() {
+            return !finishing();
+        }));
+
         this._activeDataSourcePanelSubscription = knockout.getObservable(this, 'activeDataSourcePanel').subscribe(function(value) {
             if (defined(value)) {
                 value.viewModel.reset();
@@ -90,6 +98,30 @@ define([
         finishCommand : {
             get : function() {
                 return this._finishCommand;
+            }
+        },
+
+        /**
+         * Gets the Command that is executed when the cancel button is clicked.
+         * @memberof DataSourcePanelViewModel.prototype
+         *
+         * @type {Command}
+         */
+        cancelCommand : {
+            get : function() {
+                return this._cancelCommand;
+            }
+        },
+
+        /**
+         * Gets the DataSourceBrowserViewModel.
+         * @memberof DataSourcePanelViewModel.prototype
+         *
+         * @type {DataSourceBrowserViewModel}
+         */
+        dataSourceBrowserViewModel : {
+            get : function() {
+                return this._dataSourceBrowserViewModel;
             }
         }
     });

@@ -45,29 +45,34 @@ define([
         templateElement.textContent = '<li>\
 <!-- ko if: hasChildren -->\
 <input type="checkbox" data-bind="attr: { id: id }, checked: expanded">\
-<label data-bind="attr: { for: id }, text: name"></label>\
+<label data-bind="attr: { for: id }, text: name, css: { \'cesium-dataSourceBrowser-item\': true, \
+    \'cesium-dataSourceBrowser-item-selected\': isSelected }"></label>\
 <ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
-<span data-bind="text: name, click: select"></span>\
+<span data-bind="text: name, click: select, css: { \'cesium-dataSourceBrowser-item\': true, \
+    \'cesium-dataSourceBrowser-item-selected\': isSelected }"></span>\
 <!-- /ko -->';
         element.appendChild(templateElement);
 
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
+        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(25) }');
         element.appendChild(dataSourcesContainer);
 
         var dataSourcesToolbar = document.createElement('div');
         dataSourcesToolbar.className = 'cesium-dataSourceBrowser-dataSourcesToolbar';
         dataSourcesContainer.appendChild(dataSourcesToolbar);
 
+/*
         var addDataSourceButton = document.createElement('span');
-        addDataSourceButton.className = 'cesium-dataSourceBrowser-addDataSource';
-        addDataSourceButton.textContent = 'Add';
+        addDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        addDataSourceButton.textContent = '+ Add';
         addDataSourceButton.setAttribute('data-bind', '\
 attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
         dataSourcesToolbar.appendChild(addDataSourceButton);
+*/
 
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
@@ -88,21 +93,24 @@ css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourceP
         dataSourcePanelHeader.textContent = 'Add Data Source';
         dataSourcePanelContainer.appendChild(dataSourcePanelHeader);
 
-        var dataSourceOptions = document.createElement('div');
+        var dataSourceOptions = document.createElement('span');
         dataSourceOptions.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions';
         dataSourceOptions.setAttribute('data-bind', '\
-foreach: dataSourcePanels');
-        dataSourcePanelContainer.appendChild(dataSourceOptions);
+foreach: dataSourcePanelViewModel.dataSourcePanels');
+        dataSourcesToolbar.appendChild(dataSourceOptions);
 
         var dataSourceOption = document.createElement('div');
         dataSourceOption.setAttribute('data-bind', '\
-text : description,\
-css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
-click: function($data) { $parent.activeDataSourcePanel = $data }');
+text : "+ " + description,\
+css: { "cesium-dataSourceBrowser-button" : true, \
+       "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.dataSourcePanelViewModel.activeDataSourcePanel },\
+click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $parent.dataSourcePanelViewModel.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
 
         var activeDataSourcePanelContainer = document.createElement('div');
+        activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(45) },\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
              data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');
@@ -112,13 +120,21 @@ template : { if: activeDataSourcePanel,\
         dataSourcePanelFooter.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-footer';
         dataSourcePanelContainer.appendChild(dataSourcePanelFooter);
 
-        var finishAddDataSourceButton = document.createElement('button');
-        finishAddDataSourceButton.type = 'button';
-        finishAddDataSourceButton.textContent = 'Finish';
+        var finishAddDataSourceButton = document.createElement('span');
+        finishAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        finishAddDataSourceButton.textContent = 'OK';
         finishAddDataSourceButton.setAttribute('data-bind', '\
 click: finishCommand,\
 enable: finishCommand.canExecute');
         dataSourcePanelFooter.appendChild(finishAddDataSourceButton);
+
+        var cancelAddDataSourceButton = document.createElement('span');
+        cancelAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        cancelAddDataSourceButton.textContent = 'Cancel';
+        cancelAddDataSourceButton.setAttribute('data-bind', '\
+click: cancelCommand,\
+enable: cancelCommand.canExecute');
+        dataSourcePanelFooter.appendChild(cancelAddDataSourceButton);
 
         var finishAddDataSourceError = document.createElement('span');
         finishAddDataSourceError.setAttribute('data-bind', '\

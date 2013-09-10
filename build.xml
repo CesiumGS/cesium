@@ -14,8 +14,12 @@
 			<specs dir="${specsDirectory}" includes="**/*.js" excludes="*.js" />
 		</createSpecList>
 
-		<createGalleryList output="${galleryDirectory}/gallery-index.js">
-			<demos dir="${galleryDirectory}" includes="**/*.html" />
+		<createGalleryList output="${viewerGalleryDirectory}/gallery-index.js">
+			<demos dir="${viewerGalleryDirectory}" includes="**/*.czml,**/*.json" />
+		</createGalleryList>
+
+		<createGalleryList output="${sandcastleGalleryDirectory}/gallery-index.js">
+			<demos dir="${sandcastleGalleryDirectory}" includes="**/*.html" />
 		</createGalleryList>
 
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
@@ -92,8 +96,9 @@
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
+			<fileset dir="${viewerGalleryDirectory}" includes="gallery-index.js" />
 			<fileset dir="${sandcastleDirectory}" includes="jsHintOptions.js" />
-			<fileset dir="${galleryDirectory}" includes="gallery-index.js" />
+			<fileset dir="${sandcastleGalleryDirectory}" includes="gallery-index.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
 	</target>
@@ -112,8 +117,9 @@
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
+	<property name="viewerGalleryDirectory" location="Apps/CesiumViewer/Gallery" />
 	<property name="sandcastleDirectory" location="Apps/Sandcastle" />
-	<property name="galleryDirectory" location="${sandcastleDirectory}/gallery" />
+	<property name="sandcastleGalleryDirectory" location="${sandcastleDirectory}/gallery" />
 	<property name="specsDirectory" location="Specs" />
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />

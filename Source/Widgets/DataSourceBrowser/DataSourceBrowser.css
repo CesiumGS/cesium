@@ -1,25 +1,82 @@
 .cesium-dataSourceBrowser {
     font-family: sans-serif;
-    font-size: 11px;
+    font-size: 15px;
     color: #edffff;
+}
+
+/* Begin exact copy of cesium-widget-button */
+.cesium-dataSourceBrowser-button {
+    display: inline-block;
+    background: #303336;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 4px 12px;
+    margin: 0 3px;
+    cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
 
-.cesium-dataSourceBrowser-dataSourcesContainer,.cesium-dataSourceBrowser-dataSourcePanelContainer {
+.cesium-dataSourceBrowser-button:focus {
+    color: #fff;
+    border-color: #ea4;
+}
+
+.cesium-dataSourceBrowser-button:hover {
+    color: #fff;
+    background: #48b;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
+}
+
+.cesium-dataSourceBrowser-button:active {
+    color: #000;
+    background: #adf;
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff;
+}
+/* End copy of cesium-widget-button */
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-footer {
+    margin-top: 5px;
+    text-align: right;
+}
+
+.cesium-dataSourceBrowser-activeDataSourcePanelContainer {
+    max-height: 420px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainer {
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
     border-radius: 10px;
     overflow: auto;
-    width: 300px;
+    width: 360px;
     max-height: 500px;
-    float: left;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer {
+    position: absolute;
+    top: 0;
+    left: 380px;
+    background-color: rgba(38, 38, 38, 0.75);
+    padding: 6px;
+    border-radius: 10px;
+    overflow: auto;
+    width: 360px;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
     padding: 0;
-    margin: 0;
+    margin: 2px 0;
     list-style: none;
 }
 
@@ -55,7 +112,7 @@
 }
 
 .cesium-dataSourceBrowser-dataSources label {
-    background-position: 18px 0;
+    background-position: 23px 0;
 }
 
 .cesium-dataSourceBrowser-dataSources label::before {
@@ -73,8 +130,10 @@
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
 }
 
-.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected {
-    color: #ffeb00;
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected,
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected:hover {
+    color: #2e2;
+    border-color: #2e2;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-visible {
@@ -83,4 +142,27 @@
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-hidden {
     display: none;
+}
+
+.cesium-dataSourceBrowser-item {
+    display: block;
+    background-color: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    padding: 0 5px;
+    border-radius: 4px;
+    box-shadow: 0 0 5px transparent;
+    -webkit-transition: background-color 0.4s, box-shadow 0.4s;
+    -moz-transition: background-color 0.4s, box-shadow 0.4s;
+    transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.cesium-dataSourceBrowser-item-selected {
+    border-color: #2e2;
+}
+
+.cesium-dataSourceBrowser-item:hover {
+    background-color: rgba(68, 136, 187, 0.5);  /* RGB is #48b */
+    text-decoration: underline;
+    box-shadow: 0 0 5px #48b;
 }

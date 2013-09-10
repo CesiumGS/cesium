@@ -45,7 +45,7 @@ define([
          * @type {String}
          */
         description : {
-            value : 'GeoJSON file',
+            value : 'GeoJSON',
             writable : false
         },
 
