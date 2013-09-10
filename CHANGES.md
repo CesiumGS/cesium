@@ -11,6 +11,8 @@ Beta Releases
 * Added `CorridorOutlineGeometry`.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Made sun size accurate.
+* Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 
 ### b20 - 2013-09-03
 
