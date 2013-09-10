@@ -797,8 +797,8 @@ define([
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = frameState.camera;
-        var view = camera.getViewMatrix();
-        var projection = camera.frustum.getProjectionMatrix();
+        var view = camera.viewMatrix;
+        var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
         var mv = view.multiply(modelMatrix);

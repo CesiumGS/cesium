@@ -911,63 +911,63 @@ defineSuite([
         expect(camera.right).toEqual(camera.direction.cross(camera.up));
     });
 
-    it('getHeading returns undefined when morphing', function() {
+    it('get heading is undefined when morphing', function() {
         controller._mode = SceneMode.MORPHING;
-        expect(controller.getHeading()).not.toBeDefined();
+        expect(controller.heading).not.toBeDefined();
     });
 
-    it('getHeading in 2D', function() {
+    it('get heading in 2D', function() {
         controller._mode = SceneMode.SCENE2D;
 
         var heading = Math.atan2(camera.right.y, camera.right.x);
-        expect(controller.getHeading()).toEqual(heading);
+        expect(controller.heading).toEqual(heading);
     });
 
-    it('getHeading in CV', function() {
+    it('get heading in CV', function() {
         controller._mode = SceneMode.COLUMBUS_VIEW;
 
         var heading = Math.atan2(camera.right.y, camera.right.x);
-        expect(controller.getHeading()).toEqual(heading);
+        expect(controller.heading).toEqual(heading);
     });
 
-    it('getHeading in 3D', function() {
+    it('get heading in 3D', function() {
         controller._mode = SceneMode.SCENE3D;
 
-        var z = Matrix4.multiplyByVector(camera.getViewMatrix(), Cartesian4.UNIT_Z);
+        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z);
         var heading = CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
 
-        expect(controller.getHeading()).toEqual(heading);
+        expect(controller.heading).toEqual(heading);
     });
 
-    it('setHeading throws without angle', function() {
+    it('set heading throws without angle', function() {
         expect(function() {
-            controller.setHeading();
+            controller.heading = undefined;
         }).toThrow();
     });
 
-    it('setHeading in 2D', function() {
+    it('set heading in 2D', function() {
         controller._mode = SceneMode.SCENE2D;
 
-        var heading = controller.getHeading();
+        var heading = controller.heading;
         var newHeading = CesiumMath.toRadians(45.0);
-        controller.setHeading(newHeading);
+        controller.heading = newHeading;
 
-        expect(controller.getHeading()).not.toEqual(heading);
-        expect(controller.getHeading()).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+        expect(controller.heading).not.toEqual(heading);
+        expect(controller.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
     });
 
-    it('setHeading in CV', function() {
+    it('set heading in CV', function() {
         controller._mode = SceneMode.COLUMBUS_VIEW;
 
-        var heading = controller.getHeading();
+        var heading = controller.heading;
         var newHeading = CesiumMath.toRadians(45.0);
-        controller.setHeading(newHeading);
+        controller.heading = newHeading;
 
-        expect(controller.getHeading()).not.toEqual(heading);
-        expect(controller.getHeading()).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+        expect(controller.heading).not.toEqual(heading);
+        expect(controller.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
     });
 
-    it('setHeading in 3D', function() {
+    it('set heading in 3D', function() {
         controller._mode = SceneMode.SCENE3D;
 
         camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -975,54 +975,54 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
-        var heading = controller.getHeading();
+        var heading = controller.heading;
         var newHeading = CesiumMath.toRadians(45.0);
-        controller.setHeading(newHeading);
+        controller.heading = newHeading;
 
-        expect(controller.getHeading()).not.toEqual(heading);
-        expect(controller.getHeading()).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+        expect(controller.heading).not.toEqual(heading);
+        expect(controller.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
     });
 
-    it('getTilt returns undefined when mode is not 3D or Columbus view', function() {
+    it('tilt is undefined when mode is not 3D or Columbus view', function() {
         controller._mode = SceneMode.MORPHING;
-        expect(controller.getTilt()).not.toBeDefined();
+        expect(controller.tilt).not.toBeDefined();
     });
 
-    it('getTilt in CV', function() {
+    it('get tilt in CV', function() {
         controller._mode = SceneMode.COLUMBUS_VIEW;
 
         var tilt = CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
-        expect(controller.getTilt()).toEqual(tilt);
+        expect(controller.tilt).toEqual(tilt);
     });
 
-    it('getTilt in 3D', function() {
+    it('get tilt in 3D', function() {
         controller._mode = SceneMode.SCENE3D;
 
         var direction = Cartesian3.normalize(camera.position);
         Cartesian3.negate(direction, direction);
         var tilt = CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
 
-        expect(controller.getTilt()).toEqual(tilt);
+        expect(controller.tilt).toEqual(tilt);
     });
 
-    it('setTilt throws without angle', function() {
+    it('set tilt throws without angle', function() {
         expect(function() {
-            controller.setTilt();
+            controller.tilt = undefined;
         }).toThrow();
     });
 
-    it('setTilt in CV', function() {
+    it('set tilt in CV', function() {
         controller._mode = SceneMode.COLUMBUS_VIEW;
 
-        var tilt = controller.getTilt();
+        var tilt = controller.tilt;
         var newTilt = CesiumMath.toRadians(45.0);
-        controller.setTilt(newTilt);
+        controller.tilt = newTilt;
 
-        expect(controller.getTilt()).not.toEqual(tilt);
-        expect(controller.getTilt()).toEqualEpsilon(newTilt, CesiumMath.EPSILON14);
+        expect(controller.tilt).not.toEqual(tilt);
+        expect(controller.tilt).toEqualEpsilon(newTilt, CesiumMath.EPSILON14);
     });
 
-    it('setTilt in 3D', function() {
+    it('set tilt in 3D', function() {
         controller._mode = SceneMode.SCENE3D;
 
         camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -1030,12 +1030,12 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
-        var tilt = controller.getTilt();
+        var tilt = controller.tilt;
         var newTilt = CesiumMath.toRadians(45.0);
-        controller.setTilt(newTilt);
+        controller.tilt = newTilt;
 
-        expect(controller.getTilt()).not.toEqual(tilt);
-        expect(controller.getTilt()).toEqualEpsilon(newTilt, CesiumMath.EPSILON14);
+        expect(controller.tilt).not.toEqual(tilt);
+        expect(controller.tilt).toEqualEpsilon(newTilt, CesiumMath.EPSILON14);
     });
 
     it('get pick ray throws without a position', function() {

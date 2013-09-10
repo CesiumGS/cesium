@@ -38,7 +38,7 @@ defineSuite([
     });
 
     it('get view matrix', function() {
-        var viewMatrix = camera.getViewMatrix();
+        var viewMatrix = camera.viewMatrix;
         var position = camera.position;
         var up = camera.up;
         var dir = camera.direction;
@@ -56,14 +56,14 @@ defineSuite([
     });
 
     it('get inverse view matrix', function() {
-        var expected = camera.getViewMatrix().inverse();
-        expect(expected).toEqualEpsilon(camera.getInverseViewMatrix(), CesiumMath.EPSILON15);
+        var expected = camera.viewMatrix.inverse();
+        expect(expected).toEqualEpsilon(camera.inverseViewMatrix, CesiumMath.EPSILON15);
     });
 
     it('get inverse transform', function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
         var expected = camera.transform.inverseTransformation();
-        expect(expected).toEqual(camera.getInverseTransform());
+        expect(expected).toEqual(camera.inverseTransform);
     });
 
     it('worldToCameraCoordinates throws without cartesian', function() {
