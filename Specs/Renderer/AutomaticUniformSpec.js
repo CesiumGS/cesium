@@ -67,11 +67,11 @@ defineSuite([
                     return new Cartesian2(1.0, 0.1);
                 }
             },
-            position : defaultValue(position, Cartesian3.ZERO.clone()),
+            position : defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
             getPositionWC : function() { return this.position; },
-            getDirectionWC : function() { return defaultValue(direction, Cartesian3.UNIT_Z.clone()); },
-            getRightWC : function() { return defaultValue(right, Cartesian3.UNIT_X.clone()); },
-            getUpWC : function() { return defaultValue(up, Cartesian3.UNIT_Y.clone()); }
+            getDirectionWC : function() { return defaultValue(direction, Cartesian3.clone(Cartesian3.UNIT_Z)); },
+            getRightWC : function() { return defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)); },
+            getUpWC : function() { return defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y)); }
         };
     }
 
