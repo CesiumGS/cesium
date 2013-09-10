@@ -47,18 +47,43 @@ defineSuite([
 
     it('addCollection/removeCollection works', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
+        dynamicObjectCollection.add(new DynamicObject());
+
         var dynamicObjectCollection2 = new DynamicObjectCollection();
+        dynamicObjectCollection2.add(new DynamicObject());
 
         var composite = new CompositeDynamicObjectCollection();
         composite.addCollection(dynamicObjectCollection);
+        expect(composite.getCollectionsLength()).toEqual(1);
+        expect(composite.getObjects().length).toEqual(1);
+
         composite.addCollection(dynamicObjectCollection2);
         expect(composite.getCollectionsLength()).toEqual(2);
+        expect(composite.getObjects().length).toEqual(2);
 
         expect(composite.removeCollection(dynamicObjectCollection)).toEqual(true);
+        expect(composite.getObjects().length).toEqual(1);
+
         expect(composite.removeCollection(dynamicObjectCollection2)).toEqual(true);
+        expect(composite.getObjects().length).toEqual(0);
         expect(composite.getCollectionsLength()).toEqual(0);
 
         expect(composite.removeCollection(dynamicObjectCollection)).toEqual(false);
+    });
+
+    it('addCollection works with index', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
+        var dynamicObjectCollection3 = new DynamicObjectCollection();
+
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection3);
+
+        composite.addCollection(dynamicObjectCollection2, 1);
+        expect(composite.getCollection(0)).toBe(dynamicObjectCollection);
+        expect(composite.getCollection(1)).toBe(dynamicObjectCollection2);
+        expect(composite.getCollection(2)).toBe(dynamicObjectCollection3);
     });
 
     it('containsCollection works', function() {
@@ -113,14 +138,25 @@ defineSuite([
 
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(1);
         composite.raiseCollection(dynamicObjectCollection2);
+
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(2);
         composite.lowerCollection(dynamicObjectCollection2);
+
         composite.lowerCollection(dynamicObjectCollection2);
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+
         composite.lowerCollection(dynamicObjectCollection2);
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+
         composite.raiseCollectionToTop(dynamicObjectCollection2);
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(2);
+
+        composite.raiseCollectionToTop(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(2);
+
+        composite.lowerCollectionToBottom(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+
         composite.lowerCollectionToBottom(dynamicObjectCollection2);
         expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
     });
@@ -456,7 +492,97 @@ defineSuite([
         expect(compositeObject.billboard.show).toBeUndefined();
     });
 
-    it('resumeEvents throws if no matching suspendEvents ', function() {
+    it('addCollection throws with undefined collection', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.addCollection(undefined);
+        }).toThrow();
+    });
+
+    it('addCollection throws if negative index', function() {
+        var collection = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.addCollection(collection, -1);
+        }).toThrow();
+    });
+
+    it('addCollection throws if index greater than length', function() {
+        var collection = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.addCollection(collection, 1);
+        }).toThrow();
+    });
+
+    it('getCollection throws with undefined index', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.getCollection(undefined);
+        }).toThrow();
+    });
+
+    it('raiseCollection throws if collection not in composite', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        var collection = new DynamicObjectCollection();
+        expect(function() {
+            composite.raiseCollection(collection);
+        }).toThrow();
+    });
+
+    it('raiseCollectionToTop throws if collection not in composite', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        var collection = new DynamicObjectCollection();
+        expect(function() {
+            composite.raiseCollectionToTop(collection);
+        }).toThrow();
+    });
+
+    it('lowerCollection throws if collection not in composite', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        var collection = new DynamicObjectCollection();
+        expect(function() {
+            composite.lowerCollection(collection);
+        }).toThrow();
+    });
+
+    it('lowerCollectionToBottom throws if collection not in composite', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        var collection = new DynamicObjectCollection();
+        expect(function() {
+            composite.lowerCollectionToBottom(collection);
+        }).toThrow();
+    });
+
+    it('raiseCollection throws if collection not defined', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.raiseCollection(undefined);
+        }).toThrow();
+    });
+
+    it('raiseCollectionToTop throws if collection not defined', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.raiseCollectionToTop(undefined);
+        }).toThrow();
+    });
+
+    it('lowerCollection throws if collection not defined', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.lowerCollection(undefined);
+        }).toThrow();
+    });
+
+    it('lowerCollectionToBottom throws if collection not defined', function() {
+        var composite = new CompositeDynamicObjectCollection();
+        expect(function() {
+            composite.lowerCollectionToBottom(undefined);
+        }).toThrow();
+    });
+
+    it('resumeEvents throws if no matching suspendEvents', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.resumeEvents();
