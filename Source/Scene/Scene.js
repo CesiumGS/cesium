@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -44,6 +45,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        DeveloperError,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -867,12 +869,18 @@ define([
      *
      * @memberof Scene
      *
-     * @param {Cartesian2} Window coordinates to perform picking on.
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
      * @returns {Object} Picked primitive.
      *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
      */
     Scene.prototype.pick = function(windowPosition) {
+        if(!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+
         var context = this._context;
         var primitives = this._primitives;
         var frameState = this._frameState;
@@ -898,51 +906,50 @@ define([
         return this._pickFramebuffer.end(scratchRectangle);
     };
 
-
     /**
      * Returns a list of primitives at a particular window coordinate position. The primitives in the list are ordered
      * by their visual order in the scene (front to back).
      *
      * @memberof Scene
      *
-     * @param {Cartesian2} Window coordinates to perform picking on.
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
      * @returns {Array} Array of picked primitives.
      *
-     * @exception {RuntimeError} unknown method of hiding primitive.
+     * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
      * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition) {
+        // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
+        // we could update the primitive once, and then just execute their commands for each pass,
+        // and cull commands for picked primitives.  e.g., base on the command's owner.
+        if (!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
 
         var pickedPrimitives = [];
 
         var primitive = this.pick(windowPosition);
-        while(typeof primitive !== 'undefined') {
+        while (defined(primitive)) {
             pickedPrimitives.push(primitive);
 
             // hide the picked primitive and call picking again to get the next primitive
-            if(typeof primitive.setShow === 'function') {
+            if (typeof primitive.setShow === 'function') {
                 primitive.setShow(false);
-            }
-            else if (typeof primitive.show !== 'undefined'){
+            } else if (defined(primitive.show)) {
                 primitive.show = false;
-            }
-            else {
-                throw new RuntimeError('unknown method of hiding primitive.');
             }
 
             primitive = this.pick(windowPosition);
         }
 
         // unhide the picked primitives
-        for(var i=0; i<pickedPrimitives.length; ++i) {
-
-            if(typeof pickedPrimitives[i].setShow === 'function') {
+        for ( var i = 0; i < pickedPrimitives.length; ++i) {
+            if (typeof pickedPrimitives[i].setShow === 'function') {
                 pickedPrimitives[i].setShow(true);
-            }
-            else {
+            } else {
                 pickedPrimitives[i].show = true;
             }
         }
