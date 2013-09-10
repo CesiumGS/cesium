@@ -9,6 +9,7 @@ define([
         '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Matrix2',
@@ -50,6 +51,7 @@ define([
         combine,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Cartesian2,
         Matrix2,
@@ -396,9 +398,11 @@ define([
         this._count = undefined;
 
         initializeMaterial(description, this);
-        Object.defineProperty(this, 'type', {
-            value : this.type,
-            writable : false
+        defineProperties(this, {
+            type : {
+                value : this.type,
+                writable : false
+            }
         });
 
         if (!defined(Material._uniformList[this.type])) {
