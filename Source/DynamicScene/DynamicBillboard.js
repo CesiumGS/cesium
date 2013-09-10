@@ -31,7 +31,7 @@ define(['../Core/defaultValue',
         this._eyeOffset = undefined;
         this._pixelOffset = undefined;
         this._show = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicBillboard.prototype, {
@@ -40,9 +40,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

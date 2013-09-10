@@ -28,7 +28,7 @@ define(['../Core/defaultValue',
         this._intersectionColor = undefined;
         this._intersectionWidth = undefined;
         this._material = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicPyramid.prototype, {
@@ -37,9 +37,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPyramid.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

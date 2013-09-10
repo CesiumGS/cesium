@@ -23,7 +23,7 @@ define(['../Core/defaultValue',
     var DynamicPolygon = function() {
         this._show = undefined;
         this._material = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicPolygon.prototype, {
@@ -32,9 +32,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

@@ -8,9 +8,16 @@ Beta Releases
 
 * Breaking changes:
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+   * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
+      * `getObject` has been renamed `getById`
+      * `removeObject` has been renamed `removeById`
+      * `collectionChanged` event added for notification of objects being added or removed.
+   * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
 * Added `CorridorOutlineGeometry`.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 
 ### b20 - 2013-09-03
 

@@ -25,7 +25,7 @@ define(['../Core/defaultValue',
         this._outlineWidth = undefined;
         this._show = undefined;
         this._width = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicPolyline.prototype, {
@@ -34,9 +34,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolyline.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

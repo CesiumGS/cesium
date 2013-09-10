@@ -20,7 +20,7 @@ define(['../Core/createGuid',
         createObservableProperty) {
     "use strict";
 
-    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyAssigned', //
+    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyChanged', //
                                  'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
 
     /**
@@ -61,7 +61,7 @@ define(['../Core/createGuid',
         this._vector = undefined;
         this._viewFrom = undefined;
 
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
         this._propertyNames = ['availability', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
@@ -73,9 +73,9 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
         /**
@@ -118,7 +118,7 @@ define(['../Core/createGuid',
 
                     var oldValue = this._availability;
                     this._availability = value;
-                    this._propertyAssigned.raiseEvent(this, 'availability', value, oldValue);
+                    this._propertyChanged.raiseEvent(this, 'availability', value, oldValue);
                 }
             }
         },
@@ -135,7 +135,7 @@ define(['../Core/createGuid',
                 var oldValue = this._position;
                 if (value !== oldValue) {
                     this._position = value;
-                    this._propertyAssigned.raiseEvent(this, 'position', value, oldValue);
+                    this._propertyChanged.raiseEvent(this, 'position', value, oldValue);
                 }
             }
         },
@@ -152,7 +152,7 @@ define(['../Core/createGuid',
                 var oldValue = this._orientation;
                 if (value !== oldValue) {
                     this._orientation = value;
-                    this._propertyAssigned.raiseEvent(this, 'orientation', value, oldValue);
+                    this._propertyChanged.raiseEvent(this, 'orientation', value, oldValue);
                 }
             }
         },
@@ -170,7 +170,7 @@ define(['../Core/createGuid',
                 var oldValue = this._viewFrom;
                 if (value !== oldValue) {
                     this._viewFrom = value;
-                    this._propertyAssigned.raiseEvent(this, 'viewFrom', value, oldValue);
+                    this._propertyChanged.raiseEvent(this, 'viewFrom', value, oldValue);
                 }
             }
         },

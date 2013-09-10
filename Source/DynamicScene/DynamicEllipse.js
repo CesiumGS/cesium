@@ -35,7 +35,7 @@ define(['../Core/Cartesian3',
         this._lastSemiMinorAxis = undefined;
         this._lastBearing = undefined;
         this._cachedVertexPositions = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicEllipse.prototype, {
@@ -44,9 +44,9 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

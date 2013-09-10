@@ -15,7 +15,7 @@ define(function() {
                 var oldValue = this[privateName];
                 if (oldValue !== value) {
                     this[privateName] = value;
-                    this._propertyAssigned.raiseEvent(this, name, value, oldValue);
+                    this._propertyChanged.raiseEvent(this, name, value, oldValue);
                 }
             }
         };

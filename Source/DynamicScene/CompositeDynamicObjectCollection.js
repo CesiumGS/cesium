@@ -40,9 +40,9 @@ define(['../Core/defined',
     }
 
     function observeProperty(that, dynamicObject, propertyName, property, eventHash) {
-        if (defined(property) && defined(property.propertyAssigned)) {
-            var subPropertyAssigned = createCallback(that, dynamicObject, propertyName);
-            eventHash[propertyName] = property.propertyAssigned.addEventListener(subPropertyAssigned);
+        if (defined(property) && defined(property.propertyChanged)) {
+            var subpropertyChanged = createCallback(that, dynamicObject, propertyName);
+            eventHash[propertyName] = property.propertyChanged.addEventListener(subpropertyChanged);
         }
     }
 
@@ -55,7 +55,7 @@ define(['../Core/defined',
     }
 
     function subscribe(that, dynamicObject) {
-        dynamicObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+        dynamicObject.propertyChanged.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
 
         var eventHash = dynamicObject._compositeEvents;
         if (!defined(eventHash)) {
@@ -72,7 +72,7 @@ define(['../Core/defined',
     }
 
     function unsubscribe(that, dynamicObject) {
-        dynamicObject.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+        dynamicObject.propertyChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
 
         var eventHash = dynamicObject._compositeEvents;
         var properties = dynamicObject.propertyNames;
@@ -144,7 +144,7 @@ define(['../Core/defined',
     }
 
     /**
-     * Non-destructively composites multiple DynamicObjectCollection instances into a single collection.
+     * Non-destructively composites multiple {@link DynamicObjectCollection} instances into a single collection.
      * If a DynamicObject with the same ID exists in multiple collections, it is non-destructively
      * merged into a single new object instance.  If an object has the same property in multiple
      * collections, the property of the DynamicObject in the last collection of the list it
@@ -155,8 +155,6 @@ define(['../Core/defined',
      * @constructor
      *
      * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
-     *
-     * @see DynamicObjectCollection
      */
     var CompositeDynamicObjectCollection = function(collections) {
         this._composite = new DynamicObjectCollection();
@@ -165,6 +163,21 @@ define(['../Core/defined',
         this._hash = {};
         recomposite(this);
     };
+
+    defineProperties(CompositeDynamicObjectCollection.prototype, {
+        /**
+         * Gets the event that is fired when objects are added or removed from the collection.
+         * The generated event is a {@link DynamicObjectCollection.collectionChangedEventCallback}.
+         * @memberof CompositeDynamicObjectCollection.prototype
+         *
+         * @type {Event}
+         */
+        collectionChanged : {
+            get : function() {
+                return this._composite._collectionChanged;
+            }
+        }
+    });
 
     /**
      * Adds a collection to the composite.
@@ -364,21 +377,6 @@ define(['../Core/defined',
         recomposite(this);
     };
 
-    defineProperties(CompositeDynamicObjectCollection.prototype, {
-        /**
-         * Gets the event that is fired when objects are added or removed from the collection.
-         * The generated event is a {@link DynamicObjectCollection.collectionChangedEventCallback}.
-         * @memberof DynamicObjectCollection.prototype
-         *
-         * @type {Event}
-         */
-        collectionChanged : {
-            get : function() {
-                return this._composite._collectionChanged;
-            }
-        }
-    });
-
     /**
      * Prevents {@link DynamicObjectCollection#collectionChanged} events from being raised
      * until a corresponding call is made to {@link DynamicObjectCollection#resumeEvents}, at which
@@ -386,7 +384,7 @@ define(['../Core/defined',
      * This allows for many items to be added and removed efficiently.
      * This function is reference counted and can safely be called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
-     * @memberof DynamicObjectCollection
+     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.suspendEvents = function() {
         this._composite.suspendEvents();
@@ -398,7 +396,7 @@ define(['../Core/defined',
      * will be triggered as a single event when this function is called.
      * This function is reference counted and can safely be called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
-     * @memberof DynamicObjectCollection
+     * @memberof CompositeDynamicObjectCollection
      *
      * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
      */
@@ -421,7 +419,7 @@ define(['../Core/defined',
 
     /**
      * Gets an object with the specified id.
-     * @memberof DynamicObjectCollection
+     * @memberof CompositeDynamicObjectCollection
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
@@ -435,7 +433,7 @@ define(['../Core/defined',
     /**
      * Gets the array of DynamicObject instances in the collection.
      * The array should not be modified directly.
-     * @memberof DynamicObjectCollection
+     * @memberof CompositeDynamicObjectCollection
      *
      * @returns {Array} the array of DynamicObject instances in the collection.
      */

@@ -32,7 +32,7 @@ define(['../Core/defaultValue',
         this._pixelOffset = undefined;
         this._scale = undefined;
         this._show = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicLabel.prototype, {
@@ -41,9 +41,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicLabel.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

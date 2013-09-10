@@ -24,7 +24,7 @@ define(['../Core/defaultValue',
         this._show = undefined;
         this._radii = undefined;
         this._material = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicEllipsoid.prototype, {
@@ -33,9 +33,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicEllipsoid.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 

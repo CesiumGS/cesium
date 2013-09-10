@@ -28,7 +28,7 @@ define(['../Core/defaultValue',
         this._resolution = undefined;
         this._leadTime = undefined;
         this._trailTime = undefined;
-        this._propertyAssigned = new Event();
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicPath.prototype, {
@@ -37,9 +37,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPath.prototype
          * @type {Event}
          */
-        propertyAssigned : {
+        propertyChanged : {
             get : function() {
-                return this._propertyAssigned;
+                return this._propertyChanged;
             }
         },
 
