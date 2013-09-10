@@ -844,6 +844,8 @@ define([
         } else if (this._mode === SceneMode.SCENE3D) {
             return getTilt3D(this);
         }
+
+        return undefined;
     };
 
     /**
