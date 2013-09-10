@@ -56,7 +56,7 @@ define([
         } else {
             var i = 2;
             var finalId = id;
-            while (defined(dynamicObjectCollection.getObject(finalId))) {
+            while (defined(dynamicObjectCollection.getById(finalId))) {
                 finalId = id + "_" + i;
                 i++;
             }
@@ -429,7 +429,7 @@ define([
             }
         }
 
-        this._dynamicObjectCollection.clear();
+        this._dynamicObjectCollection.removeAll();
 
         var dataSource = this;
         return when(crsFunction, function(crsFunction) {

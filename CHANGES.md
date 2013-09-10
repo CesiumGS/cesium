@@ -8,6 +8,11 @@ Beta Releases
 
 * Breaking changes:
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+   * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
+      * `getObject` has been renamed `getById`
+      * `removeObject` has been renamed `removeById`
+      * `collectionChanged` event added for notification of objects being added or removed.
+   * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -15,6 +20,8 @@ Beta Releases
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 
 ### b20 - 2013-09-03
 

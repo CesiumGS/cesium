@@ -1,10 +1,17 @@
 /*global define*/
-define([
+define(['../Core/defaultValue',
         '../Core/defined',
-        '../Core/defaultValue'
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
-         defined,
-         defaultValue) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -13,64 +20,98 @@ define([
      * @constructor
      */
     var DynamicPoint = function() {
+        this._color = undefined;
+        this._pixelSize = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._show = undefined;
+        this._propertyChanged = new Event();
+    };
+
+    defineProperties(DynamicPoint.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPoint.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
+            }
+        },
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's color.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createObservableProperty('color', '_color'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.pixelSize = undefined;
+        pixelSize : createObservableProperty('pixelSize', '_pixelSize'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.outlineColor = undefined;
+        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.outlineWidth = undefined;
+        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : createObservableProperty('show', '_show')
+    });
 
     /**
-     * Given two DynamicObjects, takes the point properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Duplicates a DynamicPoint instance.
+     * @memberof DynamicPoint
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPoint} [result] The object onto which to store the result.
+     * @returns {DynamicPoint} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
-        var pointToMerge = objectToMerge.point;
-        if (defined(pointToMerge)) {
-
-            var targetPoint = targetObject.point;
-            if (!defined(targetPoint)) {
-                targetObject.point = targetPoint = new DynamicPoint();
-            }
-
-            targetPoint.color = defaultValue(targetPoint.color, pointToMerge.color);
-            targetPoint.pixelSize = defaultValue(targetPoint.pixelSize, pointToMerge.pixelSize);
-            targetPoint.outlineColor = defaultValue(targetPoint.outlineColor, pointToMerge.outlineColor);
-            targetPoint.outlineWidth = defaultValue(targetPoint.outlineWidth, pointToMerge.outlineWidth);
-            targetPoint.show = defaultValue(targetPoint.show, pointToMerge.show);
+    DynamicPoint.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicPoint();
         }
+        result.color = this.color;
+        result.pixelSize = this.pixelSize;
+        result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
+        result.show = this.show;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the point associated with it.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicPoint
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the point from.
+     * @param {DynamicPoint} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPoint.undefineProperties = function(dynamicObject) {
-        dynamicObject.point = undefined;
+    DynamicPoint.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.color = defaultValue(this.color, source.color);
+        this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.show = defaultValue(this.show, source.show);
     };
 
     return DynamicPoint;
