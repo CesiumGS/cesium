@@ -104,8 +104,8 @@ define(['../Core/createGuid',
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
+         * @memberof DynamicObject.prototype
          * @type {TimeInterval}
-         * @default undefined
          */
         availability : {
             get : function() {
@@ -124,8 +124,8 @@ define(['../Core/createGuid',
         },
         /**
          * Gets or sets the position.
+         * @memberof DynamicObject.prototype
          * @type {PositionProperty}
-         * @default undefined
          */
         position : {
             get : function() {
@@ -141,8 +141,8 @@ define(['../Core/createGuid',
         },
         /**
          * Gets or sets the orientation.
+         * @memberof DynamicObject.prototype
          * @type {Property}
-         * @default undefined
          */
         orientation : {
             get : function() {
@@ -159,8 +159,8 @@ define(['../Core/createGuid',
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
+         * @memberof DynamicObject.prototype
          * @type {Cartesian3}
-         * @default undefined
          */
         viewFrom : {
             get : function() {
@@ -176,81 +176,83 @@ define(['../Core/createGuid',
         },
         /**
          * Gets or sets the billboard.
+         * @memberof DynamicObject.prototype
          * @type {DynamicBillboard}
-         * @default undefined
          */
         billboard : createObservableProperty('billboard', '_billboard'),
         /**
          * Gets or sets the cone.
+         * @memberof DynamicObject.prototype
          * @type {DynamicCone}
-         * @default undefined
          */
         cone : createObservableProperty('cone', '_cone'),
 
         /**
          * Gets or sets the ellipsoid.
+         * @memberof DynamicObject.prototype
          * @type {DynamicEllipsoid}
-         * @default undefined
          */
         ellipsoid : createObservableProperty('ellipsoid', '_ellipsoid'),
         /**
          * Gets or sets the ellipse.
+         * @memberof DynamicObject.prototype
          * @type {DynamicEllipse}
-         * @default undefined
          */
         ellipse : createObservableProperty('ellipse', '_ellipse'),
         /**
          * Gets or sets the label.
+         * @memberof DynamicObject.prototype
          * @type {DynamicLabel}
-         * @default undefined
          */
         label : createObservableProperty('label', '_label'),
         /**
          * Gets or sets the path.
+         * @memberof DynamicObject.prototype
          * @type {DynamicPath}
-         * @default undefined
          */
         path : createObservableProperty('path', '_path'),
         /**
          * Gets or sets the point graphic.
+         * @memberof DynamicObject.prototype
          * @type {DynamicPoint}
-         * @default undefined
          */
         point : createObservableProperty('point', '_point'),
         /**
          * Gets or sets the polygon.
+         * @memberof DynamicObject.prototype
          * @type {DynamicPolygon}
-         * @default undefined
          */
         polygon : createObservableProperty('polygon', '_polygon'),
         /**
          * Gets or sets the polyline.
+         * @memberof DynamicObject.prototype
          * @type {DynamicPolyline}
-         * @default undefined
          */
         polyline : createObservableProperty('polyline', '_polyline'),
         /**
          * Gets or sets the pyramid.
+         * @memberof DynamicObject.prototype
          * @type {DynamicPyramid}
-         * @default undefined
          */
         pyramid : createObservableProperty('pyramid', '_pyramid'),
         /**
          * Gets or sets the vertex positions.
+         * @memberof DynamicObject.prototype
          * @type {Property}
-         * @default undefined
          */
         vertexPositions : createObservableProperty('vertexPositions', '_vertexPositions'),
         /**
          * Gets or sets the vector.
+         * @memberof DynamicObject.prototype
          * @type {DynamicVector}
-         * @default undefined
          */
         vector : createObservableProperty('vector', '_vector')
     });
 
     /**
      * Given a time, returns true if this object should have data during that time.
+     * @memberof DynamicObject
+     *
      * @param {JulianDate} time The time to check availability for.
      * @exception {DeveloperError} time is required.
      * @returns true if the object should have data during the provided time, false otherwise.
@@ -276,14 +278,29 @@ define(['../Core/createGuid',
         return availabilityValue;
     };
 
+    /**
+     * Adds a property to this object.  Once a property is added, it can be
+     * observed with {@link DynamicObject.propertyChanged} and composited
+     * with {@link CompositeDynamicObjectCollection}
+     * @memberof DynamicObject
+     *
+     * @param propertyName The name of the property to add.
+     *
+     * @exception {DeveloperError} propertyName is required.
+     * @exception {DeveloperError} "propertyName" is a reserved property name.
+     * @exception {DeveloperError} "propertyName" is already a registered property.
+     */
     DynamicObject.prototype.addProperty = function(propertyName) {
+        if (!defined(propertyName)) {
+            throw new DeveloperError('propertyName is required.');
+        }
+
         var propertyNames = this._propertyNames;
         if (propertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError();
+            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError();
-
+            throw new DeveloperError(propertyName + ' is already a registered property.');
         }
 
         propertyNames.push(propertyName);
@@ -291,21 +308,46 @@ define(['../Core/createGuid',
         Object.defineProperty(this, propertyName, createObservableProperty(propertyName, '_' + propertyName));
     };
 
+    /**
+     * Removed a property previously added with addProperty.
+     * @memberof DynamicObject
+     *
+     * @param propertyName The name of the property to remove.
+     *
+     * @exception {DeveloperError} propertyName is required.
+     * @exception {DeveloperError} "propertyName" is a reserved property name.
+     * @exception {DeveloperError} "propertyName" is not a registered property.
+     */
     DynamicObject.prototype.removeProperty = function(propertyName) {
+        if (!defined(propertyName)) {
+            throw new DeveloperError('propertyName is required.');
+        }
+
         var propertyNames = this._propertyNames;
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError();
+            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         if (propertyNames.indexOf(propertyName) === -1) {
-            throw new DeveloperError();
+            throw new DeveloperError(propertyName + ' is not a registered property.');
         }
 
         this._propertyNames.push(propertyName);
         delete this[propertyName];
     };
 
-    DynamicObject.prototype.merge = function(objectToMerge) {
-        this.availability = defaultValue(objectToMerge.availability, this.availability);
+    /**
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicObject
+     *
+     * @param {DynamicObject} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
+     */
+    DynamicObject.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.availability = defaultValue(source.availability, this.availability);
 
         var propertyNames = this._propertyNames;
         var propertyNamesLength = propertyNames.length;
@@ -313,23 +355,26 @@ define(['../Core/createGuid',
             var name = propertyNames[i];
             //TODO Remove this once availability is refactored.
             if (name !== 'availability') {
-                var target = this[name];
-                var source = objectToMerge[name];
-                if (defined(source)) {
-                    if (defined(target)) {
-                        if (defined(target.merge)) {
-                            target.merge(source);
+                var targetProperty = this[name];
+                var sourceProperty = source[name];
+                if (defined(sourceProperty)) {
+                    if (defined(targetProperty)) {
+                        if (defined(targetProperty.merge)) {
+                            targetProperty.merge(sourceProperty);
                         }
-                    } else if (defined(source.merge) && defined(source.clone)) {
-                        this[name] = source.clone();
+                    } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
+                        this[name] = sourceProperty.clone();
                     } else {
-                        this[name] = source;
+                        this[name] = sourceProperty;
                     }
                 }
             }
         }
     };
 
+    /**
+     * @private
+     */
     DynamicObject.prototype.clean = function() {
         var propertyNames = this._propertyNames;
         var propertyNamesLength = propertyNames.length;

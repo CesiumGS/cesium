@@ -113,6 +113,7 @@ define(['../Core/Clock',
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
+     * @memberof DynamicClock
      *
      * @param {DynamicClock} source The object to be merged into this object.
      * @exception {DeveloperError} source is required.

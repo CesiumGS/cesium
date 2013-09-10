@@ -81,6 +81,7 @@ define(['../Core/defaultValue',
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
+     * @memberof DynamicEllipsoid
      *
      * @param {DynamicEllipsoid} source The object to be merged into this object.
      * @exception {DeveloperError} source is required.
