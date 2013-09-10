@@ -973,8 +973,8 @@ define([
         var size;
         var offset;
 
-        var toCenter = camera.getPositionWC().subtract(boundingVolume.center, scratchToCenter);
-        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
+        var toCenter = camera.positionWC.subtract(boundingVolume.center, scratchToCenter);
+        var proj = camera.directionWC.multiplyByScalar(toCenter.dot(camera.directionWC), scratchProj);
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
         var canvas = context.getCanvas();
