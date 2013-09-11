@@ -44,22 +44,13 @@ defineSuite([
 
     function createMockCamera(view, projection, infiniteProjection, position, direction, right, up) {
         return {
-            getViewMatrix : function() {
-                return defaultValue(view, Matrix4.IDENTITY.clone());
-            },
-            getInverseViewMatrix : function() {
-                var m = defaultValue(view, Matrix4.IDENTITY.clone());
-                return Matrix4.inverseTransformation(m);
-            },
+            viewMatrix : defaultValue(view, Matrix4.IDENTITY.clone()),
+            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.IDENTITY.clone())),
             frustum : {
                 near : 1.0,
                 far : 1000.0,
-                getProjectionMatrix : function() {
-                    return defaultValue(projection, Matrix4.IDENTITY.clone());
-                },
-                getInfiniteProjectionMatrix : function() {
-                    return defaultValue(infiniteProjection, Matrix4.IDENTITY.clone());
-                },
+                projectionMatrix : defaultValue(projection, Matrix4.IDENTITY.clone()),
+                infiniteProjectionMatrix : defaultValue(infiniteProjection, Matrix4.IDENTITY.clone()),
                 computeCullingVolume : function() {
                     return undefined;
                 },
@@ -68,10 +59,10 @@ defineSuite([
                 }
             },
             position : defaultValue(position, Cartesian3.ZERO.clone()),
-            getPositionWC : function() { return this.position; },
-            getDirectionWC : function() { return defaultValue(direction, Cartesian3.UNIT_Z.clone()); },
-            getRightWC : function() { return defaultValue(right, Cartesian3.UNIT_X.clone()); },
-            getUpWC : function() { return defaultValue(up, Cartesian3.UNIT_Y.clone()); }
+            positionWC : defaultValue(position, Cartesian3.ZERO.clone()),
+            directionWC : defaultValue(direction, Cartesian3.UNIT_Z.clone()),
+            rightWC : defaultValue(right, Cartesian3.UNIT_X.clone()),
+            upWC : defaultValue(up, Cartesian3.UNIT_Y.clone())
         };
     }
 
