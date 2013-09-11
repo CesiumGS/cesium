@@ -358,7 +358,7 @@ define([
             }
         }
 
-        var cameraPosition = frameState.camera.getPositionWC();
+        var cameraPosition = frameState.camera.positionWC;
 
         var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
@@ -797,7 +797,7 @@ define([
     var centerEyeScratch = new Cartesian4();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
-        var viewMatrix = frameState.camera.getViewMatrix();
+        var viewMatrix = frameState.camera.viewMatrix;
 
         var maxTextures = context.getMaximumTextureImageUnits();
 

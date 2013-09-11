@@ -137,9 +137,7 @@ define([
          *
          * @type Boolean
          *
-         * @default true
-         *
-         * @private
+         * @default false
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
 

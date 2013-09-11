@@ -9,7 +9,9 @@ define([
         './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './Color',
+        './Cartesian3'
     ], function(
         defined,
         DeveloperError,
@@ -20,7 +22,9 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        Color,
+        Cartesian3) {
     "use strict";
 
     /**
@@ -30,11 +34,14 @@ define([
      * @alias SimplePolylineGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
+     * @exception {DeveloperError} colors has an invalid length.
      *
-     * @see SimplePolylineGeometry.createGeometry
+     * @see SimplePolylineGeometry#createGeometry
      *
      * @example
      * // A polyline with two connected line segments
@@ -50,12 +57,20 @@ define([
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
+        var colors = options.colors;
+        var perVertex = defaultValue(options.colorsPerVertex, false);
 
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
 
+        if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
+            throw new DeveloperError('colors has an invalid length.');
+        }
+
         this._positions = positions;
+        this._colors = colors;
+        this._perVertex = perVertex;
         this._workerName = 'createSimplePolylineGeometry';
     };
 
@@ -67,18 +82,50 @@ define([
      */
     SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
         var positions = simplePolylineGeometry._positions;
+        var colors = simplePolylineGeometry._colors;
+        var perVertex = simplePolylineGeometry._perVertex;
+
+        var perSegmentColors = defined(colors) && !perVertex;
 
         var i;
         var j = 0;
-        var numberOfPositions = positions.length;
-        var positionValues = new Float64Array(numberOfPositions * 3);
+        var k = 0;
 
-        for (i = 0; i < numberOfPositions; ++i) {
+        var length = positions.length;
+        var numberOfPositions = !perSegmentColors ? positions.length : positions.length * 2 - 2;
+
+        var positionValues = new Float64Array(numberOfPositions * 3);
+        var colorValues = defined(colors) ? new Uint8Array(numberOfPositions * 4) : undefined;
+
+        for (i = 0; i < length; ++i) {
             var p = positions[i];
 
-            positionValues[j++] = p.x;
-            positionValues[j++] = p.y;
-            positionValues[j++] = p.z;
+            var color;
+            if (perSegmentColors && i > 0) {
+                Cartesian3.pack(p, positionValues, j);
+                j += 3;
+
+                color = colors[i - 1];
+                colorValues[k++] = Color.floatToByte(color.red);
+                colorValues[k++] = Color.floatToByte(color.green);
+                colorValues[k++] = Color.floatToByte(color.blue);
+                colorValues[k++] = Color.floatToByte(color.alpha);
+            }
+
+            if (perSegmentColors && i === length - 1) {
+                break;
+            }
+
+            Cartesian3.pack(p, positionValues, j);
+            j += 3;
+
+            if (defined(colors)) {
+                color = colors[i];
+                colorValues[k++] = Color.floatToByte(color.red);
+                colorValues[k++] = Color.floatToByte(color.green);
+                colorValues[k++] = Color.floatToByte(color.blue);
+                colorValues[k++] = Color.floatToByte(color.alpha);
+            }
         }
 
         var attributes = new GeometryAttributes();
@@ -88,12 +135,21 @@ define([
             values : positionValues
         });
 
-        // From line strip to lines
-        var numberOfIndices = 2 * (numberOfPositions - 1);
+        if (defined(colors)) {
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                values : colorValues,
+                normalize : true
+            });
+        }
+
+        var numberOfIndices = !perSegmentColors ? 2 * (numberOfPositions - 1) : numberOfPositions;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
+        var indicesIncrement = perSegmentColors ? 2 : 1;
 
         j = 0;
-        for (i = 0; i < numberOfPositions - 1; ++i) {
+        for (i = 0; i < numberOfPositions - 1; i += indicesIncrement) {
             indices[j++] = i;
             indices[j++] = i + 1;
         }

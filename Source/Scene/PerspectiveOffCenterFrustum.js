@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -13,6 +14,7 @@ define([
         DeveloperError,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -95,34 +97,6 @@ define([
         this._infinitePerspective = undefined;
     };
 
-    /**
-     * Returns the perspective projection matrix computed from the view frustum.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @returns {Matrix4} The perspective projection matrix.
-     *
-     * @see PerspectiveOffCenterFrustum#getInfiniteProjectionMatrix
-     */
-    PerspectiveOffCenterFrustum.prototype.getProjectionMatrix = function() {
-        update(this);
-        return this._perspectiveMatrix;
-    };
-
-    /**
-     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @returns {Matrix4} The infinite perspective projection matrix.
-     *
-     * @see PerspectiveOffCenterFrustum#getProjectionMatrix
-     */
-    PerspectiveOffCenterFrustum.prototype.getInfiniteProjectionMatrix = function() {
-        update(this);
-        return this._infinitePerspective;
-    };
-
     function update(frustum) {
         if (!defined(frustum.right) || !defined(frustum.left) ||
             !defined(frustum.top) || !defined(frustum.bottom) ||
@@ -155,6 +129,36 @@ define([
             frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
         }
     }
+
+    defineProperties(PerspectiveOffCenterFrustum.prototype, {
+        /**
+         * The perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveOffCenterFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
+         */
+        projectionMatrix : {
+            get : function() {
+                update(this);
+                return this._perspectiveMatrix;
+            }
+        },
+
+        /**
+         * The perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveOffCenterFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveOffCenterFrustum#projectionMatrix
+         */
+        infiniteProjectionMatrix : {
+            get : function() {
+                update(this);
+                return this._infinitePerspective;
+            }
+        }
+    });
 
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();

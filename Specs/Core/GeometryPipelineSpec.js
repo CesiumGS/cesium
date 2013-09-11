@@ -553,12 +553,12 @@ defineSuite([
         var geometry = {};
         geometry.attributes = {};
         geometry.attributes.position = {
-            componentDatatype : ComponentDatatype.FLOAT,
+            componentDatatype : ComponentDatatype.DOUBLE,
             componentsPerAttribute : 3,
             values : [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z]
         };
 
-        geometry = GeometryPipeline.projectTo2D(geometry);
+        geometry = GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection();
@@ -583,6 +583,81 @@ defineSuite([
     it('projectTo2D throws without a geometry', function() {
         expect(function() {
             GeometryPipeline.projectTo2D(undefined);
+        }).toThrow();
+    });
+
+    it('projectTo2D throws without attributeName', function() {
+        expect(function() {
+            GeometryPipeline.projectTo2D(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }));
+        }).toThrow();
+    });
+
+    it('projectTo2D throws without attributeName3D', function() {
+        expect(function() {
+            GeometryPipeline.projectTo2D(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'position');
+        }).toThrow();
+    });
+
+    it('projectTo2D throws without attributeName2D', function() {
+        expect(function() {
+            GeometryPipeline.projectTo2D(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'position', 'position3D');
+        }).toThrow();
+    });
+
+    it('projectTo2D throws without attribute', function() {
+        expect(function() {
+            GeometryPipeline.projectTo2D(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'position', 'position3D', 'position2D');
+        }).toThrow();
+    });
+
+    it('projectTo2D throws without ComponentDatatype.DOUBLE', function() {
+        expect(function() {
+            var geometry = new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                        componentsPerAttribute : 1,
+                        values : [0.0]
+                    })
+                }
+            });
+            GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
         }).toThrow();
     });
 
@@ -668,14 +743,14 @@ defineSuite([
         expect(function() {
             GeometryPipeline.encodeAttribute(new Geometry({
                 attributes : {
-                    position : new GeometryAttribute({
+                    normal : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
                     })
                 },
                 primitiveType : PrimitiveType.POINTS
-            }), 'normal');
+            }), 'position', 'positionHigh', 'positionLow');
         }).toThrow();
     });
 
@@ -690,7 +765,7 @@ defineSuite([
                     })
                 }
             });
-            GeometryPipeline.encodeAttribute(geometry);
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
         }).toThrow();
     });
 

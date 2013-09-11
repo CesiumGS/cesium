@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/PerspectiveOffCenterFrustum'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         PerspectiveOffCenterFrustum) {
     "use strict";
@@ -63,34 +65,6 @@ define([
         this._far = this.far;
     };
 
-    /**
-     * Returns the perspective projection matrix computed from the view frustum.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @returns {Matrix4} The perspective projection matrix.
-     *
-     * @see PerspectiveFrustum#getInfiniteProjectionMatrix
-     */
-    PerspectiveFrustum.prototype.getProjectionMatrix = function() {
-        update(this);
-        return this._offCenterFrustum.getProjectionMatrix();
-    };
-
-    /**
-     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @returns {Matrix4} The infinite perspective projection matrix.
-     *
-     * @see PerspectiveFrustum#getProjectionMatrix
-     */
-    PerspectiveFrustum.prototype.getInfiniteProjectionMatrix = function() {
-        update(this);
-        return this._offCenterFrustum.getInfiniteProjectionMatrix();
-    };
-
     function update(frustum) {
         if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
@@ -125,6 +99,36 @@ define([
             f.far = frustum.far;
         }
     }
+
+    defineProperties(PerspectiveFrustum.prototype, {
+        /**
+         * The perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveFrustum#infiniteProjectionMatrix
+         */
+        projectionMatrix : {
+            get : function() {
+                update(this);
+                return this._offCenterFrustum.projectionMatrix;
+            }
+        },
+
+        /**
+         * The perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveFrustum#projectionMatrix
+         */
+        infiniteProjectionMatrix : {
+            get : function() {
+                update(this);
+                return this._offCenterFrustum.infiniteProjectionMatrix;
+            }
+        }
+    });
 
     /**
      * Creates a culling volume for this frustum.
