@@ -837,6 +837,8 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles TimeSpan', function() {
+        var pastDate = JulianDate.fromDate(new Date('1870'));
+        var futureDate = JulianDate.fromDate(new Date('2014'));
         var timeKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -860,7 +862,8 @@ defineSuite(['DynamicScene/KmlDataSource',
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         var billboard = objects[0].billboard;
         expect(billboard.show).toBeDefined();
-        //TODO Test the interval itself
+        expect(billboard.show.getValue(pastDate)).toBe(undefined);
+        expect(billboard.show.getValue(futureDate)).toBe(true);
     });
 
     it('processTimeSpan throws with empty dates', function() {
