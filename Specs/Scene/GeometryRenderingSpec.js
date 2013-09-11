@@ -104,7 +104,7 @@ defineSuite([
 
     function viewSphere3D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
@@ -154,7 +154,7 @@ defineSuite([
     function viewSphereCV(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius * 0.5;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -207,7 +207,7 @@ defineSuite([
     function viewSphere2D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -1046,7 +1046,7 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = frameState.camera.position.clone();
+                var translation = Cartesian3.clone(frameState.camera.position);
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);

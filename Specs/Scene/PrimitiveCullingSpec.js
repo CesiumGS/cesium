@@ -123,7 +123,7 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
@@ -159,7 +159,7 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
@@ -204,7 +204,7 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
@@ -236,7 +236,7 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);

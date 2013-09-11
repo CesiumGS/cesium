@@ -60,18 +60,18 @@ defineSuite([
     };
 
     beforeEach(function() {
-        position = Cartesian3.UNIT_Z.clone();
-        up = Cartesian3.UNIT_Y.clone();
+        position = Cartesian3.clone(Cartesian3.UNIT_Z);
+        up = Cartesian3.clone(Cartesian3.UNIT_Y);
         dir = Cartesian3.negate(Cartesian3.UNIT_Z);
         right = Cartesian3.cross(dir, up);
 
         canvas = new FakeCanvas();
 
         camera = new Camera(canvas);
-        camera.position = position.clone();
-        camera.up = up.clone();
-        camera.direction = dir.clone();
-        camera.right = right.clone();
+        camera.position = Cartesian3.clone(position);
+        camera.up = Cartesian3.clone(up);
+        camera.direction = Cartesian3.clone(dir);
+        camera.right = Cartesian3.clone(right);
 
         controller = camera.controller;
         controller.minimumZoomDistance = 0.0;
@@ -457,8 +457,8 @@ defineSuite([
 
     it('lookAt', function() {
         var target = new Cartesian3(-1.0, -1.0, 0.0);
-        var position = Cartesian3.UNIT_X;
-        var up = Cartesian3.UNIT_Z;
+        var position = Cartesian3.clone(Cartesian3.UNIT_X);
+        var up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         var tempCamera = camera.clone();
         tempCamera.controller.lookAt(position, target, up);
@@ -473,8 +473,8 @@ defineSuite([
     });
 
     it('lookAt throws with no eye parameter', function() {
-        var target = Cartesian3.ZERO;
-        var up = Cartesian3.ZERO;
+        var target = Cartesian3.clone(Cartesian3.ZERO);
+        var up = Cartesian3.clone(Cartesian3.ZERO);
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(undefined, target, up);
@@ -482,8 +482,8 @@ defineSuite([
     });
 
     it('lookAt throws with no target parameter', function() {
-        var eye = Cartesian3.ZERO;
-        var up = Cartesian3.ZERO;
+        var eye = Cartesian3.clone(Cartesian3.ZERO);
+        var up = Cartesian3.clone(Cartesian3.ZERO);
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(eye, undefined, up);
@@ -491,8 +491,8 @@ defineSuite([
     });
 
     it('lookAt throws with no up parameter', function() {
-        var eye = Cartesian3.ZERO;
-        var target = Cartesian3.ZERO;
+        var eye = Cartesian3.clone(Cartesian3.ZERO);
+        var target = Cartesian3.clone(Cartesian3.ZERO);
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(eye, target, undefined);
@@ -646,10 +646,10 @@ defineSuite([
                 -CesiumMath.PI_OVER_TWO,
                 Math.PI,
                 CesiumMath.PI_OVER_TWO);
-        var position = camera.position;
-        var direction = camera.direction.clone();
-        var up = camera.up.clone();
-        var right = camera.right.clone();
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
         controller._mode = SceneMode.SCENE3D;
         controller.getExtentCameraCoordinates(extent, position);
         expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
@@ -665,9 +665,9 @@ defineSuite([
                 -0.1,
                 CesiumMath.PI_OVER_TWO);
         var position = new Cartesian3();
-        var direction = camera.direction.clone();
-        var up = camera.up.clone();
-        var right = camera.right.clone();
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
         controller._mode = SceneMode.SCENE3D;
         position = controller.getExtentCameraCoordinates(extent);
         expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
@@ -717,9 +717,9 @@ defineSuite([
         var projection = new GeographicProjection();
         controller._mode = SceneMode.COLUMBUS_VIEW;
         controller._projection = projection;
-        var direction = camera.direction.clone();
-        var up = camera.up.clone();
-        var right = camera.right.clone();
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
         camera.position = controller.getExtentCameraCoordinates(extent);
         expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON8);
         expect(camera.direction).toEqual(direction);
@@ -737,10 +737,10 @@ defineSuite([
         var projection = new GeographicProjection();
         controller._mode = SceneMode.MORPHING;
         controller._projection = projection;
-        var position = camera.position.clone();
-        var direction = camera.direction.clone();
-        var up = camera.up.clone();
-        var right = camera.right.clone();
+        var position = Cartesian3.clone(camera.position);
+        var direction = Cartesian3.clone(camera.direction);
+        var up = Cartesian3.clone(camera.up);
+        var right = Cartesian3.clone(camera.right);
         controller.getExtentCameraCoordinates(extent, camera.position);
         expect(camera.position).toEqual(position);
         expect(camera.direction).toEqual(direction);

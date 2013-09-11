@@ -252,7 +252,7 @@ defineSuite([
     });
 
     it('lineSegmentPlane intersects', function() {
-        var normal = Cartesian3.UNIT_Y.clone();
+        var normal = Cartesian3.clone(Cartesian3.UNIT_Y);
         var point = new Cartesian3(0.0, 2.0, 0.0);
         var plane = Plane.fromPointNormal(point, normal);
 

@@ -263,7 +263,7 @@ defineSuite([
             command.uniformMap = this._um;
             command.modelMatrix = this._modelMatrix;
             command.executeInClosestFrustum = closestFrustum;
-            command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.ZERO.clone(), 500000.0) : undefined;
+            command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
 
             var commandList = new CommandLists();
             commandList.colorList.push(command);
