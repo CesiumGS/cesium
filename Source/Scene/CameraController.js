@@ -399,10 +399,10 @@ define([
         this.look(this._camera.direction, -amount);
     };
 
-    var appendTransformPosition = Cartesian4.UNIT_W.clone();
-    var appendTransformUp = Cartesian4.ZERO.clone();
-    var appendTransformRight = Cartesian4.ZERO.clone();
-    var appendTransformDirection = Cartesian4.ZERO.clone();
+    var appendTransformPosition = Cartesian4.clone(Cartesian4.UNIT_W);
+    var appendTransformUp = Cartesian4.clone(Cartesian4.ZERO);
+    var appendTransformRight = Cartesian4.clone(Cartesian4.ZERO);
+    var appendTransformDirection = Cartesian4.clone(Cartesian4.ZERO);
     function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
@@ -424,10 +424,10 @@ define([
         return oldTransform;
     }
 
-    var revertTransformPosition = Cartesian4.UNIT_W.clone();
-    var revertTransformUp = Cartesian4.ZERO.clone();
-    var revertTransformRight = Cartesian4.ZERO.clone();
-    var revertTransformDirection = Cartesian4.ZERO.clone();
+    var revertTransformPosition = Cartesian4.clone(Cartesian4.UNIT_W);
+    var revertTransformUp = Cartesian4.clone(Cartesian4.ZERO);
+    var revertTransformRight = Cartesian4.clone(Cartesian4.ZERO);
+    var revertTransformDirection = Cartesian4.clone(Cartesian4.ZERO);
     function revertTransform(controller, transform) {
         if (defined(transform)) {
             var camera = controller._camera;
@@ -860,8 +860,8 @@ define([
     }
 
     var viewExtentCVCartographic = new Cartographic();
-    var viewExtentCVNorthEast = Cartesian4.UNIT_W.clone();
-    var viewExtentCVSouthWest = Cartesian4.UNIT_W.clone();
+    var viewExtentCVNorthEast = Cartesian4.clone(Cartesian4.UNIT_W);
+    var viewExtentCVSouthWest = Cartesian4.clone(Cartesian4.UNIT_W);
     var viewExtentCVTransform = new Matrix4();
     function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
         var north = extent.north;

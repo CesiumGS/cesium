@@ -656,7 +656,7 @@ define([
         }
     }
 
-    var rotate3DRestrictedDirection = Cartesian4.ZERO.clone();
+    var rotate3DRestrictedDirection = Cartesian4.clone(Cartesian4.ZERO);
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
@@ -739,8 +739,8 @@ define([
         cameraController.constrainedAxis = oldAxis;
     }
 
-    var pan3DP0 = Cartesian4.UNIT_W.clone();
-    var pan3DP1 = Cartesian4.UNIT_W.clone();
+    var pan3DP0 = Cartesian4.clone(Cartesian4.UNIT_W);
+    var pan3DP1 = Cartesian4.clone(Cartesian4.UNIT_W);
     var pan3DTemp0 = new Cartesian3();
     var pan3DTemp1 = new Cartesian3();
     var pan3DTemp2 = new Cartesian3();
@@ -845,7 +845,7 @@ define([
     var tilt3DWindowPos = new Cartesian2();
     var tilt3DRay = new Ray();
     var tilt3DCart = new Cartographic();
-    var tilt3DCenter = Cartesian4.UNIT_W.clone();
+    var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
     var tilt3DTransform = new Matrix4();
     function tilt3D(controller, movement) {
         var cameraController = controller._cameraController;

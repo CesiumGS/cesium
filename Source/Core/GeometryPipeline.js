@@ -1133,7 +1133,7 @@ define([
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
             if (vertexNormalData.count > 0) {
-                Cartesian3.ZERO.clone(normal);
+                Cartesian3.clone(Cartesian3.ZERO, normal);
                 for (j = 0; j < vertexNormalData.count; j++) {
                     Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }

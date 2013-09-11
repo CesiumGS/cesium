@@ -251,7 +251,7 @@ define([
         }
 
         if (!defined(extent)) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }

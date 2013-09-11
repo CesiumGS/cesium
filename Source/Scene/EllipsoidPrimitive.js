@@ -87,7 +87,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.center = Cartesian3.ZERO.clone();
+        this.center = Cartesian3.clone(Cartesian3.ZERO);
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
