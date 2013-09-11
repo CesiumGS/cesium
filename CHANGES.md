@@ -7,6 +7,22 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
+```javascript
+var primitive = scene.pick(/* ... */);
+if (defined(primitive)) {
+   // Use primitive
+}
+```
+
+      should now look like:
+```javascript
+var p = scene.pick(/* ... */);
+if (defined(p) && defined(p.primitive)) {
+   // Use p.primitive
+}
+```
+
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
