@@ -297,12 +297,36 @@ defineSuite(['DynamicScene/KmlDataSource',
         }).toThrow();
     });
 
+    it('handles Coordinates without altitude', function() {
+        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
+        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
+        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
+        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+    <kml xmlns="http://www.opengis.net/kml/2.2">\
+    <Document>\
+    <Placemark>\
+      <LineString>\
+        <coordinates>1,2 \
+                     4,5 \
+        </coordinates>\
+      </LineString>\
+    </Placemark>\
+    </Document>\
+    </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var object = objects[0];
+        expect(objects.length).toEqual(1);
+        expect(object.vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(object.vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
+    });
+
     it('handles Polygon geometry', function() {
-        var coordinates = [[-122.365662, 37.826988, 0],
-                [-122.365202, 37.826302, 0],
-                [-122.364581, 37.82655, 0],
-                [-122.365038, 37.827237, 0],
-                [-122.365662, 37.826988, 0]];
+        var coordinates = [[-122.365662, 37.826988, 0], [-122.365202, 37.826302, 0], [-122.364581, 37.82655, 0], [-122.365038, 37.827237, 0], [-122.365662, 37.826988, 0]];
         coordinates = coordinatesArrayToCartesianArray(coordinates);
         var polygon = new DynamicPolygon();
         var material = new ColorMaterialProperty();
@@ -331,7 +355,7 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         var dynamicObject = objects[0];
-        for(var i = 0; i < coordinates.length; i++){
+        for ( var i = 0; i < coordinates.length; i++) {
             expect(dynamicObject.vertexPositions.getValue()[i]).toEqual(coordinates[i]);
         }
     });
@@ -605,13 +629,13 @@ defineSuite(['DynamicScene/KmlDataSource',
             <Document>\
             <Style id="testStyle">\
             <LineStyle>\
-            <color>000000ff</color>\
-            <width>4</width>\
-            <gx:labelVisibility>1</gx:labelVisibility>\
-            <gx:outerColor>ffffffff</gx:outerColor>\
-            <gx:outerWidth>0.0</gx:outerWidth>\
-            <gx:physicalWidth>0.0</gx:physicalWidth>\
-            <gx:labelVisibility>0</gx:labelVisibility>\
+                <color>000000ff</color>\
+                <width>4</width>\
+                <gx:labelVisibility>1</gx:labelVisibility>\
+                <gx:outerColor>ffffffff</gx:outerColor>\
+                <gx:outerWidth>0.0</gx:outerWidth>\
+                <gx:physicalWidth>0.0</gx:physicalWidth>\
+                <gx:labelVisibility>0</gx:labelVisibility>\
             </LineStyle>\
             </Style>\
             <Placemark>\
