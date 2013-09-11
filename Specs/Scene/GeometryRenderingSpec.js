@@ -302,7 +302,9 @@ defineSuite([
 
         context.getUniformState().update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual(instance.id);
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual(instance.id);
 
         primitive = primitive && primitive.destroy();
     }

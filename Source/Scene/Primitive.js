@@ -430,6 +430,27 @@ define([
         }
     }
 
+    function createPickIds(context, primitive, instances) {
+        var pickColors = [];
+        var length = instances.length;
+
+        for (var i = 0; i < length; ++i) {
+            var pickObject = {
+                primitive : defaultValue(instances[i].pickPrimitive, primitive)
+            };
+
+            if (defined(instances[i].id)) {
+                pickObject.id = instances[i].id;
+            }
+
+            var pickId = context.createPickId(pickObject);
+            primitive._pickIds.push(pickId);
+            pickColors.push(pickId.color);
+        }
+
+        return pickColors;
+    }
+
     var taskProcessor = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
 
     /**
@@ -460,8 +481,6 @@ define([
         var instances;
         var clonedInstances;
         var geometries;
-        var pickColors;
-        var pickId;
 
         var that = this;
 
@@ -519,17 +538,10 @@ define([
                     var transferableObjects = [];
                     PrimitivePipeline.transferInstances(clonedInstances, transferableObjects);
 
-                    pickColors = [];
-                    for (i = 0; i < length; ++i) {
-                        pickId = context.createPickId(defaultValue(instances[i].id, this));
-                        this._pickIds.push(pickId);
-                        pickColors.push(pickId.color);
-                    }
-
                     promise = taskProcessor.scheduleTask({
                         task : 'combineGeometry',
                         instances : clonedInstances,
-                        pickIds : pickColors,
+                        pickIds : createPickIds(context, this, instances),
                         ellipsoid : projection.getEllipsoid(),
                         isGeographic : projection instanceof GeographicProjection,
                         elementIndexUintSupported : context.getElementIndexUint(),
@@ -585,16 +597,9 @@ define([
                     clonedInstances[index] = cloneInstance(instances[index], geometry.geometry);
                 }
 
-                pickColors = [];
-                for (i = 0; i < length; ++i) {
-                    pickId = context.createPickId(defaultValue(instances[i].id, this));
-                    this._pickIds.push(pickId);
-                    pickColors.push(pickId.color);
-                }
-
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
-                    pickIds : pickColors,
+                    pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
                     isGeographic : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
