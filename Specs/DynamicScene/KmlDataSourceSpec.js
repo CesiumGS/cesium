@@ -331,8 +331,6 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         var dynamicObject = objects[0];
-        expect(objects.length).toEqual(1);
-        expect(dynamicObject.polygon).toBeDefined();
         for(var i = 0; i < coordinates.length; i++){
             expect(dynamicObject.vertexPositions.getValue()[i]).toEqual(coordinates[i]);
         }

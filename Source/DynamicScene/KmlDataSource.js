@@ -67,64 +67,65 @@ define(['../Core/createGuid',
     //Helper functions
     function readCoordinate(element) {
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        scratch = Cartographic.fromDegrees(digits[0], digits[1], parseFloat(digits[2]), scratch);
+        scratch = Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratch);
         return Ellipsoid.WGS84.cartographicToCartesian(scratch);
     }
 
     function readCoordinates(element) {
-        var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        var numberOfCoordinates = digits.length / 3;
+        var tuples = element.textContent.trim().split(/[\s\n]+/g);
+        var numberOfCoordinates = tuples.length;
         var result = new Array(numberOfCoordinates);
         var resultIndex = 0;
-        for ( var i = 0; i < digits.length; i += 3) {
-            scratch = Cartographic.fromDegrees(parseFloat(digits[i]), parseFloat(digits[i+1]), parseFloat(digits[i+2]), scratch);
-            result[resultIndex] = Ellipsoid.WGS84.cartographicToCartesian(scratch);
-            resultIndex++;
+
+        for ( var i = 0; i < tuples.length; i++) {
+            var coordinates = tuples[i].split(/[\s,\n]+/g);
+            scratch = Cartographic.fromDegrees(parseFloat(coordinates[0]), parseFloat(coordinates[1]), defined(coordinates[2]) ? parseFloat(coordinates[2]) : 0, scratch);
+            result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratch);
         }
         return result;
     }
 
-    function equalCoordinateTuples(tuple1, tuple2){
+    function equalCoordinateTuples(tuple1, tuple2) {
         return tuple1[0] === tuple2[0] && tuple1[1] === tuple2[1] && tuple1[2] === tuple2[2];
     }
 
-    function getNumericValue(node, tagName){
+    function getNumericValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
         return defined(element) ? parseFloat(element.firstChild.data) : undefined;
     }
 
-    function getStringValue(node, tagName){
+    function getStringValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
         var value = defined(element) ? element.firstChild.data : undefined;
         return value;
     }
 
-    function getColorValue(node, tagName){
+    function getColorValue(node, tagName) {
         var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
-        var value = defined(element)  ? element.firstChild.data : undefined;
-        if (!defined(value)){
+        var value = defined(element) ? element.firstChild.data : undefined;
+        if (!defined(value)) {
             return undefined;
         }
         var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
-        if(colorMode === 'random'){
+        if (colorMode === 'random') {
             var options = {};
-            alpha = parseInt(value.substring(0,2), 16) / 255.0;
-            blue = parseInt(value.substring(2,4), 16)  / 255.0;
-            green = parseInt(value.substring(4,6), 16) / 255.0;
-            red = parseInt(value.substring(6,8), 16) / 255.0;
-            if(red > 0){
+            alpha = parseInt(value.substring(0, 2), 16) / 255.0;
+            blue = parseInt(value.substring(2, 4), 16) / 255.0;
+            green = parseInt(value.substring(4, 6), 16) / 255.0;
+            red = parseInt(value.substring(6, 8), 16) / 255.0;
+            if (red > 0) {
                 options.maximumRed = red;
             } else {
                 options.red = 0;
             }
-            if(green > 0){
+            if (green > 0) {
                 options.maximumGreen = green;
             } else {
                 options.green = 0;
             }
-            if(blue > 0){
+            if (blue > 0) {
                 options.maximumBlue = blue;
             } else {
                 options.blue = 0;
@@ -133,24 +134,24 @@ define(['../Core/createGuid',
             return Color.fromRandom(options);
         }
         //normal mode as default
-        alpha = parseInt(value.substring(0,2), 16) / 255.0;
-        blue = parseInt(value.substring(2,4), 16)  / 255.0;
-        green = parseInt(value.substring(4,6), 16) / 255.0;
-        red = parseInt(value.substring(6,8), 16) / 255.0;
+        alpha = parseInt(value.substring(0, 2), 16) / 255.0;
+        blue = parseInt(value.substring(2, 4), 16) / 255.0;
+        green = parseInt(value.substring(4, 6), 16) / 255.0;
+        red = parseInt(value.substring(6, 8), 16) / 255.0;
         return new Color(red, green, blue, alpha);
     }
 
     // KML processing functions
     function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
         dynamicObject.name = getStringValue(placemark, 'name');
-        if(defined(dynamicObject.label)){
+        if (defined(dynamicObject.label)) {
             dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
         }
         // I want to iterate over every placemark
-        for(var i = 0, len = placemark.childNodes.length; i < len; i++){
+        for ( var i = 0, len = placemark.childNodes.length; i < len; i++) {
             var node = placemark.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(featureTypes.hasOwnProperty(node.nodeName)){
+            if (featureTypes.hasOwnProperty(node.nodeName)) {
                 placemark.geometry = node.nodeName;
                 var geometryType = placemark.geometry;
                 var geometryHandler = featureTypes[geometryType];
@@ -171,7 +172,7 @@ define(['../Core/createGuid',
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
-    function processLineString(dataSource, dynamicObject, kml, node){
+    function processLineString(dataSource, dynamicObject, kml, node) {
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
@@ -179,32 +180,32 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
 
-    function processLinearRing(dataSource, dynamicObject, kml, node){
+    function processLinearRing(dataSource, dynamicObject, kml, node) {
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
-        if (!equalCoordinateTuples(coordinates[0], coordinates[el.length -1])){
+        if (!equalCoordinateTuples(coordinates[0], coordinates[el.length - 1])) {
             throw new DeveloperError("The first and last coordinate tuples must be the same.");
         }
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
 
-    function processPolygon(dataSource, dynamicObject, kml, node){
+    function processPolygon(dataSource, dynamicObject, kml, node) {
         //TODO innerBoundaryIS, extrude, tessellate, altitudeMode
         var el = node.getElementsByTagName('outerBoundaryIs');
-        for (var j = 0; j < el.length; j++) {
+        for ( var j = 0; j < el.length; j++) {
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
     }
 
-    function processGxTrack(dataSource, dynamicObject, kml, node){
+    function processGxTrack(dataSource, dynamicObject, kml, node) {
         //TODO altitudeMode, gx:angles
         var coordsEl = node.getElementsByTagName('coord');
         var coordinates = new Array(coordsEl.length);
         var timesEl = node.getElementsByTagName('when');
         var times = new Array(timesEl.length);
-        for(var i = 0; i < times.length; i++){
+        for ( var i = 0; i < times.length; i++) {
             coordinates[i] = readCoordinate(coordsEl[i]);
             times[i] = JulianDate.fromIso8601(timesEl[i].firstChild.data);
         }
@@ -213,15 +214,15 @@ define(['../Core/createGuid',
         dynamicObject.position = property;
     }
 
-    function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
+    function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
         var geometryObject = dynamicObject;
         var styleObject = dynamicObject;
         // I want to iterate over every placemark
-        for(var i = 0, len = node.childNodes.length; i < len; i++){
+        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
             var innerNode = node.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(featureTypes.hasOwnProperty(innerNode.nodeName)){
+            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
                 kml.geometry = innerNode.nodeName;
                 var geometryType = kml.geometry;
                 var geometryHandler = featureTypes[geometryType];
@@ -229,7 +230,7 @@ define(['../Core/createGuid',
                     throw new DeveloperError('gx:MultiTrack takes one or more gx:Track elements');
                 }
                 //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)){
+                if (!defined(geometryObject)) {
                     var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
                     geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
                     DynamicBillboard.mergeProperties(geometryObject, styleObject);
@@ -245,14 +246,14 @@ define(['../Core/createGuid',
         }
     }
 
-    function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
+    function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         var geometryObject = dynamicObject;
         var styleObject = dynamicObject;
         // I want to iterate over every placemark
-        for(var i = 0, len = node.childNodes.length; i < len; i++){
+        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
             var innerNode = node.childNodes.item(i);
             //Checking if the node holds a supported Geometry type
-            if(featureTypes.hasOwnProperty(innerNode.nodeName)){
+            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
                 kml.geometry = innerNode.nodeName;
                 var geometryType = kml.geometry;
                 var geometryHandler = featureTypes[geometryType];
@@ -260,7 +261,7 @@ define(['../Core/createGuid',
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
                 //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)){
+                if (!defined(geometryObject)) {
                     var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
                     geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
                     DynamicBillboard.mergeProperties(geometryObject, styleObject);
@@ -276,33 +277,33 @@ define(['../Core/createGuid',
         }
     }
 
-    function processTimeSpan(dataSource, dynamicObject, kml, node){
-        var beginEl = defined(node.getElementsByTagName('begin')) ? node.getElementsByTagName('begin')[0] :  undefined ;
-        var endEl = defined(node.getElementsByTagName('end')) ? node.getElementsByTagName('end')[0] :  undefined ;
+    function processTimeSpan(dataSource, dynamicObject, kml, node) {
+        var beginEl = defined(node.getElementsByTagName('begin')) ? node.getElementsByTagName('begin')[0] : undefined;
+        var endEl = defined(node.getElementsByTagName('end')) ? node.getElementsByTagName('end')[0] : undefined;
         var beginDate = defined(beginEl) ? new Date(beginEl.textContent) : undefined;
         var endDate = defined(endEl) ? new Date(endEl.textContent) : undefined;
         var interval;
-        if(!defined(beginDate) && !defined(endDate)){
+        if (!defined(beginDate) && !defined(endDate)) {
             throw new DeveloperError('TimeSpan requires a begin and/or end date');
         }
-        if(defined(beginDate) && defined(endDate)){
-            if(endDate > beginDate){
+        if (defined(beginDate) && defined(endDate)) {
+            if (endDate > beginDate) {
                 interval = new TimeInterval(JulianDate.fromDate(beginDate), JulianDate.fromDate(endDate), true, true, true);
             } else {
                 throw new DeveloperError('End date must be larger than Begin date');
             }
-        } else if(defined(beginDate)){
+        } else if (defined(beginDate)) {
             interval = new TimeInterval(JulianDate.fromDate(beginDate), Iso8601.MAXIMUM_VALUE, true, false, true);
         } else {
-            interval =  new TimeInterval(Iso8601.MINIMUM_VALUE, JulianDate.fromDate(endDate), false, true, true);
+            interval = new TimeInterval(Iso8601.MINIMUM_VALUE, JulianDate.fromDate(endDate), false, true, true);
         }
         var properties = Object.getOwnPropertyNames(dynamicObject);
         //iterate all attributes of the dynamicObject in order to assign the TimeInterval
-        for(var i = 0; i < properties.length; i++){
+        for ( var i = 0; i < properties.length; i++) {
             var graphicType = dynamicObject[properties[i]];
-            if(typeof graphicType === 'object'){
+            if (typeof graphicType === 'object') {
                 //need to create a new TimeIntervalCollectionProperty if none is defined yet
-                if(!defined(graphicType.show)){
+                if (!defined(graphicType.show)) {
                     graphicType.show = new TimeIntervalCollectionProperty();
                 }
                 graphicType.show.intervals.addInterval(interval);
@@ -312,41 +313,39 @@ define(['../Core/createGuid',
 
     //Object that holds all supported Geometry
     var featureTypes = {
-            Point : processPoint,
-            LineString : processLineString,
-            LinearRing : processLinearRing,
-            Polygon: processPolygon,
-            'gx:Track': processGxTrack,
-            'gx:MultiTrack': processGxMultiTrack,
-            MultiGeometry: processMultiGeometry,
-            TimeSpan: processTimeSpan
-            //TODO Model, gxTrack, gxMultitrack
+        Point : processPoint,
+        LineString : processLineString,
+        LinearRing : processLinearRing,
+        Polygon : processPolygon,
+        'gx:Track' : processGxTrack,
+        'gx:MultiTrack' : processGxMultiTrack,
+        MultiGeometry : processMultiGeometry,
+        TimeSpan : processTimeSpan
+    //TODO Model, gxTrack, gxMultitrack
     };
 
     function processStyle(styleNode, dynamicObject, sourceUri) {
-        for(var i = 0, len = styleNode.childNodes.length; i < len; i++){
+        for ( var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
 
-            if(node.nodeName === "IconStyle"){
+            if (node.nodeName === "IconStyle") {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
                 var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
                 var color = getColorValue(node, 'color');
-                var icon = getStringValue(node,'href');
+                var icon = getStringValue(node, 'href');
                 if (defined(sourceUri)) {
                     var baseUri = new Uri(document.location.href);
                     sourceUri = new Uri(sourceUri);
                     icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
                 }
 
-
                 billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
                 billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
                 dynamicObject.billboard = billboard;
-            }
-            else if(node.nodeName ===  "LabelStyle")   {
+            } else if (node.nodeName === "LabelStyle") {
                 //Map style to label properties
                 var label = defined(dynamicObject.label) ? dynamicObject.label : new DynamicLabel();
                 var labelScale = getNumericValue(node, 'scale');
@@ -358,20 +357,19 @@ define(['../Core/createGuid',
                 label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
                 dynamicObject.label = label;
                 //default billboard image
-                if(!defined(dynamicObject.billboard)){
+                if (!defined(dynamicObject.billboard)) {
                     dynamicObject.billboard = new DynamicBillboard();
                     dynamicObject.billboard.image = new ConstantProperty("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
                 }
-            }
-            else if(node.nodeName ===  "LineStyle")   {
+            } else if (node.nodeName === "LineStyle") {
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
                 var polyline = defined(dynamicObject.polyline) ? dynamicObject.polyline : new DynamicPolyline();
                 var lineColor = getColorValue(node, 'color');
-                var lineWidth = getNumericValue(node,'width');
-                var lineOuterColor = getColorValue(node,'outerColor');
-                var lineOuterWidth = getNumericValue(node,'outerWidth');
-                if(defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)){
+                var lineWidth = getNumericValue(node, 'width');
+                var lineOuterColor = getColorValue(node, 'outerColor');
+                var lineOuterWidth = getNumericValue(node, 'outerWidth');
+                if (defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)) {
                     throw new DeveloperError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
@@ -380,8 +378,7 @@ define(['../Core/createGuid',
                 polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
                 polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
                 dynamicObject.polyline = polyline;
-            }
-            else if(node.nodeName === "PolyStyle")   {
+            } else if (node.nodeName === "PolyStyle") {
                 //Map style to polygon properties
                 //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
@@ -422,7 +419,7 @@ define(['../Core/createGuid',
     //Asynchronously processes an external style file.
     function processExternalStyles(uri, styleCollection) {
         return when(loadXML(uri), function(styleKml) {
-            return processStyles(styleKml, styleCollection, uri);
+            return processStyles(styleKml, styleCollection, uri, true);
         });
     }
 
@@ -430,7 +427,7 @@ define(['../Core/createGuid',
     //their id into the rovided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(kml, styleCollection, sourceUri) {
+    function processStyles(kml, styleCollection, sourceUri, isExternal) {
         var i;
 
         var styleNodes = kml.getElementsByTagName('Style');
@@ -441,7 +438,7 @@ define(['../Core/createGuid',
             var id = defined(attributes.id) ? attributes.id.textContent : undefined;
             if (defined(id)) {
                 id = '#' + id;
-                if (defined(sourceUri)) {
+                if (isExternal && defined(sourceUri)) {
                     id = sourceUri + id;
                 }
                 if (!defined(styleCollection.getObject(id))) {
@@ -460,7 +457,7 @@ define(['../Core/createGuid',
             if (styleReference[0] !== '#') {
                 var tokens = styleReference.split('#');
                 if (tokens.length !== 2) {
-                    throw new RuntimeError();
+                    throw new RuntimeError('Unable to parse style: ' + styleReference);
                 }
                 var uri = tokens[0];
                 if (!defined(externalStyleHash[uri])) {
@@ -484,7 +481,7 @@ define(['../Core/createGuid',
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         //The rest of the loading code is synchronous
-        return when.all(processStyles(kml, styleCollection, sourceUri), function() {
+        return when.all(processStyles(kml, styleCollection, sourceUri, false), function() {
             var array = kml.getElementsByTagName('Placemark');
             for ( var i = 0, len = array.length; i < len; i++) {
                 var placemark = array[i];
@@ -603,5 +600,6 @@ define(['../Core/createGuid',
             return when.reject(error);
         });
     };
+
     return KmlDataSource;
 });
