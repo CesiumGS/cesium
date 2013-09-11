@@ -26,41 +26,41 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
+    
+    /*~~~ Create ellipsoid and place with model matrix ~~*/
+    
+    var radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, radii.z)
+    );
 
-    var radii = new Cesium.Cartesian3(0.5, 0.5, 1.0);
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         radii : radii
     });
-
-    var instances = [];
-    var i;
-    var ellipsoidModelMatrix;
-    for (i = 0; i < 5; ++i) {
-        var height = 100000.0 + (200000.0 * i);
-        ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
-
-        instances.push(new Cesium.GeometryInstance({
-            geometry : ellipsoidGeometry,
-            modelMatrix : ellipsoidModelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-            }
-        }));
-    }
-
+    var ellipsoidInstance = new Cesium.GeometryInstance({
+        geometry : ellipsoidGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
+    });
     primitives.add(new Cesium.Primitive({
-        geometryInstances : instances,
+        geometryInstances : ellipsoidInstance,
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : false,
             closed : true
         })
     }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

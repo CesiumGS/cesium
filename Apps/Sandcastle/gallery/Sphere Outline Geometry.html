@@ -26,69 +26,68 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    // Create box and ellipsoid boxes, and use the instance's
-    // modelMatrix to scale and position them.
-    var radius = 0.75;
-    var sphereGeometry = new Cesium.SphereGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        radius : radius
+    var radius = 300000;
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-98.0, 45.0));
+    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, radius)
+    );
+    
+    /*~~~~~~ Sphere outline ~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+    var sphereOutlineInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.SphereOutlineGeometry({
+            radius : radius,
+            stackPartitions : 8,
+            slicePartitions : 12
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
     });
-
-    var sphereOutlineGeometry = new Cesium.SphereOutlineGeometry({
-        radius : radius,
-        stackPartitions : 6,
-        slicePartitions : 5
-    });
-
-    var instances = [];
-    var outlineInstances = [];
-    var i;
-    var sphereModelMatrix;
-    for (i = 0; i < 5; ++i) {
-        var height = 100000.0 + (200000.0 * i);
-        sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-98.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
-
-        instances.push(new Cesium.GeometryInstance({
-            geometry : sphereGeometry,
-            modelMatrix : sphereModelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-            }
-        }));
-        outlineInstances.push(new Cesium.GeometryInstance({
-            geometry : sphereOutlineGeometry,
-            modelMatrix : sphereModelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-            }
-        }));
-    }
-
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : instances,
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
-            closed : true
-        })
-    }));
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : outlineInstances,
+        geometryInstances : sphereOutlineInstance,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(3.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
     }));
+
+    /*~~~~~~~~~ Green Sphere ~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+    var sphereInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.SphereGeometry({
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            radius : radius
+        }),
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : sphereInstance,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

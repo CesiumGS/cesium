@@ -26,13 +26,16 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    var extent = Cesium.Extent.fromDegrees(-92.0, 20.0, -86.0, 27.0);
-    var extentInstance = new Cesium.GeometryInstance({
+    /*~~~~~~~~~~~ Red extent ~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    
+    var extent = Cesium.Extent.fromDegrees(-110.0, 20.0, -80.0, 25.0);
+    var redExtentInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.ExtentGeometry({
             extent : extent,
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
@@ -41,11 +44,34 @@ require(['Cesium'], function(Cesium) {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         }
     });
+    
+    /*~~~~~~~~~~ Green extruded extent ~~~~~~~~~~~~~~~~*/
+    
+    extent = Cesium.Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+    var greenExtentInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.ExtentGeometry({
+            extent : extent,
+            rotation : Cesium.Math.toRadians(45),
+            extrudedHeight : 300000.0,
+            height : 100000.0,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
 
+    /*~~~~~~~~ Add extent instances to primitives ~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [extentInstance],
-        appearance : new Cesium.PerInstanceColorAppearance()
+        geometryInstances : [redExtentInstance, greenExtentInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
+        })
     }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

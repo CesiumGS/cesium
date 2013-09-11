@@ -26,41 +26,45 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
-    // Create box and ellipsoid boxes, and use the instance's
-    // modelMatrix to scale and position them.
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    var radius = 0.75;
+    /*~~ Create sphere are position with model matrix ~*/
+    
+    var radius = 300000.0;
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, radius)
+    );
+
     var sphereGeometry = new Cesium.SphereGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         radius : radius
     });
 
-    var instances = [];
-    for (var i = 0; i < 5; ++i) {
-        var height = 100000.0 + (200000.0 * i);
-        var sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
-
-        instances.push(new Cesium.GeometryInstance({
-            geometry : sphereGeometry,
-            modelMatrix : sphereModelMatrix,
-            attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
-            }
-        }));
-    }
-
+    var sphereInstance = new Cesium.GeometryInstance({
+        geometry : sphereGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
+    });
+    
+    /*~~ Add sphere instance to primitives ~~~~~~~~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : instances,
+        geometryInstances : sphereInstance,
         appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : true,
+            translucent : false,
             closed : true
         })
     }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

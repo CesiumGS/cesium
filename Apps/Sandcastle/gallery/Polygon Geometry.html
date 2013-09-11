@@ -26,79 +26,107 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
+    
+    /*~~~~~~ Red polygon ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-107.0, 27.0),
-        Cesium.Cartographic.fromDegrees(-107.0, 22.0),
-        Cesium.Cartographic.fromDegrees(-102.0, 23.0),
-        Cesium.Cartographic.fromDegrees(-97.0, 21.0),
-        Cesium.Cartographic.fromDegrees(-97.0, 25.0)
+        Cesium.Cartographic.fromDegrees(-115.0, 37.0),
+        Cesium.Cartographic.fromDegrees(-115.0, 32.0),
+        Cesium.Cartographic.fromDegrees(-107.0, 33.0),
+        Cesium.Cartographic.fromDegrees(-102.0, 31.0),
+        Cesium.Cartographic.fromDegrees(-102.0, 35.0)
     ]);
     
-    var polygonInstance = new Cesium.GeometryInstance({
+    var redPolygonInstance = new Cesium.GeometryInstance({
         geometry : Cesium.PolygonGeometry.fromPositions({
             positions : positions,
-            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        })
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
     });
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [polygonInstance],
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
-        })
-    }));
-
+    /*~~~~~~~ Blue polygon with holes ~~~~~~~~~~~~~~~~~*/
+    
     var polygonHierarchy = {
         positions : ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-            Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+            Cesium.Cartographic.fromDegrees(-99.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-99.0, 40.0)
         ]),
         holes : [{
             positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-                Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-97.0, 31.0),
                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-                Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+                Cesium.Cartographic.fromDegrees(-87.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-87.0, 31.0)
             ]),
             holes : [{
                 positions : ellipsoid.cartographicArrayToCartesianArray([
-                    Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-                    Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-                    Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-                    Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+                    Cesium.Cartographic.fromDegrees(-95.0, 33.0),
+                    Cesium.Cartographic.fromDegrees(-89.0, 33.0),
+                    Cesium.Cartographic.fromDegrees(-89.0, 37.0),
+                    Cesium.Cartographic.fromDegrees(-95.0, 37.0)
                 ]),
                 holes : [{
                     positions : ellipsoid.cartographicArrayToCartesianArray([
-                        Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-                        Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-                        Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-                        Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+                        Cesium.Cartographic.fromDegrees(-93.0, 34.0),
+                        Cesium.Cartographic.fromDegrees(-91.0, 34.0),
+                        Cesium.Cartographic.fromDegrees(-91.0, 36.0),
+                        Cesium.Cartographic.fromDegrees(-93.0, 36.0)
                     ])
                 }]
             }]
         }]
     };
-    polygonInstance = new Cesium.GeometryInstance({
+    var bluePolygonInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.PolygonGeometry({
             polygonHierarchy : polygonHierarchy,
-            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        })
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
     });
 
+    /*~~~~~~~ Green extruded polygon ~~~~~~~~~~~~~~~~~~*/
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-108.0, 42.0),
+        Cesium.Cartographic.fromDegrees(-100.0, 42.0),
+        Cesium.Cartographic.fromDegrees(-104.0, 40.0)
+    ]);
+    
+    var greenPolygonInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonGeometry.fromPositions({
+            positions : positions,
+            extrudedHeight: 500000.0,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
+
+    /*~~~~~~ Add polygon instances to primitives ~~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [polygonInstance],
-        appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+        geometryInstances : [redPolygonInstance, greenPolygonInstance, bluePolygonInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
         })
     }));
 
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    
     Sandcastle.finishedLoading();
 });
 </script>

@@ -26,31 +26,78 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
-    var radius = 250000.0;
+       
+    /*~~~~~~~~~~~~~~~ Red circle ~~~~~~~~~~~~~~~~~~~~~~*/
+    
+    var circleGeometry = new Cesium.CircleGeometry({
+        center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 40.0)),
+        radius : 250000.0,
+        stRotation: Cesium.Math.toRadians(90),
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    });
     var circleInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.CircleGeometry({
-            center : center,
-            radius : radius,
-            stRotation: Cesium.Math.toRadians(90),
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-        }),
+        geometry : circleGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         }
     });
-
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [circleInstance],
-        appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
-            closed : true
+    
+    primitives.add( new Cesium.Primitive({
+        geometryInstances: circleInstance,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false
         })
     }));
+    
+    /*~~~~~~~~~~~ Green extruded circle ~~~~~~~~~~~~~~~*/
+    
+    circleGeometry = new Cesium.CircleGeometry({
+        center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 50.0)),
+        radius : 350000.0,
+        extrudedHeight: 600000.0,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
+    circleInstance = new Cesium.GeometryInstance({
+        geometry : circleGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: circleInstance,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false,
+            closed: true
+        })
+    }));
+    
+    /*~~~~~~~~~~~~ Blue circle with height ~~~~~~~~~~~~*/
+  
+    circleGeometry = new Cesium.CircleGeometry({
+        center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 40.0)),
+        radius : 500000.0,
+        height : 800000.0,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
+    circleInstance = new Cesium.GeometryInstance({
+        geometry : circleGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: circleInstance,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false
+        })
+    }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

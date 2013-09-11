@@ -26,24 +26,23 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var primitives = viewer.scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    // Create a box and use the a modelMatrix to position it.
+    /*~~ Create box and position with a model matrix ~~*/
     
-    var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 700000.0);
+    var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0));
+    var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, dimensions.z/2));
     
     var boxGeometry = Cesium.BoxGeometry.fromDimensions({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         dimensions : dimensions
     });
-
-    var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
-            Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))
-            ),
-            new Cesium.Cartesian3(0.0, 0.0, dimensions.z/2));
 
     var boxGeometryInstance = new Cesium.GeometryInstance({
         geometry : boxGeometry,
@@ -60,6 +59,8 @@ require(['Cesium'], function(Cesium) {
             translucent: false
         })
     }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

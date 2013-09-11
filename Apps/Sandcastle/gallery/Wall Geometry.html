@@ -26,21 +26,69 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-
-    // Create a single wall
+   
+    /*~~~~~~ Red wall,constant min and max heights ~~~~*/
+    
     var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-95.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-85.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-75.0, 50.0)
+        Cesium.Cartographic.fromDegrees(-115.0, 34.0),
+        Cesium.Cartographic.fromDegrees(-90.0, 34.0)
     ]);
-    var maximumHeights = [500000, 1000000, 500000];
-    var minimumHeights =  [0, 500000, 0];
+    
+    var redWallInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.WallGeometry.fromConstantHeights({
+            positions : positions,
+            maximumHeight : 200000.0,
+            minimumHeight : 100000.0
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+        }
+    });
+    
+    /*~~~~~~~~ Green wall, contsant height ~~~~~~~~~~~~*/
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-107.0, 33.0),
+        Cesium.Cartographic.fromDegrees(-97.0, 33.0),
+        Cesium.Cartographic.fromDegrees(-97.0, 30.0),
+        Cesium.Cartographic.fromDegrees(-107.0, 30.0),
+        Cesium.Cartographic.fromDegrees(-107.0, 33.0)
+    ]);
+    
+    var greenWallInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.WallGeometry.fromConstantHeights({
+            positions : positions,
+            maximumHeight : 100000.0
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
+    
+    /*~~ Blue wall, height specified at each position ~~*/
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-115.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-112.5, 40.0),
+        Cesium.Cartographic.fromDegrees(-110.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-107.5, 40.0),
+        Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-102.5, 40.0),
+        Cesium.Cartographic.fromDegrees(-100.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-97.5, 40.0),
+        Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-92.5, 40.0),
+        Cesium.Cartographic.fromDegrees(-90.0, 40.0)
+    ]);
+    var maximumHeights = [100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000];
+    var minimumHeights =  [0, 100000,  0, 100000, 0, 100000, 0, 100000, 0, 100000, 0];
 
-    var wallInstance = new Cesium.GeometryInstance({
+    var blueWallInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.WallGeometry({
             positions : positions,
             maximumHeights: maximumHeights,
@@ -48,15 +96,21 @@ require(['Cesium'], function(Cesium) {
             
         }),
         attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha:0.7}))
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
         }
     });
+   
+    /*~~~ Add wall instances to primitives ~~~~~~~~~~~~*/
 
     scene.getPrimitives().add(new Cesium.Primitive({
-        geometryInstances : wallInstance,
-        appearance : new Cesium.PerInstanceColorAppearance()
+        geometryInstances : [blueWallInstance, redWallInstance, greenWallInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false
+        })
     }));
 
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    
     Sandcastle.finishedLoading();
 });
 </script>

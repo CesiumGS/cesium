@@ -26,36 +26,25 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    var extent = Cesium.Extent.fromDegrees(-92.0, 20.0, -86.0, 27.0);
-    var extentInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.ExtentGeometry({
-            extent : extent,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-        }
-    });
-    var extentOutlineInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.ExtentOutlineGeometry({
-            extent : extent
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
-        }
-    });
-
+    var extent = Cesium.Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+    
+    /*~~~~~~~~~~~~~ Extent outline ~~~~~~~~~~~~~~~~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [extentInstance],
-        appearance : new Cesium.PerInstanceColorAppearance()
-    }));
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [extentOutlineInstance],
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.ExtentOutlineGeometry({
+                extent : extent
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            }
+        }),
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
             renderState : {
@@ -67,6 +56,23 @@ require(['Cesium'], function(Cesium) {
         })
     }));
 
+    /*~~~~~~~~~~~~~~~~~~~ Extent ~~~~~~~~~~~~~~~~~~~~~~*/
+   
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.ExtentGeometry({
+                extent : extent,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance()
+    }));
+
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    
     Sandcastle.finishedLoading();
 });
 </script>

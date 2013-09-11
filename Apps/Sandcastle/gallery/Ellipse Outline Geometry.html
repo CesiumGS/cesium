@@ -26,56 +26,107 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 25.0));
-    var semiMinorAxis = 300000.0;
-    var semiMajorAxis = 500000.0;
-    var rotation = Cesium.Math.toRadians(-40.0);
-    var ellipseInstance = new Cesium.GeometryInstance({
+    /*~~~~~~~~~ Outline of red ellipse ~~~~~~~~~~~~~~~~*/
+    
+    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var semiMinorAxis = 200000.0;
+    var semiMajorAxis = 300000.0;
+    var ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
+        center : center,
+        semiMinorAxis : semiMinorAxis,
+        semiMajorAxis : semiMajorAxis
+    });
+    
+    var redEllipseOutlineInstance = new Cesium.GeometryInstance({
+        geometry : ellipseOutlineGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+  
+    /*~~~~~~~~~~~~~~~ Red ellipse ~~~~~~~~~~~~~~~~~~~~~*/
+    
+    var redEllipseInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.EllipseGeometry({
             center : center,
             semiMinorAxis : semiMinorAxis,
             semiMajorAxis : semiMajorAxis,
-            rotation : rotation,
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
         }),
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         }
     });
-    var ellipseOutlineInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.EllipseOutlineGeometry({
-            center : center,
-            semiMinorAxis : semiMinorAxis,
-            semiMajorAxis : semiMajorAxis,
-            rotation : rotation
-        }),
+    
+    /*~~~~~~~~ Outline of green extruded ellipse ~~~~~~*/
+    
+    center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 35.0));
+    var extrudedHeight = 150000.0;
+    var rotation = Cesium.Math.toRadians(45);
+    ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
+        center : center,
+        semiMinorAxis : semiMinorAxis,
+        semiMajorAxis : semiMajorAxis,
+        extrudedHeight : extrudedHeight,
+        rotation : rotation,
+        numberOfVerticalLines: 10
+    });
+    
+    var greenEllipseOutlineInstance = new Cesium.GeometryInstance({
+        geometry : ellipseOutlineGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
         }
     });
 
-    primitives.add(new Cesium.Primitive({
-        geometryInstances : [ellipseInstance],
-        appearance : new Cesium.PerInstanceColorAppearance()
-    }));
+    /*~~~~~~~~~~ Green extruded ellipse ~~~~~~~~~~~~~~~*/
     
+    var greenEllipseInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipseGeometry({
+            center : center,
+            semiMinorAxis : semiMinorAxis,
+            semiMajorAxis : semiMajorAxis,
+            extrudedHeight : extrudedHeight,
+            rotation: rotation,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+        }
+    });
+    
+    /*~~ Add ellipse outline instances to primitives ~~*/
+
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [ellipseOutlineInstance],
+        geometryInstances : [redEllipseOutlineInstance, greenEllipseOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(3.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
     }));
+    
+    /*~~~~~ Add ellipse instances to primitives ~~~~~~~*/
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [redEllipseInstance, greenEllipseInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
+        })
+    }));
+    
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

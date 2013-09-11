@@ -31,35 +31,74 @@ require(['Cesium'], function(Cesium) {
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
+    
     var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
-    var radius = 250000.0;
-    var height = 0.0;
-    var circleInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.CircleGeometry({
-            center : center,
-            radius : radius,
-            height: height,
-            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
-        }
+    var radius = 200000.0;
+    
+    /*~~~~~~~~~~ Outline of red circle ~~~~~~~~~~~~~~~~*/
+    
+    var circleOutlineGeometry = new Cesium.CircleOutlineGeometry({
+        center : center,
+        radius : radius
     });
+    
     var circleOutlineInstance = new Cesium.GeometryInstance({
-        geometry : new Cesium.CircleOutlineGeometry({
-            center : center,
-            radius : radius,
-            height: height
-        }),
+        geometry : circleOutlineGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
         }
     });
-
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [circleInstance],
+        geometryInstances : [circleOutlineInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(3.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+    
+    /*~~~~~~~~~~~~~~ Red Circle ~~~~~~~~~~~~~~~~~~~~~~~*/
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.CircleGeometry({
+                center : center,
+                radius : radius,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+            }
+        }),
         appearance : new Cesium.PerInstanceColorAppearance()
     }));
+    
+    /*~~~~~~~~~ Outline of green extruded circle ~~~~~~*/
+    
+    center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 40.0));
+    radius = 100000.0;
+    var height = 100000.0;
+    var extrudedHeight = 350000.0;
+    
+    circleOutlineGeometry = new Cesium.CircleOutlineGeometry({
+        center : center,
+        radius : radius,
+        height: height,
+        extrudedHeight: extrudedHeight,
+        numberOfVerticalLines: 16
+    });
+    
+    circleOutlineInstance = new Cesium.GeometryInstance({
+        geometry : circleOutlineGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
     
     primitives.add(new Cesium.Primitive({
         geometryInstances : [circleOutlineInstance],
@@ -73,6 +112,29 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
+    
+    /*~~~~~~~~~ Green Extruded Circle ~~~~~~~~~~~~~~~~~*/
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.CircleGeometry({
+                center : center,
+                radius : radius,
+                height: height,
+                extrudedHeight: extrudedHeight,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
+        })
+    }));
+
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });</script>

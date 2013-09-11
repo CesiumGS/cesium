@@ -26,21 +26,20 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
-
-    Cesium.Math.setRandomNumberSeed(1234);
-
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-
+       
     var dimensions = new Cesium.Cartesian3(400000.0, 400000.0, 400000.0);
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-106.0, 45.0));
     var boxModelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(
-            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-106.0, 45.0))  ),
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, dimensions.z/2));
     
-    //Box outline
+    /*~~~~~~~~~~~~ Create box outline ~~~~~~~~~~~~~~~~~*/
+    
     var boxOutlineGeometry = Cesium.BoxOutlineGeometry.fromDimensions({
         dimensions : dimensions
     });
@@ -64,7 +63,8 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
-    // Fill box
+    /*~~~~~~~~~~~~ Create box fill ~~~~~~~~~~~~~~~~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : Cesium.BoxGeometry.fromDimensions({
@@ -73,7 +73,7 @@ require(['Cesium'], function(Cesium) {
             }),
             modelMatrix : boxModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
             }
         }),
         appearance : new Cesium.PerInstanceColorAppearance({
@@ -82,6 +82,7 @@ require(['Cesium'], function(Cesium) {
         })
     }));
 
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });

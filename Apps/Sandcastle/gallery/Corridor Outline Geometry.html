@@ -26,26 +26,34 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+    
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-    var width = 200000;
+    
+    var width = 200000.0;
     var positions = ellipsoid.cartographicArrayToCartesianArray([
         Cesium.Cartographic.fromDegrees(-100.0, 40.0),
         Cesium.Cartographic.fromDegrees(-105.0, 40.0),
         Cesium.Cartographic.fromDegrees(-105.0, 35.0)
     ]);
+    
+    /*~~~~~~~~~~~~~ Outline of red corridor ~~~~~~~~~~~*/
+
+    var corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry( {
+        positions: positions,
+        width: width
+    });
     var redCorridorOutline = new Cesium.GeometryInstance({
-        geometry: new Cesium.CorridorOutlineGeometry( {
-            positions: positions,
-            width: width
-        }),
+        geometry: corridorOutlineGeometry,
         attributes: {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
         }
     });
 
+    /*~~~~~~~~~~~~~~~~ Red corridor ~~~~~~~~~~~~~~~~~~~*/
+    
     var redCorridor = new Cesium.GeometryInstance({
         geometry: new Cesium.CorridorGeometry({
             positions : positions,
@@ -57,28 +65,68 @@ require(['Cesium'], function(Cesium) {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         }
     });
-        
+    
+    /*~~~~~~~~~~~~ Outline of blue corridor ~~~~~~~~~~~*/
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-90.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+        Cesium.Cartographic.fromDegrees(-95.0, 35.0)
+    ]);
+    var extrudedHeight = 100000.0;
+    
+    corridorOutlineGeometry = new Cesium.CorridorOutlineGeometry( {
+        positions: positions,
+        width: width,
+        cornerType: Cesium.CornerType.MITERED,
+        extrudedHeight: extrudedHeight
+    });
+    var blueCorridorOutline = new Cesium.GeometryInstance({
+        geometry: corridorOutlineGeometry,
+        attributes: {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+    
+    /*~~~~~~~~~~~~~~~ Blue corridor ~~~~~~~~~~~~~~~~~~*/
+    
+    var blueCorridor = new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorGeometry({
+            positions : positions,
+            width : width,
+            cornerType : Cesium.CornerType.MITERED,
+            extrudedHeight: extrudedHeight,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    });
+    
+    /*~~~~~~~ Add instances to primitives ~~~~~~~~~~~~*/
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [redCorridor],
+        geometryInstances : [redCorridor, blueCorridor],
         appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : true,
-            closed : true,
-            faceForward : true
+            translucent : false,
+            closed : true
         })
     }));
     
     primitives.add(new Cesium.Primitive({
-        geometryInstances : redCorridorOutline,
+        geometryInstances : [redCorridorOutline, blueCorridorOutline],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(3.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
     }));
+                             
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });
