@@ -971,7 +971,7 @@ defineSuite([
         controller._mode = SceneMode.SCENE3D;
 
         camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.direction = Cartesian3.UNIT_X.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
@@ -1026,7 +1026,7 @@ defineSuite([
         controller._mode = SceneMode.SCENE3D;
 
         camera.position = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.direction = Cartesian3.UNIT_X.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
