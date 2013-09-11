@@ -474,7 +474,7 @@ define([
         var frustum = frameState.camera.frustum;
 
         if (frameState.mode === SceneMode.SCENE2D) {
-            if ((Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
+            if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
                     duration : 0,
                     onComplete : onComplete,

@@ -121,7 +121,7 @@ define([
         var intersectionPoint = IntersectionTests.rayPlane(ray, this._plane, projectPointOntoPlaneCartesian3);
 
         if (defined(intersectionPoint)) {
-            var v = Cartesian2.subtract(intersectionPoint, this._origin, intersectionPoint);
+            var v = Cartesian3.subtract(intersectionPoint, this._origin, intersectionPoint);
             var x = Cartesian3.dot(this._xAxis, v);
             var y = Cartesian3.dot(this._yAxis, v);
 
