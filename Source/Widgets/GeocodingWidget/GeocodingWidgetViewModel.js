@@ -151,7 +151,19 @@ define([
                 var north = bbox[2];
                 var east = bbox[3];
                 var extent = Extent.fromDegrees(west, south, east, north);
-                that._scene.getCamera().controller.viewExtent(extent);
+
+                var position = that._scene.getCamera().controller.getExtentCameraCoordinates(extent);
+                var surfaceNormal = that._ellipsoid.geodeticSurfaceNormal(position);
+
+                var description = {
+                    destination : position,
+                    duration : that._flightDuration,
+                    up : Cartesian3.UNIT_Z,
+                    direction : surfaceNormal.negate()
+                };
+
+                var flight = CameraFlightPath.createAnimation(scene, description);
+                scene.getAnimations().add(flight);
             });
         });
 
