@@ -142,7 +142,7 @@ define([
      * <tr>
      * <td>GLSL</td>
      * <td>JavaScript</td>
-     * </tr>
+     * </tr>©=
      * <tr>
      * <td><code>uniform float u_float; </code></td>
      * <td><code> sp.getAllUniforms().u_float.value = 1.0;</code></td>
@@ -960,7 +960,7 @@ define([
                     var indexOfBracket = uniformName.indexOf('[');
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
-                        uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+                        uniformArray = uniformsByName[uniformName.slice(0, indexOfBracket)];
 
                         // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
                         // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
