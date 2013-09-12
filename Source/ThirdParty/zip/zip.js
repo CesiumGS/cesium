@@ -28,7 +28,7 @@
 **/
 
 /*global define*/
-define(function() {
+define(['../../Core/buildModuleUrl'], function(buildModuleUrl) {
     var tmp = {};
 
     (function(obj) {
@@ -799,12 +799,11 @@ define(function() {
                 callback(createZipWriter(writer, onerror, dontDeflate));
             }, onerror);
         },
-        workerScriptsPath : "",
+        workerScriptsPath : buildModuleUrl('ThirdParty/zip/'),
         useWebWorkers : true
     };
 
 })(tmp);
 
-    tmp.zip.workerScriptsPath = '/Source/ThirdParty/zip/';
-return tmp.zip;
+    return tmp.zip;
 });
