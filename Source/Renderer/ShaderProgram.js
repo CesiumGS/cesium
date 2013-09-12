@@ -374,10 +374,9 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                return function(textureUnitIndex) {
-                    this.textureUnitIndex = textureUnitIndex;
-                    _gl.uniform1i(_location, textureUnitIndex);
-                    return textureUnitIndex + 1;
+                return function() {
+                    _gl.activeTexture(_gl.TEXTURE0 + this.textureUnitIndex);
+                    _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
                 };
             case _gl.INT:
             case _gl.BOOL:
@@ -420,9 +419,10 @@ define([
         })();
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
-            this._setSampler = function() {
-                _gl.activeTexture(_gl.TEXTURE0 + this.textureUnitIndex);
-                _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
+            this._setSampler = function(textureUnitIndex) {
+                this.textureUnitIndex = textureUnitIndex;
+                _gl.uniform1i(_location, textureUnitIndex);
+                return textureUnitIndex + 1;
             };
         }
     };
@@ -497,15 +497,13 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                return function(textureUnitIndex) {
-                    this.textureUnitIndex = textureUnitIndex;
-
+                return function() {
                     for ( var i = 0; i < _locations.length; ++i) {
-                        var index = textureUnitIndex + i;
-                        _gl.uniform1i(_locations[i], index);
+                        var value = this.value[i];
+                        var index = this.textureUnitIndex + i;
+                        _gl.activeTexture(_gl.TEXTURE0 + index);
+                        _gl.bindTexture(value._getTarget(), value._getTexture());
                     }
-
-                    return textureUnitIndex + _locations.length;
                 };
             case _gl.INT:
             case _gl.BOOL:
@@ -562,13 +560,15 @@ define([
         })();
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
-            this._setSampler = function() {
+            this._setSampler = function(textureUnitIndex) {
+                this.textureUnitIndex = textureUnitIndex;
+
                 for ( var i = 0; i < _locations.length; ++i) {
-                    var value = this.value[i];
-                    var index = this.textureUnitIndex + i;
-                    _gl.activeTexture(_gl.TEXTURE0 + index);
-                    _gl.bindTexture(value._getTarget(), value._getTexture());
+                    var index = textureUnitIndex + i;
+                    _gl.uniform1i(_locations[i], index);
                 }
+
+                return textureUnitIndex + _locations.length;
             };
         }
     };
@@ -579,7 +579,7 @@ define([
         var textureUnitIndex = 0;
         var length = samplerUniforms.length;
         for (var i = 0; i < length; ++i) {
-            textureUnitIndex = samplerUniforms[i]._set(textureUnitIndex);
+            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
         }
 
         gl.useProgram(null);
@@ -601,15 +601,14 @@ define([
         var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
-        var partitionedUniforms = partitionUniforms(uniforms.allUniforms);
+        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
 
         this._gl = gl;
         this._program = program;
         this._numberOfVertexAttributes = numberOfVertexAttributes;
         this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
-        this._allUniforms = uniforms.allUniforms;
+        this._uniformsByName = uniforms.uniformsByName;
         this._uniforms = uniforms.uniforms;
-        this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
 
@@ -923,7 +922,7 @@ define([
     }
 
     function findUniforms(gl, program) {
-        var allUniforms = {};
+        var uniformsByName = [];
         var uniforms = [];
         var samplerUniforms = [];
 
@@ -942,12 +941,11 @@ define([
                     var uniformValue = gl.getUniform(program, location);
                     var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
 
-                    allUniforms[uniformName] = uniform;
+                    uniformsByName[uniformName] = uniform;
+                    uniforms.push(uniform);
 
                     if (uniform._setSampler) {
                         samplerUniforms.push(uniform);
-                    } else {
-                        uniforms.push(uniform);
                     }
                 } else {
                     // Uniform array
@@ -991,12 +989,11 @@ define([
                         }
                         uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
 
-                        allUniforms[uniformName] = uniformArray;
+                        uniformsByName[uniformName] = uniformArray;
+                        uniforms.push(uniformArray);
 
                         if (uniformArray._setSampler) {
                             samplerUniforms.push(uniformArray);
-                        } else {
-                            uniforms.push(uniformArray);
                         }
                     }
                 }
@@ -1004,7 +1001,7 @@ define([
         }
 
         return {
-            allUniforms : allUniforms,
+            uniformsByName : uniformsByName,
             uniforms : uniforms,
             samplerUniforms : samplerUniforms
         };
@@ -1067,7 +1064,7 @@ define([
      * @see ShaderProgram#getManualUniforms
      */
     ShaderProgram.prototype.getAllUniforms = function() {
-        return this._allUniforms;
+        return this._uniformsByName;
     };
 
     /**
@@ -1093,7 +1090,6 @@ define([
         var i;
 
         var uniforms = this._uniforms;
-        var samplerUniforms = this._samplerUniforms;
         var manualUniforms = this._manualUniforms;
         var automaticUniforms = this._automaticUniforms;
 
@@ -1115,12 +1111,6 @@ define([
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
             uniforms[i]._set();
-        }
-
-        // TODO: combine with above
-        len = samplerUniforms.length;
-        for (i = 0; i < len; ++i) {
-            samplerUniforms[i]._setSampler();
         }
 
         if (validate) {
