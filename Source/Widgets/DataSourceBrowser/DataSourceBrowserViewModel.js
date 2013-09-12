@@ -60,9 +60,11 @@ define([
          */
         this.addDataSourceTooltip = 'Add Data Source';
 
+        this.visible = true;
+
         this._dataSourceViewModels = [];
 
-        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels', '_maxHeight']);
+        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels', '_maxHeight', 'visible']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -156,10 +158,18 @@ define([
      * Gets the maximum height of panels within the widget, minus an offset, in CSS-ready form.
      * @param {Number} offset The offset in pixels.
      * @memberof DataSourceBrowserViewModel.prototype
-     * @type {Number}
+     * @returns {String}
      */
     DataSourceBrowserViewModel.prototype.maxHeightOffset = function(offset) {
         return (this._maxHeight - offset).toString() + 'px';
+    };
+
+    /**
+     * Toggle visibility
+     * @memberof DataSourceBrowserViewModel.prototype
+     */
+    DataSourceBrowserViewModel.prototype.toggleVisibility = function() {
+        this.visible = !this.visible;
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

@@ -38,6 +38,12 @@ define([
         var element = document.createElement('div');
         element.className = 'cesium-dataSourceBrowser';
 
+        var layerButton = document.createElement('div');
+        layerButton.className = 'cesium-dataSourceBrowser-layerButton';
+        layerButton.setAttribute('data-bind', 'click: toggleVisibility,\
+css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
+        element.appendChild(layerButton);
+
         var templateID = 'cesium-dataSourceBrowser-template-' + createGuid();
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
@@ -57,8 +63,20 @@ define([
 
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
-        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(25) }');
+        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(25) },\
+css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible }');
         element.appendChild(dataSourcesContainer);
+
+        var dataSourcesContainerHeader = document.createElement('div');
+        dataSourcesContainerHeader.className = 'cesium-dataSourceBrowser-dataSourcesContainerHeader';
+        dataSourcesContainerHeader.textContent = 'Data sources';
+        dataSourcesContainer.appendChild(dataSourcesContainerHeader);
+
+        var dataSourcesContainerHide = document.createElement('div');
+        dataSourcesContainerHide.className = 'cesium-dataSourceBrowser-dataSourcesContainerHide';
+        dataSourcesContainerHide.innerHTML = '&laquo;';
+        dataSourcesContainerHide.setAttribute('data-bind', 'click: toggleVisibility');
+        dataSourcesContainer.appendChild(dataSourcesContainerHide);
 
         var dataSourcesToolbar = document.createElement('div');
         dataSourcesToolbar.className = 'cesium-dataSourceBrowser-dataSourcesToolbar';
@@ -84,8 +102,7 @@ template: { name: "' + templateID + '", foreach: dataSourceViewModels }');
         dataSourcePanelContainer.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer';
         dataSourcePanelContainer.setAttribute('data-bind', '\
 with: dataSourcePanelViewModel,\
-css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourcePanelViewModel.visible,\
-       "cesium-dataSourceBrowser-dataSourcePanelContainer-hidden" : !dataSourcePanelViewModel.visible }');
+css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourcePanelViewModel.visible }');
         element.appendChild(dataSourcePanelContainer);
 
         var dataSourcePanelHeader = document.createElement('div');

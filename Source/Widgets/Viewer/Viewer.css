@@ -57,8 +57,8 @@
 
 .cesium-viewer-dataSourceBrowserContainer {
     position: absolute;
-    top: 5px;
-    left: 5px;
+    top: 0;
+    left: 0;
     padding: 0;
 }
 

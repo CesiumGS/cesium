@@ -55,23 +55,90 @@
 }
 
 .cesium-dataSourceBrowser-dataSourcesContainer {
-    background-color: rgba(38, 38, 38, 0.75);
+    position: relative;
+    top: 5px;
+    left: -400px;
+    opacity: 0;
+    background-color: rgba(38, 38, 38, 0.85);
+    border-top: 1px solid #444;
+    border-right: 1px solid #444;
+    border-bottom: 1px solid #444;
     padding: 6px;
-    border-radius: 10px;
     overflow: auto;
     width: 360px;
     max-height: 500px;
+    -webkit-transition: left 0.2s ease-in, opacity 0.2s ease-in;
+    -moz-transition: left 0.2s ease-in, opacity 0.2s ease-in;
+    transition: left 0.2s ease-in, opacity 0.2s ease-in;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainer-visible {
+    left: 0;
+    opacity: 1;
+    -webkit-transition: left 0.2s ease-out, opacity 0.2s ease-out;
+    -moz-transition: left 0.2s ease-out, opacity 0.2s ease-out;
+    transition: left 0.2s ease-out, opacity 0.2s ease-out;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
     position: absolute;
-    top: 0;
+    top: 5px;
     left: 380px;
-    background-color: rgba(38, 38, 38, 0.75);
+    background-color: rgba(38, 38, 38, 0.85);
+    border: 1px solid #444;
     padding: 6px;
-    border-radius: 10px;
+    border-radius: 7px;
     overflow: auto;
     width: 360px;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerHeader {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(84, 84, 84, 0.8);
+    color: #edffff;
+    text-align: center;
+    font-weight: bold;
+    margin: -6px -6px 6px -6px; /* Note margin-bottom is positive. */
+    padding: 6px;
+    letter-spacing: 1px;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerHide {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    font-size: 18px;
+    display: inline-block;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    padding: 1px 12px;
+    margin: 0 3px;
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerHide:focus {
+    color: #fff;
+    border-color: #ea4;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerHide:hover {
+    color: #fff;
+    background: #48b;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerHide:active {
+    color: #000;
+    background: #adf;
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
@@ -128,6 +195,7 @@
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
+    display: none;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected,
@@ -138,10 +206,6 @@
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-visible {
     display: block;
-}
-
-.cesium-dataSourceBrowser-dataSourcePanelContainer-hidden {
-    display: none;
 }
 
 .cesium-dataSourceBrowser-item {
@@ -165,4 +229,26 @@
     background-color: rgba(68, 136, 187, 0.5);  /* RGB is #48b */
     text-decoration: underline;
     box-shadow: 0 0 5px #48b;
+}
+
+.cesium-dataSourceBrowser-layerButton {
+    display: block;
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 32px;
+    height: 32px;
+    background-image: url(../Images/layers.svg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 14%;
+    cursor: pointer;
+}
+
+.cesium-dataSourceBrowser-layerButton:hover {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}
+
+.cesium-dataSourceBrowser-layerButton-hidden {
+    display: none;
 }
