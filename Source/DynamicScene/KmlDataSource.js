@@ -297,18 +297,7 @@ define(['../Core/createGuid',
         } else {
             interval = new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
         }
-        var properties = Object.getOwnPropertyNames(dynamicObject);
-        //iterate all attributes of the dynamicObject in order to assign the TimeInterval
-        for ( var i = 0; i < properties.length; i++) {
-            var graphicType = dynamicObject[properties[i]];
-            if (typeof graphicType === 'object') {
-                //need to create a new TimeIntervalCollectionProperty if none is defined yet
-                if (!defined(graphicType.show)) {
-                    graphicType.show = new TimeIntervalCollectionProperty();
-                }
-                graphicType.show.intervals.addInterval(interval);
-            }
-        }
+        dynamicObject._setAvailability(interval);
     }
 
     //Object that holds all supported Geometry
@@ -537,7 +526,18 @@ define(['../Core/createGuid',
      * @returns {DynamicClock} The clock associated with the current KML data, or undefined if none exists.
      */
     KmlDataSource.prototype.getClock = function() {
-        return undefined;
+        var availability = this._dynamicObjectCollection.computeAvailability();
+        if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+            return undefined;
+        }
+        var clock = new DynamicClock();
+        clock.startTime = availability.start;
+        clock.stopTime = availability.stop;
+        clock.currentTime = availability.start;
+        clock.clockRange = ClockRange.LOOP_STOP;
+        clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        clock.multiplier = Math.min(Math.max(availability.start.getSecondsDifference(availability.stop) / 60, 60), 50000000);
+        return clock;
     };
 
     /**
