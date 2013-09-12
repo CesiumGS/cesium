@@ -17,7 +17,7 @@ define([
         knockout) {
     "use strict";
 
-    var GeocodingWidget = function(container, scene, transitioner, ellipsoid, flightDuration) {
+    var GeocodingWidget = function(container, scene, ellipsoid, flightDuration) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -26,7 +26,7 @@ define([
 
         this._container = container;
 
-        this._viewModel = new GeocodingWidgetViewModel(scene, transitioner, ellipsoid, flightDuration);
+        this._viewModel = new GeocodingWidgetViewModel(scene, ellipsoid, flightDuration);
 
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocodingWidget-input';

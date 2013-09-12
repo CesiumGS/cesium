@@ -39,74 +39,6 @@ define([
         when) {
     "use strict";
 
-    function viewHome(scene, ellipsoid, transitioner, flightDuration) {
-        var mode = scene.mode;
-
-        var camera = scene.getCamera();
-        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
-
-        var controller = scene.getScreenSpaceCameraController();
-
-        controller.setEllipsoid(ellipsoid);
-        controller.columbusViewMode = CameraColumbusViewMode.FREE;
-
-        var canvas = scene.getCanvas();
-        if (defined(transitioner) && mode === SceneMode.MORPHING) {
-            transitioner.completeMorph();
-        }
-        var flight;
-        var description;
-
-        if (mode === SceneMode.SCENE2D) {
-            camera.transform = new Matrix4(0, 0, 1, 0,
-                                           1, 0, 0, 0,
-                                           0, 1, 0, 0,
-                                           0, 0, 0, 1);
-            description = {
-                destination : Extent.MAX_VALUE,
-                duration : flightDuration
-            };
-            flight = CameraFlightPath.createAnimationExtent(scene, description);
-            scene.getAnimations().add(flight);
-        } else if (mode === SceneMode.SCENE3D) {
-            Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
-            var rotation = Matrix4.getRotation(camera.transform);
-            rotation.multiplyByVector(camera.direction, camera.direction);
-            rotation.multiplyByVector(camera.up, camera.up);
-            rotation.multiplyByVector(camera.right, camera.right);
-            camera.transform = Matrix4.IDENTITY.clone();
-            var defaultCamera = new Camera(canvas);
-            description = {
-                destination : defaultCamera.position,
-                duration : flightDuration,
-                up : defaultCamera.up,
-                direction : defaultCamera.direction
-            };
-            flight = CameraFlightPath.createAnimation(scene, description);
-            scene.getAnimations().add(flight);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                           1.0, 0.0, 0.0, 0.0,
-                                           0.0, 1.0, 0.0, 0.0,
-                                           0.0, 0.0, 0.0, 1.0);
-            var maxRadii = ellipsoid.getMaximumRadius();
-            var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-            var direction = Cartesian3.ZERO.subtract(position).normalize();
-            var right = direction.cross(Cartesian3.UNIT_Z);
-            var up = right.cross(direction);
-
-            description = {
-                destination : position,
-                duration : flightDuration,
-                up : up,
-                direction : direction
-            };
-
-            flight = CameraFlightPath.createAnimation(scene, description);
-            scene.getAnimations().add(flight);
-        }
-    }
-
     /**
      * The view model for {@link HomeButton}.
      * @alias HomeButtonViewModel
@@ -119,7 +51,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var GeocodingWidgetViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
+    var GeocodingWidgetViewModel = function(scene, ellipsoid, flightDuration) {
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -129,9 +61,9 @@ define([
 
         this._scene = scene;
         this._ellipsoid = ellipsoid;
-        this._transitioner = transitioner;
         this._flightDuration = flightDuration;
         this._searchText = '';
+        this._resultText = '';
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -145,7 +77,7 @@ define([
             });
 
             when(promise, function(result) {
-                that.searchText = result.resourceSets[0].resources[0].name;
+                that._searchText = result.resourceSets[0].resources[0].name;
                 var bbox = result.resourceSets[0].resources[0].bbox;
                 var south = bbox[0];
                 var west = bbox[1];

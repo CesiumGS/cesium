@@ -294,7 +294,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var geocodingWidgetContainer = document.createElement('div');
             geocodingWidgetContainer.className = 'cesium-viewer-geocodingWidgetContainer';
             viewerContainer.appendChild(geocodingWidgetContainer);
-            geocodingWidget = new GeocodingWidget(geocodingWidgetContainer, cesiumWidget.scene);
+            geocodingWidget = new GeocodingWidget(geocodingWidgetContainer, cesiumWidget.scene, cesiumWidget.centralBody.getEllipsoid());
         }
 
         var eventHelper = new EventHelper();
