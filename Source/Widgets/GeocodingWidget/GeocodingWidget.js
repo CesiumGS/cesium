@@ -31,7 +31,8 @@ define([
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocodingWidget-input';
         textBox.setAttribute('draggable', 'false');
-        textBox.setAttribute('data-bind', 'value: searchText');
+        textBox.setAttribute('placeholder', 'Enter an address or landmark...');
+        textBox.setAttribute('data-bind', 'value: searchText, event: { keypress: inputKeypress }, valueUpdate: "afterkeydown"');
         this._textBox = textBox;
         container.appendChild(textBox);
 

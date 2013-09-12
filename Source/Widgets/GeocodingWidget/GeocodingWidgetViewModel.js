@@ -131,7 +131,7 @@ define([
         this._ellipsoid = ellipsoid;
         this._transitioner = transitioner;
         this._flightDuration = flightDuration;
-        this._searchText = '220 Valley Creek Blvd, Exton, PA';
+        this._searchText = '';
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -165,6 +165,13 @@ define([
                 var flight = CameraFlightPath.createAnimation(scene, description);
                 scene.getAnimations().add(flight);
             });
+        });
+
+        this._inputKeypressCommand = createCommand(function(data, event) {
+           if (event.which === 13) {
+               that._searchCommand();
+           }
+           return true;
         });
 
         /**
@@ -231,6 +238,12 @@ define([
         search : {
             get : function() {
                 return this._searchCommand;
+            }
+        },
+
+        inputKeypress : {
+            get : function() {
+                return this._inputKeypressCommand;
             }
         },
 
