@@ -23,6 +23,7 @@ define(['../Core/createGuid',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
+        './DynamicPath',
         './DynamicPoint',
         './DynamicPolyline',
         './DynamicPolygon',
@@ -56,6 +57,7 @@ define(['../Core/createGuid',
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
+        DynamicPath,
         DynamicPoint,
         DynamicPolyline,
         DynamicPolygon,
@@ -146,26 +148,30 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
-        dynamicObject.name = getStringValue(placemark, 'name');
-        if (defined(dynamicObject.label)) {
-            dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
-        }
-        // I want to iterate over every placemark
-        for ( var i = 0, len = placemark.childNodes.length; i < len; i++) {
-            var node = placemark.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(node.nodeName)) {
-                placemark.geometry = node.nodeName;
-                var geometryType = placemark.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (!defined(geometryHandler)) {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
-                }
-                geometryHandler(dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
+    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+        var id = defined(placemark.id) ? placemark.id : createGuid();
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+
+        processInlineStyles(dynamicObject, placemark, styleCollection, sourceUri, uriResolver);
+
+        var name = getStringValue(placemark, 'name');
+        if (defined(name)) {
+            if (!defined(dynamicObject.label)) {
+                dynamicObject.label = new DynamicLabel();
             }
+            dynamicObject.label.text = new ConstantProperty(name);
         }
 
+        var nodes = placemark.childNodes;
+        for ( var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes.item(i);
+            var nodeName = node.nodeName;
+
+            if (featureTypes.hasOwnProperty(nodeName)) {
+                console.log(nodeName);
+                featureTypes[nodeName](dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
+            }
+        }
     }
 
     function processPoint(dataSource, dynamicObject, kml, node) {
@@ -190,7 +196,7 @@ define(['../Core/createGuid',
         var coordinates = readCoordinates(el[0]);
 
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length - 1])) {
-            throw new RuntimeError("The first and last coordinate tuples must be the same.");
+            throw new RuntimeError('The first and last coordinate tuples must be the same.');
         }
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
@@ -220,88 +226,86 @@ define(['../Core/createGuid',
 
     function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
-        var geometryObject = dynamicObject;
-        var styleObject = dynamicObject;
-        // I want to iterate over every placemark
-        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
-            var innerNode = node.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
-                kml.geometry = innerNode.nodeName;
-                var geometryType = kml.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (geometryHandler !== processGxTrack) {
-                    throw new RuntimeError('gx:MultiTrack takes one or more gx:Track elements');
-                }
-                //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)) {
-                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
-                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
-                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
-                    DynamicLabel.mergeProperties(geometryObject, styleObject);
-                    DynamicPoint.mergeProperties(geometryObject, styleObject);
-                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
-                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
-                    DynamicObject.mergeProperties(geometryObject, styleObject);
-                }
-                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
-                geometryObject = undefined;
+        dynamicObjectCollection.removeObject(dynamicObject.id);
+
+        var childNodes = node.childNodes;
+        for ( var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var childNodeName = childNode.nodeName;
+
+            if (featureTypes.hasOwnProperty(childNodeName)) {
+                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+
+                DynamicBillboard.mergeProperties(childObject, dynamicObject);
+                DynamicLabel.mergeProperties(childObject, dynamicObject);
+                DynamicPoint.mergeProperties(childObject, dynamicObject);
+                DynamicPath.mergeProperties(childObject, dynamicObject);
+                DynamicObject.mergeProperties(childObject, dynamicObject);
+
+                var geometryHandler = featureTypes[childNodeName];
+                geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
             }
         }
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
-        var geometryObject = dynamicObject;
-        var styleObject = dynamicObject;
-        // I want to iterate over every placemark
-        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
-            var innerNode = node.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
-                kml.geometry = innerNode.nodeName;
-                var geometryType = kml.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (!defined(geometryHandler)) {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
+        dynamicObjectCollection.removeObject(dynamicObject.id);
+
+        var childNodes = node.childNodes;
+        for ( var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var childNodeName = childNode.nodeName;
+
+            if (featureTypes.hasOwnProperty(childNodeName)) {
+                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+
+                DynamicObject.mergeProperties(childObject, dynamicObject);
+
+                console.log(childNodeName);
+
+                switch (childNodeName) {
+                case 'Polygon':
+                    DynamicPolygon.mergeProperties(childObject, dynamicObject);
+                    break;
+                default:
+                    DynamicBillboard.mergeProperties(childObject, dynamicObject);
+                    DynamicLabel.mergeProperties(childObject, dynamicObject);
+                    DynamicPoint.mergeProperties(childObject, dynamicObject);
+                    DynamicPolygon.mergeProperties(childObject, dynamicObject);
+                    DynamicPolyline.mergeProperties(childObject, dynamicObject);
+                    break;
                 }
-                //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)) {
-                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
-                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
-                    DynamicObject.mergeProperties(geometryObject, styleObject);
-                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
-                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
-                    DynamicLabel.mergeProperties(geometryObject, styleObject);
-                    DynamicPoint.mergeProperties(geometryObject, styleObject);
-                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
-                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
-                }
-                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
-                geometryObject = undefined;
+
+                var geometryHandler = featureTypes[childNodeName];
+                geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
             }
         }
     }
 
     function processTimeSpan(dataSource, dynamicObject, kml, node) {
-        var beginEl = node.getElementsByTagName('begin');
-        var endEl = node.getElementsByTagName('end');
-        var beginDate = defined(beginEl[0]) ? JulianDate.fromIso8601(beginEl[0].textContent) : undefined;
-        var endDate = defined(endEl[0]) ? JulianDate.fromIso8601(endEl[0].textContent) : undefined;
-        var interval;
-        if (!defined(beginDate) && !defined(endDate)) {
-            throw new RuntimeError('TimeSpan requires a begin and/or end date');
+        var beginDate;
+        var beginNode = node.getElementsByTagName('begin')[0];
+        if (defined(beginNode)) {
+            beginDate = JulianDate.fromIso8601(beginNode.textContent);
         }
+
+        var endDate;
+        var endNode = node.getElementsByTagName('end')[0];
+        if (defined(endNode)) {
+            endDate = JulianDate.fromIso8601(endNode.textContent);
+        }
+
+        var interval;
         if (defined(beginDate) && defined(endDate)) {
-            if (endDate > beginDate) {
-                interval = new TimeInterval(beginDate, endDate, true, true, true);
-            } else {
-                throw new RuntimeError('End date must be larger than Begin date');
-            }
+            interval = new TimeInterval(beginDate, endDate, true, true, true);
         } else if (defined(beginDate)) {
             interval = new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
         } else {
             interval = new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
         }
+
         dynamicObject._setAvailability(interval);
     }
 
@@ -321,7 +325,7 @@ define(['../Core/createGuid',
         for ( var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
 
-            if (node.nodeName === "IconStyle") {
+            if (node.nodeName === 'IconStyle') {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
                 var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
@@ -346,7 +350,7 @@ define(['../Core/createGuid',
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
                 billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
                 dynamicObject.billboard = billboard;
-            } else if (node.nodeName === "LabelStyle") {
+            } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
                 var label = defined(dynamicObject.label) ? dynamicObject.label : new DynamicLabel();
                 var labelScale = getNumericValue(node, 'scale');
@@ -360,9 +364,9 @@ define(['../Core/createGuid',
                 //default billboard image
                 if (!defined(dynamicObject.billboard)) {
                     dynamicObject.billboard = new DynamicBillboard();
-                    dynamicObject.billboard.image = new ConstantProperty("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+                    dynamicObject.billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
                 }
-            } else if (node.nodeName === "LineStyle") {
+            } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
                 var polyline = defined(dynamicObject.polyline) ? dynamicObject.polyline : new DynamicPolyline();
@@ -379,7 +383,7 @@ define(['../Core/createGuid',
                 polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
                 polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
                 dynamicObject.polyline = polyline;
-            } else if (node.nodeName === "PolyStyle") {
+            } else if (node.nodeName === 'PolyStyle') {
                 //Map style to polygon properties
                 //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
@@ -475,26 +479,18 @@ define(['../Core/createGuid',
         return promises;
     }
 
-    function loadKML(dataSource, kml, sourceUri, uriResolver) {
+    function loadKml(dataSource, kml, sourceUri, uriResolver) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         var styleCollection = new DynamicObjectCollection();
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
-        //The rest of the loading code is synchronous
         return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
-            var i, len;
-            var array = kml.getElementsByTagName('Placemark');
-
-            len = array.length;
-            for (i = 0; i < len; i++) {
-                var placemark = array[i];
-                var placemarkId = defined(placemark.id) ? placemark.id : createGuid();
-                var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
-                processInlineStyles(placemarkDynamicObject, array[i], styleCollection, sourceUri, uriResolver);
-                processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
+            var placemarks = kml.getElementsByTagName('Placemark');
+            var length = placemarks.length;
+            for ( var i = 0; i < length; i++) {
+                processPlacemark(dataSource, placemarks[i], dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
             }
-
             dataSource._changed.raiseEvent(this);
         });
     }
@@ -502,7 +498,7 @@ define(['../Core/createGuid',
     function loadXmlFromZip(reader, entry, uriResolver, deferred) {
         entry.getData(new zip.TextWriter(), function(xmlString) {
             var parser = new DOMParser();
-            uriResolver.kml = parser.parseFromString(xmlString, "text/xml");
+            uriResolver.kml = parser.parseFromString(xmlString, 'text/xml');
             deferred.resolve();
         }, function(current, total) {
             // onprogress callback
@@ -538,7 +534,7 @@ define(['../Core/createGuid',
                 }
 
                 when.all(promises, function() {
-                    loadKML(dataSource, uriResolver.kml, undefined, uriResolver);
+                    loadKml(dataSource, uriResolver.kml, undefined, uriResolver);
                     // close the zip reader
                     reader.close(function() {
                         // onclose callback
@@ -644,7 +640,7 @@ define(['../Core/createGuid',
         }
 
         this._dynamicObjectCollection.clear();
-        return loadKML(this, kml, source);
+        return loadKml(this, kml, source);
     };
 
     /**
