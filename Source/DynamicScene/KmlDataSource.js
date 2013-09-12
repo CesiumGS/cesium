@@ -156,7 +156,7 @@ define(['../Core/createGuid',
                 var geometryType = placemark.geometry;
                 var geometryHandler = featureTypes[geometryType];
                 if (!defined(geometryHandler)) {
-                    throw new DeveloperError('Unknown geometry type: ' + geometryType);
+                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
                 geometryHandler(dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
             }
@@ -186,7 +186,7 @@ define(['../Core/createGuid',
         var coordinates = readCoordinates(el[0]);
 
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length - 1])) {
-            throw new DeveloperError("The first and last coordinate tuples must be the same.");
+            throw new RuntimeError("The first and last coordinate tuples must be the same.");
         }
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
@@ -227,7 +227,7 @@ define(['../Core/createGuid',
                 var geometryType = kml.geometry;
                 var geometryHandler = featureTypes[geometryType];
                 if (geometryHandler !== processGxTrack) {
-                    throw new DeveloperError('gx:MultiTrack takes one or more gx:Track elements');
+                    throw new RuntimeError('gx:MultiTrack takes one or more gx:Track elements');
                 }
                 //only create a new dynamicObject if the placemark's object was used already
                 if (!defined(geometryObject)) {
@@ -258,7 +258,7 @@ define(['../Core/createGuid',
                 var geometryType = kml.geometry;
                 var geometryHandler = featureTypes[geometryType];
                 if (!defined(geometryHandler)) {
-                    throw new DeveloperError('Unknown geometry type: ' + geometryType);
+                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
                 //only create a new dynamicObject if the placemark's object was used already
                 if (!defined(geometryObject)) {
@@ -284,13 +284,13 @@ define(['../Core/createGuid',
         var endDate = defined(endEl[0]) ? JulianDate.fromIso8601(endEl[0].textContent) : undefined;
         var interval;
         if (!defined(beginDate) && !defined(endDate)) {
-            throw new DeveloperError('TimeSpan requires a begin and/or end date');
+            throw new RuntimeError('TimeSpan requires a begin and/or end date');
         }
         if (defined(beginDate) && defined(endDate)) {
             if (endDate > beginDate) {
                 interval = new TimeInterval(beginDate, endDate, true, true, true);
             } else {
-                throw new DeveloperError('End date must be larger than Begin date');
+                throw new RuntimeError('End date must be larger than Begin date');
             }
         } else if (defined(beginDate)) {
             interval = new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
@@ -359,7 +359,7 @@ define(['../Core/createGuid',
                 var lineOuterColor = getColorValue(node, 'outerColor');
                 var lineOuterWidth = getNumericValue(node, 'outerWidth');
                 if (defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)) {
-                    throw new DeveloperError('gx:outerWidth must be a value between 0 and 1.0');
+                    throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
                 polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
