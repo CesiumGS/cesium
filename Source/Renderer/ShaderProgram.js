@@ -922,7 +922,7 @@ define([
     }
 
     function findUniforms(gl, program) {
-        var uniformsByName = [];
+        var uniformsByName = {};
         var uniforms = [];
         var samplerUniforms = [];
 
