@@ -419,13 +419,6 @@ define([
 
                 return textureUnitIndex + 1;
             };
-
-            this._clearSampler = function(textureUnitIndex) {
-                _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex);
-                _gl.bindTexture(this.value._getTarget(), null);
-
-                return textureUnitIndex + 1;
-            };
         }
     };
 
@@ -558,15 +551,6 @@ define([
                     _gl.activeTexture(_gl.TEXTURE0 + index);
                     _gl.bindTexture(value._getTarget(), value._getTexture());
                     _gl.uniform1i(_locations[i], index);
-                }
-
-                return textureUnitIndex + _locations.length;
-            };
-
-            this._clearSampler = function(textureUnitIndex) {
-                for ( var i = 0; i < _locations.length; ++i) {
-                    _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
-                    _gl.bindTexture(this.value[i]._getTarget(), null);
                 }
 
                 return textureUnitIndex + _locations.length;
@@ -1068,15 +1052,6 @@ define([
         this._gl.useProgram(this._program);
     };
 
-    ShaderProgram.prototype._unBind = function() {
-        var samplerUniforms = this._samplerUniforms;
-        var textureUnitIndex = 0;
-        var len = samplerUniforms.length;
-        for ( var i = 0; i < len; ++i) {
-            textureUnitIndex = samplerUniforms[i]._clearSampler(textureUnitIndex);
-        }
-    };
-
     ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
         // TODO: Performance
 
@@ -1123,6 +1098,8 @@ define([
                 throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
             }
         }
+
+        return textureUnitIndex;
     };
 
     /**

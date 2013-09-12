@@ -253,6 +253,7 @@ define([
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
         this._currentRenderState = rs;
+        this.maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
@@ -2117,7 +2118,9 @@ define([
 
         if (count > 0) {
             this._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
-            sp._setUniforms(command.uniformMap, this._us, this._validateSP);
+            var textureUnitIndex = sp._setUniforms(command.uniformMap, this._us, this._validateSP);
+
+            this.maxFrameTextureUnitIndex = Math.max(this.maxFrameTextureUnitIndex, textureUnitIndex);
 
             va._bind();
 
@@ -2141,7 +2144,6 @@ define([
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
         }
-        this._currentSp._unBind();
         this._currentSp = undefined;
     };
 
@@ -2149,7 +2151,17 @@ define([
      * @private
      */
     Context.prototype.endFrame = function() {
-        this._gl.useProgram(null);
+        var gl = this._gl;
+        gl.useProgram(null);
+
+        var length = this.maxFrameTextureUnitIndex;
+        this.maxFrameTextureUnitIndex = 0;
+
+        for (var i = 0; i < length; ++i) {
+            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        }
     };
 
     /**
