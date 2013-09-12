@@ -18,7 +18,7 @@ Beta Releases
 * Added `heading` and `tilt` properties to `CameraController`.
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
-* Fix geometries no closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
+* Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 
 ### b20 - 2013-09-03
 
