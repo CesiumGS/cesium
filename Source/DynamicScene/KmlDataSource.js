@@ -20,6 +20,7 @@ define(['../Core/createGuid',
         './ColorMaterialProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionProperty',
+        '../Scene/LabelStyle',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -54,6 +55,7 @@ define(['../Core/createGuid',
         ColorMaterialProperty,
         SampledPositionProperty,
         TimeIntervalCollectionProperty,
+        LabelStyle,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -152,24 +154,33 @@ define(['../Core/createGuid',
         var id = defined(placemark.id) ? placemark.id : createGuid();
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
 
-        processInlineStyles(dynamicObject, placemark, styleCollection, sourceUri, uriResolver);
+        var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
 
         var name = getStringValue(placemark, 'name');
         if (defined(name)) {
             if (!defined(dynamicObject.label)) {
                 dynamicObject.label = new DynamicLabel();
+                dynamicObject.label.font = new ConstantProperty('16pt Arial');
+                dynamicObject.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
             }
             dynamicObject.label.text = new ConstantProperty(name);
         }
 
+        var foundGeometry = false;
         var nodes = placemark.childNodes;
         for ( var i = 0, len = nodes.length; i < len; i++) {
             var node = nodes.item(i);
             var nodeName = node.nodeName;
-
-            if (featureTypes.hasOwnProperty(nodeName)) {
+            if (nodeName === 'TimeSpan') {
+                dynamicObject._setAvailability(processTimeSpan(node));
+            } else if (featureTypes.hasOwnProperty(nodeName)) {
+                foundGeometry = true;
+                mergeStyles(nodeName, styleObject, dynamicObject);
                 featureTypes[nodeName](dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
             }
+        }
+        if (!foundGeometry) {
+            mergeStyles(undefined, styleObject, dynamicObject);
         }
     }
 
@@ -236,11 +247,7 @@ define(['../Core/createGuid',
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
 
-                DynamicBillboard.mergeProperties(childObject, dynamicObject);
-                DynamicLabel.mergeProperties(childObject, dynamicObject);
-                DynamicPoint.mergeProperties(childObject, dynamicObject);
-                DynamicPath.mergeProperties(childObject, dynamicObject);
-                DynamicObject.mergeProperties(childObject, dynamicObject);
+                mergeStyles(childNodeName, dynamicObject, childObject);
 
                 var geometryHandler = featureTypes[childNodeName];
                 geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
@@ -260,20 +267,7 @@ define(['../Core/createGuid',
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
 
-                DynamicObject.mergeProperties(childObject, dynamicObject);
-
-                switch (childNodeName) {
-                case 'Polygon':
-                    DynamicPolygon.mergeProperties(childObject, dynamicObject);
-                    break;
-                default:
-                    DynamicBillboard.mergeProperties(childObject, dynamicObject);
-                    DynamicLabel.mergeProperties(childObject, dynamicObject);
-                    DynamicPoint.mergeProperties(childObject, dynamicObject);
-                    DynamicPolygon.mergeProperties(childObject, dynamicObject);
-                    DynamicPolyline.mergeProperties(childObject, dynamicObject);
-                    break;
-                }
+                mergeStyles(childNodeName, dynamicObject, childObject);
 
                 var geometryHandler = featureTypes[childNodeName];
                 geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
@@ -281,29 +275,26 @@ define(['../Core/createGuid',
         }
     }
 
-    function processTimeSpan(dataSource, dynamicObject, kml, node) {
-        var beginDate;
+    function processTimeSpan(node) {
         var beginNode = node.getElementsByTagName('begin')[0];
-        if (defined(beginNode)) {
-            beginDate = JulianDate.fromIso8601(beginNode.textContent);
-        }
+        var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
 
-        var endDate;
         var endNode = node.getElementsByTagName('end')[0];
-        if (defined(endNode)) {
-            endDate = JulianDate.fromIso8601(endNode.textContent);
-        }
+        var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
 
-        var interval;
         if (defined(beginDate) && defined(endDate)) {
-            interval = new TimeInterval(beginDate, endDate, true, true, true);
-        } else if (defined(beginDate)) {
-            interval = new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
-        } else {
-            interval = new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
+            return new TimeInterval(beginDate, endDate, true, true, true);
         }
 
-        dynamicObject._setAvailability(interval);
+        if (defined(beginDate)) {
+            return new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
+        }
+
+        if (defined(endDate)) {
+            return new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
+        }
+
+        return undefined;
     }
 
     //Object that holds all supported Geometry
@@ -314,8 +305,7 @@ define(['../Core/createGuid',
         Polygon : processPolygon,
         'gx:Track' : processGxTrack,
         'gx:MultiTrack' : processGxMultiTrack,
-        MultiGeometry : processMultiGeometry,
-        TimeSpan : processTimeSpan
+        MultiGeometry : processMultiGeometry
     };
 
     function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
@@ -357,6 +347,8 @@ define(['../Core/createGuid',
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
+                label.font = new ConstantProperty('16pt Arial');
+                label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 dynamicObject.label = label;
                 //default billboard image
                 if (!defined(dynamicObject.billboard)) {
@@ -393,29 +385,91 @@ define(['../Core/createGuid',
         }
     }
 
+    function mergeStyles(geometryType, styleObject, targetObject) {
+        switch (geometryType) {
+        case 'Point':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'LineString':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        case 'LinearRing':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        case 'Polygon':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            break;
+        case 'gx:Track':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'gx:MultiTrack':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'MultiGeometry':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        default:
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        }
+    }
+
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
-    function processInlineStyles(dynamicObject, node, styleCollection, sourceUri, uriResolver) {
+    function processInlineStyles(placeMark, styleCollection, sourceUri, uriResolver) {
+        var result = new DynamicObject();
+
         //KML_TODO Validate the behavior for multiple/conflicting styles.
-        var inlineStyles = node.getElementsByTagName('Style');
+        var inlineStyles = placeMark.getElementsByTagName('Style');
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject, sourceUri, uriResolver);
+            processStyle(inlineStyles.item(inlineStylesLength - 1), result, sourceUri, uriResolver);
         }
 
-        var externalStyles = node.getElementsByTagName('styleUrl');
+        var externalStyles = placeMark.getElementsByTagName('styleUrl');
         if (externalStyles.length > 0) {
             var styleObject = styleCollection.getObject(externalStyles.item(0).textContent);
+
             if (typeof styleObject !== 'undefined') {
                 //Google earth seems to always use the first external style only.
-                DynamicBillboard.mergeProperties(dynamicObject, styleObject);
-                DynamicLabel.mergeProperties(dynamicObject, styleObject);
-                DynamicPoint.mergeProperties(dynamicObject, styleObject);
-                DynamicPolygon.mergeProperties(dynamicObject, styleObject);
-                DynamicPolyline.mergeProperties(dynamicObject, styleObject);
-                DynamicObject.mergeProperties(dynamicObject, styleObject);
+                DynamicBillboard.mergeProperties(result, styleObject);
+                DynamicLabel.mergeProperties(result, styleObject);
+                DynamicPoint.mergeProperties(result, styleObject);
+                DynamicPolygon.mergeProperties(result, styleObject);
+                DynamicPolyline.mergeProperties(result, styleObject);
+                DynamicObject.mergeProperties(result, styleObject);
             }
         }
+        return result;
     }
 
     //Asynchronously processes an external style file.
