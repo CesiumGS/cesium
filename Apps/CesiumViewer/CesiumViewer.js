@@ -91,6 +91,7 @@ define([
 
         if (defined(endUserOptions.source)) {
             var source;
+            var sourceFunctionName = 'loadUrl';
             var sourceUrl = endUserOptions.source.toUpperCase();
             if (endsWith(sourceUrl, '.GEOJSON') || //
                 endsWith(sourceUrl, '.JSON') || //
@@ -100,6 +101,9 @@ define([
                 source = new CzmlDataSource();
             } else if (endsWith(sourceUrl, ".KML")) {
                 source = new KmlDataSource();
+            } else if (endsWith(sourceUrl, ".KMZ")) {
+                source = new KmlDataSource();
+                sourceFunctionName = 'loadKmzUrl';
             } else {
                 loadingIndicator.style.display = 'none';
 
@@ -107,7 +111,7 @@ define([
             }
 
             if (defined(source)) {
-                source.loadUrl(endUserOptions.source).then(function() {
+                source[sourceFunctionName](endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
 
                     if (defined(endUserOptions.lookAt)) {
