@@ -2146,6 +2146,13 @@ define([
     };
 
     /**
+     * @private
+     */
+    Context.prototype.endFrame = function() {
+        this._gl.useProgram(null);
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context

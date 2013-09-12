@@ -1069,8 +1069,6 @@ define([
     };
 
     ShaderProgram.prototype._unBind = function() {
-        this._gl.useProgram(null);
-
         var samplerUniforms = this._samplerUniforms;
         var textureUnitIndex = 0;
         var len = samplerUniforms.length;
