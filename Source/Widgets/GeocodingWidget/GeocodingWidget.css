@@ -1,0 +1,28 @@
+.cesium-geocodingWidget-input {
+    border: solid 1px #888;
+    background-color: #222;
+    color: white;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.cesium-geocodingWidget-input:hover {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}
+
+.cesium-geocodingWidget-goButton {
+    display: inline-block;
+    position: relative;
+    background-image: url(../Images/search.svg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    border-radius: 14%;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+.cesium-geocodingWidget-goButton:hover {
+    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+}
