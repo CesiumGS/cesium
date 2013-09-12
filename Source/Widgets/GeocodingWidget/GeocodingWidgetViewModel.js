@@ -145,6 +145,7 @@ define([
             });
 
             when(promise, function(result) {
+                that.searchText = result.resourceSets[0].resources[0].name;
                 var bbox = result.resourceSets[0].resources[0].bbox;
                 var south = bbox[0];
                 var west = bbox[1];
@@ -181,7 +182,7 @@ define([
          */
         this.tooltip = 'View Home';
 
-        knockout.track(this, ['tooltip']);
+        knockout.track(this, ['tooltip', '_searchText']);
     };
 
     defineProperties(GeocodingWidgetViewModel.prototype, {
