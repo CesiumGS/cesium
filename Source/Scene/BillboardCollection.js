@@ -590,7 +590,7 @@ define([
         var length = sixteenK * 6;
         var indices = new Uint16Array(length);
         for (var i = 0, j = 0; i < length; i += 6, j += 4) {
-            indices[i + 0] = j + 0;
+            indices[i] = j;
             indices[i + 1] = j + 1;
             indices[i + 2] = j + 2;
 
