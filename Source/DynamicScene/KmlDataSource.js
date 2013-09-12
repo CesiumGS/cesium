@@ -168,7 +168,6 @@ define(['../Core/createGuid',
             var nodeName = node.nodeName;
 
             if (featureTypes.hasOwnProperty(nodeName)) {
-                console.log(nodeName);
                 featureTypes[nodeName](dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
             }
         }
@@ -262,8 +261,6 @@ define(['../Core/createGuid',
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
 
                 DynamicObject.mergeProperties(childObject, dynamicObject);
-
-                console.log(childNodeName);
 
                 switch (childNodeName) {
                 case 'Polygon':
