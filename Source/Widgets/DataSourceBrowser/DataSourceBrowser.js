@@ -67,7 +67,7 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         // This is the container panel for the list of data sources.
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
-        dataSourcesContainer.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(25) },\
+        dataSourcesContainer.setAttribute('data-bind', '\
 css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible }');
         element.appendChild(dataSourcesContainer);
 
@@ -93,18 +93,24 @@ attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
         dataSourcesContainerHeader.appendChild(addDataSourceButton);
 
+        // This is a height-limited container for the list of data sources.
+        var dataSourcesContainerBody = document.createElement('div');
+        dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
+        dataSourcesContainerBody.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(45) }');
+        dataSourcesContainer.appendChild(dataSourcesContainerBody);
+
         // Info message, if there are no data sources.
         var dataSourcesInfo = document.createElement('div');
         dataSourcesInfo.className = 'cesium-dataSourceBrowser-dataSourcesInfo';
         dataSourcesInfo.setAttribute('data-bind', 'text: infoText');
-        dataSourcesContainer.appendChild(dataSourcesInfo);
+        dataSourcesContainerBody.appendChild(dataSourcesInfo);
 
         // The root UL of the actual list of data sources, that uses the template.
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
         dataSourcesRootElement.setAttribute('data-bind', '\
 template: { name: "' + templateID + '", foreach: dataSourceViewModels }');
-        dataSourcesContainer.appendChild(dataSourcesRootElement);
+        dataSourcesContainerBody.appendChild(dataSourcesRootElement);
 
         // The root of the panel that adds new data sources.
         var dataSourcePanelContainer = document.createElement('div');

@@ -63,10 +63,7 @@
     border-top: 1px solid #444;
     border-right: 1px solid #444;
     border-bottom: 1px solid #444;
-    padding: 6px;
-    overflow: auto;
     width: 360px;
-    max-height: 500px;
     -webkit-transition: left 0.2s ease-in, opacity 0.2s ease-in;
     -moz-transition: left 0.2s ease-in, opacity 0.2s ease-in;
     transition: left 0.2s ease-in, opacity 0.2s ease-in;
@@ -78,6 +75,12 @@
     -webkit-transition: left 0.2s ease-out, opacity 0.2s ease-out;
     -moz-transition: left 0.2s ease-out, opacity 0.2s ease-out;
     transition: left 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainerBody {
+    width: 100%;
+    max-height: 500px;
+    overflow: auto;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
@@ -100,7 +103,7 @@
     background: rgba(84, 84, 84, 0.8);
     color: #edffff;
     font-weight: bold;
-    margin: -6px -6px 6px -6px; /* Note margin-bottom is positive. */
+    margin: 0 0 2px 0;
     padding: 6px 6px 6px 110px;
     letter-spacing: 1px;
 }
