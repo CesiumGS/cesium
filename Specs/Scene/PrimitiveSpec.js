@@ -22,8 +22,6 @@ defineSuite([
          'Scene/OrthographicFrustum',
          'Specs/render',
          'Specs/pick',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -50,8 +48,6 @@ defineSuite([
          OrthographicFrustum,
          render,
          pick,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {

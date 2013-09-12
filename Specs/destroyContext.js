@@ -4,8 +4,8 @@ define(['Specs/destroyCanvas'], function(destroyCanvas) {
 
     function destroyContext(context) {
         if (context) {
-            destroyCanvas(context.getCanvas());
-            context = context.destroy();
+//            destroyCanvas(context.getCanvas());
+//            context = context.destroy();
         }
     }
 
