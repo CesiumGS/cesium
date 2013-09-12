@@ -47,12 +47,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('fromArray throws with an invalid offset', function() {
-        expect(function() {
-            Cartesian4.fromArray([0.0, 0.0, 0.0, 0.0], 1);
-        }).toThrow();
-    });
-
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var result = cartesian.clone();

@@ -743,18 +743,17 @@ define([
         return geometry;
     };
 
-    var scratch = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian4();
 
     function transformPoint(matrix, attribute) {
         if (defined(attribute)) {
             var values = attribute.values;
             var length = values.length;
             for (var i = 0; i < length; i += 3) {
-                Cartesian3.fromArray(values, i, scratch);
-                Matrix4.multiplyByPoint(matrix, scratch, scratch);
-                values[i] = scratch.x;
-                values[i + 1] = scratch.y;
-                values[i + 2] = scratch.z;
+                Cartesian3.unpack(values, i, scratchCartesian3);
+                Matrix4.multiplyByPoint(matrix, scratchCartesian3, scratchCartesian4);
+                Cartesian3.pack(scratchCartesian4, values, i);
             }
         }
     }
@@ -764,11 +763,9 @@ define([
             var values = attribute.values;
             var length = values.length;
             for (var i = 0; i < length; i += 3) {
-                Cartesian3.fromArray(values, i, scratch);
-                Matrix3.multiplyByVector(matrix, scratch, scratch);
-                values[i] = scratch.x;
-                values[i + 1] = scratch.y;
-                values[i + 2] = scratch.z;
+                Cartesian3.unpack(values, i, scratchCartesian3);
+                Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian4);
+                Cartesian3.pack(scratchCartesian4, values, i);
             }
         }
     }
