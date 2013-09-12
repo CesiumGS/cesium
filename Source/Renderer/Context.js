@@ -253,7 +253,7 @@ define([
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
         this._currentRenderState = rs;
-        this.maxFrameTextureUnitIndex = 0;
+        this._maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
@@ -2071,6 +2071,7 @@ define([
 
         this._currentFramebuffer = framebuffer;
         this._currentSp = sp;
+        this._maxFrameTextureUnitIndex = Math.max(this._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
     };
 
     /**
@@ -2118,9 +2119,7 @@ define([
 
         if (count > 0) {
             this._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
-            var textureUnitIndex = sp._setUniforms(command.uniformMap, this._us, this._validateSP);
-
-            this.maxFrameTextureUnitIndex = Math.max(this.maxFrameTextureUnitIndex, textureUnitIndex);
+            sp._setUniforms(command.uniformMap, this._us, this._validateSP);
 
             va._bind();
 
@@ -2154,8 +2153,8 @@ define([
         var gl = this._gl;
         gl.useProgram(null);
 
-        var length = this.maxFrameTextureUnitIndex;
-        this.maxFrameTextureUnitIndex = 0;
+        var length = this._maxFrameTextureUnitIndex;
+        this._maxFrameTextureUnitIndex = 0;
 
         for (var i = 0; i < length; ++i) {
             gl.activeTexture(gl.TEXTURE0 + i);

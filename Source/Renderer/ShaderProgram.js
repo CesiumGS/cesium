@@ -339,6 +339,11 @@ define([
             return _location;
         };
 
+        /**
+         * @private
+         */
+        this.textureUnitIndex = undefined;
+
         this._set = (function() {
             switch (activeUniform.type) {
             case _gl.FLOAT:
@@ -369,8 +374,11 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                // See _setSampler()
-                return undefined;
+                return function(textureUnitIndex) {
+                    this.textureUnitIndex = textureUnitIndex;
+                    _gl.uniform1i(_location, textureUnitIndex);
+                    return textureUnitIndex + 1;
+                };
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
@@ -412,12 +420,9 @@ define([
         })();
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
-                _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex);
+            this._setSampler = function() {
+                _gl.activeTexture(_gl.TEXTURE0 + this.textureUnitIndex);
                 _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
-                _gl.uniform1i(_location, textureUnitIndex);
-
-                return textureUnitIndex + 1;
             };
         }
     };
@@ -448,6 +453,11 @@ define([
         this._getLocations = function() {
             return _locations;
         };
+
+        /**
+         * @private
+         */
+        this.textureUnitIndex = undefined;
 
         this._set = (function() {
             switch (activeUniform.type) {
@@ -487,8 +497,16 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                // See _setSampler()
-                return undefined;
+                return function(textureUnitIndex) {
+                    this.textureUnitIndex = textureUnitIndex;
+
+                    for ( var i = 0; i < _locations.length; ++i) {
+                        var index = textureUnitIndex + i;
+                        _gl.uniform1i(_locations[i], index);
+                    }
+
+                    return textureUnitIndex + _locations.length;
+                };
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
@@ -544,19 +562,30 @@ define([
         })();
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
-            this._setSampler = function(textureUnitIndex) {
+            this._setSampler = function() {
                 for ( var i = 0; i < _locations.length; ++i) {
                     var value = this.value[i];
-                    var index = textureUnitIndex + i;
+                    var index = this.textureUnitIndex + i;
                     _gl.activeTexture(_gl.TEXTURE0 + index);
                     _gl.bindTexture(value._getTarget(), value._getTexture());
-                    _gl.uniform1i(_locations[i], index);
                 }
-
-                return textureUnitIndex + _locations.length;
             };
         }
     };
+
+    function setSamplerUniforms(gl, program, samplerUniforms) {
+        gl.useProgram(program);
+
+        var textureUnitIndex = 0;
+        var length = samplerUniforms.length;
+        for (var i = 0; i < length; ++i) {
+            textureUnitIndex = samplerUniforms[i]._set(textureUnitIndex);
+        }
+
+        gl.useProgram(null);
+
+        return textureUnitIndex;
+    }
 
     /**
      * DOC_TBA
@@ -583,6 +612,11 @@ define([
         this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
+
+        /**
+         * @private
+         */
+        this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
 
         /**
          * GLSL source for the shader program's vertex shader.  This is the version of
@@ -1083,10 +1117,10 @@ define([
             uniforms[i]._set();
         }
 
-        var textureUnitIndex = 0;
+        // TODO: combine with above
         len = samplerUniforms.length;
         for (i = 0; i < len; ++i) {
-            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
+            samplerUniforms[i]._setSampler();
         }
 
         if (validate) {
@@ -1098,8 +1132,6 @@ define([
                 throw new DeveloperError('Program validation failed.  Link log: ' + gl.getProgramInfoLog(program));
             }
         }
-
-        return textureUnitIndex;
     };
 
     /**
