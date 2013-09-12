@@ -36,12 +36,30 @@ define([
     function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
         var key = '';
         key += textureCount;
-        key += applyBrightness ? '_brightness' : '';
-        key += applyContrast ? '_contrast' : '';
-        key += applyHue ? '_hue' : '';
-        key += applySaturation ? '_saturation' : '';
-        key += applyGamma ? '_gamma' : '';
-        key += applyAlpha ? '_alpha' : '';
+
+        if (applyBrightness) {
+            key += '_brightness';
+        }
+
+        if (applyContrast) {
+            key += '_contrast';
+        }
+
+        if (applyHue) {
+            key += '_hue';
+        }
+
+        if (applySaturation) {
+            key += '_saturation';
+        }
+
+        if (applyGamma) {
+            key += '_gamma';
+        }
+
+        if (applyAlpha) {
+            key += '_alpha';
+        }
 
         return key;
     }
