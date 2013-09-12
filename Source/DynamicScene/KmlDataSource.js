@@ -278,24 +278,24 @@ define(['../Core/createGuid',
     }
 
     function processTimeSpan(dataSource, dynamicObject, kml, node) {
-        var beginEl = defined(node.getElementsByTagName('begin')) ? node.getElementsByTagName('begin')[0] : undefined;
-        var endEl = defined(node.getElementsByTagName('end')) ? node.getElementsByTagName('end')[0] : undefined;
-        var beginDate = defined(beginEl) ? new Date(beginEl.textContent) : undefined;
-        var endDate = defined(endEl) ? new Date(endEl.textContent) : undefined;
+        var beginEl = node.getElementsByTagName('begin');
+        var endEl = node.getElementsByTagName('end');
+        var beginDate = defined(beginEl[0]) ? JulianDate.fromIso8601(beginEl[0].textContent) : undefined;
+        var endDate = defined(endEl[0]) ? JulianDate.fromIso8601(endEl[0].textContent) : undefined;
         var interval;
         if (!defined(beginDate) && !defined(endDate)) {
             throw new DeveloperError('TimeSpan requires a begin and/or end date');
         }
         if (defined(beginDate) && defined(endDate)) {
             if (endDate > beginDate) {
-                interval = new TimeInterval(JulianDate.fromDate(beginDate), JulianDate.fromDate(endDate), true, true, true);
+                interval = new TimeInterval(beginDate, endDate, true, true, true);
             } else {
                 throw new DeveloperError('End date must be larger than Begin date');
             }
         } else if (defined(beginDate)) {
-            interval = new TimeInterval(JulianDate.fromDate(beginDate), Iso8601.MAXIMUM_VALUE, true, false, true);
+            interval = new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
         } else {
-            interval = new TimeInterval(Iso8601.MINIMUM_VALUE, JulianDate.fromDate(endDate), false, true, true);
+            interval = new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
         }
         var properties = Object.getOwnPropertyNames(dynamicObject);
         //iterate all attributes of the dynamicObject in order to assign the TimeInterval
