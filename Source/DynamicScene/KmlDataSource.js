@@ -95,12 +95,12 @@ define(['../Core/createGuid',
 
     function getNumericValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) ? parseFloat(element.firstChild.data) : undefined;
+        return defined(element) ? parseFloat(element.textContent) : undefined;
     }
 
     function getStringValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        var value = defined(element) ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.textContent : undefined;
         return value;
     }
 
@@ -108,11 +108,11 @@ define(['../Core/createGuid',
         var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
-        var value = defined(element) ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.textContent : undefined;
         if (!defined(value)) {
             return undefined;
         }
-        var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
+        var colorMode = defined(colorModeNode) ? colorModeNode.textContent : undefined;
         if (colorMode === 'random') {
             var options = {};
             alpha = parseInt(value.substring(0, 2), 16) / 255.0;
@@ -211,7 +211,7 @@ define(['../Core/createGuid',
         var times = new Array(timesEl.length);
         for ( var i = 0; i < times.length; i++) {
             coordinates[i] = readCoordinate(coordsEl[i]);
-            times[i] = JulianDate.fromIso8601(timesEl[i].firstChild.data);
+            times[i] = JulianDate.fromIso8601(timesEl[i].textContent);
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
@@ -268,12 +268,13 @@ define(['../Core/createGuid',
                 if (!defined(geometryObject)) {
                     var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
                     geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
+                    DynamicObject.mergeProperties(geometryObject, styleObject);
+                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
                     DynamicBillboard.mergeProperties(geometryObject, styleObject);
                     DynamicLabel.mergeProperties(geometryObject, styleObject);
                     DynamicPoint.mergeProperties(geometryObject, styleObject);
                     DynamicPolygon.mergeProperties(geometryObject, styleObject);
                     DynamicPolyline.mergeProperties(geometryObject, styleObject);
-                    DynamicObject.mergeProperties(geometryObject, styleObject);
                 }
                 geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
                 geometryObject = undefined;
@@ -314,10 +315,9 @@ define(['../Core/createGuid',
         'gx:MultiTrack' : processGxMultiTrack,
         MultiGeometry : processMultiGeometry,
         TimeSpan : processTimeSpan
-    //TODO Model, gxTrack, gxMultitrack
     };
 
-    function processStyle(styleNode, dynamicObject, sourceUri, zipContext) {
+    function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
         for ( var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
 
@@ -329,8 +329,8 @@ define(['../Core/createGuid',
                 var color = getColorValue(node, 'color');
                 var icon = getStringValue(node, 'href');
                 var iconResolved = false;
-                if (defined(zipContext)) {
-                    var blob = zipContext[icon.toUpperCase()];
+                if (defined(uriResolver)) {
+                    var blob = uriResolver[icon];
                     if (defined(blob)) {
                         iconResolved = true;
                         icon = blob;
@@ -393,13 +393,13 @@ define(['../Core/createGuid',
     }
 
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
-    function processInlineStyles(dynamicObject, node, styleCollection, sourceUri, zipContext) {
+    function processInlineStyles(dynamicObject, node, styleCollection, sourceUri, uriResolver) {
         //KML_TODO Validate the behavior for multiple/conflicting styles.
         var inlineStyles = node.getElementsByTagName('Style');
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject, sourceUri, zipContext);
+            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject, sourceUri, uriResolver);
         }
 
         var externalStyles = node.getElementsByTagName('styleUrl');
@@ -428,7 +428,7 @@ define(['../Core/createGuid',
     //their id into the rovided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(kml, styleCollection, sourceUri, isExternal, zipContext) {
+    function processStyles(kml, styleCollection, sourceUri, isExternal, uriResolver) {
         var i;
 
         var styleNodes = kml.getElementsByTagName('Style');
@@ -444,7 +444,7 @@ define(['../Core/createGuid',
                 }
                 if (!defined(styleCollection.getObject(id))) {
                     var styleObject = styleCollection.getOrCreateObject(id);
-                    processStyle(node, styleObject, sourceUri, zipContext);
+                    processStyle(node, styleObject, sourceUri, uriResolver);
                 }
             }
         }
@@ -475,23 +475,79 @@ define(['../Core/createGuid',
         return promises;
     }
 
-    function loadKML(dataSource, kml, sourceUri, zipContext) {
+    function loadKML(dataSource, kml, sourceUri, uriResolver) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         var styleCollection = new DynamicObjectCollection();
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         //The rest of the loading code is synchronous
-        return when.all(processStyles(kml, styleCollection, sourceUri, false, zipContext), function() {
+        return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
+            var i, len;
             var array = kml.getElementsByTagName('Placemark');
-            for ( var i = 0, len = array.length; i < len; i++) {
+
+            len = array.length;
+            for (i = 0; i < len; i++) {
                 var placemark = array[i];
                 var placemarkId = defined(placemark.id) ? placemark.id : createGuid();
                 var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
-                processInlineStyles(placemarkDynamicObject, array[i], styleCollection, sourceUri, zipContext);
+                processInlineStyles(placemarkDynamicObject, array[i], styleCollection, sourceUri, uriResolver);
                 processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
             }
+
             dataSource._changed.raiseEvent(this);
+        });
+    }
+
+    function loadXmlFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.TextWriter(), function(xmlString) {
+            var parser = new DOMParser();
+            uriResolver.kml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback
+        });
+    }
+
+    function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
+            uriResolver[entry.filename] = dataUri;
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback
+        });
+    }
+
+    function loadKmz(dataSource, blob, deferred) {
+        var uriResolver = {};
+        zip.createReader(new zip.BlobReader(blob), function(reader) {
+            reader.getEntries(function(entries) {
+                var promises = [];
+                for ( var i = 0; i < entries.length; i++) {
+                    var entry = entries[i];
+                    if (!entry.directory) {
+                        var innerDefer = when.defer();
+                        promises.push(innerDefer.promise);
+                        var filename = entry.filename.toUpperCase();
+                        if (filename === 'DOC.KML') {
+                            loadXmlFromZip(reader, entry, uriResolver, innerDefer);
+                        } else {
+                            loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
+                        }
+                    }
+                }
+
+                when.all(promises, function() {
+                    loadKML(dataSource, uriResolver.kml, undefined, uriResolver);
+                    // close the zip reader
+                    reader.close(function() {
+                        // onclose callback
+                    });
+                    deferred.resolve(dataSource);
+                });
+            });
+        }, function(error) {
+            deferred.reject(error);
         });
     }
 
@@ -574,12 +630,13 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Replaces any existing data with the provided KML.
+     * Asynchronously loads the provided KML, replacing any existing data.
      *
-     * @param {Object} KML The KML to be processed.
-     * @param {String} source The source of the KML.
+     * @param {Document} kml The parsed KML document to be processed.
      *
-     * @exception {DeveloperError} KML is required.
+     * @returns {Promise} a promise that will resolve when the KML is processed.
+     *
+     * @exception {DeveloperError} kml is required.
      */
     KmlDataSource.prototype.load = function(kml, source) {
         if (!defined(kml)) {
@@ -613,71 +670,42 @@ define(['../Core/createGuid',
         });
     };
 
-    function loadFromZip(reader, entry, context, deferred) {
-        entry.getData(new zip.TextWriter(), function(xmlString) {
-            var parser = new DOMParser();
-            var kml = parser.parseFromString(xmlString, "text/xml");
-            context.kml = kml;
-            deferred.resolve(kml);
-        }, function(current, total) {
-            // onprogress callback
-        });
-    }
-
-    function loadDataUriFromZip(reader, entry, context, deferred) {
-        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
-            context[entry.filename.toUpperCase()] = dataUri;
-            deferred.resolve(dataUri);
-        }, function(current, total) {
-            // onprogress callback
-        });
-    }
-
-    function createReader(dataSource, blob, deferred) {
-        var context = {};
-        zip.createReader(new zip.BlobReader(blob), function(reader) {
-            reader.getEntries(function(entries) {
-                var defers = [];
-                for ( var i = 0; i < entries.length; i++) {
-                    var entry = entries[i];
-                    if (!entry.directory) {
-                        var innerDefer = when.defer();
-                        defers.push(innerDefer.promise);
-                        var filename = entry.filename.toUpperCase();
-                        if (filename === 'DOC.KML') {
-                            loadFromZip(reader, entry, context, innerDefer);
-                        } else {
-                            loadDataUriFromZip(reader, entry, context, innerDefer);
-                        }
-                    }
-                }
-
-                when.all(defers, function() {
-                    loadKML(dataSource, context.kml, undefined, context);
-                    // close the zip reader
-                    reader.close(function() {
-                        // onclose callback
-                    });
-                    deferred.resolve(dataSource);
-                });
-            });
-        }, function(error) {
-            deferred.reject(error);
-        });
-    }
-
+    /**
+     * Asynchronously loads the provided KMZ, replacing any existing data.
+     *
+     * @param {Blob} kmz The KMZ document to be processed.
+     *
+     * @returns {Promise} a promise that will resolve when the KMZ is processed.
+     *
+     * @exception {DeveloperError} kmz is required.
+     */
     KmlDataSource.prototype.loadKmz = function(kmz) {
+        if (!defined(kmz)) {
+            throw new DeveloperError('kmz is required.');
+        }
+
         var deferred = when.defer();
-        createReader(this, kmz, deferred);
+        loadKmz(this, kmz, deferred);
         return deferred.promise;
     };
 
+    /**
+     * Asynchronously loads the KMZ at the provided url, replacing any existing data.
+     *
+     * @param {Object} url The url to be processed.
+     *
+     * @returns {Promise} a promise that will resolve when the KMZ is processed.
+     *
+     * @exception {DeveloperError} url is required.
+     */
     KmlDataSource.prototype.loadKmzUrl = function(url) {
+        if (!defined(url)) {
+            throw new DeveloperError('url is required.');
+        }
+
         var that = this;
         return when(loadBlob(url), function(blob) {
-            var deferred = when.defer();
-            createReader(that, blob, deferred);
-            return deferred.promise;
+            return that.loadKmz(blob);
         }, function(error) {
             that._error.raiseEvent(that, error);
             return when.reject(error);
