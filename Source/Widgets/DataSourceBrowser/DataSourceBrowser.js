@@ -53,10 +53,12 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         templateElement.id = templateID;
         templateElement.textContent = '<li>\
 <!-- ko if: hasChildren -->\
-<input type="checkbox" data-bind="attr: { id: id }, checked: expanded">\
-<label data-bind="attr: { for: id }, text: name, css: { \'cesium-dataSourceBrowser-item\': true, \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected }"></label>\
-<ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul>\
+<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
+<span data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item\': true, \
+    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <span data-bind="html: expandIndicator"></span>\
+    <span data-bind="text: name"></span></span>\
+<ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span data-bind="text: name, click: select, css: { \'cesium-dataSourceBrowser-item\': true, \

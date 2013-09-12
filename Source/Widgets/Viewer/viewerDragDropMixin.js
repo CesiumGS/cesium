@@ -72,7 +72,7 @@ define([
         //Local variables to be closed over by defineProperties.
         var dropEnabled = true;
         var onDropError = new Event();
-        var clearOnDrop = defaultValue(options.clearOnDrop, true);
+        var clearOnDrop = defaultValue(options.clearOnDrop, !defined(viewer.dataSourceBrowser));
         var dropTarget = defaultValue(options.dropTarget, viewer.container);
 
         dropTarget = getElement(dropTarget);
