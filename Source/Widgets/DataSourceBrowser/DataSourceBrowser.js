@@ -70,7 +70,8 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         var dataSourcesContainer = document.createElement('div');
         dataSourcesContainer.className = 'cesium-dataSourceBrowser-dataSourcesContainer';
         dataSourcesContainer.setAttribute('data-bind', '\
-css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible }');
+css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible,\
+       "cesium-dataSourceBrowser-dataSourcesContainer-obscured" : dataSourcePanelViewModel.visible }');
         element.appendChild(dataSourcesContainer);
 
         // This is the header bar on the list of data sources.

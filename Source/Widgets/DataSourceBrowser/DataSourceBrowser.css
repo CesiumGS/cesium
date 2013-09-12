@@ -45,26 +45,36 @@
 /* End copy of cesium-widget-button */
 
 .cesium-dataSourceBrowser-dataSourcesContainer {
-    position: relative;
+    position: absolute;
     top: 5px;
-    left: -400px;
+    left: -380px;
     opacity: 0;
+    visibility: hidden;
     background-color: rgba(38, 38, 38, 0.95);
     border-top: 1px solid #444;
     border-right: 1px solid #444;
     border-bottom: 1px solid #444;
     width: 360px;
-    -webkit-transition: left 0.2s ease-in, opacity 0.2s ease-in;
-    -moz-transition: left 0.2s ease-in, opacity 0.2s ease-in;
-    transition: left 0.2s ease-in, opacity 0.2s ease-in;
+    -webkit-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    -moz-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
 }
 
 .cesium-dataSourceBrowser-dataSourcesContainer-visible {
     left: 0;
     opacity: 1;
+    visibility: visible;
     -webkit-transition: left 0.2s ease-out, opacity 0.2s ease-out;
     -moz-transition: left 0.2s ease-out, opacity 0.2s ease-out;
     transition: left 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainer-obscured {
+    opacity: 0;
+    visibility: hidden;
+    -webkit-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    -moz-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
 }
 
 .cesium-dataSourceBrowser-dataSourcesContainerHeader {
@@ -231,16 +241,30 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
  */
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
-    display: none;
+    display: block;
     position: absolute;
     top: 5px;
-    left: 380px;
+    left: -380px;
+    opacity: 0;
+    visibility: hidden;
     background-color: rgba(38, 38, 38, 0.85);
     border: 1px solid #444;
     padding: 6px;
     border-radius: 7px;
     overflow: auto;
-    width: 360px;
+    width: 480px;
+    -webkit-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    -moz-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+    transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-visible {
+    left: 5px;
+    opacity: 1;
+    visibility: visible;
+    -webkit-transition: left 0.2s ease-out, opacity 0.2s ease-out;
+    -moz-transition: left 0.2s ease-out, opacity 0.2s ease-out;
+    transition: left 0.2s ease-out, opacity 0.2s ease-out;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-header {
@@ -267,8 +291,4 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
 .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected:hover {
     color: #2e2;
     border-color: #2e2;
-}
-
-.cesium-dataSourceBrowser-dataSourcePanelContainer-visible {
-    display: block;
 }
