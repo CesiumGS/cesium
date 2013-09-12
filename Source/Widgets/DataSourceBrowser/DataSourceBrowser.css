@@ -99,10 +99,9 @@
     right: 0;
     background: rgba(84, 84, 84, 0.8);
     color: #edffff;
-    text-align: center;
     font-weight: bold;
     margin: -6px -6px 6px -6px; /* Note margin-bottom is positive. */
-    padding: 6px;
+    padding: 6px 6px 6px 110px;
     letter-spacing: 1px;
 }
 
@@ -111,34 +110,22 @@
     top: 1px;
     right: 1px;
     font-size: 18px;
-    display: inline-block;
     border: 1px solid transparent;
-    border-radius: 5px;
     padding: 1px 12px;
-    margin: 0 3px;
-    cursor: pointer;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
+    background-color: transparent;
 }
 
-.cesium-dataSourceBrowser-dataSourcesContainerHide:focus {
-    color: #fff;
-    border-color: #ea4;
+.cesium-dataSourceBrowser-addDataSourceButton {
+    position: absolute;
+    top: 1px;
+    right: 45px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    letter-spacing: 0;
 }
 
-.cesium-dataSourceBrowser-dataSourcesContainerHide:hover {
-    color: #fff;
-    background: #48b;
-    border-color: #aef;
-    box-shadow: 0 0 8px #fff;
-}
-
-.cesium-dataSourceBrowser-dataSourcesContainerHide:active {
-    color: #000;
-    background: #adf;
-    border-color: #fff;
-    box-shadow: 0 0 8px #fff;
+.cesium-dataSourceBrowser-dataSourcesInfo {
+    padding-left: 110px;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
@@ -196,6 +183,10 @@
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
     display: none;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions {
+    padding: 2px 0 5px;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected,

@@ -151,6 +151,17 @@ define([
             set : function(value) {
                 this._maxHeight = value;
             }
+        },
+
+        /**
+         * Gets a message if there are no data sources.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {string}
+         */
+        infoText : {
+            get : function() {
+                return this._dataSourceViewModels.length ? '' : 'Empty globe.';
+            }
         }
     });
 
