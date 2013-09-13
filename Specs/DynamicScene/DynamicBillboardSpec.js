@@ -30,6 +30,8 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
 
         var target = new DynamicBillboard();
         target.merge(source);
@@ -44,6 +46,8 @@ defineSuite([
         expect(target.pixelOffset).toBe(source.pixelOffset);
         expect(target.scale).toBe(source.scale);
         expect(target.show).toBe(source.show);
+        expect(target.width).toBe(source.width);
+        expect(target.height).toBe(source.height);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -58,6 +62,8 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
 
         var image = new ConstantProperty('');
         var rotation = new ConstantProperty(5);
@@ -69,6 +75,8 @@ defineSuite([
         var pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         var scale = new ConstantProperty(1);
         var show = new ConstantProperty(false);
+        var width = new ConstantProperty(2);
+        var height = new ConstantProperty(3);
 
         var target = new DynamicBillboard();
         target.image = image;
@@ -81,6 +89,8 @@ defineSuite([
         target.pixelOffset = pixelOffset;
         target.scale = scale;
         target.show = show;
+        target.width = width;
+        target.height = height;
 
         target.merge(source);
 
@@ -94,6 +104,8 @@ defineSuite([
         expect(target.pixelOffset).toBe(pixelOffset);
         expect(target.scale).toBe(scale);
         expect(target.show).toBe(show);
+        expect(target.width).toBe(width);
+        expect(target.height).toBe(height);
     });
 
     it('clone works', function() {
@@ -108,6 +120,8 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
@@ -120,6 +134,8 @@ defineSuite([
         expect(result.pixelOffset).toBe(source.pixelOffset);
         expect(result.scale).toBe(source.scale);
         expect(result.show).toBe(source.show);
+        expect(result.width).toBe(source.width);
+        expect(result.height).toBe(source.height);
     });
 
     it('merge throws if source undefined', function() {

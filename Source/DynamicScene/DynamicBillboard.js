@@ -22,6 +22,8 @@ define(['../Core/defaultValue',
      */
     var DynamicBillboard = function() {
         this._image = undefined;
+        this._width = undefined;
+        this._height = undefined;
         this._scale = undefined;
         this._rotation = undefined;
         this._alignedAxis = undefined;
@@ -114,7 +116,21 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show')
+        show : createObservableProperty('show', '_show'),
+
+        /**
+         * Gets or sets the billboard's width in pixels. If undefined, the native width is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        width : createObservableProperty('width', '_width'),
+
+        /**
+         * Gets or sets the billboard's height in pixels. If undefined, the native height is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        height : createObservableProperty('height', '_height')
     });
 
     /**
@@ -138,6 +154,8 @@ define(['../Core/defaultValue',
         result.alignedAxis = this._alignedAxis;
         result.show = this._show;
         result.verticalOrigin = this._verticalOrigin;
+        result.width = this._width;
+        result.height = this._height;
         return result;
     };
 
@@ -163,6 +181,8 @@ define(['../Core/defaultValue',
         this.alignedAxis = defaultValue(this._alignedAxis, source._alignedAxis);
         this.show = defaultValue(this._show, source._show);
         this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
+        this.width = defaultValue(this._width, source._width);
+        this.height = defaultValue(this._height, source._height);
     };
 
     return DynamicBillboard;

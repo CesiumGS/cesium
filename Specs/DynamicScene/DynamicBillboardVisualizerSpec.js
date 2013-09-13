@@ -149,6 +149,8 @@ defineSuite([
             billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             billboard.pixelOffset = new ConstantProperty(new Cartesian2(3, 2));
+            billboard.width = new ConstantProperty(15);
+            billboard.height = new ConstantProperty(5);
 
             visualizer.update(time);
 
@@ -167,7 +169,8 @@ defineSuite([
                     expect(bb.getAlignedAxis()).toEqual(testObject.billboard.alignedAxis.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
                     expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
-                    expect(bb.getPixelOffset()).toEqual(testObject.billboard.pixelOffset.getValue(time));
+                    expect(bb.getWidth()).toEqual(testObject.billboard.width.getValue(time));
+                    expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
                 }
                 return bb.getShow(); //true once the image is loaded.
             });
@@ -185,6 +188,8 @@ defineSuite([
             billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.pixelOffset = new ConstantProperty(new Cartesian2(2, 3));
+            billboard.width = new ConstantProperty(17);
+            billboard.height = new ConstantProperty(12);
 
             waitsFor(function() {
                 visualizer.update(time);
@@ -199,6 +204,8 @@ defineSuite([
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
                     expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
                     expect(bb.getPixelOffset()).toEqual(testObject.billboard.pixelOffset.getValue(time));
+                    expect(bb.getWidth()).toEqual(testObject.billboard.width.getValue(time));
+                    expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
                 }
                 return imageReady;
             });
