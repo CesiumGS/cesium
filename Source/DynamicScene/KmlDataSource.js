@@ -13,22 +13,26 @@ define(['../Core/createGuid',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/TimeInterval',
+        '../Core/loadBlob',
         '../Core/loadXML',
         './ConstantProperty',
         './ConstantPositionProperty',
         './ColorMaterialProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionProperty',
+        '../Scene/LabelStyle',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
+        './DynamicPath',
         './DynamicPoint',
         './DynamicPolyline',
         './DynamicPolygon',
         './DynamicLabel',
         './DynamicBillboard',
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
-        '../ThirdParty/Uri'
+        '../ThirdParty/zip/zip'
     ], function(
         createGuid,
         defined,
@@ -44,22 +48,26 @@ define(['../Core/createGuid',
         Iso8601,
         JulianDate,
         TimeInterval,
+        loadBlob,
         loadXML,
         ConstantProperty,
         ConstantPositionProperty,
         ColorMaterialProperty,
         SampledPositionProperty,
         TimeIntervalCollectionProperty,
+        LabelStyle,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
+        DynamicPath,
         DynamicPoint,
         DynamicPolyline,
         DynamicPolygon,
         DynamicLabel,
         DynamicBillboard,
+        Uri,
         when,
-        Uri) {
+        zip) {
     "use strict";
 
     var scratch = new Cartographic();
@@ -91,12 +99,12 @@ define(['../Core/createGuid',
 
     function getNumericValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        return defined(element) ? parseFloat(element.firstChild.data) : undefined;
+        return defined(element) ? parseFloat(element.textContent) : undefined;
     }
 
     function getStringValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        var value = defined(element) ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.textContent : undefined;
         return value;
     }
 
@@ -104,11 +112,11 @@ define(['../Core/createGuid',
         var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
-        var value = defined(element) ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.textContent : undefined;
         if (!defined(value)) {
             return undefined;
         }
-        var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
+        var colorMode = defined(colorModeNode) ? colorModeNode.textContent : undefined;
         if (colorMode === 'random') {
             var options = {};
             alpha = parseInt(value.substring(0, 2), 16) / 255.0;
@@ -142,26 +150,38 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
-        dynamicObject.name = getStringValue(placemark, 'name');
-        if (defined(dynamicObject.label)) {
-            dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
-        }
-        // I want to iterate over every placemark
-        for ( var i = 0, len = placemark.childNodes.length; i < len; i++) {
-            var node = placemark.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(node.nodeName)) {
-                placemark.geometry = node.nodeName;
-                var geometryType = placemark.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (!defined(geometryHandler)) {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
-                }
-                geometryHandler(dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
+    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+        var id = defined(placemark.id) ? placemark.id : createGuid();
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+
+        var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
+
+        var name = getStringValue(placemark, 'name');
+        if (defined(name)) {
+            if (!defined(dynamicObject.label)) {
+                dynamicObject.label = new DynamicLabel();
+                dynamicObject.label.font = new ConstantProperty('16pt Arial');
+                dynamicObject.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
             }
+            dynamicObject.label.text = new ConstantProperty(name);
         }
 
+        var foundGeometry = false;
+        var nodes = placemark.childNodes;
+        for ( var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes.item(i);
+            var nodeName = node.nodeName;
+            if (nodeName === 'TimeSpan') {
+                dynamicObject._setAvailability(processTimeSpan(node));
+            } else if (featureTypes.hasOwnProperty(nodeName)) {
+                foundGeometry = true;
+                mergeStyles(nodeName, styleObject, dynamicObject);
+                featureTypes[nodeName](dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
+            }
+        }
+        if (!foundGeometry) {
+            mergeStyles(undefined, styleObject, dynamicObject);
+        }
     }
 
     function processPoint(dataSource, dynamicObject, kml, node) {
@@ -186,7 +206,7 @@ define(['../Core/createGuid',
         var coordinates = readCoordinates(el[0]);
 
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length - 1])) {
-            throw new RuntimeError("The first and last coordinate tuples must be the same.");
+            throw new RuntimeError('The first and last coordinate tuples must be the same.');
         }
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
@@ -207,7 +227,7 @@ define(['../Core/createGuid',
         var times = new Array(timesEl.length);
         for ( var i = 0; i < times.length; i++) {
             coordinates[i] = readCoordinate(coordsEl[i]);
-            times[i] = JulianDate.fromIso8601(timesEl[i].firstChild.data);
+            times[i] = JulianDate.fromIso8601(timesEl[i].textContent);
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
@@ -216,88 +236,65 @@ define(['../Core/createGuid',
 
     function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
-        var geometryObject = dynamicObject;
-        var styleObject = dynamicObject;
-        // I want to iterate over every placemark
-        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
-            var innerNode = node.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
-                kml.geometry = innerNode.nodeName;
-                var geometryType = kml.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (geometryHandler !== processGxTrack) {
-                    throw new RuntimeError('gx:MultiTrack takes one or more gx:Track elements');
-                }
-                //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)) {
-                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
-                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
-                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
-                    DynamicLabel.mergeProperties(geometryObject, styleObject);
-                    DynamicPoint.mergeProperties(geometryObject, styleObject);
-                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
-                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
-                    DynamicObject.mergeProperties(geometryObject, styleObject);
-                }
-                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
-                geometryObject = undefined;
+        dynamicObjectCollection.removeObject(dynamicObject.id);
+
+        var childNodes = node.childNodes;
+        for ( var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var childNodeName = childNode.nodeName;
+
+            if (featureTypes.hasOwnProperty(childNodeName)) {
+                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+
+                mergeStyles(childNodeName, dynamicObject, childObject);
+
+                var geometryHandler = featureTypes[childNodeName];
+                geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
             }
         }
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
-        var geometryObject = dynamicObject;
-        var styleObject = dynamicObject;
-        // I want to iterate over every placemark
-        for ( var i = 0, len = node.childNodes.length; i < len; i++) {
-            var innerNode = node.childNodes.item(i);
-            //Checking if the node holds a supported Geometry type
-            if (featureTypes.hasOwnProperty(innerNode.nodeName)) {
-                kml.geometry = innerNode.nodeName;
-                var geometryType = kml.geometry;
-                var geometryHandler = featureTypes[geometryType];
-                if (!defined(geometryHandler)) {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
-                }
-                //only create a new dynamicObject if the placemark's object was used already
-                if (!defined(geometryObject)) {
-                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
-                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
-                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
-                    DynamicLabel.mergeProperties(geometryObject, styleObject);
-                    DynamicPoint.mergeProperties(geometryObject, styleObject);
-                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
-                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
-                    DynamicObject.mergeProperties(geometryObject, styleObject);
-                }
-                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
-                geometryObject = undefined;
+        dynamicObjectCollection.removeObject(dynamicObject.id);
+
+        var childNodes = node.childNodes;
+        for ( var i = 0, len = childNodes.length; i < len; i++) {
+            var childNode = childNodes.item(i);
+            var childNodeName = childNode.nodeName;
+
+            if (featureTypes.hasOwnProperty(childNodeName)) {
+                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+
+                mergeStyles(childNodeName, dynamicObject, childObject);
+
+                var geometryHandler = featureTypes[childNodeName];
+                geometryHandler(dataSource, childObject, kml, childNode, dynamicObjectCollection);
             }
         }
     }
 
-    function processTimeSpan(dataSource, dynamicObject, kml, node) {
-        var beginEl = node.getElementsByTagName('begin');
-        var endEl = node.getElementsByTagName('end');
-        var beginDate = defined(beginEl[0]) ? JulianDate.fromIso8601(beginEl[0].textContent) : undefined;
-        var endDate = defined(endEl[0]) ? JulianDate.fromIso8601(endEl[0].textContent) : undefined;
-        var interval;
-        if (!defined(beginDate) && !defined(endDate)) {
-            throw new RuntimeError('TimeSpan requires a begin and/or end date');
-        }
+    function processTimeSpan(node) {
+        var beginNode = node.getElementsByTagName('begin')[0];
+        var beginDate = defined(beginNode) ? JulianDate.fromIso8601(beginNode.textContent) : undefined;
+
+        var endNode = node.getElementsByTagName('end')[0];
+        var endDate = defined(endNode) ? JulianDate.fromIso8601(endNode.textContent) : undefined;
+
         if (defined(beginDate) && defined(endDate)) {
-            if (endDate > beginDate) {
-                interval = new TimeInterval(beginDate, endDate, true, true, true);
-            } else {
-                throw new RuntimeError('End date must be larger than Begin date');
-            }
-        } else if (defined(beginDate)) {
-            interval = new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
-        } else {
-            interval = new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
+            return new TimeInterval(beginDate, endDate, true, true, true);
         }
-        dynamicObject._setAvailability(interval);
+
+        if (defined(beginDate)) {
+            return new TimeInterval(beginDate, Iso8601.MAXIMUM_VALUE, true, false, true);
+        }
+
+        if (defined(endDate)) {
+            return new TimeInterval(Iso8601.MINIMUM_VALUE, endDate, false, true, true);
+        }
+
+        return undefined;
     }
 
     //Object that holds all supported Geometry
@@ -308,23 +305,29 @@ define(['../Core/createGuid',
         Polygon : processPolygon,
         'gx:Track' : processGxTrack,
         'gx:MultiTrack' : processGxMultiTrack,
-        MultiGeometry : processMultiGeometry,
-        TimeSpan : processTimeSpan
-    //TODO Model, gxTrack, gxMultitrack
+        MultiGeometry : processMultiGeometry
     };
 
-    function processStyle(styleNode, dynamicObject, sourceUri) {
+    function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
         for ( var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
 
-            if (node.nodeName === "IconStyle") {
+            if (node.nodeName === 'IconStyle') {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
                 var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
                 var color = getColorValue(node, 'color');
                 var icon = getStringValue(node, 'href');
-                if (defined(sourceUri)) {
+                var iconResolved = false;
+                if (defined(uriResolver)) {
+                    var blob = uriResolver[icon];
+                    if (defined(blob)) {
+                        iconResolved = true;
+                        icon = blob;
+                    }
+                }
+                if (!iconResolved && defined(sourceUri)) {
                     var baseUri = new Uri(document.location.href);
                     sourceUri = new Uri(sourceUri);
                     icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
@@ -334,7 +337,7 @@ define(['../Core/createGuid',
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
                 billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
                 dynamicObject.billboard = billboard;
-            } else if (node.nodeName === "LabelStyle") {
+            } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
                 var label = defined(dynamicObject.label) ? dynamicObject.label : new DynamicLabel();
                 var labelScale = getNumericValue(node, 'scale');
@@ -344,13 +347,15 @@ define(['../Core/createGuid',
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
+                label.font = new ConstantProperty('16pt Arial');
+                label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 dynamicObject.label = label;
                 //default billboard image
                 if (!defined(dynamicObject.billboard)) {
                     dynamicObject.billboard = new DynamicBillboard();
-                    dynamicObject.billboard.image = new ConstantProperty("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+                    dynamicObject.billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
                 }
-            } else if (node.nodeName === "LineStyle") {
+            } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
                 var polyline = defined(dynamicObject.polyline) ? dynamicObject.polyline : new DynamicPolyline();
@@ -367,7 +372,7 @@ define(['../Core/createGuid',
                 polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
                 polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
                 dynamicObject.polyline = polyline;
-            } else if (node.nodeName === "PolyStyle") {
+            } else if (node.nodeName === 'PolyStyle') {
                 //Map style to polygon properties
                 //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
@@ -380,29 +385,91 @@ define(['../Core/createGuid',
         }
     }
 
+    function mergeStyles(geometryType, styleObject, targetObject) {
+        switch (geometryType) {
+        case 'Point':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'LineString':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        case 'LinearRing':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        case 'Polygon':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            break;
+        case 'gx:Track':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'gx:MultiTrack':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            break;
+        case 'MultiGeometry':
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        default:
+            DynamicObject.mergeProperties(targetObject, styleObject);
+            DynamicBillboard.mergeProperties(targetObject, styleObject);
+            DynamicLabel.mergeProperties(targetObject, styleObject);
+            DynamicPath.mergeProperties(targetObject, styleObject);
+            DynamicPoint.mergeProperties(targetObject, styleObject);
+            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            break;
+        }
+    }
+
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
-    function processInlineStyles(dynamicObject, node, styleCollection, sourceUri) {
+    function processInlineStyles(placeMark, styleCollection, sourceUri, uriResolver) {
+        var result = new DynamicObject();
+
         //KML_TODO Validate the behavior for multiple/conflicting styles.
-        var inlineStyles = node.getElementsByTagName('Style');
+        var inlineStyles = placeMark.getElementsByTagName('Style');
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject, sourceUri);
+            processStyle(inlineStyles.item(inlineStylesLength - 1), result, sourceUri, uriResolver);
         }
 
-        var externalStyles = node.getElementsByTagName('styleUrl');
+        var externalStyles = placeMark.getElementsByTagName('styleUrl');
         if (externalStyles.length > 0) {
             var styleObject = styleCollection.getObject(externalStyles.item(0).textContent);
+
             if (typeof styleObject !== 'undefined') {
                 //Google earth seems to always use the first external style only.
-                DynamicBillboard.mergeProperties(dynamicObject, styleObject);
-                DynamicLabel.mergeProperties(dynamicObject, styleObject);
-                DynamicPoint.mergeProperties(dynamicObject, styleObject);
-                DynamicPolygon.mergeProperties(dynamicObject, styleObject);
-                DynamicPolyline.mergeProperties(dynamicObject, styleObject);
-                DynamicObject.mergeProperties(dynamicObject, styleObject);
+                DynamicBillboard.mergeProperties(result, styleObject);
+                DynamicLabel.mergeProperties(result, styleObject);
+                DynamicPoint.mergeProperties(result, styleObject);
+                DynamicPolygon.mergeProperties(result, styleObject);
+                DynamicPolyline.mergeProperties(result, styleObject);
+                DynamicObject.mergeProperties(result, styleObject);
             }
         }
+        return result;
     }
 
     //Asynchronously processes an external style file.
@@ -416,7 +483,7 @@ define(['../Core/createGuid',
     //their id into the rovided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(kml, styleCollection, sourceUri, isExternal) {
+    function processStyles(kml, styleCollection, sourceUri, isExternal, uriResolver) {
         var i;
 
         var styleNodes = kml.getElementsByTagName('Style');
@@ -432,7 +499,7 @@ define(['../Core/createGuid',
                 }
                 if (!defined(styleCollection.getObject(id))) {
                     var styleObject = styleCollection.getOrCreateObject(id);
-                    processStyle(node, styleObject, sourceUri);
+                    processStyle(node, styleObject, sourceUri, uriResolver);
                 }
             }
         }
@@ -463,23 +530,71 @@ define(['../Core/createGuid',
         return promises;
     }
 
-    function loadKML(dataSource, kml, sourceUri) {
+    function loadKml(dataSource, kml, sourceUri, uriResolver) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         var styleCollection = new DynamicObjectCollection();
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
-        //The rest of the loading code is synchronous
-        return when.all(processStyles(kml, styleCollection, sourceUri, false), function() {
-            var array = kml.getElementsByTagName('Placemark');
-            for ( var i = 0, len = array.length; i < len; i++) {
-                var placemark = array[i];
-                var placemarkId = defined(placemark.id) ? placemark.id : createGuid();
-                var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
-                processInlineStyles(placemarkDynamicObject, array[i], styleCollection, sourceUri);
-                processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
+        return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
+            var placemarks = kml.getElementsByTagName('Placemark');
+            var length = placemarks.length;
+            for ( var i = 0; i < length; i++) {
+                processPlacemark(dataSource, placemarks[i], dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
             }
             dataSource._changed.raiseEvent(this);
+        });
+    }
+
+    function loadXmlFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.TextWriter(), function(xmlString) {
+            var parser = new DOMParser();
+            uriResolver.kml = parser.parseFromString(xmlString, 'text/xml');
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback
+        });
+    }
+
+    function loadDataUriFromZip(reader, entry, uriResolver, deferred) {
+        entry.getData(new zip.Data64URIWriter(), function(dataUri) {
+            uriResolver[entry.filename] = dataUri;
+            deferred.resolve();
+        }, function(current, total) {
+            // onprogress callback
+        });
+    }
+
+    function loadKmz(dataSource, blob, deferred) {
+        var uriResolver = {};
+        zip.createReader(new zip.BlobReader(blob), function(reader) {
+            reader.getEntries(function(entries) {
+                var promises = [];
+                for ( var i = 0; i < entries.length; i++) {
+                    var entry = entries[i];
+                    if (!entry.directory) {
+                        var innerDefer = when.defer();
+                        promises.push(innerDefer.promise);
+                        var filename = entry.filename.toUpperCase();
+                        if (filename === 'DOC.KML') {
+                            loadXmlFromZip(reader, entry, uriResolver, innerDefer);
+                        } else {
+                            loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
+                        }
+                    }
+                }
+
+                when.all(promises, function() {
+                    loadKml(dataSource, uriResolver.kml, undefined, uriResolver);
+                    // close the zip reader
+                    reader.close(function() {
+                        // onclose callback
+                    });
+                    deferred.resolve(dataSource);
+                });
+            });
+        }, function(error) {
+            deferred.reject(error);
         });
     }
 
@@ -562,12 +677,13 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Replaces any existing data with the provided KML.
+     * Asynchronously loads the provided KML, replacing any existing data.
      *
-     * @param {Object} KML The KML to be processed.
-     * @param {String} source The source of the KML.
+     * @param {Document} kml The parsed KML document to be processed.
      *
-     * @exception {DeveloperError} KML is required.
+     * @returns {Promise} a promise that will resolve when the KML is processed.
+     *
+     * @exception {DeveloperError} kml is required.
      */
     KmlDataSource.prototype.load = function(kml, source) {
         if (!defined(kml)) {
@@ -575,7 +691,7 @@ define(['../Core/createGuid',
         }
 
         this._dynamicObjectCollection.clear();
-        return loadKML(this, kml, source);
+        return loadKml(this, kml, source);
     };
 
     /**
@@ -597,6 +713,48 @@ define(['../Core/createGuid',
             return dataSource.load(kml, url);
         }, function(error) {
             dataSource._error.raiseEvent(dataSource, error);
+            return when.reject(error);
+        });
+    };
+
+    /**
+     * Asynchronously loads the provided KMZ, replacing any existing data.
+     *
+     * @param {Blob} kmz The KMZ document to be processed.
+     *
+     * @returns {Promise} a promise that will resolve when the KMZ is processed.
+     *
+     * @exception {DeveloperError} kmz is required.
+     */
+    KmlDataSource.prototype.loadKmz = function(kmz) {
+        if (!defined(kmz)) {
+            throw new DeveloperError('kmz is required.');
+        }
+
+        var deferred = when.defer();
+        loadKmz(this, kmz, deferred);
+        return deferred.promise;
+    };
+
+    /**
+     * Asynchronously loads the KMZ at the provided url, replacing any existing data.
+     *
+     * @param {Object} url The url to be processed.
+     *
+     * @returns {Promise} a promise that will resolve when the KMZ is processed.
+     *
+     * @exception {DeveloperError} url is required.
+     */
+    KmlDataSource.prototype.loadKmzUrl = function(url) {
+        if (!defined(url)) {
+            throw new DeveloperError('url is required.');
+        }
+
+        var that = this;
+        return when(loadBlob(url), function(blob) {
+            return that.loadKmz(blob);
+        }, function(error) {
+            that._error.raiseEvent(that, error);
             return when.reject(error);
         });
     };
