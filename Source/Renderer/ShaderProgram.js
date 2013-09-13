@@ -142,7 +142,7 @@ define([
      * <tr>
      * <td>GLSL</td>
      * <td>JavaScript</td>
-     * </tr>©=
+     * </tr>
      * <tr>
      * <td><code>uniform float u_float; </code></td>
      * <td><code> sp.getAllUniforms().u_float.value = 1.0;</code></td>
