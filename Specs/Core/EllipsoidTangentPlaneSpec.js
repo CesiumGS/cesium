@@ -3,12 +3,14 @@ defineSuite([
          'Core/EllipsoidTangentPlane',
          'Core/Ellipsoid',
          'Core/Cartesian2',
-         'Core/Cartesian3'
+         'Core/Cartesian3',
+         'Core/Cartographic'
      ], function(
          EllipsoidTangentPlane,
          Ellipsoid,
          Cartesian2,
-         Cartesian3) {
+         Cartesian3,
+         Cartographic) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -166,5 +168,25 @@ defineSuite([
         expect(function() {
             return tangentPlane.projectPointsOntoEllipsoid(undefined);
         }).toThrow();
+    });
+
+    it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {
+        var ellipsoid = Ellipsoid.WGS84;
+
+        var points = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-72.0, 40.0),
+            Cartographic.fromDegrees(-68.0, 35.0),
+            Cartographic.fromDegrees(-75.0, 30.0),
+            Cartographic.fromDegrees(-70.0, 30.0),
+            Cartographic.fromDegrees(-68.0, 40.0)
+        ]);
+
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(points, ellipsoid);
+        var points2D = tangentPlane.projectPointsOntoPlane(points);
+        var positionsBack = tangentPlane.projectPointsOntoEllipsoid(points2D);
+
+        expect(positionsBack[0].x).toBeCloseTo(points[0].x);
+        expect(positionsBack[0].y).toBeCloseTo(points[0].y);
+        expect(positionsBack[0].z).toBeCloseTo(points[0].z);
     });
 });
