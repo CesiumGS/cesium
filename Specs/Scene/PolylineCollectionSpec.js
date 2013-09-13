@@ -1375,7 +1375,7 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, polylines, 0, 0);
-        expect(pickedObject).toEqual(p);
+        expect(pickedObject.primitive).toEqual(p);
     });
 
     it('is not picked (show === false)', function() {

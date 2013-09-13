@@ -74,9 +74,11 @@ define([
         }
 
         function pickAndTrackObject(e) {
-            var pickedPrimitive = viewer.scene.pick(e.position);
-            if (defined(pickedPrimitive)) {
-                trackObject(pickedPrimitive.dynamicObject);
+            var picked = viewer.scene.pick(e.position);
+            if (defined(picked) &&
+                defined(picked.primitive) &&
+                defined(picked.primitive.dynamicObject)) {
+                trackObject(picked.primitive.dynamicObject);
             }
         }
 

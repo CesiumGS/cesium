@@ -828,7 +828,7 @@ defineSuite([
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
 
-        var ray = new Ray(camera.getPositionWC(), camera.getDirectionWC());
+        var ray = new Ray(camera.positionWC, camera.directionWC);
         var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
         expect(intersection).toBeDefined();
     });
@@ -840,7 +840,7 @@ defineSuite([
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
         camera.controller.lookRight(CesiumMath.PI_OVER_TWO);
-        var ray = new Ray(camera.getPositionWC(), camera.getDirectionWC());
+        var ray = new Ray(camera.positionWC, camera.directionWC);
         var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
         expect(intersection).not.toBeDefined();
 
