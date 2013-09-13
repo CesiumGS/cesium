@@ -8,6 +8,7 @@ define([
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
+        '../../DynamicScene/KmlDataSource',
         '../../ThirdParty/when',
         '../getElement'
     ], function(
@@ -19,6 +20,7 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
+        KmlDataSource,
         when,
         getElement) {
     "use strict";
@@ -158,7 +160,7 @@ define([
             for ( var i = 0; i < length; i++) {
                 var f = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f.name);
+                reader.onload = createOnLoadCallback(viewer, f);
                 reader.onerror = createOnDropErrorCallback(viewer, f.name);
                 reader.readAsText(f);
             }
@@ -204,24 +206,34 @@ define([
         return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
-    function createOnLoadCallback(viewer, source) {
-        var DataSource;
-        var sourceUpperCase = source.toUpperCase();
-        if (endsWith(sourceUpperCase, ".CZML")) {
-            DataSource = CzmlDataSource;
-        } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
-        endsWith(sourceUpperCase, ".JSON") || //
-        endsWith(sourceUpperCase, ".TOPOJSON")) {
-            DataSource = GeoJsonDataSource;
-        } else {
-            viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-            return undefined;
-        }
-
+    function createOnLoadCallback(viewer, file) {
+        var source = file.name;
         return function(evt) {
-            var dataSource = new DataSource();
+            var promise;
+            var dataSource;
+            var sourceUpperCase = source.toUpperCase();
+            if (endsWith(sourceUpperCase, ".CZML")) {
+                dataSource = new CzmlDataSource();
+                promise = dataSource.load(JSON.parse(evt.target.result), source);
+            } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
+            endsWith(sourceUpperCase, ".JSON") || //
+            endsWith(sourceUpperCase, ".TOPOJSON")) {
+                dataSource = new GeoJsonDataSource();
+                promise = dataSource.load(JSON.parse(evt.target.result), source);
+            } else if (endsWith(sourceUpperCase, ".KML")) {
+                dataSource = new KmlDataSource();
+                var parser = new DOMParser();
+                promise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), source);
+            } else if (endsWith(sourceUpperCase, ".KMZ")) {
+                dataSource = new KmlDataSource();
+                promise = dataSource.loadKmz(file);
+            } else {
+                viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+                return undefined;
+            }
+
             try {
-                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
+                when(promise, function() {
                     viewer.dataSources.add(dataSource);
                 }, function(error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
