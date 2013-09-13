@@ -40,42 +40,27 @@ require(['Cesium'], function(Cesium) {
         stRotation: Cesium.Math.toRadians(90),
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     });
-    var circleInstance = new Cesium.GeometryInstance({
+    var redCircleInstance = new Cesium.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.RED)
         }
     });
-    
-    primitives.add( new Cesium.Primitive({
-        geometryInstances: circleInstance,
-        appearance: new Cesium.PerInstanceColorAppearance({
-            translucent: false
-        })
-    }));
-    
+
     /*~~~~~~~~~~~ Green extruded circle ~~~~~~~~~~~~~~~*/
     
     circleGeometry = new Cesium.CircleGeometry({
         center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 50.0)),
-        radius : 350000.0,
-        extrudedHeight: 600000.0,
+        radius : 250000.0,
+        extrudedHeight: 300000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
-    circleInstance = new Cesium.GeometryInstance({
+    var greenCircleInstance = new Cesium.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
         }
     });
-    
-    primitives.add(new Cesium.Primitive({
-        geometryInstances: circleInstance,
-        appearance: new Cesium.PerInstanceColorAppearance({
-            translucent: false,
-            closed: true
-        })
-    }));
-    
+       
     /*~~~~~~~~~~~~ Blue circle with height ~~~~~~~~~~~~*/
   
     circleGeometry = new Cesium.CircleGeometry({
@@ -83,22 +68,24 @@ require(['Cesium'], function(Cesium) {
         radius : 500000.0,
         height : 800000.0,
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
-    circleInstance = new Cesium.GeometryInstance({
+    var blueCircleInstance = new Cesium.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
         }
     });
     
+    /*~~~~~~ Add instances to primitives ~~~~~~~~~~~~~~*/
+        
     primitives.add(new Cesium.Primitive({
-        geometryInstances: circleInstance,
+        geometryInstances: [redCircleInstance, blueCircleInstance, greenCircleInstance],
         appearance: new Cesium.PerInstanceColorAppearance({
             translucent: false
         })
     }));
-    
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    
     Sandcastle.finishedLoading();
 });
 </script>

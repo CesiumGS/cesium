@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Geometry and Appearances.">
+    <meta name="description" content="Box Geometry Outline">
     <meta name="cesium-sandcastle-labels" content="Geometry Examples">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -31,36 +31,35 @@ require(['Cesium'], function(Cesium) {
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
+           
+    /*~~~~~~~~ Create a simple polyline ~~~~~~~~~~~~~~~*/
     
-    /*~~~ Create ellipsoid and place with model matrix ~~*/
-    
-    var radii = new Cesium.Cartesian3(200000.0, 200000.0, 300000.0);
-    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
-    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
-        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
-        new Cesium.Cartesian3(0.0, 0.0, radii.z)
-    );
+    var positions = [];
+    for (var i = 0; i <= 10; ++i) {
+        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 30.0 + 3*i/2*(i%2))));
+    }
 
-    var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        radii : radii
-    });
-    var ellipsoidInstance = new Cesium.GeometryInstance({
-        geometry : ellipsoidGeometry,
-        modelMatrix : modelMatrix,
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
-        }
-    });
     primitives.add(new Cesium.Primitive({
-        geometryInstances : ellipsoidInstance,
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.SimplePolylineGeometry({
+                positions : positions
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+            }
+        }),
         appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
-            closed : true
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(2.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
         })
     }));
     
-    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+    /*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
     Sandcastle.finishedLoading();
 });
