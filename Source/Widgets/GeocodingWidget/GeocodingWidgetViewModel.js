@@ -26,6 +26,7 @@ define([
         '../../Scene/PerInstanceColorAppearance',
         '../../Scene/PerspectiveFrustum',
         '../../Scene/Primitive',
+        '../../Scene/sampleTerrain',
         '../../Scene/SceneMode',
         '../../DynamicScene/ConstantProperty',
         '../../DynamicScene/DynamicClock',
@@ -64,6 +65,7 @@ define([
         PerInstanceColorAppearance,
         PerspectiveFrustum,
         Primitive,
+        sampleTerrain,
         SceneMode,
         ConstantProperty,
         DynamicClock,
@@ -240,6 +242,9 @@ define([
             var nextWaypoint = 1;
             var distanceBetweenWaypoints = geodesic.getSurfaceDistance();
 
+            var times = [];
+            var samples = [];
+
             for (i = 0; i < coordinates.length; ++i) {
                 if (i > waypoints[nextWaypoint].closestPointIndex) {
                     ++nextWaypoint;
@@ -257,17 +262,28 @@ define([
                 } else {
                     waypointTime = CesiumMath.lerp(waypoints[nextWaypoint - 1].time, waypoints[nextWaypoint].time, distanceFromLastWaypoint / distanceBetweenWaypoints);
                 }
-                dynamicObject.position.addSample(initialTime.addSeconds(waypointTime), viewModel._ellipsoid.cartographicToCartesian(positionCartographic));
+
+                times.push(initialTime.addSeconds(waypointTime));
+                samples.push(positionCartographic);
             }
 
-            dynamicObject._setAvailability(new TimeInterval(initialTime, initialTime.addSeconds(waypoints[waypoints.length - 1].time)));
+            var terrainProvider = viewModel._scene.getPrimitives().getCentralBody().terrainProvider;
+            when(sampleTerrain(terrainProvider, 11, samples), function() {
+                var samplesCartesian = [];
+                for (var q = 0; q < samples.length; ++q) {
+                    samplesCartesian.push(viewModel._ellipsoid.cartographicToCartesian(samples[q]));
+                }
 
-            viewModel._navigationDataSource._clock.startTime = initialTime;
-            viewModel._navigationDataSource._clock.stopTime = initialTime.addSeconds(waypoints[waypoints.length - 1].time);
-            viewModel._navigationDataSource._clock.currentTime = initialTime;
-            viewModel._navigationDataSource._clock.multiplier = 10.0;
+                dynamicObject.position.addSamples(times, samplesCartesian);
+                dynamicObject._setAvailability(new TimeInterval(initialTime, initialTime.addSeconds(waypoints[waypoints.length - 1].time)));
 
-            viewModel._navigationDataSource._changedEvent.raiseEvent(viewModel._navigationDataSource);
+                viewModel._navigationDataSource._clock.startTime = initialTime;
+                viewModel._navigationDataSource._clock.stopTime = initialTime.addSeconds(waypoints[waypoints.length - 1].time);
+                viewModel._navigationDataSource._clock.currentTime = initialTime;
+                viewModel._navigationDataSource._clock.multiplier = 10.0;
+
+                viewModel._navigationDataSource._changedEvent.raiseEvent(viewModel._navigationDataSource);
+            });
         });
     }
 
