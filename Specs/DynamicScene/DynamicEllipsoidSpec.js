@@ -1,87 +1,73 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicEllipsoid',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
+             'DynamicScene/ColorMaterialProperty',
+             'DynamicScene/ConstantProperty',
+             'DynamicScene/DynamicVertexPositionsProperty',
              'Core/Cartesian3',
-             'Core/Color',
-             'Core/Iso8601',
-             'Core/TimeInterval'
-            ], function(
-              DynamicEllipsoid,
-              DynamicObject,
-              JulianDate,
-              Cartesian3,
-              Color,
-              Iso8601,
-              TimeInterval) {
+             'Core/Color'
+         ], function(
+             DynamicEllipsoid,
+             ColorMaterialProperty,
+             ConstantProperty,
+             DynamicVertexPositionsProperty,
+             Cartesian3,
+             Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties does not change a fully configured ellipsoid', function() {
-        var expectedMaterial = 4;
-        var expectedRadii = 5;
-        var expectedShow = 6;
+    it('merge assigns unassigned properties', function() {
+        var source = new DynamicEllipsoid();
+        source.material = new ColorMaterialProperty();
+        source.radii = new ConstantProperty(new Cartesian3());
+        source.show = new ConstantProperty(true);
 
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.ellipsoid = new DynamicEllipsoid();
-        objectToMerge.material = 1;
-        objectToMerge.radii = 2;
-        objectToMerge.show = 3;
+        var target = new DynamicEllipsoid();
+        target.merge(source);
 
-        var mergedObject = new DynamicObject('mergedObject');
-        mergedObject.ellipsoid = new DynamicEllipsoid();
-        mergedObject.ellipsoid.material = expectedMaterial;
-        mergedObject.ellipsoid.radii = expectedRadii;
-        mergedObject.ellipsoid.show = expectedShow;
-
-        DynamicEllipsoid.mergeProperties(mergedObject, objectToMerge);
-
-        expect(mergedObject.ellipsoid.material).toEqual(expectedMaterial);
-        expect(mergedObject.ellipsoid.radii).toEqual(expectedRadii);
-        expect(mergedObject.ellipsoid.show).toEqual(expectedShow);
+        expect(target.material).toBe(source.material);
+        expect(target.radii).toBe(source.radii);
+        expect(target.show).toBe(source.show);
     });
 
-    it('mergeProperties creates and configures an undefined ellipsoid', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.ellipsoid = new DynamicEllipsoid();
-        objectToMerge.material = 1;
-        objectToMerge.radii = 2;
-        objectToMerge.show = 3;
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicEllipsoid();
+        source.material = new ColorMaterialProperty();
+        source.radii = new ConstantProperty(new Cartesian3());
+        source.show = new ConstantProperty(true);
 
-        var mergedObject = new DynamicObject('mergedObject');
+        var material = new ColorMaterialProperty();
+        var radii = new ConstantProperty(new Cartesian3());
+        var show = new ConstantProperty(true);
 
-        DynamicEllipsoid.mergeProperties(mergedObject, objectToMerge);
+        var target = new DynamicEllipsoid();
+        target.material = material;
+        target.radii = radii;
+        target.show = show;
 
-        expect(mergedObject.ellipsoid.material).toEqual(objectToMerge.ellipsoid.material);
-        expect(mergedObject.ellipsoid.radii).toEqual(objectToMerge.ellipsoid.radii);
-        expect(mergedObject.ellipsoid.show).toEqual(objectToMerge.ellipsoid.show);
+        target.merge(source);
+
+        expect(target.material).toBe(material);
+        expect(target.radii).toBe(radii);
+        expect(target.show).toBe(show);
     });
 
-    it('mergeProperties does not change when used with an undefined ellipsoid', function() {
-        var expectedMaterial = 4;
-        var expectedRadii = 5;
-        var expectedShow = 6;
+    it('clone works', function() {
+        var source = new DynamicEllipsoid();
+        source.material = new ColorMaterialProperty();
+        source.radii = new ConstantProperty(new Cartesian3());
+        source.show = new ConstantProperty(true);
 
-        var objectToMerge = new DynamicObject('objectToMerge');
-
-        var mergedObject = new DynamicObject('mergedObject');
-        mergedObject.ellipsoid = new DynamicEllipsoid();
-        mergedObject.ellipsoid.material = expectedMaterial;
-        mergedObject.ellipsoid.radii = expectedRadii;
-        mergedObject.ellipsoid.show = expectedShow;
-
-        DynamicEllipsoid.mergeProperties(mergedObject, objectToMerge);
-
-        expect(mergedObject.ellipsoid.material).toEqual(expectedMaterial);
-        expect(mergedObject.ellipsoid.radii).toEqual(expectedRadii);
-        expect(mergedObject.ellipsoid.show).toEqual(expectedShow);
+        var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.radii).toBe(source.radii);
+        expect(result.show).toBe(source.show);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.ellipsoid = new DynamicEllipsoid();
-        DynamicEllipsoid.undefineProperties(testObject);
-        expect(testObject.ellipsoid).toBeUndefined();
+    it('merge throws if source undefined', function() {
+        var target = new DynamicEllipsoid();
+        expect(function() {
+            target.merge(undefined);
+        }).toThrow();
     });
 });
