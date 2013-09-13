@@ -222,6 +222,7 @@ define([
                 waypoints.push({
                     time : time,
                     closestPointIndex : closestPointIndex,
+                    bestDistanceSquared : bestDistanceSquared,
                     positionCartographic : Cartographic.fromDegrees(coordinates[closestPointIndex][1], coordinates[closestPointIndex][0], 0.0)
                 });
                 time += turn.travelDuration;
@@ -239,32 +240,43 @@ define([
             var geodesic = new EllipsoidGeodesic(waypoints[0].positionCartographic, waypoints[1].positionCartographic, viewModel._ellipsoid);
 
             var initialTime = new JulianDate();
-            var nextWaypoint = 1;
+            var waypointIndex = 0;
             var distanceBetweenWaypoints = geodesic.getSurfaceDistance();
 
             var times = [];
             var samples = [];
 
+            var lastTime = 0.0;
+
             for (i = 0; i < coordinates.length; ++i) {
-                if (i > waypoints[nextWaypoint].closestPointIndex) {
-                    ++nextWaypoint;
-                    if (nextWaypoint < waypoints.length) {
-                        geodesic.setEndPoints(waypoints[nextWaypoint - 1].positionCartographic, waypoints[nextWaypoint].positionCartographic);
-                        distanceBetweenWaypoints = geodesic.getSurfaceDistance();
+                var sampleTime;
+                var positionCartographic;
+
+                if (i === waypoints[waypointIndex].closestPointIndex) {
+                    sampleTime = waypoints[waypointIndex].time;
+                    positionCartographic = waypoints[waypointIndex].positionCartographic;
+
+                    var previousWaypointIndex = waypointIndex;
+                    ++waypointIndex;
+                    if (waypointIndex >= waypoints.length) {
+                        break;
                     }
-                }
-                var positionCartographic = Cartographic.fromDegrees(coordinates[i][1], coordinates[i][0], 0.0);
-                geodesic.setEndPoints(waypoints[nextWaypoint - 1].positionCartographic, positionCartographic);
-                var distanceFromLastWaypoint = geodesic.getSurfaceDistance();
-                var waypointTime;
-                if (nextWaypoint >= waypoints.length) {
-                    waypointTime = waypoints[waypoints.length - 1].time;
+
+                    geodesic.setEndPoints(waypoints[previousWaypointIndex].positionCartographic, waypoints[waypointIndex].positionCartographic);
+                    distanceBetweenWaypoints = geodesic.getSurfaceDistance();
                 } else {
-                    waypointTime = CesiumMath.lerp(waypoints[nextWaypoint - 1].time, waypoints[nextWaypoint].time, distanceFromLastWaypoint / distanceBetweenWaypoints);
+                    positionCartographic = Cartographic.fromDegrees(coordinates[i][1], coordinates[i][0], 0.0);
+                    geodesic.setEndPoints(waypoints[waypointIndex - 1].positionCartographic, positionCartographic);
+                    var distanceFromLastWaypoint = geodesic.getSurfaceDistance();
+                    var distanceRatio = Math.min(1.0, distanceFromLastWaypoint / distanceBetweenWaypoints);
+                    sampleTime = CesiumMath.lerp(waypoints[waypointIndex - 1].time, waypoints[waypointIndex].time, distanceRatio);
                 }
 
-                times.push(initialTime.addSeconds(waypointTime));
-                samples.push(positionCartographic);
+                if (sampleTime - lastTime > 1e-3) {
+                    times.push(initialTime.addSeconds(sampleTime));
+                    samples.push(positionCartographic);
+                    lastTime = sampleTime;
+                }
             }
 
             var terrainProvider = viewModel._scene.getPrimitives().getCentralBody().terrainProvider;
@@ -276,10 +288,10 @@ define([
                 }
 
                 dynamicObject.position.addSamples(times, samplesCartesian);
-                dynamicObject._setAvailability(new TimeInterval(initialTime, initialTime.addSeconds(waypoints[waypoints.length - 1].time)));
+                dynamicObject._setAvailability(new TimeInterval(initialTime, times[times.length - 1]));
 
                 viewModel._navigationDataSource._clock.startTime = initialTime;
-                viewModel._navigationDataSource._clock.stopTime = initialTime.addSeconds(waypoints[waypoints.length - 1].time);
+                viewModel._navigationDataSource._clock.stopTime = times[times.length - 1];
                 viewModel._navigationDataSource._clock.currentTime = initialTime;
                 viewModel._navigationDataSource._clock.multiplier = 10.0;
 
