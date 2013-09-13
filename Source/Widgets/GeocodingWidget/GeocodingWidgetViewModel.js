@@ -28,6 +28,7 @@ define([
         '../../Scene/Primitive',
         '../../Scene/SceneMode',
         '../../DynamicScene/ConstantProperty',
+        '../../DynamicScene/DynamicClock',
         '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectCollection',
         '../../DynamicScene/DynamicPath',
@@ -65,6 +66,7 @@ define([
         Primitive,
         SceneMode,
         ConstantProperty,
+        DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
@@ -79,6 +81,7 @@ define([
         this._changedEvent = new Event();
         this._errorEvent = new Event();
         this._objects = new DynamicObjectCollection();
+        this._clock = new DynamicClock();
     }
 
     /**
@@ -112,7 +115,7 @@ define([
      * @returns {DynamicClock} The clock associated with this data source, or undefined if none exists.
      */
     NavigationDataSource.prototype.getClock = function() {
-        return undefined;
+        return this._clock;
     };
 
     /**
@@ -258,6 +261,11 @@ define([
             }
 
             dynamicObject._setAvailability(new TimeInterval(initialTime, initialTime.addSeconds(waypoints[waypoints.length - 1].time)));
+
+            viewModel._navigationDataSource._clock.startTime = initialTime;
+            viewModel._navigationDataSource._clock.stopTime = initialTime.addSeconds(waypoints[waypoints.length - 1].time);
+            viewModel._navigationDataSource._clock.currentTime = initialTime;
+            viewModel._navigationDataSource._clock.multiplier = 10.0;
 
             viewModel._navigationDataSource._changedEvent.raiseEvent(viewModel._navigationDataSource);
         });

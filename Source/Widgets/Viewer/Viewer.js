@@ -297,6 +297,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             geocodingWidget = new GeocodingWidget(geocodingWidgetContainer, cesiumWidget.scene, cesiumWidget.centralBody.getEllipsoid());
 
             dataSourceCollection.add(geocodingWidget.viewModel._navigationDataSource);
+
+            geocodingWidget.viewModel._navigationDataSource.getChangedEvent().addEventListener(function(dataSource) {
+                setClockFromDataSource(dataSourceCollection, dataSource);
+            });
         }
 
         var eventHelper = new EventHelper();
