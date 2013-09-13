@@ -401,7 +401,6 @@ require({
     }
 
     tabs.watch("selectedChildWidget", function(name, oldValue, newValue){
-        //console.log("selected child changed from ", oval, " to ", nval);
         if (newValue === registry.byId('logContainer')) {
             numberOfNewConsoleMessages = 0;
             registry.byId('logContainer').set('title', 'Console');
