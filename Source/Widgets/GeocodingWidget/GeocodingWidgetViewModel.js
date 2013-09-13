@@ -28,7 +28,9 @@ define([
         '../../Scene/Primitive',
         '../../Scene/sampleTerrain',
         '../../Scene/SceneMode',
+        '../../Scene/VerticalOrigin',
         '../../DynamicScene/ConstantProperty',
+        '../../DynamicScene/DynamicBillboard',
         '../../DynamicScene/DynamicClock',
         '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectCollection',
@@ -67,7 +69,9 @@ define([
         Primitive,
         sampleTerrain,
         SceneMode,
+        VerticalOrigin,
         ConstantProperty,
+        DynamicBillboard,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -230,9 +234,13 @@ define([
 
             var dynamicObject = viewModel._navigationDataSource._objects.getOrCreateObject(viewModel._searchText);
             dynamicObject.position = new SampledPositionProperty();
-            dynamicObject.point = new DynamicPoint();
-            dynamicObject.point.show = new ConstantProperty(true);
-            dynamicObject.point.pixelSize = new ConstantProperty(10);
+//            dynamicObject.point = new DynamicPoint();
+//            dynamicObject.point.show = new ConstantProperty(true);
+//            dynamicObject.point.pixelSize = new ConstantProperty(10);
+
+            dynamicObject.billboard = new DynamicBillboard();
+            dynamicObject.billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+            dynamicObject.billboard.image = new ConstantProperty('../../../Source/Widgets/Images/MapMarker.png');
             dynamicObject.path = new DynamicPath();
             dynamicObject.path.show = new ConstantProperty(true);
             dynamicObject.path.color = new ConstantProperty(new Color(0, 0, 255));
