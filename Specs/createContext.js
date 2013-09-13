@@ -14,6 +14,7 @@ define([
         createCanvas,
         createFrameState) {
     "use strict";
+    /*global unescape*/
 
     function getQueryParameters() {
         var queryParameters = {};
