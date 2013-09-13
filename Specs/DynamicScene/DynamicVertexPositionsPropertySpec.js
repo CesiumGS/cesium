@@ -127,9 +127,9 @@ defineSuite([
     it('getValue works for reference data', function() {
         var objects = new DynamicObjectCollection();
         CzmlDataSource._processCzml(testObjects, objects);
-        var test1 = objects.getObject('test1');
-        var test2 = objects.getObject('test2');
-        var test3 = objects.getObject('test3');
+        var test1 = objects.getById('test1');
+        var test2 = objects.getById('test2');
+        var test3 = objects.getById('test3');
 
         var property = new DynamicVertexPositionsProperty();
         property.processCzmlIntervals(referenceInterval, undefined, objects);
