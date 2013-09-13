@@ -130,7 +130,7 @@ defineSuite([
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
 
         var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
-        expect(pickedObject).toEqual(ellipsoid);
+        expect(pickedObject.primitive).toEqual(ellipsoid);
     });
 
     it('is not picked (show === false)', function() {
