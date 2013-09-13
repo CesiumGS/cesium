@@ -11,8 +11,6 @@ defineSuite([
          'Core/VertexFormat',
          'Renderer/ClearCommand',
          'Specs/render',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -28,8 +26,6 @@ defineSuite([
          VertexFormat,
          ClearCommand,
          render,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
