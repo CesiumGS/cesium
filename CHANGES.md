@@ -11,6 +11,22 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
+```javascript
+var primitive = scene.pick(/* ... */);
+if (defined(primitive)) {
+   // Use primitive
+}
+```
+
+      should now look like:
+```javascript
+var p = scene.pick(/* ... */);
+if (defined(p) && defined(p.primitive)) {
+   // Use p.primitive
+}
+```
+
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
    * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
@@ -22,6 +38,7 @@ Beta Releases
 * Added `heading` and `tilt` properties to `CameraController`.
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
+* Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 
 ### b20 - 2013-09-03
 

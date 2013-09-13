@@ -134,7 +134,7 @@ defineSuite([
         extent = createExtent();
 
         var pickedObject = pick(context, frameState, extent, 0, 0);
-        expect(pickedObject).toEqual(extent);
+        expect(pickedObject.primitive).toEqual(extent);
     });
 
     it('is not picked (show === false)', function() {
