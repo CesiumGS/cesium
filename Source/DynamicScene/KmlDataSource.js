@@ -25,7 +25,6 @@ define(['../Core/createGuid',
         './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPath',
-        './DynamicPoint',
         './DynamicPolyline',
         './DynamicPolygon',
         './DynamicLabel',
@@ -60,7 +59,6 @@ define(['../Core/createGuid',
         DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
-        DynamicPoint,
         DynamicPolyline,
         DynamicPolygon,
         DynamicLabel,
@@ -172,7 +170,7 @@ define(['../Core/createGuid',
             var node = nodes.item(i);
             var nodeName = node.nodeName;
             if (nodeName === 'TimeSpan') {
-                dynamicObject._setAvailability(processTimeSpan(node));
+                dynamicObject.availability = processTimeSpan(node);
             } else if (featureTypes.hasOwnProperty(nodeName)) {
                 foundGeometry = true;
                 mergeStyles(nodeName, styleObject, dynamicObject);
@@ -236,7 +234,7 @@ define(['../Core/createGuid',
 
     function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
-        dynamicObjectCollection.removeObject(dynamicObject.id);
+        dynamicObjectCollection.remove(dynamicObject);
 
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
@@ -256,7 +254,7 @@ define(['../Core/createGuid',
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
-        dynamicObjectCollection.removeObject(dynamicObject.id);
+        dynamicObjectCollection.remove(dynamicObject);
 
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
@@ -333,6 +331,8 @@ define(['../Core/createGuid',
                     icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
                 }
 
+                billboard.width = new ConstantProperty(32);
+                billboard.height = new ConstantProperty(32);
                 billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
                 billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
@@ -354,6 +354,8 @@ define(['../Core/createGuid',
                 if (!defined(dynamicObject.billboard)) {
                     dynamicObject.billboard = new DynamicBillboard();
                     dynamicObject.billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
+                    dynamicObject.billboard.width = new ConstantProperty(32);
+                    dynamicObject.billboard.height = new ConstantProperty(32);
                 }
             } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
@@ -386,59 +388,43 @@ define(['../Core/createGuid',
     }
 
     function mergeStyles(geometryType, styleObject, targetObject) {
+        targetObject.merge(styleObject);
+
+        //If a shared style has multiple styles, for example PolyStyle and
+        //and LineStyle, an object can end up with styles it shouldn't have.
+        //After we merge, remove any such styles.
         switch (geometryType) {
         case 'Point':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicBillboard.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPoint.mergeProperties(targetObject, styleObject);
+            targetObject.path = undefined;
+            targetObject.polygon = undefined;
+            targetObject.polyline = undefined;
             break;
         case 'LineString':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPolyline.mergeProperties(targetObject, styleObject);
-            break;
         case 'LinearRing':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPolyline.mergeProperties(targetObject, styleObject);
+            targetObject.billboard = undefined;
+            targetObject.label = undefined;
+            targetObject.path = undefined;
+            targetObject.point = undefined;
+            targetObject.polygon = undefined;
             break;
         case 'Polygon':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPolygon.mergeProperties(targetObject, styleObject);
+            targetObject.billboard = undefined;
+            targetObject.label = undefined;
+            targetObject.path = undefined;
+            targetObject.point = undefined;
+            targetObject.polyline = undefined;
             break;
         case 'gx:Track':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicBillboard.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPath.mergeProperties(targetObject, styleObject);
-            DynamicPoint.mergeProperties(targetObject, styleObject);
+            targetObject.polygon = undefined;
+            targetObject.polyline = undefined;
             break;
         case 'gx:MultiTrack':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicBillboard.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPath.mergeProperties(targetObject, styleObject);
-            DynamicPoint.mergeProperties(targetObject, styleObject);
+            targetObject.polygon = undefined;
+            targetObject.polyline = undefined;
             break;
         case 'MultiGeometry':
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicBillboard.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPath.mergeProperties(targetObject, styleObject);
-            DynamicPoint.mergeProperties(targetObject, styleObject);
-            DynamicPolygon.mergeProperties(targetObject, styleObject);
-            DynamicPolyline.mergeProperties(targetObject, styleObject);
             break;
         default:
-            DynamicObject.mergeProperties(targetObject, styleObject);
-            DynamicBillboard.mergeProperties(targetObject, styleObject);
-            DynamicLabel.mergeProperties(targetObject, styleObject);
-            DynamicPath.mergeProperties(targetObject, styleObject);
-            DynamicPoint.mergeProperties(targetObject, styleObject);
-            DynamicPolygon.mergeProperties(targetObject, styleObject);
-            DynamicPolyline.mergeProperties(targetObject, styleObject);
             break;
         }
     }
@@ -457,16 +443,10 @@ define(['../Core/createGuid',
 
         var externalStyles = placeMark.getElementsByTagName('styleUrl');
         if (externalStyles.length > 0) {
-            var styleObject = styleCollection.getObject(externalStyles.item(0).textContent);
-
+            //Google earth seems to always use the first external style only.
+            var styleObject = styleCollection.getById(externalStyles.item(0).textContent);
             if (typeof styleObject !== 'undefined') {
-                //Google earth seems to always use the first external style only.
-                DynamicBillboard.mergeProperties(result, styleObject);
-                DynamicLabel.mergeProperties(result, styleObject);
-                DynamicPoint.mergeProperties(result, styleObject);
-                DynamicPolygon.mergeProperties(result, styleObject);
-                DynamicPolyline.mergeProperties(result, styleObject);
-                DynamicObject.mergeProperties(result, styleObject);
+                result.merge(styleObject);
             }
         }
         return result;
@@ -497,7 +477,7 @@ define(['../Core/createGuid',
                 if (isExternal && defined(sourceUri)) {
                     id = sourceUri + id;
                 }
-                if (!defined(styleCollection.getObject(id))) {
+                if (!defined(styleCollection.getById(id))) {
                     var styleObject = styleCollection.getOrCreateObject(id);
                     processStyle(node, styleObject, sourceUri, uriResolver);
                 }
@@ -690,7 +670,7 @@ define(['../Core/createGuid',
             throw new DeveloperError('kml is required.');
         }
 
-        this._dynamicObjectCollection.clear();
+        this._dynamicObjectCollection.removeAll();
         return loadKml(this, kml, source);
     };
 
