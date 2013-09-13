@@ -339,6 +339,11 @@ define([
             return _location;
         };
 
+        /**
+         * @private
+         */
+        this.textureUnitIndex = undefined;
+
         this._set = (function() {
             switch (activeUniform.type) {
             case _gl.FLOAT:
@@ -369,8 +374,10 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                // See _setSampler()
-                return undefined;
+                return function() {
+                    _gl.activeTexture(_gl.TEXTURE0 + this.textureUnitIndex);
+                    _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
+                };
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
@@ -413,17 +420,8 @@ define([
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
-                _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex);
-                _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
+                this.textureUnitIndex = textureUnitIndex;
                 _gl.uniform1i(_location, textureUnitIndex);
-
-                return textureUnitIndex + 1;
-            };
-
-            this._clearSampler = function(textureUnitIndex) {
-                _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex);
-                _gl.bindTexture(this.value._getTarget(), null);
-
                 return textureUnitIndex + 1;
             };
         }
@@ -455,6 +453,11 @@ define([
         this._getLocations = function() {
             return _locations;
         };
+
+        /**
+         * @private
+         */
+        this.textureUnitIndex = undefined;
 
         this._set = (function() {
             switch (activeUniform.type) {
@@ -494,8 +497,14 @@ define([
                 };
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
-                // See _setSampler()
-                return undefined;
+                return function() {
+                    for ( var i = 0; i < _locations.length; ++i) {
+                        var value = this.value[i];
+                        var index = this.textureUnitIndex + i;
+                        _gl.activeTexture(_gl.TEXTURE0 + index);
+                        _gl.bindTexture(value._getTarget(), value._getTexture());
+                    }
+                };
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
@@ -552,27 +561,31 @@ define([
 
         if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
+                this.textureUnitIndex = textureUnitIndex;
+
                 for ( var i = 0; i < _locations.length; ++i) {
-                    var value = this.value[i];
                     var index = textureUnitIndex + i;
-                    _gl.activeTexture(_gl.TEXTURE0 + index);
-                    _gl.bindTexture(value._getTarget(), value._getTexture());
                     _gl.uniform1i(_locations[i], index);
-                }
-
-                return textureUnitIndex + _locations.length;
-            };
-
-            this._clearSampler = function(textureUnitIndex) {
-                for ( var i = 0; i < _locations.length; ++i) {
-                    _gl.activeTexture(_gl.TEXTURE0 + textureUnitIndex + i);
-                    _gl.bindTexture(this.value[i]._getTarget(), null);
                 }
 
                 return textureUnitIndex + _locations.length;
             };
         }
     };
+
+    function setSamplerUniforms(gl, program, samplerUniforms) {
+        gl.useProgram(program);
+
+        var textureUnitIndex = 0;
+        var length = samplerUniforms.length;
+        for (var i = 0; i < length; ++i) {
+            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
+        }
+
+        gl.useProgram(null);
+
+        return textureUnitIndex;
+    }
 
     /**
      * DOC_TBA
@@ -588,17 +601,21 @@ define([
         var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
         var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
         var uniforms = findUniforms(gl, program);
-        var partitionedUniforms = partitionUniforms(uniforms.allUniforms);
+        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
 
         this._gl = gl;
         this._program = program;
         this._numberOfVertexAttributes = numberOfVertexAttributes;
         this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
-        this._allUniforms = uniforms.allUniforms;
+        this._uniformsByName = uniforms.uniformsByName;
         this._uniforms = uniforms.uniforms;
-        this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
+
+        /**
+         * @private
+         */
+        this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
 
         /**
          * GLSL source for the shader program's vertex shader.  This is the version of
@@ -905,7 +922,7 @@ define([
     }
 
     function findUniforms(gl, program) {
-        var allUniforms = {};
+        var uniformsByName = {};
         var uniforms = [];
         var samplerUniforms = [];
 
@@ -924,12 +941,11 @@ define([
                     var uniformValue = gl.getUniform(program, location);
                     var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
 
-                    allUniforms[uniformName] = uniform;
+                    uniformsByName[uniformName] = uniform;
+                    uniforms.push(uniform);
 
                     if (uniform._setSampler) {
                         samplerUniforms.push(uniform);
-                    } else {
-                        uniforms.push(uniform);
                     }
                 } else {
                     // Uniform array
@@ -944,7 +960,7 @@ define([
                     var indexOfBracket = uniformName.indexOf('[');
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
-                        uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+                        uniformArray = uniformsByName[uniformName.slice(0, indexOfBracket)];
 
                         // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
                         // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
@@ -973,12 +989,11 @@ define([
                         }
                         uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
 
-                        allUniforms[uniformName] = uniformArray;
+                        uniformsByName[uniformName] = uniformArray;
+                        uniforms.push(uniformArray);
 
                         if (uniformArray._setSampler) {
                             samplerUniforms.push(uniformArray);
-                        } else {
-                            uniforms.push(uniformArray);
                         }
                     }
                 }
@@ -986,7 +1001,7 @@ define([
         }
 
         return {
-            allUniforms : allUniforms,
+            uniformsByName : uniformsByName,
             uniforms : uniforms,
             samplerUniforms : samplerUniforms
         };
@@ -1049,7 +1064,7 @@ define([
      * @see ShaderProgram#getManualUniforms
      */
     ShaderProgram.prototype.getAllUniforms = function() {
-        return this._allUniforms;
+        return this._uniformsByName;
     };
 
     /**
@@ -1068,17 +1083,6 @@ define([
         this._gl.useProgram(this._program);
     };
 
-    ShaderProgram.prototype._unBind = function() {
-        this._gl.useProgram(null);
-
-        var samplerUniforms = this._samplerUniforms;
-        var textureUnitIndex = 0;
-        var len = samplerUniforms.length;
-        for ( var i = 0; i < len; ++i) {
-            textureUnitIndex = samplerUniforms[i]._clearSampler(textureUnitIndex);
-        }
-    };
-
     ShaderProgram.prototype._setUniforms = function(uniformMap, uniformState, validate) {
         // TODO: Performance
 
@@ -1086,7 +1090,6 @@ define([
         var i;
 
         var uniforms = this._uniforms;
-        var samplerUniforms = this._samplerUniforms;
         var manualUniforms = this._manualUniforms;
         var automaticUniforms = this._automaticUniforms;
 
@@ -1108,12 +1111,6 @@ define([
         len = uniforms.length;
         for (i = 0; i < len; ++i) {
             uniforms[i]._set();
-        }
-
-        var textureUnitIndex = 0;
-        len = samplerUniforms.length;
-        for (i = 0; i < len; ++i) {
-            textureUnitIndex = samplerUniforms[i]._setSampler(textureUnitIndex);
         }
 
         if (validate) {
