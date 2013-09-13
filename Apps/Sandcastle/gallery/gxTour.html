@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use the Viewer Widget to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var centralBody = scene.getPrimitives().getCentralBody();
+    centralBody.depthTestAgainstTerrain = true;
+
+    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesium.agi.com/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+
+    centralBody.terrainProvider = cesiumTerrainProvider;
+
+    var ds = new Cesium.KmlTourDataSource(cesiumTerrainProvider);
+    ds.getChangedEvent().addEventListener(function(ev){
+        viewer.dataSources.add(ds);
+    });
+    ds.loadUrl('../gallery/akosmaroy-2013-08-12-LSZH-LSZL-cockpit.kml');
+
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

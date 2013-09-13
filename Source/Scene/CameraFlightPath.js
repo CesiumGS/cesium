@@ -652,5 +652,246 @@ define([
         return this.createAnimation(scene, createAnimationDescription);
     };
 
+
+
+    // -- PROTOTYPE PART - Animate KML gx:Tour sequence -- //
+
+
+    /**
+     * Calculates default camera direction matrix based on input location
+     * By default a cinematic camera should look exactly at the center of ellipsoid
+     * Its up vector always points towards geograpic North.
+     *
+     * @param {Geographic} loc Actual geographic location
+     * @param {Ellipsoid} ell Ellipsoid
+     *
+     * @returns {Matrix3} Matrix containing three column vectors: right, up and direction
+     */
+    var generateOrientationMatrix = function(loc, ell) {
+        // Surface Normal
+        var sNorm = ell.geodeticSurfaceNormalCartographic(loc);
+
+
+        // calculate cinematic camera up and dir vectors
+        // i.  sNorm X North => Left
+        var myLeft = sNorm.cross( Cartesian3.UNIT_Z ).normalize();
+        // ii. Left X Up => dir (north)
+        var upp = myLeft.cross(sNorm);  // upp should point to North
+        var dirr = sNorm.negate();      // dirr should point to the center
+
+        var myRight = myLeft.negate();
+
+        // prepare rotation matrix (R U D)
+        var mat1 = new Matrix3(
+            myRight.x, upp.x, dirr.x,
+            myRight.y, upp.y, dirr.y,
+            myRight.z, upp.z, dirr.z
+        );
+        return mat1;
+    };
+
+
+    /**
+     * Apply rotations to cam orientation matrix
+     * - Heading
+     * - Tilt
+     * - Rotation
+     *
+     * @see https://developers.google.com/kml/documentation/cameras
+     *  
+     * @param {Matrix3} mat Cam orientation matrix (R U D)
+     * @param {number} h Heading as compass angle in degrees (0 < h < 360), 0 = North
+     * @param {number} t Tilt Horizontal tilting angle in degrees. (-180 < t < 180), 0 = Down, 90 = Head forward
+     * @param {number} r Left-right rotation angle in degrees. (-180 < t < 180)
+     *
+     * @returns {Matrix3} Matrix having rotations applied to.
+     */
+    var rotCameraMatrix = function(mat, h, t, r){
+        var mh, mt, mr;
+
+        // Heading
+        if (h === 0) {
+            mh = Matrix3.IDENTITY;
+        } else {
+            mh = Matrix3.fromRotationZ(CesiumMath.toRadians( 360-h ));
+        }
+
+        // Tilt
+        if (t >= 0) {
+            mt = Matrix3.fromRotationX(CesiumMath.toRadians( -t ));
+        } else {
+            // TBD
+            mt = Matrix3.IDENTITY;
+        }
+        
+        // Roll (-180 < 0 < 180)
+        if (r === 0) {
+            mr = Matrix3.IDENTITY;
+        } else {
+            mr = Matrix3.fromRotationY(CesiumMath.toRadians( -r ));
+        }
+        
+        // mat = mat.multiply(mx).multiply(my).multiply(mz);
+
+        Matrix3.multiply(mat, mh, mat);
+        Matrix3.multiply(mat, mt, mat);
+        // FIXME - this is bogus!
+        Matrix3.multiply(mat, mr, mat);
+
+        return mat;
+    };
+
+
+
+    /**
+     * Creates an animation to fly the camera from it's current position through a complete tour route to its final position.
+     * Keep in mind that the animation will happen in the camera's current reference frame.
+     *
+     * Note: although it should work, the function lack some features, such as
+     * - processing 'wait' items. Currently they are skipped.
+     *
+     * Known issues:
+     * - left-right rotation is bogus. It interferes with heading although it should not.
+     * - never reaches end location.
+     *
+     * @param {FrameState} frameState The current frame state.
+     * @param {Object} tour gxTour structure.
+     * @param {Object} options TBD
+     *
+     * @exception {DeveloperError} frameState parameter is required.
+     * @exception {DeveloperError} tour parameter is required.
+     * 
+     * @see processGxTour.js
+     */
+    CameraFlightPath.createGxTourAnimation = function(frameState, tour, options) {
+        var locations = [];         // sequence of geographic locations
+        var orientations = [];      // sequence of {direction, up} objects
+        var durations = [];         // sequence of anim durations
+        var totalDuration = 0;
+
+
+        var i,j;
+        var node;
+        var mat1;
+        var rmat;
+        var v1, v2, v11, v22;
+
+
+        if (typeof frameState === 'undefined') {
+            throw new DeveloperError('frameState is required.');
+        }
+        if (typeof tour === 'undefined') {
+            throw new DeveloperError('tour is required.');
+        }
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            throw new DeveloperError('Only 3D mode is supported.');
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var speed = defaultValue(options.speed, 1);
+
+        var _ellipsoid = frameState.scene2D.projection.getEllipsoid();
+
+
+
+
+
+        // Main Loop: Process Tour Nodes
+        // expects objects having structure:
+        //   {type: 'flyTo', camera:{location: {Cartographic}, orientation:[...], time: {number} }}
+        for (i=0; i<tour.length; i++) {
+            node = defaultValue(tour[i], defaultValue.EMPTY_OBJECT);
+
+            if (node.type === 'flyTo') {
+                // generate camera orientation matrix (Right,Up,Dir)
+                mat1 = generateOrientationMatrix(node.camera.location, _ellipsoid);
+                // apply camera rotations
+                mat1 = rotCameraMatrix(mat1,
+                    node.camera.orientation[0],
+                    node.camera.orientation[1],
+                    node.camera.orientation[2]
+                );
+
+                v1 = mat1.getColumn(1); /*rmat.multiplyByVector(mat1.getColumn(1), v1);*/ // up
+                v2 = mat1.getColumn(2); /* rmat.multiplyByVector(mat1.getColumn(2), v2); */ // dir
+                // v11 = rmat.multiplyByVector(v1); // up
+                // v22 = rmat.multiplyByVector(v2); // dir
+
+                // Store results
+                // Cartograpic!
+                locations.push( node.camera.location );
+                orientations.push({
+                    direction: v2,
+                    up: v1
+                });
+                durations.push( node.duration / speed );
+            } else {
+                // TBD handle 'wait' nodes
+            }
+        }
+
+
+        // Generate the animation route
+
+        var myUpdate = (function(_frameState) {
+            var camera = _frameState.camera;
+            var rotMatrix = new Matrix3();
+            var _ell = _frameState.scene2D.projection.getEllipsoid();
+
+            var _pts = [];   // route control points
+            var k;
+            var t=0;         // time offset
+            var pt, ori;
+            for (k=0; k<locations.length; k++) {
+                pt = _ell.cartographicToCartesian(locations[k]);
+                // set orientations too
+                ori = createQuaternion(orientations[k].direction, orientations[k].up);
+
+                _pts.push({point: pt, time: t, orientation: ori});
+                t += durations[k];
+            }
+            var path = createSpline(_pts);
+
+
+
+            var _orientations = new OrientationInterpolator(_pts);
+
+            return function(value) {
+                var time = value.time;
+                var orientation = _orientations.evaluate(time);
+                Matrix3.fromQuaternion(orientation, rotMatrix);
+
+                camera.position = path.evaluate(time, camera.position);
+                camera.right = rotMatrix.getRow(0, camera.right);
+                camera.up = rotMatrix.getRow(1, camera.up);
+                camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            };
+        })(frameState);
+
+
+        // calculate total duration
+        totalDuration = 0;
+        for (i=0; i<durations.length; i++) {
+            totalDuration += durations[i];
+        }
+
+        // finally, construct animation object
+        return {
+            duration : totalDuration,
+            easingFunction : Tween.Easing.Linear.None,
+            startValue : {
+                time : 0.0
+            },
+            stopValue : {
+                time : totalDuration
+            },
+            onUpdate : myUpdate,
+            onComplete : options.onCompleteCallback
+        };
+    };
+
+
+
     return CameraFlightPath;
 });
