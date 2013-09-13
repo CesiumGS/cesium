@@ -2543,7 +2543,9 @@ define([
      * @see Context#getObjectByPickColor
      *
      * @example
-     * this._pickId = context.createPickId(this);
+     * this._pickId = context.createPickId({
+     *   primitive : this
+     * });
      */
     Context.prototype.createPickId = function(object) {
         if (!defined(object)) {
