@@ -32,6 +32,14 @@ require(['Cesium'], function(Cesium) {
         })
     });
     
+    addEventListener('keypress', function(e) {
+        if (e.which === 96) {
+            viewer.scene.getPrimitives().getCentralBody().depthTestAgainstTerrain = !viewer.scene.getPrimitives().getCentralBody().depthTestAgainstTerrain;
+            return false;
+        }
+        return true;
+    }, false);
+
     viewer.extend(Cesium.viewerDynamicObjectMixin);
 
     Sandcastle.finishedLoading();

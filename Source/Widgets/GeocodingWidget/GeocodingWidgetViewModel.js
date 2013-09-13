@@ -271,6 +271,7 @@ define([
             when(sampleTerrain(terrainProvider, 11, samples), function() {
                 var samplesCartesian = [];
                 for (var q = 0; q < samples.length; ++q) {
+                    samples[q].height += 5.0;
                     samplesCartesian.push(viewModel._ellipsoid.cartographicToCartesian(samples[q]));
                 }
 
