@@ -207,7 +207,7 @@ define([
                     rotation : this.rotation,
                     stRotation : this.textureRotationAngle
                 }),
-                id : this
+                pickPrimitive : this
             });
 
             if (defined(this._primitive)) {

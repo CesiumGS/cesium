@@ -8,6 +8,22 @@ Beta Releases
 
 * Breaking changes:
    * If your application uses Bing Maps imagery, you must supply a Bing Maps key for your application as soon as possible and prior to deployment.  If you do not supply a Bing Maps key, a message is now written to the console reminding you to do so. 
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
+```javascript
+var primitive = scene.pick(/* ... */);
+if (defined(primitive)) {
+   // Use primitive
+}
+```
+
+      should now look like:
+```javascript
+var p = scene.pick(/* ... */);
+if (defined(p) && defined(p.primitive)) {
+   // Use p.primitive
+}
+```
+
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
    * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
