@@ -22,6 +22,7 @@ Beta Releases
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 
 ### b20 - 2013-09-03
 
