@@ -4,10 +4,12 @@
     color: white;
     display: inline-block;
     vertical-align: middle;
-    width: 350px;
-    height: 2em;
+    width: 200px;
     padding-left: 4px;
     padding-right: 32px;
+    height: 100%;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 .cesium-viewer-geocodingWidgetContainer:hover .cesium-geocodingWidget-input {
@@ -20,13 +22,14 @@
     background-image: url(../Images/search.svg);
     background-repeat: no-repeat;
     background-size: 100% 100%;
-    background-position: 0 1px;
+    background-position: 0 3px;
     cursor: pointer;
     width: 32px;
     top: 0;
     right: 0;
     bottom: 0;
     vertical-align: middle;
+    height: 100%;
 }
 
 .cesium-geocodingWidget-goButton:hover {
