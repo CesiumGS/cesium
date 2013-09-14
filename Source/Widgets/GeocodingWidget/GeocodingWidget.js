@@ -18,15 +18,23 @@ define([
     "use strict";
 
     /**
-     * A widget for finding addresses and landmarks, and flying the camera to them.
+     * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
+     * performed using the <a href="http://msdn.microsoft.com/en-us/library/ff701715.aspx">Bing Maps Locations API</a>.
      *
      * @alias GeocodingWidget
      * @constructor
      *
-     * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Scene} scene The Scene instance to use.
-     * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
-     * @param {Number} [flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
+     * @param {Scene} description.scene The Scene instance to use.
+     * @param {String} [description.key] The Bing Maps key for your application, which can be
+     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        If this parameter is not provided, {@link BingMapsImageryProvider.defaultKey} is used.
+     *        If {@link BingMapsImageryProvider.defaultKey} is undefined as well, a message is
+     *        written to the console reminding you that you must create and supply a Bing Maps
+     *        key as soon as possible.  Please do not deploy an application that uses
+     *        Bing Maps imagery without creating a separate key for your application.
+     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
+     * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.

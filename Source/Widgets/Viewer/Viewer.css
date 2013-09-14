@@ -58,7 +58,7 @@
 .cesium-viewer-toolbar {
 	display: block;
 	position: absolute;
-	top: 5px;
+	top: 44px;
 	right: 5px;
 }
 
@@ -90,7 +90,7 @@
     display: block;
     position: absolute;
     top: 5px;
-    right: 110px;
+    right: 5px;
     margin: 1px;
     height: 32px;
 }
