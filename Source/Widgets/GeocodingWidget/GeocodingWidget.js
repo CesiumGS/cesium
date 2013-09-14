@@ -1,4 +1,4 @@
-/*global define,document*/
+/*global define*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -28,27 +28,30 @@ define([
      * @param {Scene} description.scene The Scene instance to use.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
-     *        If this parameter is not provided, {@link BingMapsImageryProvider.defaultKey} is used.
-     *        If {@link BingMapsImageryProvider.defaultKey} is undefined as well, a message is
+     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
+     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
-     *        Bing Maps imagery without creating a separate key for your application.
+     *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
      *
-     * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} scene is required.
+     * @exception {DeveloperError} description.container is required.
+     * @exception {DeveloperError} description.scene is required.
      */
-    var GeocodingWidget = function(container, scene, ellipsoid, flightDuration) {
-        if (!defined(container)) {
-            throw new DeveloperError('container is required.');
+    var GeocodingWidget = function(description) {
+        if (!defined(description) || !defined(description.container)) {
+            throw new DeveloperError('description.container is required.');
+        }
+        if (!defined(description.scene)) {
+            throw new DeveloperError('description.scene is required.');
         }
 
-        container = getElement(container);
+        var container = getElement(description.container);
 
         this._container = container;
 
-        this._viewModel = new GeocodingWidgetViewModel(scene, ellipsoid, flightDuration);
+        this._viewModel = new GeocodingWidgetViewModel(description.scene, description.key, description.ellipsoid, description.flightDuration);
 
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocodingWidget-input';

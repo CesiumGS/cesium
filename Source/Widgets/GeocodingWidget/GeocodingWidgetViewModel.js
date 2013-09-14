@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/BingMapsApi',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Cartographic',
@@ -41,6 +42,7 @@ define([
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
+        BingMapsApi,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -151,7 +153,7 @@ define([
         var promise = jsonp('http://dev.virtualearth.net/REST/v1/Locations', {
             parameters : {
                 query : viewModel._searchText,
-                key : 'AkMnCOd4RF1U7D7qgdBz3Fk1aJB3rgCCI_DO841suDGxqOg0SMICTE8Ivy5HhAf5'
+                key : viewModel._key
 
             },
             callbackParameterName : 'jsonp'
@@ -192,7 +194,7 @@ define([
                 'wp.1' : to,
                 distanceUnit : 'mi',
                 routePathOutput : 'Points',
-                key : 'AkMnCOd4RF1U7D7qgdBz3Fk1aJB3rgCCI_DO841suDGxqOg0SMICTE8Ivy5HhAf5'
+                key : viewModel._key
 
             },
             callbackParameterName : 'jsonp'
@@ -320,7 +322,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var GeocodingWidgetViewModel = function(scene, ellipsoid, flightDuration) {
+    var GeocodingWidgetViewModel = function(scene, key, ellipsoid, flightDuration) {
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -328,6 +330,7 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         flightDuration = defaultValue(flightDuration, 1500);
 
+        this._key = BingMapsApi.getKey(key);
         this._scene = scene;
         this._ellipsoid = ellipsoid;
         this._flightDuration = flightDuration;
