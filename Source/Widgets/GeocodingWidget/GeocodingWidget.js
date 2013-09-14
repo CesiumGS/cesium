@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,document*/
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -17,6 +17,20 @@ define([
         knockout) {
     "use strict";
 
+    /**
+     * A widget for finding addresses and landmarks, and flying the camera to them.
+     *
+     * @alias GeocodingWidget
+     * @constructor
+     *
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
+     * @param {Scene} scene The Scene instance to use.
+     * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
+     * @param {Number} [flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     *
+     * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} scene is required.
+     */
     var GeocodingWidget = function(container, scene, ellipsoid, flightDuration) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -30,7 +44,6 @@ define([
 
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocodingWidget-input';
-        textBox.setAttribute('draggable', 'false');
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', 'value: searchText, event: { keypress: inputKeypress }, valueUpdate: "afterkeydown"');
         this._textBox = textBox;
