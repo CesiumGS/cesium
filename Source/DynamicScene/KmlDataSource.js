@@ -473,21 +473,52 @@ define(['../Core/createGuid',
     //each style is loaded.
     function processStyles(kml, styleCollection, sourceUri, isExternal, uriResolver) {
         var i;
+        var id;
+        var styleObject;
 
         var styleNodes = kml.getElementsByTagName('Style');
         var styleNodesLength = styleNodes.length;
         for (i = styleNodesLength - 1; i >= 0; i--) {
             var node = styleNodes.item(i);
             var attributes = node.attributes;
-            var id = defined(attributes.id) ? attributes.id.textContent : undefined;
+            id = defined(attributes.id) ? attributes.id.textContent : undefined;
             if (defined(id)) {
                 id = '#' + id;
                 if (isExternal && defined(sourceUri)) {
                     id = sourceUri + id;
                 }
                 if (!defined(styleCollection.getById(id))) {
-                    var styleObject = styleCollection.getOrCreateObject(id);
+                    styleObject = styleCollection.getOrCreateObject(id);
                     processStyle(node, styleObject, sourceUri, uriResolver);
+                }
+            }
+        }
+
+        var styleMaps = kml.getElementsByTagName('StyleMap');
+        var styleMapsLength = styleMaps.length;
+        for (i = 0; i < styleMapsLength; i++) {
+            var styleMap = styleMaps.item(i);
+            id = defined(styleMap.attributes.id) ? styleMap.attributes.id.textContent : undefined;
+            if (defined(id)) {
+                var pairs = styleMap.children;
+                for ( var p = 0; p < pairs.length; p++) {
+                    var pair = pairs[p];
+                    var key = pair.getElementsByTagName('key')[0];
+                    if (defined(key) && key.textContent === 'normal') {
+                        var styleUrl = pair.getElementsByTagName('styleUrl')[0];
+                        id = '#' + id;
+                        if (isExternal && defined(sourceUri)) {
+                            id = sourceUri + id;
+                        }
+                        if (!defined(styleCollection.getById(id))) {
+                            styleObject = styleCollection.getOrCreateObject(id);
+                            var base = styleCollection.getOrCreateObject(styleUrl.textContent);
+                            if (defined(base)) {
+                                styleObject.merge(base);
+                            }
+                        }
+                        break;
+                    }
                 }
             }
         }
