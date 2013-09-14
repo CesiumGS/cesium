@@ -26,6 +26,7 @@ Beta Releases
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 
 ### b20 - 2013-09-03
 

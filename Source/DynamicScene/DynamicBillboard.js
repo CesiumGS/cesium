@@ -119,18 +119,28 @@ define(['../Core/defaultValue',
         show : createObservableProperty('show', '_show'),
 
         /**
-         * Gets or sets the billboard's width in pixels. If undefined, the native width is used.
+         * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
+         * If undefined, the native width is used.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
         width : createObservableProperty('width', '_width'),
 
         /**
-         * Gets or sets the billboard's height in pixels. If undefined, the native height is used.
+         * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
+         * If undefined, the native height is used.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        height : createObservableProperty('height', '_height')
+        height : createObservableProperty('height', '_height'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
+         * If undefined, a constant size is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        nearFarScalar : createObservableProperty('nearFarScalar', '_nearFarScalar')
     });
 
     /**
@@ -156,6 +166,7 @@ define(['../Core/defaultValue',
         result.verticalOrigin = this._verticalOrigin;
         result.width = this._width;
         result.height = this._height;
+        result.nearFarScalar = this._nearFarScalar;
         return result;
     };
 
@@ -183,6 +194,7 @@ define(['../Core/defaultValue',
         this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
         this.width = defaultValue(this._width, source._width);
         this.height = defaultValue(this._height, source._height);
+        this.nearFarScalar = defaultValue(this._nearFarScalar, source._nearFarScalar);
     };
 
     return DynamicBillboard;
