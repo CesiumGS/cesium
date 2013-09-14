@@ -8,6 +8,8 @@ Beta Releases
 
 * Breaking changes:
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+   * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
+   * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
    * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
       * `getObject` has been renamed `getById`
       * `removeObject` has been renamed `removeById`
@@ -18,8 +20,10 @@ Beta Releases
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Added `heading` and `tilt` properties to `CameraController`.
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
+* Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.

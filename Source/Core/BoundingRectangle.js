@@ -330,7 +330,7 @@ define([
      * Computes a bounding rectangle that is rectangle expanded to contain point.
      * @memberof BoundingRectangle
      *
-     * @param {BoundingRectangle} point A point to enclose in a bounding rectangle.
+     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.
