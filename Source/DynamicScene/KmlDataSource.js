@@ -12,6 +12,7 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/JulianDate',
+        '../Core/NearFarScalar',
         '../Core/TimeInterval',
         '../Core/loadBlob',
         '../Core/loadXML',
@@ -21,6 +22,7 @@ define(['../Core/createGuid',
         './SampledPositionProperty',
         './TimeIntervalCollectionProperty',
         '../Scene/LabelStyle',
+        '../Scene/VerticalOrigin',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -46,6 +48,7 @@ define(['../Core/createGuid',
         Event,
         Iso8601,
         JulianDate,
+        NearFarScalar,
         TimeInterval,
         loadBlob,
         loadXML,
@@ -55,6 +58,7 @@ define(['../Core/createGuid',
         SampledPositionProperty,
         TimeIntervalCollectionProperty,
         LabelStyle,
+        VerticalOrigin,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -160,6 +164,8 @@ define(['../Core/createGuid',
                 dynamicObject.label = new DynamicLabel();
                 dynamicObject.label.font = new ConstantProperty('16pt Arial');
                 dynamicObject.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
+                dynamicObject.label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
+                dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             }
             dynamicObject.label.text = new ConstantProperty(name);
         }
@@ -336,6 +342,7 @@ define(['../Core/createGuid',
                 billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
                 billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
+                billboard.nearFarScalar = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.0));
                 dynamicObject.billboard = billboard;
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
@@ -346,7 +353,8 @@ define(['../Core/createGuid',
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
-                label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
+                label.pixelOffset = new ConstantProperty(new Cartesian2(0, 16));
+                label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
                 label.font = new ConstantProperty('16pt Arial');
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 dynamicObject.label = label;
