@@ -468,7 +468,9 @@ define([
             var pickCommand = this._pickCommand;
 
             if (!defined(this._pickId)) {
-                this._pickId = context.createPickId(this._pickIdThis);
+                this._pickId = context.createPickId({
+                    primitive : this._pickIdThis
+                });
             }
 
             // Recompile shader when material changes
