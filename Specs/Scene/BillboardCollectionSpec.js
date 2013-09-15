@@ -1096,7 +1096,7 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, billboards, 0, 0);
-        expect(pickedObject).toEqual(b);
+        expect(pickedObject.primitive).toEqual(b);
     });
 
     it('is not picked', function() {
