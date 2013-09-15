@@ -101,6 +101,13 @@ define([
         this.id = options.id;
 
         /**
+         * Used for picking primitives that wrap geometry instances.
+         *
+         * @private
+         */
+        this.pickPrimitive = options.pickPrimitive;
+
+        /**
          * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
          * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
          *

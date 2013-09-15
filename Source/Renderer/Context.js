@@ -253,6 +253,7 @@ define([
         this._currentFramebuffer = undefined;
         this._currentSp = undefined;
         this._currentRenderState = rs;
+        this._maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
@@ -2070,6 +2071,7 @@ define([
 
         this._currentFramebuffer = framebuffer;
         this._currentSp = sp;
+        this._maxFrameTextureUnitIndex = Math.max(this._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
     };
 
     /**
@@ -2141,8 +2143,24 @@ define([
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
         }
-        this._currentSp._unBind();
         this._currentSp = undefined;
+    };
+
+    /**
+     * @private
+     */
+    Context.prototype.endFrame = function() {
+        var gl = this._gl;
+        gl.useProgram(null);
+
+        var length = this._maxFrameTextureUnitIndex;
+        this._maxFrameTextureUnitIndex = 0;
+
+        for (var i = 0; i < length; ++i) {
+            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        }
     };
 
     /**
@@ -2525,7 +2543,9 @@ define([
      * @see Context#getObjectByPickColor
      *
      * @example
-     * this._pickId = context.createPickId(this);
+     * this._pickId = context.createPickId({
+     *   primitive : this
+     * });
      */
     Context.prototype.createPickId = function(object) {
         if (!defined(object)) {
