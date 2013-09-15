@@ -209,30 +209,30 @@ define([
     function createOnLoadCallback(viewer, file) {
         var source = file.name;
         return function(evt) {
-            var promise;
-            var dataSource;
-            var sourceUpperCase = source.toUpperCase();
-            if (endsWith(sourceUpperCase, ".CZML")) {
-                dataSource = new CzmlDataSource();
-                promise = dataSource.load(JSON.parse(evt.target.result), source);
-            } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
-            endsWith(sourceUpperCase, ".JSON") || //
-            endsWith(sourceUpperCase, ".TOPOJSON")) {
-                dataSource = new GeoJsonDataSource();
-                promise = dataSource.load(JSON.parse(evt.target.result), source);
-            } else if (endsWith(sourceUpperCase, ".KML")) {
-                dataSource = new KmlDataSource();
-                var parser = new DOMParser();
-                promise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), source);
-            } else if (endsWith(sourceUpperCase, ".KMZ")) {
-                dataSource = new KmlDataSource();
-                promise = dataSource.loadKmz(file);
-            } else {
-                viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-                return undefined;
-            }
-
             try {
+                var promise;
+                var dataSource;
+                var sourceUpperCase = source.toUpperCase();
+                if (endsWith(sourceUpperCase, ".CZML")) {
+                    dataSource = new CzmlDataSource();
+                    promise = dataSource.load(JSON.parse(evt.target.result), source);
+                } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
+                endsWith(sourceUpperCase, ".JSON") || //
+                endsWith(sourceUpperCase, ".TOPOJSON")) {
+                    dataSource = new GeoJsonDataSource();
+                    promise = dataSource.load(JSON.parse(evt.target.result), source);
+                } else if (endsWith(sourceUpperCase, ".KML")) {
+                    dataSource = new KmlDataSource();
+                    var parser = new DOMParser();
+                    promise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), source);
+                } else if (endsWith(sourceUpperCase, ".KMZ")) {
+                    dataSource = new KmlDataSource();
+                    promise = dataSource.loadKmz(file);
+                } else {
+                    viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+                    return undefined;
+                }
+
                 when(promise, function() {
                     viewer.dataSources.add(dataSource);
                 }, function(error) {
