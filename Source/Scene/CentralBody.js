@@ -653,7 +653,7 @@ define([
             this._surfaceShaderSet.baseFragmentShaderString =
                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
                 (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
-                //'#line 0\n' +
+                '#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 

@@ -2538,7 +2538,7 @@ define([
         var definitions = getBuiltinConstants() +
                           //getAutomaticUniforms() +
                           ShadersBuiltinFunctions + '\n\n' +
-                          //'#line 0 \n';
+                          '#line 0 \n';
                           '';
 
         getShaderDefinitions = function() {
