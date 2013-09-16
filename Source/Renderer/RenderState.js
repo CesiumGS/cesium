@@ -274,7 +274,7 @@ define([
     }
 
     function applyLineWidth(gl, renderState) {
-        //gl.lineWidth(renderState.lineWidth);
+        gl.lineWidth(renderState.lineWidth);
     }
 
     function applyPolygonOffset(gl, renderState) {

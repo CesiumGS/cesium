@@ -36,15 +36,35 @@ vec3 sampleAndBlend(
     //    tileTextureCoordinates.t > textureCoordinateExtent.q
     // In other words, the alpha is zero if the fragment is outside the extent
     // covered by this texture.  Would an actual 'if' yield better performance?
-    if (tileTextureCoordinates.s < textureCoordinateExtent.s ||
-        tileTextureCoordinates.s > textureCoordinateExtent.p ||
-        tileTextureCoordinates.t < textureCoordinateExtent.t ||
-        tileTextureCoordinates.t > textureCoordinateExtent.q)
-    {
-        textureAlpha = 0.0;
-    }
-    
-    return mix(previousColor, sampledColor.rgb, sampledColor.a * textureAlpha);
+	vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
+	textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+	alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
+	textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
+
+	vec3 color = sampledColor.rgb;
+
+#ifdef APPLY_BRIGHTNESS
+    color = mix(vec3(0.0), color, textureBrightness);
+#endif
+
+#ifdef APPLY_CONTRAST
+    color = mix(vec3(0.5), color, textureContrast);
+#endif
+
+#ifdef APPLY_HUE
+    color = czm_hue(color, textureHue);
+#endif
+
+#ifdef APPLY_SATURATION
+    color = czm_saturation(color, textureSaturation);
+#endif
+
+#ifdef APPLY_GAMMA
+    color = pow(color, vec3(textureOneOverGamma));
+#endif
+
+    return mix(previousColor, color, sampledColor.a * textureAlpha);
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
