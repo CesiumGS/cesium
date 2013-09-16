@@ -648,7 +648,7 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
-        expect(pickedObject).toEqual(label);
+        expect(pickedObject.primitive).toEqual(label);
     });
 
     it('does not pick a label with show set to false', function() {

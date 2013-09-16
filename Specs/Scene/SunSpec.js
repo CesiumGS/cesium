@@ -130,6 +130,32 @@ defineSuite([
         sun.destroy();
     });
 
+    it('can set glow factor', function() {
+        var sun = scene.sun = new Sun();
+        sun.glowFactor = 0.0;
+        expect(sun.glowFactor).toEqual(0.0);
+        sun.glowFactor = 2.0;
+        expect(sun.glowFactor).toEqual(2.0);
+    });
+
+    it('draws without lens flare', function() {
+        scene.sun = new Sun();
+        scene.sun.glowFactor = 0.0;
+        scene.initializeFrame();
+        scene.render();
+
+        var us = scene.getContext().getUniformState();
+        var camera = scene.getCamera();
+
+        var sunPosition = us.getSunPositionWC();
+        var cameraPosition = sunPosition.normalize().multiplyByScalar(1e8);
+        camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+
+        scene.initializeFrame();
+        scene.render();
+        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+    });
+
     it('isDestroyed', function() {
         var sun = new Sun();
         expect(sun.isDestroyed()).toEqual(false);

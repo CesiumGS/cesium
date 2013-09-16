@@ -590,7 +590,7 @@ define([
         var length = sixteenK * 6;
         var indices = new Uint16Array(length);
         for (var i = 0, j = 0; i < length; i += 6, j += 4) {
-            indices[i + 0] = j + 0;
+            indices[i] = j;
             indices[i + 1] = j + 1;
             indices[i + 2] = j + 2;
 
@@ -973,8 +973,8 @@ define([
         var size;
         var offset;
 
-        var toCenter = camera.getPositionWC().subtract(boundingVolume.center, scratchToCenter);
-        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
+        var toCenter = camera.positionWC.subtract(boundingVolume.center, scratchToCenter);
+        var proj = camera.directionWC.multiplyByScalar(toCenter.dot(camera.directionWC), scratchProj);
         var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
 
         var canvas = context.getCanvas();

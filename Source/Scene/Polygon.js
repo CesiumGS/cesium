@@ -138,10 +138,8 @@ define([
          * @type Boolean
          *
          * @default false
-         *
-         * @private
          */
-        this.asynchronous = defaultValue(options.asynchronous, false);
+        this.asynchronous = defaultValue(options.asynchronous, true);
 
         this._positions = options.positions;
         this._polygonHierarchy = options.polygonHierarchy;
@@ -301,7 +299,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
-                    id : this
+                    pickPrimitive : this
                 });
             } else {
                 instance = new GeometryInstance({
@@ -313,7 +311,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
-                    id : this
+                    pickPrimitive : this
                 });
             }
 

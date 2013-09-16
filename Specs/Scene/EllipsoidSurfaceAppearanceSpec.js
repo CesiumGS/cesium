@@ -10,8 +10,6 @@ defineSuite([
          'Core/ColorGeometryInstanceAttribute',
          'Renderer/ClearCommand',
          'Specs/render',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -26,8 +24,6 @@ defineSuite([
          ColorGeometryInstanceAttribute,
          ClearCommand,
          render,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {

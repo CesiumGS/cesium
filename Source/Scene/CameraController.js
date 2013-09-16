@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -20,6 +21,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -407,15 +409,15 @@ define([
         var camera = controller._camera;
         var oldTransform;
         if (defined(transform)) {
-            var position = Cartesian3.clone(camera.getPositionWC(), appendTransformPosition);
-            var up = Cartesian3.clone(camera.getUpWC(), appendTransformUp);
-            var right = Cartesian3.clone(camera.getRightWC(), appendTransformRight);
-            var direction = Cartesian3.clone(camera.getDirectionWC(), appendTransformDirection);
+            var position = Cartesian3.clone(camera.positionWC, appendTransformPosition);
+            var up = Cartesian3.clone(camera.upWC, appendTransformUp);
+            var right = Cartesian3.clone(camera.rightWC, appendTransformRight);
+            var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
             camera.transform = transform.multiply(oldTransform);
 
-            var invTransform = camera.getInverseTransform();
+            var invTransform = camera.inverseTransform;
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, up, up), camera.up);
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, right, right), camera.right);
@@ -431,13 +433,13 @@ define([
     function revertTransform(controller, transform) {
         if (defined(transform)) {
             var camera = controller._camera;
-            var position = Cartesian3.clone(camera.getPositionWC(), revertTransformPosition);
-            var up = Cartesian3.clone(camera.getUpWC(), revertTransformUp);
-            var right = Cartesian3.clone(camera.getRightWC(), revertTransformRight);
-            var direction = Cartesian3.clone(camera.getDirectionWC(), revertTransformDirection);
+            var position = Cartesian3.clone(camera.positionWC, revertTransformPosition);
+            var up = Cartesian3.clone(camera.upWC, revertTransformUp);
+            var right = Cartesian3.clone(camera.rightWC, revertTransformRight);
+            var direction = Cartesian3.clone(camera.directionWC, revertTransformDirection);
 
             camera.transform = transform;
-            transform = camera.getInverseTransform();
+            transform = camera.inverseTransform;
 
             position = Cartesian3.clone(Matrix4.multiplyByVector(transform, position, position), camera.position);
             up = Cartesian3.clone(Matrix4.multiplyByVector(transform, up, up), camera.up);
@@ -748,6 +750,121 @@ define([
         }
     };
 
+    function getHeading2D(controller) {
+        var camera = controller._camera;
+        return Math.atan2(camera.right.y, camera.right.x);
+    }
+
+    var scratchHeadingCartesian4 = new Cartesian4();
+
+    function getHeading3D(controller) {
+        var camera = controller._camera;
+        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
+        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+    }
+
+    function setHeading2D(controller, angle) {
+        var rightAngle = getHeading2D(controller);
+        angle = rightAngle - angle;
+        controller.look(Cartesian3.UNIT_Z, angle);
+    }
+
+    var scratchHeadingAxis = new Cartesian3();
+
+    function setHeading3D(controller, angle) {
+        var camera = controller._camera;
+
+        var axis = Cartesian3.normalize(camera.position, scratchHeadingAxis);
+        var upAngle = getHeading3D(controller);
+        angle = upAngle - angle;
+        controller.look(axis, angle);
+    }
+
+    function getTiltCV(controller) {
+        var camera = controller._camera;
+
+        // Math.acos(dot(camera.direction, Cartesian3.UNIT_Z.negate())
+        return CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
+    }
+
+    var scratchTiltCartesian3 = new Cartesian3();
+
+    function getTilt3D(controller) {
+        var camera = controller._camera;
+
+        var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
+        Cartesian3.negate(direction, direction);
+
+        return CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
+    }
+
+    defineProperties(CameraController.prototype, {
+        /**
+         * The camera heading in radians.
+         * @memberof CameraController
+         *
+         * @type {Number}
+         */
+        heading : {
+            get : function () {
+                if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
+                    return getHeading2D(this);
+                } else if (this._mode === SceneMode.SCENE3D) {
+                    return getHeading3D(this);
+                }
+
+                return undefined;
+            },
+            //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
+            //* @exception {DeveloperError} angle is required.
+            set : function (angle) {
+                if (!defined(angle)) {
+                    throw new DeveloperError('angle is required.');
+                }
+
+                if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
+                    setHeading2D(this, angle);
+                } else if (this._mode === SceneMode.SCENE3D) {
+                    setHeading3D(this, angle);
+                }
+            }
+        },
+
+        /**
+         * The the camera tilt in radians
+         * @memberof CameraController
+         *
+         * @type {Number}
+         */
+        tilt : {
+            get : function() {
+                if (this._mode === SceneMode.COLUMBUS_VIEW) {
+                    return getTiltCV(this);
+                } else if (this._mode === SceneMode.SCENE3D) {
+                    return getTilt3D(this);
+                }
+
+                return undefined;
+            },
+            //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
+            //* @exception {DeveloperError} angle is required.
+            set : function(angle) {
+                if (!defined(angle)) {
+                    throw new DeveloperError('angle is required.');
+                }
+
+                if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+                    var camera = this._camera;
+
+                    angle = CesiumMath.clamp(angle, 0.0, CesiumMath.PI_OVER_TWO);
+                    angle = angle - this.tilt;
+
+                    this.look(camera.right, angle);
+                }
+            }
+        }
+    });
+
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.
@@ -861,7 +978,7 @@ define([
 
         var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
         transform.setColumn(3, Cartesian4.UNIT_W);
-        var invTransform = camera.getInverseTransform();
+        var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
         cart.longitude = east;
@@ -1099,13 +1216,13 @@ define([
         var x = (2.0 / width) * windowPosition.x - 1.0;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
 
-        var position = camera.getPositionWC();
+        var position = camera.positionWC;
         Cartesian3.clone(position, result.origin);
 
-        var nearCenter = Cartesian3.multiplyByScalar(camera.getDirectionWC(), near, pickPerspCenter);
+        var nearCenter = Cartesian3.multiplyByScalar(camera.directionWC, near, pickPerspCenter);
         Cartesian3.add(position, nearCenter, nearCenter);
-        var xDir = Cartesian3.multiplyByScalar(camera.getRightWC(), x * near * tanTheta, pickPerspXDir);
-        var yDir = Cartesian3.multiplyByScalar(camera.getUpWC(), y * near * tanPhi, pickPerspYDir);
+        var xDir = Cartesian3.multiplyByScalar(camera.rightWC, x * near * tanTheta, pickPerspXDir);
+        var yDir = Cartesian3.multiplyByScalar(camera.upWC, y * near * tanPhi, pickPerspYDir);
         var direction = Cartesian3.add(nearCenter, xDir, result.direction);
         Cartesian3.add(direction, yDir, direction);
         Cartesian3.subtract(direction, position, direction);
@@ -1128,7 +1245,7 @@ define([
         origin.x += x;
         origin.y += y;
 
-        Cartesian3.clone(camera.getDirectionWC(), result.direction);
+        Cartesian3.clone(camera.directionWC, result.direction);
 
         return result;
     }
@@ -1242,7 +1359,7 @@ define([
         var updateCV = function(value) {
             var interp = position.lerp(newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
+            camera.position = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(pos));
         };
 
         return {
@@ -1263,7 +1380,7 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
+        var normal = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(Cartesian4.UNIT_X));
         var scalar = -normal.dot(position) / normal.dot(direction);
         var center = position.add(direction.multiplyByScalar(scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);

@@ -30,51 +30,51 @@ defineSuite([
     it('out of range fov causes an exception', function() {
         frustum.fovy = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
 
         frustum.fovy = CesiumMath.TWO_PI;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('negative aspect ratio throws an exception', function() {
         frustum.aspectRatio = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('out of range near plane throws an exception', function() {
         frustum.near = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('negative far plane throws an exception', function() {
         frustum.far = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('computeCullingVolume with no position throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume();
+            return frustum.computeCullingVolume();
         }).toThrow();
     });
 
     it('computeCullingVolume with no direction throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume(new Cartesian3());
+            return frustum.computeCullingVolume(new Cartesian3());
         }).toThrow();
     });
 
     it('computeCullingVolume with no up throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
+            return frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
         }).toThrow();
     });
 
@@ -115,7 +115,7 @@ defineSuite([
     });
 
     it('get perspective projection matrix', function() {
-        var projectionMatrix = frustum.getProjectionMatrix();
+        var projectionMatrix = frustum.projectionMatrix;
         var expected = Matrix4.computePerspectiveFieldOfView(frustum.fovy, frustum.aspectRatio, frustum.near, frustum.far);
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
@@ -128,7 +128,7 @@ defineSuite([
         var near = frustum.near;
 
         var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near);
-        expect(frustum.getInfiniteProjectionMatrix()).toEqual(expected);
+        expect(frustum.infiniteProjectionMatrix).toEqual(expected);
     });
 
     it('get pixel size throws without canvas dimensions', function() {
@@ -164,7 +164,7 @@ defineSuite([
     it('throws with undefined frustum parameters', function() {
         var frustum = new PerspectiveFrustum();
         expect(function() {
-            return frustum.getInfiniteProjectionMatrix();
+            return frustum.infiniteProjectionMatrix;
         }).toThrow();
     });
 });
