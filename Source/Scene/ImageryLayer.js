@@ -630,7 +630,7 @@ define([
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
-        /*if (typeof imageryProvider.getTileDiscardPolicy !== 'undefined') {
+        if (typeof imageryProvider.getTileDiscardPolicy !== 'undefined') {
             var discardPolicy = imageryProvider.getTileDiscardPolicy();
             if (typeof discardPolicy !== 'undefined') {
                 // If the discard policy is not ready yet, transition back to the
@@ -646,7 +646,7 @@ define([
                     return;
                 }
             }
-        }*/
+        }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
         var texture = this._texturePool.createTexture2D(context, {
