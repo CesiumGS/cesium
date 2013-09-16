@@ -20,7 +20,7 @@ require([
     centralBody.depthTestAgainstTerrain = true;
 
     centralBody.terrainProvider = new Cesium.CesiumMeshTerrainProvider({
-        url : 'http://172.16.37.34/mesh2'
+        url : 'http://c1200562-00.stk.com/terrain/datasets/foo/tiles'
     });
 
     var tp = new TitlePane({
