@@ -24,7 +24,6 @@ defineSuite([
         shape = [new Cartesian2(-10000, -10000), new Cartesian2(10000, -10000), new Cartesian2(10000, 10000), new Cartesian2(-10000, 10000)];
     });
 
-
     it('throws without polyline positions', function() {
         expect(function() {
             return new PolylineVolumeOutlineGeometry({});

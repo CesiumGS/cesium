@@ -154,23 +154,23 @@ define([
 
         var point = shape2D[0];
         shape[index++] = point.x - xOffset;
-        shape[index++] = 0;
+        shape[index++] = 0.0;
         shape[index++] = point.y - yOffset;
         for ( var i = 1; i < length; i++) {
             point = shape2D[i];
             var x = point.x - xOffset;
             var z = point.y - yOffset;
             shape[index++] = x;
-            shape[index++] = 0;
+            shape[index++] = 0.0;
             shape[index++] = z;
 
             shape[index++] = x;
-            shape[index++] = 0;
+            shape[index++] = 0.0;
             shape[index++] = z;
         }
         point = shape2D[0];
         shape[index++] = point.x - xOffset;
-        shape[index++] = 0;
+        shape[index++] = 0.0;
         shape[index++] = point.y - yOffset;
 
         return shape;

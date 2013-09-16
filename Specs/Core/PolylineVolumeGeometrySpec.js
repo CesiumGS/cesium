@@ -25,7 +25,6 @@ defineSuite([
         shape = [new Cartesian2(-10000, -10000), new Cartesian2(10000, -10000), new Cartesian2(10000, 10000), new Cartesian2(-10000, 10000)];
     });
 
-
     it('throws without polyline positions', function() {
         expect(function() {
             return new PolylineVolumeGeometry({});
@@ -89,7 +88,6 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(3 * (4 * 2 + 4 * 2 * 6));
         expect(m.indices.length).toEqual(3 * 10 * 2 + 24 * 3);
     });
-
 
     it('compute all vertex attributes', function() {
         var ellipsoid = Ellipsoid.WGS84;
