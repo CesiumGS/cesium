@@ -44,6 +44,17 @@
 }
 /* End copy of cesium-widget-button */
 
+.cesium-dataSourceBrowser-button-disabled,
+.cesium-dataSourceBrowser-button-disabled:focus,
+.cesium-dataSourceBrowser-button-disabled:hover,
+.cesium-dataSourceBrowser-button-disabled:active {
+    background: #303336;
+    border-color: #444;
+    color: #888;
+    box-shadow: none;
+    cursor: default;
+}
+
 .cesium-dataSourceBrowser-dataSourcesContainer {
     position: absolute;
     top: 5px;

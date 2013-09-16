@@ -190,16 +190,15 @@ template : { if: activeDataSourcePanel,\
         finishAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
         finishAddDataSourceButton.textContent = 'OK';
         finishAddDataSourceButton.setAttribute('data-bind', '\
-click: finishCommand,\
-enable: finishCommand.canExecute');
+click: function () { finishCommand.canExecute && finishCommand(); },\
+css: { \'cesium-dataSourceBrowser-button-disabled\': !finishCommand.canExecute }');
         dataSourcePanelFooter.appendChild(finishAddDataSourceButton);
 
         var cancelAddDataSourceButton = document.createElement('span');
         cancelAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
         cancelAddDataSourceButton.textContent = 'Cancel';
         cancelAddDataSourceButton.setAttribute('data-bind', '\
-click: cancelCommand,\
-enable: cancelCommand.canExecute');
+click: cancelCommand');
         dataSourcePanelFooter.appendChild(cancelAddDataSourceButton);
 
         var finishAddDataSourceError = document.createElement('span');
