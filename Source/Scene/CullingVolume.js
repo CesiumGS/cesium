@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Intersect'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Intersect) {
     "use strict";
@@ -33,12 +35,12 @@ define([
      * @memberof CullingVolume
      *
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
-     * @return {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
+     * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
      *
      * @exception {DeveloperError} boundingVolume is required.
      */
     CullingVolume.prototype.getVisibility = function(boundingVolume) {
-        if (typeof boundingVolume === 'undefined') {
+        if (!defined(boundingVolume)) {
             throw new DeveloperError('boundingVolume is required.');
         }
 

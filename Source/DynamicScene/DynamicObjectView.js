@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
@@ -16,6 +17,7 @@ define([
         '../Scene/SceneMode'
        ], function(
          defaultValue,
+         defined,
          DeveloperError,
          CesiumMath,
          Cartesian2,
@@ -31,7 +33,7 @@ define([
          SceneMode) {
     "use strict";
 
-    function update2D(that, camera, objectChanged, offset, positionProperty, time, projection) {
+    function update2D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid, projection) {
         var viewDistance;
         var scene = that.scene;
         var modeChanged = scene.mode !== that._mode;
@@ -46,8 +48,9 @@ define([
             viewDistance = camera.position.z;
         }
 
-        var cartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
-        if (typeof cartographic !== 'undefined') {
+        var cartesian = positionProperty.getValue(time, that._lastCartesian);
+        if (defined(cartesian)) {
+            var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
             //We are assigning the position of the camera, not of the object, so modify the height appropriately.
             cartographic.height = viewDistance;
             if (objectChanged || modeChanged) {
@@ -83,20 +86,20 @@ define([
     function update3D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
         update3DController(that, camera, objectChanged, offset);
 
-        var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
-        if (typeof cartesian !== 'undefined') {
+        var cartesian = positionProperty.getValue(time, that._lastCartesian);
+        if (defined(cartesian)) {
             var successful = false;
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
             var deltaTime = time.addSeconds(0.01);
-            var deltaCartesian = positionProperty.getValueCartesian(deltaTime, update3DCartesian3Scratch1);
-            if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
+            var deltaCartesian = positionProperty.getValue(deltaTime, update3DCartesian3Scratch1);
+            if (defined(deltaCartesian) && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
                 var toFixed;
 
-                if (typeof toInertial === 'undefined' || typeof toInertialDelta === 'undefined') {
+                if (!defined(toInertial) || !defined(toInertialDelta)) {
                     toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, update3DMatrix3Scratch3);
                     toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
                     toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, update3DMatrix3Scratch2);
@@ -167,8 +170,10 @@ define([
         update3DController(that, camera, objectChanged, offset);
 
         //The swizzling here is intentional because ColumbusView uses a different coordinate system.
-        var cartographic = positionProperty.getValueCartographic(time, that._lastCartographic);
-        if (typeof cartographic !== 'undefined') {
+        var cartesian = positionProperty.getValue(time, that._lastCartesian);
+        if (defined(cartesian)) {
+            var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
+
             var projectedPosition = projection.project(cartographic);
             updateColumbusCartesian4.x = projectedPosition.z;
             updateColumbusCartesian4.y = projectedPosition.x;
@@ -295,12 +300,12 @@ define([
     * @exception {DeveloperError} DynamicObjectView.dynamicObject.position is required.
     */
     DynamicObjectView.prototype.update = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 
         var scene = this.scene;
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('DynamicObjectView.scene is required.');
         }
 
@@ -310,17 +315,17 @@ define([
         }
 
         var dynamicObject = this.dynamicObject;
-        if (typeof dynamicObject === 'undefined') {
+        if (!defined(dynamicObject)) {
             throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
         }
 
         var ellipsoid = this.ellipsoid;
-        if (typeof ellipsoid === 'undefined') {
+        if (!defined(ellipsoid)) {
             throw new DeveloperError('DynamicObjectView.ellipsoid is required.');
         }
 
         var positionProperty = this.dynamicObject.position;
-        if (typeof positionProperty === 'undefined') {
+        if (!defined(positionProperty)) {
             throw new DeveloperError('dynamicObject.position is required.');
         }
 
@@ -334,7 +339,7 @@ define([
             this._lastDynamicObject = dynamicObject;
 
             var viewFromProperty = this.dynamicObject.viewFrom;
-            if (typeof viewFromProperty === 'undefined' || typeof viewFromProperty.getValue(time, offset) === 'undefined') {
+            if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset))) {
                 Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
             }
 
@@ -350,7 +355,7 @@ define([
             if (Cartesian3.equals(offset.normalize(dynamicObjectViewCartesian3Scratch), Cartesian3.UNIT_Z)) {
                 offset.y -= 0.01;
             }
-        } else if (typeof this._lastOffset !== 'undefined') {
+        } else if (defined(this._lastOffset)) {
             offset = this._lastOffset;
         } else {
             Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
@@ -358,7 +363,7 @@ define([
 
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, scene.scene2D.projection);
+            update2D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         } else if (mode === SceneMode.SCENE3D) {
             update3D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {

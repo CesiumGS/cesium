@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -18,13 +19,15 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './Material',
         './SceneMode',
         './Polyline',
+        '../Shaders/PolylineCommon',
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS'
     ], function(
+        defined,
         DeveloperError,
         Color,
         combine,
@@ -43,10 +46,11 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         Material,
         SceneMode,
         Polyline,
+        PolylineCommon,
         PolylineVS,
         PolylineFS) {
     "use strict";
@@ -177,7 +181,7 @@ define([
      *
      * @param {Object}[polyline=undefined] A template describing the polyline's properties as shown in Example 1.
      *
-     * @return {Polyline} The polyline that was added to the collection.
+     * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
      * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
@@ -215,7 +219,7 @@ define([
      *
      * @param {Polyline} polyline The polyline to remove.
      *
-     * @return {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
      * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
      * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
@@ -239,7 +243,7 @@ define([
             this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
-            if (typeof polyline._bucket !== 'undefined') {
+            if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
                 bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.release();
@@ -287,12 +291,12 @@ define([
      *
      * @param {Polyline} polyline The polyline to check for.
      *
-     * @return {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
      */
     PolylineCollection.prototype.contains = function(polyline) {
-        return typeof polyline !== 'undefined' && polyline._polylineCollection === this;
+        return defined(polyline) && polyline._polylineCollection === this;
     };
 
     /**
@@ -306,7 +310,7 @@ define([
      *
      * @param {Number} index The zero-based index of the polyline.
      *
-     * @return {Polyline} The polyline at the specified index.
+     * @returns {Polyline} The polyline at the specified index.
      *
      * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
@@ -326,7 +330,7 @@ define([
      * }
      */
     PolylineCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 
@@ -341,7 +345,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {Number} The number of polylines in this collection.
+     * @returns {Number} The number of polylines in this collection.
      *
      * @performance If polylines were removed from the collection and
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
@@ -439,7 +443,7 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
-        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
+        if ((!defined(this._rs)) || (this._rs.depthTest.enabled !== useDepthTest)) {
             this._rs = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
@@ -500,7 +504,7 @@ define([
                     var polyline = polylines[s];
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
-                        if (typeof currentId !== 'undefined') {
+                        if (defined(currentId)) {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
                                 command.owner = polylineCollection;
@@ -546,11 +550,11 @@ define([
                     } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
                         boundingVolume = polyline._boundingVolume2D;
                     } else if (frameState.mode === SceneMode.SCENE2D) {
-                        if (typeof polyline._boundingVolume2D !== 'undefined') {
+                        if (defined(polyline._boundingVolume2D)) {
                             boundingVolume = BoundingSphere.clone(polyline._boundingVolume2D, boundingSphereScratch2);
                             boundingVolume.center.x = 0.0;
                         }
-                    } else if (typeof polyline._boundingVolume !== 'undefined' && typeof polyline._boundingVolume2D !== 'undefined') {
+                    } else if (defined(polyline._boundingVolume) && defined(polyline._boundingVolume2D)) {
                         boundingVolume = BoundingSphere.union(polyline._boundingVolume, polyline._boundingVolume2D, boundingSphereScratch2);
                     }
 
@@ -562,7 +566,7 @@ define([
                     }
                 }
 
-                if (typeof currentId !== 'undefined' && count > 0) {
+                if (defined(currentId) && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
                         command.owner = polylineCollection;
@@ -602,7 +606,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see PolylineCollection#destroy
      */
@@ -620,7 +624,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -714,7 +718,7 @@ define([
                     bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context);
 
                     if (mode === SceneMode.MORPHING) {
-                        if (typeof position3DArray === 'undefined') {
+                        if (!defined(position3DArray)) {
                             position3DArray = new Float32Array(6 * totalLength * 3);
                         }
                         bucket.writeForMorph(position3DArray, positionIndex);
@@ -735,7 +739,7 @@ define([
 
             collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
             var position3DBuffer;
-            if (typeof position3DArray !== 'undefined') {
+            if (defined(position3DArray)) {
                 position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
             }
             collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
@@ -928,7 +932,7 @@ define([
                 p.update();
                 var material = p.getMaterial();
                 var value = polylineBuckets[material.type];
-                if (typeof value === 'undefined') {
+                if (!defined(value)) {
                     value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
                 }
                 value.addPolyline(p);
@@ -957,7 +961,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (typeof polyline !== 'undefined') {
+                if (defined(polyline)) {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -971,9 +975,9 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (typeof polylines[i] !== 'undefined') {
+            if (defined(polylines[i])) {
                 var bucket = polylines[i]._bucket;
-                if (typeof bucket !== 'undefined') {
+                if (defined(bucket)) {
                     bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
                 }
             }
@@ -998,7 +1002,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (typeof polylines[i] !== 'undefined') {
+            if (defined(polylines[i])) {
                 polylines[i]._destroy();
             }
         }
@@ -1031,18 +1035,15 @@ define([
     };
 
     PolylineBucket.prototype.updateShader = function(context) {
-        if (typeof this.shaderProgram !== 'undefined') {
+        if (defined(this.shaderProgram)) {
             return;
         }
 
-        var fsSource =
-            '#line 0\n' +
-            this.material.shaderSource +
-            '#line 0\n' +
-            PolylineFS;
-
-        this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, createPickFragmentShaderSource(fsSource, 'varying'), attributeIndices);
+        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
+        var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
+        var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
+        this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeIndices);
+        this.pickShaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsPick, attributeIndices);
     };
 
     function intersectsIDL(polyline) {

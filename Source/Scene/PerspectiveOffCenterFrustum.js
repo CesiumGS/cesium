@@ -2,6 +2,8 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -11,6 +13,8 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
+        defineProperties,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -75,7 +79,7 @@ define([
         /**
          * The distance of the near plane.
          * @type {Number}
-         * @default 1.0 
+         * @default 1.0
          */
         this.near = 1.0;
         this._near = this.near;
@@ -83,7 +87,7 @@ define([
         /**
          * The distance of the far plane.
          * @type {Number}
-         * @default 500000000.0 
+         * @default 500000000.0
          */
         this.far = 500000000.0;
         this._far = this.far;
@@ -93,38 +97,10 @@ define([
         this._infinitePerspective = undefined;
     };
 
-    /**
-     * Returns the perspective projection matrix computed from the view frustum.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @return {Matrix4} The perspective projection matrix.
-     *
-     * @see PerspectiveOffCenterFrustum#getInfiniteProjectionMatrix
-     */
-    PerspectiveOffCenterFrustum.prototype.getProjectionMatrix = function() {
-        update(this);
-        return this._perspectiveMatrix;
-    };
-
-    /**
-     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
-     *
-     * @memberof PerspectiveOffCenterFrustum
-     *
-     * @return {Matrix4} The infinite perspective projection matrix.
-     *
-     * @see PerspectiveOffCenterFrustum#getProjectionMatrix
-     */
-    PerspectiveOffCenterFrustum.prototype.getInfiniteProjectionMatrix = function() {
-        update(this);
-        return this._infinitePerspective;
-    };
-
     function update(frustum) {
-        if (typeof frustum.right === 'undefined' || typeof frustum.left === 'undefined' ||
-                typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined' ||
-                typeof frustum.near ===' undefined' || typeof frustum.far === 'undefined') {
+        if (!defined(frustum.right) || !defined(frustum.left) ||
+            !defined(frustum.top) || !defined(frustum.bottom) ||
+            !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
@@ -154,6 +130,36 @@ define([
         }
     }
 
+    defineProperties(PerspectiveOffCenterFrustum.prototype, {
+        /**
+         * The perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveOffCenterFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
+         */
+        projectionMatrix : {
+            get : function() {
+                update(this);
+                return this._perspectiveMatrix;
+            }
+        },
+
+        /**
+         * The perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveOffCenterFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveOffCenterFrustum#projectionMatrix
+         */
+        infiniteProjectionMatrix : {
+            get : function() {
+                update(this);
+                return this._infinitePerspective;
+            }
+        }
+    });
+
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesFarCenter = new Cartesian3();
@@ -171,7 +177,7 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {CullingVolume} A culling volume at the given position and orientation.
+     * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
@@ -179,15 +185,15 @@ define([
      * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
     PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
-        if (typeof direction === 'undefined') {
+        if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
 
-        if (typeof up === 'undefined') {
+        if (!defined(up)) {
             throw new DeveloperError('up is required.');
         }
 
@@ -220,7 +226,7 @@ define([
         Cartesian3.cross(normal, up, normal);
 
         var plane = planes[0];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[0] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -236,7 +242,7 @@ define([
         Cartesian3.cross(up, normal, normal);
 
         plane = planes[1];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[1] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -252,7 +258,7 @@ define([
         Cartesian3.cross(right, normal, normal);
 
         plane = planes[2];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[2] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -268,7 +274,7 @@ define([
         Cartesian3.cross(normal, right, normal);
 
         plane = planes[3];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[3] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -278,7 +284,7 @@ define([
 
         //Near plane computation
         plane = planes[4];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[4] = new Cartesian4();
         }
         plane.x = direction.x;
@@ -290,7 +296,7 @@ define([
         Cartesian3.negate(direction, normal);
 
         plane = planes[5];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[5] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -333,7 +339,7 @@ define([
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
         update(this);
 
-        if (typeof canvasDimensions === 'undefined') {
+        if (!defined(canvasDimensions)) {
             throw new DeveloperError('canvasDimensions is required.');
         }
 
@@ -364,7 +370,7 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
+     * @returns {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
      */
     PerspectiveOffCenterFrustum.prototype.clone = function() {
         var frustum = new PerspectiveOffCenterFrustum();
@@ -384,10 +390,10 @@ define([
      * @memberof PerspectiveOffCenterFrustum
      *
      * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveOffCenterFrustum.prototype.equals = function(other) {
-        return (typeof other !== 'undefined' &&
+        return (defined(other) &&
                 this.right === other.right &&
                 this.left === other.left &&
                 this.top === other.top &&

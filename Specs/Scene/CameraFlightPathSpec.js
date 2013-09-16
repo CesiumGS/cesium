@@ -8,7 +8,7 @@ defineSuite([
          'Core/Extent',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         'Specs/createFrameState'
+         'Specs/createScene'
      ], function (
          CameraFlightPath,
          Cartesian3,
@@ -18,14 +18,15 @@ defineSuite([
          Extent,
          OrthographicFrustum,
          SceneMode,
-         createFrameState) {
+         createScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var frameState;
+    var scene, frameState;
 
     beforeEach(function() {
-        frameState = createFrameState();
+        scene = createScene();
+        frameState = scene.getFrameState();
     });
 
     function createOrthographicFrustum() {
@@ -43,7 +44,7 @@ defineSuite([
         return f;
     }
 
-    it('create animation throws without a frameState', function() {
+    it('create animation throws without a scene', function() {
         expect(function() {
             CameraFlightPath.createAnimation(undefined, {
                 destination : new Cartesian3(1e9, 1e9, 1e9)
@@ -53,11 +54,11 @@ defineSuite([
 
     it('create animation throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimation(frameState, {});
+            CameraFlightPath.createAnimation(scene, {});
         }).toThrow();
     });
 
-    it('create animation with cartographic throws without a frameState', function() {
+    it('create animation with cartographic throws without a scene', function() {
         expect(function() {
             CameraFlightPath.createAnimationCartographic(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
@@ -67,11 +68,11 @@ defineSuite([
 
     it('create animation with cartographic throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimationCartographic(frameState, {});
+            CameraFlightPath.createAnimationCartographic(scene, {});
         }).toThrow();
     });
 
-    it('create animation with extent throws without a frameState', function() {
+    it('create animation with extent throws without a scene', function() {
         expect(function() {
             CameraFlightPath.createAnimationExtent(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
@@ -81,7 +82,7 @@ defineSuite([
 
     it('create animation with extent throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimationExtent(frameState, {});
+            CameraFlightPath.createAnimationExtent(scene, {});
         }).toThrow();
     });
 
@@ -91,15 +92,20 @@ defineSuite([
         var onComplete = function() {
             return true;
         };
+        var onCancel = function() {
+            return true;
+        };
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete
+            onComplete : onComplete,
+            onCancel: onCancel
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(flight.onComplete).toEqual(onComplete);
+        expect(typeof flight.onComplete).toEqual('function');
+        expect(typeof flight.onCancel).toEqual('function');
         expect(typeof flight.onUpdate).toEqual('function');
         expect(flight.startValue).toBeDefined();
         expect(flight.stopValue).toBeDefined();
@@ -112,15 +118,20 @@ defineSuite([
         var onComplete = function() {
             return true;
         };
+        var onCancel = function() {
+            return true;
+        };
 
-        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+        var flight = CameraFlightPath.createAnimationCartographic(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete
+            onComplete : onComplete,
+            onCancel: onCancel
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(flight.onComplete).toEqual(onComplete);
+        expect(typeof flight.onComplete).toEqual('function');
+        expect(typeof flight.onCancel).toEqual('function');
         expect(typeof flight.onUpdate).toEqual('function');
         expect(flight.startValue).toBeDefined();
         expect(flight.stopValue).toBeDefined();
@@ -133,15 +144,20 @@ defineSuite([
         var onComplete = function() {
             return true;
         };
+        var onCancel = function() {
+            return true;
+        };
 
-        var flight = CameraFlightPath.createAnimationExtent(frameState, {
+        var flight = CameraFlightPath.createAnimationExtent(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete
+            onComplete : onComplete,
+            onCancel: onCancel
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(flight.onComplete).toEqual(onComplete);
+        expect(typeof flight.onComplete).toEqual('function');
+        expect(typeof flight.onCancel).toEqual('function');
         expect(typeof flight.onUpdate).toEqual('function');
         expect(flight.startValue).toBeDefined();
         expect(flight.stopValue).toBeDefined();
@@ -152,7 +168,7 @@ defineSuite([
         expect( function() {
             frameState.mode = SceneMode.MORPHING;
             var destination = new Cartesian3(1e9, 1e9, 1e9);
-            CameraFlightPath.createAnimation(frameState, {
+            CameraFlightPath.createAnimation(scene, {
                 destination : destination
             });
         }).toThrow();
@@ -162,7 +178,7 @@ defineSuite([
         expect(function () {
             frameState.mode = SceneMode.MORPHING;
             var destination = new Cartesian3(1e9, 1e9, 1e9);
-            CameraFlightPath.createAnimationCartographic(frameState, {
+            CameraFlightPath.createAnimationCartographic(scene, {
                 destination : destination
             });
         }).toThrow();
@@ -172,7 +188,7 @@ defineSuite([
         expect(function() {
             frameState.mode = SceneMode.MORPHING;
             var destination = new Extent(-1, -1, 1, 1);
-            CameraFlightPath.createAnimationExtent(frameState, {
+            CameraFlightPath.createAnimationExtent(scene, {
                 destination : destination
             });
         }).toThrow();
@@ -190,7 +206,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -221,7 +237,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+        var flight = CameraFlightPath.createAnimationCartographic(scene, {
             destination : endCartographic,
             direction : endDirection,
             up : endUp,
@@ -254,7 +270,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(frameState, {
+        var flight = CameraFlightPath.createAnimationExtent(scene, {
             destination : extent,
             direction : endDirection,
             up : endUp,
@@ -290,7 +306,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -327,7 +343,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+        var flight = CameraFlightPath.createAnimationCartographic(scene, {
             destination : endCartographic,
             direction : endDirection,
             up : endUp,
@@ -366,7 +382,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(frameState, {
+        var flight = CameraFlightPath.createAnimationExtent(scene, {
             destination : extent,
             direction : endDirection,
             up : endUp,
@@ -404,7 +420,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -447,7 +463,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+        var flight = CameraFlightPath.createAnimationCartographic(scene, {
             destination : endCartographic,
             direction : endDirection,
             up : endUp,
@@ -492,7 +508,7 @@ defineSuite([
         var endUp = startUp.negate();
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(frameState, {
+        var flight = CameraFlightPath.createAnimationExtent(scene, {
             destination : extent,
             direction : endDirection,
             up : endUp,
@@ -520,7 +536,7 @@ defineSuite([
         end.height -= 1000000.0;
 
         var duration = 3000.0;
-        var flight = CameraFlightPath.createAnimationCartographic(frameState, {
+        var flight = CameraFlightPath.createAnimationCartographic(scene, {
             destination : end,
             duration : duration
         });
@@ -545,7 +561,7 @@ defineSuite([
         var startUp = camera.up.clone();
 
         var duration = 3000.0;
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : startPosition,
             direction : startDirection,
             up : startUp,
@@ -565,7 +581,7 @@ defineSuite([
             return true;
         };
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : destination,
             duration : duration,
             onComplete : onComplete
@@ -573,7 +589,7 @@ defineSuite([
 
         expect(flight.duration).toEqual(duration);
         expect(flight.onComplete).not.toEqual(onComplete);
-        expect(typeof flight.onUpdate).toEqual('undefined');
+        expect(flight.onUpdate).toBeUndefined();
         expect(frameState.camera.position).not.toEqual(destination);
         flight.onComplete();
         expect(frameState.camera.position).toEqual(destination);
@@ -592,7 +608,7 @@ defineSuite([
         var destination = camera.position.clone();
         destination.z = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : destination
         });
 
@@ -609,7 +625,7 @@ defineSuite([
         camera.right = camera.direction.cross(camera.up);
         camera.frustum = createOrthographicFrustum();
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : camera.position
         });
 
@@ -625,7 +641,7 @@ defineSuite([
         camera.up = Cartesian3.UNIT_Y.clone();
         camera.right = camera.direction.cross(camera.up);
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : camera.position
         });
 
@@ -650,7 +666,7 @@ defineSuite([
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -678,7 +694,7 @@ defineSuite([
         var startPosition = camera.position.clone();
         var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             duration : 0
         });
@@ -699,7 +715,7 @@ defineSuite([
         var endDirection = startDirection.negate();
         var endUp = startUp.negate();
 
-        var flight = CameraFlightPath.createAnimation(frameState, {
+        var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,

@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Cartesian4'
+         'Core/Cartesian4',
+         'Specs/createPackableSpecs'
      ], function(
-         Cartesian4) {
+         Cartesian4,
+         createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -42,12 +44,6 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian4.fromArray();
-        }).toThrow();
-    });
-
-    it('fromArray throws with an invalid offset', function() {
-        expect(function() {
-            Cartesian4.fromArray([0.0, 0.0, 0.0, 0.0], 1);
         }).toThrow();
     });
 
@@ -466,7 +462,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Cartesian4.clone()).toEqual('undefined');
+        expect(Cartesian4.clone()).toBeUndefined();
     });
 
     it('static getMaximumComponent throws with no parameter', function() {
@@ -633,4 +629,6 @@ defineSuite([
         var expectedResult = new Cartesian4(2, 2, 4, 7);
         expect(cartesian4).toEqual(expectedResult);
     });
+
+    createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
 });

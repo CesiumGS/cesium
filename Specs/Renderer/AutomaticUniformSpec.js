@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+         'Specs/createCamera',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState',
@@ -9,8 +10,12 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/defaultValue',
          'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
+         'Renderer/ClearCommand',
+         'Scene/FrameState',
+         'Scene/OrthographicFrustum',
+         'Scene/SceneMode'
      ], 'Renderer/AutomaticUniforms', function(
+         createCamera,
          createContext,
          destroyContext,
          createFrameState,
@@ -20,7 +25,10 @@ defineSuite([
          PrimitiveType,
          defaultValue,
          BufferUsage,
-         ClearCommand) {
+         ClearCommand,
+         FrameState,
+         OrthographicFrustum,
+         SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,22 +44,13 @@ defineSuite([
 
     function createMockCamera(view, projection, infiniteProjection, position, direction, right, up) {
         return {
-            getViewMatrix : function() {
-                return defaultValue(view, Matrix4.IDENTITY.clone());
-            },
-            getInverseViewMatrix : function() {
-                var m = defaultValue(view, Matrix4.IDENTITY.clone());
-                return Matrix4.inverseTransformation(m);
-            },
+            viewMatrix : defaultValue(view, Matrix4.IDENTITY.clone()),
+            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.IDENTITY.clone())),
             frustum : {
                 near : 1.0,
                 far : 1000.0,
-                getProjectionMatrix : function() {
-                    return defaultValue(projection, Matrix4.IDENTITY.clone());
-                },
-                getInfiniteProjectionMatrix : function() {
-                    return defaultValue(infiniteProjection, Matrix4.IDENTITY.clone());
-                },
+                projectionMatrix : defaultValue(projection, Matrix4.IDENTITY.clone()),
+                infiniteProjectionMatrix : defaultValue(infiniteProjection, Matrix4.IDENTITY.clone()),
                 computeCullingVolume : function() {
                     return undefined;
                 },
@@ -60,10 +59,10 @@ defineSuite([
                 }
             },
             position : defaultValue(position, Cartesian3.ZERO.clone()),
-            getPositionWC : function() { return this.position; },
-            getDirectionWC : function() { return defaultValue(direction, Cartesian3.UNIT_Z.clone()); },
-            getRightWC : function() { return defaultValue(right, Cartesian3.UNIT_X.clone()); },
-            getUpWC : function() { return defaultValue(up, Cartesian3.UNIT_Y.clone()); }
+            positionWC : defaultValue(position, Cartesian3.ZERO.clone()),
+            directionWC : defaultValue(direction, Cartesian3.UNIT_Z.clone()),
+            rightWC : defaultValue(right, Cartesian3.UNIT_X.clone()),
+            upWC : defaultValue(up, Cartesian3.UNIT_Y.clone())
         };
     }
 
@@ -94,7 +93,6 @@ defineSuite([
 
     it('can declare automatic uniforms', function() {
         var fs =
-            'uniform vec4 czm_viewport; ' +
             'void main() { ' +
             '  gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); ' +
             '}';
@@ -770,6 +768,76 @@ defineSuite([
             '    (czm_temeToPseudoFixed[0][1] != 0.0) && (czm_temeToPseudoFixed[1][1] != 0.0) && (czm_temeToPseudoFixed[2][1] == 0.0) && ' +
             '    (czm_temeToPseudoFixed[0][2] == 0.0) && (czm_temeToPseudoFixed[1][2] == 0.0) && (czm_temeToPseudoFixed[2][2] == 1.0) ' +
             '  ); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode == 2.0); ' +   // 3D
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode2D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode2D == 0.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneModeColumbusView', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneModeColumbusView == 1.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode3D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode3D == 2.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneModeMorphing', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneModeMorphing == 3.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_eyeHeight2D == 0,0 in Scene3D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_eyeHeight2D.x == 0.0, czm_eyeHeight2D.y == 0.0, 1.0, 1.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_eyeHeight2D in Scene2D', function() {
+        var us = context.getUniformState();
+        var camera = createCamera(context);
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+        var frameState = createFrameState(camera);
+        frameState.mode = SceneMode.SCENE2D;
+
+        us.update(frameState);
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_eyeHeight2D.x == 2.0, czm_eyeHeight2D.y == 4.0, 1.0, 1.0); ' +
             '}';
         verifyDraw(fs);
     });

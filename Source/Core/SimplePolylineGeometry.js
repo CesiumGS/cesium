@@ -1,64 +1,131 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './ComponentDatatype',
         './IndexDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './Color',
+        './Cartesian3'
     ], function(
+        defined,
         DeveloperError,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        Color,
+        Cartesian3) {
     "use strict";
 
     /**
-     * A {@link Geometry} that represents a polyline modeled as a line strip; the first two positions define a line segment,
+     * A description of a polyline modeled as a line strip; the first two positions define a line segment,
      * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
+     * @exception {DeveloperError} colors has an invalid length.
+     *
+     * @see SimplePolylineGeometry#createGeometry
      *
      * @example
      * // A polyline with two connected line segments
-     * var geometry = new SimplePolylineGeometry({
+     * var polyline = new SimplePolylineGeometry({
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
      *     Cartographic.fromDegrees(0.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 5.0)
      *   ])
      * });
+     * var geometry = SimplePolylineGeometry.createGeometry(polyline);
      */
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
+        var colors = options.colors;
+        var perVertex = defaultValue(options.colorsPerVertex, false);
 
-        if ((typeof positions === 'undefined') || (positions.length < 2)) {
+        if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
 
+        if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
+            throw new DeveloperError('colors has an invalid length.');
+        }
+
+        this._positions = positions;
+        this._colors = colors;
+        this._perVertex = perVertex;
+        this._workerName = 'createSimplePolylineGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
+        var positions = simplePolylineGeometry._positions;
+        var colors = simplePolylineGeometry._colors;
+        var perVertex = simplePolylineGeometry._perVertex;
+
+        var perSegmentColors = defined(colors) && !perVertex;
+
         var i;
         var j = 0;
-        var numberOfPositions = positions.length;
-        var positionValues = new Float64Array(numberOfPositions * 3);
+        var k = 0;
 
-        for (i = 0; i < numberOfPositions; ++i) {
+        var length = positions.length;
+        var numberOfPositions = !perSegmentColors ? positions.length : positions.length * 2 - 2;
+
+        var positionValues = new Float64Array(numberOfPositions * 3);
+        var colorValues = defined(colors) ? new Uint8Array(numberOfPositions * 4) : undefined;
+
+        for (i = 0; i < length; ++i) {
             var p = positions[i];
 
-            positionValues[j++] = p.x;
-            positionValues[j++] = p.y;
-            positionValues[j++] = p.z;
+            var color;
+            if (perSegmentColors && i > 0) {
+                Cartesian3.pack(p, positionValues, j);
+                j += 3;
+
+                color = colors[i - 1];
+                colorValues[k++] = Color.floatToByte(color.red);
+                colorValues[k++] = Color.floatToByte(color.green);
+                colorValues[k++] = Color.floatToByte(color.blue);
+                colorValues[k++] = Color.floatToByte(color.alpha);
+            }
+
+            if (perSegmentColors && i === length - 1) {
+                break;
+            }
+
+            Cartesian3.pack(p, positionValues, j);
+            j += 3;
+
+            if (defined(colors)) {
+                color = colors[i];
+                colorValues[k++] = Color.floatToByte(color.red);
+                colorValues[k++] = Color.floatToByte(color.green);
+                colorValues[k++] = Color.floatToByte(color.blue);
+                colorValues[k++] = Color.floatToByte(color.alpha);
+            }
         }
 
         var attributes = new GeometryAttributes();
@@ -68,46 +135,31 @@ define([
             values : positionValues
         });
 
-        // From line strip to lines
-        var numberOfIndices = 2 * (numberOfPositions - 1);
+        if (defined(colors)) {
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                values : colorValues,
+                normalize : true
+            });
+        }
+
+        var numberOfIndices = !perSegmentColors ? 2 * (numberOfPositions - 1) : numberOfPositions;
         var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfIndices);
+        var indicesIncrement = perSegmentColors ? 2 : 1;
 
         j = 0;
-        for (i = 0; i < numberOfPositions - 1; ++i) {
+        for (i = 0; i < numberOfPositions - 1; i += indicesIncrement) {
             indices[j++] = i;
             indices[j++] = i + 1;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromPoints(positions);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : BoundingSphere.fromPoints(positions)
+        });
     };
 
     return SimplePolylineGeometry;

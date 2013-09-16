@@ -455,7 +455,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof BoundingSphere.clone()).toEqual('undefined');
+        expect(BoundingSphere.clone()).toBeUndefined();
     });
 
     it('static union throws with no left parameter', function() {

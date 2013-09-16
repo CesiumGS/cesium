@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Cartographic',
         '../Core/Cartesian2',
@@ -13,6 +14,7 @@ define([
     ],
     function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartographic,
         Cartesian2,
@@ -44,7 +46,7 @@ define([
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result=undefined] An optional object to return the input position transformed to window coordinates.
      *
-     * @return {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} position is required.
@@ -60,18 +62,18 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
 
-        if (typeof actualPosition === 'undefined') {
+        if (!defined(actualPosition)) {
             result = undefined;
             return undefined;
         }
@@ -98,7 +100,7 @@ define([
 
         var projection = frameState.scene2D.projection;
         projection.getEllipsoid().cartesianToCartographic(position, positionInCartographic);
-        if (typeof positionInCartographic === 'undefined') {
+        if (!defined(positionInCartographic)) {
             result = undefined;
             return result;
         }

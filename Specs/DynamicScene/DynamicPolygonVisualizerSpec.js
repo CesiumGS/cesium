@@ -3,26 +3,26 @@ defineSuite([
          'DynamicScene/DynamicPolygonVisualizer',
          'Specs/createScene',
          'Specs/destroyScene',
-         'Specs/MockProperty',
+         'DynamicScene/ConstantProperty',
          'Core/Cartesian3',
          'Core/Color',
          'Core/JulianDate',
          'DynamicScene/DynamicEllipse',
          'DynamicScene/DynamicPolygon',
          'DynamicScene/DynamicObjectCollection',
-         'Scene/Material'
+         'DynamicScene/ColorMaterialProperty'
      ], function(
          DynamicPolygonVisualizer,
          createScene,
          destroyScene,
-         MockProperty,
+         ConstantProperty,
          Cartesian3,
          Color,
          JulianDate,
          DynamicEllipse,
          DynamicPolygon,
          DynamicObjectCollection,
-         Material) {
+         ColorMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -81,7 +81,7 @@ defineSuite([
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.vertexPositions = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -92,7 +92,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
+        polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -105,7 +105,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.ellipse = new DynamicEllipse();
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
+        polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -116,15 +116,15 @@ defineSuite([
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.ellipse = new DynamicEllipse();
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
+        polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var primitive = scene.getPrimitives().get(0);
-        expect(typeof primitive.getPositions()).toEqual('undefined');
+        expect(primitive.getPositions()).toBeUndefined();
     });
 
     it('DynamicPolygon with ellipse and position creates a primitive and updates it.', function() {
@@ -135,17 +135,15 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
-        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
-        polygon.material = new MockProperty(colorMaterial);
+        polygon.show = new ConstantProperty(true);
+        polygon.material = new ColorMaterialProperty();
 
         var ellipse = testObject.ellipse = new DynamicEllipse();
-        ellipse.bearing = new MockProperty(0);
-        ellipse.semiMajorAxis = new MockProperty(1000);
-        ellipse.semiMinorAxis = new MockProperty(1000);
+        ellipse.bearing = new ConstantProperty(0);
+        ellipse.semiMajorAxis = new ConstantProperty(1000);
+        ellipse.semiMinorAxis = new ConstantProperty(1000);
         visualizer.update(new JulianDate());
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -154,7 +152,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
         expect(primitive.getPositions().length > 0);
 
     });
@@ -168,13 +166,11 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.vertexPositions = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
 
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
-        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
-        polygon.material = new MockProperty(colorMaterial);
+        polygon.show = new ConstantProperty(true);
+        polygon.material = new ColorMaterialProperty();
 
         visualizer.update(time);
 
@@ -184,18 +180,16 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
 
-        testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
-        colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.1, 0.2, 0.4, 0.3);
-        polygon.material = new MockProperty(colorMaterial);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
+        polygon.material = new ColorMaterialProperty();
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
 
-        polygon.show = new MockProperty(false);
+        polygon.show = new ConstantProperty(false);
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
     });
@@ -207,9 +201,9 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
-        testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
         var polygon = testObject.polygon = new DynamicPolygon();
-        polygon.show = new MockProperty(true);
+        polygon.show = new ConstantProperty(true);
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -233,8 +227,8 @@ defineSuite([
         var time = new JulianDate();
         var polygon = testObject.polygon = new DynamicPolygon();
 
-        testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
-        polygon.show = new MockProperty(true);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
+        polygon.show = new ConstantProperty(true);
 
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -245,15 +239,15 @@ defineSuite([
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.vertexPositions = new MockProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
+        testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
         testObject.polygon = new DynamicPolygon();
-        testObject.polygon.show = new MockProperty(true);
+        testObject.polygon.show = new ConstantProperty(true);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.vertexPositions = new MockProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
+        testObject2.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
         testObject2.polygon = new DynamicPolygon();
-        testObject2.polygon.show = new MockProperty(true);
+        testObject2.polygon.show = new ConstantProperty(true);
 
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
 

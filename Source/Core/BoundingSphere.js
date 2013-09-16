@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian3',
         './Cartesian4',
@@ -12,6 +13,7 @@ define([
         './Matrix4'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian3,
         Cartesian4,
@@ -71,16 +73,16 @@ define([
      *
      * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
     BoundingSphere.fromPoints = function(positions, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
@@ -224,7 +226,7 @@ define([
      * @param {Extent} extent The extent around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtent2D = function(extent, projection, result) {
         return BoundingSphere.fromExtentWithHeights2D(extent, projection, 0.0, 0.0, result);
@@ -241,14 +243,14 @@ define([
      * @param {Number} [minimumHeight=0.0] The minimum height over the extent.
      * @param {Number} [maximumHeight=0.0] The maximum height over the extent.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
@@ -287,14 +289,14 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
-        if (typeof extent !== 'undefined') {
+        if (defined(extent)) {
             positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
         }
 
@@ -321,7 +323,7 @@ define([
      *        the stride is 5, however, two array elements are skipped and the next position begins at array
      *        index 5.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      *
@@ -336,21 +338,21 @@ define([
      * var sphere = BoundingSphere.fromVertices(points, center, 5);
      */
     BoundingSphere.fromVertices = function(positions, center, stride, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
         }
 
-        if (typeof center === 'undefined') {
+        if (!defined(center)) {
             center = Cartesian3.ZERO;
         }
 
-        if (typeof stride === 'undefined') {
+        if (!defined(stride)) {
             stride = 3;
         }
 
@@ -499,7 +501,7 @@ define([
      * @param {Number} [oppositeCorner] The maximum height over the extent.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} corner and oppositeCorner are required.
      *
@@ -508,11 +510,11 @@ define([
      * var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-0.5, -0.5, -0.5), new Cartesian3(0.5, 0.5, 0.5));
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
-        if ((typeof corner === 'undefined') || (typeof oppositeCorner === 'undefined')) {
+        if (!defined(corner) || !defined(oppositeCorner)) {
             throw new DeveloperError('corner and oppositeCorner are required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -531,7 +533,7 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid around which to create a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} ellipsoid is required.
      *
@@ -539,11 +541,11 @@ define([
      * var boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
-        if (typeof ellipsoid === 'undefined') {
+        if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -558,14 +560,14 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new BoundingSphere(sphere.center, sphere.radius);
         }
 
@@ -583,21 +585,21 @@ define([
      * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
      */
     BoundingSphere.union = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
 
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -624,17 +626,17 @@ define([
      * @param {BoundingSphere} sphere A sphere to expand.
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} point is required.
      */
     BoundingSphere.expand = function(sphere, point, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof point === 'undefined') {
+        if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
 
@@ -656,7 +658,7 @@ define([
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
@@ -664,11 +666,11 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.intersect = function(sphere, plane) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
 
@@ -694,21 +696,21 @@ define([
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transform = function(sphere, transform, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof transform === 'undefined') {
+        if (!defined(transform)) {
             throw new DeveloperError('transform is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -732,26 +734,26 @@ define([
      * @param {Cartesian3} position The position to calculate the distance from.
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
-     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
-        if (typeof direction === 'undefined') {
+        if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Interval();
         }
 
@@ -782,12 +784,12 @@ define([
      * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
@@ -883,12 +885,12 @@ define([
      *
      * @param {BoundingSphere} [left] The first BoundingSphere.
      * @param {BoundingSphere} [right] The second BoundingSphere.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     BoundingSphere.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 Cartesian3.equals(left.center, right.center) &&
                 left.radius === right.radius);
     };
@@ -898,7 +900,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
@@ -910,7 +912,7 @@ define([
      *
      * @param {BoundingSphere} right The sphere to enclose in this bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      */
@@ -924,7 +926,7 @@ define([
      *
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.
      */
@@ -939,7 +941,7 @@ define([
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
@@ -955,7 +957,7 @@ define([
      *
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} transform is required.
      */
@@ -974,7 +976,7 @@ define([
      * @param {Cartesian3} position The position to calculate the distance from.
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
-     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
@@ -989,7 +991,7 @@ define([
      *
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.prototype.projectTo2D = function(projection, result) {
         return BoundingSphere.projectTo2D(this, projection, result);
@@ -1001,7 +1003,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [right] The right hand side BoundingSphere.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     BoundingSphere.prototype.equals = function(right) {
         return BoundingSphere.equals(this, right);

@@ -1,8 +1,12 @@
 /*global define*/
 define([
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/PerspectiveOffCenterFrustum'
     ], function(
+        defined,
+        defineProperties,
         DeveloperError,
         PerspectiveOffCenterFrustum) {
     "use strict";
@@ -47,7 +51,7 @@ define([
         /**
          * The distance of the near plane.
          * @type {Number}
-         * @default 1.0 
+         * @default 1.0
          */
         this.near = 1.0;
         this._near = this.near;
@@ -61,37 +65,8 @@ define([
         this._far = this.far;
     };
 
-    /**
-     * Returns the perspective projection matrix computed from the view frustum.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @return {Matrix4} The perspective projection matrix.
-     *
-     * @see PerspectiveFrustum#getInfiniteProjectionMatrix
-     */
-    PerspectiveFrustum.prototype.getProjectionMatrix = function() {
-        update(this);
-        return this._offCenterFrustum.getProjectionMatrix();
-    };
-
-    /**
-     * Returns the perspective projection matrix computed from the view frustum with an infinite far plane.
-     *
-     * @memberof PerspectiveFrustum
-     *
-     * @return {Matrix4} The infinite perspective projection matrix.
-     *
-     * @see PerspectiveFrustum#getProjectionMatrix
-     */
-    PerspectiveFrustum.prototype.getInfiniteProjectionMatrix = function() {
-        update(this);
-        return this._offCenterFrustum.getInfiniteProjectionMatrix();
-    };
-
     function update(frustum) {
-        if (typeof frustum.fovy === 'undefined' || typeof frustum.aspectRatio === 'undefined' ||
-                typeof frustum.near === 'undefined' || typeof frustum.far === 'undefined') {
+        if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
@@ -125,6 +100,36 @@ define([
         }
     }
 
+    defineProperties(PerspectiveFrustum.prototype, {
+        /**
+         * The perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveFrustum#infiniteProjectionMatrix
+         */
+        projectionMatrix : {
+            get : function() {
+                update(this);
+                return this._offCenterFrustum.projectionMatrix;
+            }
+        },
+
+        /**
+         * The perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveFrustum
+         * @type {Matrix4}
+         *
+         * @see PerspectiveFrustum#projectionMatrix
+         */
+        infiniteProjectionMatrix : {
+            get : function() {
+                update(this);
+                return this._offCenterFrustum.infiniteProjectionMatrix;
+            }
+        }
+    });
+
     /**
      * Creates a culling volume for this frustum.
      *
@@ -138,7 +143,7 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {CullingVolume} A culling volume at the given position and orientation.
+     * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
@@ -195,7 +200,7 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @return {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
+     * @returns {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
      */
     PerspectiveFrustum.prototype.clone = function() {
         var frustum = new PerspectiveFrustum();
@@ -214,10 +219,10 @@ define([
      * @memberof PerspectiveFrustum
      *
      * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
-        if (typeof other === 'undefined') {
+        if (!defined(other)) {
             return false;
         }
 

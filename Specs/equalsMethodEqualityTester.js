@@ -1,14 +1,14 @@
 /*global define*/
-define(function() {
+define(['Core/defined'], function(defined) {
     "use strict";
 
     return function(a, b) {
         // if either a or b have an equals method, call it.
-        if (a !== null && typeof a !== 'undefined' && typeof a.equals === 'function') {
+        if (a !== null && defined(a) && typeof a.equals === 'function') {
             return a.equals(b);
         }
 
-        if (b !== null && typeof b !== 'undefined' && typeof b.equals === 'function') {
+        if (b !== null && defined(b) && typeof b.equals === 'function') {
             return b.equals(a);
         }
 

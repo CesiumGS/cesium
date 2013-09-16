@@ -138,7 +138,7 @@ define([
      *     someParameter : true,
      *     another : 'hello'
      * });
-     * if (typeof promise === 'undefined') {
+     * if (!defined(promise)) {
      *     // too many active tasks - try again later
      * } else {
      *     when(promise, function(result) {
@@ -177,7 +177,7 @@ define([
      *
      * @memberof TaskProcessor
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see TaskProcessor#destroy
      */
@@ -193,7 +193,7 @@ define([
      *
      * @memberof TaskProcessor
      *
-     * @return {undefined}
+     * @returns {undefined}
      */
     TaskProcessor.prototype.destroy = function() {
         if (defined(this._worker)) {

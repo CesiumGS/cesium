@@ -62,6 +62,7 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
+        polygon.asynchronous = false;
 
         polylines = new PolylineCollection();
         polyline = polylines.add({

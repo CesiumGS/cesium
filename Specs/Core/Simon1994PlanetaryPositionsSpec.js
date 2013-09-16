@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Core/Simon1994PlanetaryPositions',
+         'Core/defined',
          'Core/JulianDate',
          'Core/TimeStandard',
          'Core/Math',
@@ -8,6 +9,7 @@ defineSuite([
          'Core/Transforms'
      ], function(
          PlanetaryPositions,
+         defined,
          JulianDate,
          TimeStandard,
          CesiumMath,
@@ -25,7 +27,7 @@ defineSuite([
         var X = 26500268539.790234;
         var Y = -132756447253.27325;
         var Z = -57556483362.533806;
-        expect(X).toEqualEpsilon(sun.x, CesiumMath.EPSILON4); //TODO
+        expect(X).toEqualEpsilon(sun.x, CesiumMath.EPSILON4);
         expect(Y).toEqualEpsilon(sun.y, CesiumMath.EPSILON4);
         expect(Z).toEqualEpsilon(sun.z, CesiumMath.EPSILON4);
 
@@ -91,7 +93,7 @@ defineSuite([
         var angles = [];
         for (i = 0; i < 24; i++) {
             transformMatrix = Transforms.computeIcrfToFixedMatrix(timesOfDay[i], transformMatrix);
-            if (typeof transformMatrix === 'undefined') {
+            if (!defined(transformMatrix)) {
                 transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(timesOfDay[i], transformMatrix);
             }
             var position = PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(timesOfDay[i]);

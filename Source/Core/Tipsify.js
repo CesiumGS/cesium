@@ -1,10 +1,12 @@
 /*global define*/
 define([
-    './DeveloperError',
-    './defaultValue'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
-        DeveloperError,
-        defaultValue) {
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -34,7 +36,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @return {Number} The average cache miss ratio (ACMR).
+     * @returns {Number} The average cache miss ratio (ACMR).
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
@@ -48,7 +50,7 @@ define([
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
 
-        if (typeof indices === 'undefined') {
+        if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
 
@@ -65,7 +67,7 @@ define([
         }
 
         // Compute the maximumIndex if not given
-        if (typeof maximumIndex === 'undefined') {
+        if (!defined(maximumIndex)) {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -109,7 +111,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @return {Array} A list of the input indices in an optimized order.
+     * @returns {Array} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
@@ -171,7 +173,7 @@ define([
             return n;
         }
 
-        if (typeof indices === 'undefined') {
+        if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
@@ -191,7 +193,7 @@ define([
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (typeof maximumIndex !== 'undefined') {
+        if (defined(maximumIndex)) {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {

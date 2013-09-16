@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -15,7 +16,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         '../Renderer/CullFace',
         './Material',
         '../Shaders/SensorVolume',
@@ -24,6 +25,7 @@ define([
         './SceneMode'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Color,
         combine,
@@ -38,7 +40,7 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         CullFace,
         Material,
         ShadersSensorVolume,
@@ -180,7 +182,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = typeof options.material !== 'undefined' ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
         /**
@@ -270,7 +272,7 @@ define([
             var distance = r / Math.cos(theta * 0.5);
             var p = n1.multiplyByScalar(distance);
 
-            positions[(j * 3) + 0] = p.x;
+            positions[(j * 3)] = p.x;
             positions[(j * 3) + 1] = p.y;
             positions[(j * 3) + 2] = p.z;
 
@@ -290,8 +292,8 @@ define([
 
         var k = 0;
         for ( var i = length - 1, j = 0; j < length; i = j++) {
-            var p0 = new Cartesian3(positions[(i * 3) + 0], positions[(i * 3) + 1], positions[(i * 3) + 2]);
-            var p1 = new Cartesian3(positions[(j * 3) + 0], positions[(j * 3) + 1], positions[(j * 3) + 2]);
+            var p0 = new Cartesian3(positions[(i * 3)], positions[(i * 3) + 1], positions[(i * 3) + 2]);
+            var p1 = new Cartesian3(positions[(j * 3)], positions[(j * 3) + 1], positions[(j * 3) + 2]);
             var n = p1.cross(p0).normalize(); // Per-face normals
 
             vertices[k++] = 0.0; // Sensor vertex
@@ -356,12 +358,12 @@ define([
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
         // Initial render state creation
-        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (typeof this._frontFaceColorCommand.renderState === 'undefined')) {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (!defined(this._frontFaceColorCommand.renderState))) {
             this._showThroughEllipsoid = this.showThroughEllipsoid;
 
             var rs = context.createRenderState({
@@ -425,7 +427,7 @@ define([
             }
         }
 
-        if (typeof this._frontFaceColorCommand.vertexArray === 'undefined') {
+        if (!defined(this._frontFaceColorCommand.vertexArray)) {
             return;
         }
 
@@ -444,14 +446,8 @@ define([
             var backFaceColorCommand = this._backFaceColorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged || typeof frontFaceColorCommand.shaderProgram === 'undefined') {
-                var fsSource =
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    CustomSensorVolumeFS;
+            if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
+                var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
 
                 frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
@@ -471,19 +467,18 @@ define([
         if (pass.pick) {
             var pickCommand = this._pickCommand;
 
-            if (typeof this._pickId === 'undefined') {
-                this._pickId = context.createPickId(this._pickIdThis);
+            if (!defined(this._pickId)) {
+                this._pickId = context.createPickId({
+                    primitive : this._pickIdThis
+                });
             }
 
             // Recompile shader when material changes
-            if (materialChanged || typeof pickCommand.shaderProgram === 'undefined') {
-                var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    CustomSensorVolumeFS, 'uniform');
+            if (materialChanged || !defined(pickCommand.shaderProgram)) {
+                var pickFS = createShaderSource({
+                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS],
+                    pickColorQualifier : 'uniform'
+                });
 
                 pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);

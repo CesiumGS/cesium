@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
@@ -18,6 +19,7 @@ define([
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
@@ -40,30 +42,12 @@ define([
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var controller = scene.getScreenSpaceCameraController();
-        var enableLook = controller.enableLook;
-        var enableRotate = controller.enableRotate;
-        var enableTilt = controller.enableTilt;
-        var enableTranslate = controller.enableTranslate;
-        var enableZoom = controller.enableZoom;
 
-        controller.enableLook = false;
-        controller.enableRotate = false;
-        controller.enableTilt = false;
-        controller.enableTranslate = false;
-        controller.enableZoom = false;
         controller.setEllipsoid(ellipsoid);
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
-        function onComplete() {
-            controller.enableLook = enableLook;
-            controller.enableRotate = enableRotate;
-            controller.enableTilt = enableTilt;
-            controller.enableTranslate = enableTranslate;
-            controller.enableZoom = enableZoom;
-        }
-
         var canvas = scene.getCanvas();
-        if (typeof transitioner !== 'undefined' && mode === SceneMode.MORPHING) {
+        if (defined(transitioner) && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
         var flight;
@@ -76,10 +60,9 @@ define([
                                            0, 0, 0, 1);
             description = {
                 destination : Extent.MAX_VALUE,
-                duration : flightDuration,
-                onComplete : onComplete
+                duration : flightDuration
             };
-            flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimationExtent(scene, description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.SCENE3D) {
             Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
@@ -93,10 +76,9 @@ define([
                 destination : defaultCamera.position,
                 duration : flightDuration,
                 up : defaultCamera.up,
-                direction : defaultCamera.direction,
-                onComplete : onComplete
+                direction : defaultCamera.direction
             };
-            flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimation(scene, description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -113,11 +95,10 @@ define([
                 destination : position,
                 duration : flightDuration,
                 up : up,
-                direction : direction,
-                onComplete : onComplete
+                direction : direction
             };
 
-            flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimation(scene, description);
             scene.getAnimations().add(flight);
         }
     }
@@ -135,7 +116,7 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 

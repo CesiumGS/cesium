@@ -11,8 +11,6 @@ defineSuite([
          'Core/VertexFormat',
          'Renderer/ClearCommand',
          'Specs/render',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -28,8 +26,6 @@ defineSuite([
          VertexFormat,
          ClearCommand,
          render,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
@@ -44,7 +40,7 @@ defineSuite([
         context = createContext();
         frameState = createFrameState();
 
-        var extent = Extent.fromDegrees(-80.0, 20.0, -70.0, 40.0);
+        var extent = Extent.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         extentInstance = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : VertexFormat.ALL,
@@ -174,7 +170,8 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'normal'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -191,7 +188,8 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -208,7 +206,8 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -225,7 +224,8 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'st'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -250,7 +250,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'float'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -275,7 +276,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec2'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -300,7 +302,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec3'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);
@@ -325,7 +328,8 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec4'
-            })
+            }),
+            asynchronous : false
         });
 
         ClearCommand.ALL.execute(context);

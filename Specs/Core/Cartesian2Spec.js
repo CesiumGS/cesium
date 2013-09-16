@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
              'Core/Cartesian2',
-             'Core/Math'
+             'Core/Math',
+             'Specs/createPackableSpecs'
             ], function(
               Cartesian2,
-              CesiumMath) {
+              CesiumMath,
+              createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -46,12 +48,6 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian2.fromArray();
-        }).toThrow();
-    });
-
-    it('fromArray throws with an invalid offset', function() {
-        expect(function() {
-            Cartesian2.fromArray([0.0, 0.0], 1);
         }).toThrow();
     });
 
@@ -448,7 +444,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Cartesian2.clone()).toEqual('undefined');
+        expect(Cartesian2.clone()).toBeUndefined();
     });
 
     it('static getMaximumComponent throws with no parameter', function() {
@@ -629,4 +625,6 @@ defineSuite([
         var expectedResult = new Cartesian2(2, 2);
         expect(cartesian2).toEqual(expectedResult);
     });
+
+    createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
 });

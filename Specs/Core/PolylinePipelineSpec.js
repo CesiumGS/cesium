@@ -2,12 +2,14 @@
 defineSuite([
          'Core/PolylinePipeline',
          'Core/Cartesian3',
+         'Core/Math',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Transforms'
      ], function(
          PolylinePipeline,
          Cartesian3,
+         CesiumMath,
          Cartographic,
          Ellipsoid,
          Transforms) {
@@ -61,6 +63,8 @@ defineSuite([
         var positions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(2.0, 2.0, 2.0),
             new Cartesian3(3.0, 3.0, 3.0),
             new Cartesian3(3.0, 3.0, 3.0)];
@@ -77,5 +81,103 @@ defineSuite([
         expect(function() {
             PolylinePipeline.removeDuplicates();
         }).toThrow();
+    });
+
+    it('scaleToSurface throws without positions', function() {
+        expect(function() {
+            PolylinePipeline.scaleToSurface();
+        }).toThrow();
+    });
+
+    it('scaleToSurface subdivides in half', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+        var p3 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(45, 0));
+        var positions = [p1, p2];
+
+        var newPositions = PolylinePipeline.scaleToSurface(positions, CesiumMath.PI_OVER_TWO/2, ellipsoid);
+
+        expect(newPositions.length).toEqual(3*3);
+        var p1n = Cartesian3.fromArray(newPositions, 0);
+        var p3n = Cartesian3.fromArray(newPositions, 3);
+        var p2n = Cartesian3.fromArray(newPositions, 6);
+        expect(p1.equalsEpsilon(p1n, CesiumMath.EPSILON4)).toEqual(true);
+        expect(p2.equalsEpsilon(p2n, CesiumMath.EPSILON4)).toEqual(true);
+        expect(p3.equalsEpsilon(p3n, CesiumMath.EPSILON4)).toEqual(true);
+    });
+
+    it('scaleToGeodeticHeight throws if positions is undefined', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight();
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight throws if height is undefined', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()]);
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], []);
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], 0, undefined, []);
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight works with a result parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+
+        var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
+        var result = [0, 0, 0, 0, 0, 0];
+        var height = 200;
+
+        PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid, result);
+
+        var p1n = Cartesian3.fromArray(result, 0);
+        var p2n = Cartesian3.fromArray(result, 3);
+        expect(ellipsoid.cartesianToCartographic(p1n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+        expect(ellipsoid.cartesianToCartographic(p2n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+    });
+
+
+    it('scaleToGeodeticHeight scales all positions to number', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+
+        var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
+        var height = 200;
+
+        var newPositions = PolylinePipeline.scaleToGeodeticHeight(positions, height);
+
+        var p1n = Cartesian3.fromArray(newPositions, 0);
+        var p2n = Cartesian3.fromArray(newPositions, 3);
+        expect(ellipsoid.cartesianToCartographic(p1n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+        expect(ellipsoid.cartesianToCartographic(p2n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+    });
+
+    it('scaleToGeodeticHeight scales all positions with array of numbers', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+
+        var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
+        var height = [200, 300];
+
+        var newPositions = PolylinePipeline.scaleToGeodeticHeight(positions, height);
+
+        var p1n = Cartesian3.fromArray(newPositions, 0);
+        var p2n = Cartesian3.fromArray(newPositions, 3);
+        expect(ellipsoid.cartesianToCartographic(p1n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+        expect(ellipsoid.cartesianToCartographic(p2n).height).toEqualEpsilon(300, CesiumMath.EPSILON8);
     });
 });

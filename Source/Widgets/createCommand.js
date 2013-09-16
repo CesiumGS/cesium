@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         Event,
@@ -29,7 +31,7 @@ define([
      * @exception {DeveloperError} func is required.
      */
     var createCommand = function(func, canExecute) {
-        if (typeof func === 'undefined') {
+        if (!defined(func)) {
             throw new DeveloperError('func is required.');
         }
 

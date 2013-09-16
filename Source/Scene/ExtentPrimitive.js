@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Color',
         '../Core/destroyObject',
         '../Core/Math',
@@ -15,6 +16,7 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
         Color,
         destroyObject,
         CesiumMath,
@@ -41,6 +43,7 @@ define([
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=undefined] The surface appearance of the primitive.
+     * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
      *
      * @example
      * var extentPrimitive = new ExtentPrimitive({
@@ -147,6 +150,16 @@ define([
          */
         this.material = defaultValue(options.material, material);
 
+        /**
+         * Determines if the geometry instances will be created and batched on
+         * a web worker.
+         *
+         * @type Boolean
+         *
+         * @default true
+         */
+        this.asynchronous = defaultValue(options.asynchronous, true);
+
         this._primitive = undefined;
     };
 
@@ -154,11 +167,11 @@ define([
      * @private
      */
     ExtentPrimitive.prototype.update = function(context, frameState, commandList) {
-        if (typeof this.ellipsoid === 'undefined') {
+        if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
@@ -166,7 +179,7 @@ define([
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
-        if (!this.show || (typeof this.extent === 'undefined')) {
+        if (!this.show || (!defined(this.extent))) {
             return;
         }
 
@@ -194,10 +207,10 @@ define([
                     rotation : this.rotation,
                     stRotation : this.textureRotationAngle
                 }),
-                id : this
+                pickPrimitive : this
             });
 
-            if (typeof this._primitive !== 'undefined') {
+            if (defined(this._primitive)) {
                 this._primitive.destroy();
             }
 
@@ -205,7 +218,8 @@ define([
                 geometryInstances : instance,
                 appearance : new EllipsoidSurfaceAppearance({
                     aboveGround : (this.height > 0.0)
-                })
+                }),
+                asynchronous : this.asynchronous
             });
         }
 
@@ -221,7 +235,7 @@ define([
      *
      * @memberof Extent
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Extent#destroy
      */
@@ -239,7 +253,7 @@ define([
      *
      * @memberof Extent
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Matrix4',
         './Geometry',
         './GeometryInstanceAttribute'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Matrix4,
         Geometry,
@@ -61,7 +63,7 @@ define([
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (typeof options.geometry === 'undefined') {
+        if (!defined(options.geometry)) {
             throw new DeveloperError('options.geometry is required.');
         }
 
@@ -97,6 +99,13 @@ define([
          * @see Primitive#getGeometryInstanceAttributes
          */
         this.id = options.id;
+
+        /**
+         * Used for picking primitives that wrap geometry instances.
+         *
+         * @private
+         */
+        this.pickPrimitive = options.pickPrimitive;
 
         /**
          * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.

@@ -3,12 +3,31 @@
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
+
+#ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_BRIGHTNESS
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_CONTRAST
 uniform float u_dayTextureContrast[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_HUE
 uniform float u_dayTextureHue[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_SATURATION
 uniform float u_dayTextureSaturation[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_GAMMA
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 

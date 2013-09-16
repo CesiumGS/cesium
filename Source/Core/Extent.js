@@ -2,6 +2,7 @@
 define([
         './freezeObject',
         './defaultValue',
+        './defined',
         './Ellipsoid',
         './Cartographic',
         './DeveloperError',
@@ -9,6 +10,7 @@ define([
     ], function(
         freezeObject,
         defaultValue,
+        defined,
         Ellipsoid,
         Cartographic,
         DeveloperError,
@@ -71,7 +73,7 @@ define([
      * @param {Number} [north=0.0] The northernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
      *
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      *
      * @example
      * var extent = Extent.fromDegrees(0.0, 20.0, 10.0, 30.0);
@@ -82,7 +84,7 @@ define([
         east = CesiumMath.toRadians(defaultValue(east, 0.0));
         north = CesiumMath.toRadians(defaultValue(north, 0.0));
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(west, south, east, north);
         }
 
@@ -100,10 +102,10 @@ define([
      *
      * @param {Array} cartographics The list of Cartographic instances.
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
     Extent.fromCartographicArray = function(cartographics, result) {
-        if (typeof cartographics === 'undefined') {
+        if (!defined(cartographics)) {
             throw new DeveloperError('cartographics is required.');
         }
 
@@ -120,7 +122,7 @@ define([
             maxLat = Math.max(maxLat, position.latitude);
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(minLon, minLat, maxLon, maxLat);
         }
 
@@ -138,14 +140,14 @@ define([
      *
      * @param {Extent} extent The extent to clone.
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
+     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
      */
     Extent.clone = function(extent, result) {
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }
 
@@ -162,7 +164,7 @@ define([
      * @memberof Extent
      *
      * @param {Extent} [result] The object onto which to store the result.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
     Extent.prototype.clone = function(result) {
         return Extent.clone(this, result);
@@ -174,7 +176,7 @@ define([
      * @memberof Extent
      *
      * @param {Extent} [other] The Extent to compare.
-     * @return {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
      */
     Extent.prototype.equals = function(other) {
         return Extent.equals(this, other);
@@ -189,12 +191,12 @@ define([
      * @param {Extent} [left] The first Extent.
      * @param {Extent} [right] The second Extent.
      *
-     * @return {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     Extent.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.west === right.west) &&
                 (left.south === right.south) &&
                 (left.east === right.east) &&
@@ -209,7 +211,7 @@ define([
      *
      * @param {Extent} [other] The Extent to compare.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if the Extents are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if the Extents are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -218,7 +220,7 @@ define([
             throw new DeveloperError('epsilon is required and must be a number.');
         }
 
-        return typeof other !== 'undefined' &&
+        return defined(other) &&
                (Math.abs(this.west - other.west) <= epsilon) &&
                (Math.abs(this.south - other.south) <= epsilon) &&
                (Math.abs(this.east - other.east) <= epsilon) &&
@@ -280,10 +282,10 @@ define([
      * @memberof Extent
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getSouthwest = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.west, this.south);
         }
         result.longitude = this.west;
@@ -297,10 +299,10 @@ define([
      * @memberof Extent
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getNorthwest = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.west, this.north);
         }
         result.longitude = this.west;
@@ -314,10 +316,10 @@ define([
      * @memberof Extent
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getNortheast = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.east, this.north);
         }
         result.longitude = this.east;
@@ -331,10 +333,10 @@ define([
      * @memberof Extent
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getSoutheast = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.east, this.south);
         }
         result.longitude = this.east;
@@ -348,10 +350,10 @@ define([
      * @memberof Extent
      *
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getCenter = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5);
         }
         result.longitude = (this.west + this.east) * 0.5;
@@ -366,19 +368,19 @@ define([
      *
      * @param otherExtent The extent to intersect with this extent.
      * @param {Extent} [result] The object onto which to store the result.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      *
      * @exception {DeveloperError} otherExtent is required.
      */
     Extent.prototype.intersectWith = function(otherExtent, result) {
-        if (typeof otherExtent === 'undefined') {
+        if (!defined(otherExtent)) {
             throw new DeveloperError('otherExtent is required.');
         }
         var west = Math.max(this.west, otherExtent.west);
         var south = Math.max(this.south, otherExtent.south);
         var east = Math.min(this.east, otherExtent.east);
         var north = Math.min(this.north, otherExtent.north);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(west, south, east, north);
         }
         result.west = west;
@@ -398,7 +400,7 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     Extent.prototype.contains = function(cartographic) {
-        if (typeof cartographic === 'undefined') {
+        if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         return cartographic.longitude >= this.west &&
@@ -413,7 +415,7 @@ define([
      *
      * @memberof Extent
      *
-     * @return {Boolean} True if the extent is empty; otherwise, false.
+     * @returns {Boolean} True if the extent is empty; otherwise, false.
      */
     Extent.prototype.isEmpty = function() {
         return this.west >= this.east || this.south >= this.north;
@@ -428,13 +430,13 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      * @param {Number} [surfaceHeight=0.0] The height of the extent above the ellipsoid.
      * @param {Array} [result] The array of Cartesians onto which to store the result.
-     * @return {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
+     * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
     Extent.prototype.subsample = function(ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = [];
         }
         var length = 0;

@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './Cartesian3',
+        './defined',
         './DeveloperError'
     ], function(
         Cartesian3,
+        defined,
         DeveloperError) {
     "use strict";
 
@@ -57,7 +59,7 @@ define([
      * @param {Number} value The floating-point value to encode.
      * @param {Object} [result] The object onto which to store the result.
      *
-     * @return {Object} The modified result parameter or a new instance if one was not provided.
+     * @returns {Object} The modified result parameter or a new instance if one was not provided.
      *
      * @exception {DeveloperError} value is required.
      *
@@ -66,11 +68,11 @@ define([
      * var splitValue = EncodedCartesian3.encode(value);
      */
     EncodedCartesian3.encode = function(value, result) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = {
                 high : 0.0,
                 low : 0.0
@@ -106,7 +108,7 @@ define([
      *
      * @param {Cartesian3} cartesian The cartesian to encode.
      * @param {EncodedCartesian3} [result] The object onto which to store the result.
-     * @return {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
+     * @returns {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      *
@@ -115,11 +117,11 @@ define([
      * var encoded = EncodedCartesian3.fromCartesian(cart);
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new EncodedCartesian3();
         }
 
@@ -171,11 +173,11 @@ define([
      * }
      */
     EncodedCartesian3.writeElements = function(cartesian, cartesianArray, index) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
 
-        if (typeof cartesianArray === 'undefined') {
+        if (!defined(cartesianArray)) {
             throw new DeveloperError('cartesianArray is required');
         }
 
