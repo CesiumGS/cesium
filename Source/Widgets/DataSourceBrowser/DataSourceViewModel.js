@@ -9,9 +9,10 @@ define([
         knockout) {
     "use strict";
 
-    var DataSourceViewModel = function(name, rootViewModel, dynamicObject) {
+    var DataSourceViewModel = function(name, rootViewModel, dataSource, dynamicObject) {
         var that = this;
 
+        this._dataSource = dataSource;
         this.rootViewModel = rootViewModel;
         this.dynamicObject = dynamicObject;
 
@@ -41,6 +42,17 @@ define([
         expandIndicator : {
             get : function() {
                 return this.expanded ? '&#9660;' : '&#9658;';
+            }
+        },
+
+        /**
+         * Gets the {@link DataSource} that contains this item.
+         * @memberof DataSourceViewModel.prototype
+         * @type {DataSource}
+         */
+        dataSource : {
+            get : function() {
+                return this._dataSource;
             }
         }
     });

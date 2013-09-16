@@ -184,8 +184,7 @@ define([
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this);
-        dataSourceViewModel._dataSource = dataSource;
+        var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this, dataSource);
 
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         var objects = dynamicObjectCollection.getObjects();
@@ -199,7 +198,7 @@ define([
                 } else if (object.id.substring(0, 16) === '/Application/STK') {
                     name = object.id.substring(object.id.lastIndexOf('/') + 1);
                 }
-                var dynamicObjectViewModel = new DataSourceViewModel(name, this, object);
+                var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
                 dataSourceViewModel.children.push(dynamicObjectViewModel);
             }
         }
@@ -211,7 +210,7 @@ define([
         var dataSourceViewModels = this._dataSourceViewModels;
         for ( var i = 0, len = dataSourceViewModels.length; i < len; ++i) {
             var dataSourceViewModel = dataSourceViewModels[i];
-            if (dataSourceViewModel._dataSource === dataSource) {
+            if (dataSourceViewModel.dataSource === dataSource) {
                 dataSourceViewModels.splice(i, 1);
                 return;
             }
