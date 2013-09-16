@@ -289,16 +289,28 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
+        var eventHelper = new EventHelper();
+
         //DataSourceBrowser
+        function trackDataSourceClock(dataSource) {
+            var dataSourceClock = dataSource.getClock();
+            if (defined(dataSourceClock)) {
+                dataSourceClock.clone(clock);
+                if (defined(timeline)) {
+                    timeline.updateFromClock();
+                    timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+                }
+            }
+        }
+
         var dataSourceBrowser;
         if (!defined(options.dataSourceBrowser) || options.dataSourceBrowser !== false) {
             var dataSourceBrowserContainer = document.createElement('div');
             dataSourceBrowserContainer.className = 'cesium-viewer-dataSourceBrowserContainer';
             viewerContainer.appendChild(dataSourceBrowserContainer);
             dataSourceBrowser = new DataSourceBrowser(dataSourceBrowserContainer, dataSourceCollection);
+            eventHelper.add(dataSourceBrowser.viewModel.onClockSelected, trackDataSourceClock);
         }
-
-        var eventHelper = new EventHelper();
 
         function updateDataSourceDisplay(clock) {
             dataSourceDisplay.update(clock.currentTime);
@@ -308,13 +320,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         function setClockFromDataSource(dataSourceCollection, dataSource) {
             if (dataSourceCollection.getLength() === 1) {
-                var dataSourceClock = dataSource.getClock();
-                if (defined(dataSourceClock)) {
-                    dataSourceClock.clone(clock);
-                    if (defined(timeline)) {
-                        timeline.updateFromClock();
-                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
-                    }
+                if (defined(dataSourceBrowser)) {
+                    dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
+                } else {
+                    trackDataSourceClock(dataSource);
                 }
             }
         }

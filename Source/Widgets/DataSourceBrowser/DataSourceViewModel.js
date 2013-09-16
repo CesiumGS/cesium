@@ -46,6 +46,17 @@ define([
         },
 
         /**
+         * True if the clock icon is selected.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Boolean}
+         */
+        clockTracking : {
+            get : function() {
+                return this.dataSource && this.rootViewModel.clockTrackedDataSource === this.dataSource;
+            }
+        },
+
+        /**
          * Gets the {@link DataSource} that contains this item.
          * @memberof DataSourceViewModel.prototype
          * @type {DataSource}
@@ -59,6 +70,10 @@ define([
 
     DataSourceViewModel.prototype.select = function() {
         this.rootViewModel.selectedItem = this;
+    };
+
+    DataSourceViewModel.prototype.trackClock = function() {
+        this.rootViewModel.clockTrackedDataSource = this.dataSource;
     };
 
     DataSourceViewModel.prototype.toggleExpanded = function() {

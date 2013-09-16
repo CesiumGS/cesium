@@ -229,7 +229,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
 .cesium-dataSourceBrowser-item-remove {
     display: block;
     position: absolute;
-    top: 0;
+    top: 1px;
     right: -40px;
     padding: 0 10px;
     font-size: 18px;
@@ -240,6 +240,16 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     background-color: #650;
     border-color: #ff0;
     color: #ff0;
+}
+
+.cesium-dataSourceBrowser-item-clock {
+    display: block;
+    position: absolute;
+    top: 1px;
+    right: 0;
+    padding: 0 10px;
+    font-size: 11px;
+    line-height: 16px;
 }
 
 .cesium-dataSourceBrowser-dataSource {

@@ -44,6 +44,7 @@ define([
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._onObjectSelected = new Event();
+        this._onClockSelected = new Event();
         this._maxHeight = 500;
 
         this._addDataSourceCommand = createCommand(function() {
@@ -60,6 +61,12 @@ define([
          */
         this.addDataSourceTooltip = 'Add Data Source';
 
+        /**
+         * Gets or sets the visibility of the Data Source Browser panel.  This can be hidden and revealed
+         * by the user with a button.
+         *
+         * @type Boolean
+         */
         this.visible = true;
 
         this._dataSourceViewModels = [];
@@ -76,6 +83,20 @@ define([
                 selectedViewModel(value);
                 if (defined(value) && defined(value.dynamicObject)) {
                     that._onObjectSelected.raiseEvent(value.dynamicObject);
+                }
+            }
+        });
+
+        this.clockTrackedDataSource = undefined;
+        var clockTrackViewModel = knockout.observable();
+        knockout.defineProperty(this, 'clockTrackedDataSource', {
+            get : function() {
+                return clockTrackViewModel();
+            },
+            set : function(value) {
+                clockTrackViewModel(value);
+                if (defined(value)) {
+                    that._onClockSelected.raiseEvent(value);
                 }
             }
         });
@@ -125,6 +146,18 @@ define([
         onObjectSelected : {
             get : function() {
                 return this._onObjectSelected;
+            }
+        },
+
+        /**
+         * Gets an event that will be raised when a data source's clock icon is selected.
+         * @memberof DataSourceBrowserViewModel.prototype
+         *
+         * @type {Event}
+         */
+        onClockSelected : {
+            get : function() {
+                return this._onClockSelected;
             }
         },
 
