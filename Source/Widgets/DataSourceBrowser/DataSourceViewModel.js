@@ -65,5 +65,9 @@ define([
         this.expanded = !this.expanded;
     };
 
+    DataSourceViewModel.prototype.remove = function() {
+        this.rootViewModel.dataSources.remove(this.dataSource);
+    };
+
     return DataSourceViewModel;
 });

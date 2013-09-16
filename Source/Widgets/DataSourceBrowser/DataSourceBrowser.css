@@ -186,6 +186,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item {
 
 .cesium-dataSourceBrowser-item {
     display: block;
+    position: relative;
     background-color: transparent;
     border: 1px solid transparent;
     color: #d9eded;
@@ -212,6 +213,26 @@ li:nth-child(odd) > .cesium-dataSourceBrowser-item:hover,
 li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     background-color: rgba(68, 136, 187, 0.5);  /* RGB is #48b */
     box-shadow: 0 0 5px #48b;
+}
+
+.cesium-dataSourceBrowser-item-remove {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: -40px;
+    padding: 0 10px;
+    font-size: 18px;
+    line-height: 16px;
+}
+
+.cesium-dataSourceBrowser-item-remove:hover {
+    background-color: #650;
+    border-color: #ff0;
+    color: #ff0;
+}
+
+.cesium-dataSourceBrowser-dataSource {
+    margin-right: 40px;
 }
 
 .cesium-dataSourceBrowser-layerButton {

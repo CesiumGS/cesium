@@ -46,7 +46,7 @@ define([
 css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         element.appendChild(layerButton);
 
-        // This is the template for a single data source and its contents.
+        // This is the template for the contents of a single data source.
         var templateID = 'cesium-dataSourceBrowser-template-' + createGuid();
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
@@ -54,14 +54,16 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         templateElement.textContent = '<li>\
 <!-- ko if: hasChildren -->\
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
-<span data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item\': true, \
+<span class="cesium-dataSourceBrowser-item" \
+    data-bind="click: toggleExpanded, css: { \
     \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <span data-bind="html: expandIndicator"></span>\
     <span data-bind="text: name"></span></span>\
 <ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
-<span data-bind="text: name, click: select, css: { \'cesium-dataSourceBrowser-item\': true, \
+<span class="cesium-dataSourceBrowser-item" \
+    data-bind="text: name, click: select, css: { \
     \'cesium-dataSourceBrowser-item-selected\': isSelected }"></span>\
 <!-- /ko -->';
         element.appendChild(templateElement);
@@ -96,7 +98,7 @@ attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
         dataSourcesContainerHeader.appendChild(addDataSourceButton);
 
-        // This is a height-limited container for the list of data sources.
+        // This is the container for the complete list of data sources.
         var dataSourcesContainerBody = document.createElement('div');
         dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
         dataSourcesContainerBody.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(45) }');
@@ -111,9 +113,33 @@ click: addDataSourceCommand');
         // The root UL of the actual list of data sources, that uses the template.
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
-        dataSourcesRootElement.setAttribute('data-bind', '\
-template: { name: "' + templateID + '", foreach: dataSourceViewModels }');
+        dataSourcesRootElement.setAttribute('data-bind', 'foreach: dataSourceViewModels');
         dataSourcesContainerBody.appendChild(dataSourcesRootElement);
+
+        // The template LI of a prototype data source.
+        var dataSourceListItem = document.createElement('li');
+        dataSourceListItem.innerHTML = '\
+<!-- ko if: hasChildren -->\
+<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
+<span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
+    data-bind="click: toggleExpanded, css: { \
+    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <span data-bind="html: expandIndicator"></span>\
+    <span data-bind="text: name"></span>\
+    <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
+    data-bind="click: remove">&times;</span></span>\
+<ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\
+<!-- /ko -->\
+<!-- ko ifnot: hasChildren -->\
+<span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
+    data-bind="text: name, click: select, css: { \
+    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
+    data-bind="click: remove">&times;</span></span>\
+<!-- /ko -->';
+        dataSourcesRootElement.appendChild(dataSourceListItem);
+
+        // === Add Data Source Panel ===
 
         // The root of the panel that adds new data sources.
         var dataSourcePanelContainer = document.createElement('div');
@@ -134,8 +160,6 @@ css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourceP
         dataSourceOptions.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions';
         dataSourceOptions.setAttribute('data-bind', '\
 foreach: dataSourcePanels');
-        //foreach: dataSourcePanelViewModel.dataSourcePanels');
-        //dataSourcesToolbar.appendChild(dataSourceOptions);
         dataSourcePanelContainer.appendChild(dataSourceOptions);
 
         // Prototype button for adding a data source.
@@ -145,9 +169,6 @@ text : "+ " + description,\
 css: { "cesium-dataSourceBrowser-button" : true, \
        "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
 click: function($data) { $parent.activeDataSourcePanel = $data }');
-        //        css: { "cesium-dataSourceBrowser-button" : true, \
-        //               "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.dataSourcePanelViewModel.activeDataSourcePanel },\
-        //        click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $parent.dataSourcePanelViewModel.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
 
         // Panel for options of data source being added.
