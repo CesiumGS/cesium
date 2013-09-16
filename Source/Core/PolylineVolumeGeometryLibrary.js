@@ -331,12 +331,11 @@ define([
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, surfaceNormal, cornerDirection);
                 cornerDirection = Cartesian3.cross(surfaceNormal, cornerDirection, cornerDirection);
-                var scalar = width / Math.max(0.25, (Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1))));
+                cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
+                var scalar = 1 / Math.max(0.25, (Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1))));
                 var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
-                cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);
-                var ratio = scalar / width;
                 if (leftIsOutside) {
-                    pivot = Cartesian3.add(position, cornerDirection, pivot);
+                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar*width, cornerDirection), pivot);
                     start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, width, start), start);
                     scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
@@ -350,11 +349,11 @@ define([
                         computeRoundCorner(pivot, start, end, cornerType, leftIsOutside, ellipsoid, finalPositions, shapeForSides, h1 + heightOffset, duplicatePoints);
                     } else {
                         cornerDirection = Cartesian3.negate(cornerDirection, cornerDirection);
-                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, h1 + heightOffset, ratio, repeat);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, h1 + heightOffset, scalar, repeat);
                     }
                     previousPosition = Cartesian3.clone(end, previousPosition);
                 } else {
-                    pivot = Cartesian3.add(position, cornerDirection, pivot);
+                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar*width, cornerDirection), pivot);
                     start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, -width, start), start);
                     scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
@@ -367,7 +366,7 @@ define([
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         computeRoundCorner(pivot, start, end, cornerType, leftIsOutside, ellipsoid, finalPositions, shapeForSides, h1 + heightOffset, duplicatePoints);
                     } else {
-                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, h1 + heightOffset, ratio, repeat);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, h1 + heightOffset, scalar, repeat);
                     }
                     previousPosition = Cartesian3.clone(end, previousPosition);
                 }
