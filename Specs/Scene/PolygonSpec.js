@@ -274,7 +274,7 @@ defineSuite([
         polygon = createPolygon();
 
         var pickedObject = pick(context, frameState, polygon, 0, 0);
-        expect(pickedObject).toEqual(polygon);
+        expect(pickedObject.primitive).toEqual(polygon);
     });
 
     it('is not picked (show === false)', function() {

@@ -36,12 +36,30 @@ define([
     function getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
         var key = '';
         key += textureCount;
-        key += applyBrightness ? '_brightness' : '';
-        key += applyContrast ? '_contrast' : '';
-        key += applyHue ? '_hue' : '';
-        key += applySaturation ? '_saturation' : '';
-        key += applyGamma ? '_gamma' : '';
-        key += applyAlpha ? '_alpha' : '';
+
+        if (applyBrightness) {
+            key += '_brightness';
+        }
+
+        if (applyContrast) {
+            key += '_contrast';
+        }
+
+        if (applyHue) {
+            key += '_hue';
+        }
+
+        if (applySaturation) {
+            key += '_saturation';
+        }
+
+        if (applyGamma) {
+            key += '_gamma';
+        }
+
+        if (applyAlpha) {
+            key += '_alpha';
+        }
 
         return key;
     }
@@ -72,12 +90,12 @@ define([
                     '   textureCoordinates,\n' +
                     '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +
-                    '   u_dayTextureAlpha[' + i + '],\n' +
-                    '   u_dayTextureBrightness[' + i + '],\n' +
-                    '   u_dayTextureContrast[' + i + '],\n' +
-                    '   u_dayTextureHue[' + i + '],\n' +
-                    '   u_dayTextureSaturation[' + i + '],\n' +
-                    '   u_dayTextureOneOverGamma[' + i + ']);\n';
+                    (applyAlpha ?      '   u_dayTextureAlpha[' + i + '],\n' : '1.0,\n') +
+                    (applyBrightness ? '   u_dayTextureBrightness[' + i + '],\n' : '0.0,\n') +
+                    (applyContrast ?   '   u_dayTextureContrast[' + i + '],\n' : '0.0,\n') +
+                    (applyHue ?        '   u_dayTextureHue[' + i + '],\n' : '0.0,\n') +
+                    (applySaturation ? '   u_dayTextureSaturation[' + i + '],\n' : '0.0,\n') +
+                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + ']);\n' : '0.0);\n') ;
             }
 
             fs +=

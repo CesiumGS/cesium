@@ -137,9 +137,7 @@ define([
          *
          * @type Boolean
          *
-         * @default true
-         *
-         * @private
+         * @default false
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
 
@@ -301,7 +299,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
-                    id : this
+                    pickPrimitive : this
                 });
             } else {
                 instance = new GeometryInstance({
@@ -313,7 +311,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
-                    id : this
+                    pickPrimitive : this
                 });
             }
 

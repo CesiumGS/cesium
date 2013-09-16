@@ -36,7 +36,7 @@
     left: 0;
     top: 0;
     overflow: hidden;
-    /*border: solid 1px #888;*/
+    cursor: pointer;
     width: 100%;
     height: 1.7em;
     background-color: #fafafa;
@@ -70,7 +70,6 @@
     white-space: nowrap;
     font-size: 80%;
     color: #eee;
-    cursor: default;
 }
 
 .cesium-timeline-ticMain {

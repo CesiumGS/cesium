@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -29,6 +30,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         destroyObject,
         Matrix4,
@@ -322,44 +324,57 @@ define([
         });
     }
 
+    var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
+
     function createColumbusViewShader(primitive, vertexShaderSource) {
-        var attributes;
-        if (!primitive._allow3DOnly) {
-            attributes =
-                'attribute vec3 position2DHigh;\n' +
-                'attribute vec3 position2DLow;\n';
-        } else {
-            attributes = '';
+        var match;
+
+        var forwardDecl = '';
+        var attributes = '';
+        var computeFunctions = '';
+
+        while ((match = positionRegex.exec(vertexShaderSource)) !== null) {
+            var name = match[1];
+
+            var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
+            forwardDecl += functionName + ';\n';
+
+            if (!primitive._allow3DOnly) {
+                attributes +=
+                    'attribute vec3 ' + name + '2DHigh;\n' +
+                    'attribute vec3 ' + name + '2DLow;\n';
+
+                computeFunctions +=
+                    functionName + '\n' +
+                    '{\n' +
+                    '    vec4 p;\n' +
+                    '    if (czm_morphTime == 1.0)\n' +
+                    '    {\n' +
+                    '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                    '    }\n' +
+                    '    else if (czm_morphTime == 0.0)\n' +
+                    '    {\n' +
+                    '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                    '    }\n' +
+                    '    else\n' +
+                    '    {\n' +
+                    '        p = czm_columbusViewMorph(\n' +
+                    '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                    '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                    '                czm_morphTime);\n' +
+                    '    }\n' +
+                    '    return p;\n' +
+                    '}\n\n';
+            } else {
+                computeFunctions +=
+                    functionName + '\n' +
+                    '{\n' +
+                    '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                    '}\n\n';
+            }
         }
 
-        var computePosition =
-            '\nvec4 czm_computePosition()\n' +
-            '{\n';
-        if (!primitive._allow3DOnly) {
-            computePosition +=
-                '    vec4 p;\n' +
-                '    if (czm_morphTime == 1.0)\n' +
-                '    {\n' +
-                '        p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
-                '    }\n' +
-                '    else if (czm_morphTime == 0.0)\n' +
-                '    {\n' +
-                '        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
-                '    }\n' +
-                '    else\n' +
-                '    {\n' +
-                '        p = czm_columbusViewMorph(\n' +
-                '                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
-                '                czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
-                '                czm_morphTime);\n' +
-                '    }\n' +
-                '    return p;\n';
-        } else {
-            computePosition += '    return czm_translateRelativeToEye(position3DHigh, position3DLow);\n';
-        }
-        computePosition += '}\n\n';
-
-        return attributes + vertexShaderSource + computePosition;
+        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -415,6 +430,27 @@ define([
         }
     }
 
+    function createPickIds(context, primitive, instances) {
+        var pickColors = [];
+        var length = instances.length;
+
+        for (var i = 0; i < length; ++i) {
+            var pickObject = {
+                primitive : defaultValue(instances[i].pickPrimitive, primitive)
+            };
+
+            if (defined(instances[i].id)) {
+                pickObject.id = instances[i].id;
+            }
+
+            var pickId = context.createPickId(pickObject);
+            primitive._pickIds.push(pickId);
+            pickColors.push(pickId.color);
+        }
+
+        return pickColors;
+    }
+
     var taskProcessor = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
 
     /**
@@ -445,8 +481,6 @@ define([
         var instances;
         var clonedInstances;
         var geometries;
-        var pickColors;
-        var pickId;
 
         var that = this;
 
@@ -504,17 +538,10 @@ define([
                     var transferableObjects = [];
                     PrimitivePipeline.transferInstances(clonedInstances, transferableObjects);
 
-                    pickColors = [];
-                    for (i = 0; i < length; ++i) {
-                        pickId = context.createPickId(defaultValue(instances[i].id, this));
-                        this._pickIds.push(pickId);
-                        pickColors.push(pickId.color);
-                    }
-
                     promise = taskProcessor.scheduleTask({
                         task : 'combineGeometry',
                         instances : clonedInstances,
-                        pickIds : pickColors,
+                        pickIds : createPickIds(context, this, instances),
                         ellipsoid : projection.getEllipsoid(),
                         isGeographic : projection instanceof GeographicProjection,
                         elementIndexUintSupported : context.getElementIndexUint(),
@@ -570,16 +597,9 @@ define([
                     clonedInstances[index] = cloneInstance(instances[index], geometry.geometry);
                 }
 
-                pickColors = [];
-                for (i = 0; i < length; ++i) {
-                    pickId = context.createPickId(defaultValue(instances[i].id, this));
-                    this._pickIds.push(pickId);
-                    pickColors.push(pickId.color);
-                }
-
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
-                    pickIds : pickColors,
+                    pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
                     isGeographic : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
@@ -878,14 +898,21 @@ define([
 
         var perInstanceAttributes = this._perInstanceAttributeIndices[index];
         var attributes = {};
+        var properties = {};
+        var hasProperties = false;
 
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
-                Object.defineProperty(attributes, name, {
+                hasProperties = true;
+                properties[name] = {
                     get : createGetFunction(name, perInstanceAttributes),
                     set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
-                });
+                };
             }
+        }
+
+        if (hasProperties) {
+            defineProperties(attributes, properties);
         }
 
         this._lastPerInstanceAttributeIndex = index;
