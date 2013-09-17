@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         '../../Core/createGuid',
         '../../Core/defined',
