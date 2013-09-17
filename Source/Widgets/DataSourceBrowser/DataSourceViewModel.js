@@ -57,6 +57,18 @@ define([
         },
 
         /**
+         * True if this is the only data source loaded.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Boolean}
+         */
+        isSoleSource : {
+            get : function() {
+                return this.dataSource && this.rootViewModel.dataSourcesLength === 1 &&
+                    this.rootViewModel.dataSources.get(0) === this.dataSource;
+            }
+        },
+
+        /**
          * Gets the {@link DataSource} that contains this item.
          * @memberof DataSourceViewModel.prototype
          * @type {DataSource}

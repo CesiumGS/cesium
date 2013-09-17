@@ -50,7 +50,7 @@
 .cesium-dataSourceBrowser-button-disabled:active {
     background: #303336;
     border-color: #444;
-    color: #888;
+    color: #646464;
     box-shadow: none;
     cursor: default;
 }
@@ -250,6 +250,15 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     padding: 0 10px;
     font-size: 11px;
     line-height: 16px;
+}
+
+.cesium-dataSourceBrowser-clock-selected {
+    border-color: #2e2;
+    color: #2e2;
+}
+
+.cesium-dataSourceBrowser-clock-hidden {
+    display: none;
 }
 
 .cesium-dataSourceBrowser-dataSource {

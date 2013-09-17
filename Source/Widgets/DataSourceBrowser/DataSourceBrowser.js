@@ -128,7 +128,8 @@ click: addDataSourceCommand');
     <span data-bind="text: name"></span>\
     <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
     data-bind="click: function () { toggleExpanded(); trackClock(); }, \
-    css: { \'cesium-dataSourceBrowser-item-selected\': clockTracking }">clock</span>\
+    css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking, \
+    \'cesium-dataSourceBrowser-clock-hidden\': isSoleSource && clockTracking }">clock</span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
     data-bind="click: remove">&times;</span></span>\
 <ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\

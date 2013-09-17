@@ -70,8 +70,10 @@ define([
         this.visible = true;
 
         this._dataSourceViewModels = [];
+        this._dataSourcesLength = 0;
 
-        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels', '_maxHeight', 'visible']);
+        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels',
+                              '_maxHeight', 'visible', '_dataSourcesLength']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -173,6 +175,17 @@ define([
         },
 
         /**
+         * Gets the number of data sources.  This is an observable copy of dataSources.getLength().
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {Number}
+         */
+        dataSourcesLength : {
+            get : function() {
+                return this._dataSourcesLength;
+            }
+        },
+
+        /**
          * Gets or sets the maximum height of the widget in pixels.
          * @memberof DataSourceBrowserViewModel.prototype
          * @type {Number}
@@ -237,6 +250,7 @@ define([
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);
+        this._dataSourcesLength = this.dataSources.getLength();
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
@@ -245,6 +259,7 @@ define([
             var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel.dataSource === dataSource) {
                 dataSourceViewModels.splice(i, 1);
+                this._dataSourcesLength = this.dataSources.getLength();
                 return;
             }
         }
