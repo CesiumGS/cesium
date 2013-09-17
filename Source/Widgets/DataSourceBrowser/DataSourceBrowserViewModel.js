@@ -48,7 +48,6 @@ define([
         this._maxHeight = 500;
 
         this._addDataSourceCommand = createCommand(function() {
-            that._dataSourcePanelViewModel.activeDataSourcePanel = undefined;
             that._dataSourcePanelViewModel.visible = true;
         });
 

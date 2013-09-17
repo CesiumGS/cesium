@@ -62,7 +62,6 @@ define([
             when(that.activeDataSourcePanel.finish(that._dataSourceBrowserViewModel.dataSources), function(result) {
                 finishing(false);
                 if (result) {
-                    that.activeDataSourcePanel = undefined;
                     that.visible = false;
                 }
             }, function(err) {
@@ -75,7 +74,6 @@ define([
 
         this._cancelCommand = createCommand(function() {
             that.error = '';
-            that.activeDataSourcePanel = undefined;
             that.visible = false;
         }, knockout.computed(function() {
             return !finishing();
