@@ -40,6 +40,7 @@ if (defined(p) && defined(p.primitive)) {
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
+* Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
   
 ### b20 - 2013-09-03
 
