@@ -343,3 +343,15 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     color: #2e2;
     border-color: #2e2;
 }
+
+.cesium-dataSourceBrowser-list-loading {
+    display: block;
+    position: relative;
+    left: 50%;
+    margin-left: -33px;
+    width: 66px;
+    height: 66px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../Images/ajax-loader.gif);
+}

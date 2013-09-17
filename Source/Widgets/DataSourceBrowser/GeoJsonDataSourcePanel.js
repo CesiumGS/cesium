@@ -26,7 +26,7 @@ define([
     var GeoJsonDataSourcePanel = function() {
         this._viewModel = new GeoJsonDataSourcePanelViewModel();
 
-        this._templateID = 'cesium-dataSourceBrowser-czmlDataSourcePanel-template-' + createGuid();
+        this._templateID = 'cesium-dataSourceBrowser-geoJsonDataSourcePanel-template-' + createGuid();
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
         templateElement.id = this._templateID;

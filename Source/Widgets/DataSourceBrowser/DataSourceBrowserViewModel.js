@@ -250,6 +250,7 @@ define([
 
         this._dataSourceViewModels.push(dataSourceViewModel);
         this._dataSourcesLength = this.dataSources.getLength();
+        this.clockTrackedDataSource = dataSource;
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {

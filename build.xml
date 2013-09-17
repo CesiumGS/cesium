@@ -15,7 +15,7 @@
 		</createSpecList>
 
 		<createGalleryList output="${viewerGalleryDirectory}/gallery-index.js">
-			<demos dir="${viewerGalleryDirectory}" includes="**/*.czml,**/*.json" />
+			<demos dir="${viewerGalleryDirectory}" includes="**/*.czml" />
 		</createGalleryList>
 
 		<createGalleryList output="${sandcastleGalleryDirectory}/gallery-index.js">

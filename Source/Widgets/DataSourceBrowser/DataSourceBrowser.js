@@ -179,7 +179,7 @@ click: function($data) { $parent.activeDataSourcePanel = $data }');
         var activeDataSourcePanelContainer = document.createElement('div');
         activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
-style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(45) },\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(85) },\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
              data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');
