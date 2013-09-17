@@ -4,6 +4,7 @@ define([
         './defined',
         './DeveloperError',
         './Math',
+        './Cartesian2',
         './Cartesian3',
         './Quaternion',
         './Matrix3'
@@ -12,12 +13,13 @@ define([
         defined,
         DeveloperError,
         CesiumMath,
+        Cartesian2,
         Cartesian3,
         Quaternion,
         Matrix3) {
     "use strict";
 
-    function _computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+    function computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                      thetaPts, thetaPtsIndex, offset, clockDir, ellipsePts, ellipsePtsIndex, numPts) {
         var angle;
         var theta;
@@ -212,21 +214,44 @@ define([
 
             var ellipsePts = [];
 
-            _computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                    thetaPts, 0.0, 0.0, 1, ellipsePts, 0, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                    thetaPts, numQuadrantPts - 1, Math.PI, -1, ellipsePts, numQuadrantPts - 1, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                    thetaPts, 0.0, Math.PI, 1, ellipsePts, (2 * numQuadrantPts) - 2, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            computeEllipseQuadrant(ellipsoid, surfPos.magnitude(), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
                                    thetaPts, numQuadrantPts - 1, CesiumMath.TWO_PI, -1, ellipsePts, (3 * numQuadrantPts) - 3, numQuadrantPts);
 
             ellipsePts.push(ellipsePts[0].clone()); // Duplicates first and last point for polyline
 
             return ellipsePts;
+        },
+
+        /**
+         * Computes a 2D circle about the origin.
+         *
+         * @param {Number} [radius = 1.0] The radius of the circle
+         *
+         * @returns The set of points that form the ellipse's boundary.
+         *
+         * @example
+         * var circle = Shapes.compute2DCircle(100000.0);
+         */
+        compute2DCircle : function(radius) {
+            if (!defined(radius)) {
+                radius = 1.0;
+            }
+            var positions = [];
+            var theta = CesiumMath.toRadians(1.0);
+            var posCount = Math.PI*2/theta;
+            for (var i = 0; i < posCount; i++) {
+                positions.push(new Cartesian2(radius * Math.cos(theta * i), radius * Math.sin(theta * i)));
+            }
+            return positions;
         }
     };
 

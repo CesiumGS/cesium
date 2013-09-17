@@ -113,22 +113,12 @@ define([
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
      * @example
-     * function computeCirclePositions(radius) {
-     *     var positions = [];
-     *     var theta = CesiumMath.toRadians(1.0);
-     *     var posCount = Math.PI*2/theta;
-     *     for (var i = 0; i < posCount; i++) {
-     *         positions.push(new Cartesian2(radius * Math.cos(theta * i), radius * Math.sin(theta * i)));
-     *     }
-     *     return positions;
-     * }
-     *
      * var volumeOutline = new PolylineVolumeOutlineGeometry({
      *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0)
      *     ]),
-     *     shapePositions : circlePositions(10000.0)
+     *     shapePositions : Shapes.compute2DCircle(100000.0)
      * });
      */
     var PolylineVolumeOutlineGeometry = function(options) {

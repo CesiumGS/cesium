@@ -919,28 +919,15 @@ require(['Cesium'], function(Cesium) {
     }
 
     positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-90.0, 10.0),
-        Cesium.Cartographic.fromDegrees(-95.0, 15.0),
-        Cesium.Cartographic.fromDegrees(-100.0, 15.0)
+        Cesium.Cartographic.fromDegrees(-102.0, 15.0, 100000.0),
+        Cesium.Cartographic.fromDegrees(-105.0, 20.0, 200000.0),
+        Cesium.Cartographic.fromDegrees(-110.0, 20.0, 100000.0)
     ]);
-
-    var polylineVolume = new Cesium.GeometryInstance({
-        geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : positions,
-            vertexFormat : Cesium.VertexFormat.ALL,
-            shapePositions : starPositions(7, 30000, 20000)
-        }),
-        attributes : {
-            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
-        }
-    });
-    height = 300000;
     var polylineVolumeFill = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
             polylinePositions : positions,
-            vertexFormat : Cesium.VertexFormat.ALL,
-            shapePositions : starPositions(7, 30000, 20000),
-            height : height
+                        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions : starPositions(7, 30000.0, 20000.0)
         }),
         attributes : {
             color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
@@ -950,8 +937,37 @@ require(['Cesium'], function(Cesium) {
     var polylineVolumeOutline = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeOutlineGeometry({
             polylinePositions : positions,
-            shapePositions : starPositions(7, 30000, 20000),
-            height : height
+            shapePositions : starPositions(7, 30000.0, 20000.0)
+        }),
+        attributes : {
+            color : solidWhite
+        }
+    });
+
+    var polylineVolume = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolylineVolumeGeometry({
+            polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-102.0, 15.0),
+                Cesium.Cartographic.fromDegrees(-105.0, 20.0),
+                Cesium.Cartographic.fromDegrees(-110.0, 20.0)
+            ]),
+                        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions : starPositions(7, 30000, 20000)
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+        }
+    });
+
+    var tubeGeometry = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolylineVolumeGeometry({
+            polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-104.0, 13.0),
+                Cesium.Cartographic.fromDegrees(-107.0, 18.0),
+                Cesium.Cartographic.fromDegrees(-112.0, 18.0)
+            ]),
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            shapePositions : Cesium.Shapes.compute2DCircle(40000.0)
         }),
         attributes : {
             color : solidWhite
@@ -959,7 +975,7 @@ require(['Cesium'], function(Cesium) {
     });
 
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [polylineVolume, polylineVolumeFill],
+        geometryInstances : [tubeGeometry, polylineVolume, polylineVolumeFill],
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : false,
             closed : true
