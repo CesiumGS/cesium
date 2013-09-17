@@ -701,6 +701,7 @@ define([
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} transform is required.
      */
+    var radiusScratch = new Cartesian3();
     BoundingSphere.transform = function(sphere, transform, result) {
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
@@ -716,8 +717,12 @@ define([
 
         Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
 
-        Cartesian3.clone(transformCart4, result.center);
-        result.radius = sphere.radius;
+        result.center = Cartesian3.clone(transformCart4, result.center);
+        var r = Cartesian3.magnitude(Matrix4.getColumn(transform, 0, radiusScratch));
+        r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 1, radiusScratch)));
+        r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 2, radiusScratch)));
+        result.radius = r;
+
         return result;
     };
 
