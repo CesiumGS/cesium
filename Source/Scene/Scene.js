@@ -131,7 +131,7 @@ define([
 
         this._shaderFrameCount = 0;
 
-        this._sunPostProcess = new SunPostProcess();
+        this._sunPostProcess = undefined;
 
         this._commandList = [];
         this._frustumCommandsList = [];
@@ -171,6 +171,15 @@ define([
          * @default undefined
          */
         this.sun = undefined;
+
+        /**
+         * Uses a bloom filter on the sun when enabled.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.sunBloom = true;
+        this._sunBloom = undefined;
 
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
@@ -378,7 +387,7 @@ define([
         frameState.frameNumber = frameNumber;
         frameState.time = time;
         frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = undefined;
         frameState.canvasDimensions.x = scene._canvas.clientWidth;
         frameState.canvasDimensions.y = scene._canvas.clientHeight;
@@ -388,7 +397,7 @@ define([
         var cb = scene._primitives.getCentralBody();
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.positionWC);
             frameState.occluder = occluder;
         }
 
@@ -464,8 +473,8 @@ define([
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
 
-        var direction = camera.getDirectionWC();
-        var position = camera.getPositionWC();
+        var direction = camera.directionWC;
+        var position = camera.positionWC;
 
         if (scene.debugShowFrustums) {
             scene.debugFrustumStatistics = {
@@ -661,12 +670,25 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
+        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
+            if (scene.sunBloom) {
+                scene._sunPostProcess = new SunPostProcess();
+            } else {
+                scene._sunPostProcess = scene._sunPostProcess.destroy();
+            }
+
+            scene._sunBloom = scene.sunBloom;
+        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
+            scene._sunPostProcess = scene._sunPostProcess.destroy();
+            scene._sunBloom = false;
+        }
+
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         }
 
@@ -674,7 +696,7 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
         }
 
@@ -694,8 +716,11 @@ define([
 
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
-            scene._sunPostProcess.execute(context);
-            passState.framebuffer = undefined;
+
+            if (scene.sunBloom) {
+                scene._sunPostProcess.execute(context);
+                passState.framebuffer = undefined;
+            }
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -781,6 +806,7 @@ define([
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
+        context.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -812,7 +838,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.getDirectionWC(), camera.getUpWC());
+        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
@@ -846,7 +872,7 @@ define([
         offCenter.near = near;
         offCenter.far = frustum.far;
 
-        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
     function getPickCullingVolume(scene, windowPosition, width, height) {
@@ -864,14 +890,15 @@ define([
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
-     * Returns the first (top) primitive in the scene at a particular window coordinate or undefined
-     * if nothing is at the location.
+     * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+     * at a particular window coordinate or undefined if nothing is at the location. Other properties may
+     * potentially be set depending on the type of primitive.
      *
      * @memberof Scene
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
-     * @returns {Object} Picked primitive.
+     * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      *
@@ -903,18 +930,22 @@ define([
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
-        return this._pickFramebuffer.end(scratchRectangle);
+        var object = this._pickFramebuffer.end(scratchRectangle);
+        context.endFrame();
+        return object;
     };
 
     /**
-     * Returns a list of primitives at a particular window coordinate position. The primitives in the list are ordered
-     * by their visual order in the scene (front to back).
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive. The primitives in the list are ordered by their visual order in the
+     * scene (front to back).
      *
      * @memberof Scene
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
-     * @returns {Array} Array of picked primitives.
+     * @returns {Array} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      *
@@ -929,11 +960,12 @@ define([
             throw new DeveloperError('windowPosition is undefined.');
         }
 
-        var pickedPrimitives = [];
+        var pickedObjects = [];
 
-        var primitive = this.pick(windowPosition);
-        while (defined(primitive)) {
-            pickedPrimitives.push(primitive);
+        var pickedResult = this.pick(windowPosition);
+        while (defined(pickedResult) && defined(pickedResult.primitive)) {
+            var primitive = pickedResult.primitive;
+            pickedObjects.push(pickedResult);
 
             // hide the picked primitive and call picking again to get the next primitive
             if (typeof primitive.setShow === 'function') {
@@ -947,24 +979,25 @@ define([
                 }
             }
 
-            primitive = this.pick(windowPosition);
+            pickedResult = this.pick(windowPosition);
         }
 
         // unhide the picked primitives
-        for ( var i = 0; i < pickedPrimitives.length; ++i) {
-            if (typeof pickedPrimitives[i].setShow === 'function') {
-                pickedPrimitives[i].setShow(true);
-            } else if (defined(primitive.show)) {
-                pickedPrimitives[i].show = true;
-            } else if (defined(primitive.primitive) && defined(primitive.id)) {
-                var attr = primitive.primitive.getGeometryInstanceAttributes(primitive.id);
+        for ( var i = 0; i < pickedObjects.length; ++i) {
+            var p = pickedObjects[i].primitive;
+            if (typeof p.setShow === 'function') {
+                p.setShow(true);
+            } else if (defined(p.show)) {
+                p.show = true;
+            } else if (defined(p.primitive) && defined(p.id)) {
+                var attr = p.primitive.getGeometryInstanceAttributes(p.id);
                 if (defined(attr) && defined(attr.show)) {
                     attr.show = ShowGeometryInstanceAttribute.toValue(true);
                 }
             }
         }
 
-        return pickedPrimitives;
+        return pickedObjects;
     };
 
     /**

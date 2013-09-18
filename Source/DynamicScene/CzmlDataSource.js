@@ -252,9 +252,10 @@ define([
     }
 
     function unwrapInterval(type, czmlInterval, sourceUri) {
+        /*jshint sub:true*/
         switch (type) {
         case Boolean:
-            return defaultValue(czmlInterval.boolean, czmlInterval);
+            return defaultValue(czmlInterval['boolean'], czmlInterval);
         case Cartesian2:
             return czmlInterval.cartesian2;
         case Cartesian3:
@@ -268,9 +269,9 @@ define([
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Number:
-            return defaultValue(czmlInterval.number, czmlInterval);
+            return defaultValue(czmlInterval['number'], czmlInterval);
         case String:
-            return defaultValue(czmlInterval.string, czmlInterval);
+            return defaultValue(czmlInterval['string'], czmlInterval);
         case Quaternion:
             return czmlInterval.unitQuaternion;
         case VerticalOrigin:
