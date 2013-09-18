@@ -15,6 +15,7 @@ Beta Releases
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
 
 ### b20 - 2013-09-03
 
