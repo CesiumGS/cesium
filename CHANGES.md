@@ -41,6 +41,7 @@ if (defined(p) && defined(p.primitive)) {
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
+* Added a new `GeocodingWidget` that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer`.
   
 ### b20 - 2013-09-03
 
