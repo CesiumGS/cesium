@@ -129,7 +129,7 @@ defineSuite([
     it('conjugate works without a result parameter', function() {
         var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        var returnedResult = quaternion.conjugate();
+        var returnedResult = Quaternion.conjugate(quaternion);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -137,17 +137,9 @@ defineSuite([
         var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var result = new Quaternion();
-        var returnedResult = quaternion.conjugate(result);
+        var returnedResult = Quaternion.conjugate(quaternion, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
-    });
-
-    it('conjugate works with "this" result parameter', function() {
-        var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
-        var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        var returnedResult = quaternion.conjugate(quaternion);
-        expect(quaternion).toBe(returnedResult);
-        expect(quaternion).toEqual(expected);
     });
 
     it('magnitudeSquared computes correct result', function() {

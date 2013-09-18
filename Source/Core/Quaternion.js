@@ -262,7 +262,7 @@ define([
      */
     Quaternion.convertPackedArrayForInterpolation = function(packedArray, startingIndex, lastIndex, result) {
         Quaternion.unpack(packedArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
-        sampledQuaternionQuaternion0Conjugate.conjugate(sampledQuaternionQuaternion0Conjugate);
+        Quaternion.conjugate(sampledQuaternionQuaternion0Conjugate, sampledQuaternionQuaternion0Conjugate);
 
         for ( var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
             var offset = i * 3;
@@ -845,17 +845,6 @@ define([
      */
     Quaternion.prototype.clone = function(result) {
         return Quaternion.clone(this, result);
-    };
-
-    /**
-     * Computes the conjugate of this quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     */
-    Quaternion.prototype.conjugate = function(result) {
-        return Quaternion.conjugate(this, result);
     };
 
     /**
