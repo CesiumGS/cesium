@@ -116,7 +116,9 @@ define([
 
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
-            this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
+            this._pickId = context.createPickId({
+                primitive : defaultValue(this._pickIdThis, this)
+            });
         }
 
         return this._pickId;

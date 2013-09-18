@@ -56,50 +56,6 @@ define([
     };
 
     /**
-     * Creates a Cartesian4 from four consecutive elements in an array.
-     * @memberof Cartesian4
-     *
-     * @param {Array} values The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
-     * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
-     * @exception {DeveloperError} offset + 4 is greater than the length of the array.
-     *
-     * @example
-     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
-     * var v = [1.0, 2.0, 3.0, 4.0];
-     * var p = Cartesian4.fromArray(v);
-     *
-     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
-     * var p2 = Cartesian4.fromArray(v2, 2);
-     */
-    Cartesian4.fromArray = function(values, offset, result) {
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
-
-        if (offset + 4 > values.length) {
-            throw new DeveloperError('offset + 4 is greater than the length of the array.');
-        }
-
-        offset = defaultValue(offset, 0);
-
-        if (!defined(result)) {
-            result = new Cartesian4();
-        }
-
-        result.x = values[offset + 0];
-        result.y = values[offset + 1];
-        result.z = values[offset + 2];
-        result.w = values[offset + 3];
-        return result;
-    };
-
-    /**
      * Creates a Cartesian4 instance from x, y, z and w coordinates.
      * @memberof Cartesian4
      *
@@ -207,6 +163,31 @@ define([
         result.w = array[startingIndex];
         return result;
     };
+
+
+
+    /**
+     * Creates a Cartesian4 from four consecutive elements in an array.
+     * @memberof Cartesian4
+     *
+     * @param {Array} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
+     * var v = [1.0, 2.0, 3.0, 4.0];
+     * var p = Cartesian4.fromArray(v);
+     *
+     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+     * var p2 = Cartesian4.fromArray(v2, 2);
+     */
+    Cartesian4.fromArray = Cartesian4.unpack;
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.

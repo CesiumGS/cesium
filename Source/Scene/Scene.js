@@ -802,6 +802,7 @@ define([
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
+        context.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -911,7 +912,9 @@ define([
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
-        return this._pickFramebuffer.end(scratchRectangle);
+        var object = this._pickFramebuffer.end(scratchRectangle);
+        context.endFrame();
+        return object;
     };
 
     /**

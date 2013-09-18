@@ -22,8 +22,6 @@ defineSuite([
          'Scene/OrthographicFrustum',
          'Specs/render',
          'Specs/pick',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -50,8 +48,6 @@ defineSuite([
          OrthographicFrustum,
          render,
          pick,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
@@ -509,12 +505,16 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual('extent1');
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual('extent1');
 
         frameState.camera.controller.viewExtent(extent2);
         us.update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual('extent2');
+        pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual('extent2');
 
         primitive = primitive && primitive.destroy();
     });
