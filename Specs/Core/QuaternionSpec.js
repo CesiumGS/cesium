@@ -145,14 +145,14 @@ defineSuite([
     it('magnitudeSquared computes correct result', function() {
         var expected = 2 * 2 + 3 * 3 + 4 * 4 + 5 * 5;
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var result = quaternion.magnitudeSquared();
+        var result = Quaternion.magnitudeSquared(quaternion);
         expect(result).toEqual(expected);
     });
 
     it('norm computes correct result', function() {
         var expected = Math.sqrt(2 * 2 + 3 * 3 + 4 * 4 + 5 * 5);
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var result = quaternion.magnitude();
+        var result = Quaternion.magnitude(quaternion);
         expect(result).toEqual(expected);
     });
 
@@ -182,7 +182,7 @@ defineSuite([
 
     it('inverse works without a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var magnitudeSquared = quaternion.magnitudeSquared();
+        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var returnedResult = quaternion.inverse();
         expect(returnedResult).toEqual(expected);
@@ -190,7 +190,7 @@ defineSuite([
 
     it('inverse works with a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var magnitudeSquared = quaternion.magnitudeSquared();
+        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var result = new Quaternion();
         var returnedResult = quaternion.inverse(result);
@@ -200,7 +200,7 @@ defineSuite([
 
     it('inverse works with "this" result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var magnitudeSquared = quaternion.magnitudeSquared();
+        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var returnedResult = quaternion.inverse(quaternion);
         expect(returnedResult).toEqual(expected);

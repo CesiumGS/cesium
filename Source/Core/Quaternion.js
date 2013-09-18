@@ -848,26 +848,6 @@ define([
     };
 
     /**
-     * Computes magnitude squared for this quaternion.
-     * @memberof Quaternion
-     *
-     * @returns {Number} The magnitude squared.
-     */
-    Quaternion.prototype.magnitudeSquared = function() {
-        return Quaternion.magnitudeSquared(this);
-    };
-
-    /**
-     * Computes magnitude for this quaternion.
-     * @memberof Quaternion
-     *
-     * @returns {Number} The magnitude.
-     */
-    Quaternion.prototype.magnitude = function() {
-        return Quaternion.magnitude(this);
-    };
-
-    /**
      * Computes the normalized form of this quaternion.
      * @memberof Quaternion
      *
