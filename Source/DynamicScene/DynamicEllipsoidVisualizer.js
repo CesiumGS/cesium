@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Scene/EllipsoidPrimitive',
         '../Scene/Material',
         './MaterialProperty'
@@ -16,6 +17,7 @@ define([
         destroyObject,
         Matrix3,
         Matrix4,
+        Quaternion,
         EllipsoidPrimitive,
         Material,
         MaterialProperty) {
@@ -248,7 +250,7 @@ define([
         if (defined(position) &&
             defined(orientation) &&
             (!position.equals(ellipsoid._visualizerPosition) ||
-             !orientation.equals(ellipsoid._visualizerOrientation))) {
+             !Quaternion.equals(orientation, ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
             ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);

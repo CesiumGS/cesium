@@ -475,27 +475,27 @@ defineSuite([
 
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        expect(quaternion.equals(new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
-        expect(quaternion.equals(new Quaternion(2.0, 2.0, 3.0, 4.0))).toEqual(false);
-        expect(quaternion.equals(new Quaternion(2.0, 1.0, 3.0, 4.0))).toEqual(false);
-        expect(quaternion.equals(new Quaternion(1.0, 2.0, 4.0, 4.0))).toEqual(false);
-        expect(quaternion.equals(new Quaternion(1.0, 2.0, 3.0, 5.0))).toEqual(false);
-        expect(quaternion.equals(undefined)).toEqual(false);
+        expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
+        expect(Quaternion.equals(quaternion, new Quaternion(2.0, 2.0, 3.0, 4.0))).toEqual(false);
+        expect(Quaternion.equals(quaternion, new Quaternion(2.0, 1.0, 3.0, 4.0))).toEqual(false);
+        expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 4.0, 4.0))).toEqual(false);
+        expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 5.0))).toEqual(false);
+        expect(Quaternion.equals(quaternion, undefined)).toEqual(false);
     });
 
     it('equalsEpsilon', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
-        expect(quaternion.equalsEpsilon(new Quaternion(2.0, 2.0, 3.0, 4.0), 0.99999)).toEqual(false);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 3.0, 3.0, 4.0), 0.99999)).toEqual(false);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 4.0, 4.0), 0.99999)).toEqual(false);
-        expect(quaternion.equalsEpsilon(new Quaternion(1.0, 2.0, 3.0, 5.0), 0.99999)).toEqual(false);
-        expect(quaternion.equalsEpsilon(undefined, 1)).toEqual(false);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(2.0, 2.0, 3.0, 4.0), 0.99999)).toEqual(false);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 3.0, 3.0, 4.0), 0.99999)).toEqual(false);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 4.0, 4.0), 0.99999)).toEqual(false);
+        expect(Quaternion.equalsEpsilon(quaternion, new Quaternion(1.0, 2.0, 3.0, 5.0), 0.99999)).toEqual(false);
+        expect(Quaternion.equalsEpsilon(quaternion, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {
