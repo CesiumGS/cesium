@@ -383,7 +383,7 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
         var t = 0.25;
         var expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
-        var result = start.lerp(end, t);
+        var result = Quaternion.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -393,7 +393,7 @@ defineSuite([
         var t = 0.25;
         var result = new Quaternion();
         var expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
-        var returnedResult = start.lerp(end, t, result);
+        var returnedResult = Quaternion.lerp(start, end, t, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
@@ -403,7 +403,7 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
         var t = 0.25;
         var expectedResult = new Quaternion(5.0, 11.0, 12.5, 22.5);
-        var returnedResult = start.lerp(end, t, start);
+        var returnedResult = Quaternion.lerp(start, end, t, start);
         expect(start).toBe(returnedResult);
         expect(start).toEqual(expectedResult);
     });
@@ -413,7 +413,7 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
         var t = 2.0;
         var expectedResult = new Quaternion(12.0, 32.0, 30.0, 40.0);
-        var result = start.lerp(end, t);
+        var result = Quaternion.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -422,7 +422,7 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
         var t = -1.0;
         var expectedResult = new Quaternion(0.0, -4.0, 0.0, 10.0);
-        var result = start.lerp(end, t);
+        var result = Quaternion.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -431,9 +431,9 @@ defineSuite([
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
-        expect(start.slerp(end, 0.0)).toEqual(start);
-        expect(start.slerp(end, 1.0)).toEqual(end);
-        expect(start.slerp(end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+        expect(Quaternion.slerp(start, end, 0.0)).toEqual(start);
+        expect(Quaternion.slerp(start, end, 1.0)).toEqual(end);
+        expect(Quaternion.slerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
     it('slerp works with a result parameter', function() {
@@ -442,7 +442,7 @@ defineSuite([
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
         var result = new Quaternion();
-        var returnedResult = start.slerp(end, 0.5, result);
+        var returnedResult = Quaternion.slerp(start, end, 0.5, result);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         expect(result).toBe(returnedResult);
     });
@@ -452,7 +452,7 @@ defineSuite([
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
-        var returnedResult = start.slerp(end, 0.5, start);
+        var returnedResult = Quaternion.slerp(start, end, 0.5, start);
         expect(start).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         expect(start).toBe(returnedResult);
     });
@@ -461,16 +461,16 @@ defineSuite([
         var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, -1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, -Math.sin(Math.PI / 8.0), -Math.cos(Math.PI / 8.0));
-        expect(start.slerp(end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+        expect(Quaternion.slerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
     it('slerp uses lerp when dot product is close to 1', function() {
         var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
         var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
         var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
-        expect(start.slerp(end, 0.0)).toEqual(start);
-        expect(start.slerp(end, 1.0)).toEqual(end);
-        expect(start.slerp(end, 0.5)).toEqual(expected);
+        expect(Quaternion.slerp(start, end, 0.0)).toEqual(start);
+        expect(Quaternion.slerp(start, end, 1.0)).toEqual(end);
+        expect(Quaternion.slerp(start, end, 0.5)).toEqual(expected);
     });
 
     it('equals', function() {

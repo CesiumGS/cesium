@@ -872,40 +872,6 @@ define([
     };
 
     /**
-     * Computes the linear interpolation or extrapolation at t using the provided quaternions.
-     * This quaternion is assumed to be t at 0.0.
-     * @memberof Quaternion
-     *
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} end is required.
-     * @exception {DeveloperError} t is required and must be a number.
-     */
-    Quaternion.prototype.lerp = function(end, t, result) {
-        return Quaternion.lerp(this, end, t, result);
-    };
-
-    /**
-     * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
-     * This quaternion is assumed to be t at 0.0.
-     * @memberof Quaternion
-     *
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} end is required.
-     * @exception {DeveloperError} t is required and must be a number.
-     */
-    Quaternion.prototype.slerp = function(end, t, result) {
-        return Quaternion.slerp(this, end, t, result);
-    };
-
-    /**
      * Compares this and the provided quaternion componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Quaternion
