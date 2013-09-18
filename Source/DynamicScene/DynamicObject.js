@@ -107,73 +107,26 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {TimeInterval}
          */
-        availability : {
-            get : function() {
-                return this._availability;
-            },
-            set : function(value) {
-                if (!defined(value) || !value.equals(this._availability)) {
-                    this._cachedAvailabilityDate = undefined;
-                    this._cachedAvailabilityValue = undefined;
-
-                    var oldValue = this._availability;
-                    this._availability = value;
-                    this._propertyChanged.raiseEvent(this, 'availability', value, oldValue);
-                }
-            }
-        },
+        availability : createDynamicPropertyDescriptor('availability', '_availability'),
         /**
          * Gets or sets the position.
          * @memberof DynamicObject.prototype
          * @type {PositionProperty}
          */
-        position : {
-            get : function() {
-                return this._position;
-            },
-            set : function(value) {
-                var oldValue = this._position;
-                if (value !== oldValue) {
-                    this._position = value;
-                    this._propertyChanged.raiseEvent(this, 'position', value, oldValue);
-                }
-            }
-        },
+        position : createDynamicPropertyDescriptor('position', '_position'),
         /**
          * Gets or sets the orientation.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        orientation : {
-            get : function() {
-                return this._orientation;
-            },
-            set : function(value) {
-                var oldValue = this._orientation;
-                if (value !== oldValue) {
-                    this._orientation = value;
-                    this._propertyChanged.raiseEvent(this, 'orientation', value, oldValue);
-                }
-            }
-        },
+        orientation : createDynamicPropertyDescriptor('orientation', '_orientation'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof DynamicObject.prototype
          * @type {Cartesian3}
          */
-        viewFrom : {
-            get : function() {
-                return this._viewFrom;
-            },
-            set : function(value) {
-                var oldValue = this._viewFrom;
-                if (value !== oldValue) {
-                    this._viewFrom = value;
-                    this._propertyChanged.raiseEvent(this, 'viewFrom', value, oldValue);
-                }
-            }
-        },
+        viewFrom : createDynamicPropertyDescriptor('viewFrom', '_viewFrom'),
         /**
          * Gets or sets the billboard.
          * @memberof DynamicObject.prototype

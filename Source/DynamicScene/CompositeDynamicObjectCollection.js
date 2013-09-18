@@ -60,8 +60,8 @@ define(['../Core/defined',
         var eventHash = dynamicObject._compositeEvents;
         if (!defined(eventHash)) {
             eventHash = {};
+            dynamicObject._compositeEvents = eventHash;
         }
-        dynamicObject._compositeEvents = eventHash;
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
@@ -160,7 +160,6 @@ define(['../Core/defined',
         this._composite = new DynamicObjectCollection();
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
-        this._hash = {};
         recomposite(this);
     };
 
@@ -327,7 +326,7 @@ define(['../Core/defined',
     };
 
     /**
-     * Lowers a collection down one position in the compoiste.
+     * Lowers a collection down one position in the composite.
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to move.
@@ -382,7 +381,7 @@ define(['../Core/defined',
      * until a corresponding call is made to {@link DynamicObjectCollection#resumeEvents}, at which
      * point a single event will be raised that covers all suspended operations.
      * This allows for many items to be added and removed efficiently.
-     * This function is reference counted and can safely be called multiple times as long as there
+     * This function can be safely called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
      * @memberof CompositeDynamicObjectCollection
      */
