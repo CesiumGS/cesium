@@ -6,7 +6,7 @@ define(function() {
      * Used to consistently define all DynamicScene graphics objects.
      * @private
      */
-    function createObservableProperty(name, privateName) {
+    function createDynamicPropertyDescriptor(name, privateName) {
         return {
             get : function() {
                 return this[privateName];
@@ -21,5 +21,5 @@ define(function() {
         };
     }
 
-    return createObservableProperty;
+    return createDynamicPropertyDescriptor;
 });

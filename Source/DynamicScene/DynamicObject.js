@@ -7,7 +7,7 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/JulianDate',
         '../Core/TimeInterval',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         createGuid,
         defaultValue,
@@ -17,7 +17,7 @@ define(['../Core/createGuid',
         Event,
         JulianDate,
         TimeInterval,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyChanged', //
@@ -179,74 +179,74 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {DynamicBillboard}
          */
-        billboard : createObservableProperty('billboard', '_billboard'),
+        billboard : createDynamicPropertyDescriptor('billboard', '_billboard'),
         /**
          * Gets or sets the cone.
          * @memberof DynamicObject.prototype
          * @type {DynamicCone}
          */
-        cone : createObservableProperty('cone', '_cone'),
+        cone : createDynamicPropertyDescriptor('cone', '_cone'),
 
         /**
          * Gets or sets the ellipsoid.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipsoid}
          */
-        ellipsoid : createObservableProperty('ellipsoid', '_ellipsoid'),
+        ellipsoid : createDynamicPropertyDescriptor('ellipsoid', '_ellipsoid'),
         /**
          * Gets or sets the ellipse.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipse}
          */
-        ellipse : createObservableProperty('ellipse', '_ellipse'),
+        ellipse : createDynamicPropertyDescriptor('ellipse', '_ellipse'),
         /**
          * Gets or sets the label.
          * @memberof DynamicObject.prototype
          * @type {DynamicLabel}
          */
-        label : createObservableProperty('label', '_label'),
+        label : createDynamicPropertyDescriptor('label', '_label'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
          * @type {DynamicPath}
          */
-        path : createObservableProperty('path', '_path'),
+        path : createDynamicPropertyDescriptor('path', '_path'),
         /**
          * Gets or sets the point graphic.
          * @memberof DynamicObject.prototype
          * @type {DynamicPoint}
          */
-        point : createObservableProperty('point', '_point'),
+        point : createDynamicPropertyDescriptor('point', '_point'),
         /**
          * Gets or sets the polygon.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolygon}
          */
-        polygon : createObservableProperty('polygon', '_polygon'),
+        polygon : createDynamicPropertyDescriptor('polygon', '_polygon'),
         /**
          * Gets or sets the polyline.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolyline}
          */
-        polyline : createObservableProperty('polyline', '_polyline'),
+        polyline : createDynamicPropertyDescriptor('polyline', '_polyline'),
         /**
          * Gets or sets the pyramid.
          * @memberof DynamicObject.prototype
          * @type {DynamicPyramid}
          */
-        pyramid : createObservableProperty('pyramid', '_pyramid'),
+        pyramid : createDynamicPropertyDescriptor('pyramid', '_pyramid'),
         /**
          * Gets or sets the vertex positions.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        vertexPositions : createObservableProperty('vertexPositions', '_vertexPositions'),
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions', '_vertexPositions'),
         /**
          * Gets or sets the vector.
          * @memberof DynamicObject.prototype
          * @type {DynamicVector}
          */
-        vector : createObservableProperty('vector', '_vector')
+        vector : createDynamicPropertyDescriptor('vector', '_vector')
     });
 
     /**
@@ -305,7 +305,7 @@ define(['../Core/createGuid',
 
         propertyNames.push(propertyName);
 
-        Object.defineProperty(this, propertyName, createObservableProperty(propertyName, '_' + propertyName));
+        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName));
     };
 
     /**
