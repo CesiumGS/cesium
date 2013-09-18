@@ -7,7 +7,7 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
-   * If your application uses Bing Maps imagery, you must supply a Bing Maps key for your application as soon as possible and prior to deployment.  If you do not supply a Bing Maps key, a message is now written to the console reminding you to do so. 
+   * If your application uses Bing Maps imagery, you must supply a Bing Maps key for your application as soon as possible and prior to deployment.  If you do not supply a Bing Maps key, a message is now written to the console reminding you to do so.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
 ```javascript
 var primitive = scene.pick(/* ... */);
