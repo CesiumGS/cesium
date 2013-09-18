@@ -112,7 +112,8 @@ define([
     GeocodingWidget.prototype.destroy = function() {
         var container = this._container;
         knockout.cleanNode(container);
-        container.removeChild(this._element);
+        container.removeChild(this._textBox);
+        container.removeChild(this._goButton);
         return destroyObject(this);
     };
 
