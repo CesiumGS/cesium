@@ -783,7 +783,7 @@ define([
     function getTiltCV(controller) {
         var camera = controller._camera;
 
-        // Math.acos(dot(camera.direction, Cartesian3.UNIT_Z.negate())
+        // Math.acos(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
         return CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
     }
 
@@ -1308,7 +1308,7 @@ define([
         var animateFrustum = right > controller._frustum.right;
 
         if (animatePosition || animateFrustum) {
-            var translatedPosition = position.clone();
+            var translatedPosition = Cartesian3.clone(position);
 
             if (translatedPosition.x > controller._maxCoord.x) {
                 translatedPosition.x = controller._maxCoord.x;
@@ -1351,7 +1351,7 @@ define([
     }
 
     function createAnimationTemplateCV(controller, position, center, maxX, maxY, duration) {
-        var newPosition = position.clone();
+        var newPosition = Cartesian3.clone(position);
 
         if (center.y > maxX) {
             newPosition.y -= center.y - maxX;

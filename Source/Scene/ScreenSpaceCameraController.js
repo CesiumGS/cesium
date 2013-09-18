@@ -254,7 +254,7 @@ define([
                 };
             } else {
                 object[lastMovementName] = {
-                    startPosition : object[lastMovementName].endPosition.clone(),
+                    startPosition : Cartesian3.clone(object[lastMovementName].endPosition),
                     endPosition : new Cartesian2(
                             object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
                             object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),

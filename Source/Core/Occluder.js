@@ -49,7 +49,7 @@ define([
             throw new DeveloperError('camera position is required.');
         }
 
-        this._occluderPosition = occluderBoundingSphere.center.clone();
+        this._occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
         this._occluderRadius = occluderBoundingSphere.radius;
 
         this._horizonDistance = 0.0;
@@ -165,7 +165,7 @@ define([
     * @see Occluder#getVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
-        var occludeePosition = occludee.center.clone();
+        var occludeePosition = Cartesian3.clone(occludee.center);
         var occludeeRadius = occludee.radius;
 
         if (this._horizonDistance !== Number.MAX_VALUE) {
@@ -227,7 +227,7 @@ define([
         // If the occludee radius is larger than the occluders, this will return that
         // the entire ocludee is visible, even though that may not be the case, though this should
         // not occur too often.
-        var occludeePosition = occludeeBS.center.clone();
+        var occludeePosition = Cartesian3.clone(occludeeBS.center);
         var occludeeRadius = occludeeBS.radius;
 
         if (occludeeRadius > this._occluderRadius) {
@@ -316,7 +316,7 @@ define([
         }
 
         var occludeePos = Cartesian3.clone(occludeePosition);
-        var occluderPosition = occluderBoundingSphere.center.clone();
+        var occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
         var occluderRadius = occluderBoundingSphere.radius;
         var numPositions = positions.length;
 
@@ -433,7 +433,7 @@ define([
 
     Occluder._horizonToPlaneNormalDotProduct = function(occluderBS, occluderPlaneNormal, occluderPlaneD, anyRotationVector, position) {
         var pos = Cartesian3.clone(position);
-        var occluderPosition = occluderBS.center.clone();
+        var occluderPosition = Cartesian3.clone(occluderBS.center);
         var occluderRadius = occluderBS.radius;
 
         //Verify that the position is outside the occluder

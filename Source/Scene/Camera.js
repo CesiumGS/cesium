@@ -67,9 +67,9 @@ define([
          * @see Transforms
          * @see Camera#inverseTransform
          */
-        this.transform = Matrix4.IDENTITY.clone();
-        this._transform = this.transform.clone();
-        this._invTransform = Matrix4.IDENTITY.clone();
+        this.transform = Matrix4.clone(Matrix4.IDENTITY);
+        this._transform = Matrix4.clone(this.transform);
+        this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
@@ -79,7 +79,7 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.position = position.clone();
+        this.position = Cartesian3.clone(position);
         this._position = position;
         this._positionWC = position;
 
@@ -90,7 +90,7 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.direction = direction.clone();
+        this.direction = Cartesian3.clone(direction);
         this._direction = direction;
         this._directionWC = direction;
 
@@ -102,7 +102,7 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.up = up.clone();
+        this.up = Cartesian3.clone(up);
         this._up = up;
         this._upWC = up;
 
@@ -113,7 +113,7 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.right = right.clone();
+        this.right = Cartesian3.clone(right);
         this._right = right;
         this._rightWC = right;
 
@@ -164,31 +164,31 @@ define([
         var position = camera._position;
         var positionChanged = !Cartesian3.equals(position, camera.position);
         if (positionChanged) {
-            position = camera._position = camera.position.clone();
+            position = camera._position = Cartesian3.clone(camera.position);
         }
 
         var direction = camera._direction;
         var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
-            direction = camera._direction = camera.direction.clone();
+            direction = camera._direction = Cartesian3.clone(camera.direction);
         }
 
         var up = camera._up;
         var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
-            up = camera._up = camera.up.clone();
+            up = camera._up = Cartesian3.clone(camera.up);
         }
 
         var right = camera._right;
         var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
-            right = camera._right = camera.right.clone();
+            right = camera._right = Cartesian3.clone(camera.right);
         }
 
         var transform = camera._transform;
         var transformChanged = !Matrix4.equals(transform, camera.transform);
         if (transformChanged) {
-            transform = camera._transform = camera.transform.clone();
+            transform = camera._transform = Matrix4.clone(camera.transform);
 
             camera._invTransform = camera._transform.inverseTransformation();
         }
@@ -202,16 +202,16 @@ define([
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
                 direction = camera._direction = Cartesian3.normalize(direction);
-                camera.direction = direction.clone();
+                camera.direction = Cartesian3.clone(direction);
 
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = Cartesian3.dot(up, direction) * invUpMag;
                 var w0 = Cartesian3.multiplyByScalar(direction, scalar);
                 up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
-                camera.up = up.clone();
+                camera.up = Cartesian3.clone(up);
 
                 right = camera._right = Cartesian3.cross(direction, up);
-                camera.right = right.clone();
+                camera.right = Cartesian3.clone(right);
             }
         }
 
@@ -345,11 +345,11 @@ define([
      */
     Camera.prototype.clone = function() {
         var camera = new Camera(this._canvas);
-        camera.position = this.position.clone();
-        camera.direction = this.direction.clone();
-        camera.up = this.up.clone();
-        camera.right = this.right.clone();
-        camera.transform = this.transform.clone();
+        camera.position = Cartesian3.clone(this.position);
+        camera.direction = Cartesian3.clone(this.direction);
+        camera.up = Cartesian3.clone(this.up);
+        camera.right = Cartesian3.clone(this.right);
+        camera.transform = Matrix4.clone(this.transform);
         camera.frustum = this.frustum.clone();
         return camera;
     };

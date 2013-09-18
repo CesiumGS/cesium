@@ -70,7 +70,7 @@ define([
         this._show = defaultValue(description.show, true);
 
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
-        this._actualPosition = this._position.clone(); // For columbus view and 2D
+        this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
         this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
         this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));

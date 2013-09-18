@@ -252,9 +252,9 @@ define([
             altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
         }
 
-        var aboveEnd = end.clone();
+        var aboveEnd = Cartesian3.clone(end);
         aboveEnd.z = altitude;
-        var afterStart = start.clone();
+        var afterStart = Cartesian3.clone(start);
         afterStart.z = altitude;
 
         var middle;
@@ -335,7 +335,7 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPath2D(camera, ellipsoid, camera.position.clone(), destination, duration);
+        var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
         var orientations = createOrientations2D(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
@@ -356,7 +356,7 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var start = camera.position.clone();
+        var start = Cartesian3.clone(camera.position);
         start.z = camera.frustum.right - camera.frustum.left;
 
         var path = createPath2D(camera, ellipsoid, start, destination, duration);

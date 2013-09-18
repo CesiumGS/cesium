@@ -976,7 +976,7 @@ defineSuite([
     it('fromCamera throws without eye', function() {
         expect(function() {
             Matrix4.fromCamera({
-                target : Cartesian3.UNIT_Z.negate(),
+                target : Cartesian3.negate(Cartesian3.UNIT_Z),
                 up : Cartesian3.UNIT_Y
             });
         }).toThrow();
@@ -995,7 +995,7 @@ defineSuite([
         expect(function() {
             Matrix4.fromCamera({
                 eye : Cartesian3.ZERO,
-                target : Cartesian3.UNIT_Z.negate()
+                target : Cartesian3.negate(Cartesian3.UNIT_Z)
             });
         }).toThrow();
     });
