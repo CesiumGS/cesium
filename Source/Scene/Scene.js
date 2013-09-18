@@ -968,15 +968,15 @@ define([
             pickedObjects.push(pickedResult);
 
             // hide the picked primitive and call picking again to get the next primitive
-            if (typeof primitive.setShow === 'function') {
-                primitive.setShow(false);
-            } else if (defined(primitive.show)) {
-                primitive.show = false;
-            } else if (defined(primitive.primitive) && defined(primitive.id)) {
-                var attributes = primitive.primitive.getGeometryInstanceAttributes(primitive.id);
+            if (defined(pickedResult.id)) {
+                var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                 if (defined(attributes) && defined(attributes.show)) {
                     attributes.show = ShowGeometryInstanceAttribute.toValue(false);
                 }
+            } else if (typeof primitive.setShow === 'function') {
+                primitive.setShow(false);
+            } else if (defined(primitive.show)) {
+                primitive.show = false;
             }
 
             pickedResult = this.pick(windowPosition);
@@ -985,15 +985,15 @@ define([
         // unhide the picked primitives
         for ( var i = 0; i < pickedObjects.length; ++i) {
             var p = pickedObjects[i].primitive;
-            if (typeof p.setShow === 'function') {
-                p.setShow(true);
-            } else if (defined(p.show)) {
-                p.show = true;
-            } else if (defined(p.primitive) && defined(p.id)) {
-                var attr = p.primitive.getGeometryInstanceAttributes(p.id);
+            if (defined(pickedObjects[i].id)) {
+                var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
                 if (defined(attr) && defined(attr.show)) {
                     attr.show = ShowGeometryInstanceAttribute.toValue(true);
                 }
+            } else if (typeof p.setShow === 'function') {
+                p.setShow(true);
+            } else if (defined(p.show)) {
+                p.show = true;
             }
         }
 
