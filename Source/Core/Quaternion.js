@@ -848,30 +848,6 @@ define([
     };
 
     /**
-     * Negates this quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     */
-    Quaternion.prototype.negate = function(result) {
-        return Quaternion.negate(this, result);
-    };
-
-    /**
-     * Computes the dot (scalar) product of this and the provided quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} right The right hand side quaternion.
-     * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Quaternion.prototype.dot = function(right) {
-        return Quaternion.dot(this, right);
-    };
-
-    /**
      * Returns a string representing this quaternion in the format (x, y, z, w).
      * @memberof Quaternion
      *

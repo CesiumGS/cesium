@@ -194,7 +194,7 @@ defineSuite([
         var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
         var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
         var expectedResult = 137.0;
-        var result = left.dot(right);
+        var result = Quaternion.dot(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -357,7 +357,7 @@ defineSuite([
     it('negate without a result parameter', function() {
         var quaternion = new Quaternion(1.0, -2.0, -5.0, 4.0);
         var expectedResult = new Quaternion(-1.0, 2.0, 5.0, -4.0);
-        var result = quaternion.negate();
+        var result = Quaternion.negate(quaternion);
         expect(result).toEqual(expectedResult);
     });
 
@@ -365,7 +365,7 @@ defineSuite([
         var quaternion = new Quaternion(1.0, -2.0, -5.0, 4.0);
         var result = new Quaternion();
         var expectedResult = new Quaternion(-1.0, 2.0, 5.0, -4.0);
-        var returnedResult = quaternion.negate(result);
+        var returnedResult = Quaternion.negate(quaternion, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
@@ -373,7 +373,7 @@ defineSuite([
     it('negate with "this" result parameter', function() {
         var quaternion = new Quaternion(1.0, -2.0, -5.0);
         var expectedResult = new Quaternion(-1.0, 2.0, 5.0);
-        var returnedResult = quaternion.negate(quaternion);
+        var returnedResult = Quaternion.negate(quaternion, quaternion);
         expect(quaternion).toBe(returnedResult);
         expect(quaternion).toEqual(expectedResult);
     });
