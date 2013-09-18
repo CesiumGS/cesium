@@ -35,7 +35,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = axis.multiplyByScalar(s);
+        var a = Quaternion.multiplyByScalar(axis, s);
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle);
         expect(returnedResult).toEqual(expected);
@@ -46,7 +46,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = axis.multiplyByScalar(s);
+        var a = Quaternion.multiplyByScalar(axis, s);
         var result = new Quaternion();
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle, result);
@@ -203,11 +203,11 @@ defineSuite([
         var right = new Quaternion(8.0, 7.0, 6.0, 5.0);
 
         var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
-        var returnedResult = left.multiply(right);
+        var returnedResult = Quaternion.multiply(left, right);
         expect(returnedResult).toEqual(expected);
 
         expected = new Quaternion(46.0, 20.0, 48.0, -20.0);
-        returnedResult = right.multiply(left);
+        returnedResult = Quaternion.multiply(right, left);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -217,19 +217,9 @@ defineSuite([
 
         var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
         var result = new Quaternion();
-        var returnedResult = left.multiply(right, result);
+        var returnedResult = Quaternion.multiply(left, right, result);
         expect(returnedResult).toEqual(expected);
         expect(result).toBe(returnedResult);
-    });
-
-    it('multiply works with "this" result parameter', function() {
-        var left = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        var right = new Quaternion(8.0, 7.0, 6.0, 5.0);
-
-        var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
-        var returnedResult = left.multiply(right, left);
-        expect(returnedResult).toEqual(expected);
-        expect(left).toBe(returnedResult);
     });
 
     it('add works without a result parameter', function() {
@@ -272,7 +262,7 @@ defineSuite([
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
-        var result = quaternion.multiplyByScalar(scalar);
+        var result = Quaternion.multiplyByScalar(quaternion, scalar);
         expect(result).toEqual(expectedResult);
     });
 
@@ -281,25 +271,16 @@ defineSuite([
         var result = new Quaternion();
         var scalar = 2;
         var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
-        var returnedResult = quaternion.multiplyByScalar(scalar, result);
+        var returnedResult = Quaternion.multiplyByScalar(quaternion, scalar, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('multiplyByScalar with "this" result parameter', function() {
-        var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
-        var scalar = 2;
-        var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
-        var returnedResult = quaternion.multiplyByScalar(scalar, quaternion);
-        expect(quaternion).toBe(returnedResult);
-        expect(quaternion).toEqual(expectedResult);
     });
 
     it('divideByScalar without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
-        var result = quaternion.divideByScalar(scalar);
+        var result = Quaternion.divideByScalar(quaternion, scalar);
         expect(result).toEqual(expectedResult);
     });
 
@@ -308,7 +289,7 @@ defineSuite([
         var result = new Quaternion();
         var scalar = 2;
         var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
-        var returnedResult = quaternion.divideByScalar(scalar, result);
+        var returnedResult = Quaternion.divideByScalar(quaternion, scalar, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
@@ -317,7 +298,7 @@ defineSuite([
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
-        var returnedResult = quaternion.divideByScalar(scalar, quaternion);
+        var returnedResult = Quaternion.divideByScalar(quaternion, scalar, quaternion);
         expect(quaternion).toBe(returnedResult);
         expect(quaternion).toEqual(expectedResult);
     });

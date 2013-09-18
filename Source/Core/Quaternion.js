@@ -871,35 +871,6 @@ define([
         return Quaternion.dot(this, right);
     };
 
-
-    /**
-     * Computes the product of this and the provided quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} right The right hande side quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Quaternion.prototype.multiply = function(right, result) {
-        return Quaternion.multiply(this, right, result);
-    };
-
-    /**
-     * Multiplies this quaternion componentwise by the provided scalar.
-     * @memberof Quaternion
-     *
-     * @param {Number} scalar The scalar to multiply with.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Quaternion.prototype.multiplyByScalar = function(scalar, result) {
-        return Quaternion.multiplyByScalar(this, scalar, result);
-    };
-
     /**
      * Divides this quaternion componentwise by the provided scalar.
      * @memberof Quaternion
