@@ -759,8 +759,17 @@ define([
 
     function getHeading3D(controller) {
         var camera = controller._camera;
-        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
-        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+        var zAxis = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
+        zAxis.z = -zAxis.z;
+
+        var angle;
+        if (Math.abs(zAxis.z) > Math.abs(zAxis.x) && Math.abs(zAxis.z) > Math.abs(zAxis.y)) {
+            angle = Math.atan2(zAxis.z, zAxis.x);
+        } else {
+            angle = Math.atan2(zAxis.y, zAxis.x);
+        }
+
+        return CesiumMath.PI_OVER_TWO - angle;
     }
 
     function setHeading2D(controller, angle) {

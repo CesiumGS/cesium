@@ -934,7 +934,13 @@ defineSuite([
         controller._mode = SceneMode.SCENE3D;
 
         var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z);
-        var heading = CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+        var heading = CesiumMath.PI_OVER_TWO - Math.atan2(-z.z, z.x);
+
+        expect(controller.heading).toEqual(heading);
+
+        controller.rotateDown(CesiumMath.PI_OVER_TWO);
+        z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z);
+        heading = CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
 
         expect(controller.heading).toEqual(heading);
     });
