@@ -644,6 +644,8 @@ require({
             if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
                 bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
                 logOutput.innerHTML = '';
+                numberOfNewConsoleMessages = 0;
+                registry.byId('logContainer').set('title', 'Console');
                 // This happens after a Run (F8) reloads bucket.html, to inject the editor code
                 // into the iframe, causing the demo to run there.
                 applyBucket();
