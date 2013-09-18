@@ -721,7 +721,7 @@ define([
         var r = Cartesian3.magnitude(Matrix4.getColumn(transform, 0, radiusScratch));
         r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 1, radiusScratch)));
         r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 2, radiusScratch)));
-        result.radius = r;
+        result.radius = r * sphere.radius;
 
         return result;
     };
