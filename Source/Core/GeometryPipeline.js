@@ -764,8 +764,8 @@ define([
             var length = values.length;
             for (var i = 0; i < length; i += 3) {
                 Cartesian3.unpack(values, i, scratchCartesian3);
-                Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian4);
-                scratchCartesian3 = Cartesian3.normalize(scratchCartesian4, scratchCartesian3);
+                Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian3);
+                scratchCartesian3 = Cartesian3.normalize(scratchCartesian3, scratchCartesian3);
                 Cartesian3.pack(scratchCartesian3, values, i);
             }
         }

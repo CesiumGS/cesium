@@ -689,6 +689,7 @@ define([
     };
 
     var transformCart4 = Cartesian4.UNIT_W.clone();
+    var columnScratch = new Cartesian3();
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
@@ -701,7 +702,6 @@ define([
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} transform is required.
      */
-    var radiusScratch = new Cartesian3();
     BoundingSphere.transform = function(sphere, transform, result) {
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
@@ -718,10 +718,7 @@ define([
         Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
 
         result.center = Cartesian3.clone(transformCart4, result.center);
-        var r = Cartesian3.magnitude(Matrix4.getColumn(transform, 0, radiusScratch));
-        r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 1, radiusScratch)));
-        r = Math.max(r, Cartesian3.magnitude(Matrix4.getColumn(transform, 2, radiusScratch)));
-        result.radius = r * sphere.radius;
+        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)), Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)), Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
 
         return result;
     };
