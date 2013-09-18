@@ -159,7 +159,7 @@ defineSuite([
     it('normalize works without a result parameter', function() {
         var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
-        var result = quaternion.normalize();
+        var result = Quaternion.normalize(quaternion);
         expect(result).toEqual(expectedResult);
     });
 
@@ -167,24 +167,16 @@ defineSuite([
         var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
         var result = new Quaternion();
-        var returnedResult = quaternion.normalize(result);
+        var returnedResult = Quaternion.normalize(quaternion, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('normalize works with "this" result parameter', function() {
-        var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
-        var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
-        var returnedResult = quaternion.normalize(quaternion);
-        expect(quaternion).toBe(returnedResult);
-        expect(quaternion).toEqual(expectedResult);
     });
 
     it('inverse works without a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
         var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
-        var returnedResult = quaternion.inverse();
+        var returnedResult = Quaternion.inverse(quaternion);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -193,18 +185,9 @@ defineSuite([
         var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var result = new Quaternion();
-        var returnedResult = quaternion.inverse(result);
+        var returnedResult = Quaternion.inverse(quaternion, result);
         expect(returnedResult).toEqual(expected);
         expect(returnedResult).toBe(result);
-    });
-
-    it('inverse works with "this" result parameter', function() {
-        var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
-        var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
-        var returnedResult = quaternion.inverse(quaternion);
-        expect(returnedResult).toEqual(expected);
-        expect(returnedResult).toBe(quaternion);
     });
 
     it('dot', function() {
@@ -481,7 +464,7 @@ defineSuite([
     });
 
     it('slerp works without a result parameter', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, 1.0).normalize();
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
@@ -491,7 +474,7 @@ defineSuite([
     });
 
     it('slerp works with a result parameter', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, 1.0).normalize();
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
@@ -502,7 +485,7 @@ defineSuite([
     });
 
     it('slerp works with "this" result parameter', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, 1.0).normalize();
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
 
@@ -512,7 +495,7 @@ defineSuite([
     });
 
     it('slerp works with obtuse angles', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, -1.0).normalize();
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, -1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, -Math.sin(Math.PI / 8.0), -Math.cos(Math.PI / 8.0));
         expect(start.slerp(end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON15);

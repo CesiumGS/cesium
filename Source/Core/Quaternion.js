@@ -848,28 +848,6 @@ define([
     };
 
     /**
-     * Computes the normalized form of this quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     */
-    Quaternion.prototype.normalize = function(result) {
-        return Quaternion.normalize(this, result);
-    };
-
-    /**
-     * Computes the inverse of the provided quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     */
-    Quaternion.prototype.inverse = function(result) {
-        return Quaternion.inverse(this, result);
-    };
-
-    /**
      * Computes the componentwise sum of this and the provided quaternion.
      * @memberof Quaternion
      *
