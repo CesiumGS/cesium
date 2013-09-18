@@ -236,7 +236,7 @@ defineSuite([
         var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
         var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
-        var result = left.add(right);
+        var result = Quaternion.add(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -245,25 +245,16 @@ defineSuite([
         var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
         var result = new Quaternion();
         var expectedResult = new Quaternion(6.0, 8.0, 13.0,  17.0);
-        var returnedResult = left.add(right, result);
+        var returnedResult = Quaternion.add(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('add works with "this" result parameter', function() {
-        var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
-        var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
-        var expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
-        var returnedResult = left.add(right, left);
-        expect(left).toBe(returnedResult);
-        expect(left).toEqual(expectedResult);
     });
 
     it('subtract works without a result parameter', function() {
         var left = new Quaternion(2.0, 3.0, 4.0, 8.0);
         var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
         var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
-        var result = left.subtract(right);
+        var result = Quaternion.subtract(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -272,18 +263,9 @@ defineSuite([
         var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
         var result = new Quaternion();
         var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
-        var returnedResult = left.subtract(right, result);
+        var returnedResult = Quaternion.subtract(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('subtract works with this result parameter', function() {
-        var left = new Quaternion(2.0, 3.0, 4.0, 8.0);
-        var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
-        var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
-        var returnedResult = left.subtract(right, left);
-        expect(returnedResult).toBe(left);
-        expect(left).toEqual(expectedResult);
     });
 
     it('multiplyByScalar without a result parameter', function() {

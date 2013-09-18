@@ -848,34 +848,6 @@ define([
     };
 
     /**
-     * Computes the componentwise sum of this and the provided quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} right The right hand side quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Quaternion.prototype.add = function(right, result) {
-        return Quaternion.add(this, right, result);
-    };
-
-    /**
-     * Computes the componentwise difference of this and the provided quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} right The right hand side quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-
-     * @exception {DeveloperError} right is required.
-     */
-    Quaternion.prototype.subtract = function(right, result) {
-        return Quaternion.subtract(this, right, result);
-    };
-
-    /**
      * Negates this quaternion.
      * @memberof Quaternion
      *
