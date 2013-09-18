@@ -268,14 +268,14 @@ define([
             var offset = i * 3;
             Quaternion.unpack(packedArray, (startingIndex + i) * 4, sampledQuaternionTempQuaternion);
 
-            sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
+            Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
 
             if (sampledQuaternionTempQuaternion.w < 0) {
-                sampledQuaternionTempQuaternion.negate(sampledQuaternionTempQuaternion);
+                Quaternion.negate(sampledQuaternionTempQuaternion, sampledQuaternionTempQuaternion);
             }
 
-            sampledQuaternionTempQuaternion.getAxis(sampledQuaternionAxis);
-            var angle = sampledQuaternionTempQuaternion.getAngle();
+            Quaternion.getAxis(sampledQuaternionTempQuaternion, sampledQuaternionAxis);
+            var angle = Quaternion.getAngle(sampledQuaternionTempQuaternion);
             result[offset] = sampledQuaternionAxis.x * angle;
             result[offset + 1] = sampledQuaternionAxis.y * angle;
             result[offset + 2] = sampledQuaternionAxis.z * angle;
@@ -312,7 +312,7 @@ define([
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }
 
-        return sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0, result);
+        return Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
     };
 
     /**
