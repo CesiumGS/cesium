@@ -718,7 +718,9 @@ define([
         Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
 
         result.center = Cartesian3.clone(transformCart4, result.center);
-        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)), Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)), Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
+                Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
+                Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
 
         return result;
     };
