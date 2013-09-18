@@ -26,6 +26,7 @@ define([
      *
      * @param {Element|String} description.container The DOM element or ID that will contain the widget.
      * @param {Scene} description.scene The Scene instance to use.
+     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -51,7 +52,7 @@ define([
 
         this._container = container;
 
-        this._viewModel = new GeocodingWidgetViewModel(description.scene, description.key, description.ellipsoid, description.flightDuration);
+        this._viewModel = new GeocodingWidgetViewModel(description);
 
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocodingWidget-input';
@@ -62,7 +63,7 @@ define([
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocodingWidget-goButton';
-        goButton.setAttribute('data-bind', 'attr: { title: tooltip }, click: search');
+        goButton.setAttribute('data-bind', 'click: search');
         this._goButton = goButton;
         container.appendChild(goButton);
 

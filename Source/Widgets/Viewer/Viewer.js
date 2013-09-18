@@ -299,12 +299,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 scene : cesiumWidget.scene,
                 ellipsoid : cesiumWidget.centralBody.getEllipsoid()
             });
-
-            dataSourceCollection.add(geocodingWidget.viewModel._navigationDataSource);
-
-            geocodingWidget.viewModel._navigationDataSource.getChangedEvent().addEventListener(function(dataSource) {
-                setClockFromDataSource(dataSourceCollection, dataSource);
-            });
         }
 
         var eventHelper = new EventHelper();
