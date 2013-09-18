@@ -872,41 +872,6 @@ define([
     };
 
     /**
-     * Divides this quaternion componentwise by the provided scalar.
-     * @memberof Quaternion
-     *
-     * @param {Number} scalar The scalar to divide by.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Quaternion.prototype.divideByScalar = function(scalar, result) {
-        return Quaternion.divideByScalar(this, scalar, result);
-    };
-
-    /**
-     * Computes the axis of rotation of this quaternion.
-     * @memberof Quaternion
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Quaternion.prototype.getAxis = function(result) {
-        return Quaternion.getAxis(this, result);
-    };
-
-    /**
-     * Computes the angle of rotation of this quaternion.
-     * @memberof Quaternion
-     *
-     * @returns {Number} The angle of rotation.
-     */
-    Quaternion.prototype.getAngle = function() {
-        return Quaternion.getAngle(this);
-    };
-
-    /**
      * Computes the linear interpolation or extrapolation at t using the provided quaternions.
      * This quaternion is assumed to be t at 0.0.
      * @memberof Quaternion

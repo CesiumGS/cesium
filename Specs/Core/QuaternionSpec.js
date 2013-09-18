@@ -310,7 +310,7 @@ defineSuite([
         var sin = Math.sin(angle / 2.0);
         var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
-        var returnedResult = quaternion.getAxis();
+        var returnedResult = Quaternion.getAxis(quaternion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
@@ -322,7 +322,7 @@ defineSuite([
         var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var result = new Cartesian3();
-        var returnedResult = quaternion.getAxis(result);
+        var returnedResult = Quaternion.getAxis(quaternion, result);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
         expect(result).toBe(returnedResult);
     });
@@ -330,7 +330,7 @@ defineSuite([
     it('getAxis returns Cartesian3 0 when w equals 1.0 without a result parameter', function() {
         var expected = new Cartesian3(0.0, 0.0, 0.0);
         var quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
-        var returnedResult = quaternion.getAxis();
+        var returnedResult = Quaternion.getAxis(quaternion);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -338,7 +338,7 @@ defineSuite([
         var expected = new Cartesian3(0.0, 0.0, 0.0);
         var quaternion = new Quaternion(4.0, 2.0, 3.0, 1.0);
         var result = new Cartesian3(1, 2, 3);
-        var returnedResult = quaternion.getAxis(result);
+        var returnedResult = Quaternion.getAxis(quaternion, result);
         expect(returnedResult).toEqual(expected);
         expect(result).toBe(returnedResult);
     });
@@ -350,7 +350,7 @@ defineSuite([
         var sin = Math.sin(angle / 2.0);
         var axis = new Cartesian3(2.0, 3.0, 6.0).normalize();
         var quaternion = new Quaternion(sin * axis.x, sin * axis.y, sin * axis.z, cos);
-        var result = quaternion.getAngle();
+        var result = Quaternion.getAngle(quaternion);
         expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
     });
 
