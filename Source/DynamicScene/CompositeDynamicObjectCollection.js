@@ -1,11 +1,13 @@
 /*global define*/
-define(['../Core/defined',
+define(['../Core/createGuid',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Math',
         './DynamicObject',
         './DynamicObjectCollection'
     ], function(
+        createGuid,
         defined,
         defineProperties,
         DeveloperError,
@@ -14,7 +16,7 @@ define(['../Core/defined',
         DynamicObjectCollection) {
     "use strict";
 
-    function createCallback(that, dynamicObject, propertyName) {
+    function createSubPropertyChangedCallback(that, dynamicObject, propertyName) {
         return function(property, subPropertyName, newValue, oldValue) {
             var id = dynamicObject.id;
             var composite = that._composite;
@@ -39,47 +41,81 @@ define(['../Core/defined',
         };
     }
 
-    function observeProperty(that, dynamicObject, propertyName, property, eventHash) {
+    function createPropertyChangedCallback(that, collectionId) {
+        var composite = that._composite;
+        var eventHash = that._eventHash;
+        return function(dynamicObject, propertyName, newValue, oldValue) {
+            var id = dynamicObject.id;
+            var compositeObject = composite.getById(id);
+            var compositeProperty = compositeObject[propertyName];
+
+            unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
+            subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
+
+            var collections = that._collectionsCopy;
+            var collectionsLength = collections.length;
+            var firstTime = true;
+            for ( var q = collectionsLength - 1; q >= 0; q--) {
+                var object = collections[q].getById(dynamicObject.id);
+                if (defined(object)) {
+                    var property = object[propertyName];
+                    if (defined(property)) {
+                        if (firstTime) {
+                            firstTime = false;
+                            //We only want to clone if the property is also mergeable.
+                            //This ensures that leaf properties are referenced and not copied,
+                            //which is the entire point of compositing.
+                            if (defined(property.merge) && defined(property.clone)) {
+                                compositeProperty = property.clone(compositeProperty);
+                            } else {
+                                compositeProperty = property;
+                                break;
+                            }
+                        }
+                        compositeProperty.merge(property);
+                    }
+                }
+            }
+            compositeObject[propertyName] = compositeProperty;
+        };
+    }
+
+    function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
         if (defined(property) && defined(property.propertyChanged)) {
-            var subpropertyChanged = createCallback(that, dynamicObject, propertyName);
-            eventHash[propertyName] = property.propertyChanged.addEventListener(subpropertyChanged);
+            var subpropertyChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
+            eventHash[collectionId + dynamicObject.id + propertyName] = property.propertyChanged.addEventListener(subpropertyChanged);
         }
     }
 
-    function unobserveProperty(propertyName, eventHash) {
-        var unsubscribeFunc = eventHash[propertyName];
+    function unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName) {
+        var propertyId = collectionId + dynamicObject.id + propertyName;
+        var unsubscribeFunc = eventHash[propertyId];
         if (defined(unsubscribeFunc)) {
             unsubscribeFunc();
-            eventHash[propertyName] = undefined;
+            eventHash[propertyId] = undefined;
         }
     }
 
-    function subscribe(that, dynamicObject) {
-        dynamicObject.propertyChanged.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
-
-        var eventHash = dynamicObject._compositeEvents;
-        if (!defined(eventHash)) {
-            eventHash = {};
-            dynamicObject._compositeEvents = eventHash;
-        }
+    function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
+        eventHash[collectionId + dynamicObject.id] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
         for ( var i = 0; i < length; i++) {
             var propertyName = properties[i];
-            observeProperty(that, dynamicObject, propertyName, dynamicObject[propertyName], eventHash);
+            subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
         }
     }
 
-    function unsubscribe(that, dynamicObject) {
-        dynamicObject.propertyChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+    function unsubscribeFromDynamicObject(that, eventHash, collectionId, dynamicObject) {
+        eventHash[collectionId + dynamicObject.id]();
+        eventHash[collectionId + dynamicObject.id] = undefined;
 
-        var eventHash = dynamicObject._compositeEvents;
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
         for ( var i = 0; i < length; i++) {
             var propertyName = properties[i];
-            unobserveProperty(propertyName, eventHash);
+            unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
         }
     }
 
@@ -97,14 +133,17 @@ define(['../Core/defined',
         var collection;
         var composite = that._composite;
         var newObjects = new DynamicObjectCollection();
+        var eventHash = that._eventHash;
+        var collectionId;
 
         for (i = 0; i < collectionsCopyLength; i++) {
             collection = collectionsCopy[i];
             collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
             objects = collection.getObjects();
+            collectionId = collection.id;
             for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                 object = objects[iObjects];
-                unsubscribe(that, object);
+                unsubscribeFromDynamicObject(that, eventHash, collectionId, object);
             }
         }
 
@@ -114,9 +153,10 @@ define(['../Core/defined',
 
             //Merge all of the existing objects.
             objects = collection.getObjects();
+            collectionId = collection.id;
             for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                 object = objects[iObjects];
-                subscribe(that, object);
+                subscribeToDynamicObject(that, eventHash, collectionId, object);
 
                 var compositeObject = newObjects.getById(object.id);
                 if (!defined(compositeObject)) {
@@ -160,6 +200,8 @@ define(['../Core/defined',
         this._composite = new DynamicObjectCollection();
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
+        this._id = createGuid();
+        this._eventHash = {};
         recomposite(this);
     };
 
@@ -174,6 +216,17 @@ define(['../Core/defined',
         collectionChanged : {
             get : function() {
                 return this._composite._collectionChanged;
+            }
+        },
+        /**
+         * Gets a globally unique identifier for this collection.
+         * @memberof CompositeDynamicObjectCollection.prototype
+         *
+         * @type {String}
+         */
+        id : {
+            get : function() {
+                return this._id;
             }
         }
     });
@@ -440,43 +493,6 @@ define(['../Core/defined',
         return this._composite.getObjects();
     };
 
-    CompositeDynamicObjectCollection.prototype._propertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        var id = dynamicObject.id;
-        var composite = this._composite;
-        var compositeObject = composite.getById(id);
-        var compositeProperty = compositeObject[propertyName];
-
-        var eventHash = dynamicObject._compositeEvents;
-        unobserveProperty(propertyName, eventHash);
-        observeProperty(this, dynamicObject, propertyName, dynamicObject[propertyName], eventHash);
-
-        var collections = this._collectionsCopy;
-        var collectionsLength = collections.length;
-        var firstTime = true;
-        for ( var q = collectionsLength - 1; q >= 0; q--) {
-            var object = collections[q].getById(dynamicObject.id);
-            if (defined(object)) {
-                var property = object[propertyName];
-                if (defined(property)) {
-                    if (firstTime) {
-                        firstTime = false;
-                        //We only want to clone if the property is also mergeable.
-                        //This ensures that leaf properties are referenced and not copied,
-                        //which is the entire point of compositing.
-                        if (defined(property.merge) && defined(property.clone)) {
-                            compositeProperty = property.clone(compositeProperty);
-                        } else {
-                            compositeProperty = property;
-                            break;
-                        }
-                    }
-                    compositeProperty.merge(property);
-                }
-            }
-        }
-        compositeObject[propertyName] = compositeProperty;
-    };
-
     CompositeDynamicObjectCollection.prototype._onCollectionChanged = function(collection, added, removed) {
         var collections = this._collectionsCopy;
         var collectionsLength = collections.length;
@@ -488,9 +504,11 @@ define(['../Core/defined',
         var object;
         var compositeObject;
         var removedLength = removed.length;
+        var eventHash = this._eventHash;
+        var collectionId = collection.id;
         for (i = 0; i < removedLength; i++) {
             var removedObject = removed[i];
-            unsubscribe(this, removedObject);
+            unsubscribeFromDynamicObject(this, eventHash, collectionId, removedObject);
 
             var removedId = removedObject.id;
             //Check if the removed object exists in any of the remaining collections
@@ -515,7 +533,7 @@ define(['../Core/defined',
         var addedLength = added.length;
         for (i = 0; i < addedLength; i++) {
             var addedObject = added[i];
-            subscribe(this, addedObject);
+            subscribeToDynamicObject(this, eventHash, collectionId, addedObject);
 
             var addedId = addedObject.id;
             //We know the added object exists in at least one collection,

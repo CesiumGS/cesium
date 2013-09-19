@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define(['../Core/createGuid',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
         '../Core/TimeInterval',
@@ -8,6 +9,7 @@ define(['../Core/defined',
         '../Core/RuntimeError',
         './DynamicObject'
     ], function(
+        createGuid,
         defined,
         defineProperties,
         Event,
@@ -46,6 +48,7 @@ define(['../Core/defined',
         this._removedHash = {};
         this._suspendCount = 0;
         this._collectionChanged = new Event();
+        this._id = createGuid();
     };
 
     /**
@@ -102,6 +105,17 @@ define(['../Core/defined',
         collectionChanged : {
             get : function() {
                 return this._collectionChanged;
+            }
+        },
+        /**
+         * Gets a globally unique identifier for this collection.
+         * @memberof DynamicObjectCollection.prototype
+         *
+         * @type {String}
+         */
+        id : {
+            get : function() {
+                return this._id;
             }
         }
     });
