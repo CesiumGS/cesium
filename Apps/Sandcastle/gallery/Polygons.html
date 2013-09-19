@@ -41,7 +41,20 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
         ]));
         primitives.add(polygon);
-        
+
+        // Create a complex polygon
+        polygon = new Cesium.Polygon();
+        Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
+        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-82.0, 28.0),
+            Cesium.Cartographic.fromDegrees(-77.0, 25.0),
+            Cesium.Cartographic.fromDegrees(-77.0, 22.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 18.0),
+            Cesium.Cartographic.fromDegrees(-80.0, 18.0),
+            Cesium.Cartographic.fromDegrees(-78.0, 28.0)
+        ]));
+        primitives.add(polygon);
+
         polygon = new Cesium.ExtentPrimitive();
         Sandcastle.declare(polygon);
         polygon.extent = new Cesium.Extent(

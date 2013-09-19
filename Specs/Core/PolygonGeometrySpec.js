@@ -122,6 +122,23 @@ defineSuite([
         expect(p.indices.length).toEqual(3 * 14);
     });
 
+    it('computes positions of complex polygon', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexformat : VertexFormat.POSITION_ONLY,
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-72.0, 40.0),
+                Cartographic.fromDegrees(-68.0, 35.0),
+                Cartographic.fromDegrees(-75.0, 30.0),
+                Cartographic.fromDegrees(-70.0, 30.0),
+                Cartographic.fromDegrees(-68.0, 40.0)
+            ]),
+            granularity : CesiumMath.PI_OVER_THREE
+        }));
+
+        expect(p.attributes.position.values.length).toEqual(3 * 9);
+        expect(p.indices.length).toEqual(3 * 3);
+    });
+
     it('computes all attributes', function() {
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.ALL,

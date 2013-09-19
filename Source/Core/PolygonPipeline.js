@@ -357,8 +357,7 @@ define([
      */
     function cleanCut(a1i, a2i, pArray) {
         return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
-                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position);
+                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray);
     }
 
     /**
@@ -390,6 +389,10 @@ define([
         var s2 = Cartesian2.subtract(pArray[after].position,  a1.position);
         var cut = Cartesian2.subtract(a2.position, a1.position);
 
+        if (cut.x === 0 && cut.y === 0) {
+            return duplicatePointInternalCut(a1i, a2i, pArray);
+        }
+
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
         s2 = new Cartesian3(s2.x, s2.y, 0.0);
@@ -411,6 +414,54 @@ define([
             }
 
             return true;
+        }
+    }
+
+    /**
+     * Determine whether a cut is "internal" when the two
+     * points are in the same place.
+     *
+     * @param {type} a1i - first vertex index
+     * @param {type} a2i - second vertex index
+     * @param {type} pArray - vertex array
+     * @returns {Boolean} - Cut is internal
+     */
+    function duplicatePointInternalCut(a1i, a2i, pArray) {
+        // Get the nodes from the array
+        var a1 = pArray[a1i];
+        var a2 = pArray[a2i];
+
+        // Define side vectors
+        var before = getNextVertex(a1i, pArray, BEFORE);
+        var after = getNextVertex(a1i, pArray, AFTER);
+        var s1 = pArray[before].position.subtract(a1.position);
+        s1 = new Cartesian3(s1.x, s1.y, 0);
+        var s2 = pArray[after].position.subtract(a1.position);
+        s2 = new Cartesian3(s2.x, s2.y, 0);
+
+        before = getNextVertex(a1i, pArray, BEFORE);
+        after = getNextVertex(a1i, pArray, AFTER);
+        var s3 = pArray[before].position.subtract(a1.position);
+        s3 = new Cartesian3(s3.x, s3.y, 0);
+        var s4 = pArray[after].position.subtract(a1.position);
+        s4 = new Cartesian3(s4.x, s4.y, 0);
+
+        if (angleGreaterThan180(s1, s2) && angleGreaterThan180(s3, s4)) {
+            return true;
+        } else if (angleLessThan180(s1, s2) && angleGreaterThan180(s3, s4)) {
+            if (s1.cross(s2).z > s4.cross(s3).z) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (angleGreaterThan180(s1, s2) && angleLessThan180(s3, s4)) {
+            if (s2.cross(s1) < s3.cross(s4).z) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
         }
     }
 
@@ -614,14 +665,13 @@ define([
      * @private
      */
     function intersectsSide(a1, a2, pArray) {
-        for ( var i = 0; i < pArray.length; i++) {
+        for ( var i = pArray.length-1; i >= 0; i--) {
             var b1 = pArray[i].position;
-            var b2;
-            if (i < pArray.length - 1) {
-                b2 = pArray[i + 1].position;
-            } else {
-                b2 = pArray[0].position;
+            var b2i = i + 1;
+            if (b2i === pArray.length) {
+                b2i = 0;
             }
+            var b2 = pArray[b2i].position;
 
             // If there's a duplicate point, there's no intersection here.
             if (Cartesian2.equals(a1, b1) || Cartesian2.equals(a2, b2) || Cartesian2.equals(a1, b2) || Cartesian2.equals(a2, b1)) {
@@ -660,7 +710,7 @@ define([
 
             // If intersecting, the cut is not clean
             if (intersects) {
-                return true;
+                return { i1: i, i2: b2i, point: intersection };
             }
         }
         return false;
@@ -700,6 +750,51 @@ define([
     }
 
     /**
+     * Determine polygon self-intersection (and return description if applicable
+     *
+     * @param {type} nodeArray
+     * @returns {Object} - object representing intersection point
+     */
+    function findSelfIntersection(nodeArray) {
+        for (var i = 0; i < nodeArray.length; i++) {
+            var v1 = i;
+            var v2 = i+1;
+            if (v2 === nodeArray.length) {
+                v2 = 0;
+            }
+            var intersection = intersectsSide(nodeArray[v1].position, nodeArray[v2].position, nodeArray);
+            if (intersection) {
+                return {
+                    a1i: nodeArray[v1].index,
+                    a2i: nodeArray[v2].index,
+                    b1i: nodeArray[intersection.i1].index,
+                    b2i: nodeArray[intersection.i2].index,
+                    point: intersection.point
+                };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determine the applicable error for an invalid polygon
+     *
+     * @param {Array} nodeArray - Polygon vertex array
+     * @returns {undefined}
+     */
+    function throwInvalidPolygonError(nodeArray) {
+        var intersection = findSelfIntersection(nodeArray);
+        var error;
+        if (intersection) {
+            error = new DeveloperError('Complex polygon: simplify first.');
+        } else {
+            error =  new DeveloperError('Invalid polygon: couldn\'t find valid division or intersection. Check winding order?');
+        }
+        error.intersection = intersection;
+        throw error;
+    }
+
+    /**
      * This recursive algorithm takes a polygon, randomly selects two vertices
      * which form a clean cut through the polygon, and divides the polygon
      * then continues to "chop" the two resulting polygons.
@@ -708,7 +803,8 @@ define([
      * @returns {Array} Index array representing triangles that fill the polygon
      *
      * @exception {DeveloperError} Invalid polygon: must have at least three vertices.
-     * @exception {DeveloperERror} Tried x times to find a vild cut and couldn't.
+     * @exception {DeveloperError} Invalid polygon: couldn't find valid division or intersection. Check winding order?
+     * @exception {DeveloperError} Complex polygon: simplify first.
      *
      * @private
      */
@@ -736,7 +832,7 @@ define([
             // Make sure we don't go into an endless loop
             var maxTries = nodeArray.length * 10;
             if (tries > maxTries) {
-                throw new DeveloperError('Tried ' + maxTries + ' times to find a valid cut and couldn\'t.');
+                throwInvalidPolygonError(nodeArray);
             }
             tries++;
 
@@ -757,18 +853,27 @@ define([
                 // Check for a clean cut
                 if (cleanCut(index1, index2, nodeArray)) {
                     // Divide polygon
-                    var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
+                    var nodeArray1 = nodeArray.slice();
+                    var nodeArray2 = nodeArray1.splice(index1, (index2 - index1 + 1), nodeArray1[index1], nodeArray1[index2]);
 
                     // Chop up resulting polygons
-                    return randomChop(nodeArray).concat(randomChop(nodeArray2));
+                    return randomChop(nodeArray1).concat(randomChop(nodeArray2));
                 }
             } catch (exception) {
                 // Eliminate superfluous vertex and start over
                 if (exception.hasOwnProperty("vertexIndex")) {
                     nodeArray.splice(exception.vertexIndex, 1);
                     return randomChop(nodeArray);
+                } else if (exception.intersection === null) {
+                    /*
+                     * If intersection couldn't be found on smaller section, try on this level.
+                     * We could have made a cut error due to inverted winding order of a complex
+                     * region that made it impossible to find the intersection on a lower level.
+                     */
+                    throwInvalidPolygonError(nodeArray);
+                } else {
+                    throw exception;
                 }
-                throw exception;
             }
         }
     }
@@ -886,6 +991,32 @@ define([
 
             // Recursive chop
             return randomChop(nodeArray);
+        },
+
+        /**
+         * Take a complex polygon and an intersection point and converts the
+         * complex polygon into a simple polygon.
+         *
+         * @param {Array} positions3D - Array of polygon positions in 3D
+         * @param {Object} intersection - An object of form { a1i, a2i, b1i, b2i, point }
+         *                                where a1i, a2i, b1i and b2i represent the indices
+         *                                of the two sides that intersect, and point
+         *                                represents the 2-dimension point of intersection
+         *
+         * @param {type} tangentPlane - The tangent plane used to project the 2d point of
+         *                              intersection back to 3d coordinates
+         *
+         * @returns {Array} - The resulting polygon positions
+         */
+        simplify: function(positions3D, intersection, tangentPlane) {
+            var iPoint = tangentPlane.projectPointsOntoEllipsoid([intersection.point])[0];
+            var invertedArea = positions3D.splice(intersection.a2i, (intersection.b1i - intersection.a2i + 1));
+            invertedArea.reverse();
+            invertedArea.push(iPoint);
+
+            Array.prototype.splice.apply(positions3D, [intersection.a2i, 0, iPoint].concat(invertedArea));
+
+            return positions3D;
         },
 
         /**
