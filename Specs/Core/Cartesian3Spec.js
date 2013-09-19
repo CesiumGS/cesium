@@ -82,7 +82,7 @@ defineSuite([
         expect(cartesian).toEqual(result);
     });
 
-    it('clone works with "this" result parameter', function() {
+    it('clone works with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var returnedResult = Cartesian3.clone(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
@@ -160,8 +160,8 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
-    
-    it('normalize works with "this" result parameter', function() {
+
+    it('normalize works with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(2.0, 0.0, 0.0);
         var expectedResult = new Cartesian3(1.0, 0.0, 0.0);
         var returnedResult = Cartesian3.normalize(cartesian, cartesian);
@@ -187,7 +187,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyComponents works with "this" result parameter', function() {
+    it('multiplyComponents works with a result parameter that is an input parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(8.0, 15.0, 42.0);
@@ -222,7 +222,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('add works with "this" result parameter', function() {
+    it('add works with a result parameter that is an input parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);
         var expectedResult = new Cartesian3(6.0, 8.0, 13.0);
@@ -276,7 +276,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyByScalar with "this" result parameter', function() {
+    it('multiplyByScalar with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var scalar = 2;
         var expectedResult = new Cartesian3(2.0, 4.0, 6.0);
@@ -303,7 +303,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('divideByScalar with "this" result parameter', function() {
+    it('divideByScalar with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var scalar = 2;
         var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
@@ -328,7 +328,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('negate with "this" result parameter', function() {
+    it('negate with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(1.0, -2.0, -5.0);
         var expectedResult = new Cartesian3(-1.0, 2.0, 5.0);
         var returnedResult = Cartesian3.negate(cartesian, cartesian);
@@ -352,7 +352,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('abs with "this" result parameter', function() {
+    it('abs with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian3(1.0, -2.0, -4.0);
         var expectedResult = new Cartesian3(1.0, 2.0, 4.0);
         var returnedResult = Cartesian3.abs(cartesian, cartesian);
@@ -380,7 +380,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('lerp works with "this" result parameter', function() {
+    it('lerp works with a result parameter that is an input parameter', function() {
         var start = new Cartesian3(4.0, 8.0, 10.0);
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = 0.25;
@@ -497,7 +497,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('cross works with "this" result parameter', function() {
+    it('cross works with a result parameter that is an input parameter', function() {
         var left = new Cartesian3(1, 2, 5);
         var right = new Cartesian3(4, 3, 6);
         var expectedResult = new Cartesian3(-3, 14, -5);

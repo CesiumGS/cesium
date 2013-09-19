@@ -63,7 +63,7 @@ defineSuite([
         expect(cartesian).toEqual(result);
     });
 
-    it('clone works with "this" result parameter', function() {
+    it('clone works with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var returnedResult = Cartesian4.clone(cartesian, cartesian);
         expect(cartesian).toBe(returnedResult);
@@ -152,7 +152,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('normalize works with "this" result parameter', function() {
+    it('normalize works with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);
         var returnedResult = Cartesian4.normalize(cartesian, cartesian);
@@ -178,7 +178,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyComponents works with "this" result parameter', function() {
+    it('multiplyComponents works with a result parameter that is an input parameter', function() {
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(8.0, 15.0, 42.0, 72.0);
@@ -213,7 +213,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('add works with "this" result parameter', function() {
+    it('add works with a result parameter that is an input parameter', function() {
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(6.0, 8.0, 13.0, 17.0);
@@ -267,7 +267,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('multiplyByScalar with "this" result parameter', function() {
+    it('multiplyByScalar with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Cartesian4(2.0, 4.0, 6.0, 8.0);
@@ -294,7 +294,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('divideByScalar with "this" result parameter', function() {
+    it('divideByScalar with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Cartesian4(0.5, 1.0, 1.5, 2.0);
@@ -319,7 +319,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('negate with "this" result parameter', function() {
+    it('negate with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(1.0, -2.0, -5.0);
         var expectedResult = new Cartesian4(-1.0, 2.0, 5.0);
         var returnedResult = Cartesian4.negate(cartesian, cartesian);
@@ -343,7 +343,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('abs with "this" result parameter', function() {
+    it('abs with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian4(1.0, -2.0, -4.0, -3.0);
         var expectedResult = new Cartesian4(1.0, 2.0, 4.0, 3.0);
         var returnedResult = Cartesian4.abs(cartesian, cartesian);
@@ -371,7 +371,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('lerp works with "this" result parameter', function() {
+    it('lerp works with a result parameter that is an input parameter', function() {
         var start = new Cartesian4(4.0, 8.0, 10.0, 20.0);
         var end = new Cartesian4(8.0, 20.0, 20.0, 30.0);
         var t = 0.25;
