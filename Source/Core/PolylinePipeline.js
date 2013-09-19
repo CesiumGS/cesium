@@ -142,15 +142,15 @@ define([
                     var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane, wrapLongitudeIntersection);
                     if (defined(intersection)) {
                         // move point on the xz-plane slightly away from the plane
-                        var offset = Cartesian4.multiplyByScalar(xzNormal, 5.0e-9, wrapLongitudeOffset);
+                        var offset = Cartesian3.multiplyByScalar(xzNormal, 5.0e-9, wrapLongitudeOffset);
                         if (Plane.getPointDistance(xzPlane, prev) < 0.0) {
-                            Cartesian4.negate(offset, offset);
+                            Cartesian3.negate(offset, offset);
                         }
 
                         cartesians.push(Cartesian3.add(intersection, offset));
                         segments.push(count + 1);
 
-                        Cartesian4.negate(offset, offset);
+                        Cartesian3.negate(offset, offset);
                         cartesians.push(Cartesian3.add(intersection, offset));
                         count = 1;
                     }

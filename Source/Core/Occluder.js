@@ -389,7 +389,7 @@ define([
     };
 
     Occluder._anyRotationVector = function(occluderPosition, occluderPlaneNormal, occluderPlaneD) {
-        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal));
+        var tempVec0 = Cartesian3.abs(occluderPlaneNormal);
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
         if (((majorAxis === 0) && (tempVec0.z > tempVec0.x)) || ((majorAxis === 1) && (tempVec0.z > tempVec0.y))) {
             majorAxis = 2;
@@ -411,7 +411,7 @@ define([
             tempVec0.z = occluderPosition.z;
             tempVec1 = Cartesian3.UNIT_Z;
         }
-        var u = (Cartesian3.normalize(occluderPlaneNormal, tempVec0) + occluderPlaneD) / -(Cartesian3.dot(occluderPlaneNormal, tempVec1));
+        var u = (Cartesian3.dot(occluderPlaneNormal, tempVec0) + occluderPlaneD) / -(Cartesian3.dot(occluderPlaneNormal, tempVec1));
         return Cartesian3.normalize(Cartesian3.subtract(Cartesian3.add(tempVec0, Cartesian3.multiplyByScalar(tempVec1, u)), occluderPosition));
     };
 

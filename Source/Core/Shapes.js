@@ -56,7 +56,7 @@ define([
             // Create the quaternion to rotate the position vector to the boundary of the ellipse.
             temp = Math.sin(angle / 2.0);
 
-            var unitQuat = Cartesian4.normalize(new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0)));
+            var unitQuat = Quaternion.normalize(new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0)));
             var rotMtx = Matrix3.fromQuaternion(unitQuat);
 
             var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);

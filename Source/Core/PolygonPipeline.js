@@ -460,8 +460,8 @@ define([
      * superfluous vertices (a requirement for this method to work), however,
      * we'll never need this cut because we can always find cut 2-5 as a substitute.
      *
-     * @param {Cartesian3} side
-     * @param {Cartesian3} cut
+     * @param {Cartesian2} side
+     * @param {Cartesian2} cut
      * @returns {Boolean}
      *
      * @private
@@ -973,7 +973,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            Cartesian3.add(v0, v1, mid);
+                            mid = Cartesian3.add(v0, v1);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
@@ -995,7 +995,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            Cartesian3.add(v1, v2, mid);
+                            mid = Cartesian3.add(v1, v2);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
@@ -1017,7 +1017,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            Cartesian3.add(v2, v0, mid);
+                            mid = Cartesian3.add(v2, v0);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;

@@ -80,7 +80,7 @@ define([
         }
 
         var index = 0;
-        startPoint = startPoint.clone(scratch1);
+        startPoint = Cartesian3.clone(startPoint, scratch1);
         for ( var i = 0; i < granularity; i++) {
             startPoint = m.multiplyByVector(startPoint, startPoint);
             array[index++] = startPoint.x;
@@ -220,7 +220,7 @@ define([
                 cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
                 var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
-                cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection, cornerDirection);
+                cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
                     center = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width, center), center);
@@ -233,7 +233,7 @@ define([
                         calculatedLefts.push(left.x, left.y, left.z);
                         calculatedNormals.push(normal.x, normal.y, normal.z);
                     }
-                    startPoint = leftPos.clone(startPoint);
+                    startPoint = Cartesian3.clone(leftPos, startPoint);
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     leftPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width * 2, leftPos), leftPos);
                     previousPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width, previousPos), previousPos);
@@ -254,7 +254,7 @@ define([
                         calculatedLefts.push(left.x, left.y, left.z);
                         calculatedNormals.push(normal.x, normal.y, normal.z);
                     }
-                    startPoint = rightPos.clone(startPoint);
+                    startPoint = Cartesian3.clone(rightPos, startPoint);
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width * 2, rightPos), rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width, previousPos), previousPos), previousPos);

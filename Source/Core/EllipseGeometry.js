@@ -363,7 +363,7 @@ define([
             }
 
             position = ellipsoid.scaleToGeodeticSurface(position, position);
-            extrudedPosition = position.clone(scratchCartesian2);
+            extrudedPosition = Cartesian3.clone(position, scratchCartesian2);
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
             var scaledNormal = Cartesian3.multiplyByScalar(normal, height, scratchCartesian4);
             position = Cartesian3.add(position, scaledNormal, position);
@@ -382,7 +382,7 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
 
-                binormal = normal.clone(binormal);
+                binormal = Cartesian3.clone(normal, binormal);
                 var next = Cartesian3.fromArray(positions, (i + 3) % length, scratchCartesian4);
                 Cartesian3.subtract(next, position, next);
                 var bottom = Cartesian3.subtract(extrudedPosition, position, scratchCartesian3);

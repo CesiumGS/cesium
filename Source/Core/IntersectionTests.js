@@ -64,7 +64,7 @@ define([
         }
 
         result = Cartesian3.multiplyByScalar(direction, t, result);
-        return Cartesian3.add(origin, result);
+        return Cartesian3.add(origin, result, result);
     };
 
     /**

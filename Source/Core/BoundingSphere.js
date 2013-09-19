@@ -348,13 +348,9 @@ define([
             return result;
         }
 
-        if (!defined(center)) {
-            center = Cartesian3.clone(Cartesian3.ZERO);
-        }
+        center = defaultValue(center, Cartesian3.ZERO);
 
-        if (!defined(stride)) {
-            stride = 3;
-        }
+        stride = defaultValue(stride, 3);
 
         if (stride < 3) {
             throw new DeveloperError('stride must be 3 or greater.');
@@ -518,7 +514,7 @@ define([
             result = new BoundingSphere();
         }
 
-        var center = Cartesian3.clone(result.center);
+        var center = result.center;
         Cartesian3.add(corner, oppositeCorner, center);
         Cartesian3.multiplyByScalar(center, 0.5, center);
         result.radius = Cartesian3.distance(center, oppositeCorner);
