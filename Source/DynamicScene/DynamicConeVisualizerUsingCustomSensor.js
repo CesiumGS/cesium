@@ -356,7 +356,7 @@ define([
         if (defined(position) &&
             defined(orientation) &&
             (!position.equals(cone._visualizerPosition) ||
-             !orientation.equals(cone._visualizerOrientation))) {
+             !Quaternion.equals(orientation, cone._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
             cone._visualizerPosition = position.clone(cone._visualizerPosition);
             cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
