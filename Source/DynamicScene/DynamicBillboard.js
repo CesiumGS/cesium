@@ -116,7 +116,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
@@ -124,7 +124,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        width : createObservableProperty('width', '_width'),
+        width : createDynamicPropertyDescriptor('width', '_width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
@@ -132,7 +132,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        height : createObservableProperty('height', '_height'),
+        height : createDynamicPropertyDescriptor('height', '_height'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -140,7 +140,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        nearFarScalar : createObservableProperty('nearFarScalar', '_nearFarScalar')
+        nearFarScalar : createDynamicPropertyDescriptor('nearFarScalar', '_nearFarScalar')
     });
 
     /**
