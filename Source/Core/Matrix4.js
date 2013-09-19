@@ -2059,38 +2059,6 @@ define([
     };
 
     /**
-     * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the column to retrieve.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.getColumn = function(index, result) {
-        return Matrix4.getColumn(this, index, result);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified column in this matrix with the provided Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the column to set.
-     * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.setColumn = function(index, cartesian, result) {
-        return Matrix4.setColumn(this, index, cartesian, result);
-    };
-
-    /**
      * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
      * @memberof Matrix4
      *

@@ -45,10 +45,10 @@ defineSuite([
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
 
         var returnedResult = Transforms.eastNorthUpToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Z); // north
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X); // up
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('eastNorthUpToFixedFrame works with a result parameter', function() {
@@ -58,10 +58,10 @@ defineSuite([
 
         var returnedResult = Transforms.eastNorthUpToFixedFrame(origin, Ellipsoid.UNIT_SPHERE, result);
         expect(result).toBe(returnedResult);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Z); // north
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X); // up
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_X); // up
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('eastNorthUpToFixedFrame works at the north pole', function() {
@@ -71,10 +71,10 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Transforms.eastNorthUpToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_X.negate()); // north
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z); // up
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X.negate()); // north
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z); // up
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('eastNorthUpToFixedFrame works at the south pole', function() {
@@ -82,10 +82,10 @@ defineSuite([
         var expectedTranslation = new Cartesian4(southPole.x, southPole.y, southPole.z, 1.0);
 
         var returnedResult = Transforms.eastNorthUpToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_X); // north
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z.negate()); // up
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X); // north
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z.negate()); // up
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('northEastDownToFixedFrame works without a result parameter', function() {
@@ -93,10 +93,10 @@ defineSuite([
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
 
         var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Z); // north
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X.negate()); // down
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_X.negate()); // down
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('northEastDownToFixedFrame works with a result parameter', function() {
@@ -106,10 +106,10 @@ defineSuite([
 
         var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE, result);
         expect(result).toBe(returnedResult);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Z); // north
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X.negate()); // down
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_X.negate()); // down
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('northEastDownToFixedFrame works at the north pole', function() {
@@ -119,10 +119,10 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Transforms.northEastDownToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_X.negate()); // north
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z.negate()); // down
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_X.negate()); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z.negate()); // down
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('northEastDownToFixedFrame works at the south pole', function() {
@@ -130,10 +130,10 @@ defineSuite([
         var expectedTranslation = new Cartesian4(southPole.x, southPole.y, southPole.z, 1.0);
 
         var returnedResult = Transforms.northEastDownToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_X); // north
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z); // down
-        expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_X); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z); // down
+        expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {

@@ -9,6 +9,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Ellipsoid',
+        './Matrix4',
         './Ray',
         './Plane'
     ], function(
@@ -21,6 +22,7 @@ define([
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        Matrix4,
         Ray,
         Plane) {
     "use strict";
@@ -52,10 +54,10 @@ define([
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
         this._origin = Cartesian3.clone(origin);
-        this._xAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn(0));
-        this._yAxis = Cartesian3.fromCartesian4(eastNorthUp.getColumn(1));
+        this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0));
+        this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1));
 
-        var normal = Cartesian3.fromCartesian4(eastNorthUp.getColumn(2));
+        var normal = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 2));
         this._plane = Plane.fromPointNormal(origin, normal);
     };
 

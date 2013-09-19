@@ -977,7 +977,7 @@ define([
         var west = extent.west;
 
         var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
-        transform.setColumn(3, Cartesian4.UNIT_W);
+        Matrix4.setColumn(transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;

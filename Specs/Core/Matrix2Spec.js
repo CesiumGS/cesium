@@ -159,8 +159,8 @@ defineSuite([
         var expectedColumn0 = new Cartesian2(1.0, 3.0);
         var expectedColumn1 = new Cartesian2(2.0, 4.0);
 
-        var resultColumn0 = matrix.getColumn(0);
-        var resultColumn1 = matrix.getColumn(1);
+        var resultColumn0 = Matrix2.getColumn(matrix, 0);
+        var resultColumn1 = Matrix2.getColumn(matrix, 1);
 
         expect(resultColumn0).toEqual(expectedColumn0);
         expect(resultColumn1).toEqual(expectedColumn1);
@@ -173,8 +173,8 @@ defineSuite([
 
         var resultColumn0 = new Cartesian2();
         var resultColumn1 = new Cartesian2();
-        var returnedResultColumn0 = matrix.getColumn(0, resultColumn0);
-        var returnedResultColumn1 = matrix.getColumn(1, resultColumn1);
+        var returnedResultColumn0 = Matrix2.getColumn(matrix, 0, resultColumn0);
+        var returnedResultColumn1 = Matrix2.getColumn(matrix, 1, resultColumn1);
 
         expect(resultColumn0).toBe(returnedResultColumn0);
         expect(resultColumn0).toEqual(expectedColumn0);
@@ -186,11 +186,11 @@ defineSuite([
         var matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
 
         var expected = new Matrix2(5.0, 2.0, 6.0, 4.0);
-        var result = matrix.setColumn(0, new Cartesian2(5.0, 6.0));
+        var result = Matrix2.setColumn(matrix, 0, new Cartesian2(5.0, 6.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix2(1.0, 7.0, 3.0, 8.0);
-        result = matrix.setColumn(1, new Cartesian2(7.0, 8.0));
+        result = Matrix2.setColumn(matrix, 1, new Cartesian2(7.0, 8.0));
         expect(result).toEqual(expected);
     });
 
@@ -199,12 +199,12 @@ defineSuite([
         var result = new Matrix2();
 
         var expected = new Matrix2(5.0, 2.0, 6.0, 4.0);
-        var returnedResult = matrix.setColumn(0, new Cartesian2(5.0, 6.0), result);
+        var returnedResult = Matrix2.setColumn(matrix, 0, new Cartesian2(5.0, 6.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix2(1.0, 7.0, 3.0, 8.0);
-        returnedResult = matrix.setColumn(1, new Cartesian2(7.0, 8.0), result);
+        returnedResult = Matrix2.setColumn(matrix, 1, new Cartesian2(7.0, 8.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });

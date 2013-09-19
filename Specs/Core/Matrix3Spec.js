@@ -253,9 +253,9 @@ defineSuite([
         var expectedColumn1 = new Cartesian3(2.0, 5.0, 8.0);
         var expectedColumn2 = new Cartesian3(3.0, 6.0, 9.0);
 
-        var resultColumn0 = matrix.getColumn(0);
-        var resultColumn1 = matrix.getColumn(1);
-        var resultColumn2 = matrix.getColumn(2);
+        var resultColumn0 = Matrix3.getColumn(matrix, 0);
+        var resultColumn1 = Matrix3.getColumn(matrix, 1);
+        var resultColumn2 = Matrix3.getColumn(matrix, 2);
 
         expect(resultColumn0).toEqual(expectedColumn0);
         expect(resultColumn1).toEqual(expectedColumn1);
@@ -271,9 +271,9 @@ defineSuite([
         var resultColumn0 = new Cartesian3();
         var resultColumn1 = new Cartesian3();
         var resultColumn2 = new Cartesian3();
-        var returnedResultColumn0 = matrix.getColumn(0, resultColumn0);
-        var returnedResultColumn1 = matrix.getColumn(1, resultColumn1);
-        var returnedResultColumn2 = matrix.getColumn(2, resultColumn2);
+        var returnedResultColumn0 = Matrix3.getColumn(matrix, 0, resultColumn0);
+        var returnedResultColumn1 = Matrix3.getColumn(matrix, 1, resultColumn1);
+        var returnedResultColumn2 = Matrix3.getColumn(matrix, 2, resultColumn2);
 
         expect(resultColumn0).toBe(returnedResultColumn0);
         expect(resultColumn0).toEqual(expectedColumn0);
@@ -287,15 +287,15 @@ defineSuite([
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
 
         var expected = new Matrix3(10.0, 2.0, 3.0, 11.0, 5.0, 6.0, 12.0, 8.0, 9.0);
-        var result = matrix.setColumn(0, new Cartesian3(10.0, 11.0, 12.0));
+        var result = Matrix3.setColumn(matrix, 0, new Cartesian3(10.0, 11.0, 12.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 13.0, 3.0, 4.0, 14.0, 6.0, 7.0, 15.0, 9.0);
-        result = matrix.setColumn(1, new Cartesian3(13.0, 14.0, 15.0));
+        result = Matrix3.setColumn(matrix, 1, new Cartesian3(13.0, 14.0, 15.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 16.0, 4.0, 5.0, 17.0, 7.0, 8.0, 18.0);
-        result = matrix.setColumn(2, new Cartesian3(16.0, 17.0, 18.0));
+        result = Matrix3.setColumn(matrix, 2, new Cartesian3(16.0, 17.0, 18.0));
         expect(result).toEqual(expected);
     });
 
@@ -304,17 +304,17 @@ defineSuite([
         var result = new Matrix3();
 
         var expected = new Matrix3(10.0, 2.0, 3.0, 11.0, 5.0, 6.0, 12.0, 8.0, 9.0);
-        var returnedResult = matrix.setColumn(0, new Cartesian3(10.0, 11.0, 12.0), result);
+        var returnedResult = Matrix3.setColumn(matrix, 0, new Cartesian3(10.0, 11.0, 12.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 13.0, 3.0, 4.0, 14.0, 6.0, 7.0, 15.0, 9.0);
-        returnedResult = matrix.setColumn(1, new Cartesian3(13.0, 14.0, 15.0), result);
+        returnedResult = Matrix3.setColumn(matrix, 1, new Cartesian3(13.0, 14.0, 15.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 16.0, 4.0, 5.0, 17.0, 7.0, 8.0, 18.0);
-        returnedResult = matrix.setColumn(2, new Cartesian3(16.0, 17.0, 18.0), result);
+        returnedResult = Matrix3.setColumn(matrix, 2, new Cartesian3(16.0, 17.0, 18.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
