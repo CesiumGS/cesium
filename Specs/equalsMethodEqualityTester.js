@@ -9,6 +9,7 @@ define(['Core/defined'], function(defined) {
             if (typeof a.equals === 'function') {
                 return a.equals(b);
             } else if(a instanceof Object) {
+                // Check if the current object has a static function named 'equals'
                 to_run = Object.getPrototypeOf(a).constructor.equals;
                 if( typeof to_run === 'function') {
                     return to_run(a, b);
@@ -20,6 +21,7 @@ define(['Core/defined'], function(defined) {
             if (typeof b.equals === 'function') {
                 return b.equals(a);
             } else if(b instanceof Object) {
+                // Check if the current object has a static function named 'equals'
                 to_run = Object.getPrototypeOf(b).constructor.equals;
                 if( typeof to_run === 'function') {
                     return to_run(b, a);

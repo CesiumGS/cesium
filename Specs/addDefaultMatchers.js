@@ -42,6 +42,7 @@ define([
                     if (typeof a.equalsEpsilon === 'function') {
                         return a.equalsEpsilon(b, epsilon);
                     } else if(a instanceof Object) {
+                        // Check if the current object has a static function named 'equalsEpsilon'
                         to_run = Object.getPrototypeOf(a).constructor.equalsEpsilon;
                         if( typeof to_run === 'function') {
                             return to_run(a, b, epsilon);
@@ -53,6 +54,7 @@ define([
                     if (typeof b.equalsEpsilon === 'function') {
                         return b.equalsEpsilon(a, epsilon);
                     } else if(b instanceof Object) {
+                        // Check if the current object has a static function named 'equalsEpsilon'
                         to_run = Object.getPrototypeOf(b).constructor.equalsEpsilon;
                         if( typeof to_run === 'function') {
                             return to_run(b, a, epsilon);
