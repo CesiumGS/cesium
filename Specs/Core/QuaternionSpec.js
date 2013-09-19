@@ -120,7 +120,7 @@ defineSuite([
         expect(quaternion).toEqual(result);
     });
 
-    it('clone works with "this" result parameter', function() {
+    it('clone works with a result parameter that is an input parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var returnedResult = quaternion.clone(quaternion);
         expect(quaternion).toBe(returnedResult);
@@ -140,6 +140,14 @@ defineSuite([
         var returnedResult = Quaternion.conjugate(quaternion, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('conjugate works with a result parameter that is an input parameter', function() {
+        var expected = new Quaternion(-1.0, -2.0, -3.0, 4.0);
+        var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+        var returnedResult = Quaternion.conjugate(quaternion, quaternion);
+        expect(quaternion).toBe(returnedResult);
+        expect(quaternion).toEqual(expected);
     });
 
     it('magnitudeSquared computes correct result', function() {
@@ -172,6 +180,14 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('normalize works with a result parameter that is an input parameter', function() {
+        var quaternion = new Quaternion(2.0, 0.0, 0.0, 0.0);
+        var expectedResult = new Quaternion(1.0, 0.0, 0.0, 0.0);
+        var returnedResult = Quaternion.normalize(quaternion, quaternion);
+        expect(quaternion).toBe(returnedResult);
+        expect(quaternion).toEqual(expectedResult);
+    });
+
     it('inverse works without a result parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
         var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
@@ -188,6 +204,15 @@ defineSuite([
         var returnedResult = Quaternion.inverse(quaternion, result);
         expect(returnedResult).toEqual(expected);
         expect(returnedResult).toBe(result);
+    });
+
+    it('inverse works with a result parameter that is an input parameter', function() {
+        var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
+        var magnitudeSquared = quaternion.magnitudeSquared();
+        var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
+        var returnedResult = Quaternion.inverse(quaternion, quaternion);
+        expect(returnedResult).toEqual(expected);
+        expect(returnedResult).toBe(quaternion);
     });
 
     it('dot', function() {
@@ -222,6 +247,16 @@ defineSuite([
         expect(result).toBe(returnedResult);
     });
 
+    it('multiply works with a result parameter that is an input parameter', function() {
+        var left = new Quaternion(1.0, 2.0, 3.0, 4.0);
+        var right = new Quaternion(8.0, 7.0, 6.0, 5.0);
+
+        var expected = new Quaternion(28.0, 56.0, 30.0, -20.0);
+        var returnedResult = Quaternion.multiply(left, right, left);
+        expect(returnedResult).toEqual(expected);
+        expect(left).toBe(returnedResult);
+    });
+
     it('add works without a result parameter', function() {
         var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
         var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
@@ -238,6 +273,15 @@ defineSuite([
         var returnedResult = Quaternion.add(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
+    });
+
+    it('add works with a result parameter that is an input parameter', function() {
+        var left = new Quaternion(2.0, 3.0, 6.0, 8.0);
+        var right = new Quaternion(4.0, 5.0, 7.0, 9.0);
+        var expectedResult = new Quaternion(6.0, 8.0, 13.0, 17.0);
+        var returnedResult = Quaternion.add(left, right, left);
+        expect(left).toBe(returnedResult);
+        expect(left).toEqual(expectedResult);
     });
 
     it('subtract works without a result parameter', function() {
@@ -258,6 +302,14 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('subtract works with this result parameter', function() {
+        var left = new Quaternion(2.0, 3.0, 4.0, 8.0);
+        var right = new Quaternion(1.0, 5.0, 7.0, 9.0);
+        var expectedResult = new Quaternion(1.0, -2.0, -3.0, -1.0);
+        var returnedResult = Quaternion.subtract(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expectedResult);
+    });
     it('multiplyByScalar without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
@@ -275,6 +327,15 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
+
+    it('multiplyByScalar with a result parameter that is an input parameter', function() {
+        var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
+        var scalar = 2;
+        var expectedResult = new Quaternion(2.0, 4.0, 6.0, 8.0);
+        var returnedResult = Quaternion.multiplyByScalar(quaternion, scalar, quaternion);
+        expect(quaternion).toBe(returnedResult);
+        expect(quaternion).toEqual(expectedResult);
+    }); 
 
     it('divideByScalar without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
@@ -294,7 +355,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('divideByScalar with "this" result parameter', function() {
+    it('divideByScalar with a result parameter that is an input parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         var scalar = 2;
         var expectedResult = new Quaternion(0.5, 1.0, 1.5, 2.0);
@@ -370,7 +431,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('negate with "this" result parameter', function() {
+    it('negate with a result parameter that is an input parameter', function() {
         var quaternion = new Quaternion(1.0, -2.0, -5.0);
         var expectedResult = new Quaternion(-1.0, 2.0, 5.0);
         var returnedResult = Quaternion.negate(quaternion, quaternion);
@@ -398,7 +459,7 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
-    it('lerp works with "this" result parameter', function() {
+    it('lerp works with a result parameter that is an input parameter', function() {
         var start = new Quaternion(4.0, 8.0, 10.0, 20.0);
         var end = new Quaternion(8.0, 20.0, 20.0, 30.0);
         var t = 0.25;
@@ -447,7 +508,7 @@ defineSuite([
         expect(result).toBe(returnedResult);
     });
 
-    it('slerp works with "this" result parameter', function() {
+    it('slerp works with a result parameter that is an input parameter', function() {
         var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
         var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
