@@ -75,49 +75,6 @@ define([
     };
 
     /**
-     * Creates a Cartesian3 from three consecutive elements in an array.
-     * @memberof Cartesian3
-     *
-     * @param {Array} values The array whose three consecutive elements correspond to the x, y, and z components, respectively.
-     * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     *
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
-     * @exception {DeveloperError} offset + 3 is greater than the length of the array.
-     *
-     * @example
-     * // Create a Cartesian3 with (1.0, 2.0, 3.0)
-     * var v = [1.0, 2.0, 3.0];
-     * var p = Cartesian3.fromArray(v);
-     *
-     * // Create a Cartesian3 with (1.0, 2.0, 3.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
-     * var p2 = Cartesian3.fromArray(v2, 2);
-     */
-    Cartesian3.fromArray = function(values, offset, result) {
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
-
-        if (offset + 3 > values.length) {
-            throw new DeveloperError('offset + 3 is greater than the length of the array.');
-        }
-
-        offset = defaultValue(offset, 0);
-
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
-        result.x = values[offset + 0];
-        result.y = values[offset + 1];
-        result.z = values[offset + 2];
-        return result;
-    };
-
-    /**
      * Creates a Cartesian3 instance from x, y and z coordinates.
      * @memberof Cartesian3
      *
@@ -232,6 +189,29 @@ define([
         result.z = array[startingIndex];
         return result;
     };
+
+    /**
+     * Creates a Cartesian3 from three consecutive elements in an array.
+     * @memberof Cartesian3
+     *
+     * @param {Array} array The array whose three consecutive elements correspond to the x, y, and z components, respectively.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create a Cartesian3 with (1.0, 2.0, 3.0)
+     * var v = [1.0, 2.0, 3.0];
+     * var p = Cartesian3.fromArray(v);
+     *
+     * // Create a Cartesian3 with (1.0, 2.0, 3.0) using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
+     * var p2 = Cartesian3.fromArray(v2, 2);
+     */
+    Cartesian3.fromArray = Cartesian3.unpack;
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.

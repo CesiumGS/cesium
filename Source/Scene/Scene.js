@@ -383,7 +383,7 @@ define([
         frameState.frameNumber = frameNumber;
         frameState.time = time;
         frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = undefined;
         frameState.canvasDimensions.x = scene._canvas.clientWidth;
         frameState.canvasDimensions.y = scene._canvas.clientHeight;
@@ -393,7 +393,7 @@ define([
         var cb = scene._primitives.getCentralBody();
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.positionWC);
             frameState.occluder = occluder;
         }
 
@@ -469,8 +469,8 @@ define([
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
 
-        var direction = camera.getDirectionWC();
-        var position = camera.getPositionWC();
+        var direction = camera.directionWC;
+        var position = camera.positionWC;
 
         if (scene.debugShowFrustums) {
             scene.debugFrustumStatistics = {
@@ -802,6 +802,7 @@ define([
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
+        context.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -833,7 +834,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.getDirectionWC(), camera.getUpWC());
+        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
@@ -867,7 +868,7 @@ define([
         offCenter.near = near;
         offCenter.far = frustum.far;
 
-        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
     function getPickCullingVolume(scene, windowPosition, width, height) {
@@ -911,7 +912,9 @@ define([
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
-        return this._pickFramebuffer.end(scratchRectangle);
+        var object = this._pickFramebuffer.end(scratchRectangle);
+        context.endFrame();
+        return object;
     };
 
     /**

@@ -169,7 +169,7 @@ define([
             this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
         }
 
-        var cameraPosition = frameState.camera.getPositionWC();
+        var cameraPosition = frameState.camera.positionWC;
 
         this._fCameraHeight2 = cameraPosition.magnitudeSquared();
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);

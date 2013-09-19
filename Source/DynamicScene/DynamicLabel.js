@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -52,84 +52,84 @@ define(['../Core/defaultValue',
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        text : createObservableProperty('text', '_text'),
+        text : createDynamicPropertyDescriptor('text', '_text'),
 
         /**
          * Gets or sets the string {@link Property} specifying the the label's font.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        font : createObservableProperty('font', '_font'),
+        font : createDynamicPropertyDescriptor('font', '_font'),
 
         /**
          * Gets or sets the {@link LabelStyle} {@link Property} specifying the the label's style.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        style : createObservableProperty('style', '_style'),
+        style : createDynamicPropertyDescriptor('style', '_style'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's fill color.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        fillColor : createObservableProperty('fillColor', '_fillColor'),
+        fillColor : createDynamicPropertyDescriptor('fillColor', '_fillColor'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's outline color.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the label outline's width.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the label's horizontal origin.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        horizontalOrigin : createObservableProperty('horizontalOrigin', '_horizontalOrigin'),
+        horizontalOrigin : createDynamicPropertyDescriptor('horizontalOrigin', '_horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the label's vertical origin.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        verticalOrigin : createObservableProperty('verticalOrigin', '_verticalOrigin'),
+        verticalOrigin : createDynamicPropertyDescriptor('verticalOrigin', '_verticalOrigin'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the label's eye offset.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        eyeOffset : createObservableProperty('eyeOffset', '_eyeOffset'),
+        eyeOffset : createDynamicPropertyDescriptor('eyeOffset', '_eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the label's pixel offset.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        pixelOffset : createObservableProperty('pixelOffset', '_pixelOffset'),
+        pixelOffset : createDynamicPropertyDescriptor('pixelOffset', '_pixelOffset'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the label's scale.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        scale : createObservableProperty('scale', '_scale'),
+        scale : createDynamicPropertyDescriptor('scale', '_scale'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the label's visibility.
          * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show')
+        show : createDynamicPropertyDescriptor('show', '_show')
     });
 
     /**

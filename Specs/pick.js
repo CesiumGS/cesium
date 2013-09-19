@@ -43,10 +43,10 @@ define([
 
         frameState.passes = oldPasses;
 
-        var primitive = pickFramebuffer.end(rectangle);
+        var p = pickFramebuffer.end(rectangle);
         pickFramebuffer.destroy();
 
-        return primitive;
+        return p;
     }
 
     return pick;

@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -45,35 +45,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        color : createObservableProperty('color', '_color'),
+        color : createDynamicPropertyDescriptor('color', '_color'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        pixelSize : createObservableProperty('pixelSize', '_pixelSize'),
+        pixelSize : createDynamicPropertyDescriptor('pixelSize', '_pixelSize'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show')
+        show : createDynamicPropertyDescriptor('show', '_show')
     });
 
     /**

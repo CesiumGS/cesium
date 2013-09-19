@@ -81,14 +81,15 @@ require(['Cesium'], function(Cesium) {
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
-                if (billboard && pickedObject === billboard) {
-                    billboard.setScale(2.0);
-                    billboard.setColor({ red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 });
-                }
-                else if (billboard) {
-                    billboard.setScale(1.0);
-                    billboard.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 });
+                if (Cesium.defined(billboard)) {
+                    var pickedObject = scene.pick(movement.endPosition);
+                    if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard)) {
+                        billboard.setScale(2.0);
+                        billboard.setColor({ red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 });
+                    } else {
+                        billboard.setScale(1.0);
+                        billboard.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 });
+                    }
                 }
             },
             Cesium.ScreenSpaceEventType.MOUSE_MOVE
@@ -116,7 +117,7 @@ require(['Cesium'], function(Cesium) {
         handler.setInputAction(function (movement) {
             if (billboard) {
                 var pickedObject = scene.pick(movement.endPosition);
-                if ((pickedObject === billboard) && !billboard.highlighted) {
+                if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard) && !billboard.highlighted) {
                     // on enter
                     animation = animation || scene.getAnimations().add({
                         onUpdate : update,
@@ -190,7 +191,7 @@ require(['Cesium'], function(Cesium) {
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.position);
-                if (!eroding && (pickedObject === sensor)) {
+                if (!eroding && Cesium.defined(pickedObject) && (pickedObject.primitive === sensor)) {
                     // Prevent multiple erosions
                     eroding = true;
                     scene.getAnimations().addProperty(sensor.material.uniforms, 'time', 1.0, 0.0, {
@@ -211,8 +212,8 @@ require(['Cesium'], function(Cesium) {
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
             handler.setInputAction(function(movement) {
                 var p = scene.pick(movement.endPosition);
-                if (primitives.contains(p)) {
-                    primitives.raiseToTop(p);
+                if (Cesium.defined(p) && primitives.contains(p.primitive)) {
+                    primitives.raiseToTop(p.primitive);
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 

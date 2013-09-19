@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -48,49 +48,49 @@ define(['../Core/defaultValue',
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        directions : createObservableProperty('directions', '_directions'),
+        directions : createDynamicPropertyDescriptor('directions', '_directions'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        radius : createObservableProperty('radius', '_radius'),
+        radius : createDynamicPropertyDescriptor('radius', '_radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        showIntersection : createObservableProperty('showIntersection', '_showIntersection'),
+        showIntersection : createDynamicPropertyDescriptor('showIntersection', '_showIntersection'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        intersectionColor : createObservableProperty('intersectionColor', '_intersectionColor'),
+        intersectionColor : createDynamicPropertyDescriptor('intersectionColor', '_intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        intersectionWidth : createObservableProperty('intersectionWidth', '_intersectionWidth'),
+        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth', '_intersectionWidth'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
          * @memberof DynamicPyramid.prototype
          * @type {MaterialProperty}
          */
-        material : createObservableProperty('material', '_material')
+        material : createDynamicPropertyDescriptor('material', '_material')
     });
 
     /**

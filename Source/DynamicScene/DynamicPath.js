@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -48,56 +48,56 @@ define(['../Core/defaultValue',
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        color : createObservableProperty('color', '_color'),
+        color : createDynamicPropertyDescriptor('color', '_color'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the path's outline color.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's outline width.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        width : createObservableProperty('width', '_width'),
+        width : createDynamicPropertyDescriptor('width', '_width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        resolution : createObservableProperty('resolution', '_resolution'),
+        resolution : createDynamicPropertyDescriptor('resolution', '_resolution'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        leadTime : createObservableProperty('leadTime', '_leadTime'),
+        leadTime : createDynamicPropertyDescriptor('leadTime', '_leadTime'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        trailTime : createObservableProperty('trailTime', '_trailTime')
+        trailTime : createDynamicPropertyDescriptor('trailTime', '_trailTime')
     });
 
     /**

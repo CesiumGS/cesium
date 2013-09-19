@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -45,35 +45,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        color : createObservableProperty('color', '_color'),
+        color : createDynamicPropertyDescriptor('color', '_color'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the vector's visibility.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's width.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        width : createObservableProperty('width', '_width'),
+        width : createDynamicPropertyDescriptor('width', '_width'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the the vector's direction.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        direction : createObservableProperty('direction', '_direction'),
+        direction : createDynamicPropertyDescriptor('direction', '_direction'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's graphical length in meters.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        length : createObservableProperty('length', '_length')
+        length : createDynamicPropertyDescriptor('length', '_length')
     });
 
     /**
