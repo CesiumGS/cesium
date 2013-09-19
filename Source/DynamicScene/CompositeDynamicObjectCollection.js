@@ -16,6 +16,14 @@ define(['../Core/createGuid',
         DynamicObjectCollection) {
     "use strict";
 
+    function clean(dynamicObject) {
+        var propertyNames = dynamicObject.propertyNames;
+        var propertyNamesLength = propertyNames.length;
+        for ( var i = 0; i < propertyNamesLength; i++) {
+            dynamicObject[propertyNames[i]] = undefined;
+        }
+    }
+
     function createSubPropertyChangedCallback(that, dynamicObject, propertyName) {
         return function(property, subPropertyName, newValue, oldValue) {
             var id = dynamicObject.id;
@@ -164,7 +172,7 @@ define(['../Core/createGuid',
                     if (!defined(compositeObject)) {
                         compositeObject = new DynamicObject(object.id);
                     } else {
-                        compositeObject.clean();
+                        clean(compositeObject);
                     }
                     newObjects.add(compositeObject);
                 }
@@ -518,7 +526,7 @@ define(['../Core/createGuid',
                 if (defined(object)) {
                     if (!defined(compositeObject)) {
                         compositeObject = composite.getById(removedId);
-                        compositeObject.clean();
+                        clean(compositeObject);
                     }
                     compositeObject.merge(object);
                 }
@@ -548,7 +556,7 @@ define(['../Core/createGuid',
                             compositeObject = new DynamicObject(addedId);
                             composite.add(compositeObject);
                         } else {
-                            compositeObject.clean();
+                            clean(compositeObject);
                         }
                     }
                     compositeObject.merge(object);

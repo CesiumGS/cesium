@@ -79,7 +79,7 @@ define(['../Core/createGuid',
             }
         },
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the names of all properties registed on this instance.
          * @memberof DynamicObject.prototype
          * @type {Event}
          */
@@ -216,19 +216,7 @@ define(['../Core/createGuid',
         }
 
         var availability = this._availability;
-        if (!defined(availability)) {
-            return true;
-        }
-
-        if (JulianDate.equals(this._cachedAvailabilityDate, time)) {
-            return this._cachedAvailabilityValue;
-        }
-
-        var availabilityValue = availability.contains(time);
-        this._cachedAvailabilityDate = JulianDate.clone(time, this._cachedAvailabilityDate);
-        this._cachedAvailabilityValue = availabilityValue;
-
-        return availabilityValue;
+        return !defined(availability) || availability.contains(time);
     };
 
     /**
@@ -250,15 +238,15 @@ define(['../Core/createGuid',
 
         var propertyNames = this._propertyNames;
         if (propertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is a reserved property name.');
+            throw new DeveloperError(propertyName + ' is already a registered property.');
         }
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is already a registered property.');
+            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
 
         propertyNames.push(propertyName);
 
-        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName));
+        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName, true));
     };
 
     /**
@@ -322,17 +310,6 @@ define(['../Core/createGuid',
                     }
                 }
             }
-        }
-    };
-
-    /**
-     * @private
-     */
-    DynamicObject.prototype.clean = function() {
-        var propertyNames = this._propertyNames;
-        var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
-            this[propertyNames[i]] = undefined;
         }
     };
 
