@@ -335,7 +335,7 @@ defineSuite([
         var returnedResult = Quaternion.multiplyByScalar(quaternion, scalar, quaternion);
         expect(quaternion).toBe(returnedResult);
         expect(quaternion).toEqual(expectedResult);
-    }); 
+    });
 
     it('divideByScalar without a result parameter', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
