@@ -191,7 +191,7 @@ define([
             var surfPosMag = Cartesian3.magnitude(surfPos);
 
             var tempVec = new Cartesian3(0.0, 0.0, 1);
-            var temp = 1.0 / surPosMag;
+            var temp = 1.0 / surfPosMag;
 
             var unitPos = Cartesian3.multiplyByScalar(surfPos, temp);
             var eastVec = Cartesian3.normalize(Cartesian3.cross(tempVec, surfPos));
