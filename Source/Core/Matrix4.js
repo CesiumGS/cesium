@@ -2059,17 +2059,6 @@ define([
     };
 
     /**
-     * Computes an Array from this Matrix4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
-     */
-    Matrix4.prototype.toArray = function(result) {
-        return Matrix4.toArray(this, result);
-    };
-
-    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
      * @memberof Matrix4
      *

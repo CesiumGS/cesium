@@ -222,7 +222,7 @@ defineSuite([
 
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray();
+        var returnedResult = Matrix3.toArray(Matrix3.fromColumnMajorArray(expected));
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
     });
@@ -230,7 +230,7 @@ defineSuite([
     it('toArray works with a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         var result = [];
-        var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray(result);
+        var returnedResult = Matrix3.toArray(Matrix3.fromColumnMajorArray(expected), result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);

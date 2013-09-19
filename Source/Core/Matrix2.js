@@ -654,17 +654,6 @@ define([
     };
 
     /**
-     * Creates an Array from this Matrix2 instance.
-     * @memberof Matrix2
-     *
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
-     */
-    Matrix2.prototype.toArray = function(result) {
-        return Matrix2.toArray(this, result);
-    };
-
-    /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian2 instance.
      * @memberof Matrix2
      *
