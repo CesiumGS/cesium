@@ -742,7 +742,7 @@ define([
 
             nw.subtract(center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
-            rotationMatrix.multiplyByVector(nw, nw);
+            Matrix2.multiplyByVector(rotationMatrix, nw, nw);
             nw.add(center, nw);
             proj.unproject(nw, nwCartographic);
 

@@ -185,7 +185,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise.
      * var p = new Cartesian2(5, 6);
      * var m = Matrix2.fromRotation(CesiumMath.toRadians(45.0));
-     * var rotated = m.multiplyByVector(p);
+     * var rotated = Matrix2.multiplyByVector(m, p);
      */
     Matrix2.fromRotation = function(angle, result) {
         if (!defined(angle)) {
@@ -653,47 +653,6 @@ define([
         return Matrix2.clone(this, result);
     };
 
-    /**
-     * Computes the product of this matrix and the provided matrix.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} right The right hand side matrix.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Matrix2.prototype.multiply = function(right, result) {
-        return Matrix2.multiply(this, right, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a column vector.
-     * @memberof Matrix2
-     *
-     * @param {Cartesian2} cartesian The column.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix2.prototype.multiplyByVector = function(cartesian, result) {
-        return Matrix2.multiplyByVector(this, cartesian, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a scalar.
-     * @memberof Matrix2
-     *
-     * @param {Number} scalar The number to multiply by.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Matrix2.prototype.multiplyByScalar = function(scalar, result) {
-        return Matrix2.multiplyByScalar(this, scalar, result);
-    };
     /**
      * Creates a negated copy of this matrix.
      * @memberof Matrix2

@@ -57,7 +57,7 @@ define([
             var unitQuat = Quaternion.normalize(new Quaternion(rotAxis.x * temp, rotAxis.y * temp, rotAxis.z * temp, Math.cos(angle / 2.0)));
             var rotMtx = Matrix3.fromQuaternion(unitQuat);
 
-            var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
+            var tmpEllipsePts = Matrix3.multiplyByVector(rotMtx, unitPos);
             var unitCart = tmpEllipsePts.normalize();
             tmpEllipsePts = unitCart.multiplyByScalar(mag);
             ellipsePts[ellipsePtsIndex] = tmpEllipsePts;

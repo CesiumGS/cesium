@@ -415,7 +415,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = transform.multiply(oldTransform);
+            camera.transform = Matrix4.multiply(transform, oldTransform);
 
             var invTransform = camera.inverseTransform;
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
@@ -1359,7 +1359,7 @@ define([
         var updateCV = function(value) {
             var interp = position.lerp(newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(pos));
+            camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, pos));
         };
 
         return {
@@ -1380,14 +1380,14 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(Cartesian4.UNIT_X));
+        var normal = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, Cartesian4.UNIT_X));
         var scalar = -normal.dot(position) / normal.dot(direction);
         var center = position.add(direction.multiplyByScalar(scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = camera.transform.multiplyByVector(center);
+        var centerWC = Matrix4.multiplyByVector(camera.transform, center);
 
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = camera.transform.multiplyByVector(cameraPosition);
+        var positionWC = Matrix4.multiplyByVector(camera.transform, cameraPosition);
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;

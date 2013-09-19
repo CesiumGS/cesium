@@ -499,7 +499,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
         var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
-        var result = left.multiply(right);
+        var result = Matrix4.multiply(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -508,7 +508,7 @@ defineSuite([
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
         var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
         var result = new Matrix4();
-        var returnedResult = left.multiply(right, result);
+        var returnedResult = Matrix4.multiply(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -517,7 +517,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
         var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
-        var returnedResult = left.multiply(right, left);
+        var returnedResult = Matrix4.multiply(left, right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });
@@ -580,7 +580,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Cartesian4(17, 18, 19, 20);
         var expected = new Cartesian4(190, 486, 782, 1078);
-        var result = left.multiplyByVector(right);
+        var result = Matrix4.multiplyByVector(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -589,7 +589,7 @@ defineSuite([
         var right = new Cartesian4(17, 18, 19, 20);
         var expected = new Cartesian4(190, 486, 782, 1078);
         var result = new Cartesian4();
-        var returnedResult = left.multiplyByVector(right, result);
+        var returnedResult = Matrix4.multiplyByVector(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -616,7 +616,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = 2;
         var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32);
-        var result = left.multiplyByScalar(right);
+        var result = Matrix4.multiplyByScalar(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -625,7 +625,7 @@ defineSuite([
         var right = 2;
         var expected = new Matrix4(2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32);
         var result = new Matrix4();
-        var returnedResult = left.multiplyByScalar(right, result);
+        var returnedResult = Matrix4.multiplyByScalar(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -827,7 +827,7 @@ defineSuite([
     it('getTranslation works without a result parameter', function() {
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var expected = new Cartesian3(4, 8, 12);
-        var returnedResult = matrix.getTranslation();
+        var returnedResult = Matrix4.getTranslation(matrix);
         expect(expected).toEqual(returnedResult);
     });
 
@@ -835,7 +835,7 @@ defineSuite([
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var expected = new Cartesian3(4, 8, 12);
         var result = new Cartesian3();
-        var returnedResult = matrix.getTranslation(result);
+        var returnedResult = Matrix4.getTranslation(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqual(returnedResult);
     });
@@ -843,7 +843,7 @@ defineSuite([
     it('getRotation works without a result parameter', function() {
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
-        var returnedResult = matrix.getRotation();
+        var returnedResult = Matrix4.getRotation(matrix);
         expect(expected).toEqual(returnedResult);
     });
 
@@ -851,7 +851,7 @@ defineSuite([
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var expected = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
         var result = new Matrix3();
-        var returnedResult = matrix.getRotation(result);
+        var returnedResult = Matrix4.getRotation(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqual(returnedResult);
     });
@@ -867,9 +867,9 @@ defineSuite([
                                    0.0022922521876059163, 0.8210249357172755,   0.5732623731786561,  2.2127927604696125,
                                    0.0,                   0.0,                  0.0,                 1.0);
 
-        var returnedResult = matrix.inverse();
+        var returnedResult = Matrix4.inverse(matrix);
         expect(expected).toEqualEpsilon(returnedResult, CesiumMath.EPSILON20);
-        expect(returnedResult.multiply(matrix)).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
+        expect(Matrix4.multiply(returnedResult, matrix)).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
     });
 
     it('inverse works with a result parameter', function() {
@@ -884,10 +884,10 @@ defineSuite([
                                    0.0,                   0.0,                  0.0,                 1.0);
 
         var result = new Matrix4();
-        var returnedResult = matrix.inverse(result);
+        var returnedResult = Matrix4.inverse(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqualEpsilon(returnedResult, CesiumMath.EPSILON20);
-        expect(returnedResult.multiply(matrix)).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
+        expect(Matrix4.multiply(returnedResult, matrix)).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
     });
 
 
@@ -902,9 +902,9 @@ defineSuite([
                                    0, 1, 0, -20,
                                    0, 0, 0, 1);
 
-        var returnedResult = matrix.inverseTransformation();
+        var returnedResult = Matrix4.inverseTransformation(matrix);
         expect(expected).toEqual(returnedResult);
-        expect(returnedResult.multiply(matrix)).toEqual(Matrix4.IDENTITY);
+        expect(Matrix4.multiply(returnedResult, matrix)).toEqual(Matrix4.IDENTITY);
     });
 
     it('inverseTransformation works with a result parameter', function() {
@@ -919,10 +919,10 @@ defineSuite([
                                    0, 0, 0, 1);
 
         var result = new Matrix4();
-        var returnedResult = matrix.inverseTransformation(result);
+        var returnedResult = Matrix4.inverseTransformation(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqual(returnedResult);
-        expect(returnedResult.multiply(matrix)).toEqual(Matrix4.IDENTITY);
+        expect(Matrix4.multiply(returnedResult, matrix)).toEqual(Matrix4.IDENTITY);
     });
 
     it('fromRowMajorArray throws with undefined parameter', function() {

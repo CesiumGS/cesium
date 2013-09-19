@@ -170,7 +170,7 @@ define([
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
-                    point : rotation.multiplyByVector(aboveEnd)
+                    point : Matrix3.multiplyByVector(rotation, aboveEnd)
                 });
             }
 

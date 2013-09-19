@@ -2059,20 +2059,6 @@ define([
     };
 
     /**
-     * Computes the product of this matrix and the provided matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} right The right hand side matrix.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Matrix4.prototype.multiply = function(right, result) {
-        return Matrix4.multiply(this, right, result);
-    };
-
-    /**
      * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
      * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit translation matrix defined by a {@link Cartesian3}.
      *
@@ -2107,20 +2093,6 @@ define([
     };
 
     /**
-     * Computes the product of this matrix and a column vector.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian4} cartesian The vector.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix4.prototype.multiplyByVector = function(cartesian, result) {
-        return Matrix4.multiplyByVector(this, cartesian, result);
-    };
-
-    /**
      * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
      * with a {@link Cartesian4} with a <code>w</code> component of one.
      * @memberof Matrix4
@@ -2135,19 +2107,6 @@ define([
         return Matrix4.multiplyByPoint(this, cartesian, result);
     };
 
-    /**
-     * Computes the product of this matrix and a scalar.
-     * @memberof Matrix4
-     *
-     * @param {Number} scalar The number to multiply by.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Matrix4.prototype.multiplyByScalar = function(scalar, result) {
-        return Matrix4.multiplyByScalar(this, scalar, result);
-    };
     /**
      * Computes a negated copy of this matrix.
      * @memberof Matrix4

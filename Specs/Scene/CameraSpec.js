@@ -51,7 +51,7 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = rotation.multiply(translation);
+        var expected = Matrix4.multiply(rotation, translation);
         expect(viewMatrix).toEqual(expected);
     });
 

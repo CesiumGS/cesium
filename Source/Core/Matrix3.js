@@ -276,7 +276,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the x-axis.
      * var p = new Cartesian3(5, 6, 7);
      * var m = Matrix3.fromRotationX(CesiumMath.toRadians(45.0));
-     * var rotated = m.multiplyByVector(p);
+     * var rotated = Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationX = function(angle, result) {
         if (!defined(angle)) {
@@ -320,7 +320,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the y-axis.
      * var p = new Cartesian3(5, 6, 7);
      * var m = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
-     * var rotated = m.multiplyByVector(p);
+     * var rotated = Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationY = function(angle, result) {
         if (!defined(angle)) {
@@ -364,7 +364,7 @@ define([
      * // Rotate a point 45 degrees counterclockwise around the z-axis.
      * var p = new Cartesian3(5, 6, 7);
      * var m = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
-     * var rotated = m.multiplyByVector(p);
+     * var rotated = Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationZ = function(angle, result) {
         if (!defined(angle)) {
@@ -918,47 +918,6 @@ define([
         return Matrix3.clone(this, result);
     };
 
-    /**
-     * Computes the product of this matrix and the provided matrix.
-     * @memberof Matrix3
-     *
-     * @param {Matrix3} right The right hand side matrix.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Matrix3.prototype.multiply = function(right, result) {
-        return Matrix3.multiply(this, right, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a column vector.
-     * @memberof Matrix3
-     *
-     * @param {Cartesian3} cartesian The column.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix3.prototype.multiplyByVector = function(cartesian, result) {
-        return Matrix3.multiplyByVector(this, cartesian, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a scalar.
-     * @memberof Matrix3
-     *
-     * @param {Number} scalar The number to multiply by.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Matrix3.prototype.multiplyByScalar = function(scalar, result) {
-        return Matrix3.multiplyByScalar(this, scalar, result);
-    };
     /**
      * Creates a negated copy of this matrix.
      * @memberof Matrix3

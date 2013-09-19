@@ -395,7 +395,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
-        var result = left.multiply(right);
+        var result = Matrix3.multiply(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -404,7 +404,7 @@ defineSuite([
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
         var result = new Matrix3();
-        var returnedResult = left.multiply(right, result);
+        var returnedResult = Matrix3.multiply(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -413,7 +413,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
-        var returnedResult = left.multiply(right, left);
+        var returnedResult = Matrix3.multiply(left, right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });
@@ -422,7 +422,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Cartesian3(10, 11, 12);
         var expected = new Cartesian3(68, 167, 266);
-        var result = left.multiplyByVector(right);
+        var result = Matrix3.multiplyByVector(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -431,7 +431,7 @@ defineSuite([
         var right = new Cartesian3(10, 11, 12);
         var expected = new Cartesian3(68, 167, 266);
         var result = new Cartesian3();
-        var returnedResult = left.multiplyByVector(right, result);
+        var returnedResult = Matrix3.multiplyByVector(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -440,7 +440,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = 2;
         var expected = new Matrix3(2, 4, 6, 8, 10, 12, 14, 16, 18);
-        var result = left.multiplyByScalar(right);
+        var result = Matrix3.multiplyByScalar(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -449,7 +449,7 @@ defineSuite([
         var right = 2;
         var expected = new Matrix3(2, 4, 6, 8, 10, 12, 14, 16, 18);
         var result = new Matrix3();
-        var returnedResult = left.multiplyByScalar(right, result);
+        var returnedResult = Matrix3.multiplyByScalar(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });

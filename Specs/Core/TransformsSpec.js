@@ -280,7 +280,7 @@ defineSuite([
                     expect(t4.inverse()).toEqualEpsilon(t4.inverseTransformation(), CesiumMath.EPSILON14);
 
                     var expectedMtx = Matrix3.fromQuaternion(componentsData[i].icrfToFixedQuaternion);
-                    var testInverse = t.transpose().multiply(expectedMtx);
+                    var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx);
                     var testDiff = new Matrix3();
                     for ( var k = 0; k < 9; k++) {
                         testDiff[k] = t[k] - expectedMtx[k];
@@ -323,7 +323,7 @@ defineSuite([
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
                 var expectedMtx = new Matrix3(0.18264414843630006, -0.98317906144315947, -0.00021950336420248503, 0.98317840915224974, 0.18264428011734501, -0.0011325710874539787, 0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
 
-                var testInverse = t.transpose().multiply(expectedMtx);
+                var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx);
                 var testDiff = new Matrix3();
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
@@ -348,7 +348,7 @@ defineSuite([
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
                 var expectedMtx = new Matrix3(-0.19073578935932833, 0.98164138366748721, 0.00022919174269963536, -0.98164073712836186, -0.19073592679333939, 0.0011266944449015753, 0.0011497249933208494, -0.000010082996932331842, 0.99999933901516791);
 
-                var testInverse = t.transpose().multiply(expectedMtx);
+                var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx);
                 var testDiff = new Matrix3();
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
@@ -372,7 +372,7 @@ defineSuite([
                 //The rotation matrix from STK Components corresponding to the time and data inputs above
                 var expectedMtx = new Matrix3(-0.17489910479510423, 0.984586338811966, 0.00021110831245616662, -0.98458569065286827, -0.17489923190143036, 0.0011297972845023996, 0.0011493056536445096, -0.00001025368996280683, 0.99999933949547);
 
-                var testInverse = t.transpose().multiply(expectedMtx);
+                var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx);
                 var testDiff = new Matrix3();
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
@@ -399,7 +399,7 @@ defineSuite([
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
-                var result = t.multiplyByVector(inertialPos);
+                var result = Matrix3.multiplyByVector(t, inertialPos);
                 var error = result.subtract(expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
@@ -449,7 +449,7 @@ defineSuite([
                 var resultT = new Matrix3();
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
-                var result = t.multiplyByVector(inertialPos);
+                var result = Matrix3.multiplyByVector(t, inertialPos);
                 var error = result.subtract(expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
@@ -524,7 +524,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
-        var mvpMatrix = perspective.multiply(view);
+        var mvpMatrix = Matrix4.multiply(perspective, view);
 
         var expected = new Cartesian2(width * 0.5, height * 0.5);
         var returnedResult = Transforms.pointToWindowCoordinates(mvpMatrix, vpTransform, Cartesian3.ZERO);
@@ -537,7 +537,7 @@ defineSuite([
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
-        var mvpMatrix = perspective.multiply(view);
+        var mvpMatrix = Matrix4.multiply(perspective, view);
 
         var expected = new Cartesian2(width * 0.5, height * 0.5);
         var result = new Cartesian2();

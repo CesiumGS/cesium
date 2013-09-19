@@ -67,9 +67,9 @@ define([
          * @see Transforms
          * @see Camera#inverseTransform
          */
-        this.transform = Matrix4.IDENTITY.clone();
-        this._transform = this.transform.clone();
-        this._invTransform = Matrix4.IDENTITY.clone();
+        this.transform = Matrix4.clone(Matrix4.IDENTITY);
+        this._transform = Matrix4.clone(this.transform);
+        this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
         var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.5 * maxRadii);
@@ -156,8 +156,8 @@ define([
                                       u.x,  u.y,  u.z, -u.dot(e),
                                      -d.x, -d.y, -d.z,  d.dot(e),
                                       0.0,  0.0,  0.0,      1.0);
-        camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
-        camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
+        camera._viewMatrix = Matrix4.multiply(viewMatrix, camera._invTransform);
+        camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
     }
 
     function update(camera) {
@@ -216,15 +216,15 @@ define([
         }
 
         if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            camera._directionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera._upWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera._rightWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {

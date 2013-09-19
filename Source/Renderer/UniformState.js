@@ -1141,9 +1141,9 @@ define([
         var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
         // Transform each camera direction to the fixed axes.
-        enuToFixed.multiplyByVector(r, r);
-        enuToFixed.multiplyByVector(u, u);
-        enuToFixed.multiplyByVector(d, d);
+        Matrix4.multiplyByVector(enuToFixed, r, r);
+        Matrix4.multiplyByVector(enuToFixed, u, u);
+        Matrix4.multiplyByVector(enuToFixed, d, d);
 
         // Compute the view matrix based on the new fixed-frame camera position and directions.
         if (!defined(result)) {
