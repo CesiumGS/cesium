@@ -919,38 +919,6 @@ define([
     };
 
     /**
-     * Retrieves a copy of the matrix row at the provided index as a Cartesian3 instance.
-     * @memberof Matrix3
-     *
-     * @param {Number} index The zero-based index of the row to retrieve.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
-     *
-     * @see Cartesian3
-     */
-    Matrix3.prototype.getRow = function(index, result) {
-        return Matrix3.getRow(this, index, result);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified row in this matrix with the provided Cartesian3 instance.
-     * @memberof Matrix3
-     *
-     * @param {Number} index The zero-based index of the row to set.
-     * @param {Cartesian3} cartesian The Cartesian whose values will be assigned to the specified row.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, or 2.
-     *
-     * @see Cartesian3
-     */
-    Matrix3.prototype.setRow = function(index, cartesian, result) {
-        return Matrix3.setRow(this, index, cartesian, result);
-    };
-
-    /**
      * Computes the product of this matrix and the provided matrix.
      * @memberof Matrix3
      *

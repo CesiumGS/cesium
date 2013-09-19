@@ -228,9 +228,9 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             camera.position = path.evaluate(time, camera.position);
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
         };
 
         return update;
@@ -344,9 +344,9 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             camera.position = path.evaluate(time, camera.position);
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
         };
 
         return update;
@@ -374,9 +374,9 @@ define([
             var zoom = camera.position.z;
             camera.position.z = height;
 
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;

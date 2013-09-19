@@ -413,10 +413,10 @@ defineSuite([
         var expectedRow2 = new Cartesian4(9.0, 10.0, 11.0, 12.0);
         var expectedRow3 = new Cartesian4(13.0, 14.0, 15.0, 16.0);
 
-        var resultRow0 = matrix.getRow(0);
-        var resultRow1 = matrix.getRow(1);
-        var resultRow2 = matrix.getRow(2);
-        var resultRow3 = matrix.getRow(3);
+        var resultRow0 = Matrix4.getRow(matrix, 0);
+        var resultRow1 = Matrix4.getRow(matrix, 1);
+        var resultRow2 = Matrix4.getRow(matrix, 2);
+        var resultRow3 = Matrix4.getRow(matrix, 3);
 
         expect(resultRow0).toEqual(expectedRow0);
         expect(resultRow1).toEqual(expectedRow1);
@@ -435,10 +435,10 @@ defineSuite([
         var resultRow1 = new Cartesian4();
         var resultRow2 = new Cartesian4();
         var resultRow3 = new Cartesian4();
-        var returnedResultRow0 = matrix.getRow(0, resultRow0);
-        var returnedResultRow1 = matrix.getRow(1, resultRow1);
-        var returnedResultRow2 = matrix.getRow(2, resultRow2);
-        var returnedResultRow3 = matrix.getRow(3, resultRow3);
+        var returnedResultRow0 = Matrix4.getRow(matrix, 0, resultRow0);
+        var returnedResultRow1 = Matrix4.getRow(matrix, 1, resultRow1);
+        var returnedResultRow2 = Matrix4.getRow(matrix, 2, resultRow2);
+        var returnedResultRow3 = Matrix4.getRow(matrix, 3, resultRow3);
 
         expect(resultRow0).toBe(returnedResultRow0);
         expect(resultRow0).toEqual(expectedRow0);
@@ -454,19 +454,19 @@ defineSuite([
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
 
         var expected = new Matrix4(91.0, 92.0, 93.0, 94.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        var result = matrix.setRow(0, new Cartesian4(91.0, 92.0, 93.0, 94.0));
+        var result = Matrix4.setRow(matrix, 0, new Cartesian4(91.0, 92.0, 93.0, 94.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 95.0, 96.0, 97.0, 98.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        result = matrix.setRow(1, new Cartesian4(95.0, 96.0, 97.0, 98.0));
+        result = Matrix4.setRow(matrix, 1, new Cartesian4(95.0, 96.0, 97.0, 98.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 99.0, 910.0, 911.0, 912.0, 13.0, 14.0, 15.0, 16.0);
-        result = matrix.setRow(2, new Cartesian4(99.0, 910.0, 911.0, 912.0));
+        result = Matrix4.setRow(matrix, 2, new Cartesian4(99.0, 910.0, 911.0, 912.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 913.0, 914.0, 915.0, 916.0);
-        result = matrix.setRow(3, new Cartesian4(913.0, 914.0, 915.0, 916.0));
+        result = Matrix4.setRow(matrix, 3, new Cartesian4(913.0, 914.0, 915.0, 916.0));
         expect(result).toEqual(expected);
     });
 
@@ -475,22 +475,22 @@ defineSuite([
         var result = new Matrix4();
 
         var expected = new Matrix4(91.0, 92.0, 93.0, 94.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        var returnedResult = matrix.setRow(0, new Cartesian4(91.0, 92.0, 93.0, 94.0), result);
+        var returnedResult = Matrix4.setRow(matrix, 0, new Cartesian4(91.0, 92.0, 93.0, 94.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 95.0, 96.0, 97.0, 98.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
-        returnedResult = matrix.setRow(1, new Cartesian4(95.0, 96.0, 97.0, 98.0), result);
+        returnedResult = Matrix4.setRow(matrix, 1, new Cartesian4(95.0, 96.0, 97.0, 98.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 99.0, 910.0, 911.0, 912.0, 13.0, 14.0, 15.0, 16.0);
-        returnedResult = matrix.setRow(2, new Cartesian4(99.0, 910.0, 911.0, 912.0), result);
+        returnedResult = Matrix4.setRow(matrix, 2, new Cartesian4(99.0, 910.0, 911.0, 912.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 913.0, 914.0, 915.0, 916.0);
-        returnedResult = matrix.setRow(3, new Cartesian4(913.0, 914.0, 915.0, 916.0), result);
+        returnedResult = Matrix4.setRow(matrix, 3, new Cartesian4(913.0, 914.0, 915.0, 916.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });

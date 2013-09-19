@@ -2059,38 +2059,6 @@ define([
     };
 
     /**
-     * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the row to retrieve.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.getRow = function(index, result) {
-        return Matrix4.getRow(this, index, result);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified row in this matrix with the provided Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the row to set.
-     * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.setRow = function(index, cartesian, result) {
-        return Matrix4.setRow(this, index, cartesian, result);
-    };
-
-    /**
      * Computes the product of this matrix and the provided matrix.
      * @memberof Matrix4
      *
