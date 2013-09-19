@@ -7,6 +7,10 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
+   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `Cesium.BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
+```javascript
+Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+```
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
 ```javascript
 var primitive = scene.pick(/* ... */);
@@ -41,6 +45,7 @@ if (defined(p) && defined(p.primitive)) {
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
+* Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 

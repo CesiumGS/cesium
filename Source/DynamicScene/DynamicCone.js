@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -54,91 +54,91 @@ define(['../Core/defaultValue',
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        minimumClockAngle : createObservableProperty('minimumClockAngle', '_minimumClockAngle'),
+        minimumClockAngle : createDynamicPropertyDescriptor('minimumClockAngle', '_minimumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's maximum clock angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        maximumClockAngle : createObservableProperty('maximumClockAngle', '_maximumClockAngle'),
+        maximumClockAngle : createDynamicPropertyDescriptor('maximumClockAngle', '_maximumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's inner half-angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        innerHalfAngle : createObservableProperty('innerHalfAngle', '_innerHalfAngle'),
+        innerHalfAngle : createDynamicPropertyDescriptor('innerHalfAngle', '_innerHalfAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's outer half-angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        outerHalfAngle : createObservableProperty('outerHalfAngle', '_outerHalfAngle'),
+        outerHalfAngle : createDynamicPropertyDescriptor('outerHalfAngle', '_outerHalfAngle'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        capMaterial : createObservableProperty('capMaterial', '_capMaterial'),
+        capMaterial : createDynamicPropertyDescriptor('capMaterial', '_capMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        innerMaterial : createObservableProperty('innerMaterial', '_innerMaterial'),
+        innerMaterial : createDynamicPropertyDescriptor('innerMaterial', '_innerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        outerMaterial : createObservableProperty('outerMaterial', '_outerMaterial'),
+        outerMaterial : createDynamicPropertyDescriptor('outerMaterial', '_outerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        silhouetteMaterial : createObservableProperty('silhouetteMaterial', '_silhouetteMaterial'),
+        silhouetteMaterial : createDynamicPropertyDescriptor('silhouetteMaterial', '_silhouetteMaterial'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        intersectionColor : createObservableProperty('intersectionColor', '_intersectionColor'),
+        intersectionColor : createDynamicPropertyDescriptor('intersectionColor', '_intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        intersectionWidth : createObservableProperty('intersectionWidth', '_intersectionWidth'),
+        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth', '_intersectionWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        showIntersection : createObservableProperty('showIntersection', '_showIntersection'),
+        showIntersection : createDynamicPropertyDescriptor('showIntersection', '_showIntersection'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the cone's projection.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        radius : createObservableProperty('radius', '_radius'),
+        radius : createDynamicPropertyDescriptor('radius', '_radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the cone.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show')
+        show : createDynamicPropertyDescriptor('show', '_show')
     });
 
     /**

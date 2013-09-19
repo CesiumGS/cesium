@@ -7,7 +7,7 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/JulianDate',
         '../Core/TimeInterval',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         createGuid,
         defaultValue,
@@ -17,7 +17,7 @@ define(['../Core/createGuid',
         Event,
         JulianDate,
         TimeInterval,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyChanged', //
@@ -79,7 +79,7 @@ define(['../Core/createGuid',
             }
         },
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * Gets the names of all properties registed on this instance.
          * @memberof DynamicObject.prototype
          * @type {Event}
          */
@@ -107,146 +107,99 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {TimeInterval}
          */
-        availability : {
-            get : function() {
-                return this._availability;
-            },
-            set : function(value) {
-                if (!defined(value) || !value.equals(this._availability)) {
-                    this._cachedAvailabilityDate = undefined;
-                    this._cachedAvailabilityValue = undefined;
-
-                    var oldValue = this._availability;
-                    this._availability = value;
-                    this._propertyChanged.raiseEvent(this, 'availability', value, oldValue);
-                }
-            }
-        },
+        availability : createDynamicPropertyDescriptor('availability', '_availability'),
         /**
          * Gets or sets the position.
          * @memberof DynamicObject.prototype
          * @type {PositionProperty}
          */
-        position : {
-            get : function() {
-                return this._position;
-            },
-            set : function(value) {
-                var oldValue = this._position;
-                if (value !== oldValue) {
-                    this._position = value;
-                    this._propertyChanged.raiseEvent(this, 'position', value, oldValue);
-                }
-            }
-        },
+        position : createDynamicPropertyDescriptor('position', '_position'),
         /**
          * Gets or sets the orientation.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        orientation : {
-            get : function() {
-                return this._orientation;
-            },
-            set : function(value) {
-                var oldValue = this._orientation;
-                if (value !== oldValue) {
-                    this._orientation = value;
-                    this._propertyChanged.raiseEvent(this, 'orientation', value, oldValue);
-                }
-            }
-        },
+        orientation : createDynamicPropertyDescriptor('orientation', '_orientation'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof DynamicObject.prototype
          * @type {Cartesian3}
          */
-        viewFrom : {
-            get : function() {
-                return this._viewFrom;
-            },
-            set : function(value) {
-                var oldValue = this._viewFrom;
-                if (value !== oldValue) {
-                    this._viewFrom = value;
-                    this._propertyChanged.raiseEvent(this, 'viewFrom', value, oldValue);
-                }
-            }
-        },
+        viewFrom : createDynamicPropertyDescriptor('viewFrom', '_viewFrom'),
         /**
          * Gets or sets the billboard.
          * @memberof DynamicObject.prototype
          * @type {DynamicBillboard}
          */
-        billboard : createObservableProperty('billboard', '_billboard'),
+        billboard : createDynamicPropertyDescriptor('billboard', '_billboard'),
         /**
          * Gets or sets the cone.
          * @memberof DynamicObject.prototype
          * @type {DynamicCone}
          */
-        cone : createObservableProperty('cone', '_cone'),
+        cone : createDynamicPropertyDescriptor('cone', '_cone'),
 
         /**
          * Gets or sets the ellipsoid.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipsoid}
          */
-        ellipsoid : createObservableProperty('ellipsoid', '_ellipsoid'),
+        ellipsoid : createDynamicPropertyDescriptor('ellipsoid', '_ellipsoid'),
         /**
          * Gets or sets the ellipse.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipse}
          */
-        ellipse : createObservableProperty('ellipse', '_ellipse'),
+        ellipse : createDynamicPropertyDescriptor('ellipse', '_ellipse'),
         /**
          * Gets or sets the label.
          * @memberof DynamicObject.prototype
          * @type {DynamicLabel}
          */
-        label : createObservableProperty('label', '_label'),
+        label : createDynamicPropertyDescriptor('label', '_label'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
          * @type {DynamicPath}
          */
-        path : createObservableProperty('path', '_path'),
+        path : createDynamicPropertyDescriptor('path', '_path'),
         /**
          * Gets or sets the point graphic.
          * @memberof DynamicObject.prototype
          * @type {DynamicPoint}
          */
-        point : createObservableProperty('point', '_point'),
+        point : createDynamicPropertyDescriptor('point', '_point'),
         /**
          * Gets or sets the polygon.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolygon}
          */
-        polygon : createObservableProperty('polygon', '_polygon'),
+        polygon : createDynamicPropertyDescriptor('polygon', '_polygon'),
         /**
          * Gets or sets the polyline.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolyline}
          */
-        polyline : createObservableProperty('polyline', '_polyline'),
+        polyline : createDynamicPropertyDescriptor('polyline', '_polyline'),
         /**
          * Gets or sets the pyramid.
          * @memberof DynamicObject.prototype
          * @type {DynamicPyramid}
          */
-        pyramid : createObservableProperty('pyramid', '_pyramid'),
+        pyramid : createDynamicPropertyDescriptor('pyramid', '_pyramid'),
         /**
          * Gets or sets the vertex positions.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        vertexPositions : createObservableProperty('vertexPositions', '_vertexPositions'),
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions', '_vertexPositions'),
         /**
          * Gets or sets the vector.
          * @memberof DynamicObject.prototype
          * @type {DynamicVector}
          */
-        vector : createObservableProperty('vector', '_vector')
+        vector : createDynamicPropertyDescriptor('vector', '_vector')
     });
 
     /**
@@ -263,19 +216,7 @@ define(['../Core/createGuid',
         }
 
         var availability = this._availability;
-        if (!defined(availability)) {
-            return true;
-        }
-
-        if (JulianDate.equals(this._cachedAvailabilityDate, time)) {
-            return this._cachedAvailabilityValue;
-        }
-
-        var availabilityValue = availability.contains(time);
-        this._cachedAvailabilityDate = JulianDate.clone(time, this._cachedAvailabilityDate);
-        this._cachedAvailabilityValue = availabilityValue;
-
-        return availabilityValue;
+        return !defined(availability) || availability.contains(time);
     };
 
     /**
@@ -297,15 +238,15 @@ define(['../Core/createGuid',
 
         var propertyNames = this._propertyNames;
         if (propertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is a reserved property name.');
+            throw new DeveloperError(propertyName + ' is already a registered property.');
         }
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is already a registered property.');
+            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
 
         propertyNames.push(propertyName);
 
-        Object.defineProperty(this, propertyName, createObservableProperty(propertyName, '_' + propertyName));
+        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName, true));
     };
 
     /**
@@ -369,17 +310,6 @@ define(['../Core/createGuid',
                     }
                 }
             }
-        }
-    };
-
-    /**
-     * @private
-     */
-    DynamicObject.prototype.clean = function() {
-        var propertyNames = this._propertyNames;
-        var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
-            this[propertyNames[i]] = undefined;
         }
     };
 
