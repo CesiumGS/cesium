@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -45,35 +45,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        color : createObservableProperty('color', '_color'),
+        color : createDynamicPropertyDescriptor('color', '_color'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the line's outline color.
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's outline width.
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
 
         /**
          * @memberof DynamicPolyline.prototype
          * Gets or sets the boolean {@link Property} specifying the line's visibility.
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        width : createObservableProperty('width', '_width')
+        width : createDynamicPropertyDescriptor('width', '_width')
     });
 
     /**

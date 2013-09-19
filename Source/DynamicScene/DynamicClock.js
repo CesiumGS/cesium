@@ -5,7 +5,7 @@ define(['../Core/Clock',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         Clock,
         defaultValue,
@@ -13,7 +13,7 @@ define(['../Core/Clock',
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -49,35 +49,35 @@ define(['../Core/Clock',
          * @memberof DynamicClock.prototype
          * @type {JulianDate}
          */
-        startTime : createObservableProperty('startTime', '_startTime'),
+        startTime : createDynamicPropertyDescriptor('startTime', '_startTime'),
 
         /**
          * Gets or sets the stop time of the clock to use when looping or clamped.
          * @memberof DynamicClock.prototype
          * @type {JulianDate}
          */
-        stopTime : createObservableProperty('stopTime', '_stopTime'),
+        stopTime : createDynamicPropertyDescriptor('stopTime', '_stopTime'),
 
         /**
          * Gets or sets the initial time to use when switching to this clock.
          * @memberof DynamicClock.prototype
          * @type {JulianDate}
          */
-        currentTime : createObservableProperty('currentTime', '_currentTime'),
+        currentTime : createDynamicPropertyDescriptor('currentTime', '_currentTime'),
 
         /**
          * Gets or sets how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @memberof DynamicClock.prototype
          * @type {ClockRange}
          */
-        clockRange : createObservableProperty('clockRange', '_clockRange'),
+        clockRange : createDynamicPropertyDescriptor('clockRange', '_clockRange'),
 
         /**
          * Gets or sets if clock advancement is frame dependent or system clock dependent.
          * @memberof DynamicClock.prototype
          * @type {ClockStep}
          */
-        clockStep : createObservableProperty('clockStep', '_clockStep'),
+        clockStep : createDynamicPropertyDescriptor('clockStep', '_clockStep'),
 
         /**
          * Gets or sets how much time advances with each tick, negative values allow for advancing backwards.
@@ -87,7 +87,7 @@ define(['../Core/Clock',
          * @memberof DynamicClock.prototype
          * @type {Number}
          */
-        multiplier : createObservableProperty('multiplier', '_multiplier')
+        multiplier : createDynamicPropertyDescriptor('multiplier', '_multiplier')
     });
 
     /**

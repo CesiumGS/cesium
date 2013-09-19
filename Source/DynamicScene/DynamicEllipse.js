@@ -7,7 +7,7 @@ define(['../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/Shapes',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         Cartesian3,
         defaultValue,
@@ -17,7 +17,7 @@ define(['../Core/Cartesian3',
         Ellipsoid,
         Event,
         Shapes,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -55,21 +55,21 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        semiMajorAxis : createObservableProperty('semiMajorAxis', '_semiMajorAxis'),
+        semiMajorAxis : createDynamicPropertyDescriptor('semiMajorAxis', '_semiMajorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        semiMinorAxis : createObservableProperty('semiMinorAxis', '_semiMinorAxis'),
+        semiMinorAxis : createDynamicPropertyDescriptor('semiMinorAxis', '_semiMinorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        bearing : createObservableProperty('bearing', '_bearing')
+        bearing : createDynamicPropertyDescriptor('bearing', '_bearing')
     });
 
     /**

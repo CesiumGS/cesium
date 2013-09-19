@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -44,21 +44,21 @@ define(['../Core/defaultValue',
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        radii : createObservableProperty('radii', '_radii'),
+        radii : createDynamicPropertyDescriptor('radii', '_radii'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
          * @memberof DynamicEllipsoid.prototype
          * @type {MaterialProperty}
          */
-        material : createObservableProperty('material', '_material')
+        material : createDynamicPropertyDescriptor('material', '_material')
     });
 
     /**

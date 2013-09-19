@@ -4,14 +4,14 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createObservableProperty'
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        createObservableProperty) {
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -53,70 +53,70 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        image : createObservableProperty('image', '_image'),
+        image : createDynamicPropertyDescriptor('image', '_image'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        scale : createObservableProperty('scale', '_scale'),
+        scale : createDynamicPropertyDescriptor('scale', '_scale'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        rotation : createObservableProperty('rotation', '_rotation'),
+        rotation : createDynamicPropertyDescriptor('rotation', '_rotation'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        alignedAxis : createObservableProperty('alignedAxis', '_alignedAxis'),
+        alignedAxis : createDynamicPropertyDescriptor('alignedAxis', '_alignedAxis'),
 
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        horizontalOrigin : createObservableProperty('horizontalOrigin', '_horizontalOrigin'),
+        horizontalOrigin : createDynamicPropertyDescriptor('horizontalOrigin', '_horizontalOrigin'),
 
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        verticalOrigin : createObservableProperty('verticalOrigin', '_verticalOrigin'),
+        verticalOrigin : createDynamicPropertyDescriptor('verticalOrigin', '_verticalOrigin'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        color : createObservableProperty('color', '_color'),
+        color : createDynamicPropertyDescriptor('color', '_color'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        eyeOffset : createObservableProperty('eyeOffset', '_eyeOffset'),
+        eyeOffset : createDynamicPropertyDescriptor('eyeOffset', '_eyeOffset'),
 
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        pixelOffset : createObservableProperty('pixelOffset', '_pixelOffset'),
+        pixelOffset : createDynamicPropertyDescriptor('pixelOffset', '_pixelOffset'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        show : createObservableProperty('show', '_show'),
+        show : createDynamicPropertyDescriptor('show', '_show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
@@ -124,7 +124,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        width : createObservableProperty('width', '_width'),
+        width : createDynamicPropertyDescriptor('width', '_width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
@@ -132,7 +132,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        height : createObservableProperty('height', '_height'),
+        height : createDynamicPropertyDescriptor('height', '_height'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -140,7 +140,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        nearFarScalar : createObservableProperty('nearFarScalar', '_nearFarScalar')
+        nearFarScalar : createDynamicPropertyDescriptor('nearFarScalar', '_nearFarScalar')
     });
 
     /**
