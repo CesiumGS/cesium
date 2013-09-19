@@ -2,13 +2,11 @@
 define([
         './DeveloperError',
         './defaultValue',
-        './Cartesian3',
         './Cartesian3'
        ], function(
          DeveloperError,
          defaultValue,
-         Cartesian3,
-         Cartesian4) {
+         Cartesian3) {
     "use strict";
 
     /**
@@ -59,13 +57,9 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is a required number');
         }
-        if(result instanceof Cartesian4) {
-          result = Cartesian4.multiplyByScalar(this.direction, t, result);
-          return Cartesian4.add(this.origin, result, result);
-        } else {
-          result = Cartesian3.multiplyByScalar(this.direction, t, result);
-          return Cartesian3.add(this.origin, result, result);
-        }
+
+        result = Cartesian3.multiplyByScalar(this.direction, t, result);
+        return Cartesian3.add(this.origin, result, result);
     };
 
     return Ray;

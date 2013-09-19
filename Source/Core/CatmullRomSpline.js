@@ -60,7 +60,11 @@ define([
             var controlPoint1 = Cartesian3.clone(controlPoints[1].point);
             var controlPoint2 = Cartesian3.clone(controlPoints[2].point);
 
-            this._ti = Cartesian3.multiplyByScalar(Cartesian3.subtract(Cartesian3.subtract(Cartesian3.multiplyByScalar(controlPoint1, 2.0), controlPoint2), controlPoint0), 0.5);
+            var ti = this._ti = new Cartesian3();
+            Cartesian3.multiplyByScalar(controlPoint1, 2.0, ti);
+            Cartesian3.subtract(ti, controlPoint2, ti);
+            Cartesian3.subtract(ti, controlPoint0, ti);
+            Cartesian3.multiplyByScalar(ti, 0.5, ti);
         }
 
         if (defined(lastTangent)) {
@@ -72,7 +76,11 @@ define([
             var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
             var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
 
-            this._to = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.subtract(controlPointn0, Cartesian3.multiplyByScalar(controlPointn1, 2.0)), controlPointn2), 0.5);
+            var to = this._to = new Cartesian3();
+            Cartesian3.multiplyByScalar(controlPointn1, 2.0, to);
+            Cartesian3.subtract(controlPointn0, to, to);
+            Cartesian3.add(to, controlPointn2, to);
+            Cartesian3.multiplyByScalar(to, 0.5, to);
         }
     };
 
