@@ -71,14 +71,21 @@ require({
         }
     }).play();
 
+    var numberOfNewConsoleMessages = 0;
+
     var logOutput = document.getElementById('logOutput');
-    function appendConsole(className, message) {
+    function appendConsole(className, message, showConsole) {
         var ele = document.createElement('span');
         ele.className = className;
         ele.textContent = message + '\n';
         logOutput.appendChild(ele);
         logOutput.parentNode.scrollTop = logOutput.clientHeight + 8 - logOutput.parentNode.clientHeight;
-        hideGallery();
+        if (showConsole) {
+            hideGallery();
+        } else {
+            ++numberOfNewConsoleMessages;
+            registry.byId('logContainer').set('title', 'Console (' + numberOfNewConsoleMessages + ')');
+        }
     }
 
     var getURL = window.URL || window.webkitURL || window;
@@ -393,6 +400,13 @@ require({
         tabs.selectChild(registry.byId('logContainer'));
     }
 
+    tabs.watch("selectedChildWidget", function(name, oldValue, newValue){
+        if (newValue === registry.byId('logContainer')) {
+            numberOfNewConsoleMessages = 0;
+            registry.byId('logContainer').set('title', 'Console');
+        }
+    });
+
     CodeMirror.commands.runCesium = function(cm) {
         clearErrorsAddHints();
         clearRun();
@@ -466,8 +480,8 @@ require({
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
-                appendConsole('consoleError', 'Error loading ' + this.src);
-                appendConsole('consoleError', "Make sure Cesium is built, see the Contributor's Guide for details.");
+                appendConsole('consoleError', 'Error loading ' + this.src, true);
+                appendConsole('consoleError', "Make sure Cesium is built, see the Contributor's Guide for details.", true);
             }
         };
 
@@ -514,7 +528,7 @@ require({
             bucketWaiting = false;
             var bucketDoc = bucketFrame.contentDocument;
             if (local.headers.substring(0, local.emptyBucket.length) !== local.emptyBucket) {
-                appendConsole('consoleError', 'Error, first part of ' + local.bucketName + ' must match first part of bucket.html exactly.');
+                appendConsole('consoleError', 'Error, first part of ' + local.bucketName + ' must match first part of bucket.html exactly.', true);
             } else {
                 var bodyAttributes = local.headers.match(/<body([^>]*?)>/)[1];
                 var attributeRegex = /([-a-z_]+)\s*="([^"]*?)"/ig;
@@ -591,7 +605,7 @@ require({
         pos = body.indexOf('<script id="cesium_sandcastle_script">');
         var pos2 = body.lastIndexOf('</script>');
         if ((pos <= 0) || (pos2 <= pos)) {
-            appendConsole('consoleError', 'Error reading source file: ' + demo.name);
+            appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
         } else {
             var script = body.substring(pos + 38, pos2);
             while (script.length > 0 && script.charCodeAt(0) < 32) {
@@ -630,29 +644,34 @@ require({
             if (bucketDoc.body.getAttribute('data-sandcastle-loaded') !== 'yes') {
                 bucketDoc.body.setAttribute('data-sandcastle-loaded', 'yes');
                 logOutput.innerHTML = '';
+                numberOfNewConsoleMessages = 0;
+                registry.byId('logContainer').set('title', 'Console');
                 // This happens after a Run (F8) reloads bucket.html, to inject the editor code
                 // into the iframe, causing the demo to run there.
                 applyBucket();
                 if (docError) {
-                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.");
+                    appendConsole('consoleError', "Documentation not available.  Please run the 'generateDocumentation' build script to generate Cesium documentation.", true);
                     showGallery();
                 }
                 if (galleryError) {
-                    appendConsole('consoleError', 'Error loading gallery, please run the build script.');
+                    appendConsole('consoleError', 'Error loading gallery, please run the build script.', true);
                 }
             }
         } else if (typeof e.data.log !== 'undefined') {
             // Console log messages from the iframe display in Sandcastle.
-            appendConsole('consoleLog', e.data.log);
+            appendConsole('consoleLog', e.data.log, false);
         } else if (typeof e.data.error !== 'undefined') {
             // Console error messages from the iframe display in Sandcastle
-            appendConsole('consoleError', e.data.error);
+            appendConsole('consoleError', e.data.error, true);
             if (typeof e.data.lineNumber !== 'undefined') {
                 line = jsEditor.setMarker(e.data.lineNumber - 1, makeLineLabel(e.data.rawErrorMsg), 'errorMarker');
                 jsEditor.setLineClass(line, 'errorLine');
                 errorLines.push(line);
                 scrollToLine(e.data.lineNumber);
             }
+        } else if (typeof e.data.warn !== 'undefined') {
+            // Console warning messages from the iframe display in Sandcastle.
+            appendConsole('consoleWarn', e.data.warn, true);
         } else if (typeof e.data.highlight !== 'undefined') {
             // Hovering objects in the embedded Cesium window.
             highlightLine(e.data.highlight);
@@ -820,7 +839,7 @@ require({
             url : 'gallery/' + window.encodeURIComponent(demo.name) + '.html',
             handleAs : 'text',
             error : function(error) {
-                appendConsole('consoleError', error);
+                appendConsole('consoleError', error, true);
                 galleryError = true;
             }
         }).then(function(value) {
