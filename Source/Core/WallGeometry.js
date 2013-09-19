@@ -256,7 +256,7 @@ define([
                 var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
                 if (i + 1 < length) {
                     nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
-                    Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5, nextTop);
+                    nextTop = Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5);
                 }
 
                 if (recomputeNormal) {

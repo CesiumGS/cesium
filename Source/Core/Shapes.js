@@ -19,7 +19,7 @@ define([
         Matrix3) {
     "use strict";
 
-    function _computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+    function _computeEllipseQuadrant(cb, cbRadius, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                      thetaPts, thetaPtsIndex, offset, clockDir, ellipsePts, ellipsePtsIndex, numPts) {
         var angle;
         var theta;
@@ -61,7 +61,7 @@ define([
 
             var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
             var unitCart = Cartesian3.normalize(tmpEllipsePts);
-            tmpEllipsePts = Cartesian3.multiplyByScalar(unitCart, mag);
+            tmpEllipsePts = Cartesian3.multiplyByScalar(unitCart, cbRadius);
             ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
         }
     }
@@ -188,16 +188,14 @@ define([
             var ecc = Math.sqrt(value);
 
             var surfPos = Cartesian3.clone(center);
-            var mag = Cartesian3.magnitude(surfPos);
+            var surfPosMag = Cartesian3.magnitude(surfPos);
 
             var tempVec = new Cartesian3(0.0, 0.0, 1);
-            var temp = 1.0 / mag;
+            var temp = 1.0 / surPosMag;
 
             var unitPos = Cartesian3.multiplyByScalar(surfPos, temp);
             var eastVec = Cartesian3.normalize(Cartesian3.cross(tempVec, surfPos));
             var northVec = Cartesian3.cross(unitPos, eastVec);
-
-            var surfPosMag = Cartesian3.magnitude(surfPos);
 
             var numQuadrantPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
             var deltaTheta = MAX_ANOMALY_LIMIT / (numQuadrantPts - 1);
@@ -216,16 +214,16 @@ define([
 
             var ellipsePts = [];
 
-            _computeEllipseQuadrant(ellipsoid, Cartesian3.magnitude(surfPos), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            _computeEllipseQuadrant(ellipsoid, surfPosMag, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                    thetaPts, 0.0, 0.0, 1, ellipsePts, 0, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, Cartesian3.magnitude(surfPos), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            _computeEllipseQuadrant(ellipsoid, surfPosMag, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                    thetaPts, numQuadrantPts - 1, Math.PI, -1, ellipsePts, numQuadrantPts - 1, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, Cartesian3.magnitude(surfPos), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            _computeEllipseQuadrant(ellipsoid, surfPosMag, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                    thetaPts, 0.0, Math.PI, 1, ellipsePts, (2 * numQuadrantPts) - 2, numQuadrantPts - 1);
 
-            _computeEllipseQuadrant(ellipsoid, Cartesian3.magnitude(surfPos), aSqr, bSqr, ab, ecc, mag, unitPos, eastVec, northVec, bearing,
+            _computeEllipseQuadrant(ellipsoid, surfPosMag, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                    thetaPts, numQuadrantPts - 1, CesiumMath.TWO_PI, -1, ellipsePts, (3 * numQuadrantPts) - 3, numQuadrantPts);
 
             ellipsePts.push(ellipsePts[0].clone()); // Duplicates first and last point for polyline
