@@ -216,8 +216,8 @@ define([
             billboard.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            billboard._visualizerColor = Color.WHITE.clone(billboard._visualizerColor);
-            billboard._visualizerOutlineColor = Color.BLACK.clone(billboard._visualizerOutlineColor);
+            billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
+            billboard._visualizerOutlineColor = Color.clone(Color.BLACK, billboard._visualizerOutlineColor);
             billboard._visualizerOutlineWidth = 0;
             billboard._visualizerPixelSize = 1;
             needRedraw = true;

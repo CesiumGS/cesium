@@ -252,8 +252,8 @@ define([
             (!position.equals(ellipsoid._visualizerPosition) ||
              !Quaternion.equals(orientation, ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
-            ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
-            ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
+            ellipsoid._visualizerPosition = Cartesian3.clone(position, ellipsoid._visualizerPosition);
+            ellipsoid._visualizerOrientation = Quaternion.clone(orientation, ellipsoid._visualizerOrientation);
         }
 
         ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid.material, ellipsoid.material);

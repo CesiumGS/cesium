@@ -284,7 +284,7 @@ define([
 
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(context, Material.ColorType);
-            cone.intersectionColor = Color.YELLOW.clone();
+            cone.intersectionColor = Color.clone(Color.YELLOW);
             cone.intersectionWidth = 5.0;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
@@ -358,8 +358,8 @@ define([
             (!position.equals(cone._visualizerPosition) ||
              !Quaternion.equals(orientation, cone._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
-            cone._visualizerPosition = position.clone(cone._visualizerPosition);
-            cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
+            cone._visualizerPosition = Cartesian3.clone(position, cone._visualizerPosition);
+            cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
         cone.material = MaterialProperty.getValue(time, context, dynamicCone.outerMaterial, cone.material);
