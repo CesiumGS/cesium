@@ -2108,31 +2108,6 @@ define([
     };
 
     /**
-     * Computes a negated copy of this matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} matrix The matrix to negate.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix4.prototype.negate = function(result) {
-        return Matrix4.negate(this, result);
-    };
-
-    /**
-     * Computes the transpose of this matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     */
-    Matrix4.prototype.transpose = function(result) {
-        return Matrix4.transpose(this, result);
-    };
-
-    /**
      * Computes a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1, column2, column3)'.
      * @memberof Matrix4

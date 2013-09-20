@@ -919,31 +919,6 @@ define([
     };
 
     /**
-     * Creates a negated copy of this matrix.
-     * @memberof Matrix3
-     *
-     * @param {Matrix3} matrix The matrix to negate.
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix3.prototype.negate = function(result) {
-        return Matrix3.negate(this, result);
-    };
-
-    /**
-     * Computes the transpose of this matrix.
-     * @memberof Matrix3
-     *
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     */
-    Matrix3.prototype.transpose = function(result) {
-        return Matrix3.transpose(this, result);
-    };
-
-    /**
      * Creates a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1, column2)'.
      * @memberof Matrix3

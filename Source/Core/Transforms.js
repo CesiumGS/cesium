@@ -433,7 +433,7 @@ define([
             return undefined;
         }
 
-        return fixedToIcrfMtx.transpose(result);
+        return Matrix3.transpose(fixedToIcrfMtx, result);
     };
 
     var xysScratch = new Iau2006XysSample(0.0, 0.0, 0.0);

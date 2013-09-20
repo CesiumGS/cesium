@@ -513,7 +513,7 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
-    it('multiply works with "this" result parameter', function() {
+    it('multiply works with a result parameter that is an input result parameter', function() {
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
         var expected = new Matrix4(250, 260, 270, 280, 618, 644, 670, 696, 986, 1028, 1070, 1112, 1354, 1412, 1470, 1528);
@@ -540,7 +540,7 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
-    it('multiplyByTranslation works with "this" result parameter', function() {
+    it('multiplyByTranslation works with a result parameter that is an input result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
         var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
@@ -567,7 +567,7 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
-    it('multiplyByUniformScale works with "this" result parameter', function() {
+    it('multiplyByUniformScale works with a result parameter that is an input result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = 2.0;
         var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
@@ -633,7 +633,7 @@ defineSuite([
     it('negate works without a result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
-        var result = matrix.negate();
+        var result = Matrix4.negate(matrix);
         expect(result).toEqual(expected);
     });
 
@@ -641,15 +641,15 @@ defineSuite([
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
         var result = new Matrix4();
-        var returnedResult = matrix.negate(result);
+        var returnedResult = Matrix4.negate(matrix, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
-    it('negate works with "this" result parameter', function() {
+    it('negate works with a result parameter that is an input result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
-        var returnedResult = matrix.negate(matrix);
+        var returnedResult = Matrix4.negate(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });
@@ -657,7 +657,7 @@ defineSuite([
     it('transpose works without a result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0);
-        var result = matrix.transpose();
+        var result = Matrix4.transpose(matrix);
         expect(result).toEqual(expected);
     });
 
@@ -665,15 +665,15 @@ defineSuite([
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0);
         var result = new Matrix4();
-        var returnedResult = matrix.transpose(result);
+        var returnedResult = Matrix4.transpose(matrix, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
-    it('transpose works with "this" result parameter', function() {
+    it('transpose works with a result parameter that is an input result parameter', function() {
         var matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var expected = new Matrix4(1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0);
-        var returnedResult = matrix.transpose(matrix);
+        var returnedResult = Matrix4.transpose(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });

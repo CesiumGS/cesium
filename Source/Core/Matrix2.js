@@ -654,31 +654,6 @@ define([
     };
 
     /**
-     * Creates a negated copy of this matrix.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} matrix The matrix to negate.
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix2.prototype.negate = function(result) {
-        return Matrix2.negate(this, result);
-    };
-
-    /**
-     * Computes the transpose of this matrix.
-     * @memberof Matrix2
-     *
-     * @param {Matrix2} [result] The object onto which to store the result.
-     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     */
-    Matrix2.prototype.transpose = function(result) {
-        return Matrix2.transpose(this, result);
-    };
-
-    /**
      * Creates a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1)'.
      * @memberof Matrix2
