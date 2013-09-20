@@ -388,7 +388,7 @@ define([
         if (this._inverseModelDirty) {
             this._inverseModelDirty = false;
 
-            this._model.inverse(this._inverseModel);
+            Matrix4.inverse(this._model, this._inverseModel);
         }
 
         return this._inverseModel;

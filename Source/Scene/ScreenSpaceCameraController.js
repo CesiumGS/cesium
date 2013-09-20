@@ -725,7 +725,7 @@ define([
 
         if (defined(restrictedAngle)) {
             var direction = Cartesian3.clone(cameraController._camera.directionWC, rotate3DRestrictedDirection);
-            var invTransform = transform.inverseTransformation();
+            var invTransform = Matrix4.inverseTransformation(transform);
             Matrix4.multiplyByVector(invTransform, direction, direction);
 
             var dot = -Cartesian3.dot(direction, constrainedAxis);

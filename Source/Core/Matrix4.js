@@ -2121,38 +2121,5 @@ define([
                '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] +')';
     };
 
-    /**
-     * Computes the inverse of this matrix using Cramers Rule.
-     * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
-     * If the matrix is an affine transformation matrix, it is more efficient
-     * to invert it with {@link #inverseTransformation}.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
-     */
-    Matrix4.prototype.inverse = function(result) {
-        return Matrix4.inverse(this, result);
-    };
-
-    /**
-     * Computes the inverse of this matrix assuming it is
-     * an affine transformation matrix, where the upper left 3x3 elements
-     * are a rotation matrix, and the upper three elements in the fourth
-     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
-     * The matrix is not verified to be in the proper form.
-     * This method is faster than computing the inverse for a general 4x4
-     * matrix using {@link #inverse}.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Matrix4.prototype.inverseTransformation = function(result) {
-        return Matrix4.inverseTransformation(this, result);
-    };
-
     return Matrix4;
 });
