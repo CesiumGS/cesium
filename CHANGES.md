@@ -12,20 +12,18 @@ Beta Releases
             Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
 
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
-```javascript
-var primitive = scene.pick(/* ... */);
-if (defined(primitive)) {
-   // Use primitive
-}
-```
+
+            var primitive = scene.pick(/* ... */);
+            if (defined(primitive)) {
+               // Use primitive
+            }
 
       should now look like:
-```javascript
-var p = scene.pick(/* ... */);
-if (defined(p) && defined(p.primitive)) {
-   // Use p.primitive
-}
-```
+
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.primitive)) {
+               // Use p.primitive
+            }
 
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
@@ -85,23 +83,21 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
       * `options.extrudedOptions.closeBottom` -> `options.closeTop`
     * Geometry constructors no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
-```javascript
-var boxGeometry = new BoxGeometry({
-  minimumCorner : min,
-  maximumCorner : max,
-  vertexFormat : VertexFormat.POSITION_ONLY
-});
-```
+
+            var boxGeometry = new BoxGeometry({
+              minimumCorner : min,
+              maximumCorner : max,
+              vertexFormat : VertexFormat.POSITION_ONLY
+            });
 
       should now look like:
-```javascript
-var box = new BoxGeometry({
-    minimumCorner : min,
-    maximumCorner : max,
-    vertexFormat : VertexFormat.POSITION_ONLY
-});
-var geometry = BoxGeometry.createGeometry(box);
-```
+
+            var box = new BoxGeometry({
+                minimumCorner : min,
+                maximumCorner : max,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            });
+            var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
