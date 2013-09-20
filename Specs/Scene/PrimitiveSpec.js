@@ -71,7 +71,7 @@ defineSuite([
         frameState = createFrameState();
 
         us = context.getUniformState();
-        us.update(frameState);
+        us.update(context, frameState);
 
         ellipsoid = Ellipsoid.WGS84;
     });
@@ -276,7 +276,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -285,7 +285,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         frameState.camera.controller.viewExtent(extent2);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -320,7 +320,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -329,7 +329,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         frameState.camera.controller.viewExtent(extent2);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -350,7 +350,7 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -359,7 +359,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         frameState.camera.controller.viewExtent(extent2);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -382,7 +382,7 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -391,7 +391,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         frameState.camera.controller.viewExtent(extent2);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -440,7 +440,7 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -473,7 +473,7 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -503,14 +503,14 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
         expect(pickObject.id).toEqual('extent1');
 
         frameState.camera.controller.viewExtent(extent2);
-        us.update(frameState);
+        us.update(context, frameState);
 
         pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
@@ -650,7 +650,7 @@ defineSuite([
         });
 
         frameState.camera.controller.viewExtent(extent1);
-        us.update(frameState);
+        us.update(context, frameState);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;

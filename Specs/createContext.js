@@ -57,7 +57,7 @@ define([
         }
 
         var us = context.getUniformState();
-        us.update(createFrameState());
+        us.update(context, createFrameState());
 
         return context;
     }

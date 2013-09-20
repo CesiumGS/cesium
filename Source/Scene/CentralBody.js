@@ -348,8 +348,8 @@ define([
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewport = viewportScratch;
-        viewport.width = context.getCanvas().clientWidth;
-        viewport.height = context.getCanvas().clientHeight;
+        viewport.width = context.getDrawingBufferWidth();
+        viewport.height = context.getDrawingBufferHeight();
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, vpTransformScratch);
         var latitudeExtension = 0.05;
 
@@ -500,8 +500,8 @@ define([
             return;
         }
 
-        var width = context.getCanvas().clientWidth;
-        var height = context.getCanvas().clientHeight;
+        var width = context.getDrawingBufferWidth();
+        var height = context.getDrawingBufferHeight();
 
         if (width === 0 || height === 0) {
             return;

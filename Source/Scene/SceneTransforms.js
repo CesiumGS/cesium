@@ -149,5 +149,15 @@ define([
         return Cartesian2.fromCartesian4(positionWC, result);
     };
 
+    /**
+     * @private
+     */
+    SceneTransforms.transformWindowToDrawingBuffer = function(context, windowPosition) {
+        var canvas = context.getCanvas();
+        var xScale = context.getDrawingBufferWidth() / canvas.clientWidth;
+        var yScale = context.getDrawingBufferHeight() / canvas.clientHeight;
+        return new Cartesian2(windowPosition.x * xScale, windowPosition.y * yScale);
+    };
+
     return SceneTransforms;
 });

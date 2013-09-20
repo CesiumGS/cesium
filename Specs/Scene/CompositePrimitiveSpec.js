@@ -66,7 +66,7 @@ defineSuite([
         camera.direction = camera.position.normalize().negate();
 
         us = context.getUniformState();
-        us.update(createFrameState(camera));
+        us.update(context, createFrameState(camera));
     });
 
     afterEach(function() {
