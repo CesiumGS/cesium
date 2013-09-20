@@ -140,9 +140,9 @@ define([
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
-        var vtDotVc = -vt.dot(cv);
+        var vtDotVc = -Cartesian3.dot(vt, cv);
         var isOccluded = vtDotVc > vhMagnitudeSquared &&
-                         vtDotVc * vtDotVc / vt.magnitudeSquared() > vhMagnitudeSquared;
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared;
         return !isOccluded;
     };
 
@@ -260,7 +260,7 @@ define([
 
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make
         // sense to try to horizon cull it.
-        if (bs.center.magnitude() < 0.1 * ellipsoid.getMinimumRadius()) {
+        if (Cartesian3.magnitude(bs.center) < 0.1 * ellipsoid.getMinimumRadius()) {
             return undefined;
         }
 
@@ -272,16 +272,16 @@ define([
 
     function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
         var scaledSpacePosition = ellipsoid.transformPositionToScaledSpace(position, scaledSpaceScratch);
-        var magnitudeSquared = scaledSpacePosition.magnitudeSquared();
+        var magnitudeSquared = Cartesian3.magnitudeSquared(scaledSpacePosition);
         var magnitude = Math.sqrt(magnitudeSquared);
-        var direction = scaledSpacePosition.divideByScalar(magnitude, directionScratch);
+        var direction = Cartesian3.divideByScalar(scaledSpacePosition, magnitude, directionScratch);
 
         // For the purpose of this computation, points below the ellipsoid are consider to be on it instead.
         magnitudeSquared = Math.max(1.0, magnitudeSquared);
         magnitude = Math.max(1.0, magnitude);
 
-        var cosAlpha = direction.dot(scaledSpaceDirectionToPoint);
-        var sinAlpha = direction.cross(scaledSpaceDirectionToPoint).magnitude();
+        var cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
+        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
 
@@ -295,14 +295,14 @@ define([
             return undefined;
         }
 
-        return scaledSpaceDirectionToPoint.multiplyByScalar(resultMagnitude, result);
+        return Cartesian3.multiplyByScalar(scaledSpaceDirectionToPoint, resultMagnitude, result);
     }
 
     var directionToPointScratch = new Cartesian3();
 
     function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
-        return directionToPointScratch.normalize(directionToPointScratch);
+        return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }
 
     return EllipsoidalOccluder;

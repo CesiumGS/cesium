@@ -35,7 +35,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = Quaternion.multiplyByScalar(axis, s);
+        var a = Cartesian3.multiplyByScalar(axis, s);
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle);
         expect(returnedResult).toEqual(expected);
@@ -46,7 +46,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = Quaternion.multiplyByScalar(axis, s);
+        var a = Cartesian3.multiplyByScalar(axis, s);
         var result = new Quaternion();
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle, result);
@@ -369,7 +369,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var returnedResult = Quaternion.getAxis(quaternion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -380,7 +380,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var result = new Cartesian3();
         var returnedResult = Quaternion.getAxis(quaternion, result);
@@ -409,7 +409,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var axis = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var axis = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * axis.x, sin * axis.y, sin * axis.z, cos);
         var result = Quaternion.getAngle(quaternion);
         expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);
