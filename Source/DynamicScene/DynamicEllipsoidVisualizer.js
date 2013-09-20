@@ -89,12 +89,12 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (defined(oldCollection)) {
-                oldCollection.objectsRemoved.removeEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
+                oldCollection.collectionChanged.removeEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.collectionChanged.addEventListener(DynamicEllipsoidVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -183,28 +183,28 @@ define([
     var orientation;
     function updateObject(dynamicEllipsoidVisualizer, time, dynamicObject) {
         var context = dynamicEllipsoidVisualizer._scene.getContext();
-        var dynamicEllipsoid = dynamicObject.ellipsoid;
+        var dynamicEllipsoid = dynamicObject._ellipsoid;
         if (!defined(dynamicEllipsoid)) {
             return;
         }
 
-        var radiiProperty = dynamicEllipsoid.radii;
+        var radiiProperty = dynamicEllipsoid._radii;
         if (!defined(radiiProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var ellipsoid;
-        var showProperty = dynamicEllipsoid.show;
+        var showProperty = dynamicEllipsoid._show;
         var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -256,10 +256,10 @@ define([
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid.material, ellipsoid.material);
+        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid._material, ellipsoid.material);
     }
 
-    DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+    DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisEllipsoidCollection = this._ellipsoidCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {

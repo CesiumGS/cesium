@@ -1,10 +1,17 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor'
     ], function(
-         defaultValue,
-         defined) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -14,46 +21,68 @@ define([
      * @constructor
      */
     var DynamicPolygon = function() {
+        this._show = undefined;
+        this._material = undefined;
+        this._propertyChanged = new Event();
+    };
+
+    defineProperties(DynamicPolygon.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPolygon.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
+            }
+        },
+
         /**
          * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
+         * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createDynamicPropertyDescriptor('show', '_show'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
+         * @memberof DynamicPolygon.prototype
          * @type {MaterialProperty}
          */
-        this.material = undefined;
-    };
+        material : createDynamicPropertyDescriptor('material', '_material')
+    });
 
     /**
-     * Given two DynamicObjects, takes the polygon properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Duplicates a DynamicPolygon instance.
+     * @memberof DynamicPolygon
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPolygon} [result] The object onto which to store the result.
+     * @returns {DynamicPolygon} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
-        var polygonToMerge = objectToMerge.polygon;
-        if (defined(polygonToMerge)) {
-
-            var targetPolygon = targetObject.polygon;
-            if (!defined(targetPolygon)) {
-                targetObject.polygon = targetPolygon = new DynamicPolygon();
-            }
-
-            targetPolygon.show = defaultValue(targetPolygon.show, polygonToMerge.show);
-            targetPolygon.material = defaultValue(targetPolygon.material, polygonToMerge.material);
+    DynamicPolygon.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicPolygon();
         }
+        result.show = this.show;
+        result.material = this.material;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the polygon associated with it.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicPolygon
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
+     * @param {DynamicPolygon} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPolygon.undefineProperties = function(dynamicObject) {
-        dynamicObject.polygon = undefined;
+    DynamicPolygon.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.show = defaultValue(this.show, source.show);
+        this.material = defaultValue(this.material, source.material);
     };
 
     return DynamicPolygon;

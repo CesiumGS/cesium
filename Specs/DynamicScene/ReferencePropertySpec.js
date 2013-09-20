@@ -22,7 +22,7 @@ defineSuite([
     var testObjectLink = 'testObject.property';
     function createTestObject(dynamicObjectCollection, methodName) {
         var testObject = dynamicObjectCollection.getOrCreateObject('testObject');
-        testObject._setAvailability(TimeInterval.fromIso8601('2012/2013'));
+        testObject.availability = TimeInterval.fromIso8601('2012/2013');
         testObject.property = {};
         testObject.property[methodName] = function(time, result) {
             result.expectedTime = time;
@@ -73,42 +73,7 @@ defineSuite([
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
-    it('Resolves getValue property on direct collection', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        createTestObject(dynamicObjectCollection, 'getValue');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
-        var result = {};
-        expect(property.getValue(validTime, result)).toEqual(result);
-        expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValue(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves getValue property on parent collection', function() {
-        var parent = new DynamicObjectCollection();
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        dynamicObjectCollection.compositeCollection = parent;
-        createTestObject(parent, 'getValue');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
-        var result = {};
-        expect(property.getValue(validTime, result)).toEqual(result);
-        expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValue(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves getValue property on direct collection', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        createTestObject(dynamicObjectCollection, 'getValue');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
-        var result = {};
-        expect(property.getValue(validTime, result)).toEqual(result);
-        expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValue(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves getValue property on direct collection', function() {
+    it('Resolves getValue property on collection', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         createTestObject(dynamicObjectCollection, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);

@@ -107,7 +107,7 @@ define([
                     viewer.dataSources.add(source);
 
                     if (defined(endUserOptions.lookAt)) {
-                        var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
+                        var dynamicObject = source.getDynamicObjectCollection().getById(endUserOptions.lookAt);
                         if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
