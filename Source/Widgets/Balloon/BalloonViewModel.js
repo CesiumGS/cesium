@@ -15,12 +15,12 @@ define([
         knockout) {
     "use strict";
 
-    var pointMin = 0;
+    var arrowMin = 0;
     var screenSpacePos = new Cartesian2();
 
-    function shiftPosition(viewModel, position, point, screen) {
-        var pointX;
-        var pointY;
+    function shiftPosition(viewModel, position, arrow, screen) {
+        var arrowX;
+        var arrowY;
         var posX;
         var posY;
         var container = viewModel._container;
@@ -29,9 +29,9 @@ define([
 
         viewModel._maxWidth = containerWidth * 0.50 + 'px';
         viewModel._maxHeight = containerHeight * 0.50 + 'px';
-        var pointMaxY = containerHeight - 15;
-        var pointMaxX = containerWidth - 16;
-        var pointXOffset = position.x - 15;
+        var arrowMaxY = containerHeight - 15;
+        var arrowMaxX = containerWidth - 16;
+        var arrowXOffset = position.x - 15;
 
         var balloonElement = viewModel._balloonElement;
         var width = balloonElement.offsetWidth;
@@ -52,39 +52,39 @@ define([
         viewModel._left = left && !top && !bottom;
         viewModel._right = right && !left && !top && !bottom;
 
-        if (viewModel.showPoint) {
+        if (viewModel.showArrow) {
             if (bottom) {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = 15;
-                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
-                pointY = pointMin;
+                arrowX = Math.min(Math.max(arrowXOffset, arrowMin), arrowMaxX - 15);
+                arrowY = arrowMin;
             } else if (top) {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = containerHeight - height - 14;
-                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
-                pointY = pointMaxY;
+                arrowX = Math.min(Math.max(arrowXOffset, arrowMin), arrowMaxX - 15);
+                arrowY = arrowMaxY;
             } else if (left) {
                 posX = 15;
                 posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
-                pointX = pointMin;
-                pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
+                arrowX = arrowMin;
+                arrowY = Math.min(Math.max((position.y - 16), arrowMin), arrowMaxY - 15);
             } else if (right) {
                 posX = containerWidth - width - 15;
                 posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
-                pointX = pointMaxX;
-                pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
+                arrowX = arrowMaxX;
+                arrowY = Math.min(Math.max((position.y - 16), arrowMin), arrowMaxY - 15);
             } else if (position.y > posMaxY) {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = position.y - height - 14;
-                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
-                pointY = position.y - 14;
+                arrowX = Math.min(Math.max(arrowXOffset, arrowMin), arrowMaxX - 15);
+                arrowY = position.y - 14;
                 viewModel._down = false;
                 viewModel._up = true;
             } else {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
-                pointX = pointXOffset;
-                pointY = Math.min(position.y + 10, posMaxY - 15);
+                arrowX = arrowXOffset;
+                arrowY = Math.min(position.y + 10, posMaxY - 15);
             }
         } else {
             if (bottom) {
@@ -105,8 +105,8 @@ define([
             }
         }
 
-        viewModel._pointX = pointX + 'px';
-        viewModel._pointY = pointY + 'px';
+        viewModel._arrowX = arrowX + 'px';
+        viewModel._arrowY = arrowY + 'px';
 
         viewModel._positionX = posX + 'px';
         viewModel._positionY = posY + 'px';
@@ -173,20 +173,20 @@ define([
         this._positionY = '0';
 
         /**
-         * The x screen position of the balloon point.
+         * The x screen position of the balloon arrow.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Number}
          */
-        this._pointX = '0';
+        this._arrowX = '0';
 
         /**
-         * The y screen position of the balloon point
+         * The y screen position of the balloon arrow
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
          */
-        this._pointY = '0';
+        this._arrowY = '0';
 
         /**
          * Determines the visibility of the balloon
@@ -197,15 +197,15 @@ define([
         this.showBalloon = false;
 
         /**
-         * Determines the visibility of the balloon point
+         * Determines the visibility of the balloon arrow
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
          */
-        this.showPoint = true;
+        this.showArrow = true;
 
         /**
-         * True of the balloon point should be pointing down.
+         * True of the balloon arrow should be arrowing down.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
@@ -213,7 +213,7 @@ define([
         this._down = true;
 
         /**
-         * True of the balloon point should be pointing up.
+         * True of the balloon arrow should be arrowing up.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
@@ -221,7 +221,7 @@ define([
         this._up = false;
 
         /**
-         * True of the balloon point should be pointing left.
+         * True of the balloon arrow should be arrowing left.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
@@ -229,7 +229,7 @@ define([
         this._left = false;
 
         /**
-         * True if the balloon point should be pointing right.
+         * True if the balloon arrow should be arrowing right.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
@@ -252,7 +252,7 @@ define([
          */
         this._maxHeight = this._container.clientHeight * 0.50 + 'px';
 
-        knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
+        knockout.track(this, ['showArrow', 'showBalloon', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
 
     /**
@@ -280,10 +280,10 @@ define([
                 var pos;
                 if (typeof this._position !== 'undefined') {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
-                    this.showPoint = true;
+                    this.showArrow = true;
                 } else {
                     pos = this._defaultPosition;
-                    this.showPoint = false;
+                    this.showArrow = false;
                 }
 
                 pos = shiftPosition(this, pos);

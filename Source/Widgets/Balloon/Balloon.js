@@ -57,25 +57,25 @@ define([
         this._content = document.createElement('div');
         contentWrapper.appendChild(this._content);
         this._content.setAttribute('data-bind', 'html: _contentHTML');
-        var pointContainer = document.createElement('div');
-        pointContainer.className = 'cesium-balloon-point-container';
-        pointContainer.setAttribute('data-bind', 'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right,\
-                "cesium-balloon-point-show" : showPoint, "cesium-balloon-point-hide" : !showPoint},\
-                style: { "bottom" : _pointY, "left" : _pointX}');
-        var point = document.createElement('div');
-        point.className = 'cesium-balloon-point';
-        point.setAttribute('data-bind', 'css: { "cesium-balloon-point-down" : _down,\
-                        "cesium-balloon-point-up" : _up,\
-                        "cesium-balloon-point-left" : _left,\
-                        "cesium-balloon-point-right" : _right}');
-        pointContainer.appendChild(point);
-        container.appendChild(pointContainer);
+        var arrowContainer = document.createElement('div');
+        arrowContainer.className = 'cesium-balloon-arrow-container';
+        arrowContainer.setAttribute('data-bind', 'css: { "cesium-balloon-arrow-container-downup" : _down || _up, "cesium-balloon-arrow-container-leftright" : _left || _right,\
+                "cesium-balloon-arrow-show" : showArrow, "cesium-balloon-arrow-hide" : !showArrow},\
+                style: { "bottom" : _arrowY, "left" : _arrowX}');
+        var arrow = document.createElement('div');
+        arrow.className = 'cesium-balloon-arrow';
+        arrow.setAttribute('data-bind', 'css: { "cesium-balloon-arrow-down" : _down,\
+                        "cesium-balloon-arrow-up" : _up,\
+                        "cesium-balloon-arrow-left" : _left,\
+                        "cesium-balloon-arrow-right" : _right}');
+        arrowContainer.appendChild(arrow);
+        container.appendChild(arrowContainer);
 
         var viewModel = new BalloonViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
 
-        this._pointContainer = pointContainer;
-        this._point = point;
+        this._arrowContainer = arrowContainer;
+        this._arrow = arrow;
         this._contentWrapper = contentWrapper;
 
         knockout.applyBindings(this._viewModel, this._container);
@@ -124,7 +124,7 @@ define([
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
-        container.removeChild(this._pointContainer);
+        container.removeChild(this._arrowContainer);
         return destroyObject(this);
     };
 

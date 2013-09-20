@@ -15,23 +15,23 @@
     margin-right: 20px;
 }
 
-.cesium-balloon-point-container {
+.cesium-balloon-arrow-container {
     position: absolute;
     overflow: hidden;
     z-index: 2;
 }
 
-.cesium-balloon-point-container-downup {
+.cesium-balloon-arrow-container-downup {
     height: 16px;
     width: 32px;
 }
 
-.cesium-balloon-point-container-leftright {
+.cesium-balloon-arrow-container-leftright {
     height: 32px;
     width: 16px;
 }
 
-.cesium-balloon-point {
+.cesium-balloon-arrow {
     background-color: #fff;
     height: 20px;
     width: 20px;
@@ -43,22 +43,22 @@
     border: 1px solid #ccc;
 }
 
-.cesium-balloon-point-down {
+.cesium-balloon-arrow-down {
     margin-left: 5px;
     margin-top: -11px;
 }
 
-.cesium-balloon-point-up {
+.cesium-balloon-arrow-up {
     margin-left: 5px;
     margin-top: 5px;
 }
 
-.cesium-balloon-point-left {
+.cesium-balloon-arrow-left {
     margin-top: 5px;
     margin-left: 5px;
 }
 
-.cesium-balloon-point-right {
+.cesium-balloon-arrow-right {
     margin-left: -11px;
     margin-top: 5px;
 }
@@ -79,11 +79,11 @@
     -moz-transition: visibility 0s 0.2s, opacity 0.2s linear;
 }
 
-.cesium-balloon-point-show {
+.cesium-balloon-arrow-show {
     visibility: visible;
 }
 
-.cesium-balloon-point-hide {
+.cesium-balloon-arrow-hide {
     visibility: hidden;
 }
 
