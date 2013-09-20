@@ -231,7 +231,7 @@ define([
         // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
         var minAngle = Number.MAX_VALUE;
         if (pointsInside.length > 0) {
-            var v1 = new Cartesian2(1.0, 0.0, 0.0);
+            var v1 = new Cartesian2(1.0, 0.0);
             for (i = 0; i < pointsInside.length; i++) {
                 var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
                 var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
