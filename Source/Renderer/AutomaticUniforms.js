@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/Matrix4',
         './UniformDatatype'
     ],function(
+        Matrix4,
         UniformDatatype) {
 
     "use strict";
@@ -1398,7 +1400,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getInverseView().getTranslation();
+                return Matrix4.getTranslation(uniformState.getInverseView());
             }
         },
 

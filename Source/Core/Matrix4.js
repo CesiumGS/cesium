@@ -2122,32 +2122,6 @@ define([
     };
 
     /**
-     * Gets the translation portion of this matrix, assuming the matrix is a affine transformation matrix.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @see Cartesian3
-     */
-    Matrix4.prototype.getTranslation = function(result) {
-        return Matrix4.getTranslation(this, result);
-    };
-
-    /**
-     * Gets the upper left 3x3 rotation matrix of this matrix, assuming the matrix is a affine transformation matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @see Matrix3
-     */
-    Matrix4.prototype.getRotation = function(result) {
-        return Matrix4.getRotation(this, result);
-    };
-
-    /**
      * Computes the inverse of this matrix using Cramers Rule.
      * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
      * If the matrix is an affine transformation matrix, it is more efficient
