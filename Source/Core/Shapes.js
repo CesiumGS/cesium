@@ -5,7 +5,6 @@ define([
         './DeveloperError',
         './Math',
         './Cartesian3',
-        './Cartesian4',
         './Quaternion',
         './Matrix3'
     ], function(
@@ -14,7 +13,6 @@ define([
         DeveloperError,
         CesiumMath,
         Cartesian3,
-        Cartesian4,
         Quaternion,
         Matrix3) {
     "use strict";
