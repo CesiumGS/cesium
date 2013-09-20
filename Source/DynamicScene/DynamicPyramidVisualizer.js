@@ -8,6 +8,7 @@ define([
         '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Scene/CustomSensorVolume',
         '../Scene/Material',
         './MaterialProperty'
@@ -20,6 +21,7 @@ define([
          Color,
          Matrix3,
          Matrix4,
+         Quaternion,
          CustomSensorVolume,
          Material,
          MaterialProperty) {
@@ -262,10 +264,10 @@ define([
         if (defined(position) &&
             defined(orientation) &&
             (!Cartesian3.equals(position, pyramid._visualizerPosition) ||
-             !Cartesian3.equals(orientation, pyramid._visualizerOrientation))) {
+             !Quaternion.equals(orientation, pyramid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
-            position.clone(pyramid._visualizerPosition);
-            orientation.clone(pyramid._visualizerOrientation);
+            Cartesian3.clone(position, pyramid._visualizerPosition);
+            Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
         pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid.material, pyramid.material);

@@ -43,7 +43,7 @@ define([
      * @memberof Ray
      *
      * @param {Number} t A scalar value.
-     * @param {Cartesian3/Cartesian4} [result] The object in which the result will be stored.
+     * @param {Cartesian3} [result] The object in which the result will be stored.
      * @returns The modified result parameter, or a new instance if none was provided.
      *
      * @exception {DeveloperError} t is a required number

@@ -51,7 +51,7 @@ define([
         var v0, v1, v2;
         var dot00, dot01, dot02, dot11, dot12;
 
-        if(typeof p0.z === 'undefined') {
+        if(!defined(p0.z)) {
           v0 = Cartesian2.subtract(p1, p0, scratchCartesian1);
           v1 = Cartesian2.subtract(p2, p0, scratchCartesian2);
           v2 = Cartesian2.subtract(point, p0, scratchCartesian3);

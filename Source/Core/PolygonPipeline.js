@@ -965,7 +965,7 @@ define([
 
                 var max = Math.max(g0, Math.max(g1, g2));
                 var edge;
-                var mid = new Cartesian3();
+                var mid;
 
                 if (max > granularity) {
                     if (g0 === max) {
