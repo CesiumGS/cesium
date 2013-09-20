@@ -208,7 +208,7 @@ defineSuite([
 
     it('inverse works with a result parameter that is an input parameter', function() {
         var quaternion = new Quaternion(2.0, 3.0, 4.0, 5.0);
-        var magnitudeSquared = quaternion.magnitudeSquared();
+        var magnitudeSquared = Quaternion.magnitudeSquared(quaternion);
         var expected = new Quaternion(-2.0 / magnitudeSquared, -3.0 / magnitudeSquared, -4.0 / magnitudeSquared, 5.0 / magnitudeSquared);
         var returnedResult = Quaternion.inverse(quaternion, quaternion);
         expect(returnedResult).toEqual(expected);
