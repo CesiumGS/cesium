@@ -72,7 +72,7 @@ define([
             Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
             Matrix3.multiplyByVector(rotation, camera.up, camera.up);
             Matrix3.multiplyByVector(rotation, camera.right, camera.right);
-            camera.transform = Matrix4.IDENTITY.clone();
+            camera.transform = Matrix4.clone(Matrix4.IDENTITY);
             var defaultCamera = new Camera(canvas);
             description = {
                 destination : defaultCamera.position,

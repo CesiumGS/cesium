@@ -186,15 +186,15 @@ define([
         }
 
         var transform = camera._transform;
-        var transformChanged = !transform.equals(camera.transform);
+        var transformChanged = !Matrix4.equals(transform, camera.transform);
         if (transformChanged) {
-            transform = camera._transform = camera.transform.clone();
+            transform = camera._transform = Matrix4.clone(camera.transform);
 
-            camera._invTransform = camera._transform.inverseTransformation();
+            camera._invTransform = Matrix4.inverseTransformation(camera._transform);
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position));
+            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position));
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -349,7 +349,7 @@ define([
         camera.direction = this.direction.clone();
         camera.up = this.up.clone();
         camera.right = this.right.clone();
-        camera.transform = this.transform.clone();
+        camera.transform = Matrix4.clone(this.transform);
         camera.frustum = this.frustum.clone();
         return camera;
     };

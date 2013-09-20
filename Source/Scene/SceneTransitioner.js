@@ -753,7 +753,7 @@ define([
 
         updateFrustums(transitioner);
         var camera = scene.getCamera();
-        camera.transform = Matrix4.IDENTITY.clone();
+        camera.transform = Matrix4.clone(Matrix4.IDENTITY);
 
         if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
             transitioner._morphCancelled = false;

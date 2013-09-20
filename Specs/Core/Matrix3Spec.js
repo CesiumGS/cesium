@@ -505,43 +505,43 @@ defineSuite([
     it('equals works in all cases', function() {
         var left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(true);
+        expect(Matrix3.equals(left, right)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 7.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 9.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 11.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 12.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 13.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
     });
 
     it('equals works with undefined', function() {
@@ -553,52 +553,52 @@ defineSuite([
     it('equalsEpsilon works in all cases', function() {
         var left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 1.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 1.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 7.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 9.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 11.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 12.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 13.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
     });
 
     it('equalsEpsilon works with undefined', function() {

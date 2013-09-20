@@ -39,20 +39,20 @@ define([
     var UniformState = function() {
         this._viewport = new BoundingRectangle();
         this._viewportDirty = false;
-        this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
-        this._viewportTransformation = Matrix4.IDENTITY.clone();
+        this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
 
-        this._model = Matrix4.IDENTITY.clone();
-        this._view = Matrix4.IDENTITY.clone();
-        this._inverseView = Matrix4.IDENTITY.clone();
-        this._projection = Matrix4.IDENTITY.clone();
-        this._infiniteProjection = Matrix4.IDENTITY.clone();
+        this._model = Matrix4.clone(Matrix4.IDENTITY);
+        this._view = Matrix4.clone(Matrix4.IDENTITY);
+        this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
+        this._projection = Matrix4.clone(Matrix4.IDENTITY);
+        this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._pixelSize = 0.0;
 
         this._frameState = undefined;
-        this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
+        this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
         this._view3DDirty = true;

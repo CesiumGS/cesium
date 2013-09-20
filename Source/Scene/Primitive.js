@@ -223,7 +223,7 @@ define([
          *
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry

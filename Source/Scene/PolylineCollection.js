@@ -141,8 +141,8 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
-        this._modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         this._rs = undefined;
 
@@ -944,10 +944,10 @@ define([
         var mode = frameState.mode;
         var projection = frameState.scene2D.projection;
 
-        if (collection._mode !== mode || (collection._projection !== projection) || (!collection._modelMatrix.equals(collection.modelMatrix))) {
+        if (collection._mode !== mode || (collection._projection !== projection) || (!Matrix4.clone(collection._modelMatrix, collection.modelMatrix))) {
             collection._mode = mode;
             collection._projection = projection;
-            collection._modelMatrix = collection.modelMatrix.clone();
+            collection._modelMatrix = Matrix4.clone(collection.modelMatrix);
             collection._createVertexArray = true;
         }
     }

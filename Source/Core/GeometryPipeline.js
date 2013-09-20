@@ -831,7 +831,7 @@ define([
             boundingSphere.center = Cartesian3.fromCartesian4(boundingSphere.center);
         }
 
-        instance.modelMatrix = Matrix4.IDENTITY.clone();
+        instance.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         return instance;
     };
