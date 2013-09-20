@@ -149,7 +149,7 @@ defineSuite([
         expect(p.radii).toEqual(testObject.ellipsoid.radii.getValue(time));
         expect(p.show).toEqual(testObject.ellipsoid.show.getValue(time));
         expect(p.material.uniforms).toEqual(testObject.ellipsoid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(testObject.orientation.getValue(time))), testObject.position.getValue(time)));
 
         ellipsoid.show.value = false;
         visualizer.update(time);
@@ -171,7 +171,7 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(true);
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(false);

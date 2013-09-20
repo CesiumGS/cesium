@@ -75,7 +75,7 @@ defineSuite([
         camera = new Camera(context.getCanvas());
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
@@ -123,18 +123,18 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
-        camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
-        camera.direction = camera.position.negate().normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
-        camera.up = camera.right.cross(camera.direction);
+        camera.position = Cartesian3.clone(bv.center);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
+        camera.up = Cartesian3.cross(camera.right, camera.direction);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
@@ -159,18 +159,18 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
@@ -204,18 +204,18 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
+        camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
@@ -236,11 +236,11 @@ defineSuite([
         var commandList = [];
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
-        camera.position = bv.center.clone();
-        camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
-        camera.direction = camera.position.negate().normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
-        camera.up = camera.right.cross(camera.direction);
+        camera.position = Cartesian3.clone(bv.center);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
+        camera.up = Cartesian3.cross(camera.right, camera.direction);
 
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
         frameState.occluder = occluder;
@@ -249,10 +249,10 @@ defineSuite([
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume on the other side of the ellipsoid.
-        camera.position = camera.position.negate();
-        camera.direction = camera.position.negate().normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
-        camera.up = camera.right.cross(camera.direction);
+        camera.position = Cartesian3.negate(camera.position);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
+        camera.up = Cartesian3.cross(camera.right, camera.direction);
 
         occluder.setCameraPosition(camera.position);
 
@@ -270,7 +270,7 @@ defineSuite([
         primitives.add(billboard);
 
         camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
-        camera.direction = camera.position.negate().normalize();
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
 
         var savedCamera = frameState.camera;
         frameState.camera = camera;
@@ -281,8 +281,8 @@ defineSuite([
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
-        camera.position = camera.position.negate();
-        camera.direction = camera.direction.negate();
+        camera.position  = Cartesian3.negate(camera.position);
+        camera.direction = Cartesian3.negate(camera.direction);
 
         occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
         frameState.occluder = occluder;
