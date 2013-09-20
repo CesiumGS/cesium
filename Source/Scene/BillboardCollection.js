@@ -949,7 +949,7 @@ define([
 
             billboardCollection._mode = mode;
             billboardCollection._projection = projection;
-            billboardCollection.modelMatrix.clone(modelMatrix);
+            Matrix4.clone(billboardCollection.modelMatrix, modelMatrix);
             billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {

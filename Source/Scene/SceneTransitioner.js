@@ -351,8 +351,8 @@ define([
         var dir = new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0);
         var up = new Cartesian4(camera.up.x, camera.up.y, camera.up.z, 0.0);
 
-        var frame = transform.inverseTransformation().multiply(camera.transform);
-        camera.transform = transform.clone();
+        var frame = Matrix4.multiply(Matrix4.inverseTransformation(transform), camera.transform);
+        camera.transform = Matrix4.clone(transform);
 
         camera.position = Cartesian3.fromCartesian4(frame.multiplyByVector(pos));
         camera.direction = Cartesian3.fromCartesian4(frame.multiplyByVector(dir));
@@ -433,7 +433,7 @@ define([
 
         morphOrthographicToPerspective(transitioner, duration, function() {
             camera.frustum = transitioner._cameraCV.frustum.clone();
-            camera.transform = transitioner._cameraCV.transform.clone();
+            camera.transform = Matrix4.clone(transitioner._cameraCV.transform);
             morphFromColumbusViewTo3D(transitioner, duration, onComplete);
         });
     }
@@ -779,7 +779,7 @@ define([
 
         updateFrustums(transitioner);
         var camera = scene.getCamera();
-        camera.transform = transitioner._camera2D.transform.clone();
+        camera.transform = Matrix4.clone(transitioner._camera2D.transform);
 
         // TODO: Match incoming columbus-view or 3D position
         camera.position = transitioner._camera2D.position.clone();
@@ -800,7 +800,7 @@ define([
 
         updateFrustums(transitioner);
         var camera = scene.getCamera();
-        camera.transform = transitioner._cameraCV.transform.clone();
+        camera.transform = Matrix4.clone(transitioner._cameraCV.transform);
 
         if (transitioner._previousModeMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
             transitioner._morphCancelled = false;
