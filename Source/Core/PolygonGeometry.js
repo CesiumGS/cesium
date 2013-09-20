@@ -117,7 +117,9 @@ define([
                     cleanedPositions = PolygonPipeline.removeDuplicates(positions);
                     positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
                 } else {
-                    throw error;
+                    /* If nothing else works, try reversing the winding order */
+                    positions2D.reverse();
+                    cleanedPositions.reverse();
                 }
             }
         }

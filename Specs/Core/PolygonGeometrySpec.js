@@ -126,17 +126,18 @@ defineSuite([
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexformat : VertexFormat.POSITION_ONLY,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                Cartographic.fromDegrees(-72.0, 40.0),
-                Cartographic.fromDegrees(-68.0, 35.0),
-                Cartographic.fromDegrees(-75.0, 30.0),
-                Cartographic.fromDegrees(-70.0, 30.0),
-                Cartographic.fromDegrees(-68.0, 40.0)
+            Cartographic.fromDegrees(-82.0, 28.0),
+            Cartographic.fromDegrees(-76.0, 25.0),
+            Cartographic.fromDegrees(-76.8, 22.0),
+            Cartographic.fromDegrees(-85.0, 18.0),
+            Cartographic.fromDegrees(-80.0, 18.0),
+            Cartographic.fromDegrees(-78.0, 28.0)
             ]),
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 9);
-        expect(p.indices.length).toEqual(3 * 3);
+        expect(p.attributes.position.values.length).toEqual(3 * 10);
+        expect(p.indices.length).toEqual(3 * 4);
     });
 
     it('computes all attributes', function() {
