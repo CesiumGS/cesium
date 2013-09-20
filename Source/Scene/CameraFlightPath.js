@@ -230,7 +230,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
-            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
         };
 
         return update;
@@ -346,7 +346,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
-            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
         };
 
         return update;
@@ -376,7 +376,7 @@ define([
 
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
-            camera.direction = Matrix3.getRow(rotMatrix, 2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
