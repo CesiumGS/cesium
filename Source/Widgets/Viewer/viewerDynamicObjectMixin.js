@@ -93,19 +93,14 @@ define([
 
         function pickAndTrackObject(e) {
             var p = viewer.scene.pick(e.position);
-            if (defined(p) &&
-                defined(p.primitive) &&
-                defined(p.primitive.dynamicObject) &&
-                defined(p.primitive.dynamicObject.position)) {
+            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject) && defined(p.primitive.dynamicObject.position)) {
                 viewer.trackedObject = p.primitive.dynamicObject;
             }
         }
 
         function pickAndShowBalloon(e) {
             var p = viewer.scene.pick(e.position);
-            if (defined(p) &&
-                defined(p.primitive) &&
-                defined(p.primitive.dynamicObject)) {
+            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject)) {
                 viewer.balloonedObject = p.primitive.dynamicObject;
             }
         }

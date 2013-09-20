@@ -37,8 +37,7 @@ define([
         container = getElement(container);
 
         this._container = container;
-        container.setAttribute('data-bind',
-                'css: { "cesium-balloon-wrapper-visible" : showBalloon, "cesium-balloon-wrapper-hidden" : !showBalloon }');
+        container.setAttribute('data-bind', 'css: { "cesium-balloon-wrapper-visible" : showBalloon, "cesium-balloon-wrapper-hidden" : !showBalloon }');
         var el = document.createElement('div');
         this._element = el;
         el.className = 'cesium-balloon-wrapper';
@@ -55,20 +54,17 @@ define([
         ex.setAttribute('data-bind', 'click: function(){showBalloon = false; return false;}');
         el.appendChild(ex);
 
-
         this._content = document.createElement('div');
         contentWrapper.appendChild(this._content);
         this._content.setAttribute('data-bind', 'html: _contentHTML');
         var pointContainer = document.createElement('div');
         pointContainer.className = 'cesium-balloon-point-container';
-        pointContainer.setAttribute('data-bind',
-                'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right,\
+        pointContainer.setAttribute('data-bind', 'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right,\
                 "cesium-balloon-point-show" : showPoint, "cesium-balloon-point-hide" : !showPoint},\
                 style: { "bottom" : _pointY, "left" : _pointX}');
         var point = document.createElement('div');
         point.className = 'cesium-balloon-point';
-        point.setAttribute('data-bind',
-                'css: { "cesium-balloon-point-down" : _down,\
+        point.setAttribute('data-bind', 'css: { "cesium-balloon-point-down" : _down,\
                         "cesium-balloon-point-up" : _up,\
                         "cesium-balloon-point-left" : _left,\
                         "cesium-balloon-point-right" : _right}');

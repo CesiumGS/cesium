@@ -18,7 +18,7 @@ define([
     var pointMin = 0;
     var screenSpacePos = new Cartesian2();
 
-    function shiftPosition(viewModel, position, point, screen){
+    function shiftPosition(viewModel, position, point, screen) {
         var pointX;
         var pointY;
         var posX;
@@ -27,8 +27,8 @@ define([
         var containerWidth = container.clientWidth;
         var containerHeight = container.clientHeight;
 
-        viewModel._maxWidth = containerWidth*0.50 + 'px';
-        viewModel._maxHeight = containerHeight*0.50 + 'px';
+        viewModel._maxWidth = containerWidth * 0.50 + 'px';
+        viewModel._maxHeight = containerHeight * 0.50 + 'px';
         var pointMaxY = containerHeight - 15;
         var pointMaxX = containerWidth - 16;
         var pointXOffset = position.x - 15;
@@ -40,7 +40,7 @@ define([
         var posMaxY = containerHeight - height;
         var posMaxX = containerWidth - width - 2;
         var posMin = 0;
-        var posXOffset = position.x - width/2;
+        var posXOffset = position.x - width / 2;
 
         var top = position.y > containerHeight;
         var bottom = position.y < -10;
@@ -68,7 +68,7 @@ define([
                 viewModel._right = false;
             } else if (left) {
                 posX = 15;
-                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
                 pointX = pointMin;
                 pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
                 viewModel._down = false;
@@ -77,7 +77,7 @@ define([
                 viewModel._right = false;
             } else if (right) {
                 posX = containerWidth - width - 15;
-                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
                 pointX = pointMaxX;
                 pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
                 viewModel._down = false;
@@ -103,16 +103,15 @@ define([
                 posY = containerHeight - height;
             } else if (left) {
                 posX = 0;
-                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
             } else if (right) {
                 posX = containerWidth - width;
-                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
             } else {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = Math.min(Math.max(position.y, posMin), posMaxY);
             }
         }
-
 
         viewModel._pointX = pointX + 'px';
         viewModel._pointY = pointY + 'px';
@@ -150,7 +149,10 @@ define([
         this._position = undefined;
         this._updateContent = false;
         this._timerRunning = false;
-        this._defaultPosition = {x: this._container.clientWidth, y: this._container.clientHeight/2};
+        this._defaultPosition = {
+            x : this._container.clientWidth,
+            y : this._container.clientHeight / 2
+        };
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
@@ -248,7 +250,7 @@ define([
          *
          * @type {Number}
          */
-        this._maxWidth = this._container.clientWidth*0.95 + 'px';
+        this._maxWidth = this._container.clientWidth * 0.95 + 'px';
 
         /**
          * The maximum height of the balloon element.
@@ -256,10 +258,9 @@ define([
          *
          * @type {Number}
          */
-        this._maxHeight = this._container.clientHeight*0.50 + 'px';
+        this._maxHeight = this._container.clientHeight * 0.50 + 'px';
 
-        knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
-                              '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
+        knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
 
     /**
@@ -273,7 +274,7 @@ define([
                 this._timerRunning = true;
                 var that = this;
                 //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
-                setTimeout(function () {
+                setTimeout(function() {
                     that._contentHTML = that._content;
                     if (typeof that._position !== 'undefined') {
                         var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
@@ -283,12 +284,12 @@ define([
                     that._timerRunning = false;
                 }, 100);
                 this._updateContent = false;
-            } else  if (this.showBalloon) {
+            } else if (this.showBalloon) {
                 var pos;
-                if (typeof this._position !== 'undefined'){
+                if (typeof this._position !== 'undefined') {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                     this.showPoint = true;
-                }  else {
+                } else {
                     pos = this._defaultPosition;
                     this.showPoint = false;
                 }
@@ -339,7 +340,7 @@ define([
          *
          * @type {Element}
          */
-        content: {
+        content : {
             set : function(value) {
                 if (typeof value === 'undefined') {
                     this._content = '';
@@ -390,8 +391,8 @@ define([
          *
          * @type {Function}
          */
-        computeScreenSpacePosition: {
-            set: function(value) {
+        computeScreenSpacePosition : {
+            set : function(value) {
                 this._computeScreenSpacePosition = value;
             }
         },
@@ -401,8 +402,8 @@ define([
          *
          * @type {Cartesian3}
          */
-        position: {
-            set: function(value) {
+        position : {
+            set : function(value) {
                 this._position = value;
             }
         }
