@@ -102,9 +102,11 @@ define([
         }
 
         function pickAndShowBalloon(e) {
-            var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
-                viewer.balloonedObject = pickedPrimitive.dynamicObject;
+            var p = viewer.scene.pick(e.position);
+            if (defined(p) &&
+                defined(p.primitive) &&
+                defined(p.primitive.dynamicObject)) {
+                viewer.balloonedObject = p.primitive.dynamicObject;
             }
         }
 
