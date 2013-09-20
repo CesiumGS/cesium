@@ -5,8 +5,10 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/Cartesian3',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Scene/CustomSensorVolume',
         '../Scene/Material',
         './MaterialProperty'
@@ -16,8 +18,10 @@ define([
          DeveloperError,
          destroyObject,
          Color,
+         Cartesian3,
          Matrix3,
          Matrix4,
+         Quaternion,
          CustomSensorVolume,
          Material,
          MaterialProperty) {
