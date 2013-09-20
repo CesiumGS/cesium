@@ -224,7 +224,7 @@ define([
             _computeEllipseQuadrant(ellipsoid, surfPosMag, aSqr, bSqr, ab, ecc, unitPos, eastVec, northVec, bearing,
                                    thetaPts, numQuadrantPts - 1, CesiumMath.TWO_PI, -1, ellipsePts, (3 * numQuadrantPts) - 3, numQuadrantPts);
 
-            ellipsePts.push(ellipsePts[0].clone()); // Duplicates first and last point for polyline
+            ellipsePts.push(Cartesian3.clone(ellipsePts[0])); // Duplicates first and last point for polyline
 
             return ellipsePts;
         }
