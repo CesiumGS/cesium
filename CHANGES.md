@@ -52,6 +52,7 @@ Beta Releases
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 
 ### b20 - 2013-09-03
 

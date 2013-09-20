@@ -341,6 +341,21 @@ define([
                 billboard.setVerticalOrigin(verticalOrigin);
             }
         }
+
+        property = dynamicBillboard._width;
+        if (defined(property)) {
+            billboard.setWidth(property.getValue(time));
+        }
+
+        property = dynamicBillboard._height;
+        if (defined(property)) {
+            billboard.setHeight(property.getValue(time));
+        }
+
+        property = dynamicBillboard._nearFarScalar;
+        if (defined(property)) {
+            billboard.setScaleByDistance(property.getValue(time));
+        }
     }
 
     DynamicBillboardVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
