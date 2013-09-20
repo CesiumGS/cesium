@@ -942,10 +942,28 @@ define([
         return this._defaultCubeMap;
     };
 
+    /**
+     * Returns the drawingBufferWidth of the underlying GL context.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The value in the drawingBufferWidth property of the underlying GL context.
+     *
+     * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth'>drawingBufferWidth</a>
+     */
     Context.prototype.getDrawingBufferHeight = function() {
         return this._gl.drawingBufferHeight;
     };
 
+    /**
+     * Returns the drawingBufferHeight of the underlying GL context.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The value in the drawingBufferHeight property of the underlying GL context.
+     *
+     * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight'>drawingBufferHeight</a>
+     */
     Context.prototype.getDrawingBufferWidth = function() {
         return this._gl.drawingBufferWidth;
     };

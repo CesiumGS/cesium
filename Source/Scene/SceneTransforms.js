@@ -152,11 +152,11 @@ define([
     /**
      * @private
      */
-    SceneTransforms.transformWindowToDrawingBuffer = function(context, windowPosition) {
+    SceneTransforms.transformWindowToDrawingBuffer = function(context, windowPosition, result) {
         var canvas = context.getCanvas();
         var xScale = context.getDrawingBufferWidth() / canvas.clientWidth;
         var yScale = context.getDrawingBufferHeight() / canvas.clientHeight;
-        return new Cartesian2(windowPosition.x * xScale, windowPosition.y * yScale);
+        return Cartesian2.fromElements(windowPosition.x * xScale, windowPosition.y * yScale, result);
     };
 
     return SceneTransforms;

@@ -35,7 +35,7 @@ define([
      *
      * @alias Camera
      *
-     * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} context is required.
      *
      * @constructor
      *

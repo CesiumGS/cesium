@@ -36,6 +36,7 @@ if (defined(p) && defined(p.primitive)) {
       Code that previously looked like `quaternion.magnitude();` should now look like `Quaternion.magnitude(quaternion);`.
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
+   * Removed `canvasDimensions` from `FrameState`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -47,6 +48,7 @@ if (defined(p) && defined(p.primitive)) {
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
+* Added getDrawingBufferWidth and getDrawingBufferHeight methods to Context; this allows code that deals with rendering to use render buffer dimensions, and code that deals with events to use canvas dimensions.
 * Added code to Cesium-Viewer to detect browser zoom scale. When resizing the canvas element, apply the browser zoom scale. This avoids a loss of visual fidelity when using browser zoom.
 
 ### b20 - 2013-09-03
