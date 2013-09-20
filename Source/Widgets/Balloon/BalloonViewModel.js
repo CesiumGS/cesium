@@ -43,9 +43,14 @@ define([
         var posXOffset = position.x - width / 2;
 
         var top = position.y > containerHeight;
-        var bottom = position.y < -10;
+        var bottom = position.y < 0;
         var left = position.x < 0;
         var right = position.x > containerWidth;
+
+        viewModel._down = bottom || (!top && !left && !right);
+        viewModel._up = top && !bottom;
+        viewModel._left = left && !top && !bottom;
+        viewModel._right = right && !left && !top && !bottom;
 
         if (viewModel.showPoint) {
             if (bottom) {
@@ -53,46 +58,33 @@ define([
                 posY = 15;
                 pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
                 pointY = pointMin;
-                viewModel._down = true;
-                viewModel._up = false;
-                viewModel._left = false;
-                viewModel._right = false;
             } else if (top) {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = containerHeight - height - 14;
                 pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
                 pointY = pointMaxY;
-                viewModel._down = false;
-                viewModel._up = true;
-                viewModel._left = false;
-                viewModel._right = false;
             } else if (left) {
                 posX = 15;
                 posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
                 pointX = pointMin;
                 pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
-                viewModel._down = false;
-                viewModel._up = false;
-                viewModel._left = true;
-                viewModel._right = false;
             } else if (right) {
                 posX = containerWidth - width - 15;
                 posY = Math.min(Math.max((position.y - height / 2), posMin), posMaxY);
                 pointX = pointMaxX;
                 pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
+            } else if (position.y > posMaxY) {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = position.y - height - 14;
+                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
+                pointY = position.y - 14;
                 viewModel._down = false;
-                viewModel._up = false;
-                viewModel._left = false;
-                viewModel._right = true;
+                viewModel._up = true;
             } else {
                 posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
                 posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
                 pointX = pointXOffset;
                 pointY = Math.min(position.y + 10, posMaxY - 15);
-                viewModel._down = true;
-                viewModel._up = false;
-                viewModel._left = false;
-                viewModel._right = false;
             }
         } else {
             if (bottom) {
