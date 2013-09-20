@@ -298,7 +298,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             if (dataSourceCollection.getLength() === 1) {
                 var dataSourceClock = dataSource.getClock();
                 if (defined(dataSourceClock)) {
-                    dataSourceClock.clone(clock);
+                    dataSourceClock.getValue(clock);
                     if (defined(timeline)) {
                         timeline.updateFromClock();
                         timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
