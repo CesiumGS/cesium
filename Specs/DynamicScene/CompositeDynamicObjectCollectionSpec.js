@@ -3,6 +3,7 @@ defineSuite([
          'DynamicScene/CompositeDynamicObjectCollection',
          'DynamicScene/CompositePositionProperty',
          'DynamicScene/CompositeProperty',
+         'DynamicScene/ConstantProperty',
          'DynamicScene/DynamicBillboard',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicObject',
@@ -15,6 +16,7 @@ defineSuite([
          CompositeDynamicObjectCollection,
          CompositePositionProperty,
          CompositeProperty,
+         ConstantProperty,
          DynamicBillboard,
          DynamicObjectCollection,
          DynamicObject,
@@ -490,6 +492,97 @@ defineSuite([
 
         dynamicObject3.billboard.show = undefined;
         expect(compositeObject.billboard.show).toBeUndefined();
+    });
+
+    it('can use the same dynamic object collection in multiple composites', function() {
+        var id = 'test';
+
+        // the dynamic object in collection1 has show === true
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject1 = new DynamicObject(id);
+        dynamicObject1.billboard = new DynamicBillboard();
+        dynamicObject1.billboard.show = new ConstantProperty(true);
+        collection1.add(dynamicObject1);
+
+        // the dynamic object in collection1 has show === false
+        var collection2 = new DynamicObjectCollection();
+        var dynamicObject2 = new DynamicObject(id);
+        dynamicObject2.billboard = new DynamicBillboard();
+        dynamicObject2.billboard.show = new ConstantProperty(false);
+        collection2.add(dynamicObject2);
+
+        // composite1 has collection1 as higher priority
+        var composite1 = new CompositeDynamicObjectCollection();
+        composite1.addCollection(collection2);
+        composite1.addCollection(collection1);
+
+        // composite2 has collection2 as higher priority
+        var composite2 = new CompositeDynamicObjectCollection();
+        composite2.addCollection(collection1);
+        composite2.addCollection(collection2);
+
+        expect(composite1.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
+        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(false);
+
+        // switch the billboard show for the dynamic object in collection2 to true, this should affect
+        // composite2 but not composite1
+        dynamicObject2.billboard.show = new ConstantProperty(true);
+        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
+        expect(composite1.getById(id).billboard.show).toBe(dynamicObject1.billboard.show);
+        expect(composite2.getById(id).billboard.show).toBe(dynamicObject2.billboard.show);
+
+        // add a position property to the dynamic object in collection1
+        dynamicObject1.position = new CompositePositionProperty();
+
+        // both composites should use the position from the object in collection1
+        expect(composite1.getById(id).position).toBe(dynamicObject1.position);
+        expect(composite2.getById(id).position).toBe(dynamicObject1.position);
+
+        // add a position property to the dynamic object in collection1
+        dynamicObject2.position = new CompositePositionProperty();
+
+        // composite1 should use the position from the object in collection1
+        // composite2 should use the position from the object in collection2
+        expect(composite1.getById(id).position).toBe(dynamicObject1.position);
+        expect(composite2.getById(id).position).toBe(dynamicObject2.position);
+    });
+
+    it('prevents names from colliding between property events and object events', function() {
+        var id = 'test';
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject1 = new DynamicObject(id);
+        collection1.add(dynamicObject1);
+
+        var collection2 = new DynamicObjectCollection();
+        var dynamicObject2 = new DynamicObject(id);
+        collection2.add(dynamicObject2);
+
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(collection2);
+        composite.addCollection(collection1);
+
+        var compositeObject = composite.getById(id);
+
+        // Add a billboard
+        dynamicObject1.billboard = new DynamicBillboard();
+        dynamicObject1.billboard.show = new ConstantProperty(false);
+
+        expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
+
+        // Add a new object
+        var newObject = new DynamicObject(id + 'billboard');
+        collection1.add(newObject);
+
+        // Replace the billboard on the original object
+        dynamicObject1.billboard = new DynamicBillboard();
+        dynamicObject1.billboard.show = new ConstantProperty(false);
+
+        // Add a property to the new object
+        newObject.position = new CompositePositionProperty();
+
+        // It should appear on the composite
+        expect(composite.getById(newObject.id).position).toBe(newObject.position);
     });
 
     it('addCollection throws with undefined collection', function() {

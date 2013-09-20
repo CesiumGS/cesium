@@ -91,12 +91,12 @@ define(['../Core/createGuid',
     function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
         if (defined(property) && defined(property.propertyChanged)) {
             var subpropertyChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
-            eventHash[collectionId + dynamicObject.id + propertyName] = property.propertyChanged.addEventListener(subpropertyChanged);
+            eventHash[JSON.stringify([collectionId, dynamicObject.id, propertyName])] = property.propertyChanged.addEventListener(subpropertyChanged);
         }
     }
 
     function unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName) {
-        var propertyId = collectionId + dynamicObject.id + propertyName;
+        var propertyId = JSON.stringify([collectionId, dynamicObject.id, propertyName]);
         var unsubscribeFunc = eventHash[propertyId];
         if (defined(unsubscribeFunc)) {
             unsubscribeFunc();
@@ -105,7 +105,7 @@ define(['../Core/createGuid',
     }
 
     function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
-        eventHash[collectionId + dynamicObject.id] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
+        eventHash[JSON.stringify([collectionId, dynamicObject.id])] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
@@ -116,8 +116,9 @@ define(['../Core/createGuid',
     }
 
     function unsubscribeFromDynamicObject(that, eventHash, collectionId, dynamicObject) {
-        eventHash[collectionId + dynamicObject.id]();
-        eventHash[collectionId + dynamicObject.id] = undefined;
+        var id = JSON.stringify([collectionId, dynamicObject.id]);
+        eventHash[id]();
+        eventHash[id] = undefined;
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
