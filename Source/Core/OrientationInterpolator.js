@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './Quaternion'
     ], function(
         defined,
-        DeveloperError) {
+        DeveloperError,
+        Quaternion) {
     "use strict";
 
     /**
@@ -101,7 +103,7 @@ define([
         var i = findIndex(this, time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
-        return this._points[i].orientation.slerp(this._points[i + 1].orientation, u);
+        return Quaternion.slerp(this._points[i].orientation, this._points[i + 1].orientation, u);
     };
 
     return OrientationInterpolator;
