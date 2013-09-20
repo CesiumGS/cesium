@@ -355,11 +355,11 @@ define([
 
         if (defined(position) &&
             defined(orientation) &&
-            (!position.equals(cone._visualizerPosition) ||
+            (!Cartesian3.equals(position, cone._visualizerPosition) ||
              !Quaternion.equals(orientation, cone._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
-            cone._visualizerPosition = position.clone(cone._visualizerPosition);
-            cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
+            cone._visualizerPosition = Cartesian3.clone(position, cone._visualizerPosition);
+            cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
         cone.material = MaterialProperty.getValue(time, context, dynamicCone._outerMaterial, cone.material);
