@@ -16,6 +16,9 @@ define(['../Core/createGuid',
         DynamicObjectCollection) {
     "use strict";
 
+    var propertyIdScratch = new Array(3);
+    var dynamicObjectIdScratch = new Array(2);
+
     function clean(dynamicObject) {
         var propertyNames = dynamicObject.propertyNames;
         var propertyNamesLength = propertyNames.length;
@@ -91,12 +94,18 @@ define(['../Core/createGuid',
     function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
         if (defined(property) && defined(property.propertyChanged)) {
             var subpropertyChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
-            eventHash[JSON.stringify([collectionId, dynamicObject.id, propertyName])] = property.propertyChanged.addEventListener(subpropertyChanged);
+            propertyIdScratch[0] = collectionId;
+            propertyIdScratch[1] = dynamicObject.id;
+            propertyIdScratch[2] = propertyName;
+            eventHash[JSON.stringify(propertyIdScratch)] = property.propertyChanged.addEventListener(subpropertyChanged);
         }
     }
 
     function unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName) {
-        var propertyId = JSON.stringify([collectionId, dynamicObject.id, propertyName]);
+        propertyIdScratch[0] = collectionId;
+        propertyIdScratch[1] = dynamicObject.id;
+        propertyIdScratch[2] = propertyName;
+        var propertyId = JSON.stringify(propertyIdScratch);
         var unsubscribeFunc = eventHash[propertyId];
         if (defined(unsubscribeFunc)) {
             unsubscribeFunc();
@@ -105,7 +114,9 @@ define(['../Core/createGuid',
     }
 
     function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
-        eventHash[JSON.stringify([collectionId, dynamicObject.id])] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
+        dynamicObjectIdScratch[0] = collectionId;
+        dynamicObjectIdScratch[1] = dynamicObject.id;
+        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
@@ -116,7 +127,9 @@ define(['../Core/createGuid',
     }
 
     function unsubscribeFromDynamicObject(that, eventHash, collectionId, dynamicObject) {
-        var id = JSON.stringify([collectionId, dynamicObject.id]);
+        dynamicObjectIdScratch[0] = collectionId;
+        dynamicObjectIdScratch[1] = dynamicObject.id;
+        var id = JSON.stringify(dynamicObjectIdScratch);
         eventHash[id]();
         eventHash[id] = undefined;
 
