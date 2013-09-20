@@ -794,7 +794,7 @@ define([
             return position;
         }
 
-        modelMatrix.multiplyByPoint(position, tempCartesian4);
+        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian4);
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
     };
 

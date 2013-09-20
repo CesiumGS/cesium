@@ -80,7 +80,7 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        viewProjection.multiplyByPoint(actualPosition, positionCC);
+        Matrix4.multiplyByPoint(viewProjection, actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getCanvas(), positionCC, result);
     };
@@ -144,7 +144,7 @@ define([
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to window coordinates
-        viewportTransform.multiplyByPoint(positionNDC, positionWC);
+        Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian4(positionWC, result);
     };

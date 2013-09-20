@@ -207,19 +207,19 @@ define([
             p1 = this._points[1].point;
             p2 = this._ti;
             p3 = this._points[2].point.subtract(p0).multiplyByScalar(0.5);
-            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
+            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
             p2 = p1.subtract(this._points[i - 1].point).multiplyByScalar(0.5);
             p3 = this._to;
-            coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
+            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec);
         } else {
             p0 = this._points[i - 1].point;
             p1 = this._points[i].point;
             p2 = this._points[i + 1].point;
             p3 = this._points[i + 2].point;
-            coefs = CatmullRomSpline.catmullRomCoefficientMatrix.multiplyByPoint(timeVec);
+            coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec);
         }
         p0 = p0.multiplyByScalar(coefs.x);
         p1 = p1.multiplyByScalar(coefs.y);

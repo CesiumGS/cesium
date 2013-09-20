@@ -1025,7 +1025,7 @@ define([
         if (uniformState._encodedCameraPositionMCDirty) {
             uniformState._encodedCameraPositionMCDirty = false;
 
-            uniformState.getInverseModel().multiplyByPoint(uniformState._cameraPosition, cameraPositionMC);
+            Matrix4.multiplyByPoint(uniformState.getInverseModel(), uniformState._cameraPosition, cameraPositionMC);
             EncodedCartesian3.fromCartesian(cameraPositionMC, uniformState._encodedCameraPositionMC);
         }
     }

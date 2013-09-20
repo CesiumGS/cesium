@@ -526,7 +526,7 @@ defineSuite([
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
         var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
-        var result = m.multiplyByTranslation(translation);
+        var result = Matrix4.multiplyByTranslation(m, translation);
         expect(result).toEqual(expected);
     });
 
@@ -535,7 +535,7 @@ defineSuite([
         var translation = new Cartesian3(17, 18, 19);
         var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
         var result = new Matrix4();
-        var returnedResult = m.multiplyByTranslation(translation, result);
+        var returnedResult = Matrix4.multiplyByTranslation(m, translation, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -544,7 +544,7 @@ defineSuite([
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
         var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
-        var returnedResult = m.multiplyByTranslation(translation, m);
+        var returnedResult = Matrix4.multiplyByTranslation(m, translation, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
     });
@@ -553,7 +553,7 @@ defineSuite([
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = 2.0;
         var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
-        var result = m.multiplyByUniformScale(scale);
+        var result = Matrix4.multiplyByUniformScale(m, scale);
         expect(result).toEqual(expected);
     });
 
@@ -562,7 +562,7 @@ defineSuite([
         var scale = 1.0;
         var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
         var result = new Matrix4();
-        var returnedResult = m.multiplyByUniformScale(scale, result);
+        var returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -571,7 +571,7 @@ defineSuite([
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = 2.0;
         var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
-        var returnedResult = m.multiplyByUniformScale(scale, m);
+        var returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
     });
@@ -598,7 +598,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Cartesian4(17, 18, 19);
         var expected = new Cartesian4(114, 334, 554, 774);
-        var result = left.multiplyByPoint(right);
+        var result = Matrix4.multiplyByPoint(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -607,7 +607,7 @@ defineSuite([
         var right = new Cartesian4(17, 18, 19);
         var expected = new Cartesian4(114, 334, 554, 774);
         var result = new Cartesian4();
-        var returnedResult = left.multiplyByPoint(right, result);
+        var returnedResult = Matrix4.multiplyByPoint(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });

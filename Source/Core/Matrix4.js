@@ -2059,55 +2059,6 @@ define([
     };
 
     /**
-     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
-     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit translation matrix defined by a {@link Cartesian3}.
-     *
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} translation The translation on the right-hand side of the multiplication.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     *
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} translation is required.
-     */
-    Matrix4.prototype.multiplyByTranslation = function(translation, result) {
-        return Matrix4.multiplyByTranslation(this, translation, result);
-    };
-
-    /**
-     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
-     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit uniform scale matrix.
-     *
-     * @memberof Matrix4
-     *
-     * @param {Number} scale The scale on the right-hand side of the multiplication.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     *
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scale is required.
-     */
-    Matrix4.prototype.multiplyByUniformScale = function(scale, result) {
-        return Matrix4.multiplyByUniformScale(this, scale, result);
-    };
-
-    /**
-     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
-     * with a {@link Cartesian4} with a <code>w</code> component of one.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} cartesian The point.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix4.prototype.multiplyByPoint = function(cartesian, result) {
-        return Matrix4.multiplyByPoint(this, cartesian, result);
-    };
-
-    /**
      * Computes a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1, column2, column3)'.
      * @memberof Matrix4
