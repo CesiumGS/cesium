@@ -22,6 +22,8 @@ define(['../Core/defaultValue',
      */
     var DynamicBillboard = function() {
         this._image = undefined;
+        this._width = undefined;
+        this._height = undefined;
         this._scale = undefined;
         this._rotation = undefined;
         this._alignedAxis = undefined;
@@ -114,7 +116,31 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show')
+        show : createDynamicPropertyDescriptor('show', '_show'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
+         * If undefined, the native width is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        width : createDynamicPropertyDescriptor('width', '_width'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
+         * If undefined, the native height is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        height : createDynamicPropertyDescriptor('height', '_height'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
+         * If undefined, a constant size is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        nearFarScalar : createDynamicPropertyDescriptor('nearFarScalar', '_nearFarScalar')
     });
 
     /**
@@ -138,6 +164,9 @@ define(['../Core/defaultValue',
         result.alignedAxis = this._alignedAxis;
         result.show = this._show;
         result.verticalOrigin = this._verticalOrigin;
+        result.width = this._width;
+        result.height = this._height;
+        result.nearFarScalar = this._nearFarScalar;
         return result;
     };
 
@@ -163,6 +192,9 @@ define(['../Core/defaultValue',
         this.alignedAxis = defaultValue(this._alignedAxis, source._alignedAxis);
         this.show = defaultValue(this._show, source._show);
         this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
+        this.width = defaultValue(this._width, source._width);
+        this.height = defaultValue(this._height, source._height);
+        this.nearFarScalar = defaultValue(this._nearFarScalar, source._nearFarScalar);
     };
 
     return DynamicBillboard;
