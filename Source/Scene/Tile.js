@@ -438,7 +438,7 @@ define([
 
         Cartesian3.negate(tile.northeastCornerCartesian, cartesian3Scratch);
         Cartesian3.cross(cartesian3Scratch, Cartesian3.UNIT_Z, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.eastNorma);
+        Cartesian3.normalize(cartesian3Scratch, tile.eastNormal);
 
         ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch2);
         Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch);
