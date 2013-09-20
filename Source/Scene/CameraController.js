@@ -1401,7 +1401,7 @@ define([
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
-        var distToC = Cartesian4.magnitude(Cartesian4.subtract(positionWC, centerWC));
+        var distToC = Cartesian3.magnitude(Cartesian3.subtract(positionWC, centerWC));
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 

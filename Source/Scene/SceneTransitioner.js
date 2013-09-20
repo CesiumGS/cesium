@@ -440,7 +440,7 @@ define([
 
     function columbusViewMorph(startPosition, endPosition, time) {
         // Just linear for now.
-        return Cartesian4.lerp(startPosition, endPosition, time);
+        return Cartesian3.lerp(startPosition, endPosition, time);
     }
 
     function morphPerspectiveToOrthographic(transitioner, duration, onComplete) {

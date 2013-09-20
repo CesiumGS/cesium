@@ -308,7 +308,7 @@ define([
 
         var right;
         var dir = frameState.camera.direction;
-        if (1.0 - Cartesian3.negate(Cartesian3.UNIT_Z).dot(dir) < CesiumMath.EPSILON6) {
+        if (1.0 - Cartesian3.dot(Cartesian3.negate(Cartesian3.UNIT_Z), dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
             right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z));
@@ -321,7 +321,7 @@ define([
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
-        var halfWidth = Math.floor(Math.max(Cartesian3.magnitude(Cartesian3.subtract(screenUp, center)), Cartesian3.magnitude(Cartesian3.subtract(screenRight, center))));
+        var halfWidth = Math.floor(Math.max(Cartesian3.distance(screenUp, center), Cartesian3.distance(screenRight, center)));
         var halfHeight = halfWidth;
 
         return new BoundingRectangle(

@@ -1162,9 +1162,9 @@ define([
         result[9] = u.z;
         result[10] = -d.z;
         result[11] = 0.0;
-        result[12] = -Cartesian3.dot(Cartesian3.fromCartesian4(r), position3D);
-        result[13] = -Cartesian3.dot(Cartesian3.fromCartesian4(u), position3D);
-        result[14] = Cartesian3.dot(Cartesian3.fromCartesian4(d), position3D);
+        result[12] = -Cartesian3.dot(r, position3D);
+        result[13] = -Cartesian3.dot(u, position3D);
+        result[14] = Cartesian3.dot(d, position3D);
         result[15] = 1.0;
 
         return result;
