@@ -84,7 +84,7 @@ defineSuite([
         extent1 = Extent.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         extent2 = Extent.fromDegrees(70.0, 20.0, 80.0, 30.0);
 
-        var translation = ellipsoid.cartographicToCartesian(extent1.getCenter()).normalize().multiplyByScalar(2.0);
+        var translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(extent1.getCenter())), 2.0);
         extentInstance1 = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -99,7 +99,7 @@ defineSuite([
             }
         });
 
-        translation = ellipsoid.cartographicToCartesian(extent2.getCenter()).normalize().multiplyByScalar(3.0);
+        translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(extent2.getCenter())), 3.0);
         extentInstance2 = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,

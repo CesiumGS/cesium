@@ -41,9 +41,9 @@ define([
         if (modeChanged) {
             that._mode = scene.mode;
             that._screenSpaceCameraController.enableTranslate = false;
-            viewDistance = offset.magnitude();
+            viewDistance = Cartesian3.magnitude(offset);
         } else if (objectChanged) {
-            viewDistance = offset.magnitude();
+            viewDistance = Cartesian3.magnitude(offset);
         } else {
             viewDistance = camera.position.z;
         }
@@ -229,7 +229,7 @@ define([
                 var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, update3DControllerQuaternion);
                 Matrix3.fromQuaternion(rotation, update3DControllerMatrix3).multiplyByVector(offset, offset);
             }
-            offset.normalize(offset).multiplyByScalar(that._lastDistance, offset);
+            Cartesian3.multiplyByScalar(Cartesian3.normalize(offset, offset), that._lastDistance, offset);
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         }
     }
@@ -349,10 +349,10 @@ define([
             first2dUp.x = first2dUp.y = 0;
             last2dUp.x = last2dUp.y = 0;
             Cartesian3.clone(offset, this._lastOffset);
-            this._lastDistance = offset.magnitude();
+            this._lastDistance = Cartesian3.magnitude(offset);
 
             //If looking straight down, move the camera slightly south the avoid gimbal lock.
-            if (Cartesian3.equals(offset.normalize(dynamicObjectViewCartesian3Scratch), Cartesian3.UNIT_Z)) {
+            if (Cartesian3.equals(Cartesian3.normalize(offset, dynamicObjectViewCartesian3Scratch), Cartesian3.UNIT_Z)) {
                 offset.y -= 0.01;
             }
         } else if (defined(this._lastOffset)) {
