@@ -116,6 +116,26 @@ defineSuite([
         expect(returnedResults).toEqual(expectedResults);
     });
 
+    it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {
+        var ellipsoid = new Ellipsoid(2,2,2);
+
+        var points = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-72.0, 40.0),
+            Cartographic.fromDegrees(-68.0, 35.0),
+            Cartographic.fromDegrees(-75.0, 30.0),
+            Cartographic.fromDegrees(-70.0, 30.0),
+            Cartographic.fromDegrees(-68.0, 40.0)
+        ]);
+
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(points, ellipsoid);
+        var points2D = tangentPlane.projectPointsOntoPlane(points);
+        var positionsBack = tangentPlane.projectPointsOntoEllipsoid(points2D);
+
+        expect(positionsBack[0].x).toBeCloseTo(points[0].x);
+        expect(positionsBack[0].y).toBeCloseTo(points[0].y);
+        expect(positionsBack[0].z).toBeCloseTo(points[0].z);
+    });
+
     it('projectPointsOntoEllipsoid works with a result parameter', function () {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var origin = new Cartesian3(1, 0, 0);
