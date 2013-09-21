@@ -358,10 +358,10 @@ define([
             proj.project(nwCartographic, nw);
             proj.project(centerCartographic, center);
 
-            nw.subtract(center, nw);
+            Cartesian3.subtract(nw, center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
             rotationMatrix.multiplyByVector(nw, nw);
-            nw.add(center, nw);
+            Cartesian3.add(nw, center, nw);
             proj.unproject(nw, nwCartographic);
 
             var latitude = nwCartographic.latitude;

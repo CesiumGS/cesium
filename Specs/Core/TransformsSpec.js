@@ -72,7 +72,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_X.negate()); // north
+        expect(returnedResult.getColumn(1)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
         expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z); // up
         expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
     });
@@ -84,7 +84,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
         expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Y); // east
         expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_X); // north
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z.negate()); // up
+        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // up
         expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
     });
 
@@ -95,7 +95,7 @@ defineSuite([
         var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
         expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X.negate()); // down
+        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
         expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
     });
 
@@ -108,7 +108,7 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_X.negate()); // down
+        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
         expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
     });
 
@@ -119,9 +119,9 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Transforms.northEastDownToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
-        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.UNIT_X.negate()); // north
+        expect(returnedResult.getColumn(0)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
         expect(returnedResult.getColumn(1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.UNIT_Z.negate()); // down
+        expect(returnedResult.getColumn(2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // down
         expect(returnedResult.getColumn(3)).toEqual(expectedTranslation); // translation
     });
 
@@ -153,8 +153,8 @@ defineSuite([
 
         time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
-        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
-        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -175,8 +175,8 @@ defineSuite([
 
         time = time.addHours(23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
-        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
-        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -201,8 +201,8 @@ defineSuite([
         var resultU = new Matrix3();
         var u = Transforms.computeTemeToPseudoFixedMatrix(time, resultU);
         expect(u).toBe(resultU);
-        var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
-        var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+        var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
+        var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
         expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
     });
 
@@ -316,8 +316,8 @@ defineSuite([
                 var resultU = new Matrix3();
                 var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
                 expect(u).toBe(resultU);
-                var tAngle = Quaternion.fromRotationMatrix(t).getAngle();
-                var uAngle = Quaternion.fromRotationMatrix(u).getAngle();
+                var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
+                var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
                 expect(tAngle).toEqualEpsilon(uAngle, CesiumMath.EPSILON6);
 
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
@@ -400,7 +400,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = t.multiplyByVector(inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -450,7 +450,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = t.multiplyByVector(inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -520,7 +520,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
@@ -533,7 +533,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });

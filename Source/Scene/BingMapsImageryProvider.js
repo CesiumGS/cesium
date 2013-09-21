@@ -1,4 +1,4 @@
-/*global define,console*/
+/*global define*/
 define([
         '../Core/defaultValue',
         '../Core/defined',
