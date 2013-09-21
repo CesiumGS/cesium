@@ -372,7 +372,7 @@ defineSuite(['DynamicScene/KmlDataSource',
               <when>2010-05-28T02:02:09Z</when>\
               <gx:coord>7 8 9</gx:coord>\
             </gx:Track>\
-            </Placemark\
+            </Placemark>\
             </Document>\
             </kml>';
 
@@ -393,7 +393,7 @@ defineSuite(['DynamicScene/KmlDataSource',
               <gx:coord>-122.207881 37.371915 156.000000</gx:coord>\
               <gx:coord>-122.205712 37.373288 152.000000</gx:coord>\
             </gx:Track>\
-            </Placemark\
+            </Placemark>\
             </Document>\
             </kml>';
 
@@ -419,7 +419,7 @@ defineSuite(['DynamicScene/KmlDataSource',
             <gx:coord>7 8 9</gx:coord>\
             </gx:Track>\
             </gx:MultiTrack>\
-            </Placemark\
+            </Placemark>\
             </Document>\
             </kml>';
 
