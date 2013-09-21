@@ -457,7 +457,7 @@ define([
                 return false;
             }
         } else if (angleGreaterThan180(s1, s2) && angleLessThan180(s3, s4)) {
-            if (Cartesian3(s2, s1) < Cartesian3(s3, s4).z) {
+            if (Cartesian3.cross(s2, s1) < Cartesian3.cross(s3, s4).z) {
                 return true;
             } else {
                 return false;
