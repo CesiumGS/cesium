@@ -18,6 +18,8 @@ define([
      * @param {Number} [nearValue=0.0] The value at the lower bound of the camera range.
      * @param {Number} [far=1.0] The upper bound of the camera range.
      * @param {Number} [farValue=0.0] The value at the upper bound of the camera range.
+     *
+     * @see Packable
      */
     var NearFarScalar = function(near, nearValue, far, farValue) {
         /**
@@ -60,16 +62,75 @@ define([
         }
 
         if (!defined(result)) {
-            return new NearFarScalar(nearFarScalar.near,
-                                     nearFarScalar.nearValue,
-                                     nearFarScalar.far,
-                                     nearFarScalar.farValue);
+            return new NearFarScalar(nearFarScalar.near, nearFarScalar.nearValue, nearFarScalar.far, nearFarScalar.farValue);
         }
 
         result.near = nearFarScalar.near;
         result.nearValue = nearFarScalar.nearValue;
         result.far = nearFarScalar.far;
         result.farValue = nearFarScalar.farValue;
+        return result;
+    };
+
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    NearFarScalar.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof NearFarScalar
+     *
+     * @param {NearFarScalar} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    NearFarScalar.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.near;
+        array[startingIndex++] = value.nearValue;
+        array[startingIndex++] = value.far;
+        array[startingIndex] = value.farValue;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof NearFarScalar
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {NearFarScalar} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
+    NearFarScalar.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new NearFarScalar();
+        }
+        result.near = array[startingIndex++];
+        result.nearValue = array[startingIndex++];
+        result.far = array[startingIndex++];
+        result.farValue = array[startingIndex];
         return result;
     };
 
@@ -91,6 +152,17 @@ define([
                 (left.nearValue === right.nearValue) &&
                 (left.far === right.far) &&
                 (left.farValue === right.farValue));
+    };
+
+    /**
+     * Duplicates this instance.
+     * @memberof NearFarScalar
+     *
+     * @param {NearFarScalar} [result] The object onto which to store the result.
+     * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
+     */
+    NearFarScalar.prototype.clone = function(result) {
+        return NearFarScalar.clone(this, result);
     };
 
     return NearFarScalar;

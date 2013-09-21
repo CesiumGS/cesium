@@ -50,8 +50,8 @@ define([
     var cqRight = new Cartesian3();
     var cqUp = new Cartesian3();
     function createQuaternion(direction, up, result) {
-        direction.cross(up, cqRight);
-        cqRight.cross(direction, cqUp);
+        Cartesian3.cross(direction, up, cqRight);
+        Cartesian3.cross(cqRight, direction, cqUp);
         viewMat[0] = cqRight.x;
         viewMat[1] = cqUp.x;
         viewMat[2] = -direction.x;
@@ -113,29 +113,29 @@ define([
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
-        var dot = start.normalize().dot(end.normalize());
+        var dot = Cartesian3.dot(Cartesian3.normalize(start), Cartesian3.normalize(end));
 
         var points;
         var altitude;
         var incrementPercentage;
-        if (start.magnitude() > maxStartAlt) {
+        if (Cartesian3.magnitude(start) > maxStartAlt) {
             altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
-            var diff = start.subtract(end);
-            altitude = diff.multiplyByScalar(0.5).add(end).magnitude();
-            var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
-            var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
+            var diff = Cartesian3.subtract(start, end);
+            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5), end));
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.up, Cartesian3.dot(diff, camera.up)));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.right, Cartesian3.dot(diff, camera.right)));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = end.normalize().multiplyByScalar(altitude);
-        var afterStart = start.normalize().multiplyByScalar(altitude);
+        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end), altitude);
+        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start), altitude);
 
         var axis, angle, rotation, middle;
-        if (end.magnitude() > maxStartAlt && dot > 0.75) {
-            middle = start.subtract(end).multiplyByScalar(0.5).add(end);
+        if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
 
             points = [{
                 point : start
@@ -144,8 +144,8 @@ define([
             }, {
                 point : end
             }];
-        } else if (start.magnitude() > maxStartAlt && dot > 0) {
-            middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+        } else if (Cartesian3.magnitude(start) > maxStartAlt && dot > 0) {
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
 
             points = [{
                 point : start
@@ -159,9 +159,9 @@ define([
                 point : start
             }];
 
-            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
-            axis = afterStart.cross(aboveEnd);
-            if (axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
+            axis = Cartesian3.cross(afterStart, aboveEnd);
+            if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
             }
 
@@ -196,9 +196,9 @@ define([
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            point.point.negate(direction3D).normalize(direction3D);
-            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
-            right3D.cross(direction3D, up3D);
+            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
+            Cartesian3.cross(right3D, direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
@@ -206,9 +206,9 @@ define([
         if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
-            point.point.negate(direction3D).normalize(direction3D);
-            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
-            right3D.cross(direction3D, up3D);
+            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
+            Cartesian3.cross(right3D, direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
@@ -230,7 +230,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
         };
 
         return update;
@@ -248,18 +248,18 @@ define([
         if (start.z > maxStartAlt) {
             altitude = 0.6 * maxStartAlt;
         } else {
-            var diff = start.subtract(end);
+            var diff = Cartesian3.subtract(start, end);
             altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
         }
 
-        var aboveEnd = end.clone();
+        var aboveEnd = Cartesian3.clone(end);
         aboveEnd.z = altitude;
-        var afterStart = start.clone();
+        var afterStart = Cartesian3.clone(start);
         afterStart.z = altitude;
 
         var middle;
         if (end.z > maxStartAlt) {
-            middle = start.subtract(end).multiplyByScalar(0.5).add(end);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
 
             points = [{
                 point : start
@@ -269,7 +269,7 @@ define([
                 point : end
             }];
         } else if (start.z > maxStartAlt) {
-            middle = start.subtract(aboveEnd).multiplyByScalar(0.5).add(aboveEnd);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
 
             points = [{
                 point : start
@@ -283,15 +283,15 @@ define([
                 point : start
             }];
 
-            var v = afterStart.subtract(aboveEnd);
-            var distance = v.magnitude();
+            var v = Cartesian3.subtract(afterStart, aboveEnd);
+            var distance = Cartesian3.magnitude(v);
             Cartesian3.normalize(v, v);
 
             var increment = incrementPercentage * distance;
             var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 points.push({
-                    point : v.multiplyByScalar(i).add(aboveEnd)
+                    point : Cartesian3.add(Cartesian3.multiplyByScalar(v, i), aboveEnd)
                 });
             }
 
@@ -308,9 +308,9 @@ define([
         return createSpline(points);
     }
 
-    var direction2D = Cartesian3.UNIT_Z.negate();
-    var right2D = direction2D.cross(Cartesian3.UNIT_Y).normalize();
-    var up2D = right2D.cross(direction2D);
+    var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
+    var right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y));
+    var up2D = Cartesian3.cross(right2D, direction2D);
     var quat = createQuaternion(direction2D, up2D);
     function createOrientations2D(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
@@ -335,7 +335,7 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPath2D(camera, ellipsoid, camera.position.clone(), destination, duration);
+        var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
         var orientations = createOrientations2D(camera, path.getControlPoints(), direction, up);
 
         var update = function(value) {
@@ -346,7 +346,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
         };
 
         return update;
@@ -356,12 +356,12 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var start = camera.position.clone();
+        var start = Cartesian3.clone(camera.position);
         start.z = camera.frustum.right - camera.frustum.left;
 
         var path = createPath2D(camera, ellipsoid, start, destination, duration);
         var points = path.getControlPoints();
-        var orientations = createOrientations2D(camera, points, Cartesian3.UNIT_Z.negate(), up);
+        var orientations = createOrientations2D(camera, points, Cartesian3.negate(Cartesian3.UNIT_Z), up);
 
         var height = camera.position.z;
 
@@ -376,7 +376,7 @@ define([
 
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
@@ -474,7 +474,7 @@ define([
         var frustum = frameState.camera.frustum;
 
         if (frameState.mode === SceneMode.SCENE2D) {
-            if ((Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
+            if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
                     duration : 0,
                     onComplete : onComplete,
@@ -494,22 +494,22 @@ define([
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
                     if (!defined(description.direction) && !defined(description.up)){
-                        dirScratch = position.negate(dirScratch).normalize(dirScratch);
-                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                        dirScratch = Cartesian3.normalize(Cartesian3.negate(position, dirScratch), dirScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Z, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);
                     }
-                    upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
+                    upScratch = defaultValue(description.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
                 } else {
                     if (!defined(description.direction) && !defined(description.up)){
-                        dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
-                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                        dirScratch = Cartesian3.negate(Cartesian3.UNIT_Z, dirScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Y, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);
                     }
-                    upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
+                    upScratch = defaultValue(description.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
                 }
 
                 Cartesian3.clone(position, frameState.camera.position);

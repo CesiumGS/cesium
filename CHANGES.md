@@ -12,32 +12,37 @@ Beta Releases
 
 * Breaking changes:
    * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `Cesium.BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
-```javascript
-Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
-```
+
+            Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
-```javascript
-var primitive = scene.pick(/* ... */);
-if (defined(primitive)) {
-   // Use primitive
-}
-```
+
+            var primitive = scene.pick(/* ... */);
+            if (defined(primitive)) {
+               // Use primitive
+            }
 
       should now look like:
-```javascript
-var p = scene.pick(/* ... */);
-if (defined(p) && defined(p.primitive)) {
-   // Use p.primitive
-}
-```
+
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.primitive)) {
+               // Use p.primitive
+            }
 
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
    * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
    * The following prototype functions were removed:
       * From `Quaternion`: `conjugate`, `magnitudeSquared`, `magnitude`, `normalize`, `inverse`, `add`, `subtract`, `negate`, `dot`, `multiply`, `multiplyByScalar`, `divideByScalar`, `getAxis`, `getAngle`, `lerp`, `slerp`, `equals`, `equalsEpsilon`
+      * From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, and `equalsEpsilon`.
+      * From `Cartesian3`: `cross`
 
       Code that previously looked like `quaternion.magnitude();` should now look like `Quaternion.magnitude(quaternion);`.
+   * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
+      * `getObject` has been renamed `getById`
+      * `removeObject` has been renamed `removeById`
+      * `collectionChanged` event added for notification of objects being added or removed.
+   * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -48,8 +53,11 @@ if (defined(p) && defined(p.primitive)) {
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
-  
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
+
 ### b20 - 2013-09-03
 
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
@@ -60,7 +68,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
     * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
        * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
        * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
-          * `Property` - base interface for all properties. 
+          * `Property` - base interface for all properties.
           * `CompositeProperty` - a property composed of other properties.
           * `ConstantProperty` - a property whose value never changes.
           * `SampledProperty` - a property whose value is interpolated from a set of samples.
@@ -82,23 +90,21 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
       * `options.extrudedOptions.closeBottom` -> `options.closeTop`
     * Geometry constructors no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
-```javascript
-var boxGeometry = new BoxGeometry({
-  minimumCorner : min,
-  maximumCorner : max,
-  vertexFormat : VertexFormat.POSITION_ONLY
-});
-```
+
+            var boxGeometry = new BoxGeometry({
+              minimumCorner : min,
+              maximumCorner : max,
+              vertexFormat : VertexFormat.POSITION_ONLY
+            });
 
       should now look like:
-```javascript
-var box = new BoxGeometry({
-    minimumCorner : min,
-    maximumCorner : max,
-    vertexFormat : VertexFormat.POSITION_ONLY
-});
-var geometry = BoxGeometry.createGeometry(box);
-```
+
+            var box = new BoxGeometry({
+                minimumCorner : min,
+                maximumCorner : max,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            });
+            var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
@@ -114,9 +120,9 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled.
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
-* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
+* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them.
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.

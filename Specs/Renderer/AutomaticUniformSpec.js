@@ -58,11 +58,11 @@ defineSuite([
                     return new Cartesian2(1.0, 0.1);
                 }
             },
-            position : defaultValue(position, Cartesian3.ZERO.clone()),
-            positionWC : defaultValue(position, Cartesian3.ZERO.clone()),
-            directionWC : defaultValue(direction, Cartesian3.UNIT_Z.clone()),
-            rightWC : defaultValue(right, Cartesian3.UNIT_X.clone()),
-            upWC : defaultValue(up, Cartesian3.UNIT_Y.clone())
+            position : defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
+            positionWC : defaultValue(position, Cartesian3.clone(Cartesian3.ZERO)),
+            directionWC : defaultValue(direction, Cartesian3.clone(Cartesian3.UNIT_Z)),
+            rightWC : defaultValue(right, Cartesian3.clone(Cartesian3.UNIT_X)),
+            upWC : defaultValue(up, Cartesian3.clone(Cartesian3.UNIT_Y))
         };
     }
 

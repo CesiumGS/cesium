@@ -83,12 +83,12 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (defined(oldCollection)) {
-                oldCollection.objectsRemoved.removeEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
+                oldCollection.collectionChanged.removeEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.collectionChanged.addEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -172,16 +172,16 @@ define([
     };
 
     function updateObject(dynamicVectorVisualizer, time, dynamicObject) {
-        var dynamicVector = dynamicObject.vector;
+        var dynamicVector = dynamicObject._vector;
         if (!defined(dynamicVector)) {
             return;
         }
 
         var polyline;
-        var showProperty = dynamicVector.show;
-        var positionProperty = dynamicObject.position;
-        var directionProperty = dynamicVector.direction;
-        var lengthProperty = dynamicVector.length;
+        var showProperty = dynamicVector._show;
+        var positionProperty = dynamicObject._position;
+        var directionProperty = dynamicVector._direction;
+        var lengthProperty = dynamicVector._length;
         var vectorVisualizerIndex = dynamicObject._vectorVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -231,16 +231,16 @@ define([
         var direction = directionProperty.getValue(time, positions[1]);
         var length = lengthProperty.getValue(time);
         if (defined(position) && defined(direction) && defined(length)) {
-            Cartesian3.add(position, direction.normalize(direction).multiplyByScalar(length, direction), direction);
+            Cartesian3.add(position, Cartesian3.multiplyByScalar(Cartesian3.normalize(direction, direction), length, direction), direction);
             polyline.setPositions(positions);
         }
 
-        var property = dynamicVector.color;
+        var property = dynamicVector._color;
         if (defined(property)) {
             uniforms.color = property.getValue(time, uniforms.color);
         }
 
-        property = dynamicVector.width;
+        property = dynamicVector._width;
         if (defined(property)) {
             var width = property.getValue(time);
             if (defined(width)) {
@@ -249,7 +249,7 @@ define([
         }
     }
 
-    DynamicVectorVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+    DynamicVectorVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisPolylineCollection = this._polylineCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {

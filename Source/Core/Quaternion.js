@@ -302,7 +302,7 @@ define([
         sampledQuaternionRotation.x = array[0];
         sampledQuaternionRotation.y = array[1];
         sampledQuaternionRotation.z = array[2];
-        var magnitude = sampledQuaternionRotation.magnitude();
+        var magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
 
         Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
 

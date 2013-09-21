@@ -56,10 +56,12 @@ define([
     MaterialProperty.getValue = function(time, context, materialProperty, material) {
         if (defined(materialProperty)) {
             var type = materialProperty.getType(time);
-            if (!defined(material) || (material.type !== type)) {
-                material = Material.fromType(context, type);
+            if (defined(type)) {
+                if (!defined(material) || (material.type !== type)) {
+                    material = Material.fromType(context, type);
+                }
+                materialProperty.getValue(time, material.uniforms);
             }
-            materialProperty.getValue(time, material.uniforms);
         }
         return material;
     };
