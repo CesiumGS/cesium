@@ -160,8 +160,6 @@ defineSuite([
         expect(indices).toEqual([ 0, 3, 4, 0, 1, 3, 1, 2, 3 ]);
     });
 
-
-
     /*
      * Polygon:
      *  0      2
@@ -179,7 +177,7 @@ defineSuite([
 
         var error;
         try {
-            var indices = PolygonPipeline.triangulate(positions);
+            PolygonPipeline.triangulate(positions);
         } catch (e) {
             error = e;
         }
@@ -206,7 +204,6 @@ defineSuite([
      *
      */
     it('simplifies a basic complex polygon (bowtie)', function() {
-
         var positions = [new Cartesian3(0,5,1000), new Cartesian3(0,0,1000), new Cartesian3(3,5,1000), new Cartesian3(3,0,1000)];
 
         var ellipsoid = new Ellipsoid(1000,1000,1000);
@@ -215,7 +212,7 @@ defineSuite([
 
         var error;
         try {
-            var indices = PolygonPipeline.triangulate(positions2D);
+            PolygonPipeline.triangulate(positions2D);
         } catch (e) {
             error = e;
         }
@@ -229,9 +226,7 @@ defineSuite([
         expect(newPositions[5].y).toBeCloseTo(2.5);
         expect(newPositions[1]).toEqual(positions[1]);
         expect(newPositions[3]).toEqual(positions[3]);
-
     });
-
 
     /*
      * Polygon:

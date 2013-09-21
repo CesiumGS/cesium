@@ -635,8 +635,8 @@ define([
 
         for ( var i = 0; i < values3D.length; i += 3) {
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
-            
-            if (value.x === 0 && value.y === 0 && value.z === 0) {
+
+            if (Cartesian3.equals(value, Cartesian3.ZERO)) {
                 continue;
             }
             var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);

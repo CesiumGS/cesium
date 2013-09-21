@@ -389,7 +389,7 @@ define([
         var s2 = Cartesian2.subtract(pArray[after].position,  a1.position);
         var cut = Cartesian2.subtract(a2.position, a1.position);
 
-        if (cut.x === 0 && cut.y === 0) {
+        if (Cartesian2.equals(cut, Cartesian2.ZERO)) {
             return duplicatePointInternalCut(a1i, a2i, pArray);
         }
 
@@ -421,10 +421,12 @@ define([
      * Determine whether a cut is "internal" when the two
      * points are in the same place.
      *
-     * @param {type} a1i - first vertex index
-     * @param {type} a2i - second vertex index
-     * @param {type} pArray - vertex array
+     * @param {Cartesian2} a1i - first vertex index
+     * @param {Cartesian2} a2i - second vertex index
+     * @param {Array} pArray - vertex array
      * @returns {Boolean} - Cut is internal
+     *
+     * @private
      */
     function duplicatePointInternalCut(a1i, a2i, pArray) {
         // Get the nodes from the array
@@ -434,28 +436,28 @@ define([
         // Define side vectors
         var before = getNextVertex(a1i, pArray, BEFORE);
         var after = getNextVertex(a1i, pArray, AFTER);
-        var s1 = pArray[before].position.subtract(a1.position);
+        var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
         s1 = new Cartesian3(s1.x, s1.y, 0);
-        var s2 = pArray[after].position.subtract(a1.position);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1.position);
         s2 = new Cartesian3(s2.x, s2.y, 0);
 
         before = getNextVertex(a1i, pArray, BEFORE);
         after = getNextVertex(a1i, pArray, AFTER);
-        var s3 = pArray[before].position.subtract(a1.position);
+        var s3 = Cartesian2.subtract(pArray[before].position, a1.position);
         s3 = new Cartesian3(s3.x, s3.y, 0);
-        var s4 = pArray[after].position.subtract(a1.position);
+        var s4 = Cartesian2.subtract(pArray[after].position, a1.position);
         s4 = new Cartesian3(s4.x, s4.y, 0);
 
         if (angleGreaterThan180(s1, s2) && angleGreaterThan180(s3, s4)) {
             return true;
         } else if (angleLessThan180(s1, s2) && angleGreaterThan180(s3, s4)) {
-            if (s1.cross(s2).z > s4.cross(s3).z) {
+            if (Cartesian3.cross(s1, s2).z > Cartesian3.cross(s4, s3).z) {
                 return true;
             } else {
                 return false;
             }
         } else if (angleGreaterThan180(s1, s2) && angleLessThan180(s3, s4)) {
-            if (s2.cross(s1) < s3.cross(s4).z) {
+            if (Cartesian3(s2, s1) < Cartesian3(s3, s4).z) {
                 return true;
             } else {
                 return false;
@@ -752,8 +754,10 @@ define([
     /**
      * Determine polygon self-intersection (and return description if applicable
      *
-     * @param {type} nodeArray
+     * @param {Array} nodeArray
      * @returns {Object} - object representing intersection point
+     *
+     * @private
      */
     function findSelfIntersection(nodeArray) {
         for (var i = 0; i < nodeArray.length; i++) {
@@ -780,7 +784,8 @@ define([
      * Determine the applicable error for an invalid polygon
      *
      * @param {Array} nodeArray - Polygon vertex array
-     * @returns {undefined}
+     *
+     * @private
      */
     function throwInvalidPolygonError(nodeArray) {
         var intersection = findSelfIntersection(nodeArray);
