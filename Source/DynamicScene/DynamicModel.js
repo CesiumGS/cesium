@@ -1,77 +1,95 @@
 /*global define*/
-define(['../Core/defaultValue'], function(defaultValue) {
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor'
+    ], function(
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
-     * Represents a time-dynamic model, typically used in conjunction with DynamicModelVisualizer and
-     * DynamicObjectCollection to visualize CZML.
+     * An optionally time-dynamic model.
      *
      * @alias DynamicModel
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicModelVisualizer
-     * @see VisualizerCollection
-     * @see CustomSensor
-     * @see CzmlDefaults
      */
     var DynamicModel = function() {
-        /**
-         * A DynamicProperty of type CzmlBoolean which determines the model's visibility.
-         * @type DynamicProperty
-         */
-        this.show = undefined;
-        /**
-         * A DynamicProperty of type CzmlCartesian3 which determines the model's scale.
-         * @type DynamicProperty
-         */
-        this.scale = undefined;
-        /**
-         * A DynamicMaterialProperty which determines the uri.
-         * @type DynamicMaterialProperty
-         */
-        this.uri = undefined;
+        this._show = undefined;
+        this._scale = undefined;
+        this._uri = undefined;
     };
 
-    /**
-     * Given two DynamicObjects, takes the model properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
-     */
-    DynamicModel.mergeProperties = function(targetObject, objectToMerge) {
-        var modelToMerge = objectToMerge.model;
-        if (typeof modelToMerge !== 'undefined') {
-
-            var targetModel = targetObject.model;
-            if (typeof targetModel === 'undefined') {
-                targetObject.model = targetModel = new DynamicModel();
+    defineProperties(DynamicModel.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPolygon.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
             }
+        },
 
-            targetModel.show = defaultValue(targetModel.show, modelToMerge.show);
-            targetModel.scale = defaultValue(targetModel.scale, modelToMerge.scale);
-            targetModel.uri = defaultValue(targetModel.uri, modelToMerge.uri);
+        /**
+         * Gets or sets the boolean {@link Property} specifying the model's visibility.
+         * @memberof DynamicModel.prototype
+         * @type {Property}
+         */
+        show : createDynamicPropertyDescriptor('show', '_show'),
+        /**
+         * Gets or sets the {@Cartesian3} {@link Property} specifying the model's scale.
+         * @memberof DynamicModel.prototype
+         * @type {Property}
+         */
+        scale : createDynamicPropertyDescriptor('scale', '_scale'),
+        /**
+         * Gets or sets the string {@link Property} specifying the model's uri.
+         * @memberof DynamicModel.prototype
+         * @type {Property}
+         */
+        uri : createDynamicPropertyDescriptor('uri', '_uri')
+    });
+
+    /**
+     * Duplicates a DynamicModel instance.
+     * @memberof DynamicModel
+     *
+     * @param {DynamicModel} [result] The object onto which to store the result.
+     * @returns {DynamicModel} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicModel.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicModel();
         }
+        result.show = this.show;
+        result.scale = this.scale;
+        result.uri = this.uri;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the model associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicModel
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the model from.
-     *
-     * @see CzmlDefaults
+     * @param {DynamicModel} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicModel.undefineProperties = function(dynamicObject) {
-        dynamicObject.model = undefined;
+    DynamicModel.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.show = defaultValue(this.show, source.show);
+        this.scale = defaultValue(this.scale, source.scale);
+        this.uri = defaultValue(this.uri, source.uri);
     };
 
     return DynamicModel;

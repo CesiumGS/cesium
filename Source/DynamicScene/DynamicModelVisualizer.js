@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/Quaternion',
         '../Core/Matrix3',
@@ -15,6 +16,7 @@ define([
          defined,
          DeveloperError,
          destroyObject,
+         Cartesian3,
          Color,
          Quaternion,
          Matrix3,
@@ -88,12 +90,12 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (defined(oldCollection)) {
-                oldCollection.objectsRemoved.removeEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved);
+                oldCollection.collectionChanged.removeEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -184,7 +186,7 @@ define([
             return;
         }
 
-        var uriProperty = dynamicModel.uri;
+        var uriProperty = dynamicModel._uri;
         if (!defined(uriProperty)) {
             return;
         }
@@ -195,7 +197,7 @@ define([
         }
 
         var model = dynamicObject._modelPrimitive;
-        var showProperty = dynamicModel.show;
+        var showProperty = dynamicModel._show;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         var uri = uriProperty.getValue(time, context);
@@ -217,7 +219,7 @@ define([
             model.dynamicObject = dynamicObject;
             model.show = true;
             model.scale = 1.0;
-            model._visualizerOrientation = Quaternion.IDENTITY.clone();
+            model._visualizerOrientation = Quaternion.clone(Quaternion.IDENTITY);
             this._primitives.add(model);
             dynamicObject._modelPrimitive = model;
         }
@@ -230,21 +232,23 @@ define([
             orientation = model._visualizerOrientation;
         }
 
-        if (defined(position) && defined(orientation) && (!position.equals(model._visualizerPosition) || !orientation.equals(model._visualizerOrientation))) {
+        if (defined(position) &&
+            defined(orientation) &&
+            (!Cartesian3.equals(position, model._visualizerPosition) || !Quaternion.equals(orientation, model._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
-            model._visualizerPosition = position.clone(model._visualizerPosition);
-            model._visualizerOrientation = orientation.clone(model._visualizerOrientation);
+            model._visualizerPosition = Cartesian3.clone(position, model._visualizerPosition);
+            model._visualizerOrientation = Quaternion.clone(orientation, model._visualizerOrientation);
         }
 
-        var scaleProperty = dynamicModel.scale;
+        var scaleProperty = dynamicModel._scale;
         if (defined(scaleProperty)) {
             model.scale = scaleProperty.getValue(time, model.scale);
         }
     };
 
-    DynamicModelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-            var dynamicObject = dynamicObjects[i];
+    DynamicModelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, removed) {
+        for ( var i = removed.length - 1; i > -1; i--) {
+            var dynamicObject = removed[i];
             var model = dynamicObject._modelPrimitive;
             if (defined(model)) {
                 model.destroy();

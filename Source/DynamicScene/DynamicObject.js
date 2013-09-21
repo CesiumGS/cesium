@@ -160,10 +160,10 @@ define(['../Core/createGuid',
         label : createDynamicPropertyDescriptor('label', '_label'),
         /**
          * Gets or sets the model.
-         * @type DynamicModel
+         * @memberof DynamicObject.prototype
+         * @type {DynamicLabel}
          */
-        this.model = undefined;
-
+        model : createDynamicPropertyDescriptor('model', '_model'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
