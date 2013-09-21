@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
@@ -15,6 +16,7 @@ define([
         defined,
         DeveloperError,
         destroyObject,
+        Cartesian3,
         Matrix3,
         Matrix4,
         Quaternion,
@@ -249,11 +251,11 @@ define([
 
         if (defined(position) &&
             defined(orientation) &&
-            (!position.equals(ellipsoid._visualizerPosition) ||
+            (!Cartesian3.equals(position, ellipsoid._visualizerPosition) ||
              !Quaternion.equals(orientation, ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
-            ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
-            ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
+            ellipsoid._visualizerPosition = Cartesian3.clone(position, ellipsoid._visualizerPosition);
+            ellipsoid._visualizerOrientation = Quaternion.clone(orientation, ellipsoid._visualizerOrientation);
         }
 
         ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid._material, ellipsoid.material);

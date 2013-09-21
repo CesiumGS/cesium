@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Cartesian3',
         './Matrix4',
         './Cartesian4',
         './TridiagonalSystemSolver'
@@ -10,6 +11,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Cartesian3,
         Matrix4,
         Cartesian4,
         TridiagonalSystemSolver) {
@@ -60,7 +62,7 @@ define([
      * // Add tangents
      * controlPoints[0].tangent = new Cartesian3(1125196, -161816, 270551);
      * for (var i = 1; i < controlPoints.length - 1; ++i) {
-     *     controlPoints[i].tangent = controlPoints[i + 1].point.subtract(controlPoints[i - 1].point).multiplyByScalar(0.5);
+     *     controlPoints[i].tangent = Cartesian3.multiplyByScalar(Cartesian3.subtract(controlPoints[i + 1].point, controlPoints[i - 1].point), 0.5);
      * }
      * controlPoints[controlPoints.length - 1].tangent = new Cartesian3(1165345, 112641, 47281);
      *
@@ -133,12 +135,12 @@ define([
         for (i = 1; i < l.length - 1; ++i) {
             l[i] = u[i] = 1.0;
             d[i] = 4.0;
-            r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
+            r[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(hermiteSpline._points[i + 1].point, hermiteSpline._points[i - 1].point), 3.0);
         }
         l[i] = 0.0;
         u[i] = 1.0;
         d[i] = 4.0;
-        r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
+        r[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(hermiteSpline._points[i + 1].point, hermiteSpline._points[i - 1].point), 3.0);
         d[i + 1] = 1.0;
         r[i + 1] = hermiteSpline._points[i + 1].tangent;
 
@@ -156,14 +158,14 @@ define([
         var i;
         l[0] = u[0] = 1.0;
         d[0] = 2.0;
-        r[0] = hermiteSpline._points[1].point.subtract(hermiteSpline._points[0].point).multiplyByScalar(3.0);
+        r[0] = Cartesian3.multiplyByScalar(Cartesian3.subtract(hermiteSpline._points[1].point, hermiteSpline._points[0].point), 3.0);
         for (i = 1; i < l.length; ++i) {
             l[i] = u[i] = 1.0;
             d[i] = 4.0;
-            r[i] = hermiteSpline._points[i + 1].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
+            r[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(hermiteSpline._points[i + 1].point, hermiteSpline._points[i - 1].point), 3.0);
         }
         d[i] = 2.0;
-        r[i] = hermiteSpline._points[i].point.subtract(hermiteSpline._points[i - 1].point).multiplyByScalar(3.0);
+        r[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(hermiteSpline._points[i].point, hermiteSpline._points[i - 1].point), 3.0);
 
         var tangents = TridiagonalSystemSolver.solve(l, d, u, r);
         for (i = 0; i < hermiteSpline._points.length; ++i) {
@@ -225,12 +227,12 @@ define([
         timeVec.x = timeVec.y * u;
 
         var coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
-        var p0 = this._points[i].point.multiplyByScalar(coefs.x);
-        var p1 = this._points[i + 1].point.multiplyByScalar(coefs.y);
-        var p2 = this._points[i].tangent.multiplyByScalar(coefs.z);
-        var p3 = this._points[i + 1].tangent.multiplyByScalar(coefs.w);
+        var p0 = Cartesian3.multiplyByScalar(this._points[i].point,       coefs.x);
+        var p1 = Cartesian3.multiplyByScalar(this._points[i + 1].point,   coefs.y);
+        var p2 = Cartesian3.multiplyByScalar(this._points[i].tangent,     coefs.z);
+        var p3 = Cartesian3.multiplyByScalar(this._points[i + 1].tangent, coefs.w);
 
-        return p0.add(p1.add(p2.add(p3)));
+        return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
     };
 
     return HermiteSpline;
