@@ -160,6 +160,73 @@ defineSuite([
         expect(indices).toEqual([ 0, 3, 4, 0, 1, 3, 1, 2, 3 ]);
     });
 
+    /*
+     * Polygon:
+     *  0      2
+     *  |\    /|
+     *  | \  / |
+     *  |  \/  |
+     *  |  /\  |   Complex: Bowtie case
+     *  | /  \ |
+     *  |/    \|
+     *  1      3
+     *
+     */
+    it('throws exception when trying to triangulate a basic complex polygon (bowtie)', function() {
+        var positions = [new Cartesian2(0,5), new Cartesian2(0,0), new Cartesian2(3,5), new Cartesian2(3,0)];
+
+        var error;
+        try {
+            PolygonPipeline.triangulate(positions);
+        } catch (e) {
+            error = e;
+        }
+        expect(error.message).toBe('Complex polygon: simplify first.');
+        expect(error.intersection.a1i).toEqual(1);
+        expect(error.intersection.a2i).toEqual(2);
+        expect(error.intersection.b1i).toEqual(3);
+        expect(error.intersection.b2i).toEqual(0);
+        expect(error.intersection.point.x).toEqual(1.5);
+        expect(error.intersection.point.y).toEqual(2.5);
+
+    });
+
+    /*
+     * Polygon:
+     *  0      2
+     *  |\    /|
+     *  | \  / |
+     *  |  \/  |
+     *  |  /\  |   Complex: Bowtie case
+     *  | /  \ |
+     *  |/    \|
+     *  1      3
+     *
+     */
+    it('simplifies a basic complex polygon (bowtie)', function() {
+        var positions = [new Cartesian3(0,5,1000), new Cartesian3(0,0,1000), new Cartesian3(3,5,1000), new Cartesian3(3,0,1000)];
+
+        var ellipsoid = new Ellipsoid(1000,1000,1000);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions);
+
+        var error;
+        try {
+            PolygonPipeline.triangulate(positions2D);
+        } catch (e) {
+            error = e;
+        }
+        var intersection = error.intersection;
+
+        var newPositions = PolygonPipeline.simplify(positions, intersection, tangentPlane);
+
+        expect(newPositions[2].x).toBeCloseTo(1.5);
+        expect(newPositions[2].y).toBeCloseTo(2.5);
+        expect(newPositions[5].x).toBeCloseTo(1.5);
+        expect(newPositions[5].y).toBeCloseTo(2.5);
+        expect(newPositions[1]).toEqual(positions[1]);
+        expect(newPositions[3]).toEqual(positions[3]);
+    });
 
 
     /*
