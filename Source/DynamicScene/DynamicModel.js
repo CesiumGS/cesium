@@ -24,6 +24,7 @@ define(['../Core/defaultValue',
         this._show = undefined;
         this._scale = undefined;
         this._uri = undefined;
+        this._propertyChanged = new Event();
     };
 
     defineProperties(DynamicModel.prototype, {
