@@ -39,6 +39,8 @@ Beta Releases
       * `removeObject` has been renamed `removeById`
       * `collectionChanged` event added for notification of objects being added or removed.
    * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
+   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
+   * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.

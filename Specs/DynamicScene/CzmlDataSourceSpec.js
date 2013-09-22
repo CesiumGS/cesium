@@ -1205,10 +1205,10 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         expect(dynamicObject.polyline).toBeDefined();
-        expect(dynamicObject.polyline.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polyline.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.polyline.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(dynamicObject.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(polylinePacket.polyline.outlineWidth);
         expect(dynamicObject.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -1236,16 +1236,14 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         expect(dynamicObject.polyline).toBeDefined();
-        expect(dynamicObject.polyline.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polyline.width.getValue(validTime)).toEqual(polylinePacket.polyline.width);
-        expect(dynamicObject.polyline.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.polyline.outlineWidth.getValue(validTime)).toEqual(polylinePacket.polyline.outlineWidth);
+        expect(dynamicObject.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.polyline.material.getValue(validTime).outlineWidth).toEqual(polylinePacket.polyline.outlineWidth);
         expect(dynamicObject.polyline.show.getValue(validTime)).toEqual(true);
 
-        expect(dynamicObject.polyline.color.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.polyline.material.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.polyline.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polyline.outlineColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polyline.outlineWidth.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.polyline.show.getValue(invalidTime)).toBeUndefined();
     });
 

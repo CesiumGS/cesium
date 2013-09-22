@@ -231,9 +231,10 @@ define([
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
-
-        this._material = material;
-        makeDirty(this, MATERIAL_INDEX);
+        if (this._material !== material) {
+            this._material = material;
+            makeDirty(this, MATERIAL_INDEX);
+        }
     };
 
     /**
