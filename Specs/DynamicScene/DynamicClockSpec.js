@@ -16,64 +16,82 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties creates a clock', function() {
-        var clockToMerge = new DynamicObject('1');
-        clockToMerge.startTime = new JulianDate();
-        clockToMerge.stopTime = new JulianDate();
-        clockToMerge.currentTime = new JulianDate();
-        clockToMerge.clockRange = ClockRange.CLAMPED;
-        clockToMerge.clockStep = ClockStep.TICK_DEPENDENT;
-        clockToMerge.multiplier = 1;
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.clock = clockToMerge;
+    it('merge assigns unassigned properties', function() {
+        var source = new DynamicClock();
+        source.startTime = new JulianDate();
+        source.stopTime = new JulianDate();
+        source.currentTime = new JulianDate();
+        source.clockRange = ClockRange.CLAMPED;
+        source.clockStep = ClockStep.TICK_DEPENDENT;
+        source.multiplier = 1;
 
-        var targetObject = new DynamicObject('targetObject');
-        DynamicClock.mergeProperties(targetObject, objectToMerge);
+        var target = new DynamicClock();
+        target.merge(source);
 
-        var targetClock = targetObject.clock;
-        expect(targetClock).toBeInstanceOf(DynamicClock);
-        expect(targetClock.startTime).toEqual(clockToMerge.startTime);
-        expect(targetClock.stopTime).toEqual(clockToMerge.stopTime);
-        expect(targetClock.currentTime).toEqual(clockToMerge.currentTime);
-        expect(targetClock.clockRange).toEqual(clockToMerge.clockRange);
-        expect(targetClock.clockStep).toEqual(clockToMerge.clockStep);
-        expect(targetClock.multiplier).toEqual(clockToMerge.multiplier);
+        expect(target.startTime).toBe(source.startTime);
+        expect(target.stopTime).toBe(source.stopTime);
+        expect(target.currentTime).toBe(source.currentTime);
+        expect(target.clockRange).toBe(source.clockRange);
+        expect(target.clockStep).toBe(source.clockStep);
+        expect(target.multiplier).toBe(source.multiplier);
     });
 
-    it('mergeProperties always overwrites the target clock with mergeObject clock if it has one', function() {
-        var clockToMerge = new DynamicObject('1');
-        clockToMerge.startTime = new JulianDate();
-        clockToMerge.stopTime = new JulianDate();
-        clockToMerge.currentTime = new JulianDate();
-        clockToMerge.clockRange = ClockRange.CLAMPED;
-        clockToMerge.clockStep = ClockStep.TICK_DEPENDENT;
-        clockToMerge.multiplier = 1;
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.clock = clockToMerge;
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicClock();
+        source.startTime = new JulianDate();
+        source.stopTime = new JulianDate();
+        source.currentTime = new JulianDate();
+        source.clockRange = ClockRange.CLAMPED;
+        source.clockStep = ClockStep.TICK_DEPENDENT;
+        source.multiplier = 1;
 
-        var targetClock = new DynamicClock();
-        targetClock.startTime = new JulianDate();
-        targetClock.stopTime = new JulianDate();
-        targetClock.currentTime = new JulianDate();
-        targetClock.clockRange = ClockRange.UNBOUNDED;
-        targetClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        targetClock.multiplier = 2;
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.clock = targetClock;
+        var startTime = new JulianDate();
+        var stopTime = new JulianDate();
+        var currentTime = new JulianDate();
+        var clockRange = ClockRange.CLAMPED;
+        var clockStep = ClockStep.TICK_DEPENDENT;
+        var multiplier = 1;
 
-        DynamicClock.mergeProperties(targetObject, objectToMerge);
-        expect(targetClock.startTime).toEqual(clockToMerge.startTime);
-        expect(targetClock.stopTime).toEqual(clockToMerge.stopTime);
-        expect(targetClock.currentTime).toEqual(clockToMerge.currentTime);
-        expect(targetClock.clockRange).toEqual(clockToMerge.clockRange);
-        expect(targetClock.clockStep).toEqual(clockToMerge.clockStep);
-        expect(targetClock.multiplier).toEqual(clockToMerge.multiplier);
+        var target = new DynamicClock();
+        target.startTime = startTime;
+        target.stopTime = stopTime;
+        target.currentTime = currentTime;
+        target.clockRange = clockRange;
+        target.clockStep = clockStep;
+        target.multiplier = multiplier;
+
+        target.merge(source);
+
+        expect(target.startTime).toBe(startTime);
+        expect(target.stopTime).toBe(stopTime);
+        expect(target.currentTime).toBe(currentTime);
+        expect(target.clockRange).toBe(clockRange);
+        expect(target.clockStep).toBe(clockStep);
+        expect(target.multiplier).toBe(multiplier);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.clock = new DynamicClock();
-        DynamicClock.undefineProperties(testObject);
-        expect(testObject.clock).toBeUndefined();
+    it('clone works', function() {
+        var source = new DynamicClock();
+        source.startTime = new JulianDate();
+        source.stopTime = new JulianDate();
+        source.currentTime = new JulianDate();
+        source.clockRange = ClockRange.CLAMPED;
+        source.clockStep = ClockStep.TICK_DEPENDENT;
+        source.multiplier = 1;
+
+        var result = source.clone();
+        expect(result.startTime).toBe(source.startTime);
+        expect(result.stopTime).toBe(source.stopTime);
+        expect(result.currentTime).toBe(source.currentTime);
+        expect(result.clockRange).toBe(source.clockRange);
+        expect(result.clockStep).toBe(source.clockStep);
+        expect(result.multiplier).toBe(source.multiplier);
+    });
+
+    it('merge throws if source undefined', function() {
+        var target = new DynamicClock();
+        expect(function() {
+            target.merge(undefined);
+        }).toThrow();
     });
 });

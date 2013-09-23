@@ -12,6 +12,14 @@
         }, '*');
     };
 
+    console.originalWarn = console.warn;
+    console.warn = function(d1) {
+        console.originalWarn.apply(console, arguments);
+        window.parent.postMessage({
+            'warn' : typeof d1 === 'undefined' ? 'undefined' : d1.toString()
+        }, '*');
+    };
+
     console.originalError = console.error;
     console.error = function(d1) {
         console.originalError.apply(console, arguments);

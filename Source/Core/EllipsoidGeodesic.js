@@ -173,10 +173,10 @@ define([
     }
 
     function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
-        var firstCartesian = ellipsoid.cartographicToCartesian(start, scratchCart2).normalize(scratchCart1);
-        var lastCartesian = ellipsoid.cartographicToCartesian(end, scratchCart2).normalize(scratchCart2);
+        var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
+        var lastCartesian  = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end,   scratchCart2), scratchCart2);
 
-        if (Math.abs(Math.abs(firstCartesian.angleBetween(lastCartesian)) - Math.PI) < 0.0125) {
+        if (Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI) < 0.0125) {
             throw new DeveloperError('geodesic position is not unique');
         }
 

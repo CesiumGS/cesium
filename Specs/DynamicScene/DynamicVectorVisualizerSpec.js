@@ -134,7 +134,7 @@ defineSuite([
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
-        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), testObject.position.getValue(time).add(vector.direction.getValue(time).normalize().multiplyByScalar(vector.length.getValue(time)))]);
+        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
         expect(primitive.getWidth()).toEqual(testObject.vector.width.getValue(time));
 
         var material = primitive.getMaterial();
@@ -147,7 +147,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
 
-        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), testObject.position.getValue(time).add(vector.direction.getValue(time).normalize().multiplyByScalar(vector.length.getValue(time)))]);
+        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
         expect(primitive.getWidth()).toEqual(testObject.vector.width.getValue(time));
 
         material = primitive.getMaterial();
@@ -181,7 +181,7 @@ defineSuite([
         visualizer.update(time);
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         expect(primitive.getShow()).toEqual(false);
     });
 
