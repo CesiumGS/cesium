@@ -455,7 +455,13 @@ define([
             return;
         }
 
-        var zoomFactor = this._zoomDetector.currentScale;
+        var zoomFactor = 1;
+        if (this._zoomDetector.currentScale !== 1) {
+            zoomFactor = this._zoomDetector.currentScale;
+        }
+        if (window.devicePixelRatio !== 1) {
+            zoomFactor = window.devicePixelRatio;
+        }
 
         this._canvasWidth = width;
         this._canvasHeight = height;
