@@ -333,13 +333,18 @@ define([
          * @type {Element}
          */
         content : {
+            get : function() {
+                return this._content;
+            },
             set : function(value) {
-                if (typeof value === 'undefined') {
-                    this._content = '';
-                } else {
-                    this._content = value;
+                if (this._content !== value) {
+                    if (typeof value === 'undefined') {
+                        this._content = '';
+                    } else {
+                        this._content = value;
+                    }
+                    this._updateContent = true;
                 }
-                this._updateContent = true;
             }
         },
         /**
@@ -354,17 +359,18 @@ define([
             }
         },
         /**
-         * Sets the default position of the balloon.
+         * Gets or sets the default screen space position of the balloon.
          * @memberof BalloonViewModel.prototype
          *
          * @type {Cartesain2}
          */
         defaultPosition : {
+            get : function() {
+                return this._defaultPosition;
+            },
             set : function(value) {
-                if (typeof value !== 'undefined') {
-                    this._defaultPosition.x = value.x;
-                    this._defaultPosition.y = value.y;
-                }
+                this._defaultPosition.x = value.x;
+                this._defaultPosition.y = value.y;
             }
         },
         /**
@@ -384,6 +390,9 @@ define([
          * @type {Function}
          */
         computeScreenSpacePosition : {
+            get : function() {
+                return this._computeScreenSpacePosition;
+            },
             set : function(value) {
                 this._computeScreenSpacePosition = value;
             }
@@ -395,6 +404,9 @@ define([
          * @type {Cartesian3}
          */
         position : {
+            get : function() {
+                return this._position;
+            },
             set : function(value) {
                 this._position = value;
             }
