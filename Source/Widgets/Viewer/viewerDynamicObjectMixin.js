@@ -118,7 +118,7 @@ define([
 
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
-        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.RIGHT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
         defineProperties(viewer, {
             /**
@@ -200,7 +200,7 @@ define([
             eventHelper.removeAll();
             balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
-            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK);
+            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
         });
     };
 
