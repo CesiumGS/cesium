@@ -18,6 +18,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Credit',
+        '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
@@ -44,6 +45,7 @@ define([
         BingMapsImageryProvider,
         CentralBody,
         Credit,
+        Moon,
         Scene,
         SceneMode,
         SceneTransitioner,
@@ -165,6 +167,7 @@ define([
 
             var centralBody = new CentralBody(ellipsoid);
             scene.getPrimitives().setCentralBody(centralBody);
+            scene.getPrimitives().add(new Moon());
 
             scene.skyBox = new SkyBox({
                 positiveX : getDefaultSkyBoxUrl('px'),
