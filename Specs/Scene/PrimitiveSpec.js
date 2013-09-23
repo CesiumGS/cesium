@@ -154,6 +154,21 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('does not render when geometryInstances is an empty array', function() {
+        var primitive = new Primitive({
+            geometryInstances : [],
+            appearance : new PerInstanceColorAppearance(),
+            allow3DOnly : true,
+            asynchronous : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(0);
+
+        primitive = primitive && primitive.destroy();
+    });
+
     it('does not render when show is false', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
