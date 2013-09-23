@@ -54,6 +54,10 @@ defineSuite([
     var zoomAmount = 1.0;
 
     var FakeContext = function() {
+        this._canvas = {
+            clientWidth: 512,
+            clientHeight: 384
+        };
         this.getDrawingBufferWidth = function() {
             return 1024;
         };
@@ -773,7 +777,7 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        var windowCoord = new Cartesian2(context.getDrawingBufferWidth() * 0.5, context.getDrawingBufferHeight() * 0.5);
+        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
         var p = controller.pickEllipsoid(windowCoord, ellipsoid);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -803,7 +807,7 @@ defineSuite([
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
 
-        var windowCoord = new Cartesian2(context.getDrawingBufferWidth() * 0.5, context.getDrawingBufferHeight() * 0.5);
+        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
         var p = controller.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -837,7 +841,7 @@ defineSuite([
         controller._mode = SceneMode.COLUMBUS_VIEW;
         controller._projection = projection;
 
-        var windowCoord = new Cartesian2(context.getDrawingBufferWidth() * 0.5, context.getDrawingBufferHeight() * 0.5);
+        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
         var p = controller.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -1046,7 +1050,7 @@ defineSuite([
     });
 
     it('get pick ray perspective', function() {
-        var windowCoord = new Cartesian2(context.getDrawingBufferWidth() / 2, context.getDrawingBufferHeight());
+        var windowCoord = new Cartesian2(context._canvas.clientWidth / 2, context._canvas.clientHeight);
         var ray = controller.getPickRay(windowCoord);
 
         var windowHeight = camera.frustum.near * Math.tan(camera.frustum.fovy * 0.5);
@@ -1065,7 +1069,7 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var windowCoord = new Cartesian2((3.0 / 5.0) * context.getDrawingBufferWidth(), (1.0 - (3.0 / 5.0)) * context.getDrawingBufferHeight());
+        var windowCoord = new Cartesian2((3.0 / 5.0) * context._canvas.clientWidth, (1.0 - (3.0 / 5.0)) * context._canvas.clientHeight);
         var ray = controller.getPickRay(windowCoord);
 
         var cameraPosition = camera.position;
