@@ -27,7 +27,7 @@ defineSuite([
         });
         camera.position = new Cartesian3();
         camera.up = Cartesian3.UNIT_Y;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.frustum.near = 1.0;
         camera.frustum.far = 2.0;
         camera.frustum.fovy = (Math.PI) / 3;

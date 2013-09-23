@@ -8,32 +8,37 @@ Beta Releases
 
 * Breaking changes:
    * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `Cesium.BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
-```javascript
-Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
-```
+
+            Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
-```javascript
-var primitive = scene.pick(/* ... */);
-if (defined(primitive)) {
-   // Use primitive
-}
-```
+
+            var primitive = scene.pick(/* ... */);
+            if (defined(primitive)) {
+               // Use primitive
+            }
 
       should now look like:
-```javascript
-var p = scene.pick(/* ... */);
-if (defined(p) && defined(p.primitive)) {
-   // Use p.primitive
-}
-```
+
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.primitive)) {
+               // Use p.primitive
+            }
 
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
    * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
    * The following prototype functions were removed:
       * From `Quaternion`: `conjugate`, `magnitudeSquared`, `magnitude`, `normalize`, `inverse`, `add`, `subtract`, `negate`, `dot`, `multiply`, `multiplyByScalar`, `divideByScalar`, `getAxis`, `getAngle`, `lerp`, `slerp`, `equals`, `equalsEpsilon`
+      * From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, and `equalsEpsilon`.
+      * From `Cartesian3`: `cross`
 
       Code that previously looked like `quaternion.magnitude();` should now look like `Quaternion.magnitude(quaternion);`.
+   * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
+      * `getObject` has been renamed `getById`
+      * `removeObject` has been renamed `removeById`
+      * `collectionChanged` event added for notification of objects being added or removed.
+   * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
@@ -47,7 +52,10 @@ if (defined(p) && defined(p.primitive)) {
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 * Added getDrawingBufferWidth and getDrawingBufferHeight methods to Context; this allows code that deals with rendering to use render buffer dimensions, and code that deals with events to use canvas dimensions.
 * Added code to Cesium-Viewer to detect browser zoom scale. When resizing the canvas element, apply the browser zoom scale. This avoids a loss of visual fidelity when using browser zoom.
 
@@ -83,23 +91,21 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
       * `options.extrudedOptions.closeBottom` -> `options.closeTop`
     * Geometry constructors no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
-```javascript
-var boxGeometry = new BoxGeometry({
-  minimumCorner : min,
-  maximumCorner : max,
-  vertexFormat : VertexFormat.POSITION_ONLY
-});
-```
+
+            var boxGeometry = new BoxGeometry({
+              minimumCorner : min,
+              maximumCorner : max,
+              vertexFormat : VertexFormat.POSITION_ONLY
+            });
 
       should now look like:
-```javascript
-var box = new BoxGeometry({
-    minimumCorner : min,
-    maximumCorner : max,
-    vertexFormat : VertexFormat.POSITION_ONLY
-});
-var geometry = BoxGeometry.createGeometry(box);
-```
+
+            var box = new BoxGeometry({
+                minimumCorner : min,
+                maximumCorner : max,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            });
+            var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.

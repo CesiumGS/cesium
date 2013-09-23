@@ -1,10 +1,17 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -14,96 +21,180 @@ define([
      * @constructor
      */
     var DynamicBillboard = function() {
+        this._image = undefined;
+        this._width = undefined;
+        this._height = undefined;
+        this._scale = undefined;
+        this._rotation = undefined;
+        this._alignedAxis = undefined;
+        this._horizontalOrigin = undefined;
+        this._verticalOrigin = undefined;
+        this._color = undefined;
+        this._eyeOffset = undefined;
+        this._pixelOffset = undefined;
+        this._show = undefined;
+        this._propertyChanged = new Event();
+    };
+
+    defineProperties(DynamicBillboard.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicBillboard.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
+            }
+        },
+
         /**
          * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.image = undefined;
+        image : createDynamicPropertyDescriptor('image', '_image'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.scale = undefined;
+        scale : createDynamicPropertyDescriptor('scale', '_scale'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.rotation = undefined;
+        rotation : createDynamicPropertyDescriptor('rotation', '_rotation'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.alignedAxis = undefined;
+        alignedAxis : createDynamicPropertyDescriptor('alignedAxis', '_alignedAxis'),
+
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.horizontalOrigin = undefined;
+        horizontalOrigin : createDynamicPropertyDescriptor('horizontalOrigin', '_horizontalOrigin'),
+
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.verticalOrigin = undefined;
+        verticalOrigin : createDynamicPropertyDescriptor('verticalOrigin', '_verticalOrigin'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createDynamicPropertyDescriptor('color', '_color'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.eyeOffset = undefined;
+        eyeOffset : createDynamicPropertyDescriptor('eyeOffset', '_eyeOffset'),
+
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.pixelOffset = undefined;
+        pixelOffset : createDynamicPropertyDescriptor('pixelOffset', '_pixelOffset'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : createDynamicPropertyDescriptor('show', '_show'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the billboard's width in pixels.
+         * If undefined, the native width is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        width : createDynamicPropertyDescriptor('width', '_width'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the billboard's height in pixels.
+         * If undefined, the native height is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        height : createDynamicPropertyDescriptor('height', '_height'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
+         * If undefined, a constant size is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        nearFarScalar : createDynamicPropertyDescriptor('nearFarScalar', '_nearFarScalar')
+    });
 
     /**
-     * Given two DynamicObjects, takes the billboard properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Duplicates a DynamicBillboard instance.
      * @memberof DynamicBillboard
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicBillboard} [result] The object onto which to store the result.
+     * @returns {DynamicBillboard} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
-        var billboardToMerge = objectToMerge.billboard;
-        if (defined(billboardToMerge)) {
-
-            var targetBillboard = targetObject.billboard;
-            if (!defined(targetBillboard)) {
-                targetObject.billboard = targetBillboard = new DynamicBillboard();
-            }
-
-            targetBillboard.color = defaultValue(targetBillboard.color, billboardToMerge.color);
-            targetBillboard.eyeOffset = defaultValue(targetBillboard.eyeOffset, billboardToMerge.eyeOffset);
-            targetBillboard.horizontalOrigin = defaultValue(targetBillboard.horizontalOrigin, billboardToMerge.horizontalOrigin);
-            targetBillboard.image = defaultValue(targetBillboard.image, billboardToMerge.image);
-            targetBillboard.pixelOffset = defaultValue(targetBillboard.pixelOffset, billboardToMerge.pixelOffset);
-            targetBillboard.scale = defaultValue(targetBillboard.scale, billboardToMerge.scale);
-            targetBillboard.rotation = defaultValue(targetBillboard.rotation, billboardToMerge.rotation);
-            targetBillboard.alignedAxis = defaultValue(targetBillboard.alignedAxis, billboardToMerge.alignedAxis);
-            targetBillboard.show = defaultValue(targetBillboard.show, billboardToMerge.show);
-            targetBillboard.verticalOrigin = defaultValue(targetBillboard.verticalOrigin, billboardToMerge.verticalOrigin);
+    DynamicBillboard.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicBillboard();
         }
+        result.color = this._color;
+        result.eyeOffset = this._eyeOffset;
+        result.horizontalOrigin = this._horizontalOrigin;
+        result.image = this._image;
+        result.pixelOffset = this._pixelOffset;
+        result.scale = this._scale;
+        result.rotation = this._rotation;
+        result.alignedAxis = this._alignedAxis;
+        result.show = this._show;
+        result.verticalOrigin = this._verticalOrigin;
+        result.width = this._width;
+        result.height = this._height;
+        result.nearFarScalar = this._nearFarScalar;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the billboard associated with it.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      * @memberof DynamicBillboard
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
+     * @param {DynamicBillboard} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicBillboard.undefineProperties = function(dynamicObject) {
-        dynamicObject.billboard = undefined;
+    DynamicBillboard.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.color = defaultValue(this._color, source._color);
+        this.eyeOffset = defaultValue(this._eyeOffset, source._eyeOffset);
+        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source._horizontalOrigin);
+        this.image = defaultValue(this._image, source._image);
+        this.pixelOffset = defaultValue(this._pixelOffset, source._pixelOffset);
+        this.scale = defaultValue(this._scale, source._scale);
+        this.rotation = defaultValue(this._rotation, source._rotation);
+        this.alignedAxis = defaultValue(this._alignedAxis, source._alignedAxis);
+        this.show = defaultValue(this._show, source._show);
+        this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
+        this.width = defaultValue(this._width, source._width);
+        this.height = defaultValue(this._height, source._height);
+        this.nearFarScalar = defaultValue(this._nearFarScalar, source._nearFarScalar);
     };
 
     return DynamicBillboard;

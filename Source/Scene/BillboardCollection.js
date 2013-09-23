@@ -973,9 +973,9 @@ define([
         var size;
         var offset;
 
-        var toCenter = camera.positionWC.subtract(boundingVolume.center, scratchToCenter);
-        var proj = camera.directionWC.multiplyByScalar(toCenter.dot(camera.directionWC), scratchProj);
-        var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
+        var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
         scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
         scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();

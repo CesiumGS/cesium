@@ -83,7 +83,7 @@ define([
         }
 
         if (!defined(positions) || positions.length === 0) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }
@@ -251,7 +251,7 @@ define([
         }
 
         if (!defined(extent)) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }
@@ -343,18 +343,14 @@ define([
         }
 
         if (!defined(positions) || positions.length === 0) {
-            result.center = Cartesian3.ZERO.clone(result.center);
+            result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
         }
 
-        if (!defined(center)) {
-            center = Cartesian3.ZERO;
-        }
+        center = defaultValue(center, Cartesian3.ZERO);
 
-        if (!defined(stride)) {
-            stride = 3;
-        }
+        stride = defaultValue(stride, 3);
 
         if (stride < 3) {
             throw new DeveloperError('stride must be 3 or greater.');
@@ -609,8 +605,8 @@ define([
         Cartesian3.add(leftCenter, rightCenter, unionScratchCenter);
         var center = Cartesian3.multiplyByScalar(unionScratchCenter, 0.5, unionScratchCenter);
 
-        var radius1 = Cartesian3.subtract(leftCenter, center, unionScratch).magnitude() + left.radius;
-        var radius2 = Cartesian3.subtract(rightCenter, center, unionScratch).magnitude() + right.radius;
+        var radius1 = Cartesian3.magnitude(Cartesian3.subtract(leftCenter, center, unionScratch)) + left.radius;
+        var radius2 = Cartesian3.magnitude(Cartesian3.subtract(rightCenter, center, unionScratch)) + right.radius;
 
         result.radius = Math.max(radius1, radius2);
         Cartesian3.clone(center, result.center);
@@ -642,7 +638,7 @@ define([
 
         result = BoundingSphere.clone(sphere, result);
 
-        var radius = Cartesian3.subtract(point, result.center, expandScratch).magnitude();
+        var radius = Cartesian3.magnitude(Cartesian3.subtract(point, result.center, expandScratch));
         if (radius > result.radius) {
             result.radius = radius;
         }
@@ -688,7 +684,7 @@ define([
         return Intersect.INSIDE;
     };
 
-    var transformCart4 = Cartesian4.UNIT_W.clone();
+    var transformCart4 = Cartesian4.clone(Cartesian4.UNIT_W);
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
@@ -758,8 +754,8 @@ define([
         }
 
         var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
-        var proj = Cartesian3.multiplyByScalar(direction, direction.dot(toCenter), scratchCartesian3);
-        var mag = proj.magnitude();
+        var proj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter), scratchCartesian3);
+        var mag = Cartesian3.magnitude(proj);
 
         result.start = mag - sphere.radius;
         result.stop = mag + sphere.radius;

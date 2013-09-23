@@ -182,9 +182,9 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
-     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
-     * var distance = toCenterProj.magnitude();
+     * var toCenter = Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
+     * var toCenterProj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
+     * var distance = Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize({
      *     width : canvas.clientWidth,
      *     height : canvas.clientHeight

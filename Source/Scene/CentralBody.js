@@ -260,29 +260,29 @@ define([
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = centralBody._ellipsoid.getOneOverRadii().multiplyComponents(p);
+        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p);
 
-        var qMagnitude = q.magnitude();
-        var qUnit = q.normalize();
+        var qMagnitude = Cartesian3.magnitude(q);
+        var qUnit = Cartesian3.normalize(q);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
-        var nUnit = qUnit.cross(eUnit).normalize();
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q));
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit));
 
         // Determine the radius of the 'limb' of the ellipsoid.
-        var wMagnitude = Math.sqrt(q.magnitudeSquared() - 1.0);
+        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
 
         // Compute the center and offsets.
-        var center = qUnit.multiplyByScalar(1.0 / qMagnitude);
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude);
         var scalar = wMagnitude / qMagnitude;
-        var eastOffset = eUnit.multiplyByScalar(scalar);
-        var northOffset = nUnit.multiplyByScalar(scalar);
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = radii.multiplyComponents(center.add(northOffset).subtract(eastOffset));
-        var upperRight = radii.multiplyComponents(center.add(northOffset).add(eastOffset));
-        var lowerLeft = radii.multiplyComponents(center.subtract(northOffset).subtract(eastOffset));
-        var lowerRight = radii.multiplyComponents(center.subtract(northOffset).add(eastOffset));
+        var upperLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.add(center, northOffset), eastOffset));
+        var upperRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.add(center, northOffset), eastOffset));
+        var lowerLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.subtract(center, northOffset), eastOffset));
+        var lowerRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.subtract(center, northOffset), eastOffset));
 
         depthQuadScratch[0] = upperLeft.x;
         depthQuadScratch[1] = upperLeft.y;
@@ -302,26 +302,26 @@ define([
     function computePoleQuad(centralBody, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
         var pt2 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
-        var radius = pt1.subtract(pt2).magnitude() * 0.5;
+        var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2)) * 0.5;
 
         var center = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = frameState.camera.direction;
-        if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
+        if (1.0 - Cartesian3.dot(Cartesian3.negate(Cartesian3.UNIT_Z), dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
-            right = dir.cross(Cartesian3.UNIT_Z).normalize();
+            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z));
         }
 
-        var screenRight = center.add(right.multiplyByScalar(radius));
-        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
+        var screenRight = Cartesian3.add(center, Cartesian3.multiplyByScalar(right, radius));
+        var screenUp = Cartesian3.add(center, Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)), radius));
 
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
-        var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
+        var halfWidth = Math.floor(Math.max(Cartesian3.distance(screenUp, center), Cartesian3.distance(screenRight, center)));
         var halfHeight = halfWidth;
 
         return new BoundingRectangle(

@@ -231,7 +231,7 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(true);
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(false);

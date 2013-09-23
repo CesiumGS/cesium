@@ -432,10 +432,23 @@ define([
         ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
         var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        Cartesian3.UNIT_Z.cross(tile.southwestCornerCartesian.negate(cartesian3Scratch), cartesian3Scratch).normalize(tile.westNormal);
-        tile.northeastCornerCartesian.negate(cartesian3Scratch).cross(Cartesian3.UNIT_Z, cartesian3Scratch).normalize(tile.eastNormal);
-        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch).cross(tile.southwestCornerCartesian.subtract(southeastCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.southNormal);
-        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch).cross(tile.northeastCornerCartesian.subtract(northwestCornerCartesian, cartesian3Scratch2), cartesian3Scratch).normalize(tile.northNormal);
+        Cartesian3.negate(tile.southwestCornerCartesian, cartesian3Scratch);
+        Cartesian3.cross(Cartesian3.UNIT_Z, cartesian3Scratch, cartesian3Scratch);
+        Cartesian3.normalize(cartesian3Scratch, tile.westNormal);
+
+        Cartesian3.negate(tile.northeastCornerCartesian, cartesian3Scratch);
+        Cartesian3.cross(cartesian3Scratch, Cartesian3.UNIT_Z, cartesian3Scratch);
+        Cartesian3.normalize(cartesian3Scratch, tile.eastNormal);
+
+        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch2);
+        Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch);
+        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
+        Cartesian3.normalize(cartesian3Scratch, tile.southNormal);
+
+        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch2);
+        Cartesian3.subtract(tile.northeastCornerCartesian, northwestCornerCartesian, cartesian3Scratch);
+        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
+        Cartesian3.normalize(cartesian3Scratch, tile.northNormal);
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
