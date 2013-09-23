@@ -41,6 +41,7 @@ Beta Releases
    * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
+   * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
