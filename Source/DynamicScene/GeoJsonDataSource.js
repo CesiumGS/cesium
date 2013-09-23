@@ -56,24 +56,34 @@ define([
             id = finalId;
         }
 
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.geoJson = geoJson;
-        dynamicObject.balloon = {
-            getValue : function() {
-                var html;
-                var properties = geoJson.properties;
-                if (typeof properties !== 'undefined') {
-                    html = '<table class="geoJsonDataSourceTable">';
-                    for ( var key in properties) {
-                        if (properties.hasOwnProperty(key)) {
-                            html += '<tr><td>' + key + '</td><td>' + properties[key] + '</td></tr>';
+        function makeTable(properties) {
+            var html = '<table class="geoJsonDataSourceTable">';
+            for ( var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    if (defined(value)) {
+                        if (typeof value === 'object') {
+                            html += '<tr><td>' + key + '</td><td>' + makeTable(value) + '</td></tr>';
+                        } else {
+                            html += '<tr><td>' + key + '</td><td>' + value + '</td></tr>';
                         }
                     }
-                    html += '</table>';
                 }
-                return html;
             }
-        };
+            html += '</table>';
+            return html;
+        }
+
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+        dynamicObject.geoJson = geoJson;
+        var properties = geoJson.properties;
+        if (defined(properties)) {
+            dynamicObject.balloon = {
+                getValue : function() {
+                    return makeTable(properties);
+                }
+            };
+        }
         return dynamicObject;
     }
 

@@ -89,21 +89,26 @@ define([
      * Converts a boolean show to a typed array that can be used to assign a show attribute.
      *
      * @param {Boolean} show The show value.
+     * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
      *
-     * @returns {Uint8Array} The typed array in the attribute's format.
+     * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
      *
      * @exception {DeveloperError} show is required.
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
      */
-    ShowGeometryInstanceAttribute.toValue = function(show) {
+    ShowGeometryInstanceAttribute.toValue = function(show, result) {
         if (!defined(show)) {
             throw new DeveloperError('show is required.');
         }
 
-        return new Uint8Array([show]);
+        if (!defined(result)) {
+            return new Uint8Array([show]);
+        }
+        result[0] = show;
+        return result;
     };
 
     return ShowGeometryInstanceAttribute;

@@ -58,6 +58,24 @@ defineSuite([
         }).toThrow();
     });
 
+    it('create animation throws with just up and no direction', function() {
+        expect(function() {
+            CameraFlightPath.createAnimation(scene, {
+                destination : Cartesian3.ZERO,
+                up : Cartesian3.UNIT_Z
+            });
+        }).toThrow();
+    });
+
+    it('create animation throws with just direction and no up', function() {
+        expect(function() {
+            CameraFlightPath.createAnimation(scene, {
+                destination : Cartesian3.ZERO,
+                direction : Cartesian3.UNIT_X
+            });
+        }).toThrow();
+    });
+
     it('create animation with cartographic throws without a scene', function() {
         expect(function() {
             CameraFlightPath.createAnimationCartographic(undefined, {
