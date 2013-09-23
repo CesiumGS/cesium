@@ -22,8 +22,6 @@ defineSuite([
          'Scene/OrthographicFrustum',
          'Specs/render',
          'Specs/pick',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -50,8 +48,6 @@ defineSuite([
          OrthographicFrustum,
          render,
          pick,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
@@ -88,7 +84,7 @@ defineSuite([
         extent1 = Extent.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         extent2 = Extent.fromDegrees(70.0, 20.0, 80.0, 30.0);
 
-        var translation = ellipsoid.cartographicToCartesian(extent1.getCenter()).normalize().multiplyByScalar(2.0);
+        var translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(extent1.getCenter())), 2.0);
         extentInstance1 = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -103,7 +99,7 @@ defineSuite([
             }
         });
 
-        translation = ellipsoid.cartographicToCartesian(extent2.getCenter()).normalize().multiplyByScalar(3.0);
+        translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(extent2.getCenter())), 3.0);
         extentInstance2 = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -509,12 +505,16 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual('extent1');
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual('extent1');
 
         frameState.camera.controller.viewExtent(extent2);
         us.update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual('extent2');
+        pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual('extent2');
 
         primitive = primitive && primitive.destroy();
     });

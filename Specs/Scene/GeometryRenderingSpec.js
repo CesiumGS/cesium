@@ -41,8 +41,6 @@ defineSuite([
          'Scene/Material',
          'Specs/render',
          'Specs/pick',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -88,8 +86,6 @@ defineSuite([
          Material,
          render,
          pick,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
@@ -110,7 +106,7 @@ defineSuite([
 
     function viewSphere3D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
@@ -120,7 +116,7 @@ defineSuite([
         Cartesian3.normalize(right, right);
         Cartesian3.cross(right, direction, camera.up);
 
-        var scalar = center.magnitude() + radius;
+        var scalar = Cartesian3.magnitude(center) + radius;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
@@ -160,7 +156,7 @@ defineSuite([
     function viewSphereCV(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius * 0.5;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -217,7 +213,7 @@ defineSuite([
     function viewSphere2D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -302,7 +298,9 @@ defineSuite([
 
         context.getUniformState().update(frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual(instance.id);
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual(instance.id);
 
         primitive = primitive && primitive.destroy();
     }
@@ -1068,7 +1066,7 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = frameState.camera.position.clone();
+                var translation = Cartesian3.clone(frameState.camera.position);
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);

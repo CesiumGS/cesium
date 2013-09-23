@@ -56,50 +56,6 @@ define([
     };
 
     /**
-     * Creates a Cartesian4 from four consecutive elements in an array.
-     * @memberof Cartesian4
-     *
-     * @param {Array} values The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
-     * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
-     * @exception {DeveloperError} offset + 4 is greater than the length of the array.
-     *
-     * @example
-     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
-     * var v = [1.0, 2.0, 3.0, 4.0];
-     * var p = Cartesian4.fromArray(v);
-     *
-     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
-     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
-     * var p2 = Cartesian4.fromArray(v2, 2);
-     */
-    Cartesian4.fromArray = function(values, offset, result) {
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
-
-        if (offset + 4 > values.length) {
-            throw new DeveloperError('offset + 4 is greater than the length of the array.');
-        }
-
-        offset = defaultValue(offset, 0);
-
-        if (!defined(result)) {
-            result = new Cartesian4();
-        }
-
-        result.x = values[offset + 0];
-        result.y = values[offset + 1];
-        result.z = values[offset + 2];
-        result.w = values[offset + 3];
-        return result;
-    };
-
-    /**
      * Creates a Cartesian4 instance from x, y, z and w coordinates.
      * @memberof Cartesian4
      *
@@ -207,6 +163,31 @@ define([
         result.w = array[startingIndex];
         return result;
     };
+
+
+
+    /**
+     * Creates a Cartesian4 from four consecutive elements in an array.
+     * @memberof Cartesian4
+     *
+     * @param {Array} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
+     * var v = [1.0, 2.0, 3.0, 4.0];
+     * var p = Cartesian4.fromArray(v);
+     *
+     * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
+     * var p2 = Cartesian4.fromArray(v2, 2);
+     */
+    Cartesian4.fromArray = Cartesian4.unpack;
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
@@ -686,26 +667,6 @@ define([
     Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
-     * Computes the value of the maximum component for this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The value of the maximum component.
-     */
-    Cartesian4.prototype.getMaximumComponent = function() {
-        return Cartesian4.getMaximumComponent(this);
-    };
-
-    /**
-     * Computes the value of the minimum component for this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The value of the minimum component.
-     */
-    Cartesian4.prototype.getMinimumComponent = function() {
-        return Cartesian4.getMinimumComponent(this);
-    };
-
-    /**
      * Duplicates this Cartesian4 instance.
      * @memberof Cartesian4
      *
@@ -714,198 +675,6 @@ define([
      */
     Cartesian4.prototype.clone = function(result) {
         return Cartesian4.clone(this, result);
-    };
-
-    /**
-     * Computes this Cartesian's squared magnitude.
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The squared magnitude.
-     */
-    Cartesian4.prototype.magnitudeSquared = function() {
-        return Cartesian4.magnitudeSquared(this);
-    };
-
-    /**
-     * Computes this Cartesian's magnitude (length).
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The magnitude.
-     */
-    Cartesian4.prototype.magnitude = function() {
-        return Cartesian4.magnitude(this);
-    };
-
-    /**
-     * Computes the normalized form of this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.normalize = function(result) {
-        return Cartesian4.normalize(this, result);
-    };
-
-    /**
-     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.dot = function(right) {
-        return Cartesian4.dot(this, right);
-    };
-
-    /**
-     * Computes the componentwise product of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.multiplyComponents = function(right, result) {
-        return Cartesian4.multiplyComponents(this, right, result);
-    };
-
-    /**
-     * Computes the componentwise sum of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.add = function(right, result) {
-        return Cartesian4.add(this, right, result);
-    };
-
-    /**
-     * Computes the componentwise difference of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.subtract = function(right, result) {
-        return Cartesian4.subtract(this, right, result);
-    };
-
-    /**
-     * Multiplies this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
-     *
-     * @param {Number} scalar The scalar to multiply with.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian4.prototype.multiplyByScalar = function(scalar, result) {
-        return Cartesian4.multiplyByScalar(this, scalar, result);
-    };
-
-    /**
-     * Divides this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
-     *
-     * @param {Number} scalar The scalar to divide by.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian4.prototype.divideByScalar = function(scalar, result) {
-        return Cartesian4.divideByScalar(this, scalar, result);
-    };
-
-    /**
-     * Negates this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.negate = function(result) {
-        return Cartesian4.negate(this, result);
-    };
-
-    /**
-     * Computes the absolute value of this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.abs = function(result) {
-        return Cartesian4.abs(this, result);
-    };
-
-    /**
-     * Computes the linear interpolation or extrapolation at t using this Cartesian
-     * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
-     * @memberof Cartesian4
-     *
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} end is required.
-     * @exception {DeveloperError} t is required and must be a number.
-     */
-    Cartesian4.prototype.lerp = function(end, t, result) {
-        return Cartesian4.lerp(this, end, t, result);
-    };
-
-    /**
-     * Returns the axis that is most orthogonal to the this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The most orthogonal axis.
-     */
-    Cartesian4.prototype.mostOrthogonalAxis = function(result) {
-        return Cartesian4.mostOrthogonalAxis(this, result);
-    };
-
-    /**
-     * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [right] The right hand side Cartesian.
-     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-     */
-    Cartesian4.prototype.equals = function(right) {
-        return Cartesian4.equals(this, right);
-    };
-
-    /**
-     * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true</code> if they are within the provided epsilon,
-     * <code>false</code> otherwise.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [right] The right hand side Cartesian.
-     * @param {Number} epsilon The epsilon to use for equality testing.
-     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
-     */
-    Cartesian4.prototype.equalsEpsilon = function(right, epsilon) {
-        return Cartesian4.equalsEpsilon(this, right, epsilon);
     };
 
     /**

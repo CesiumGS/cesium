@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Cartesian2',
         './Cartographic',
         './GeographicProjection',
         './Intersect'
@@ -10,6 +11,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Cartesian2,
         Cartographic,
         GeographicProjection,
         Intersect) {
@@ -135,7 +137,7 @@ define([
         var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
         var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));
 
-        upperRight.subtract(lowerLeft, upperRight);
+        Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 
         result.x = lowerLeft.x;
         result.y = lowerLeft.y;
@@ -330,7 +332,7 @@ define([
      * Computes a bounding rectangle that is rectangle expanded to contain point.
      * @memberof BoundingRectangle
      *
-     * @param {BoundingRectangle} point A point to enclose in a bounding rectangle.
+     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.

@@ -70,7 +70,7 @@ define([
         this._show = defaultValue(description.show, true);
 
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
-        this._actualPosition = this._position.clone(); // For columbus view and 2D
+        this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
         this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
         this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
@@ -116,7 +116,9 @@ define([
 
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
-            this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
+            this._pickId = context.createPickId({
+                primitive : defaultValue(this._pickIdThis, this)
+            });
         }
 
         return this._pickId;
@@ -797,15 +799,15 @@ define([
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = frameState.camera;
-        var view = camera.getViewMatrix();
-        var projection = camera.frustum.getProjectionMatrix();
+        var view = camera.viewMatrix;
+        var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
         var mv = view.multiply(modelMatrix);
         var positionEC = mv.multiplyByPoint(position);
 
         // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
+        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC));
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
@@ -815,7 +817,7 @@ define([
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
-        var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
+        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
 

@@ -435,18 +435,16 @@ define([
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri) {
         if (!defined(packetData)) {
-            return false;
+            return;
         }
 
-        var updated = false;
         if (Array.isArray(packetData)) {
             for ( var i = 0, len = packetData.length; i < len; i++) {
-                updated = processProperty(type, object, propertyName, packetData[i], interval, sourceUri) || updated;
+                processProperty(type, object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
-            updated = processProperty(type, object, propertyName, packetData, interval, sourceUri) || updated;
+            processProperty(type, object, propertyName, packetData, interval, sourceUri);
         }
-        return updated;
     }
 
     function processPositionProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
@@ -578,18 +576,16 @@ define([
 
     function processPositionPacketData(object, propertyName, packetData, interval, sourceUri) {
         if (!defined(packetData)) {
-            return false;
+            return;
         }
 
-        var updated = false;
         if (Array.isArray(packetData)) {
             for ( var i = 0, len = packetData.length; i < len; i++) {
-                updated = processPositionProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+                processPositionProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
-            updated = processPositionProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+            processPositionProperty(object, propertyName, packetData, interval, sourceUri);
         }
-        return updated;
     }
 
     var Cartesian2WrapperProperty = function() {
@@ -684,80 +680,70 @@ define([
         return propertyCreated;
     }
 
-    function processMaterialPacketData(object, propertyName, packetData, interval, sourceUri){
+    function processMaterialPacketData(object, propertyName, packetData, interval, sourceUri) {
         if (!defined(packetData)) {
-            return false;
+            return;
         }
 
-        var updated = false;
         if (Array.isArray(packetData)) {
             for ( var i = 0, len = packetData.length; i < len; i++) {
-                updated = processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+                processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
-            updated = processMaterialProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+            processMaterialProperty(object, propertyName, packetData, interval, sourceUri);
         }
-        return updated;
     }
 
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
-        if (!defined(positionData)) {
-            return false;
+        if (defined(positionData)) {
+            processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri);
         }
-        return processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri);
     }
 
     function processViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var viewFromData = packet.viewFrom;
-        if (!defined(viewFromData)) {
-            return false;
+        if (defined(viewFromData)) {
+            processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
         }
-        return processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
     }
 
     function processOrientation(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var orientationData = packet.orientation;
-        if (!defined(orientationData)) {
-            return false;
+        if (defined(orientationData)) {
+            processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
         }
-
-        return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
     }
 
     function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (!defined(vertexPositionsData)) {
-            return false;
+            return;
         }
 
         var vertexPositions = dynamicObject.vertexPositions;
-        var propertyCreated = !defined(dynamicObject.vertexPositions);
-        if (propertyCreated) {
+        if (!defined(vertexPositions)) {
             dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
         }
         vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
-        return propertyCreated;
     }
 
     function processAvailability(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var availability = packet.availability;
         if (!defined(availability)) {
-            return false;
+            return;
         }
 
-        var propertyChanged = false;
         var interval = TimeInterval.fromIso8601(availability);
         if (defined(interval)) {
-            propertyChanged = dynamicObject._setAvailability(interval);
+            dynamicObject.availability = interval;
         }
-        return propertyChanged;
     }
 
     function processBillboard(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
-            return false;
+            return;
         }
 
         var interval = billboardData.interval;
@@ -766,66 +752,63 @@ define([
         }
 
         var billboard = dynamicObject.billboard;
-        var billboardUpdated = !defined(billboard);
-        if (billboardUpdated) {
+        if (!defined(billboard)) {
             dynamicObject.billboard = billboard = new DynamicBillboard();
         }
 
-        billboardUpdated = processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
-
-        return billboardUpdated;
+        processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri);
+        processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri);
+        processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri);
+        processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri);
+        processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri);
+        processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri);
+        processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri);
+        processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri);
+        processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri);
+        processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri);
     }
 
     function processClock(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var clockUpdated = false;
         var clockPacket = packet.clock;
-        if (defined(clockPacket)) {
-            if (dynamicObject.id === 'document') {
-                var clock = dynamicObject.clock;
-                if (!defined(clock)) {
-                    clock = new DynamicClock();
-                    dynamicObject.clock = clock;
-                    clockUpdated = true;
-                }
-
-                if (defined(clockPacket.interval)) {
-                    var interval = TimeInterval.fromIso8601(clockPacket.interval);
-                    if (defined(interval)) {
-                        clock.startTime = interval.start;
-                        clock.stopTime = interval.stop;
-                    }
-                }
-                if (defined(clockPacket.currentTime)) {
-                    clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
-                }
-                if (defined(clockPacket.range)) {
-                    clock.clockRange = ClockRange[clockPacket.range];
-                }
-                if (defined(clockPacket.step)) {
-                    clock.clockStep = ClockStep[clockPacket.step];
-                }
-                if (defined(clockPacket.multiplier)) {
-                    clock.multiplier = clockPacket.multiplier;
-                }
-            }
+        if (!defined(clockPacket) || dynamicObject.id !== 'document') {
+            return;
         }
 
-        return clockUpdated;
+        var clock = dynamicObject.clock;
+        if (!defined(clock)) {
+            clock = new DynamicClock();
+            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+            clock.clockRange = ClockRange.LOOP_STOP;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clock.multiplier = 1.0;
+            dynamicObject.clock = clock;
+        }
+        if (defined(clockPacket.interval)) {
+            var interval = TimeInterval.fromIso8601(clockPacket.interval);
+            if (defined(interval)) {
+                clock.startTime = interval.start;
+                clock.stopTime = interval.stop;
+            }
+        }
+        if (defined(clockPacket.currentTime)) {
+            clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+        }
+        if (defined(clockPacket.range)) {
+            clock.clockRange = ClockRange[clockPacket.range];
+        }
+        if (defined(clockPacket.step)) {
+            clock.clockStep = ClockStep[clockPacket.step];
+        }
+        if (defined(clockPacket.multiplier)) {
+            clock.multiplier = clockPacket.multiplier;
+        }
     }
 
     function processCone(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var coneData = packet.cone;
         if (!defined(coneData)) {
-            return false;
+            return;
         }
 
         var interval = coneData.interval;
@@ -834,31 +817,29 @@ define([
         }
 
         var cone = dynamicObject.cone;
-        var coneUpdated = !defined(cone);
-        if (coneUpdated) {
+        if (!defined(cone)) {
             dynamicObject.cone = cone = new DynamicCone();
         }
 
-        coneUpdated = processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processMaterialPacketData(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
-        coneUpdated = processMaterialPacketData(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
-        coneUpdated = processMaterialPacketData(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
-        coneUpdated = processMaterialPacketData(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
-        return coneUpdated;
+        processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri);
+        processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri);
+        processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri);
+        processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri);
+        processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri);
+        processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri);
+        processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri);
+        processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri);
+        processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri);
+        processMaterialPacketData(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
+        processMaterialPacketData(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
+        processMaterialPacketData(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
+        processMaterialPacketData(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
     }
 
     function processEllipse(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipseData = packet.ellipse;
         if (!defined(ellipseData)) {
-            return false;
+            return;
         }
 
         var interval = ellipseData.interval;
@@ -867,22 +848,19 @@ define([
         }
 
         var ellipse = dynamicObject.ellipse;
-        var ellipseUpdated = !defined(ellipse);
-        if (ellipseUpdated) {
+        if (!defined(ellipse)) {
             dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
-        ellipseUpdated = processPacketData(Number, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
-
-        return ellipseUpdated;
+        processPacketData(Number, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri);
+        processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri);
+        processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri);
     }
 
     function processEllipsoid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipsoidData = packet.ellipsoid;
         if (!defined(ellipsoidData)) {
-            return false;
+            return;
         }
 
         var interval = ellipsoidData.interval;
@@ -891,21 +869,19 @@ define([
         }
 
         var ellipsoid = dynamicObject.ellipsoid;
-        var ellipsoidUpdated = !defined(ellipsoid);
-        if (ellipsoidUpdated) {
+        if (!defined(ellipsoid)) {
             dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }
 
-        ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
-        return ellipsoidUpdated;
+        processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri);
+        processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri);
+        processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
     }
 
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
-            return false;
+            return;
         }
 
         var interval = labelData.interval;
@@ -914,31 +890,28 @@ define([
         }
 
         var label = dynamicObject.label;
-        var labelUpdated = !defined(label);
-        if (labelUpdated) {
+        if (!defined(label)) {
             dynamicObject.label = label = new DynamicLabel();
         }
 
-        labelUpdated = processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(String, label, 'text', labelData.text, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(String, label, 'font', labelData.font, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri) || labelUpdated;
-
-        return labelUpdated;
+        processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri);
+        processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri);
+        processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri);
+        processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri);
+        processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri);
+        processPacketData(String, label, 'text', labelData.text, interval, sourceUri);
+        processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri);
+        processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri);
+        processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri);
+        processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri);
+        processPacketData(String, label, 'font', labelData.font, interval, sourceUri);
+        processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri);
     }
 
     function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
-            return false;
+            return;
         }
 
         var interval = pathData.interval;
@@ -947,26 +920,24 @@ define([
         }
 
         var path = dynamicObject.path;
-        var pathUpdated = !defined(path);
-        if (pathUpdated) {
+        if (!defined(path)) {
             dynamicObject.path = path = new DynamicPath();
         }
 
-        pathUpdated = processPacketData(Color, path, 'color', pathData.color, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'width', pathData.width, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Color, path, 'outlineColor', pathData.outlineColor, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri) || pathUpdated;
-        return pathUpdated;
+        processPacketData(Color, path, 'color', pathData.color, interval, sourceUri);
+        processPacketData(Number, path, 'width', pathData.width, interval, sourceUri);
+        processPacketData(Color, path, 'outlineColor', pathData.outlineColor, interval, sourceUri);
+        processPacketData(Number, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri);
+        processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri);
+        processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri);
+        processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri);
+        processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri);
     }
 
     function processPoint(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pointData = packet.point;
         if (!defined(pointData)) {
-            return false;
+            return;
         }
 
         var interval = pointData.interval;
@@ -975,24 +946,21 @@ define([
         }
 
         var point = dynamicObject.point;
-        var pointUpdated = !defined(point);
-        if (pointUpdated) {
+        if (!defined(point)) {
             dynamicObject.point = point = new DynamicPoint();
         }
 
-        pointUpdated = processPacketData(Color, point, 'color', pointData.color, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri) || pointUpdated;
-
-        return pointUpdated;
+        processPacketData(Color, point, 'color', pointData.color, interval, sourceUri);
+        processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri);
+        processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri);
+        processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri);
+        processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri);
     }
 
     function processPolygon(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
         if (!defined(polygonData)) {
-            return false;
+            return;
         }
 
         var interval = polygonData.interval;
@@ -1001,20 +969,18 @@ define([
         }
 
         var polygon = dynamicObject.polygon;
-        var polygonUpdated = !defined(polygon);
-        if (polygonUpdated) {
+        if (!defined(polygon)) {
             dynamicObject.polygon = polygon = new DynamicPolygon();
         }
 
-        polygonUpdated = processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
-        polygonUpdated = processMaterialPacketData(polygon, 'material', polygonData.material, interval, sourceUri);
-        return polygonUpdated;
+        processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri);
+        processMaterialPacketData(polygon, 'material', polygonData.material, interval, sourceUri);
     }
 
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
-            return false;
+            return;
         }
 
         var interval = polylineData.interval;
@@ -1023,23 +989,21 @@ define([
         }
 
         var polyline = dynamicObject.polyline;
-        var polylineUpdated = !defined(polyline);
-        if (polylineUpdated) {
+        if (!defined(polyline)) {
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        polylineUpdated = processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
-        return polylineUpdated;
+        processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri);
+        processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri);
+        processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri);
+        processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
+        processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri);
     }
 
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
         if (!defined(pyramidData)) {
-            return false;
+            return;
         }
 
         var interval = pyramidData.interval;
@@ -1048,34 +1012,30 @@ define([
         }
 
         var pyramid = dynamicObject.pyramid;
-        var pyramidUpdated = !defined(pyramid);
-        if (pyramidUpdated) {
+        if (!defined(pyramid)) {
             dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }
 
-        pyramidUpdated = processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processMaterialPacketData(pyramid, 'material', pyramidData.material, interval, sourceUri);
+        processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri);
+        processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri);
+        processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri);
+        processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri);
+        processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri);
+        processMaterialPacketData(pyramid, 'material', pyramidData.material, interval, sourceUri);
 
         if (defined(pyramidData.directions)) {
             var directions = pyramid.directions;
             if (!defined(directions)) {
                 pyramid.directions = directions = new DynamicDirectionsProperty();
-                pyramidUpdated = true;
             }
             directions.processCzmlIntervals(pyramidData.directions, interval);
         }
-
-        return pyramidUpdated;
     }
 
     function processVector(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vectorData = packet.vector;
         if (!defined(vectorData)) {
-            return false;
+            return;
         }
 
         var interval = vectorData.interval;
@@ -1084,21 +1044,18 @@ define([
         }
 
         var vector = dynamicObject.vector;
-        var vectorUpdated = !defined(vector);
-        if (vectorUpdated) {
+        if (!defined(vector)) {
             dynamicObject.vector = vector = new DynamicVector();
         }
 
-        vectorUpdated = processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
-
-        return vectorUpdated;
+        processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri);
+        processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri);
+        processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri);
+        processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri);
+        processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri);
     }
 
-    function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
+    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri) {
         var objectId = packet.id;
         if (!defined(objectId)) {
             objectId = createGuid();
@@ -1109,10 +1066,7 @@ define([
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);
             for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-                if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && !defined(updatedObjectsHash[objectId])) {
-                    updatedObjectsHash[objectId] = true;
-                    updatedObjects.push(object);
-                }
+                updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri);
             }
         }
     }
@@ -1123,7 +1077,7 @@ define([
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
-        var documentObject = dynamicObjectCollection.getObject('document');
+        var documentObject = dynamicObjectCollection.getById('document');
         if (defined(documentObject) && defined(documentObject.clock)) {
             clock = new DynamicClock();
             clock.startTime = documentObject.clock.startTime;
@@ -1165,22 +1119,22 @@ define([
      * @type Array
      */
     CzmlDataSource.updaters = [processClock,//
-                               processBillboard, //
-                               processEllipse, //
-                               processEllipsoid, //
-                               processCone, //
-                               processLabel, //
-                               processPath, //
-                               processPoint, //
-                               processPolygon, //
-                               processPolyline, //
-                               processPyramid, //
-                               processVector, //
-                               processPosition, //
-                               processViewFrom, //
-                               processOrientation, //
-                               processVertexPositions, //
-                               processAvailability];
+    processBillboard, //
+    processEllipse, //
+    processEllipsoid, //
+    processCone, //
+    processLabel, //
+    processPath, //
+    processPoint, //
+    processPolygon, //
+    processPolyline, //
+    processPyramid, //
+    processVector, //
+    processPosition, //
+    processViewFrom, //
+    processOrientation, //
+    processVertexPositions, //
+    processAvailability];
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
@@ -1265,7 +1219,7 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
-        this._dynamicObjectCollection.clear();
+        this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
 
@@ -1359,23 +1313,15 @@ define([
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
     CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
-        var updatedObjects = [];
-        var updatedObjectsHash = {};
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);
+                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri);
             }
         } else {
-            processCzmlPacket(czml, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);
+            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri);
         }
-
-        if (updatedObjects.length > 0) {
-            dynamicObjectCollection.objectPropertiesChanged.raiseEvent(dynamicObjectCollection, updatedObjects);
-        }
-
-        return updatedObjects;
     };
 
     return CzmlDataSource;

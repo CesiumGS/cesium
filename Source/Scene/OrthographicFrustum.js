@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian2',
@@ -10,6 +11,7 @@ define([
         '../Scene/CullingVolume'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         destroyObject,
         Cartesian2,
@@ -92,18 +94,6 @@ define([
         this._orthographicMatrix = undefined;
     };
 
-    /**
-     * Returns the orthographic projection matrix computed from the view frustum.
-     *
-     * @memberof OrthographicFrustum
-     *
-     * @returns {Matrix4} The orthographic projection matrix.
-     */
-    OrthographicFrustum.prototype.getProjectionMatrix = function() {
-        update(this);
-        return this._orthographicMatrix;
-    };
-
     function update(frustum) {
         if (!defined(frustum.right) || !defined(frustum.left) ||
             !defined(frustum.top) || !defined(frustum.bottom) ||
@@ -136,6 +126,20 @@ define([
             frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         }
     }
+
+    defineProperties(OrthographicFrustum.prototype, {
+        /**
+         * The orthographic projection matrix computed from the view frustum.
+         * @memberof OrthographicFrustum
+         * @type {Matrix4}
+         */
+        projectionMatrix : {
+            get : function() {
+                update(this);
+                return this._orthographicMatrix;
+            }
+        }
+    });
 
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
@@ -214,7 +218,7 @@ define([
         plane.x = -right.x;
         plane.y = -right.y;
         plane.z = -right.z;
-        plane.w = -Cartesian3.dot(right.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(right), point);
 
         // Bottom plane
         Cartesian3.multiplyByScalar(up, b, point);
@@ -240,7 +244,7 @@ define([
         plane.x = -up.x;
         plane.y = -up.y;
         plane.z = -up.z;
-        plane.w = -Cartesian3.dot(up.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(up), point);
 
         // Near plane
         plane = planes[4];
@@ -263,7 +267,7 @@ define([
         plane.x = -direction.x;
         plane.y = -direction.y;
         plane.z = -direction.z;
-        plane.w = -Cartesian3.dot(direction.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(direction), point);
 
         return this._cullingVolume;
     };

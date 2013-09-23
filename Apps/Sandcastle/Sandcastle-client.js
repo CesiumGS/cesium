@@ -12,6 +12,14 @@
         }, '*');
     };
 
+    console.originalWarn = console.warn;
+    console.warn = function(d1) {
+        console.originalWarn.apply(console, arguments);
+        window.parent.postMessage({
+            'warn' : typeof d1 === 'undefined' ? 'undefined' : d1.toString()
+        }, '*');
+    };
+
     console.originalError = console.error;
     console.error = function(d1) {
         console.originalError.apply(console, arguments);
@@ -125,7 +133,7 @@
     Sandcastle.highlight = function(obj) {
         if (typeof obj !== 'undefined') {
             for ( var i = 0, len = Sandcastle.registered.length; i < len; ++i) {
-                if (obj === Sandcastle.registered[i].obj) {
+                if (obj.primitive === Sandcastle.registered[i].obj) {
                     window.parent.postMessage({
                         'highlight' : Sandcastle.registered[i].lineNumber
                     }, '*');

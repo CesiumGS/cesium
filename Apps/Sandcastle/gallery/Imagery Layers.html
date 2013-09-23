@@ -26,14 +26,14 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var widget = new Cesium.CesiumWidget('cesiumContainer', {
+        imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
+            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+            proxy : new Cesium.DefaultProxy('/proxy/')
+        })
+    });
 
     var layers = widget.centralBody.getImageryLayers();
-    layers.removeAll();
-    layers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-        url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-        proxy : new Cesium.DefaultProxy('/proxy/')
-    }));
     var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
         url : 'http://cesium.agi.com/blackmarble',
         maximumLevel : 8,
