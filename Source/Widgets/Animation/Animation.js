@@ -681,7 +681,7 @@ define([
         var scaleX = width / baseWidth;
         var scaleY = height / baseHeight;
 
-        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
+        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0; overflow: hidden;';
         svg.setAttribute('width', width);
         svg.setAttribute('height', height);
         svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
