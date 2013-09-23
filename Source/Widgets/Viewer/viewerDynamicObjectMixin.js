@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -9,8 +10,10 @@ define([
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
+        '../Balloon/Balloon',
         '../../DynamicScene/DynamicObjectView'
     ], function(
+        Cartesian2,
         defaultValue,
         defined,
         DeveloperError,
@@ -20,6 +23,7 @@ define([
         ScreenSpaceEventType,
         wrapFunction,
         SceneMode,
+        Balloon,
         DynamicObjectView) {
     "use strict";
 
@@ -35,6 +39,7 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
+     * @exception {DeveloperError} balloonedObject is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -42,7 +47,9 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
+     * viewer.balloonedObject = object; //Balloon will now appear over object
      */
+
     var viewerDynamicObjectMixin = function(viewer) {
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
@@ -53,19 +60,36 @@ define([
         if (viewer.hasOwnProperty('onObjectTracked')) {
             throw new DeveloperError('onObjectTracked is already defined by another mixin.');
         }
+        if (viewer.hasOwnProperty('balloonedObject')) {
+            throw new DeveloperError('balloonedObject is already defined by another mixin.');
+        }
+
+        //Balloon
+        var balloonContainer = document.createElement('div');
+        balloonContainer.className = 'cesium-viewer-balloonContainer';
+        viewer.container.appendChild(balloonContainer);
+
+        var balloon = new Balloon(balloonContainer, viewer.scene);
+        var balloonViewModel = balloon.viewModel;
+        viewer._balloon = balloon;
 
         var eventHelper = new EventHelper();
         var onObjectTracked = new Event();
         var trackedObject;
         var dynamicObjectView;
+        var balloonedObject;
 
         //Subscribe to onTick so that we can update the view each update.
-        function updateView(clock) {
+        function onTick(clock) {
             if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(clock.currentTime);
             }
+            if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined') {
+                balloonViewModel.position = balloonedObject.position.getValue(clock.currentTime, balloonViewModel.position);
+                balloonViewModel.update();
+            }
         }
-        eventHelper.add(viewer.clock.onTick, updateView);
+        eventHelper.add(viewer.clock.onTick, onTick);
 
         function trackObject(dynamicObject) {
             if (defined(dynamicObject) && defined(dynamicObject.position)) {
@@ -82,18 +106,27 @@ define([
             }
         }
 
-        function clearTrackedObject() {
-            viewer.trackedObject = undefined;
+        function pickAndShowBalloon(e) {
+            var p = viewer.scene.pick(e.position);
+            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject)) {
+                viewer.balloonedObject = p.primitive.dynamicObject;
+            }
         }
 
-        //Subscribe to the home button click if it exists, so that we can
-        //clear the trackedObject when it is clicked.
+        function onHomeButtonClicked() {
+            viewer.trackedObject = undefined;
+            viewer.balloonedObject = undefined;
+        }
+
+        //Subscribe to the home button beforeExecute event if it exists,
+        // so that we can clear the trackedObject and balloon.
         if (defined(viewer.homeButton)) {
-            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, onHomeButtonClicked);
         }
 
         //Subscribe to left clicks and zoom to the picked object.
-        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.RIGHT_CLICK);
 
         if (defined(viewer.dataSourceBrowser)) {
             eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectSelected, trackObject);
@@ -111,7 +144,6 @@ define([
                 },
                 set : function(value) {
                     var sceneMode = viewer.scene.getFrameState().mode;
-
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                         viewer.scene.getScreenSpaceCameraController().enableTranslate = !defined(value);
                     }
@@ -124,6 +156,8 @@ define([
                         trackedObject = value;
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                         onObjectTracked.raiseEvent(viewer, value);
+                        //Hide the balloon if it's not the object we are following.
+                        balloonViewModel.showBalloon = balloonedObject === trackedObject;
                     }
                 }
             },
@@ -139,14 +173,46 @@ define([
                 get : function() {
                     return onObjectTracked;
                 }
+            },
+            /**
+             * Gets or sets the object instance for which to display a balloon
+             * @memberof viewerDynamicObjectMixin.prototype
+             * @type {DynamicObject}
+             */
+            balloonedObject : {
+                get : function() {
+                    return balloonedObject;
+                },
+                set : function(value) {
+                    var content;
+                    var position;
+                    if (typeof value !== 'undefined') {
+                        if (typeof value.position !== 'undefined') {
+                            position = value.position.getValue(viewer.clock.currentTime);
+                        }
+
+                        if (typeof value.balloon !== 'undefined') {
+                            content = value.balloon.getValue(viewer.clock.currentTime);
+                        }
+
+                        if (typeof content === 'undefined') {
+                            content = value.id;
+                        }
+                        balloonViewModel.content = content;
+                    }
+                    balloonedObject = value;
+                    balloonViewModel.position = position;
+                    balloonViewModel.showBalloon = typeof content !== 'undefined';
+                }
             }
         });
 
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
             eventHelper.removeAll();
-
+            balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK);
         });
     };
 

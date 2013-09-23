@@ -1,11 +1,13 @@
 @import url(../Animation/Animation.css);
 @import url(../BaseLayerPicker/BaseLayerPicker.css);
+@import url(../Balloon/Balloon.css);
 @import url(../CesiumWidget/CesiumWidget.css);
 @import url(../DataSourceBrowser/DataSourceBrowser.css);
 @import url(../FullscreenButton/FullscreenButton.css);
 @import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
 @import url(../Timeline/Timeline.css);
+@import url(../../DynamicScene/GeoJsonDataSource.css);
 
 .cesium-viewer {
     font-family: sans-serif;
@@ -15,6 +17,11 @@
     position: relative;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cesium-viewer-balloonContainer {
     width: 100%;
     height: 100%;
 }

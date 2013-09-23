@@ -55,8 +55,25 @@ define([
             }
             id = finalId;
         }
+
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
+        dynamicObject.balloon = {
+            getValue : function() {
+                var html;
+                var properties = geoJson.properties;
+                if (typeof properties !== 'undefined') {
+                    html = '<table class="geoJsonDataSourceTable">';
+                    for ( var key in properties) {
+                        if (properties.hasOwnProperty(key)) {
+                            html += '<tr><td>' + key + '</td><td>' + properties[key] + '</td></tr>';
+                        }
+                    }
+                    html += '</table>';
+                }
+                return html;
+            }
+        };
         return dynamicObject;
     }
 

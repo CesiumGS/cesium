@@ -2,16 +2,18 @@
 defineSuite([
          'Widgets/Viewer/viewerDynamicObjectMixin',
          'Core/Cartesian3',
+         'DynamicScene/ConstantPositionProperty',
+         'DynamicScene/ConstantProperty',
          'DynamicScene/DynamicObject',
          'Scene/CameraFlightPath',
-         'DynamicScene/ConstantProperty',
          'Widgets/Viewer/Viewer'
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
+         ConstantPositionProperty,
+         ConstantProperty,
          DynamicObject,
          CameraFlightPath,
-         ConstantProperty,
          Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -33,10 +35,11 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('adds trackedObject property', function() {
+    it('adds properties', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
         expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
+        expect(viewer.hasOwnProperty('balloonedObject')).toEqual(true);
     });
 
     it('can get and set trackedObject', function() {
@@ -51,6 +54,23 @@ defineSuite([
 
         viewer.trackedObject = undefined;
         expect(viewer.trackedObject).toBeUndefined();
+    });
+
+    it('can get and set balloonedObject', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.balloon = new ConstantProperty('<span>content</span>');
+
+        viewer.balloonedObject = dynamicObject;
+        expect(viewer.balloonedObject).toBe(dynamicObject);
+
+        viewer.balloonedObject = undefined;
+        expect(viewer.balloonedObject).toBeUndefined();
+
+        viewer.destroy();
     });
 
     it('home button resets tracked object', function() {
@@ -78,7 +98,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws if dropTarget property already added by another mixin.', function() {
+    it('throws if trackedObject property already added by another mixin.', function() {
         viewer = new Viewer(container);
         viewer.trackedObject = true;
         expect(function() {
@@ -113,6 +133,13 @@ defineSuite([
 
             viewer.onObjectTracked.removeEventListener(spyListener);
         });
-
+    });
+    it('throws if balloonedObject property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.balloonedObject = true;
+        expect(function() {
+            viewer.extend(viewerDynamicObjectMixin);
+        }).toThrow();
+        viewer.destroy();
     });
 });

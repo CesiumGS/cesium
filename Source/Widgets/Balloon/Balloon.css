@@ -1,0 +1,105 @@
+.cesium-balloon-wrapper {
+    position: absolute;
+    font-size: 10pt;
+    background-color: #fff;
+    border-radius: 5px;
+    z-index: 1;
+    border: 1px solid #ccc;
+    padding: 5px;
+    min-height: 28px;
+    min-width: 28px;
+}
+
+.cesium-balloon-content {
+    overflow: auto;
+    margin-right: 20px;
+}
+
+.cesium-balloon-arrow-container {
+    position: absolute;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.cesium-balloon-arrow-container-downup {
+    height: 16px;
+    width: 32px;
+}
+
+.cesium-balloon-arrow-container-leftright {
+    height: 32px;
+    width: 16px;
+}
+
+.cesium-balloon-arrow {
+    background-color: #fff;
+    height: 20px;
+    width: 20px;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    border: 1px solid #ccc;
+}
+
+.cesium-balloon-arrow-down {
+    margin-left: 5px;
+    margin-top: -11px;
+}
+
+.cesium-balloon-arrow-up {
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+.cesium-balloon-arrow-left {
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.cesium-balloon-arrow-right {
+    margin-left: -11px;
+    margin-top: 5px;
+}
+
+.cesium-balloon-wrapper-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.2s linear;
+    -webkit-transition: opacity 0.2s linear;
+    -moz-transition: opacity 0.2s linear;
+}
+
+.cesium-balloon-wrapper-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.2s, opacity 0.2s linear;
+    -webkit-transition: visibility 0s 0.2s, opacity 0.2s linear;
+    -moz-transition: visibility 0s 0.2s, opacity 0.2s linear;
+}
+
+.cesium-balloon-arrow-show {
+    visibility: visible;
+}
+
+.cesium-balloon-arrow-hide {
+    visibility: hidden;
+}
+
+.cesium-balloon-close {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    height: 16px;
+    width: 16px;
+    display: block;
+    background:
+        url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAl9JREFUSEullL1OG0EUhbegXPc8AEXKSLigoKBISZkHQLZl8fcWLt3kp4gEic07+AEoIp7ABQWFSz+AS4rN983e3YzZmCBxpSPfe+ac2Zk74ylexpei7P8serPbovc0K3qVMJf7yljIuoGgvCl6d2Faggk4C0zBClRq1IatDsgS8gHBGnwOeivg98AIbNTqiaE0gV/W/CGonYHm2En0JMJ9QbjsT4kgyI/AfpTW+3JRWrut6ps9oUEzit8x1pg34BFoFOZy+SQrG+sEdvs6+OZrGlyVv3mer2qq18TBk+BTKASNsWM2qNM23j9BbGEU/Euzv3meb2GStmAjKBbBO/DWJi5TEz0KCr/QXlOF4LVjPAX1MRpcijnE1hJ3BZoDsGb586Dq/8Gv+io7ycegO8HYiWa1eoKuQ+JHUd4ieAYL4L3XIK7BPajQ3HTMeXwvykObE6eTjtFczrGQ7Y7BYNC/uLiYgaerq6tKmMs5FrJuICjPz8/vwrQEE3AWmIIVqNSoDVsdkOXl5eUDgjX453sAvwdGYKNWTwylCfyy5v++B2iOnURPIobDYR/CZbfvAfkRaO+EuVyU1m6r0uveZxTte6AQbMAj0CjM5fJJVnqdwG637wF5Y3BV/uZ5vqqpXhMHt/7OCkFj7JgN6rSN908QW2jfA4WgMfub5/kWJmkLNoKifQ/I39rEpd78GNtrqhC8doynoD5Gg0sxh9ha4q5AcwDWfP3ve8DVbK6yk+x8Dxg70axWT9B1SIzH41sEz2ABvPcaxDW4BxWam445j9FodGhz7LAGYS7nWMgiiuIPrDnc+wQrd0kAAAAASUVORK5CYII=)
+        bottom;
+    text-indent: -99999px;
+}
+
+.cesium-balloon-close:hover {
+    background-position: 0 0;
+}
