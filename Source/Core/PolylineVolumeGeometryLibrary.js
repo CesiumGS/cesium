@@ -100,7 +100,7 @@ define([
         return (prev.x * next.y - prev.y * next.x >= 0.0) ? -angle : angle;
     }
 
-    var negativeX = Cartesian4.UNIT_X.negate();
+    var negativeX = new Cartesian4(-1, 0, 0, 0);
     var transform = new Matrix4();
     var translation = new Matrix4();
     var rotationZ = new Matrix3();
