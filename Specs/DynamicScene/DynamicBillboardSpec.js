@@ -1,154 +1,157 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DynamicBillboard',
-         'DynamicScene/DynamicObject',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Color',
-         'Core/Iso8601',
-         'Core/TimeInterval',
-         'Scene/HorizontalOrigin',
-         'Scene/VerticalOrigin'
-     ], function(
-         DynamicBillboard,
-         DynamicObject,
-         Cartesian2,
-         Cartesian3,
-         Color,
-         Iso8601,
-         TimeInterval,
-         HorizontalOrigin,
-         VerticalOrigin) {
+             'DynamicScene/DynamicBillboard',
+             'Core/Cartesian2',
+             'Core/Cartesian3',
+             'Core/NearFarScalar',
+             'Core/Color',
+             'Scene/HorizontalOrigin',
+             'Scene/VerticalOrigin',
+             'DynamicScene/ConstantProperty'
+         ], function(
+             DynamicBillboard,
+             Cartesian2,
+             Cartesian3,
+             NearFarScalar,
+             Color,
+             HorizontalOrigin,
+             VerticalOrigin,
+             ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties does not change a fully configured billboard', function() {
-        var expectedImage = 'image';
-        var expectedScale = 'scale';
-        var expectedRotation = 'rotation';
-        var expectedAlignedAxis = 'alignedAxis';
-        var expectedHorizontalOrigin = 'horizontalOrigin';
-        var expectedVerticalOrigin = 'verticalOrigin';
-        var expectedColor = 'color';
-        var expectedEyeOffset = 'eyeOffset';
-        var expectedPixelOffset = 'pixelOffset';
-        var expectedShow = 'show';
+    it('merge assigns unassigned properties', function() {
+        var source = new DynamicBillboard();
+        source.image = new ConstantProperty('');
+        source.rotation = new ConstantProperty(5);
+        source.alignedAxis = new ConstantProperty(new Cartesian3());
+        source.color = new ConstantProperty(Color.BLACK);
+        source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        source.scale = new ConstantProperty(1);
+        source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
+        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
 
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.billboard = new DynamicBillboard();
-        objectToMerge.billboard.image = 1;
-        objectToMerge.billboard.scale = 2;
-        objectToMerge.billboard.rotation = 3;
-        objectToMerge.billboard.alignedAxis = 4;
-        objectToMerge.billboard.horizontalOrigin = 5;
-        objectToMerge.billboard.verticalOrigin = 6;
-        objectToMerge.billboard.color = 7;
-        objectToMerge.billboard.eyeOffset = 8;
-        objectToMerge.billboard.pixelOffset = 9;
-        objectToMerge.billboard.show = 10;
+        var target = new DynamicBillboard();
+        target.merge(source);
 
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.billboard = new DynamicBillboard();
-        targetObject.billboard.image = expectedImage;
-        targetObject.billboard.scale = expectedScale;
-        targetObject.billboard.rotation = expectedRotation;
-        targetObject.billboard.alignedAxis = expectedAlignedAxis;
-        targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
-        targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
-        targetObject.billboard.color = expectedColor;
-        targetObject.billboard.eyeOffset = expectedEyeOffset;
-        targetObject.billboard.pixelOffset = expectedPixelOffset;
-        targetObject.billboard.show = expectedShow;
-
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.billboard.image).toEqual(expectedImage);
-        expect(targetObject.billboard.scale).toEqual(expectedScale);
-        expect(targetObject.billboard.rotation).toEqual(expectedRotation);
-        expect(targetObject.billboard.alignedAxis).toEqual(expectedAlignedAxis);
-        expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
-        expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
-        expect(targetObject.billboard.color).toEqual(expectedColor);
-        expect(targetObject.billboard.eyeOffset).toEqual(expectedEyeOffset);
-        expect(targetObject.billboard.pixelOffset).toEqual(expectedPixelOffset);
-        expect(targetObject.billboard.show).toEqual(expectedShow);
+        expect(target.image).toBe(source.image);
+        expect(target.rotation).toBe(source.rotation);
+        expect(target.alignedAxis).toBe(source.alignedAxis);
+        expect(target.color).toBe(source.color);
+        expect(target.horizontalOrigin).toBe(source.horizontalOrigin);
+        expect(target.verticalOrigin).toBe(source.verticalOrigin);
+        expect(target.eyeOffset).toBe(source.eyeOffset);
+        expect(target.pixelOffset).toBe(source.pixelOffset);
+        expect(target.scale).toBe(source.scale);
+        expect(target.show).toBe(source.show);
+        expect(target.width).toBe(source.width);
+        expect(target.height).toBe(source.height);
+        expect(target.nearFarScalar).toBe(source.nearFarScalar);
     });
 
-    it('mergeProperties creates and configures an undefined billboard', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.billboard = new DynamicBillboard();
-        objectToMerge.billboard.image = 1;
-        objectToMerge.billboard.scale = 2;
-        objectToMerge.billboard.rotation = 3;
-        objectToMerge.billboard.alignedAxis = 4;
-        objectToMerge.billboard.horizontalOrigin = 5;
-        objectToMerge.billboard.verticalOrigin = 6;
-        objectToMerge.billboard.color = 7;
-        objectToMerge.billboard.eyeOffset = 8;
-        objectToMerge.billboard.pixelOffset = 9;
-        objectToMerge.billboard.show = 10;
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicBillboard();
+        source.image = new ConstantProperty('');
+        source.rotation = new ConstantProperty(5);
+        source.alignedAxis = new ConstantProperty(new Cartesian3());
+        source.color = new ConstantProperty(Color.BLACK);
+        source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        source.scale = new ConstantProperty(1);
+        source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
+        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
 
-        var targetObject = new DynamicObject('targetObject');
+        var image = new ConstantProperty('');
+        var rotation = new ConstantProperty(5);
+        var alignedAxis = new ConstantProperty(new Cartesian3());
+        var color = new ConstantProperty(Color.BLACK);
+        var horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        var verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        var eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        var pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        var scale = new ConstantProperty(1);
+        var show = new ConstantProperty(false);
+        var width = new ConstantProperty(2);
+        var height = new ConstantProperty(3);
+        var nearFarScalar = new ConstantProperty(new NearFarScalar());
 
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
+        var target = new DynamicBillboard();
+        target.image = image;
+        target.rotation = rotation;
+        target.alignedAxis = alignedAxis;
+        target.color = color;
+        target.horizontalOrigin = horizontalOrigin;
+        target.verticalOrigin = verticalOrigin;
+        target.eyeOffset = eyeOffset;
+        target.pixelOffset = pixelOffset;
+        target.scale = scale;
+        target.show = show;
+        target.width = width;
+        target.height = height;
+        target.nearFarScalar = nearFarScalar;
 
-        expect(targetObject.billboard.image).toEqual(objectToMerge.billboard.image);
-        expect(targetObject.billboard.scale).toEqual(objectToMerge.billboard.scale);
-        expect(targetObject.billboard.rotation).toEqual(objectToMerge.billboard.rotation);
-        expect(targetObject.billboard.alignedAxis).toEqual(objectToMerge.billboard.alignedAxis);
-        expect(targetObject.billboard.horizontalOrigin).toEqual(objectToMerge.billboard.horizontalOrigin);
-        expect(targetObject.billboard.verticalOrigin).toEqual(objectToMerge.billboard.verticalOrigin);
-        expect(targetObject.billboard.color).toEqual(objectToMerge.billboard.color);
-        expect(targetObject.billboard.eyeOffset).toEqual(objectToMerge.billboard.eyeOffset);
-        expect(targetObject.billboard.pixelOffset).toEqual(objectToMerge.billboard.pixelOffset);
-        expect(targetObject.billboard.show).toEqual(objectToMerge.billboard.show);
+        target.merge(source);
+
+        expect(target.image).toBe(image);
+        expect(target.rotation).toBe(rotation);
+        expect(target.alignedAxis).toBe(alignedAxis);
+        expect(target.color).toBe(color);
+        expect(target.horizontalOrigin).toBe(horizontalOrigin);
+        expect(target.verticalOrigin).toBe(verticalOrigin);
+        expect(target.eyeOffset).toBe(eyeOffset);
+        expect(target.pixelOffset).toBe(pixelOffset);
+        expect(target.scale).toBe(scale);
+        expect(target.show).toBe(show);
+        expect(target.width).toBe(width);
+        expect(target.height).toBe(height);
+        expect(target.nearFarScalar).toBe(nearFarScalar);
     });
 
-    it('mergeProperties does not change when used with an undefined billboard', function() {
-        var expectedImage = 'image';
-        var expectedScale = 'scale';
-        var expectedRotation = 'rotation';
-        var expectedAlignedAxis = 'alignedAxis';
-        var expectedHorizontalOrigin = 'horizontalOrigin';
-        var expectedVerticalOrigin = 'verticalOrigin';
-        var expectedColor = 'color';
-        var expectedEyeOffset = 'eyeOffset';
-        var expectedPixelOffset = 'pixelOffset';
-        var expectedShow = 'show';
+    it('clone works', function() {
+        var source = new DynamicBillboard();
+        source.image = new ConstantProperty('');
+        source.rotation = new ConstantProperty(5);
+        source.alignedAxis = new ConstantProperty(new Cartesian3());
+        source.color = new ConstantProperty(Color.BLACK);
+        source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        source.scale = new ConstantProperty(1);
+        source.show = new ConstantProperty(false);
+        source.width = new ConstantProperty(24);
+        source.height = new ConstantProperty(36);
+        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
 
-        var objectToMerge = new DynamicObject('objectToMerge');
-
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.billboard = new DynamicBillboard();
-        targetObject.billboard.image = expectedImage;
-        targetObject.billboard.scale = expectedScale;
-        targetObject.billboard.rotation = expectedRotation;
-        targetObject.billboard.alignedAxis = expectedAlignedAxis;
-        targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
-        targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
-        targetObject.billboard.color = expectedColor;
-        targetObject.billboard.eyeOffset = expectedEyeOffset;
-        targetObject.billboard.pixelOffset = expectedPixelOffset;
-        targetObject.billboard.show = expectedShow;
-
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.billboard.image).toEqual(expectedImage);
-        expect(targetObject.billboard.scale).toEqual(expectedScale);
-        expect(targetObject.billboard.rotation).toEqual(expectedRotation);
-        expect(targetObject.billboard.alignedAxis).toEqual(expectedAlignedAxis);
-        expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
-        expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
-        expect(targetObject.billboard.color).toEqual(expectedColor);
-        expect(targetObject.billboard.eyeOffset).toEqual(expectedEyeOffset);
-        expect(targetObject.billboard.pixelOffset).toEqual(expectedPixelOffset);
-        expect(targetObject.billboard.show).toEqual(expectedShow);
+        var result = source.clone();
+        expect(result.image).toBe(source.image);
+        expect(result.rotation).toBe(source.rotation);
+        expect(result.alignedAxis).toBe(source.alignedAxis);
+        expect(result.color).toBe(source.color);
+        expect(result.horizontalOrigin).toBe(source.horizontalOrigin);
+        expect(result.verticalOrigin).toBe(source.verticalOrigin);
+        expect(result.eyeOffset).toBe(source.eyeOffset);
+        expect(result.pixelOffset).toBe(source.pixelOffset);
+        expect(result.scale).toBe(source.scale);
+        expect(result.show).toBe(source.show);
+        expect(result.width).toBe(source.width);
+        expect(result.height).toBe(source.height);
+        expect(result.nearFarScalar).toBe(source.nearFarScalar);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.billboard = new DynamicBillboard();
-        DynamicBillboard.undefineProperties(testObject);
-        expect(testObject.billboard).toBeUndefined();
+    it('merge throws if source undefined', function() {
+        var target = new DynamicBillboard();
+        expect(function() {
+            target.merge(undefined);
+        }).toThrow();
     });
 });

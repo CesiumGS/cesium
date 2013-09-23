@@ -4,9 +4,11 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Scene/CustomSensorVolume',
         '../Scene/Material',
         './MaterialProperty'
@@ -15,9 +17,11 @@ define([
          defined,
          DeveloperError,
          destroyObject,
+         Cartesian3,
          Color,
          Matrix3,
          Matrix4,
+         Quaternion,
          CustomSensorVolume,
          Material,
          MaterialProperty) {
@@ -90,12 +94,12 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (defined(oldCollection)) {
-                oldCollection.objectsRemoved.removeEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
+                oldCollection.collectionChanged.removeEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.collectionChanged.addEventListener(DynamicPyramidVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -184,28 +188,28 @@ define([
     var orientation;
     function updateObject(dynamicPyramidVisualizer, time, dynamicObject) {
         var context = dynamicPyramidVisualizer._scene.getContext();
-        var dynamicPyramid = dynamicObject.pyramid;
+        var dynamicPyramid = dynamicObject._pyramid;
         if (!defined(dynamicPyramid)) {
             return;
         }
 
-        var directionsProperty = dynamicPyramid.directions;
+        var directionsProperty = dynamicPyramid._directions;
         if (!defined(directionsProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var pyramid;
-        var showProperty = dynamicPyramid.show;
+        var showProperty = dynamicPyramid._show;
         var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -259,16 +263,16 @@ define([
 
         if (defined(position) &&
             defined(orientation) &&
-            (!position.equals(pyramid._visualizerPosition) ||
-             !orientation.equals(pyramid._visualizerOrientation))) {
+            (!Cartesian3.equals(position, pyramid._visualizerPosition) ||
+             !Quaternion.equals(orientation, pyramid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
-            position.clone(pyramid._visualizerPosition);
-            orientation.clone(pyramid._visualizerOrientation);
+            Cartesian3.clone(position, pyramid._visualizerPosition);
+            Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid.material, pyramid.material);
+        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid._material, pyramid.material);
 
-        var property = dynamicPyramid.intersectionColor;
+        var property = dynamicPyramid._intersectionColor;
         if (defined(property)) {
             var intersectionColor = property.getValue(time, intersectionColor);
             if (defined(intersectionColor)) {
@@ -276,7 +280,7 @@ define([
             }
         }
 
-        property = dynamicPyramid.intersectionWidth;
+        property = dynamicPyramid._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time, intersectionWidth);
             if (defined(intersectionWidth)) {
@@ -284,7 +288,7 @@ define([
             }
         }
 
-        property = dynamicPyramid.radius;
+        property = dynamicPyramid._radius;
         if (defined(property)) {
             var radius = property.getValue(time, radius);
             if (defined(radius)) {
@@ -293,7 +297,7 @@ define([
         }
     }
 
-    DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+    DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisPyramidCollection = this._pyramidCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {

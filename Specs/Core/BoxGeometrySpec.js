@@ -55,7 +55,7 @@ defineSuite([
         expect(m.indices.length).toEqual(12 * 3);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
-        expect(m.boundingSphere.radius).toEqual(maximumCorner.magnitude() * 0.5);
+        expect(m.boundingSphere.radius).toEqual(Cartesian3.magnitude(maximumCorner) * 0.5);
     });
 
     it('fromDimensions throws without dimensions', function() {

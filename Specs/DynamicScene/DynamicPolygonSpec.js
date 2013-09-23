@@ -1,68 +1,63 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DynamicPolygon',
-         'DynamicScene/DynamicObject',
-         'Core/Color',
-         'Core/Iso8601',
-         'Core/TimeInterval'
-     ], function(
-         DynamicPolygon,
-         DynamicObject,
-         Color,
-         Iso8601,
-         TimeInterval) {
+             'DynamicScene/DynamicPolygon',
+             'DynamicScene/ColorMaterialProperty',
+             'DynamicScene/ConstantProperty',
+             'DynamicScene/DynamicVertexPositionsProperty',
+             'Core/Color'
+         ], function(
+             DynamicPolygon,
+             ColorMaterialProperty,
+             ConstantProperty,
+             DynamicVertexPositionsProperty,
+             Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties does not change a fully configured polygon', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.polygon = new DynamicPolygon();
-        objectToMerge.polygon.material = 1;
-        objectToMerge.polygon.show = 2;
+    it('merge assigns unassigned properties', function() {
+        var source = new DynamicPolygon();
+        source.material = new ColorMaterialProperty();
+        source.show = new ConstantProperty(true);
 
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.polygon = new DynamicPolygon();
-        targetObject.polygon.material = 3;
-        targetObject.polygon.show = 4;
+        var target = new DynamicPolygon();
+        target.merge(source);
 
-        DynamicPolygon.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.polygon.material).toEqual(3);
-        expect(targetObject.polygon.show).toEqual(4);
+        expect(target.material).toBe(source.material);
+        expect(target.show).toBe(source.show);
     });
 
-    it('mergeProperties creates and configures an undefined polygon', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.polygon = new DynamicPolygon();
-        objectToMerge.polygon.material = 1;
-        objectToMerge.polygon.show = 2;
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicPolygon();
+        source.material = new ColorMaterialProperty();
+        source.show = new ConstantProperty(true);
 
-        var targetObject = new DynamicObject('targetObject');
+        var material = new ColorMaterialProperty();
+        var show = new ConstantProperty(true);
 
-        DynamicPolygon.mergeProperties(targetObject, objectToMerge);
+        var target = new DynamicPolygon();
+        target.material = material;
+        target.show = show;
 
-        expect(targetObject.polygon.material).toEqual(objectToMerge.polygon.material);
-        expect(targetObject.polygon.show).toEqual(objectToMerge.polygon.show);
+        target.merge(source);
+
+        expect(target.material).toBe(material);
+        expect(target.show).toBe(show);
     });
 
-    it('mergeProperties does not change when used with an undefined polygon', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
+    it('clone works', function() {
+        var source = new DynamicPolygon();
+        source.material = new ColorMaterialProperty();
+        source.show = new ConstantProperty(true);
 
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.polygon = new DynamicPolygon();
-        targetObject.polygon.material = 3;
-        targetObject.polygon.show = 4;
-
-        DynamicPolygon.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.polygon.material).toEqual(3);
-        expect(targetObject.polygon.show).toEqual(4);
+        var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.show).toBe(source.show);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.polygon = new DynamicPolygon();
-        DynamicPolygon.undefineProperties(testObject);
-        expect(testObject.polygon).toBeUndefined();
+    it('merge throws if source undefined', function() {
+        var target = new DynamicPolygon();
+        expect(function() {
+            target.merge(undefined);
+        }).toThrow();
     });
 });

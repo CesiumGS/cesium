@@ -1,10 +1,17 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -14,52 +21,78 @@ define([
      * @constructor
      */
     var DynamicEllipsoid = function() {
+        this._show = undefined;
+        this._radii = undefined;
+        this._material = undefined;
+        this._propertyChanged = new Event();
+    };
+
+    defineProperties(DynamicEllipsoid.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
+            }
+        },
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createDynamicPropertyDescriptor('show', '_show'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        this.radii = undefined;
+        radii : createDynamicPropertyDescriptor('radii', '_radii'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {MaterialProperty}
          */
-        this.material = undefined;
-    };
+        material : createDynamicPropertyDescriptor('material', '_material')
+    });
 
     /**
-     * Given two DynamicObjects, takes the ellipsoid properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Duplicates a DynamicEllipsoid instance.
+     * @memberof DynamicEllipsoid
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicEllipsoid} [result] The object onto which to store the result.
+     * @returns {DynamicEllipsoid} The modified result parameter or a new instance if one was not provided.
      */
-    DynamicEllipsoid.mergeProperties = function(targetObject, objectToMerge) {
-        var ellipsoidToMerge = objectToMerge.ellipsoid;
-        if (defined(ellipsoidToMerge)) {
-
-            var targetEllipsoid = targetObject.ellipsoid;
-            if (!defined(targetEllipsoid)) {
-                targetObject.ellipsoid = targetEllipsoid = new DynamicEllipsoid();
-            }
-
-            targetEllipsoid.show = defaultValue(targetEllipsoid.show, ellipsoidToMerge.show);
-            targetEllipsoid.radii = defaultValue(targetEllipsoid.radii, ellipsoidToMerge.radii);
-            targetEllipsoid.material = defaultValue(targetEllipsoid.material, ellipsoidToMerge.material);
+    DynamicEllipsoid.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicEllipsoid();
         }
+        result.show = this.show;
+        result.radii = this.radii;
+        result.material = this.material;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the ellipsoid associated with it.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicEllipsoid
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipsoid from.
+     * @param {DynamicEllipsoid} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicEllipsoid.undefineProperties = function(dynamicObject) {
-        dynamicObject.ellipsoid = undefined;
+    DynamicEllipsoid.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.show = defaultValue(this.show, source.show);
+        this.radii = defaultValue(this.radii, source.radii);
+        this.material = defaultValue(this.material, source.material);
     };
 
     return DynamicEllipsoid;
