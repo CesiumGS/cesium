@@ -71,7 +71,7 @@ define([
             rotation.multiplyByVector(camera.up, camera.up);
             rotation.multiplyByVector(camera.right, camera.right);
             camera.transform = Matrix4.IDENTITY.clone();
-            var defaultCamera = new Camera(canvas);
+            var defaultCamera = new Camera(scene.getContext());
             description = {
                 destination : defaultCamera.position,
                 duration : flightDuration,

@@ -47,7 +47,7 @@ defineSuite([
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterEach(function() {

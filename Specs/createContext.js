@@ -40,12 +40,12 @@ define([
         return queryParameters;
     }
 
-    function createContext(options) {
+    function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties
         options = clone(defaultValue(options, {}));
         options.alpha = defaultValue(options.alpha, true);
 
-        var canvas = createCanvas();
+        var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);
 
         var parameters = getQueryParameters();
@@ -57,7 +57,7 @@ define([
         }
 
         var us = context.getUniformState();
-        us.update(createFrameState());
+        us.update(context, createFrameState());
 
         return context;
     }
