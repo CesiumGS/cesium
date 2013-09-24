@@ -114,7 +114,10 @@ define([
 
     var ListDataSourcePanel = function(description, url) {
         this._viewModel = new ListDataSourcePanelViewModel(description, url);
+        this._templateID = undefined;
+    };
 
+    ListDataSourcePanel.prototype._createTemplate = function() {
         this._templateID = 'cesium-dataSourceBrowser-listDataSourcePanel-template-' + createGuid();
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
@@ -163,6 +166,9 @@ define([
          */
         templateID : {
             get : function() {
+                if (!defined(this._templateID)) {
+                    this._createTemplate();
+                }
                 return this._templateID;
             }
         },

@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../../Core/createGuid',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../DynamicScene/CzmlDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
         createGuid,
+        defined,
         defineProperties,
         CzmlDataSource,
         knockout,
@@ -25,7 +27,10 @@ define([
 
     var CzmlDataSourcePanel = function() {
         this._viewModel = new CzmlDataSourcePanelViewModel();
+        this._templateID = undefined;
+    };
 
+    CzmlDataSourcePanel.prototype._createTemplate = function() {
         this._templateID = 'cesium-dataSourceBrowser-czmlDataSourcePanel-template-' + createGuid();
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
@@ -57,6 +62,9 @@ define([
          */
         templateID : {
             get : function() {
+                if (!defined(this._templateID)) {
+                    this._createTemplate();
+                }
                 return this._templateID;
             }
         },
