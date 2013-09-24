@@ -38,12 +38,10 @@ require(['Cesium'], function(Cesium) {
 
     centralBody.terrainProvider = cesiumTerrainProvider;
 
-    var ds = new Cesium.KmlTourDataSource(cesiumTerrainProvider);
-    ds.getChangedEvent().addEventListener(function(ev){
+    var ds = new Cesium.KmlDataSource(cesiumTerrainProvider);
+    ds.loadUrl('../gallery/akosmaroy-2013-08-12-LSZH-LSZL-cockpit.kml').then(function() {
         viewer.dataSources.add(ds);
     });
-    ds.loadUrl('../gallery/akosmaroy-2013-08-12-LSZH-LSZL-cockpit.kml');
-
 
     Sandcastle.finishedLoading();
 });
