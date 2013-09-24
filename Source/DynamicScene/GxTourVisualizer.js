@@ -155,7 +155,7 @@ define([
         camera.position = path.evaluate(millisecs);
         camera.right = rotMatrix.getRow(0);
         camera.up = rotMatrix.getRow(1);
-        camera.direction = rotMatrix.getRow(2).negate(camera.direction);
+        camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
     }
 
     return GxTourVisualizer;
