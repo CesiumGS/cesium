@@ -31,6 +31,25 @@ define([
         knockout.defineProperty(this, 'isSelected', function() {
             return rootViewModel.selectedItem === that;
         });
+
+        knockout.defineProperty(this, 'isFilteredOut', function() {
+            if (rootViewModel.searchText.length < 1) {
+                // No filtering in progress, nothing filtered out.
+                return false;
+            }
+
+            // If any child is visible, we must be visible.
+            var len = that.children.length;
+            for (var i = 0; i < len; ++i) {
+                var kidFilteredOut = that.children[i].isFilteredOut;
+                if (!kidFilteredOut) {
+                    return false;
+                }
+            }
+
+            // No visible kids, return actual match against filter.
+            return that.name.toLowerCase().indexOf(rootViewModel.searchText.toLowerCase()) < 0;
+        });
     };
 
     defineProperties(DataSourceViewModel.prototype, {

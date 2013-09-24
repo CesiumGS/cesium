@@ -61,6 +61,13 @@ define([
         this.addDataSourceTooltip = 'Add Data Source';
 
         /**
+         * Gets or sets the user search/filter text.  This property is observable.
+         *
+         * @type String
+         */
+        this.searchText = '';
+
+        /**
          * Gets or sets the visibility of the Data Source Browser panel.  This can be hidden and revealed
          * by the user with a button.
          *
@@ -72,7 +79,7 @@ define([
         this._dataSourcesLength = 0;
 
         knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels',
-                              '_maxHeight', 'visible', '_dataSourcesLength']);
+                              '_maxHeight', 'visible', '_dataSourcesLength', 'searchText']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();

@@ -51,7 +51,8 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
         templateElement.id = templateID;
-        templateElement.textContent = '<li>\
+        templateElement.textContent = '<li \
+data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <!-- ko if: hasChildren -->\
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
 <span class="cesium-dataSourceBrowser-item" \
@@ -110,6 +111,23 @@ click: addDataSourceCommand');
         dataSourcesInfo.setAttribute('data-bind', 'text: infoText');
         dataSourcesContainerBody.appendChild(dataSourcesInfo);
 
+        // Text filter box
+        var dataSourcesFilterBox = document.createElement('div');
+        dataSourcesFilterBox.className = 'cesium-dataSourceBrowser-dataSourcesFilterBox';
+        dataSourcesFilterBox.textContent = "Search: ";
+        dataSourcesFilterBox.setAttribute('data-bind', '\
+css: { "cesium-dataSourceBrowser-dataSourcesFilterBox-visible" : dataSourcesLength > 0 }');
+        dataSourcesContainerBody.appendChild(dataSourcesFilterBox);
+
+        // Text filter input
+        var dataSourcesFilterInput = document.createElement('input');
+        dataSourcesFilterInput.className = 'cesium-dataSourceBrowser-dataSourcesFilterInput';
+        dataSourcesFilterInput.setAttribute('type', 'text');
+        dataSourcesFilterInput.setAttribute('data-bind', '\
+value: searchText,\
+valueUpdate: \'afterkeydown\'');
+        dataSourcesFilterBox.appendChild(dataSourcesFilterInput);
+
         // The root UL of the actual list of data sources, that uses the template.
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
@@ -120,7 +138,8 @@ click: addDataSourceCommand');
         var dataSourceListItem = document.createElement('li');
         dataSourceListItem.innerHTML = '\
 <!-- ko if: hasChildren -->\
-<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
+<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded,\
+                        \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="click: toggleExpanded, css: { \
     \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
@@ -137,7 +156,8 @@ click: addDataSourceCommand');
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="text: name, click: select, css: { \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    \'cesium-dataSourceBrowser-item-selected\': isSelected,\
+    \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
     data-bind="click: remove">&times;</span></span>\
 <!-- /ko -->';

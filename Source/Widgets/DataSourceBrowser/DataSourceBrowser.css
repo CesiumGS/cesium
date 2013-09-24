@@ -124,6 +124,25 @@
     padding-left: 110px;
 }
 
+.cesium-dataSourceBrowser-dataSourcesFilterBox {
+    display: none;
+    padding-left: 15px;
+}
+
+.cesium-dataSourceBrowser-dataSourcesFilterBox-visible {
+    display: block;
+}
+
+.cesium-dataSourceBrowser-dataSourcesFilterInput {
+    width: 75%;
+    background: rgb(46, 46, 46);
+    border: solid 1px #444;
+    color: #ff5;
+    padding: 0 2px;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
 ul.cesium-dataSourceBrowser-dataSources {
     margin: 0;
 }
@@ -224,6 +243,10 @@ li:nth-child(odd) > .cesium-dataSourceBrowser-item:hover,
 li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     background-color: rgba(68, 136, 187, 0.5);  /* RGB is #48b */
     box-shadow: 0 0 5px #48b;
+}
+
+.cesium-dataSourceBrowser-item-excluded {
+    display: none;
 }
 
 .cesium-dataSourceBrowser-item-remove {
