@@ -302,7 +302,6 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     border: 1px solid #444;
     padding: 6px;
     border-radius: 7px;
-    overflow: auto;
     width: 480px;
     -webkit-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
     -moz-transition: visibility 0s 0.25s, left 0.2s ease-in, opacity 0.2s ease-in;
@@ -319,8 +318,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-header {
-    text-align: center;
-    margin-bottom: 5px;
+    margin: 0 0 5px 130px;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-footer {
@@ -334,8 +332,27 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     overflow-y: auto;
 }
 
-.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions {
-    padding: 2px 0 5px;
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceTypeSelector {
+    position: relative;
+}
+
+.cesium-dataSourceBrowser .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions {
+    display: none;
+    background: #222;
+    border: solid 1px #777;
+    border-radius: 5px;
+    padding: 4px 0;
+    margin: 0;
+    position: absolute;
+    top: 30px;
+    left: 0;
+    width: 200px;
+    text-align: left;
+    z-index: 1000;
+}
+
+.cesium-dataSourceBrowser .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions-visible {
+    display: block;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected,

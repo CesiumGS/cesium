@@ -68,7 +68,7 @@ define([
     }
 
     function startup() {
-        DataSourcePanelViewModel.defaultDataSourcePanels.push(new ListDataSourcePanel('Examples', 'Gallery/'));
+        DataSourcePanelViewModel.defaultDataSourcePanels.unshift(new ListDataSourcePanel('Local Gallery', 'Gallery/'));
 
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);

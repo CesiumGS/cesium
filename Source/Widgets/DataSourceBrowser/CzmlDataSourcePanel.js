@@ -37,7 +37,7 @@ define([
         templateElement.id = this._templateID;
         templateElement.textContent = '<div>\
 <span>CZML URL:</span>\
-<input type="text" data-bind="value: url">\
+<input type="text" data-bind="value: url" size="50">\
 </div>';
         document.body.appendChild(templateElement);
     };
@@ -50,7 +50,7 @@ define([
          * @type {String}
          */
         description : {
-            value : 'CZML',
+            value : 'CZML File',
             writable : false
         },
 

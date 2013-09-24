@@ -48,13 +48,20 @@ define([
         this.visible = false;
 
         /**
+         * Gets or sets whether the type selector is visible.  This property is observable.
+         *
+         * @type Boolean
+         */
+        this.typeSelectorVisible = false;
+
+        /**
          * Gets or sets the error message that is currently shown.  This property is observable.
          *
          * @type String
          */
         this.error = '';
 
-        knockout.track(this, ['dataSourcePanels', 'activeDataSourcePanel', 'visible', 'error']);
+        knockout.track(this, ['dataSourcePanels', 'activeDataSourcePanel', 'visible', 'error', 'typeSelectorVisible']);
 
         this._finishCommand = createCommand(function() {
             that.error = '';
@@ -123,6 +130,14 @@ define([
             }
         }
     });
+
+    /**
+     * Toggles the visibility of the data source type selector.
+     * @memberof DataSourcePanelViewModel
+     */
+    DataSourcePanelViewModel.prototype.toggleDataSourceTypeSelector = function() {
+        this.typeSelectorVisible = !this.typeSelectorVisible;
+    };
 
     /**
      * @memberof DataSourcePanelViewModel

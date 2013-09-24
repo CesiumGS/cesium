@@ -156,24 +156,44 @@ css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourceP
         // The header of the add new data source panel.
         var dataSourcePanelHeader = document.createElement('div');
         dataSourcePanelHeader.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-header';
-        dataSourcePanelHeader.textContent = 'Add Data Source';
+        dataSourcePanelHeader.textContent = 'Add data from: ';
         dataSourcePanelContainer.appendChild(dataSourcePanelHeader);
 
+        // Selector button for the type of data source.
+        var dataSourceTypeSelector = document.createElement('div');
+        dataSourceTypeSelector.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceTypeSelector cesium-dataSourceBrowser-button';
+        dataSourceTypeSelector.innerHTML = ' &#9660;';
+        dataSourceTypeSelector.setAttribute('data-bind', '\
+click: toggleDataSourceTypeSelector');
+        dataSourcePanelHeader.appendChild(dataSourceTypeSelector);
+
+        // Label of selector button for the type of data source.
+        var dataSourceTypeSelectorLabel = document.createElement('span');
+        dataSourceTypeSelectorLabel.setAttribute('data-bind', '\
+text: activeDataSourcePanel ? activeDataSourcePanel.description : \'Choose...\'');
+        dataSourceTypeSelector.insertBefore(dataSourceTypeSelectorLabel, dataSourceTypeSelector.firstChild);
+
         // Container for the add buttons for each of the types of data sources.
-        var dataSourceOptions = document.createElement('div');
+        var dataSourceOptions = document.createElement('ul');
         dataSourceOptions.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions';
         dataSourceOptions.setAttribute('data-bind', '\
+css: { \'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions-visible\' : typeSelectorVisible },\
 foreach: dataSourcePanels');
-        dataSourcePanelContainer.appendChild(dataSourceOptions);
+        dataSourceTypeSelector.appendChild(dataSourceOptions);
 
         // Prototype button for adding a data source.
-        var dataSourceOption = document.createElement('div');
+        var dataSourceOption = document.createElement('li');
         dataSourceOption.setAttribute('data-bind', '\
-text : "+ " + description,\
-css: { "cesium-dataSourceBrowser-button" : true, \
-       "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
 click: function($data) { $parent.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
+
+        // Label on prototype button for adding a data source.
+        var dataSourceOptionLabel = document.createElement('span');
+        dataSourceOptionLabel.className = 'cesium-dataSourceBrowser-item';
+        dataSourceOptionLabel.setAttribute('data-bind', '\
+css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
+text : description');
+        dataSourceOption.appendChild(dataSourceOptionLabel);
 
         // Panel for options of data source being added.
         var activeDataSourcePanelContainer = document.createElement('div');
