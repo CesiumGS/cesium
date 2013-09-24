@@ -806,6 +806,14 @@ define([
                 return;
             }
 
+            if (!defined(material._cubeMaps[uniformId])) {
+                material._cubeMaps[uniformId] = material._defaultCubeMap;
+            }
+
+            if (uniformValue === 'czm_defaultCubeMap') {
+                return;
+            }
+
             var path =
                 uniformValue.positiveX + uniformValue.negativeX +
                 uniformValue.positiveY + uniformValue.negativeY +
@@ -829,10 +837,6 @@ define([
                 });
 
                 material._cubeMapPaths[uniformId] = path;
-            }
-
-            if (!defined(material._cubeMaps[uniformId])) {
-                material._cubeMaps[uniformId] = material._defaultCubeMap;
             }
         };
     }

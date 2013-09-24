@@ -510,16 +510,6 @@ defineSuite([
         expect(pixel).toEqual([0, 255, 255, 255]);
     });
 
-    it('throws without context for material that uses images', function() {
-        expect(function() {
-            return new Material({
-                fabric : {
-                    type : 'DiffuseMap'
-                }
-            });
-        }).toThrow();
-    });
-
     it('throws with source and components in same template', function () {
         expect(function() {
             return new Material({
@@ -704,24 +694,6 @@ defineSuite([
         });
         var pixel = renderMaterial(material);
         expect(pixel).not.toEqual([0, 0, 0, 0]);
-    });
-
-    it('throws with invalid uniform set after creation', function() {
-        expect(function() {
-            var material = new Material({
-                strict : true,
-                fabric : {
-                    uniforms : {
-                        value : 0.5
-                    },
-                    components : {
-                        diffuse : 'vec3(value)'
-                    }
-                }
-            });
-            material.uniforms.value = {x : 0.5, y : 0.5};
-            renderMaterial(material);
-        }).toThrow();
     });
 
     it('throws with invalid type sent to fromType', function() {
