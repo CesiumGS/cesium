@@ -53,7 +53,7 @@ defineSuite([
         context = createContext();
 
         var us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
