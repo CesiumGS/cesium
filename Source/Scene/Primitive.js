@@ -103,7 +103,7 @@ define([
      * var primitive = new Primitive({
      *   geometryInstances : instance,
      *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType(scene.getContext(), 'Checkerboard')
+     *     material : Material.fromType('Checkerboard')
      *   })
      * });
      * scene.getPrimitives().add(primitive);

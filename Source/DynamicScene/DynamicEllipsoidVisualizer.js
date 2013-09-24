@@ -184,7 +184,6 @@ define([
     var position;
     var orientation;
     function updateObject(dynamicEllipsoidVisualizer, time, dynamicObject) {
-        var context = dynamicEllipsoidVisualizer._scene.getContext();
         var dynamicEllipsoid = dynamicObject._ellipsoid;
         if (!defined(dynamicEllipsoid)) {
             return;
@@ -237,7 +236,7 @@ define([
             dynamicObject._ellipsoidVisualizerIndex = ellipsoidVisualizerIndex;
             ellipsoid.dynamicObject = dynamicObject;
 
-            ellipsoid.material = Material.fromType(context, Material.ColorType);
+            ellipsoid.material = Material.fromType(Material.ColorType);
         } else {
             ellipsoid = dynamicEllipsoidVisualizer._ellipsoidCollection[ellipsoidVisualizerIndex];
         }
@@ -258,7 +257,7 @@ define([
             ellipsoid._visualizerOrientation = Quaternion.clone(orientation, ellipsoid._visualizerOrientation);
         }
 
-        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid._material, ellipsoid.material);
+        ellipsoid.material = MaterialProperty.getValue(time, dynamicEllipsoid._material, ellipsoid.material);
     }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {

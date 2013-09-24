@@ -62,8 +62,8 @@ defineSuite([
     });
 
     it('constructs with a material', function() {
-        var material = Material.fromType(undefined, Material.ErosionType);
-        var quad = new ViewportQuad(undefined, material);
+        var material = Material.fromType(Material.ErosionType);
+        var quad = new ViewportQuad(material);
         expect(quad.material.type).toEqual(material.type);
     });
 
@@ -116,7 +116,7 @@ defineSuite([
                 source : testImage
             });
 
-            viewportQuad.material = Material.fromType(context, Material.ImageType);
+            viewportQuad.material = Material.fromType(Material.ImageType);
             viewportQuad.material.uniforms.image = texture;
 
             ClearCommand.ALL.execute(context);

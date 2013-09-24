@@ -313,7 +313,6 @@ define([
      *
      * @alias Material
      *
-     * @param {Context} description.context The context used to create textures if the material uses them.
      * @param {Boolean} [description.strict = false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Object} description.fabric The fabric JSON used to generate the material.
      *
@@ -324,14 +323,13 @@ define([
      * @exception {DeveloperError} fabric: cannot have source and components in the same section.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
-     * @exception {DeveloperError} image: context is not defined.
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
      * @example
      * // Create a color material with fromType:
-     * polygon.material = Material.fromType(context, 'Color');
+     * polygon.material = Material.fromType('Color');
      * polygon.material.uniforms.color = {
      *     red : 1.0,
      *     green : 1.0,
@@ -344,7 +342,6 @@ define([
      *
      * // Create a color material with full Fabric notation:
      * polygon.material = new Material({
-     *     context : context,
      *     fabric : {
      *         type : 'Color',
      *         uniforms : {
@@ -392,7 +389,6 @@ define([
         this.uniforms = undefined;
         this._uniforms = undefined;
 
-        this._context = undefined;
         this._strict = undefined;
         this._template = undefined;
         this._count = undefined;
@@ -429,9 +425,8 @@ define([
     /**
      * Creates a new material using an existing material type.
      * <br /><br />
-     * Shorthand for: new Material({context : context, fabric : {type : type}});
+     * Shorthand for: new Material({fabric : {type : type}});
      *
-     * @param {Context} context The context used to create textures if the material uses them.
      * @param {String} type The base material type.
      *
      * @returns {Material} New material object.
@@ -439,15 +434,14 @@ define([
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Material.fromType(context, 'Color');
+     * var material = Material.fromType('Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
-    Material.fromType = function(context, type) {
+    Material.fromType = function(type) {
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         return new Material({
-            context : context,
             fabric : {
                 type : type
             }
@@ -585,7 +579,6 @@ define([
 
     function initializeMaterial(description, result) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        result._context = description.context;
         result._strict = defaultValue(description.strict, false);
         result._count = defaultValue(description.count, 0);
         result._template = clone(defaultValue(description.fabric, defaultValue.EMPTY_OBJECT));
@@ -893,14 +886,12 @@ define([
 
     // Create all sub-materials by combining source and uniforms together.
     function createSubMaterials(material) {
-        var context = material._context;
         var strict = material._strict;
         var subMaterialTemplates = material._template.materials;
         for ( var subMaterialId in subMaterialTemplates) {
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
                 var subMaterial = new Material({
-                    context : context,
                     strict : strict,
                     fabric : subMaterialTemplates[subMaterialId],
                     count : material._count
