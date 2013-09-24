@@ -39,6 +39,10 @@ Beta Releases
       * `removeObject` has been renamed `removeById`
       * `collectionChanged` event added for notification of objects being added or removed.
    * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
+   * `UniformState.update` now takes a context as its first parameter.
+   * `Camera` constructor now takes a context instead of a canvas.
+   * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
+   * Removed `canvasDimensions` from `FrameState`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -53,6 +57,8 @@ Beta Releases
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
+* Added getDrawingBufferWidth and getDrawingBufferHeight methods to Context; this allows code that deals with rendering to use render buffer dimensions, and code that deals with events to use canvas dimensions.
+* Added code to Cesium-Viewer to detect browser zoom scale. When resizing the canvas element, apply the browser zoom scale. This avoids a loss of visual fidelity when using browser zoom.
 
 ### b20 - 2013-09-03
 

@@ -51,7 +51,7 @@ defineSuite([
         polygon.asynchronous = false;
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
