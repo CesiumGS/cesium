@@ -142,7 +142,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -199,7 +199,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -263,7 +263,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -296,7 +296,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
@@ -330,7 +330,7 @@ defineSuite([
                 afterView(frameState, primitive);
             }
 
-            context.getUniformState().update(frameState);
+            context.getUniformState().update(context, frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
