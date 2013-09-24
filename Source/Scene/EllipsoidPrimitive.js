@@ -277,6 +277,7 @@ define([
 
         var materialChanged = this._material !== this.material;
         this._material = this.material;
+        this._material.update(context);
 
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;

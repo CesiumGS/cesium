@@ -440,6 +440,7 @@ define([
 
         var materialChanged = this._material !== this.material;
         this._material = this.material;
+        this._material.update(context);
 
         if (pass.color) {
             var frontFaceColorCommand = this._frontFaceColorCommand;

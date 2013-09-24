@@ -683,6 +683,10 @@ define([
             createSP = true;
         }
 
+        if (defined(this._material)) {
+            this._material.update(context);
+        }
+
         if (createRS) {
             if (appearance.closed && appearance.translucent) {
                 var rs = clone(appearance.renderState, false);

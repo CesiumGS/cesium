@@ -208,6 +208,8 @@ define([
                     this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
 
+            this._material.update(context);
+
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);
         }
