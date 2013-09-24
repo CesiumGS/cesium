@@ -55,10 +55,10 @@ Beta Releases
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
-* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
-* Added getDrawingBufferWidth and getDrawingBufferHeight methods to Context; this allows code that deals with rendering to use render buffer dimensions, and code that deals with events to use canvas dimensions.
-* Added code to Cesium-Viewer to detect browser zoom scale. When resizing the canvas element, apply the browser zoom scale. This avoids a loss of visual fidelity when using browser zoom.
+* Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
+* `Viewer` no longer losses visual fidelity when using browser zoom.
 
 ### b20 - 2013-09-03
 
