@@ -53,6 +53,7 @@ Beta Releases
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
+* Added support for complex polygons. This fixes [#1121](https://github.com/AnalyticalGraphicsInc/cesium/issues/1121).
 
 ### b20 - 2013-09-03
 

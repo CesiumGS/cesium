@@ -635,11 +635,6 @@ defineSuite([
         expect(function() {
             GeometryPipeline.projectTo2D(new Geometry({
                 attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : [0.0, 0.0, 0.0]
-                    })
                 },
                 primitiveType : PrimitiveType.POINTS
             }), 'position', 'position3D', 'position2D');

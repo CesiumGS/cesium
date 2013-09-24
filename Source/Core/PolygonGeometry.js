@@ -105,8 +105,27 @@ define([
             positions2D.reverse();
             cleanedPositions.reverse();
         }
-
-        var indices = PolygonPipeline.triangulate(positions2D);
+        var indices = null;
+        // Keep attempting to triangulate until all intersections have been caught and polygon is simple
+        for (var i = 0; !indices && i < cleanedPositions.length; i++) {
+            try {
+                indices = PolygonPipeline.triangulate(positions2D);
+            } catch (error) {
+                if (error.intersection) {
+                    // Intersection found; simplify the polygon
+                    positions = PolygonPipeline.simplify(cleanedPositions, error.intersection, tangentPlane);
+                    cleanedPositions = PolygonPipeline.removeDuplicates(positions);
+                    positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+                } else {
+                    // If nothing else works, try reversing the winding order
+                    positions2D.reverse();
+                    cleanedPositions.reverse();
+                }
+            }
+        }
+        if (!indices) {
+            throw new DeveloperError('Polygon could not be triangulated.');
+        }
         return new GeometryInstance({
             geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
         });
@@ -602,6 +621,7 @@ define([
      *
      * @exception {DeveloperError} At least three positions are required.
      * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     * @exception {DeveloperError} Polygon could not be triangulated.
      */
     PolygonGeometry.createGeometry = function(polygonGeometry) {
         var vertexFormat = polygonGeometry._vertexFormat;
