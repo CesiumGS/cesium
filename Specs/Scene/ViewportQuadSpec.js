@@ -63,7 +63,7 @@ defineSuite([
 
     it('constructs with a material', function() {
         var material = Material.fromType(Material.ErosionType);
-        var quad = new ViewportQuad(material);
+        var quad = new ViewportQuad(undefined, material);
         expect(quad.material.type).toEqual(material.type);
     });
 
