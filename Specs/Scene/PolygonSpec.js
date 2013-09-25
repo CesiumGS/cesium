@@ -14,6 +14,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Math',
          'Renderer/ClearCommand',
+         'Scene/Material',
          'Scene/SceneMode'
      ], function(
          Polygon,
@@ -30,6 +31,7 @@ defineSuite([
          Ellipsoid,
          CesiumMath,
          ClearCommand,
+         Material,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -62,19 +64,75 @@ defineSuite([
     function createPolygon() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
-        var p = new Polygon();
-        p.ellipsoid = ellipsoid;
-        p.granularity = CesiumMath.toRadians(20.0);
-        p.setPositions([
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-        ]);
-        p.asynchronous = false;
-
-        return p;
+        return new Polygon({
+            ellipsoid : ellipsoid,
+            granularity : CesiumMath.toRadians(20.0),
+            positions : [
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
+            ],
+            asynchronous : false
+        });
     }
+
+    it('constructor sets properties', function() {
+        var positions = [
+             new Cartesian3(1.0, 2.0, 3.0),
+             new Cartesian3(4.0, 5.0, 6.0),
+             new Cartesian3(7.0, 8.0, 9.0)
+         ];
+        var material = Material.fromType('Checkerboard');
+
+        var polygon = new Polygon({
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            positions : positions,
+            granularity : CesiumMath.toRadians(10.0),
+            height : 100.0,
+            textureRotationAngle : CesiumMath.toRadians(45.0),
+            show : false,
+            material : material,
+            asynchronous : false
+        });
+
+        expect(polygon.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(polygon.getPositions()).toEqual(positions);
+        expect(polygon.granularity).toEqual(CesiumMath.toRadians(10.0));
+        expect(polygon.height).toEqual(100.0);
+        expect(polygon.textureRotationAngle).toEqual(CesiumMath.toRadians(45.0));
+        expect(polygon.show).toEqual(false);
+        expect(polygon.material).toBe(material);
+        expect(polygon.asynchronous).toEqual(false);
+    });
+
+    it('construction throws with both positions and polygonHierarchy', function() {
+        expect(function() {
+            return new Polygon({
+                positions : [
+                     new Cartesian3(1.0, 2.0, 3.0),
+                     new Cartesian3(4.0, 5.0, 6.0),
+                     new Cartesian3(7.0, 8.0, 9.0)
+                 ],
+                 polygonHierarchy : {
+                     positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                         new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                         new Cartographic.fromDegrees(-110.0, 35.0, 0.0),
+                         new Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                         new Cartographic.fromDegrees(-124.0, 40.0, 0.0)
+                    ])
+                }
+            });
+        }).toThrow();
+    });
+
+    it('construction throws with less than three positions', function() {
+        expect(function() {
+            return new Polygon({
+                positions : []
+            });
+        }).toThrow();
+    });
 
     it('gets default show', function() {
         expect(polygon.show).toEqual(true);
@@ -82,10 +140,10 @@ defineSuite([
 
     it('sets positions', function() {
         var positions = [
-                         new Cartesian3(1.0, 2.0, 3.0),
-                         new Cartesian3(4.0, 5.0, 6.0),
-                         new Cartesian3(7.0, 8.0, 9.0)
-                        ];
+            new Cartesian3(1.0, 2.0, 3.0),
+            new Cartesian3(4.0, 5.0, 6.0),
+            new Cartesian3(7.0, 8.0, 9.0)
+        ];
 
         expect(polygon.getPositions()).not.toBeDefined();
 

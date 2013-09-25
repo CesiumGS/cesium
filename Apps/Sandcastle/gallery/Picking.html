@@ -182,7 +182,7 @@ require(['Cesium'], function(Cesium) {
             xHalfAngle : Cesium.Math.toRadians(40.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
             showIntersection : false,
-            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
+            material : Cesium.Material.fromType('Erosion')
         });
         scene.getPrimitives().add(sensors);
 
@@ -218,38 +218,36 @@ require(['Cesium'], function(Cesium) {
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        // Construct the primitives.
-        var redPolygon = new Cesium.Polygon();
-        redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
-        redPolygon.material.uniforms.color = {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
-
-        var bluePolygon = new Cesium.Polygon();
-        bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
-        bluePolygon.material.uniforms.color = {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
-
-        var greenPolygon = new Cesium.Polygon();
-        greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
-        greenPolygon.material.uniforms.color = {
-            red : 0.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
-
         // Add primitives from bottom to top.
-        primitives.add(redPolygon);
-        primitives.add(bluePolygon);
-        primitives.add(greenPolygon);
+        var redPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
+            ])
+        }));
+        redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+
+        var bluePolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
+            ])
+        }));
+        bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
+
+        var greenPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
+            ])
+        }));
+        greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
     }
     
     function drawExtent(scene, ellipsoid) {

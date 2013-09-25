@@ -43,6 +43,7 @@ Beta Releases
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
+   * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -52,7 +53,9 @@ Beta Releases
 * Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
-* Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
+* Improved graphics performance.
+    * An Everest terrain view went from 135-140 to over 150 frames per second.
+    * Rendering over a thousand polylines in the same collection with different materials went from 20 to 40 frames per second.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
@@ -60,6 +63,15 @@ Beta Releases
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * `Viewer` no longer losses visual fidelity when using browser zoom.
 * Added `Geometries` tab to Sandcastle with an example for each geometry type.
+* `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
+
+        var p = new Primitive(/* ... */);
+        primitives.add(p);
+        return p;
+
+  becomes
+
+        return primitives.add(new Primitive(/* ... */));
 
 ### b20 - 2013-09-03
 
