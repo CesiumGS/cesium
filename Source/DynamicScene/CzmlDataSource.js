@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -69,6 +70,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermitePolynomialApproximation,
         Iso8601,
         JulianDate,
@@ -1104,6 +1106,18 @@ define([
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
+
+        var name;
+        if (defined(documentObject) && defined(documentObject.name)) {
+            name = documentObject.name.getValue();
+        }
+
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        dataSource._name = name;
+
         return clock;
     }
 
@@ -1113,6 +1127,7 @@ define([
      * @constructor
      */
     var CzmlDataSource = function() {
+        this._name = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
@@ -1143,6 +1158,16 @@ define([
     processOrientation, //
     processVertexPositions, //
     processAvailability];
+
+    /**
+     * Gets the name of this data source.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    CzmlDataSource.prototype.getName = function() {
+        return this._name;
+    };
 
     /**
      * Gets an event that will be raised when non-time-varying data changes

@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/getFilenameFromUri',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -24,6 +25,7 @@ define([
         Color,
         defined,
         DeveloperError,
+        getFilenameFromUri,
         RuntimeError,
         Ellipsoid,
         Event,
@@ -266,6 +268,18 @@ define([
          * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
+
+        this._name = undefined;
+    };
+
+    /**
+     * Gets the name of this data source.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    GeoJsonDataSource.prototype.getName = function() {
+        return this._name;
     };
 
     /**
@@ -360,6 +374,11 @@ define([
     GeoJsonDataSource.prototype.load = function(geoJson, source) {
         if (!defined(geoJson)) {
             throw new DeveloperError('geoJson is required.');
+        }
+
+        this._name = undefined;
+        if (defined(source)) {
+            this._name = getFilenameFromUri(source);
         }
 
         var typeHandler = geoJsonObjectTypes[geoJson.type];
