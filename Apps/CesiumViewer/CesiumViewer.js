@@ -103,7 +103,6 @@ define([
                 source = new KmlDataSource();
             } else if (endsWith(sourceUrl, ".KMZ")) {
                 source = new KmlDataSource();
-                sourceFunctionName = 'loadKmzUrl';
             } else {
                 loadingIndicator.style.display = 'none';
 

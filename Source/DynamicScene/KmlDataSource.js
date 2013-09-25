@@ -739,29 +739,6 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Asynchronously loads the KML at the provided url, replacing any existing data.
-     *
-     * @param {Object} url The url to be processed.
-     *
-     * @returns {Promise} a promise that will resolve when the KML is processed.
-     *
-     * @exception {DeveloperError} url is required.
-     */
-    KmlDataSource.prototype.loadUrl = function(url) {
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-
-        var dataSource = this;
-        return when(loadXML(url), function(kml) {
-            return dataSource.load(kml, url);
-        }, function(error) {
-            dataSource._error.raiseEvent(dataSource, error);
-            return when.reject(error);
-        });
-    };
-
-    /**
      * Asynchronously loads the provided KMZ, replacing any existing data.
      *
      * @param {Blob} kmz The KMZ document to be processed.
@@ -789,14 +766,38 @@ define(['../Core/createGuid',
      *
      * @exception {DeveloperError} url is required.
      */
-    KmlDataSource.prototype.loadKmzUrl = function(url) {
+    KmlDataSource.prototype.loadUrl = function(url) {
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 
         var that = this;
         return when(loadBlob(url), function(blob) {
-            return that.loadKmz(blob, url);
+            var deferred = when.defer();
+
+            //Get the blob "magic number" to determine if it's a zip or KML
+            var slice = blob.slice(0, 4);
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(slice);
+            reader.onload = function(e) {
+                var buffer = reader.result;
+                var view = new DataView(buffer);
+
+                //If it's a zip file, treat it as a KMZ
+                if (view.getUint32(0, false) === 0x504b0304) {
+                    return loadKmz(that, blob, url, deferred);
+                }
+
+                //Else, reader it as an XML file.
+                reader = new FileReader();
+                reader.addEventListener("loadend", function() {
+                    var parser = new DOMParser();
+                    that.load(parser.parseFromString(reader.result, 'text/xml'), url);
+                    deferred.resolve();
+                });
+                reader.readAsText(blob);
+            };
+            return deferred;
         }, function(error) {
             that._error.raiseEvent(that, error);
             return when.reject(error);
