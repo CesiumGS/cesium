@@ -139,6 +139,26 @@ define([
         positionNDC.z = position.z / position.w;
 
         // Assuming viewport takes up the entire canvas...
+        viewport.width = context._canvas.clientWidth;
+        viewport.height = context.getCanvas().clientHeight;
+        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
+
+        // Viewport transform to transform from clip coordinates to window coordinates
+        viewportTransform.multiplyByPoint(positionNDC, positionWC);
+
+        return Cartesian2.fromCartesian4(positionWC, result);
+    };
+
+    /**
+     * @private
+     */
+    SceneTransforms.clipToDrawingBufferCoordinates = function(context, position, result) {
+        // Perspective divide to transform from clip coordinates to normalized device coordinates
+        positionNDC.x = position.x / position.w;
+        positionNDC.y = position.y / position.w;
+        positionNDC.z = position.z / position.w;
+
+        // Assuming viewport takes up the entire canvas...
         viewport.width = context.getDrawingBufferWidth();
         viewport.height = context.getDrawingBufferHeight();
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
