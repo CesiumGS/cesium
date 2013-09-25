@@ -15,13 +15,16 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var camera;
-    var canvas = {
-        clientWidth : 1024,
-        clientHeight : 768
-    };
 
     beforeEach(function() {
-        camera = new Camera(canvas);
+        camera = new Camera({
+            getDrawingBufferWidth: function() {
+                return 1024;
+            },
+            getDrawingBufferHeight: function() {
+                return 768;
+            }
+        });
         camera.position = new Cartesian3();
         camera.up = Cartesian3.UNIT_Y;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);

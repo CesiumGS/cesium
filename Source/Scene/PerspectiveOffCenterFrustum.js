@@ -312,12 +312,12 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
-     * @exception {DeveloperError} canvasDimensions is required.
-     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
-     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions is required.
+     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -336,22 +336,22 @@ define([
      * var distance = Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
      */
-    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
+    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance) {
         update(this);
 
-        if (!defined(canvasDimensions)) {
-            throw new DeveloperError('canvasDimensions is required.');
+        if (!defined(drawingBufferDimensions)) {
+            throw new DeveloperError('drawingBufferDimensions is required.');
         }
 
-        var width = canvasDimensions.x;
-        var height = canvasDimensions.y;
+        var width = drawingBufferDimensions.x;
+        var height = drawingBufferDimensions.y;
 
         if (width <= 0) {
-            throw new DeveloperError('canvasDimensions.x must be greater than zero.');
+            throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
         }
 
         if (height <= 0) {
-            throw new DeveloperError('canvasDimensions.y must be greater than zero.');
+            throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
         }
 
         distance = defaultValue(distance, this.near);

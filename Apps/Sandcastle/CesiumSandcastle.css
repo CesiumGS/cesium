@@ -118,7 +118,7 @@ html, body {
 }
 
 #logOutput {
-	white-space: pre;
+	white-space: pre-wrap;
 	padding: 2px 4px;
 	font-size: 9pt;
 	font-family: monospace;
