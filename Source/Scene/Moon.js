@@ -84,22 +84,12 @@ define([
             ellipsoid = this._ellipsoid = new EllipsoidPrimitive();
             ellipsoid.radii = new Cartesian3(Moon.Iau2000MeanLunarRadius, Moon.Iau2000MeanLunarRadius, Moon.Iau2000MeanLunarRadius);
 
-            ellipsoid.material = Material.fromType(context, Material.ImageType);
+            ellipsoid.material = Material.fromType(Material.ImageType);
         }
 
         if (this.moonTextureUrl !== this._moonTextureUrl) {
             this._moonTextureUrl = this.moonTextureUrl;
-
-            var image = new Image();
-            image.onload = function() {
-                ellipsoid.material.uniforms.image = context.createTexture2D({
-                    source : image
-                });
-            };
-            image.src = buildModuleUrl('Assets/Textures/moonSmall.jpg');
-
-            // TODO: For some reason this doesn't work
-            //ellipsoid.material.uniforms.image = this._moonTextureUrl;
+            ellipsoid.material.uniforms.image = this._moonTextureUrl;
         }
 
         var date = frameState.time;
