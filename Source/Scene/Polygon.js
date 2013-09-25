@@ -37,7 +37,30 @@ define([
      * @alias Polygon
      * @constructor
      *
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
+     * @param {Array} [options.positions=undefined] The cartesian positions of the polygon.
+     * @param {Object} [options.polygonHierarchy=undefined] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
+     * @param {Number} [options.height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
+     * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Material} [options.material=undefined] The surface appearance of the primitive.
+     * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
+     *
+     * @exception {DeveloperError} Either options.positions or options.polygonHierarchy can be provided, but not both.
+     * @exception {DeveloperError} When options.positions is provided, at least three positions are required.
+     *
      * @example
+     * // Example 1
+     * var polygon = new Polygon({
+     *   positions : [
+     *     ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *     ellipsoid.cartographicToCartesian(new Cartographic(...)),
+     *     ellipsoid.cartographicToCartesian(new Cartographic(...))
+     *   ]
+     * });
+     *
+     * // Example 2
      * var polygon = new Polygon();
      * polygon.material.uniforms.color = {
      *   red   : 1.0,
@@ -137,15 +160,22 @@ define([
          *
          * @type Boolean
          *
-         * @default false
+         * @default true
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
 
-        this._positions = options.positions;
-        this._polygonHierarchy = options.polygonHierarchy;
+        this._positions = undefined;
+        this._polygonHierarchy = undefined;
         this._createPrimitive = false;
-
         this._primitive = undefined;
+
+        if (defined(options.positions) && defined(options.polygonHierarchy)) {
+            throw new DeveloperError('Either options.positions or options.polygonHierarchy can be provided, but not both.');
+        } else if (defined(options.positions)) {
+            this.setPositions(options.positions);
+        } else if (defined(options.polygonHierarchy)) {
+            this.configureFromPolygonHierarchy(options.polygonHierarchy);
+        }
     };
 
     /**
