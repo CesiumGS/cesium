@@ -274,7 +274,7 @@ define([
 
     /**
      * Gets the name of this data source.
-     * @memberof CzmlDataSource
+     * @memberof GeoJsonDataSource
      *
      * @returns {String} The name.
      */
