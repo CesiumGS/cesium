@@ -395,12 +395,10 @@ define([
 
         this._texturePaths = {};
         this._loadedImages = [];
-        this._cubeMapPaths = {};
         this._loadedCubeMaps = [];
 
         this._textures = {};
         this._defaultTexture = undefined;
-        this._cubeMaps = {};
         this._defaultCubeMap = undefined;
 
         this._updateFunctions = [];
@@ -471,9 +469,14 @@ define([
             uniformId = loadedImage.id;
             var image = loadedImage.image;
 
-            var texture = context.createTexture2D({
-                source : image
-            });
+            var texture = Material._textureCache.getTexture(this._texturePaths[uniformId]);
+            if (!defined(texture)) {
+                texture = context.createTexture2D({
+                    source : image
+                });
+                Material._textureCache.addTexture(this._texturePaths[uniformId], texture);
+            }
+
             this._textures[uniformId] = texture;
 
             var uniformDimensionsName = uniformId + 'Dimensions';
@@ -494,17 +497,22 @@ define([
             uniformId = loadedCubeMap.id;
             var images = loadedCubeMap.images;
 
-            var cubeMap = context.createCubeMap({
-                source : {
-                    positiveX : images[0],
-                    negativeX : images[1],
-                    positiveY : images[2],
-                    negativeY : images[3],
-                    positiveZ : images[4],
-                    negativeZ : images[5]
-                }
-            });
-            this._cubeMaps[uniformId] = cubeMap;
+            var cubeMap = Material._textureCache.getTexture(this._texturePaths[uniformId]);
+            if (!defined(cubeMap)) {
+                cubeMap = context.createCubeMap({
+                    source : {
+                        positiveX : images[0],
+                        negativeX : images[1],
+                        positiveY : images[2],
+                        negativeY : images[3],
+                        positiveZ : images[4],
+                        negativeZ : images[5]
+                    }
+                });
+                Material._textureCache.addTexture(this._texturePaths[uniformId], cubeMap);
+            }
+
+            this._textures[uniformId] = cubeMap;
         }
 
         loadedCubeMaps.length = 0;
@@ -563,10 +571,8 @@ define([
         var uniforms = this.uniforms;
         for ( var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
-                var uniformValue = uniforms[uniformId];
-                if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
-                    Material._textureCache.releaseTexture(this, uniformValue);
-                }
+                var path = this._texturePaths[uniformId];
+                Material._textureCache.releaseTexture(path);
             }
         }
         for ( var material in materials) {
@@ -687,6 +693,124 @@ define([
         }
     }
 
+    var matrixMap = {
+        'mat2' : Matrix2,
+        'mat3' : Matrix3,
+        'mat4' : Matrix4
+    };
+
+    function createTexture2DUpdateFunction(uniformId) {
+        return function(material) {
+            var uniforms = material.uniforms;
+            var uniformValue = uniforms[uniformId];
+            var texture = material._textures[uniformId];
+
+            var uniformDimensionsName;
+            var uniformDimensions;
+
+            if (uniformValue instanceof Texture && uniformValue !== texture) {
+                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = uniformValue;
+
+                uniformDimensionsName = uniformId + 'Dimensions';
+                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
+                    uniformDimensions = uniforms[uniformDimensionsName];
+                    uniformDimensions.x = uniformValue._width;
+                    uniformDimensions.y = uniformValue._height;
+                }
+
+                return;
+            }
+
+            if (!defined(texture)) {
+                material._texturePaths[uniformId] = undefined;
+                texture = material._textures[uniformId] = material._defaultTexture;
+
+                uniformDimensionsName = uniformId + 'Dimensions';
+                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
+                    uniformDimensions = uniforms[uniformDimensionsName];
+                    uniformDimensions.x = texture._width;
+                    uniformDimensions.y = texture._height;
+                }
+            }
+
+            if (uniformValue === Material.DefaultImageId) {
+                return;
+            }
+
+            if (uniformValue !== material._texturePaths[uniformId]) {
+                var newTexture = Material._textureCache.getTexture(uniformValue);
+                if (defined(newTexture)) {
+                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                    material._textures[uniformId] = newTexture;
+                } else {
+                    when(loadImage(uniformValue), function(image) {
+                        material._loadedImages.push({
+                            id : uniformId,
+                            image : image
+                        });
+                    });
+                }
+
+                material._texturePaths[uniformId] = uniformValue;
+            }
+        };
+    }
+
+    function createCubeMapUpdateFunction(uniformId) {
+        return function(material) {
+            var uniformValue = material.uniforms[uniformId];
+
+            if (uniformValue instanceof CubeMap) {
+                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = uniformValue;
+                return;
+            }
+
+            if (!defined(material._textures[uniformId])) {
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = material._defaultCubeMap;
+            }
+
+            if (uniformValue === Material.DefaultCubeMapId) {
+                return;
+            }
+
+            var path =
+                uniformValue.positiveX + uniformValue.negativeX +
+                uniformValue.positiveY + uniformValue.negativeY +
+                uniformValue.positiveZ + uniformValue.negativeZ;
+
+            if (path !== material._texturePaths[uniformId]) {
+                var newTexture = Material._textureCache.getTexture(path);
+                if (defined(newTexture)) {
+                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                    material._textures[uniformId] = newTexture;
+                } else {
+                    var promises = [
+                        loadImage(uniformValue.positiveX),
+                        loadImage(uniformValue.negativeX),
+                        loadImage(uniformValue.positiveY),
+                        loadImage(uniformValue.negativeY),
+                        loadImage(uniformValue.positiveZ),
+                        loadImage(uniformValue.negativeZ)
+                    ];
+
+                    when.all(promises).then(function(images) {
+                        material._loadedCubeMaps.push({
+                            id : uniformId,
+                            images : images
+                        });
+                    });
+                }
+
+                material._texturePaths[uniformId] = path;
+            }
+        };
+    }
+
     function createUniforms(material) {
         var uniforms = material._template.uniforms;
         for ( var uniformId in uniforms) {
@@ -744,9 +868,9 @@ define([
                 };
                 material._updateFunctions.push(createTexture2DUpdateFunction(uniformId));
             } else if (uniformType === 'samplerCube') {
-                material._cubeMaps[uniformId] = (uniformValue instanceof CubeMap) ? uniformValue : material._defaultCubeMap;
+                material._textures[uniformId] = (uniformValue instanceof CubeMap) ? uniformValue : material._defaultCubeMap;
                 material._uniforms[newUniformId] = function() {
-                    return material._cubeMaps[uniformId];
+                    return material._textures[uniformId];
                 };
                 material._updateFunctions.push(createCubeMapUpdateFunction(uniformId));
             } else if (uniformType.indexOf('mat') !== -1) {
@@ -760,93 +884,6 @@ define([
             }
         }
     }
-
-    function createTexture2DUpdateFunction(uniformId) {
-        return function(material) {
-            var uniforms = material.uniforms;
-            var uniformValue = uniforms[uniformId];
-            var texture = material._textures[uniformId];
-
-            if (uniformValue instanceof Texture && uniformValue !== texture) {
-                material._textures[uniformId] = uniformValue;
-
-                var uniformDimensionsName = uniformId + 'Dimensions';
-                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
-                    var uniformDimensions = uniforms[uniformDimensionsName];
-                    uniformDimensions.x = uniformValue._width;
-                    uniformDimensions.y = uniformValue._height;
-                }
-
-                return;
-            }
-
-            if (uniformValue !== material._texturePaths[uniformId]) {
-                when(loadImage(uniformValue), function(image) {
-                    material._loadedImages.push({
-                        id : uniformId,
-                        image : image
-                    });
-                });
-
-                material._texturePaths[uniformId] = uniformValue;
-            }
-
-            if (!defined(texture)) {
-                material._textures[uniformId] = material._defaultTexture;
-            }
-        };
-    }
-
-    function createCubeMapUpdateFunction(uniformId) {
-        return function(material) {
-            var uniformValue = material.uniforms[uniformId];
-
-            if (uniformValue instanceof CubeMap) {
-                material._textures[uniformId] = uniformValue;
-                return;
-            }
-
-            if (!defined(material._cubeMaps[uniformId])) {
-                material._cubeMaps[uniformId] = material._defaultCubeMap;
-            }
-
-            if (uniformValue === 'czm_defaultCubeMap') {
-                return;
-            }
-
-            var path =
-                uniformValue.positiveX + uniformValue.negativeX +
-                uniformValue.positiveY + uniformValue.negativeY +
-                uniformValue.positiveZ + uniformValue.negativeZ;
-
-            if (path !== material._cubeMapPaths[uniformId]) {
-                var promises = [
-                    loadImage(uniformValue.positiveX),
-                    loadImage(uniformValue.negativeX),
-                    loadImage(uniformValue.positiveY),
-                    loadImage(uniformValue.negativeY),
-                    loadImage(uniformValue.positiveZ),
-                    loadImage(uniformValue.negativeZ)
-                ];
-
-                when.all(promises).then(function(images) {
-                    material._loadedCubeMaps.push({
-                        id : uniformId,
-                        images : images
-                    });
-                });
-
-                material._cubeMapPaths[uniformId] = path;
-            }
-        };
-    }
-
-    // Checks for updates to material values to refresh the uniforms.
-    var matrixMap = {
-        'mat2' : Matrix2,
-        'mat3' : Matrix3,
-        'mat4' : Matrix4
-    };
 
     // Determines the uniform type based on the uniform in the template.
     function getUniformType(uniformValue) {
@@ -945,107 +982,32 @@ define([
     }
 
     Material._textureCache = {
-        _pathsToMaterials : {},
+        _textures : {},
 
-        _pathsToTextures : {},
-
-        _updateMaterialsOnLoad : function(texture, path) {
-            this._pathsToTextures[path] = texture;
-            var materialContainers = this._pathsToMaterials[path];
-            for ( var i = 0; i < materialContainers.length; i++) {
-                var materialContainer = materialContainers[i];
-                var material = materialContainer.material;
-                var property = materialContainer.property;
-                this.releaseTexture(material, material.uniforms[property]);
-                material.uniforms[property] = texture;
-            }
+        addTexture : function(path, texture) {
+            this._textures[path] = {
+                texture : texture,
+                count : 1
+            };
         },
 
-        releaseTexture : function(material, texture) {
-            var pathsToTexture = this._pathsToTextures;
-            for ( var path in pathsToTexture) {
-                if (pathsToTexture[path] === texture) {
-                    var materialsWithTexture = this._pathsToMaterials[path];
-                    for ( var i = 0; i < materialsWithTexture.length; i++) {
-                        if (materialsWithTexture[i].material === material) {
-                            materialsWithTexture.splice(i, 1);
-                            var numMaterialsWithTexture = materialsWithTexture.length;
-                            if (numMaterialsWithTexture === 0) {
-                                texture.destroy();
-                                delete pathsToTexture.path;
-                                delete materialsWithTexture.path;
-                            }
-                        }
-                    }
-                }
+        getTexture : function(path) {
+            var entry = this._textures[path];
+
+            if (defined(entry)) {
+                entry.count++;
+                return entry.texture;
             }
+
+            return undefined;
         },
 
-        registerCubeMapToMaterial : function(material, property, info) {
-            var that = this;
-            var texture;
-            if (info === Material.DefaultCubeMapId) {
-                texture = material._context.getDefaultCubeMap();
-            } else {
-                var path = info.positiveX + info.negativeX + info.positiveY + info.negativeY + info.positiveZ + info.negativeZ;
-                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({
-                    'material' : material,
-                    'property' : property
-                });
-                texture = this._pathsToTextures[path];
-                if (!defined(texture)) {
-                    var oldTexture = material.uniforms[property];
-                    var hasOldTexture = oldTexture instanceof CubeMap;
-                    texture = hasOldTexture ? oldTexture : material._context.getDefaultCubeMap();
-                    if (this._pathsToMaterials[path].length === 1) {
-                        when.all([loadImage(info.positiveX), loadImage(info.negativeX), loadImage(info.positiveY), loadImage(info.negativeY), loadImage(info.positiveZ), loadImage(info.negativeZ)]).then(function(images) {
-                            texture = material._context.createCubeMap({
-                                source : {
-                                    positiveX : images[0],
-                                    negativeX : images[1],
-                                    positiveY : images[2],
-                                    negativeY : images[3],
-                                    positiveZ : images[4],
-                                    negativeZ : images[5]
-                                }
-                            });
-                            that._updateMaterialsOnLoad(texture, path);
-                        });
-                    }
-                }
+        releaseTexture : function(path) {
+            var entry = this._textures[path];
+            if (defined(entry) && --entry.count === 0) {
+                entry.texture = entry.texture && entry.texture.destroy();
+                this._textures[path] = undefined;
             }
-            return texture;
-        },
-
-        registerTexture2DToMaterial : function(material, property, info) {
-            var that = this;
-            var texture;
-            if (info === Material.DefaultImageId) {
-                texture = material._context.getDefaultTexture();
-            } else {
-                var path = info;
-                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({
-                    'material' : material,
-                    'property' : property
-                });
-                texture = this._pathsToTextures[path];
-                if (!defined(texture)) {
-                    var oldTexture = material.uniforms[property];
-                    var hasOldTexture = oldTexture instanceof Texture;
-                    texture = hasOldTexture ? oldTexture : material._context.getDefaultTexture();
-                    if (this._pathsToMaterials[path].length === 1) {
-                        when(loadImage(path), function(image) {
-                            texture = material._context.createTexture2D({
-                                source : image
-                            });
-                            that._updateMaterialsOnLoad(texture, path);
-                        });
-                    }
-                }
-            }
-            return texture;
         }
     };
 
