@@ -162,7 +162,7 @@ define([
          *
          * @type {Number}
          */
-        this._positionX = '0';
+        this._positionX = '-1000px';
 
         /**
          * The y screen position of the balloon.
@@ -202,7 +202,7 @@ define([
          *
          * @type {Boolean}
          */
-        this.showArrow = true;
+        this.showArrow = false;
 
         /**
          * True of the balloon arrow should be arrowing down.
