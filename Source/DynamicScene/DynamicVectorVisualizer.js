@@ -214,7 +214,7 @@ define([
             polyline.setWidth(1);
             var material = polyline.getMaterial();
             if (!defined(material) || (material.type !== Material.PolylineArrowType)) {
-                material = Material.fromType(dynamicVectorVisualizer._scene.getContext(), Material.PolylineArrowType);
+                material = Material.fromType(Material.PolylineArrowType);
                 polyline.setMaterial(material);
             }
             uniforms = material.uniforms;

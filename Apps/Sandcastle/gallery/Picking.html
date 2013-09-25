@@ -182,7 +182,7 @@ require(['Cesium'], function(Cesium) {
             xHalfAngle : Cesium.Math.toRadians(40.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
             showIntersection : false,
-            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
+            material : Cesium.Material.fromType('Erosion')
         });
         scene.getPrimitives().add(sensors);
 

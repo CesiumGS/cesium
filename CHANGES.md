@@ -43,6 +43,7 @@ Beta Releases
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
+   * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.

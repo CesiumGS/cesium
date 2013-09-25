@@ -50,7 +50,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toRadians(-90.0),
                 Cesium.Math.toRadians(20.0));
         polygon.rotation = Cesium.Math.toRadians(45);
-        polygon.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ColorType);
+        polygon.material = Cesium.Material.fromType(Cesium.Material.ColorType);
         polygon.material.uniforms.color = {red: 1.0, green: 0.0, blue: 1.0, alpha: 0.75};
         primitives.add(polygon);
 
@@ -95,7 +95,7 @@ require(['Cesium'], function(Cesium) {
             }]
         };
 
-        polygonHierarchy.material = Cesium.Material.fromType(scene.getContext(), 'Color');
+        polygonHierarchy.material = Cesium.Material.fromType('Color');
         polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
         polygonHierarchy.configureFromPolygonHierarchy(hierarchy);
         primitives.add(polygonHierarchy);
@@ -119,7 +119,7 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-80.0, 40.0),
             Cesium.Cartographic.fromDegrees(-90.0, 40.0)
         ]));
-        checkeredPolygon.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+        checkeredPolygon.material = Cesium.Material.fromType('Checkerboard');
         primitives.add(checkeredPolygon);
     }
 

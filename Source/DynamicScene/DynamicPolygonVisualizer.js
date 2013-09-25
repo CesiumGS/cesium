@@ -200,7 +200,6 @@ define([
             return;
         }
 
-        var context = dynamicPolygonVisualizer._scene.getContext();
         if (!defined(polygonVisualizerIndex)) {
             var unusedIndexes = dynamicPolygonVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
@@ -218,7 +217,7 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = Material.fromType(context, Material.ColorType);
+            polygon.material = Material.fromType(Material.ColorType);
         } else {
             polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
         }
@@ -239,7 +238,7 @@ define([
             polygon._visualizerPositions = vertexPositions;
         }
 
-        polygon.material = MaterialProperty.getValue(time, context, dynamicPolygon._material, polygon.material);
+        polygon.material = MaterialProperty.getValue(time, dynamicPolygon._material, polygon.material);
     }
 
     DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {

@@ -86,7 +86,7 @@ define([
         this.rectangle = BoundingRectangle.clone(rectangle);
 
         if (!defined(material)) {
-            material = Material.fromType(undefined, Material.ColorType);
+            material = Material.fromType(Material.ColorType);
             material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         }
 
@@ -104,7 +104,7 @@ define([
          * viewportQuad.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * viewportQuad.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * viewportQuad.material = Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -207,6 +207,8 @@ define([
                 this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                     this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
+
+            this._material.update(context);
 
             this._overlayCommand.uniformMap = this._material._uniforms;
             commandList.push(this._commandLists);

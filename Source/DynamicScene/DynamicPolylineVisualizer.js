@@ -217,7 +217,7 @@ define([
             polyline.setWidth(1);
             var material = polyline.getMaterial();
             if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
-                material = Material.fromType(dynamicPolylineVisualizer._scene.getContext(), Material.PolylineOutlineType);
+                material = Material.fromType(Material.PolylineOutlineType);
                 polyline.setMaterial(material);
             }
             uniforms = material.uniforms;

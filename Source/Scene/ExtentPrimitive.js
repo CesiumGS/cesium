@@ -127,7 +127,7 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        var material = Material.fromType(undefined, Material.ColorType);
+        var material = Material.fromType(Material.ColorType);
         material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
 
         /**
@@ -144,7 +144,7 @@ define([
          * extent.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * extent.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * extent.material = Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
