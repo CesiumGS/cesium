@@ -62,17 +62,13 @@ Beta Releases
 * Added `Geometries` tab to Sandcastle with an example for each geometry type.
 * `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
 
-```javascript
-var p = new Primitive(/* ... */);
-primitives.add(p);
-return p;
-```
+        var p = new Primitive(/* ... */);
+        primitives.add(p);
+        return p;
 
-becomes
+  becomes
 
-```javascript
-return primitives.add(new Primitive(/* ... */));
-```
+        return primitives.add(new Primitive(/* ... */));
 
 ### b20 - 2013-09-03
 
