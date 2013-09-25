@@ -227,7 +227,7 @@ define([
                     promise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), source);
                 } else if (endsWith(sourceUpperCase, ".KMZ")) {
                     dataSource = new KmlDataSource();
-                    promise = dataSource.loadKmz(file);
+                    promise = dataSource.loadKmz(file, source);
                 } else {
                     viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
                     return undefined;

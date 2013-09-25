@@ -10,6 +10,7 @@ define(['../Core/createGuid',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/NearFarScalar',
@@ -46,6 +47,7 @@ define(['../Core/createGuid',
         RuntimeError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         Iso8601,
         JulianDate,
         NearFarScalar,
@@ -550,6 +552,24 @@ define(['../Core/createGuid',
     }
 
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        var name;
+        var document = kml.getElementsByTagName('Document');
+        if (document.length > 0) {
+            var childNodes = document[0].children;
+            var length = childNodes.length;
+            for ( var i = 0; i < length; i++) {
+                var node = childNodes[i];
+                if (node.nodeName === 'name') {
+                    name = node.textContent;
+                    break;
+                }
+            }
+        }
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+        dataSource._name = name;
+
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         var styleCollection = new DynamicObjectCollection();
 
@@ -584,7 +604,7 @@ define(['../Core/createGuid',
         });
     }
 
-    function loadKmz(dataSource, blob, deferred) {
+    function loadKmz(dataSource, blob, sourceUri, deferred) {
         var uriResolver = {};
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
@@ -604,7 +624,7 @@ define(['../Core/createGuid',
                 }
 
                 when.all(promises, function() {
-                    loadKml(dataSource, uriResolver.kml, undefined, uriResolver);
+                    loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
                     // close the zip reader
                     reader.close(function() {
                         // onclose callback
@@ -628,6 +648,7 @@ define(['../Core/createGuid',
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this._name = undefined;
     };
 
     /**
@@ -649,6 +670,10 @@ define(['../Core/createGuid',
      */
     KmlDataSource.prototype.getErrorEvent = function() {
         return this._error;
+    };
+
+    KmlDataSource.prototype.getName = function() {
+        return this._name;
     };
 
     /**
@@ -745,13 +770,13 @@ define(['../Core/createGuid',
      *
      * @exception {DeveloperError} kmz is required.
      */
-    KmlDataSource.prototype.loadKmz = function(kmz) {
+    KmlDataSource.prototype.loadKmz = function(kmz, url) {
         if (!defined(kmz)) {
             throw new DeveloperError('kmz is required.');
         }
 
         var deferred = when.defer();
-        loadKmz(this, kmz, deferred);
+        loadKmz(this, kmz, url, deferred);
         return deferred.promise;
     };
 
@@ -771,7 +796,7 @@ define(['../Core/createGuid',
 
         var that = this;
         return when(loadBlob(url), function(blob) {
-            return that.loadKmz(blob);
+            return that.loadKmz(blob, url);
         }, function(error) {
             that._error.raiseEvent(that, error);
             return when.reject(error);
