@@ -7,6 +7,7 @@
     body { font-family: sans-serif; }
     li { margin-top: 5px; }
     .outer > li { margin-top: 1.4em; }
+    .smallFont { font-size: 50%; }    
     </style>
 </head>
 
@@ -39,7 +40,7 @@
         Tests
         <ul>
             <li>
-                <a href="Specs/SpecRunner.html">Run all tests</a> &bullet; <a href="Specs/SpecRunner.html?skipWebGLValidation">Run all without WebGL validation</a> (faster)
+                <a href="Specs/SpecRunner.html?skipWebGLValidation">Run all tests</a> <span class="smallFont">(<a href="Specs/SpecRunner.html">Run with WebGL validation</a>)</span>
             </li>
             <li>
                 <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
