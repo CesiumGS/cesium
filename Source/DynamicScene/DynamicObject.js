@@ -52,6 +52,7 @@ define(['../Core/createGuid',
         this._ellipsoid = undefined;
         this._ellipse = undefined;
         this._label = undefined;
+        this._name = undefined;
         this._path = undefined;
         this._point = undefined;
         this._polygon = undefined;
@@ -63,7 +64,7 @@ define(['../Core/createGuid',
 
         this._propertyChanged = new Event();
         this._propertyNames = ['availability', 'position', 'orientation', 'billboard', //
-                               'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
+                               'cone', 'ellipsoid', 'ellipse', 'label', 'name', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
     };
 
@@ -98,6 +99,13 @@ define(['../Core/createGuid',
                 return this._id;
             }
         },
+        /**
+         * Gets or sets the name of the object.  The name is intended for end-user
+         * consumption and does not need to be unique.
+         * @memberof DynamicObject.prototype
+         * @type {Property}
+         */
+        name : createDynamicPropertyDescriptor('name', '_name'),
         /**
          * The availability TimeInterval, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's

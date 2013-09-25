@@ -694,6 +694,13 @@ define([
         }
     }
 
+    function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var nameData = packet.name;
+        if (defined(nameData)) {
+            processPacketData(String, dynamicObject, 'name', nameData, undefined, sourceUri);
+        }
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -1124,6 +1131,7 @@ define([
     processEllipsoid, //
     processCone, //
     processLabel, //
+    processName, //
     processPath, //
     processPoint, //
     processPolygon, //
