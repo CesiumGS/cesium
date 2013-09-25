@@ -83,7 +83,7 @@ defineSuite([
              new Cartesian3(4.0, 5.0, 6.0),
              new Cartesian3(7.0, 8.0, 9.0)
          ];
-        var material = Material.fromType(undefined, 'Checkerboard');
+        var material = Material.fromType('Checkerboard');
 
         var polygon = new Polygon({
             ellipsoid : Ellipsoid.UNIT_SPHERE,

@@ -48,7 +48,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toRadians(-90.0),
                 Cesium.Math.toRadians(20.0)),
             rotation : Cesium.Math.toRadians(45),
-            material : Cesium.Material.fromType(scene.getContext(), Cesium.Material.ColorType)
+            material : Cesium.Material.fromType(Cesium.Material.ColorType)
         }));
         polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 1.0, 0.75);
         Sandcastle.declare(polygon);
@@ -88,7 +88,7 @@ require(['Cesium'], function(Cesium) {
         };
         var polygonHierarchy = primitives.add(new Cesium.Polygon({
             polygonHierarchy : hierarchy,
-            material : Cesium.Material.fromType(scene.getContext(), 'Color')
+            material : Cesium.Material.fromType('Color')
         }));
         polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
         Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
@@ -111,7 +111,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Cartographic.fromDegrees(-80.0, 40.0),
                 Cesium.Cartographic.fromDegrees(-90.0, 40.0)
             ]),
-            material : Cesium.Material.fromType(scene.getContext(), 'Checkerboard')
+            material : Cesium.Material.fromType('Checkerboard')
         }));
         Sandcastle.declare(checkeredPolygon);   // For highlighting on mouseover in Sandcastle.
     }

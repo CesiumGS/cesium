@@ -48,7 +48,7 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-105.0, 35.0),
             Cesium.Cartographic.fromDegrees(-100.0, 32.0)
         ]));
-        var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
+        var outlineMaterial = Cesium.Material.fromType(Cesium.Material.PolylineOutlineType);
         outlineMaterial.uniforms.outlineWidth = 5.0;
         widePolyline.setMaterial(outlineMaterial);
         widePolyline.setWidth(10.0);
@@ -60,7 +60,7 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
             Cesium.Cartographic.fromDegrees(-85.0, 40.0)
         ]));
-        var glowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
+        var glowMaterial = Cesium.Material.fromType(Cesium.Material.PolylineGlowType);
         glowMaterial.uniforms.innerWidth = 3.0;
         glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 1.0);
         coloredPolyline.setMaterial(glowMaterial);
@@ -80,7 +80,7 @@ require(['Cesium'], function(Cesium) {
             new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
         ]);
         localPolyline.setWidth(10.0);
-        var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
+        var arrowMaterial = Cesium.Material.fromType(Cesium.Material.PolylineArrowType);
         localPolyline.setMaterial(arrowMaterial);
         primitives.add(localPolylines);
     }
