@@ -84,7 +84,7 @@ define([
             if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(clock.currentTime);
             }
-            if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined') {
+            if (defined(balloonedObject) && defined(balloonedObject.position)) {
                 balloonViewModel.position = balloonedObject.position.getValue(clock.currentTime, balloonViewModel.position);
                 balloonViewModel.update();
             }
@@ -174,23 +174,30 @@ define([
                 set : function(value) {
                     var content;
                     var position;
-                    if (typeof value !== 'undefined') {
-                        if (typeof value.position !== 'undefined') {
+                    if (defined(value)) {
+                        if (defined(value.position)) {
                             position = value.position.getValue(viewer.clock.currentTime);
                         }
 
-                        if (typeof value.balloon !== 'undefined') {
+                        if (defined(value.balloon)) {
                             content = value.balloon.getValue(viewer.clock.currentTime);
                         }
 
-                        if (typeof content === 'undefined') {
-                            content = value.id;
+                        var heading;
+                        if (defined(value.name)) {
+                            heading = value.name.getValue(viewer.clock.currentTime);
+                        }
+
+                        if (defined(content) && defined(heading)) {
+                            content = '<h3>' + heading + '</h3>' + content;
+                        } else if (!defined(content)) {
+                            content = '<h3>' + defaultValue(heading, value.id) + '</h3>';
                         }
                         balloonViewModel.content = content;
                     }
                     balloonedObject = value;
                     balloonViewModel.position = position;
-                    balloonViewModel.showBalloon = typeof content !== 'undefined';
+                    balloonViewModel.showBalloon = defined(content);
                 }
             }
         });
