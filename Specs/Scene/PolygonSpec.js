@@ -107,14 +107,14 @@ defineSuite([
     });
 
     it('construction throws with both positions and polygonHierarchy', function() {
-//      expect(function() {
+        expect(function() {
             return new Polygon({
                 positions : [
                      new Cartesian3(1.0, 2.0, 3.0),
                      new Cartesian3(4.0, 5.0, 6.0),
                      new Cartesian3(7.0, 8.0, 9.0)
                  ],
-                 hierarchy : {
+                 polygonHierarchy : {
                      positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                          new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
                          new Cartographic.fromDegrees(-110.0, 35.0, 0.0),
@@ -123,7 +123,7 @@ defineSuite([
                     ])
                 }
             });
-//    }).toThrow();
+        }).toThrow();
     });
 
     it('construction throws with less than three positions', function() {
