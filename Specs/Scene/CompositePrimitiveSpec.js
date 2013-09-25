@@ -66,7 +66,7 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
 
         us = context.getUniformState();
-        us.update(createFrameState(camera));
+        us.update(context, createFrameState(camera));
     });
 
     afterEach(function() {

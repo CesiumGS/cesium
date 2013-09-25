@@ -299,4 +299,14 @@ defineSuite([
         c.cache.foo = nonDestroyableObject;
         c.destroy();
     });
+
+    it('returns the underling drawingBufferWidth', function() {
+        var c = createContext(undefined, 1024, 768);
+        expect(c.getDrawingBufferWidth()).toBe(1024);
+    });
+
+    it('returns the underling drawingBufferHeight', function() {
+        var c = createContext(undefined, 1024, 768);
+        expect(c.getDrawingBufferHeight()).toBe(768);
+    });
 }, 'WebGL');

@@ -1062,7 +1062,7 @@ define([
         }
 
         if (packet['delete'] === true) {
-            dynamicObjectCollection.removeObject(objectId);
+            dynamicObjectCollection.removeById(objectId);
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);
             for ( var i = updaterFunctions.length - 1; i > -1; i--) {

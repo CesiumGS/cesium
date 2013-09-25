@@ -813,7 +813,7 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = projection.multiplyByVector(positionEC); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC);
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC);
 
         // Apply pixel offset
         var uniformState = context.getUniformState();

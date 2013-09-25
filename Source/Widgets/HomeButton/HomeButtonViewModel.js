@@ -46,7 +46,7 @@ define([
         controller.setEllipsoid(ellipsoid);
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
-        var canvas = scene.getCanvas();
+        var context = scene.getContext();
         if (defined(transitioner) && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
@@ -71,7 +71,7 @@ define([
             rotation.multiplyByVector(camera.up, camera.up);
             rotation.multiplyByVector(camera.right, camera.right);
             camera.transform = Matrix4.IDENTITY.clone();
-            var defaultCamera = new Camera(canvas);
+            var defaultCamera = new Camera(context);
             description = {
                 destination : defaultCamera.position,
                 duration : flightDuration,

@@ -45,7 +45,7 @@ defineSuite([
         ellipsoid = new EllipsoidPrimitive();
         frameState = createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
         us = context.getUniformState();
-        us.update(frameState);
+        us.update(context, frameState);
     });
 
     afterEach(function() {
