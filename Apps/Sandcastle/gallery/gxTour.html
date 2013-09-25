@@ -22,9 +22,24 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
+
+    /** lookout angles **/
+    var luhead = {
+        /* maxHRange: 90,
+        maxVRange: 90, */
+
+        hstep: 5,
+        vstep: 5,
+        
+		hangle: 0,
+		vangle: 0
+    };
+
+
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
@@ -43,6 +58,87 @@ require(['Cesium'], function(Cesium) {
         viewer.dataSources.add(ds);
     });
 
+    createButtons(viewer);
+    
+	// -- cockpit lookout start --
+
+    var createButtons = function(widget) {
+        // var ellipsoid = widget.centralBody.getEllipsoid();
+        var scene = widget.scene;
+        var primitives = scene.getPrimitives();
+        var toolbar = document.getElementById('toolbar');
+
+        // Left button
+        var button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            /* primitives.removeAll();
+            addBillboard(scene, ellipsoid);
+            Sandcastle.highlight(addBillboard); */
+            
+            luhead.hangle -= luhead.hstep;
+        };
+        button.innerHTML = '&larr;';
+        toolbar.appendChild(button);
+
+        // Up button
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            luhead.vangle += luhead.vstep;
+        };
+        button.innerHTML = '&uarr;';
+        toolbar.appendChild(button);
+
+        // Center button
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            luhead.hangle = 0;
+            luhead.vangle = 0;
+        };
+        button.innerHTML = '&oplus;';
+        toolbar.appendChild(button);
+
+        // Down button
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            luhead.vangle -= luhead.vstep;
+        };
+        button.innerHTML = '&darr;';
+        toolbar.appendChild(button);
+
+        // Right button
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            luhead.hangle += luhead.hstep;
+        };
+        button.innerHTML = '&rarr;';
+        toolbar.appendChild(button);
+    };
+
+
+    var animate = function() {
+        var camera = scene.getCamera();
+        var controller = camera.controller;
+        
+        controller.lookUp(Cesium.Math.toRadians(luhead.vangle));
+        controller.lookRight(Cesium.Math.toRadians(luhead.hangle));
+    };
+
+    function tick() {
+        scene.initializeFrame();
+        animate();
+        scene.render();
+
+        Cesium.requestAnimationFrame(tick);
+    }
+    tick();
+
+	// -- cockpit lookout end --
+        
     Sandcastle.finishedLoading();
 });
 </script>
