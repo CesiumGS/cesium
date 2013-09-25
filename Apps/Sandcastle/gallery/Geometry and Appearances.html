@@ -128,7 +128,7 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
         appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+            material : Cesium.Material.fromType('Stripe')
         })
     }));
     primitives.add(new Cesium.Primitive({
@@ -523,7 +523,7 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
         appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+            material : Cesium.Material.fromType('Stripe')
         })
     }));
 
@@ -762,7 +762,7 @@ require(['Cesium'], function(Cesium) {
             })
         }),
         appearance : new Cesium.PolylineMaterialAppearance({
-            material : Cesium.Material.fromType(scene.getContext(), Cesium.Material.PolylineGlowType)
+            material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType)
         })
     }));
     
@@ -821,7 +821,7 @@ require(['Cesium'], function(Cesium) {
             positions : positions
         })
     });
-    var wallMaterial = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+    var wallMaterial = Cesium.Material.fromType('Checkerboard');
     wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
 
     scene.getPrimitives().add(new Cesium.Primitive({

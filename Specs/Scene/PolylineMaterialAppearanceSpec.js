@@ -78,7 +78,7 @@ defineSuite([
                 })
             }),
             appearance : new PolylineMaterialAppearance({
-                material : Material.fromType(context, Material.PolylineOutlineType),
+                material : Material.fromType(Material.PolylineOutlineType),
                 translucent : false
             }),
             asynchronous : false
