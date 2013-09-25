@@ -29,52 +29,46 @@ require(['Cesium'], function(Cesium) {
 
     function createPrimitives(scene, ellipsoid) {
         var primitives = scene.getPrimitives();
-        var polylines = new Cesium.PolylineCollection();
 
         // Fill circle
-        var circle = new Cesium.Polygon();
+        var circle = primitives.add(new Cesium.Polygon({
+            positions : Cesium.Shapes.computeCircleBoundary(
+                ellipsoid,
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 40.0)),
+                300000.0)
+        }));
         Sandcastle.declare(circle); // For highlighting on mouseover in Sandcastle.
-        circle.setPositions(
-                Cesium.Shapes.computeCircleBoundary(
-                        ellipsoid,
-                        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 40.0)),
-                        300000.0));
-        primitives.add(circle);
 
         // Outline circle
+        var polylines = primitives.add(new Cesium.PolylineCollection());
         var outline = polylines.add();
         Sandcastle.declare(outline); // For highlighting on mouseover in Sandcastle.
         outline.setPositions(
-                Cesium.Shapes.computeCircleBoundary(
-                        ellipsoid,
-                        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-82.0, 37.0)),
-                        300000.0));
-        primitives.add(polylines);
+            Cesium.Shapes.computeCircleBoundary(
+                ellipsoid,
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-82.0, 37.0)),
+                300000.0));
 
         // Apply a material to a filled circle
-        var circle2 = new Cesium.Polygon();
+        var circle2 = primitives.add(new Cesium.Polygon({
+            positions : Cesium.Shapes.computeCircleBoundary(
+                ellipsoid,
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 35.0)),
+                400000.0),
+            material : Cesium.Material.fromType(Cesium.Material.TyeDyeType)
+        }));
         Sandcastle.declare(circle2); // For highlighting on mouseover in Sandcastle.
-        circle2.setPositions(
-                Cesium.Shapes.computeCircleBoundary(
-                        ellipsoid,
-                        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 35.0)),
-                        400000.0));
-
-        // Any polygon-compatible material can be used
-        circle2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.TyeDyeType);
-        primitives.add(circle2);
 
         // Fill an ellipse
-        var ellipse = new Cesium.Polygon();
+        var ellipse = primitives.add(new Cesium.Polygon({
+            positions : Cesium.Shapes.computeEllipseBoundary(
+                ellipsoid,
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-78.0, 32.5)),
+                500000.0,
+                250000.0,
+                Cesium.Math.toRadians(60))
+        }));
         Sandcastle.declare(ellipse); // For highlighting on mouseover in Sandcastle.
-        ellipse.setPositions(
-                Cesium.Shapes.computeEllipseBoundary(
-                        ellipsoid,
-                        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-78.0, 32.5)),
-                        500000.0,
-                        250000.0,
-                        Cesium.Math.toRadians(60)));
-        primitives.add(ellipse);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');

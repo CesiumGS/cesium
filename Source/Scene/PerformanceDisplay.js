@@ -143,7 +143,7 @@ define([
         }
 
         if (!defined(this._quad)) {
-            this._quad = new ViewportQuad(undefined, Material.fromType(context, Material.ImageType));
+            this._quad = new ViewportQuad(undefined, Material.fromType(Material.ImageType));
         }
 
         if (!defined(this._texture)) {
