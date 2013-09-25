@@ -758,7 +758,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (defined(this._dataSourceBrowser)) {
-            this._viewerContainer.removeChild(this._dataSourceBrowser.container);
+            this._element.removeChild(this._dataSourceBrowser.container);
             this._dataSourceBrowser = this._dataSourceBrowser.destroy();
         }
 

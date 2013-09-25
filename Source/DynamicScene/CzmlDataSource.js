@@ -1104,8 +1104,11 @@ define([
                 //name = documentObject.name;
             }
 
-            if (!defined(name)) {
-                name = sourceUri.substr(sourceUri.lastIndexOf('/') + 1);
+            if (!defined(name) && defined(sourceUri)) {
+                var index = sourceUri.lastIndexOf('/');
+                if (index !== -1) {
+                    name = sourceUri.substr(index + 1);
+                }
             }
 
             dataSource._name = name;

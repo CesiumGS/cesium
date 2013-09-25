@@ -55,6 +55,14 @@ defineSuite([
         viewer.extend(viewerDragDropMixin);
         expect(viewer.dropTarget).toBe(viewer.container);
         expect(viewer.dropEnabled).toEqual(true);
+        expect(viewer.clearOnDrop).toEqual(false);
+    });
+
+    it('clearOnDrop defaults to true when dataSourceBrowser is not used', function() {
+        viewer = new Viewer(container, {
+            dataSourceBrowser: false
+        });
+        viewer.extend(viewerDragDropMixin);
         expect(viewer.clearOnDrop).toEqual(true);
     });
 

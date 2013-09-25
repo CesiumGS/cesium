@@ -25,6 +25,10 @@ define(['Core/Event',
             return that.errorEvent;
         };
 
+        this.getName = function() {
+            return 'Mock Data';
+        };
+
         this.getClock = function() {
             return that.clock;
         };
