@@ -63,7 +63,7 @@ require(['Cesium'], function(Cesium) {
                         Cesium.Math.toRadians(20.0),
                         Cesium.Math.toRadians(-80.0),
                         Cesium.Math.toRadians(50.0)),
-            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
+            material : Cesium.Material.fromType('Erosion')
         });
         primitives.add(extent);
 
@@ -73,7 +73,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)),
                 modelMatrix);
 
-        var material = Cesium.Material.fromType(scene.getContext(), 'Stripe'); // Use default colors
+        var material = Cesium.Material.fromType('Stripe'); // Use default colors
         material.uniforms.repeat = 10;
         var sensors = new Cesium.SensorVolumeCollection();
         rectangularSensor = sensors.addRectangularPyramid({

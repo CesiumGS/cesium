@@ -61,7 +61,7 @@ require(['Cesium'], function(Cesium) {
                         400000.0));
 
         // Any polygon-compatible material can be used
-        circle2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.TyeDyeType);
+        circle2.material = Cesium.Material.fromType(Cesium.Material.TyeDyeType);
         primitives.add(circle2);
 
         // Fill an ellipse

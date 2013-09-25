@@ -71,7 +71,7 @@ defineSuite([
     });
 
     it('explicitly constructs a polyline', function() {
-        var material = Material.fromType(context, Material.PolylineOutlineType);
+        var material = Material.fromType(Material.PolylineOutlineType);
         var p = polylines.add({
             show : false,
             positions : [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)],
@@ -89,7 +89,7 @@ defineSuite([
     });
 
     it('sets polyline properties', function() {
-        var material = Material.fromType(context, Material.PolylineOutlineType);
+        var material = Material.fromType(Material.PolylineOutlineType);
         var p = polylines.add();
         p.setShow(false);
         p.setPositions([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)]);
@@ -711,7 +711,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         //recreates vertex array because buffer usage changed
-        p2.setMaterial(Material.fromType(context, Material.PolylineOutlineType));
+        p2.setMaterial(Material.fromType(Material.PolylineOutlineType));
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1241,11 +1241,11 @@ defineSuite([
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        p2.setMaterial(Material.fromType(context, Material.PolylineOutlineType));
+        p2.setMaterial(Material.fromType(Material.PolylineOutlineType));
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        p2.setMaterial(Material.fromType(context, Material.ColorType));
+        p2.setMaterial(Material.fromType(Material.ColorType));
         render(context, frameState, polylines);
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
