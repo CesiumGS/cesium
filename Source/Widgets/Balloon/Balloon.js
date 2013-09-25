@@ -37,7 +37,8 @@ define([
         container = getElement(container);
 
         this._container = container;
-        container.setAttribute('data-bind', 'css: { "cesium-balloon-wrapper-visible" : showBalloon, "cesium-balloon-wrapper-hidden" : !showBalloon }');
+        container.setAttribute('data-bind', 'css: { "cesium-balloon-container" : true, "cesium-balloon-container-visible" : showBalloon }');
+
         var el = document.createElement('div');
         this._element = el;
         el.className = 'cesium-balloon-wrapper';
@@ -60,7 +61,7 @@ define([
         var arrowContainer = document.createElement('div');
         arrowContainer.className = 'cesium-balloon-arrow-container';
         arrowContainer.setAttribute('data-bind', 'css: { "cesium-balloon-arrow-container-downup" : _down || _up, "cesium-balloon-arrow-container-leftright" : _left || _right,\
-                "cesium-balloon-arrow-show" : showArrow, "cesium-balloon-arrow-hide" : !showArrow},\
+                "cesium-balloon-arrow-container-show" : showArrow },\
                 style: { "bottom" : _arrowY, "left" : _arrowX}');
         var arrow = document.createElement('div');
         arrow.className = 'cesium-balloon-arrow';
