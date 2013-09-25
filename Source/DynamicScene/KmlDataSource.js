@@ -170,7 +170,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             }
             dynamicObject.label.text = new ConstantProperty(name);
-            dynamicObject.name = name;
+            dynamicObject.name = dynamicObject.label.text;
         }
 
         var foundGeometry = false;
