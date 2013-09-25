@@ -313,7 +313,6 @@ define([
      *
      * @alias Material
      *
-     * @param {Context} description.context The context used to create textures if the material uses them.
      * @param {Boolean} [description.strict = false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Object} description.fabric The fabric JSON used to generate the material.
      *
@@ -324,14 +323,13 @@ define([
      * @exception {DeveloperError} fabric: cannot have source and components in the same section.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'type', 'materials', 'uniforms', 'components', or 'source'.
      * @exception {DeveloperError} fabric: property name is not valid. It should be 'diffuse', 'specular', 'shininess', 'normal', 'emission', or 'alpha'.
-     * @exception {DeveloperError} image: context is not defined.
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
      * @example
      * // Create a color material with fromType:
-     * polygon.material = Material.fromType(context, 'Color');
+     * polygon.material = Material.fromType('Color');
      * polygon.material.uniforms.color = {
      *     red : 1.0,
      *     green : 1.0,
@@ -344,7 +342,6 @@ define([
      *
      * // Create a color material with full Fabric notation:
      * polygon.material = new Material({
-     *     context : context,
      *     fabric : {
      *         type : 'Color',
      *         uniforms : {
@@ -392,10 +389,17 @@ define([
         this.uniforms = undefined;
         this._uniforms = undefined;
 
-        this._context = undefined;
         this._strict = undefined;
         this._template = undefined;
         this._count = undefined;
+
+        this._texturePaths = {};
+        this._loadedImages = [];
+        this._loadedCubeMaps = [];
+
+        this._textures = {};
+
+        this._updateFunctions = [];
 
         initializeMaterial(description, this);
         defineProperties(this, {
@@ -417,9 +421,8 @@ define([
     /**
      * Creates a new material using an existing material type.
      * <br /><br />
-     * Shorthand for: new Material({context : context, fabric : {type : type}});
+     * Shorthand for: new Material({fabric : {type : type}});
      *
-     * @param {Context} context The context used to create textures if the material uses them.
      * @param {String} type The base material type.
      *
      * @returns {Material} New material object.
@@ -427,19 +430,95 @@ define([
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Material.fromType(context, 'Color');
+     * var material = Material.fromType('Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
-    Material.fromType = function(context, type) {
+    Material.fromType = function(type) {
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         return new Material({
-            context : context,
             fabric : {
                 type : type
             }
         });
+    };
+
+    /**
+     * @private
+     */
+    Material.prototype.update = function(context) {
+        var i;
+        var uniformId;
+
+        var loadedImages = this._loadedImages;
+        var length = loadedImages.length;
+
+        for (i = 0; i < length; ++i) {
+            var loadedImage = loadedImages[i];
+            uniformId = loadedImage.id;
+            var image = loadedImage.image;
+
+            var texture = Material._textureCache.getTexture(this._texturePaths[uniformId]);
+            if (!defined(texture)) {
+                texture = context.createTexture2D({
+                    source : image
+                });
+                Material._textureCache.addTexture(this._texturePaths[uniformId], texture);
+            }
+
+            this._textures[uniformId] = texture;
+
+            var uniformDimensionsName = uniformId + 'Dimensions';
+            if (this.uniforms.hasOwnProperty(uniformDimensionsName)) {
+                var uniformDimensions = this.uniforms[uniformDimensionsName];
+                uniformDimensions.x = texture._width;
+                uniformDimensions.y = texture._height;
+            }
+        }
+
+        loadedImages.length = 0;
+
+        var loadedCubeMaps = this._loadedCubeMaps;
+        length = loadedCubeMaps.length;
+
+        for (i = 0; i < length; ++i) {
+            var loadedCubeMap = loadedCubeMaps[i];
+            uniformId = loadedCubeMap.id;
+            var images = loadedCubeMap.images;
+
+            var cubeMap = Material._textureCache.getTexture(this._texturePaths[uniformId]);
+            if (!defined(cubeMap)) {
+                cubeMap = context.createCubeMap({
+                    source : {
+                        positiveX : images[0],
+                        negativeX : images[1],
+                        positiveY : images[2],
+                        negativeY : images[3],
+                        positiveZ : images[4],
+                        negativeZ : images[5]
+                    }
+                });
+                Material._textureCache.addTexture(this._texturePaths[uniformId], cubeMap);
+            }
+
+            this._textures[uniformId] = cubeMap;
+        }
+
+        loadedCubeMaps.length = 0;
+
+        var updateFunctions = this._updateFunctions;
+        length = updateFunctions.length;
+        for (i = 0; i < length; ++i) {
+            updateFunctions[i](this, context);
+        }
+
+        var subMaterials = this.materials;
+        for (var name in subMaterials) {
+            if (subMaterials.hasOwnProperty(name)) {
+                subMaterials[name].update(context);
+            }
+        }
     };
 
     /**
@@ -482,10 +561,8 @@ define([
         var uniforms = this.uniforms;
         for ( var uniformId in uniforms) {
             if (uniforms.hasOwnProperty(uniformId)) {
-                var uniformValue = uniforms[uniformId];
-                if (uniformValue instanceof Texture || uniformValue instanceof CubeMap) {
-                    Material._textureCache.releaseTexture(this, uniformValue);
-                }
+                var path = this._texturePaths[uniformId];
+                Material._textureCache.releaseTexture(path);
             }
         }
         for ( var material in materials) {
@@ -498,7 +575,6 @@ define([
 
     function initializeMaterial(description, result) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        result._context = description.context;
         result._strict = defaultValue(description.strict, false);
         result._count = defaultValue(description.count, 0);
         result._template = clone(defaultValue(description.fabric, defaultValue.EMPTY_OBJECT));
@@ -607,6 +683,124 @@ define([
         }
     }
 
+    var matrixMap = {
+        'mat2' : Matrix2,
+        'mat3' : Matrix3,
+        'mat4' : Matrix4
+    };
+
+    function createTexture2DUpdateFunction(uniformId) {
+        return function(material, context) {
+            var uniforms = material.uniforms;
+            var uniformValue = uniforms[uniformId];
+            var texture = material._textures[uniformId];
+
+            var uniformDimensionsName;
+            var uniformDimensions;
+
+            if (uniformValue instanceof Texture && uniformValue !== texture) {
+                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = uniformValue;
+
+                uniformDimensionsName = uniformId + 'Dimensions';
+                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
+                    uniformDimensions = uniforms[uniformDimensionsName];
+                    uniformDimensions.x = uniformValue._width;
+                    uniformDimensions.y = uniformValue._height;
+                }
+
+                return;
+            }
+
+            if (!defined(texture)) {
+                material._texturePaths[uniformId] = undefined;
+                texture = material._textures[uniformId] = context.getDefaultTexture();
+
+                uniformDimensionsName = uniformId + 'Dimensions';
+                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
+                    uniformDimensions = uniforms[uniformDimensionsName];
+                    uniformDimensions.x = texture._width;
+                    uniformDimensions.y = texture._height;
+                }
+            }
+
+            if (uniformValue === Material.DefaultImageId) {
+                return;
+            }
+
+            if (uniformValue !== material._texturePaths[uniformId]) {
+                var newTexture = Material._textureCache.getTexture(uniformValue);
+                if (defined(newTexture)) {
+                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                    material._textures[uniformId] = newTexture;
+                } else {
+                    when(loadImage(uniformValue), function(image) {
+                        material._loadedImages.push({
+                            id : uniformId,
+                            image : image
+                        });
+                    });
+                }
+
+                material._texturePaths[uniformId] = uniformValue;
+            }
+        };
+    }
+
+    function createCubeMapUpdateFunction(uniformId) {
+        return function(material, context) {
+            var uniformValue = material.uniforms[uniformId];
+
+            if (uniformValue instanceof CubeMap) {
+                Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = uniformValue;
+                return;
+            }
+
+            if (!defined(material._textures[uniformId])) {
+                material._texturePaths[uniformId] = undefined;
+                material._textures[uniformId] = context.getDefaultCubeMap();
+            }
+
+            if (uniformValue === Material.DefaultCubeMapId) {
+                return;
+            }
+
+            var path =
+                uniformValue.positiveX + uniformValue.negativeX +
+                uniformValue.positiveY + uniformValue.negativeY +
+                uniformValue.positiveZ + uniformValue.negativeZ;
+
+            if (path !== material._texturePaths[uniformId]) {
+                var newTexture = Material._textureCache.getTexture(path);
+                if (defined(newTexture)) {
+                    Material._textureCache.releaseTexture(material._texturePaths[uniformId]);
+                    material._textures[uniformId] = newTexture;
+                } else {
+                    var promises = [
+                        loadImage(uniformValue.positiveX),
+                        loadImage(uniformValue.negativeX),
+                        loadImage(uniformValue.positiveY),
+                        loadImage(uniformValue.negativeY),
+                        loadImage(uniformValue.positiveZ),
+                        loadImage(uniformValue.negativeZ)
+                    ];
+
+                    when.all(promises).then(function(images) {
+                        material._loadedCubeMaps.push({
+                            id : uniformId,
+                            images : images
+                        });
+                    });
+                }
+
+                material._texturePaths[uniformId] = path;
+            }
+        };
+    }
+
     function createUniforms(material) {
         var uniforms = material._template.uniforms;
         for ( var uniformId in uniforms) {
@@ -623,6 +817,7 @@ define([
         var materialUniforms = material._template.uniforms;
         var uniformValue = materialUniforms[uniformId];
         var uniformType = getUniformType(uniformValue);
+
         if (!defined(uniformType)) {
             throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
         } else if (uniformType === 'channels') {
@@ -630,12 +825,6 @@ define([
                 throw new DeveloperError('strict: shader source does not use channels \'' + uniformId + '\'.');
             }
         } else {
-            // If uniform type is an image, add image dimension uniforms.
-            if (uniformType.indexOf('sampler') !== -1) {
-                if (!defined(material._context)) {
-                    throw new DeveloperError('image: context is not defined');
-                }
-            }
             // Since webgl doesn't allow texture dimension queries in glsl, create a uniform to do it.
             // Check if the shader source actually uses texture dimensions before creating the uniform.
             if (uniformType === 'sampler2D') {
@@ -661,47 +850,28 @@ define([
             }
             // Set uniform value
             material.uniforms[uniformId] = uniformValue;
-            material._uniforms[newUniformId] = returnUniform(material, uniformId, uniformType);
-        }
-    }
 
-    // Checks for updates to material values to refresh the uniforms.
-    var matrixMap = {
-        'mat2' : Matrix2,
-        'mat3' : Matrix3,
-        'mat4' : Matrix4
-    };
-    function returnUniform(material, uniformId, originalUniformType) {
-        return function() {
-            var uniforms = material.uniforms;
-            var uniformValue = uniforms[uniformId];
-            var uniformType = getUniformType(uniformValue);
-
-            if (originalUniformType === 'sampler2D' && (uniformType === originalUniformType || uniformValue instanceof Texture)) {
-                if (uniformType === originalUniformType) {
-                    uniformValue = Material._textureCache.registerTexture2DToMaterial(material, uniformId, uniformValue);
-                }
-                // Since texture dimensions can't be updated manually, update them when the texture is updated.
-                var uniformDimensionsName = uniformId + 'Dimensions';
-                if (uniforms.hasOwnProperty(uniformDimensionsName)) {
-                    var uniformDimensions = uniforms[uniformDimensionsName];
-                    uniformDimensions.x = uniformValue._width;
-                    uniformDimensions.y = uniformValue._height;
-                }
-            } else if (originalUniformType === 'samplerCube' && (uniformType === originalUniformType || uniformValue instanceof CubeMap)) {
-                if (uniformType === originalUniformType) {
-                    uniformValue = Material._textureCache.registerCubeMapToMaterial(material, uniformId, uniformValue);
-                }
-            } else if (originalUniformType.indexOf('mat') !== -1 && (uniformType === originalUniformType || uniformValue instanceof matrixMap[originalUniformType])) {
-                if (uniformType === originalUniformType) {
-                    uniformValue = matrixMap[originalUniformType].fromColumnMajorArray(uniformValue);
-                }
-            } else if (!defined(uniformType) || originalUniformType !== uniformType) {
-                throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid value.');
+            if (uniformType === 'sampler2D') {
+                material._uniforms[newUniformId] = function() {
+                    return material._textures[uniformId];
+                };
+                material._updateFunctions.push(createTexture2DUpdateFunction(uniformId));
+            } else if (uniformType === 'samplerCube') {
+                material._uniforms[newUniformId] = function() {
+                    return material._textures[uniformId];
+                };
+                material._updateFunctions.push(createCubeMapUpdateFunction(uniformId));
+            } else if (uniformType.indexOf('mat') !== -1) {
+                var scratchMatrix = new matrixMap[uniformType]();
+                material._uniforms[newUniformId] = function() {
+                    return matrixMap[uniformType].fromColumnMajorArray(material.uniforms[uniformId], scratchMatrix);
+                };
+            } else {
+                material._uniforms[newUniformId] = function() {
+                    return material.uniforms[uniformId];
+                };
             }
-            uniforms[uniformId] = uniformValue;
-            return uniforms[uniformId];
-        };
+        }
     }
 
     // Determines the uniform type based on the uniform in the template.
@@ -746,14 +916,12 @@ define([
 
     // Create all sub-materials by combining source and uniforms together.
     function createSubMaterials(material) {
-        var context = material._context;
         var strict = material._strict;
         var subMaterialTemplates = material._template.materials;
         for ( var subMaterialId in subMaterialTemplates) {
             if (subMaterialTemplates.hasOwnProperty(subMaterialId)) {
                 // Construct the sub-material.
                 var subMaterial = new Material({
-                    context : context,
                     strict : strict,
                     fabric : subMaterialTemplates[subMaterialId],
                     count : material._count
@@ -803,107 +971,32 @@ define([
     }
 
     Material._textureCache = {
-        _pathsToMaterials : {},
+        _textures : {},
 
-        _pathsToTextures : {},
-
-        _updateMaterialsOnLoad : function(texture, path) {
-            this._pathsToTextures[path] = texture;
-            var materialContainers = this._pathsToMaterials[path];
-            for ( var i = 0; i < materialContainers.length; i++) {
-                var materialContainer = materialContainers[i];
-                var material = materialContainer.material;
-                var property = materialContainer.property;
-                this.releaseTexture(material, material.uniforms[property]);
-                material.uniforms[property] = texture;
-            }
+        addTexture : function(path, texture) {
+            this._textures[path] = {
+                texture : texture,
+                count : 1
+            };
         },
 
-        releaseTexture : function(material, texture) {
-            var pathsToTexture = this._pathsToTextures;
-            for ( var path in pathsToTexture) {
-                if (pathsToTexture[path] === texture) {
-                    var materialsWithTexture = this._pathsToMaterials[path];
-                    for ( var i = 0; i < materialsWithTexture.length; i++) {
-                        if (materialsWithTexture[i].material === material) {
-                            materialsWithTexture.splice(i, 1);
-                            var numMaterialsWithTexture = materialsWithTexture.length;
-                            if (numMaterialsWithTexture === 0) {
-                                texture.destroy();
-                                delete pathsToTexture.path;
-                                delete materialsWithTexture.path;
-                            }
-                        }
-                    }
-                }
+        getTexture : function(path) {
+            var entry = this._textures[path];
+
+            if (defined(entry)) {
+                entry.count++;
+                return entry.texture;
             }
+
+            return undefined;
         },
 
-        registerCubeMapToMaterial : function(material, property, info) {
-            var that = this;
-            var texture;
-            if (info === Material.DefaultCubeMapId) {
-                texture = material._context.getDefaultCubeMap();
-            } else {
-                var path = info.positiveX + info.negativeX + info.positiveY + info.negativeY + info.positiveZ + info.negativeZ;
-                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({
-                    'material' : material,
-                    'property' : property
-                });
-                texture = this._pathsToTextures[path];
-                if (!defined(texture)) {
-                    var oldTexture = material.uniforms[property];
-                    var hasOldTexture = oldTexture instanceof CubeMap;
-                    texture = hasOldTexture ? oldTexture : material._context.getDefaultCubeMap();
-                    if (this._pathsToMaterials[path].length === 1) {
-                        when.all([loadImage(info.positiveX), loadImage(info.negativeX), loadImage(info.positiveY), loadImage(info.negativeY), loadImage(info.positiveZ), loadImage(info.negativeZ)]).then(function(images) {
-                            texture = material._context.createCubeMap({
-                                source : {
-                                    positiveX : images[0],
-                                    negativeX : images[1],
-                                    positiveY : images[2],
-                                    negativeY : images[3],
-                                    positiveZ : images[4],
-                                    negativeZ : images[5]
-                                }
-                            });
-                            that._updateMaterialsOnLoad(texture, path);
-                        });
-                    }
-                }
+        releaseTexture : function(path) {
+            var entry = this._textures[path];
+            if (defined(entry) && --entry.count === 0) {
+                entry.texture = entry.texture && entry.texture.destroy();
+                this._textures[path] = undefined;
             }
-            return texture;
-        },
-
-        registerTexture2DToMaterial : function(material, property, info) {
-            var that = this;
-            var texture;
-            if (info === Material.DefaultImageId) {
-                texture = material._context.getDefaultTexture();
-            } else {
-                var path = info;
-                this._pathsToMaterials[path] = defaultValue(this._pathsToMaterials[path], []);
-                this._pathsToMaterials[path].push({
-                    'material' : material,
-                    'property' : property
-                });
-                texture = this._pathsToTextures[path];
-                if (!defined(texture)) {
-                    var oldTexture = material.uniforms[property];
-                    var hasOldTexture = oldTexture instanceof Texture;
-                    texture = hasOldTexture ? oldTexture : material._context.getDefaultTexture();
-                    if (this._pathsToMaterials[path].length === 1) {
-                        when(loadImage(path), function(image) {
-                            texture = material._context.createTexture2D({
-                                source : image
-                            });
-                            that._updateMaterialsOnLoad(texture, path);
-                        });
-                    }
-                }
-            }
-            return texture;
         }
     };
 

@@ -319,11 +319,11 @@ define([
         var positionEC = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3);
         positionEC.z = -dist;
         var positionCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(context, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToWindowCoordinates(context, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(context, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);

@@ -234,7 +234,6 @@ define([
     var cachedPosition = new Cartesian3();
     var cachedOrientation = new Quaternion();
     function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
-        var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject._cone;
         if (!defined(dynamicCone)) {
             return;
@@ -283,7 +282,7 @@ define([
             cone.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            cone.material = Material.fromType(context, Material.ColorType);
+            cone.material = Material.fromType(Material.ColorType);
             cone.intersectionColor = Color.YELLOW.clone();
             cone.intersectionWidth = 5.0;
             cone.radius = Number.POSITIVE_INFINITY;
@@ -362,7 +361,7 @@ define([
             cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
         }
 
-        cone.material = MaterialProperty.getValue(time, context, dynamicCone._outerMaterial, cone.material);
+        cone.material = MaterialProperty.getValue(time, dynamicCone._outerMaterial, cone.material);
 
         property = dynamicCone._intersectionColor;
         if (defined(property)) {
