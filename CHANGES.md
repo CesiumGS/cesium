@@ -39,6 +39,10 @@ Beta Releases
       * `removeObject` has been renamed `removeById`
       * `collectionChanged` event added for notification of objects being added or removed.
    * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
+   * `UniformState.update` now takes a context as its first parameter.
+   * `Camera` constructor now takes a context instead of a canvas.
+   * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
+   * Removed `canvasDimensions` from `FrameState`.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -51,8 +55,11 @@ Beta Releases
 * Improved graphics performance.  For example, an Everest terrain view went from 135-140 to over 150 frames per second.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
-* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects .
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
+* Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
+* `Viewer` no longer losses visual fidelity when using browser zoom.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
 
 ### b20 - 2013-09-03
 

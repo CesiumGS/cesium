@@ -58,7 +58,7 @@ defineSuite([
         var us = context.getUniformState();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 20000000.0));
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         command.execute(context);
@@ -81,7 +81,7 @@ defineSuite([
         var us = context.getUniformState();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();
@@ -101,7 +101,7 @@ defineSuite([
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
         frameState.mode = SceneMode.SCENE2D;
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();
@@ -121,7 +121,7 @@ defineSuite([
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
         frameState.passes.color = false;
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();
