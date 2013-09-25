@@ -180,6 +180,14 @@ define([
         this._sunBloom = undefined;
 
         /**
+         * The {@link Moon}
+         *
+         * @type Moon
+         * @default undefined
+         */
+        this.moon = undefined;
+
+        /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
          * @type {Color}
@@ -641,7 +649,7 @@ define([
         }
     }
 
-    function isSunVisible(command, frameState) {
+    function isVisible(command, frameState) {
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -652,11 +660,14 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
+        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+        var transformedBV = command.boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+                  ((cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) &&
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(transformedBV)))));
     }
 
     function executeCommands(scene, passState, clearColor) {
@@ -682,7 +693,10 @@ define([
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
-        var sunVisible = isSunVisible(sunCommand, frameState);
+        var sunVisible = isVisible(sunCommand, frameState);
+        var moonCommand = (frameState.passes.color && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
+        var moonVisible = isVisible(moonCommand, frameState);
+
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -717,6 +731,10 @@ define([
                 scene._sunPostProcess.execute(context);
                 passState.framebuffer = undefined;
             }
+        }
+
+        if (defined(moonCommand) && moonVisible) {
+            executeCommand(moonCommand, scene, context, passState);
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;

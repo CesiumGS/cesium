@@ -172,7 +172,6 @@ define([
 
             var centralBody = new CentralBody(ellipsoid);
             scene.getPrimitives().setCentralBody(centralBody);
-            scene.getPrimitives().add(new Moon());
 
             scene.skyBox = new SkyBox({
                 positiveX : getDefaultSkyBoxUrl('px'),
@@ -184,6 +183,7 @@ define([
             });
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
             scene.sun = new Sun();
+            scene.moon = new Moon();
 
             //Set the base imagery layer
             var imageryProvider = options.imageryProvider;
