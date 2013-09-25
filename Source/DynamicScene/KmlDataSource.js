@@ -170,6 +170,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             }
             dynamicObject.label.text = new ConstantProperty(name);
+            dynamicObject.name = name;
         }
 
         var foundGeometry = false;
@@ -179,6 +180,8 @@ define(['../Core/createGuid',
             var nodeName = node.nodeName;
             if (nodeName === 'TimeSpan') {
                 dynamicObject.availability = processTimeSpan(node);
+            } else if (nodeName === 'description') {
+                dynamicObject.balloon = new ConstantProperty(node.textContent);
             } else if (featureTypes.hasOwnProperty(nodeName)) {
                 foundGeometry = true;
                 mergeStyles(nodeName, styleObject, dynamicObject);
