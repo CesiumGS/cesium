@@ -591,7 +591,6 @@ define(['../Core/createGuid',
         // create a dynamic object based on the results
         // FIXME
         var object = dynamicObjectCollection.getOrCreateObject('gxTour:' + start.toIso8601());
-        console.log("[GX:DEBUG] dy obj: " + object);
         object.clock = dataSource._clock;
         object.gxTour = tour;
         object.availability = new TimeInterval(start, end, true, false);
@@ -821,7 +820,6 @@ define(['../Core/createGuid',
             }
 
             /** Process gx:Tour nodes START **/
-            console.log("[GX:DEBUG] START");
             // process gx:Tour
             var tourNodes = kml.getElementsByTagNameNS(GxTourProcessor.GX_NS, 'Tour');
             // TBD: why just one tour?
@@ -850,22 +848,13 @@ define(['../Core/createGuid',
                             }
                         }
 
-                        console.log("[GX:DEBUG] cdd[1]");
-                        try {
-                            createDynamicDataObject(dataSource, dynamicObjectCollection, tour);
-                        } catch(exc) {
-                            console.log("[GX:DEBUG] cdd[1] --> " + exc);
-                        }
+                        createDynamicDataObject(dataSource, dynamicObjectCollection, tour);
                     });
 
                 } else {
-                    console.log("[GX:DEBUG] cdd[2]");
                     createDynamicDataObject(dataSource, dynamicObjectCollection, tour);
                 }
-            } else {
-                console.log("[GX:DEBUG] nothing to parse ...");
             }
-            console.log("[GX:DEBUG] END");
             /** Process gx:Tour nodes END **/
 
             dataSource._changed.raiseEvent(this);
