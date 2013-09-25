@@ -143,7 +143,7 @@ define([
         }
 
         if (!defined(this._quad)) {
-            this._quad = new ViewportQuad(undefined, Material.fromType(context, Material.ImageType));
+            this._quad = new ViewportQuad(undefined, Material.fromType(Material.ImageType));
         }
 
         if (!defined(this._texture)) {
@@ -156,7 +156,7 @@ define([
             this._texture.copyFrom(this._canvas);
         }
 
-        var viewportHeight = context.getCanvas().clientHeight;
+        var viewportHeight = context.getDrawingBufferHeight();
         if (viewportHeight !== this._viewportHeight) {
             this._viewportHeight = viewportHeight;
             var rect = this._quad.rectangle;

@@ -1,107 +1,83 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicVector',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
              'Core/Cartesian3',
              'Core/Color',
-             'Core/Iso8601',
-             'Core/TimeInterval',
              'DynamicScene/ConstantProperty'
-            ], function(
-                    DynamicVector,
-                    DynamicObject,
-                    JulianDate,
-                    Cartesian3,
-                    Color,
-                    Iso8601,
-                    TimeInterval,
-                    ConstantProperty) {
+         ], function(
+             DynamicVector,
+             Cartesian3,
+             Color,
+             ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties does not change a fully configured vector', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.vector = new DynamicVector();
-        objectToMerge.vector.color = new ConstantProperty(Color.WHITE);
-        objectToMerge.vector.width = new ConstantProperty(1);
-        objectToMerge.vector.length = new ConstantProperty(2);
-        objectToMerge.vector.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
-        objectToMerge.vector.show = new ConstantProperty(true);
+    it('merge assigns unassigned properties', function() {
+        var source = new DynamicVector();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.length = new ConstantProperty(2);
+        source.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
+        source.show = new ConstantProperty(true);
 
-        var color = new ConstantProperty(Color.RED);
-        var width = new ConstantProperty(2);
-        var length = new ConstantProperty(10);
-        var direction = new ConstantProperty(new Cartesian3(0, 0, 1));
-        var show = new ConstantProperty(false);
-
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.vector = new DynamicVector();
-        targetObject.vector.color = color;
-        targetObject.vector.width = width;
-        targetObject.vector.length = length;
-        targetObject.vector.direction = direction;
-        targetObject.vector.show = show;
-
-        DynamicVector.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.vector.color).toEqual(color);
-        expect(targetObject.vector.width).toEqual(width);
-        expect(targetObject.vector.length).toEqual(length);
-        expect(targetObject.vector.direction).toEqual(direction);
-        expect(targetObject.vector.show).toEqual(show);
+        var target = new DynamicVector();
+        target.merge(source);
+        expect(target.color).toBe(source.color);
+        expect(target.width).toBe(source.width);
+        expect(target.length).toBe(source.length);
+        expect(target.direction).toBe(source.direction);
+        expect(target.show).toBe(source.show);
     });
 
-    it('mergeProperties creates and configures an undefined vector', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.vector = new DynamicVector();
-        objectToMerge.vector.color = new ConstantProperty(Color.WHITE);
-        objectToMerge.vector.width = new ConstantProperty(1);
-        objectToMerge.vector.length = new ConstantProperty(10);
-        objectToMerge.vector.direction = new ConstantProperty(new Cartesian3(0, 0, 1));
-        objectToMerge.vector.show = new ConstantProperty(true);
-
-        var targetObject = new DynamicObject('targetObject');
-
-        DynamicVector.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.vector.color).toEqual(objectToMerge.vector.color);
-        expect(targetObject.vector.width).toEqual(objectToMerge.vector.width);
-        expect(targetObject.vector.length).toEqual(objectToMerge.vector.length);
-        expect(targetObject.vector.direction).toEqual(objectToMerge.vector.direction);
-        expect(targetObject.vector.show).toEqual(objectToMerge.vector.show);
-    });
-
-    it('mergeProperties does not change when used with an undefined vector', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicVector();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.length = new ConstantProperty(2);
+        source.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
+        source.show = new ConstantProperty(true);
 
         var color = new ConstantProperty(Color.WHITE);
         var width = new ConstantProperty(1);
-        var length = new ConstantProperty(10);
-        var direction = new ConstantProperty(new Cartesian3(0, 0, 1));
+        var length = new ConstantProperty(2);
+        var direction = new ConstantProperty(new Cartesian3(1, 0, 0));
         var show = new ConstantProperty(true);
 
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.vector = new DynamicVector();
-        targetObject.vector.color = color;
-        targetObject.vector.width = width;
-        targetObject.vector.length = length;
-        targetObject.vector.direction = direction;
-        targetObject.vector.show = show;
+        var target = new DynamicVector();
+        target.color = color;
+        target.width = width;
+        target.length = length;
+        target.direction = direction;
+        target.show = show;
 
-        DynamicVector.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.vector.color).toEqual(color);
-        expect(targetObject.vector.width).toEqual(width);
-        expect(targetObject.vector.length).toEqual(length);
-        expect(targetObject.vector.direction).toEqual(direction);
-        expect(targetObject.vector.show).toEqual(show);
+        target.merge(source);
+        expect(target.color).toBe(color);
+        expect(target.width).toBe(width);
+        expect(target.length).toBe(length);
+        expect(target.direction).toBe(direction);
+        expect(target.show).toBe(show);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.vector = new DynamicVector();
-        DynamicVector.undefineProperties(testObject);
-        expect(testObject.vector).toBeUndefined();
+    it('clone works', function() {
+        var source = new DynamicVector();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.length = new ConstantProperty(2);
+        source.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
+        source.show = new ConstantProperty(true);
+
+        var result = source.clone();
+        expect(result.color).toBe(source.color);
+        expect(result.width).toBe(source.width);
+        expect(result.length).toBe(source.length);
+        expect(result.direction).toBe(source.direction);
+        expect(result.show).toBe(source.show);
+    });
+
+    it('merge throws if source undefined', function() {
+        var target = new DynamicVector();
+        expect(function() {
+            target.merge(undefined);
+        }).toThrow();
     });
 });

@@ -465,7 +465,7 @@ define([
     var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
     function computeSimonEarth(date, result) {
         var moon = computeSimonMoon(date);
-        result = moon.multiplyByScalar(factor, result);
+        result = Cartesian3.multiplyByScalar(moon, factor, result);
         return result;
     }
 
@@ -489,12 +489,12 @@ define([
         }
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
-        result = translation.negate(result);
+        result = Cartesian3.negate(translation, result);
 
         //second forward transformation
         computeSimonEarth(date, translation);
 
-        result.subtract(translation, result);
+        Cartesian3.subtract(result, translation, result);
         axesTransformation.multiplyByVector(result, result);
 
         return result;

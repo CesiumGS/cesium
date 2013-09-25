@@ -80,13 +80,6 @@ define([
          */
         this.occluder = undefined;
 
-        /**
-         * The dimensions of the canvas.
-         * @type {Cartesian2}
-         * @default Cartesian2(0.0, 0.0)
-         */
-        this.canvasDimensions = new Cartesian2();
-
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a color pass, <code>false</code> otherwise.

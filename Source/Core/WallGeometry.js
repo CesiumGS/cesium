@@ -252,7 +252,7 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
-                var nextTop;
+                var nextTop = new Cartesian3();
                 var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
                 if (i + 1 < length) {
                     nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
@@ -260,20 +260,20 @@ define([
                 }
 
                 if (recomputeNormal) {
-                    var scalednextPosition = nextTop.subtract(topPosition, scratchCartesian3Position4);
-                    var scaledGroundPosition = groundPosition.subtract(topPosition, scratchCartesian3Position1);
-                    normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
+                    var scalednextPosition = Cartesian3.subtract(nextTop, topPosition, scratchCartesian3Position4);
+                    var scaledGroundPosition = Cartesian3.subtract(groundPosition, topPosition, scratchCartesian3Position1);
+                    normal = Cartesian3.normalize(Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal), normal);
                     recomputeNormal = false;
                 }
 
-                if (nextPosition.equalsEpsilon(groundPosition, CesiumMath.EPSILON6)) {
+                if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON6)) {
                     recomputeNormal = true;
                 } else {
                     if (vertexFormat.tangent) {
-                        tangent = nextPosition.subtract(groundPosition, tangent).normalize(tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.subtract(nextPosition, groundPosition, tangent), tangent);
                     }
                     if (vertexFormat.binormal) {
-                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                     }
                 }
 

@@ -92,12 +92,12 @@ defineSuite([
             var c = u * u * u - 2.0 * u * u + u;
             var d = u * u * u - u * u;
 
-            var p0 = p.multiplyByScalar(a);
-            var p1 = q.multiplyByScalar(b);
-            var p2 = pT.multiplyByScalar(c);
-            var p3 = qT.multiplyByScalar(d);
+            var p0 = Cartesian3.multiplyByScalar(p, a);
+            var p1 = Cartesian3.multiplyByScalar(q, b);
+            var p2 = Cartesian3.multiplyByScalar(pT, c);
+            var p3 = Cartesian3.multiplyByScalar(qT, d);
 
-            return p0.add(p1).add(p2).add(p3);
+            return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
         };
     };
 
