@@ -43,6 +43,7 @@ Beta Releases
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
+   * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
@@ -60,6 +61,7 @@ Beta Releases
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * `Viewer` no longer losses visual fidelity when using browser zoom.
 * Added `Geometries` tab to Sandcastle with an example for each geometry type.
+* Added `DynamicObject.name` property, which is a non-unique, user-readable name for the object.
 
 ### b20 - 2013-09-03
 

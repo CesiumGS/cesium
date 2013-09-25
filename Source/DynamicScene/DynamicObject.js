@@ -30,7 +30,7 @@ define(['../Core/createGuid',
      * @alias DynamicObject
      * @constructor
      *
-     * @param {Object} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
+     * @param {String} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
      *
      * @see Property
      * @see DynamicObjectCollection
@@ -92,7 +92,7 @@ define(['../Core/createGuid',
         /**
          * Gets the unique ID associated with this object.
          * @memberof DynamicObject.prototype
-         * @type {Object}
+         * @type {String}
          */
         id : {
             get : function() {
