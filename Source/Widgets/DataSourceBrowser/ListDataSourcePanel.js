@@ -61,14 +61,6 @@ define([
             console.error('Error loading gallery ' + url);
             return when.reject(error);
         });
-
-/*
-        window.setTimeout(function() {
-        for (var i = 0; i < 100; ++i) {
-            var item = new ListDataSourceItemViewModel('Testing'+i, this, 'desc', 'url', 'czml');
-            that.children.push(item);
-        }
-        }, 5000);*/
     };
 
     defineProperties(ListDataSourcePanelViewModel.prototype, {
