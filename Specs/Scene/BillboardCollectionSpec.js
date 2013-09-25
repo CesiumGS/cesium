@@ -65,7 +65,7 @@ defineSuite([
         context = createContext();
 
         var us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -237,7 +237,7 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         // clear screen
@@ -245,11 +245,11 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         // camera at 6.0 above billboard, expect no green pixels to be rendered, as scale is 0.0
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         // revert framestate
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     it('throws setScaleByDistance with nearDistance === farDistance', function() {

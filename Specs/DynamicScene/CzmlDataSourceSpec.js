@@ -57,6 +57,11 @@ defineSuite([
         }
     };
 
+    var czmlDelete = {
+        'id' : 'test',
+        'delete' : true
+    };
+
     var dynamicCzml = {
         id : 'test',
         availability : '2000-01-01/2001-01-01',
@@ -66,15 +71,20 @@ defineSuite([
     };
 
     var clockCzml = {
-        id : 'document',
-        clock : {
-            interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-            currentTime : '2012-03-15T10:00:00Z',
-            multiplier : 60.0,
-            range : 'LOOP_STOP',
-            step : 'SYSTEM_CLOCK_MULTIPLIER'
-        }
-    };
+            id : 'document',
+            clock : {
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+
+    var nameCzml = {
+            id : 'document',
+            name : 'czmlName'
+        };
 
     var simple;
     var simpleUrl = 'Data/CZML/simple.czml';
@@ -102,10 +112,23 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
         expect(dataSource.getErrorEvent()).toBeInstanceOf(Event);
+        expect(dataSource.getName()).toBeUndefined();
         expect(dataSource.getClock()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
         expect(dataSource.getIsTimeVarying()).toEqual(true);
+    });
+
+    it('getName returns CZML defined name', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(nameCzml);
+        expect(dataSource.getName()).toEqual('czmlName');
+    });
+
+    it('getName uses source name if CZML name is undefined', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(clockCzml, 'Gallery/simple.czml?asd=true');
+        expect(dataSource.getName()).toEqual('simple.czml');
     });
 
     it('getClock returns undefined for static CZML', function() {
@@ -1403,5 +1426,14 @@ defineSuite([
         expect(dynamicObject.vector.direction.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.length.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzml deletes an existing object.', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(staticCzml);
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        dataSource.load(czmlDelete);
+        expect(objects.length).toEqual(0);
     });
 });

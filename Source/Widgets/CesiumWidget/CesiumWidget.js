@@ -141,6 +141,11 @@ define([
         this._element = widgetNode;
 
         try {
+            var svgNS = "http://www.w3.org/2000/svg";
+            var zoomDetector = document.createElementNS(svgNS, 'svg');
+            zoomDetector.style.display = 'none';
+            widgetNode.appendChild(zoomDetector);
+
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
                 return false;
@@ -199,6 +204,7 @@ define([
 
             this._container = container;
             this._canvas = canvas;
+            this._zoomDetector = zoomDetector;
             this._canvasWidth = canvas.width;
             this._canvasHeight = canvas.height;
             this._scene = scene;
@@ -449,8 +455,22 @@ define([
             return;
         }
 
-        canvas.width = this._canvasWidth = width;
-        canvas.height = this._canvasHeight = height;
+        var zoomFactor = 1;
+        if (this._zoomDetector.currentScale !== 1) {
+            zoomFactor = this._zoomDetector.currentScale;
+        }
+        if (window.devicePixelRatio !== 1) {
+            zoomFactor = window.devicePixelRatio;
+        }
+
+        this._canvasWidth = width;
+        this._canvasHeight = height;
+
+        width *= zoomFactor;
+        height *= zoomFactor;
+
+        canvas.width = width;
+        canvas.height = height;
 
         var canRender = width !== 0 && height !== 0;
         this._canRender = canRender;

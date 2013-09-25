@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -69,6 +70,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermitePolynomialApproximation,
         Iso8601,
         JulianDate,
@@ -694,6 +696,13 @@ define([
         }
     }
 
+    function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var nameData = packet.name;
+        if (defined(nameData)) {
+            processPacketData(String, dynamicObject, 'name', nameData, undefined, sourceUri);
+        }
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -1062,7 +1071,7 @@ define([
         }
 
         if (packet['delete'] === true) {
-            dynamicObjectCollection.removeObject(objectId);
+            dynamicObjectCollection.removeById(objectId);
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);
             for ( var i = updaterFunctions.length - 1; i > -1; i--) {
@@ -1098,21 +1107,16 @@ define([
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
 
-        if (!defined(dataSource._name)) {
-            var name;
-            if (defined(documentObject)) {
-                //name = documentObject.name;
-            }
-
-            if (!defined(name) && defined(sourceUri)) {
-                var index = sourceUri.lastIndexOf('/');
-                if (index !== -1) {
-                    name = sourceUri.substr(index + 1);
-                }
-            }
-
-            dataSource._name = name;
+        var name;
+        if (defined(documentObject) && defined(documentObject.name)) {
+            name = documentObject.name.getValue();
         }
+
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        dataSource._name = name;
 
         return clock;
     }
@@ -1125,8 +1129,8 @@ define([
      * @param {String} [name] The name of this data source.  If undefined, a name will be read from the
      *                        loaded CZML document, or the name of the CZML file.
      */
-    var CzmlDataSource = function(name) {
-        this._name = name;
+    var CzmlDataSource = function() {
+        this._name = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
@@ -1145,6 +1149,7 @@ define([
     processEllipsoid, //
     processCone, //
     processLabel, //
+    processName, //
     processPath, //
     processPoint, //
     processPolygon, //

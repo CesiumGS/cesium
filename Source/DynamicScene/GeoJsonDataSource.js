@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/getFilenameFromUri',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -24,6 +25,7 @@ define([
         Color,
         defined,
         DeveloperError,
+        getFilenameFromUri,
         RuntimeError,
         Ellipsoid,
         Event,
@@ -298,6 +300,8 @@ define([
          * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
+
+        this._name = undefined;
     };
 
     /**
@@ -404,8 +408,9 @@ define([
             throw new DeveloperError('geoJson is required.');
         }
 
-        if (!defined(this._name) && defined(source)) {
-            this._name = source.substr(source.lastIndexOf('/') + 1);
+        this._name = undefined;
+        if (defined(source)) {
+            this._name = getFilenameFromUri(source);
         }
 
         var typeHandler = geoJsonObjectTypes[geoJson.type];
