@@ -59,6 +59,7 @@ Beta Releases
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * `Viewer` no longer losses visual fidelity when using browser zoom.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
 
 ### b20 - 2013-09-03
 

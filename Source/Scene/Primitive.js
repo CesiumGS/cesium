@@ -459,6 +459,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
             (!frameState.passes.color && !frameState.passes.pick)) {

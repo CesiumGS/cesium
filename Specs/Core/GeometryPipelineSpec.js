@@ -812,6 +812,46 @@ defineSuite([
         expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 
+    it('transformToWorldCoordinates with non-uniform scale', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+            }),
+            modelMatrix : Matrix4.fromScale(new Cartesian3(1.0, 2.0, 4.0))
+        });
+
+        var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+        var transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0];
+        var transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+
+        expect(transformed.geometry.attributes.position.values).toEqual(transformedPositions);
+        expect(transformed.geometry.attributes.normal.values).toEqual(transformedNormals);
+        expect(transformed.geometry.boundingSphere).toEqual(new BoundingSphere(new Cartesian3(0.5, 1.0, 0.0), 4.0));
+        expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
     it('transformToWorldCoordinates does nothing when already in world coordinates', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
