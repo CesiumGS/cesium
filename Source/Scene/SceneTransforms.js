@@ -193,7 +193,7 @@ define([
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to window coordinates
-        viewportTransform.multiplyByPoint(positionNDC, positionWC);
+        Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian4(positionWC, result);
     };
@@ -210,8 +210,8 @@ define([
         viewport.height = context.getDrawingBufferHeight();
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
-        // Viewport transform to transform from clip coordinates to window coordinates
-        viewportTransform.multiplyByPoint(positionNDC, positionWC);
+        // Viewport transform to transform from clip coordinates to drawing buffer coordinates
+        Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian4(positionWC, result);
     };
