@@ -53,7 +53,7 @@ define([
             var length = galleryList.length;
             for (var i = 0; i < length; ++i) {
                 var entry = galleryList[i];
-                var item = new ListDataSourceItemViewModel(entry.name, that, 'desc', url + entry.name + '.czml', 'czml');
+                var item = new ListDataSourceItemViewModel(entry.name, that, 'desc', url + entry.name + '.' + entry.format, entry.format);
                 that.children.push(item);
             }
             that._isLoading = false;
@@ -187,7 +187,19 @@ define([
             return false;
         }
 
-        var dataSource = new CzmlDataSource();
+        var format = this.viewModel.selectedItem.format;
+        var dataSource;
+        switch(format) {
+        case 'czml':
+            dataSource = new CzmlDataSource();
+            break;
+        case 'json':
+            dataSource = new GeoJsonDataSource();
+            break;
+        default:
+            return false;
+        }
+
         return when(dataSource.loadUrl(url), function() {
             dataSourceCollection.add(dataSource);
             return true;

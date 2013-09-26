@@ -10,11 +10,17 @@ var demos = [];
 forEachFile('demos', function(relativePath, file) {
     "use strict";
 
-    var demo = relativePath.substring(0, relativePath.lastIndexOf('.')).replace('\\', '/');
+    var lastDotIndex = relativePath.lastIndexOf('.');
+    var demo = relativePath.substring(0, lastDotIndex).replace('\\', '/');
     var demoObject = {
         name : String(demo),
         date : file.lastModified()
     };
+
+    var format = String(relativePath.substring(lastDotIndex + 1));
+    if (format !== 'html') {
+        demoObject.format = format;
+    }
 
     if (new File(file.getParent(), demo + '.jpg').exists()) {
         demoObject.img = demo + '.jpg';
