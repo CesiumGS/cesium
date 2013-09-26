@@ -28,7 +28,7 @@ defineSuite([
 
         // expected results taken from STK Components:
         //    EvaluatorGroup group = new EvaluatorGroup();
-        //    IauOrientationAxes axes = new IauOrientationAxes(Iau2006Orientation.ComputeMoon);
+        //    IauOrientationAxes axes = new IauOrientationAxes(Iau2000Orientation.ComputeMoon);
         //    AxesEvaluator eval1 = axes.GetEvaluator(group);
         //    UnitQuaternion q = eval1.Evaluate(TimeConstants.J2000);
         //    Matrix3By3 expectedMatrix = new Matrix3By3(q);

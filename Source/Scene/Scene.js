@@ -650,6 +650,10 @@ define([
     }
 
     function isVisible(command, frameState) {
+        if (!defined(command)) {
+            return;
+        }
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
