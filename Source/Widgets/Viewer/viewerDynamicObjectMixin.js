@@ -183,11 +183,7 @@ define([
                             content = value.balloon.getValue(viewer.clock.currentTime);
                         }
 
-                        var heading;
-                        if (defined(value.name)) {
-                            heading = value.name.getValue(viewer.clock.currentTime);
-                        }
-
+                        var heading = value.name;
                         if (defined(content) && defined(heading)) {
                             content = '<h3>' + heading + '</h3>' + content;
                         } else if (!defined(content)) {
