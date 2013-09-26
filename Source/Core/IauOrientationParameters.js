@@ -15,24 +15,10 @@ define([
      * except that they are expressed in radians.
      * </p>
      * @exports IauOrientationParameters
+     *
+     * @private
      */
     var IauOrientationParameters = function(rightAscension, declination, rotation, rotationRate) {
-        if (!defined(rightAscension)) {
-            throw new DeveloperError('rightAscension is required.');
-        }
-
-        if (!defined(declination)) {
-            throw new DeveloperError('declination is required.');
-        }
-
-        if (!defined(rotation)) {
-            throw new DeveloperError('rotation is required.');
-        }
-
-        if (!defined(rotationRate)) {
-            throw new DeveloperError('rotationRate is required.');
-        }
-
         /**
          * The right ascension of the north pole of the body with respect to
          * the International Celestial Reference Frame, in radians.

@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defined',
         './DeveloperError',
+        './Iau2000Orientation',
         './JulianDate',
         './Math',
         './Matrix3',
@@ -11,6 +12,7 @@ define([
         Cartesian3,
         defined,
         DeveloperError,
+        Iau2000Orientation,
         JulianDate,
         CesiumMath,
         Matrix3,
@@ -23,7 +25,7 @@ define([
      * @alias IauOrientationAxes
      * @constructor
      *
-     * @param {Function} computeFunction The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
+     * @param {Function} [computeFunction=Iau2000Orientation.ComputeMoon] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
      *
      * @exception {DeveloperError} computeFunction is required.
      *
@@ -31,7 +33,7 @@ define([
      */
     var IauOrientationAxes = function (computeFunction) {
         if (!defined(computeFunction) || typeof computeFunction !== 'function') {
-            throw new DeveloperError('computeFunction is required.');
+            computeFunction = Iau2000Orientation.ComputeMoon;
         }
 
         this._computeFunction = computeFunction;

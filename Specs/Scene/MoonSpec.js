@@ -7,6 +7,7 @@ defineSuite([
          'Specs/destroyScene',
          'Core/Cartesian3',
          'Core/defined',
+         'Core/Ellipsoid',
          'Core/Matrix3',
          'Core/Simon1994PlanetaryPositions',
          'Core/Transforms',
@@ -19,6 +20,7 @@ defineSuite([
          destroyScene,
          Cartesian3,
          defined,
+         Ellipsoid,
          Matrix3,
          Simon1994PlanetaryPositions,
          Transforms,
@@ -48,6 +50,13 @@ defineSuite([
 
         camera.controller.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
     }
+
+    it('default constructs the moon', function() {
+        var moon = new Moon();
+        expect(moon.show).toEqual(true);
+        expect(moon.textureUrl).toContain('Assets/Textures/moonSmall.jpg');
+        expect(moon.ellipsoid).toBe(Ellipsoid.MOON);
+    });
 
     it('draws in 3D', function() {
         scene.moon = new Moon();

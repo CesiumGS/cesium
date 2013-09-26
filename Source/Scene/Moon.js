@@ -2,11 +2,11 @@
 define([
         '../Core/buildModuleUrl',
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Iau2000Orientation',
+        '../Core/Ellipsoid',
         '../Core/IauOrientationAxes',
-        '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Simon1994PlanetaryPositions',
@@ -16,11 +16,11 @@ define([
     ], function(
         buildModuleUrl,
         Cartesian3,
+        defaultValue,
         defined,
         destroyObject,
-        Iau2000Orientation,
+        Ellipsoid,
         IauOrientationAxes,
-        JulianDate,
         Matrix3,
         Matrix4,
         Simon1994PlanetaryPositions,
@@ -30,45 +30,53 @@ define([
     "use strict";
 
     /**
-     * Draws the Moon.
+     * Draws the Moon in 3D.
      * @alias Moon
      * @constructor
      *
+     * @param {Boolean} [options.show=true] Determines whether the moon will be rendered.
+     * @param {String} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
+     *
      * @example
-     * var moon = new Moon();
-     * scene.getPrimitives.add(moon);
+     * scene.moon = new Moon();
      */
-    var Moon = function() {
+    var Moon = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var url = options.textureUrl;
+        if (!defined(url)) {
+            url = buildModuleUrl('Assets/Textures/moonSmall.jpg');
+        }
+
         /**
          * Determines if the moon will be shown.
          *
          * @type {Boolean}
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
 
         /**
          * The moon texture.
          * @type {String}
          * @default buildModuleUrl('Assets/Textures/moonSmall.jpg')
          */
-        this.moonTextureUrl = buildModuleUrl('Assets/Textures/moonSmall.jpg');
-        this._moonTextureUrl = undefined;
+        this.textureUrl = url;
 
-        this._ellipsoid = undefined;
-        this._axes = new IauOrientationAxes(Iau2000Orientation.ComputeMoon);
+        /**
+         * The moon ellipsoid.
+         * @type {Ellipsoid}
+         * @default Ellipsoid.MOON
+         */
+        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
+
+        this._ellipsoidPrimitive = new EllipsoidPrimitive();
+        this._ellipsoidPrimitive.radii = this.ellipsoid.getRadii();
+        this._ellipsoidPrimitive.material = Material.fromType(Material.ImageType);
+
+        this._axes = new IauOrientationAxes();
     };
-
-    /**
-     * The mean radius of the moon, according to the "Report of the IAU/IAG Working Group on
-     * Cartographic Coordinates and Rotational Elements of the Planets and satellites: 2000",
-     * Celestial Mechanics 82: 83-110, 2002.
-     * @memberof Moon
-     *
-     * @type {Number}
-     * @constant
-     */
-    Moon.Iau2000MeanLunarRadius = 1737400.0;
 
     var icrfToFixed = new Matrix3();
     var rotationScratch = new Matrix3();
@@ -80,18 +88,8 @@ define([
             return;
         }
 
-        var ellipsoid = this._ellipsoid;
-        if (!defined(ellipsoid)) {
-            ellipsoid = this._ellipsoid = new EllipsoidPrimitive();
-            ellipsoid.radii = new Cartesian3(Moon.Iau2000MeanLunarRadius, Moon.Iau2000MeanLunarRadius, Moon.Iau2000MeanLunarRadius);
-
-            ellipsoid.material = Material.fromType(Material.ImageType);
-        }
-
-        if (this.moonTextureUrl !== this._moonTextureUrl) {
-            this._moonTextureUrl = this.moonTextureUrl;
-            ellipsoid.material.uniforms.image = this._moonTextureUrl;
-        }
+        var ellipsoidPrimitive = this._ellipsoidPrimitive;
+        ellipsoidPrimitive.material.uniforms.image = this.textureUrl;
 
         var date = frameState.time;
         if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {
@@ -105,8 +103,8 @@ define([
         var translation = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date, translationScratch);
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
-        Matrix4.fromRotationTranslation(rotation, translation, ellipsoid.modelMatrix);
-        ellipsoid.update(context, frameState, scratchCommandList);
+        Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
+        ellipsoidPrimitive.update(context, frameState, scratchCommandList);
 
         if (scratchCommandList.length > 0 && defined(scratchCommandList[0].colorList)) {
             var command = scratchCommandList[0].colorList[0];

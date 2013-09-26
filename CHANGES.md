@@ -56,6 +56,7 @@ Beta Releases
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Added proper support for browser zoom.
+* Added `Moon`. Also added `Iau2000Orientation.ComputeMoon` and `IauOrientationAxes` to compute the Moon's orientation.
 * Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.
@@ -72,7 +73,6 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
-* Added `Moon`.
 
 ### b20 - 2013-09-03
 
