@@ -86,6 +86,13 @@ defineSuite([
             name : 'czmlName'
         };
 
+    var parentChildCzml = [{
+        'id' : 'parent'
+    }, {
+        'id' : 'child',
+        'parent' : 'parent'
+    }];
+
     var simple;
     var simpleUrl = 'Data/CZML/simple.czml';
     var vehicle;
@@ -1436,4 +1443,17 @@ defineSuite([
         dataSource.load(czmlDelete);
         expect(objects.length).toEqual(0);
     });
+
+    it('parentChildCzml', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(parentChildCzml);
+        var objects = dataSource.getDynamicObjectCollection();
+
+        var parent = objects.getById('parent');
+        expect(parent.parent).toBeUndefined();
+
+        var child = objects.getById('child');
+        expect(child.parent.getValue()).toBe(parent);
+    });
+
 });
