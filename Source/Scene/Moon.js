@@ -37,6 +37,7 @@ define([
      * @param {Boolean} [options.show=true] Determines whether the moon will be rendered.
      * @param {String} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
+     * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
      * @example
      * scene.moon = new Moon();
@@ -71,9 +72,17 @@ define([
          */
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.MOON);
 
+        /**
+         * Use the sun as the only light source.
+         * @type {Boolean}
+         * @default true
+         */
+        this.onlySunLighting = defaultValue(options.onlySunLighting, true);
+
         this._ellipsoidPrimitive = new EllipsoidPrimitive();
         this._ellipsoidPrimitive.radii = this.ellipsoid.getRadii();
         this._ellipsoidPrimitive.material = Material.fromType(Material.ImageType);
+        this._ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
 
         this._axes = new IauOrientationAxes();
     };
@@ -90,6 +99,7 @@ define([
 
         var ellipsoidPrimitive = this._ellipsoidPrimitive;
         ellipsoidPrimitive.material.uniforms.image = this.textureUrl;
+        ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
 
         var date = frameState.time;
         if (!defined(Transforms.computeIcrfToFixedMatrix(date, icrfToFixed))) {

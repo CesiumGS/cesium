@@ -164,6 +164,12 @@ define([
         this.material = Material.fromType(Material.ColorType);
         this._material = undefined;
 
+        /**
+         * @private
+         */
+        this.onlySunLighting = false;
+        this._onlySunLighting = false;
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -279,12 +285,18 @@ define([
         this._material = this.material;
         this._material.update(context);
 
+        var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
+        this._onlySunLighting = this.onlySunLighting;
+
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged) {
-                var colorFS = createShaderSource({ sources : [this.material.shaderSource, EllipsoidFS] });
+            if (materialChanged || lightingChanged) {
+                var colorFS = createShaderSource({
+                    defines : [this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : ''],
+                    sources : [this.material.shaderSource, EllipsoidFS] }
+                );
 
                 this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
 
@@ -312,8 +324,9 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
                 var pickFS = createShaderSource({
+                    defines : [this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : ''],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });

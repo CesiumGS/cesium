@@ -56,6 +56,7 @@ defineSuite([
         expect(moon.show).toEqual(true);
         expect(moon.textureUrl).toContain('Assets/Textures/moonSmall.jpg');
         expect(moon.ellipsoid).toBe(Ellipsoid.MOON);
+        expect(moon.onlySunLighting).toEqual(true);
     });
 
     it('draws in 3D', function() {
