@@ -72,6 +72,7 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
+* Added `Moon`.
 
 ### b20 - 2013-09-03
 
