@@ -58,8 +58,6 @@ require(['Cesium'], function(Cesium) {
         viewer.dataSources.add(ds);
     });
 
-    createButtons(viewer);
-    
 	// -- cockpit lookout start --
 
     var createButtons = function(widget) {
@@ -118,6 +116,7 @@ require(['Cesium'], function(Cesium) {
         button.innerHTML = '&rarr;';
         toolbar.appendChild(button);
     };
+    createButtons(viewer);
 
 
     var animate = function() {
