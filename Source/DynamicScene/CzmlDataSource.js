@@ -50,6 +50,7 @@ define([
         './DynamicPyramid',
         './DynamicVector',
         './DynamicVertexPositionsProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
         './TimeIntervalCollectionPositionProperty',
@@ -107,6 +108,7 @@ define([
         DynamicPyramid,
         DynamicVector,
         DynamicVertexPositionsProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionPositionProperty,
@@ -701,6 +703,13 @@ define([
         }
     }
 
+    function processParent(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var parent = packet.parent;
+        if (defined(parent)) {
+            dynamicObject.parent = new ReferenceProperty(dynamicObjectCollection, parent);
+        }
+    }
+
     function processViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var viewFromData = packet.viewFrom;
         if (defined(viewFromData)) {
@@ -1130,6 +1139,7 @@ define([
     processPolyline, //
     processPyramid, //
     processVector, //
+    processParent, //
     processPosition, //
     processViewFrom, //
     processOrientation, //
