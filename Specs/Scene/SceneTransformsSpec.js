@@ -39,7 +39,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('returns correct position', function() {
+    it('returns correct window position', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var positionCartographic = ellipsoid.cartesianToCartographic(scene.getCamera().position);
         positionCartographic.height = 0.0;
@@ -52,6 +52,21 @@ defineSuite([
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
         expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
         expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
+    });
+
+    it('returns correct drawing buffer position', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.getCamera().position);
+        positionCartographic.height = 0.0;
+        var position = ellipsoid.cartographicToCartesian(positionCartographic);
+
+        // Update scene state
+        scene.initializeFrame();
+        scene.render();
+
+        var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
+        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
+        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
     });
 
 }, 'WebGL');
