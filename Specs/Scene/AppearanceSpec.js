@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor', function() {
-        var material = Material.fromType(undefined, 'Color');
+        var material = Material.fromType('Color');
         var vs =
             'attribute vec3 position3DHigh;\n' +
             'attribute vec3 position3DLow;\n' +
@@ -60,7 +60,7 @@ defineSuite([
     });
 
     it('getFragmentShaderSource with material', function() {
-        var material = Material.fromType(undefined, 'Color');
+        var material = Material.fromType('Color');
         var fs =
             'varying vec4 v_color;\n' +
             'void main() {\n' +
