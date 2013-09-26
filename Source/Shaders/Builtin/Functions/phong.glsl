@@ -42,7 +42,6 @@ vec4 czm_phong(vec3 toEye, czm_material material)
     return vec4(color, material.alpha);
 }
 
-
 vec4 czm_private_phong(vec3 toEye, czm_material material)
 {
     float diffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);

@@ -25,7 +25,7 @@ define([
      * @alias IauOrientationAxes
      * @constructor
      *
-     * @param {Function} [computeFunction=Iau2000Orientation.ComputeMoon] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
+     * @param {Function} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
      *
      * @exception {DeveloperError} computeFunction is required.
      *
