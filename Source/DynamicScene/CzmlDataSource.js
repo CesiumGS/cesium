@@ -697,10 +697,7 @@ define([
     }
 
     function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var nameData = packet.name;
-        if (defined(nameData)) {
-            processPacketData(String, dynamicObject, 'name', nameData, undefined, sourceUri);
-        }
+        dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
     }
 
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1109,7 +1106,7 @@ define([
 
         var name;
         if (defined(documentObject) && defined(documentObject.name)) {
-            name = documentObject.name.getValue();
+            name = documentObject.name;
         }
 
         if (!defined(name) && defined(sourceUri)) {
