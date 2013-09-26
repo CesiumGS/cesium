@@ -1,8 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-         'Core/IauOrientationParameters'
-     ], function(
-             IauOrientationParameters) {
+defineSuite(['Core/IauOrientationParameters'], function(IauOrientationParameters) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
