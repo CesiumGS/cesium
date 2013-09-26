@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="The outline of a cylinder.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+    
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+
+    var length = 400000.0;
+    var radius = 150000.0;
+
+    // Red cylinder outline
+    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+    );
+    
+    var cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+        length : length,
+        topRadius : radius,
+        bottomRadius : radius
+    });
+    
+    var redCylinderOutline = new Cesium.GeometryInstance({
+        geometry : cylinderOutlineGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+
+    // Red cylinder
+    var fillGeometry = new Cesium.CylinderGeometry({
+        length : length,
+        topRadius : radius,
+        bottomRadius : radius,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    });
+    
+    var redCylinder = new Cesium.GeometryInstance({
+        geometry : fillGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    });
+
+    // Blue cylinder outline
+    positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 40.0));
+    modelMatrix = Cesium.Matrix4.multiplyByTranslation(
+        Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
+        new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
+    );
+    cylinderOutlineGeometry = new Cesium.CylinderOutlineGeometry({
+        length : length,
+        topRadius : radius,
+        bottomRadius : radius,
+        numberOfVerticalLines: 0
+    });
+        
+    var blueCylinderOutline = new Cesium.GeometryInstance({
+        geometry : cylinderOutlineGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+
+    // Blue cylinder
+    var blueCylinder = new Cesium.GeometryInstance({
+        geometry : fillGeometry,
+        modelMatrix : modelMatrix,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+        }
+    });
+    
+    // Add outline instances to primitives
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [redCylinderOutline, blueCylinderOutline],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+    
+    // Add cylinderst to primitives
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [redCylinder, blueCylinder],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true
+        })
+    }));
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

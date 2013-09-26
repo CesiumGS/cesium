@@ -432,6 +432,7 @@ define([
      * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
+     * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
      * @see Scene#getAnimations
      */
@@ -441,20 +442,26 @@ define([
     CameraFlightPath.createAnimation = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
+        var direction = description.direction;
+        var up = description.up;
 
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
+
+        if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
+            throw new DeveloperError('If either direction or up is given, then both are required.');
+        }
+
         var frameState = scene.getFrameState();
         if (frameState.mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
-        var direction = description.direction;
-        var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
 
         var controller = scene.getScreenSpaceCameraController();

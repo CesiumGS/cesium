@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="The outlien of a polygon.">
+    <meta name="cesium-sandcastle-labels" content="Geometries">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+
+    // Blue polygon outline
+    var positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-95, 37.0),
+        Cesium.Cartographic.fromDegrees(-95, 32.0),
+        Cesium.Cartographic.fromDegrees(-90, 33.0),
+        Cesium.Cartographic.fromDegrees(-87, 31.0),
+        Cesium.Cartographic.fromDegrees(-87, 35.0)
+    ]);
+    
+    var bluePolygonOutlineInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonOutlineGeometry.fromPositions({
+            positions : positions
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+    
+    // Blue polygon
+    var bluePolygonInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonGeometry.fromPositions({
+            positions : positions,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 0.0, 1.0, 0.5))
+        }
+    });
+
+    // Green extruded polygon outline
+    var polygonHierarchy = {
+        positions : ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-108.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-98.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-98.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-108.0, 40.0)
+        ]),
+        holes : [{
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-106.0, 31.0),
+                Cesium.Cartographic.fromDegrees(-106.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 39.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 31.0)
+            ])
+        }]
+    };
+    var extrudedHeight = 500000.0;
+    
+    var greenPolygonOutlineInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonOutlineGeometry({
+            polygonHierarchy : polygonHierarchy,
+            extrudedHeight : extrudedHeight
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+    
+    // Green extruded polygon
+    var greenPolygonInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : polygonHierarchy,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            extrudedHeight : extrudedHeight
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(0.0, 1.0, 0.0, 0.5))
+        }
+    });
+    
+    // Add polygon outline instances to primitives
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [bluePolygonOutlineInstance, greenPolygonOutlineInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+    
+    // Add polygon instances to primtives
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [bluePolygonInstance, greenPolygonInstance],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true
+        })
+    }));
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

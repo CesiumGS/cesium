@@ -54,7 +54,7 @@ defineSuite([
 
         frameState.camera.controller.viewExtent(extent);
         var us = context.getUniformState();
-        us.update(frameState);
+        us.update(context, frameState);
     });
 
     afterAll(function() {
@@ -83,7 +83,7 @@ defineSuite([
             materialSupport : MaterialAppearance.MaterialSupport.BASIC,
             translucent : false,
             closed : true,
-            material : Material.fromType(context, Material.DotType)
+            material : Material.fromType(Material.DotType)
         });
 
         ClearCommand.ALL.execute(context);
@@ -98,7 +98,7 @@ defineSuite([
             materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
             translucent : false,
             closed : true,
-            material : Material.fromType(context, Material.ImageType)
+            material : Material.fromType(Material.ImageType)
         });
 
         ClearCommand.ALL.execute(context);
@@ -113,7 +113,7 @@ defineSuite([
             materialSupport : MaterialAppearance.MaterialSupport.ALL,
             translucent : false,
             closed : true,
-            material : Material.fromType(context, Material.NormalMapType)
+            material : Material.fromType(Material.NormalMapType)
         });
 
         ClearCommand.ALL.execute(context);
