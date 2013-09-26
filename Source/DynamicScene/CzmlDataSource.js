@@ -893,6 +893,13 @@ define([
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
     }
 
+    function processDescription(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var descriptionData = packet.description;
+        if (defined(descriptionData)) {
+            processPacketData(String, dynamicObject, 'balloon', descriptionData, undefined, sourceUri);
+        }
+    }
+
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
@@ -1124,6 +1131,8 @@ define([
 
         dataSource._name = name;
 
+        //FIXME This is a temporary hack to sstop the document from showing up in the DataSourceBrowser.
+        dynamicObjectCollection.removeById('document');
         return clock;
     }
 
@@ -1154,6 +1163,7 @@ define([
     processEllipse, //
     processEllipsoid, //
     processCone, //
+    processDescription, //
     processLabel, //
     processName, //
     processPath, //

@@ -236,15 +236,37 @@ define([
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
+        var dataSourceViewModelHash = {};
+
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this, dataSource);
 
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         var objects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = objects.length; i < len; ++i) {
             var object = objects[i];
-            var name = defaultValue(object.name, object.id);
-            var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
-            dataSourceViewModel.children.push(dynamicObjectViewModel);
+
+            var parent;
+            var id = object.id;
+            if (!defined(dataSourceViewModelHash[id])) {
+                parent = undefined;
+                var name = defaultValue(object.name, id);
+                var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
+                dataSourceViewModelHash[id] = dynamicObjectViewModel;
+                if (defined(object.parent)) {
+                    parent = object.parent.getValue();
+                }
+                if (defined(parent)) {
+                    var parentId = parent.id;
+                    var parentViewModel = dataSourceViewModelHash[parentId];
+                    if (!defined(parentViewModel)) {
+                        parentViewModel = new DataSourceViewModel(defaultValue(parent.name, parentId), this, dataSource, parent);
+                        dataSourceViewModelHash[parentId] = parentViewModel;
+                    }
+                    parentViewModel.children.push(dynamicObjectViewModel);
+                } else {
+                    dataSourceViewModel.children.push(dynamicObjectViewModel);
+                }
+            }
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);
