@@ -7,9 +7,9 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
-   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `Cesium.BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
+   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
 
-            Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+            BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
 
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
 
