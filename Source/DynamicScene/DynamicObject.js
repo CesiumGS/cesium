@@ -63,8 +63,8 @@ define(['../Core/createGuid',
         this._viewFrom = undefined;
 
         this._propertyChanged = new Event();
-        this._propertyNames = ['availability', 'position', 'orientation', 'billboard', //
-                               'cone', 'ellipsoid', 'ellipse', 'label', 'name', 'path', 'point', 'polygon', //
+        this._propertyNames = ['position', 'orientation', 'billboard', //
+                               'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
     };
 
@@ -105,7 +105,19 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        name : createDynamicPropertyDescriptor('name', '_name'),
+        name : {
+            configurable : false,
+            get : function() {
+                return this._name;
+            },
+            set : function(value) {
+                var oldValue = this._name;
+                if (oldValue !== value) {
+                    this._name = value;
+                    this._propertyChanged.raiseEvent(this, 'name', value, oldValue);
+                }
+            }
+        },
         /**
          * The availability TimeInterval, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
@@ -296,26 +308,26 @@ define(['../Core/createGuid',
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+
+        //Name and availability are not Property objects and are currently handled differently.
+        this.name = defaultValue(this.name, source.name);
         this.availability = defaultValue(source.availability, this.availability);
 
         var propertyNames = this._propertyNames;
         var propertyNamesLength = propertyNames.length;
         for ( var i = 0; i < propertyNamesLength; i++) {
             var name = propertyNames[i];
-            //TODO Remove this once availability is refactored.
-            if (name !== 'availability') {
-                var targetProperty = this[name];
-                var sourceProperty = source[name];
-                if (defined(sourceProperty)) {
-                    if (defined(targetProperty)) {
-                        if (defined(targetProperty.merge)) {
-                            targetProperty.merge(sourceProperty);
-                        }
-                    } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
-                        this[name] = sourceProperty.clone();
-                    } else {
-                        this[name] = sourceProperty;
+            var targetProperty = this[name];
+            var sourceProperty = source[name];
+            if (defined(sourceProperty)) {
+                if (defined(targetProperty)) {
+                    if (defined(targetProperty.merge)) {
+                        targetProperty.merge(sourceProperty);
                     }
+                } else if (defined(sourceProperty.merge) && defined(sourceProperty.clone)) {
+                    this[name] = sourceProperty.clone();
+                } else {
+                    this[name] = sourceProperty;
                 }
             }
         }
