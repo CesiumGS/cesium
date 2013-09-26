@@ -12,6 +12,7 @@ define(['../Core/createGuid',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermiteSpline',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -57,6 +58,7 @@ define(['../Core/createGuid',
         RuntimeError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermiteSpline,
         Iso8601,
         JulianDate,
@@ -186,6 +188,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             }
             dynamicObject.label.text = new ConstantProperty(name);
+            dynamicObject.name = dynamicObject.label.text;
         }
 
         var foundGeometry = false;
@@ -195,6 +198,8 @@ define(['../Core/createGuid',
             var nodeName = node.nodeName;
             if (nodeName === 'TimeSpan') {
                 dynamicObject.availability = processTimeSpan(node);
+            } else if (nodeName === 'description') {
+                dynamicObject.balloon = new ConstantProperty(node.textContent);
             } else if (featureTypes.hasOwnProperty(nodeName)) {
                 foundGeometry = true;
                 mergeStyles(nodeName, styleObject, dynamicObject);
@@ -806,6 +811,24 @@ define(['../Core/createGuid',
      * @param {Object} uriResolver
      */
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        var name;
+        var document = kml.getElementsByTagName('Document');
+        if (document.length > 0) {
+            var childNodes = document[0].children;
+            var length = childNodes.length;
+            for ( var i = 0; i < length; i++) {
+                var node = childNodes[i];
+                if (node.nodeName === 'name') {
+                    name = node.textContent;
+                    break;
+                }
+            }
+        }
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+        dataSource._name = name;
+
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         var styleCollection = new DynamicObjectCollection();
 
@@ -880,7 +903,7 @@ define(['../Core/createGuid',
         });
     }
 
-    function loadKmz(dataSource, blob, deferred) {
+    function loadKmz(dataSource, blob, sourceUri, deferred) {
         var uriResolver = {};
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
@@ -900,7 +923,7 @@ define(['../Core/createGuid',
                 }
 
                 when.all(promises, function() {
-                    loadKml(dataSource, uriResolver.kml, undefined, uriResolver);
+                    loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
                     // close the zip reader
                     reader.close(function() {
                         // onclose callback
@@ -927,6 +950,7 @@ define(['../Core/createGuid',
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this._name = undefined;
 
         this._terrainProvider = defaultValue(terrainProvider, undefined);
     };
@@ -950,6 +974,10 @@ define(['../Core/createGuid',
      */
     KmlDataSource.prototype.getErrorEvent = function() {
         return this._error;
+    };
+
+    KmlDataSource.prototype.getName = function() {
+        return this._name;
     };
 
     /**
@@ -1015,29 +1043,6 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Asynchronously loads the KML at the provided url, replacing any existing data.
-     *
-     * @param {Object} url The url to be processed.
-     *
-     * @returns {Promise} a promise that will resolve when the KML is processed.
-     *
-     * @exception {DeveloperError} url is required.
-     */
-    KmlDataSource.prototype.loadUrl = function(url) {
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
-        }
-
-        var dataSource = this;
-        return when(loadXML(url), function(kml) {
-            return dataSource.load(kml, url);
-        }, function(error) {
-            dataSource._error.raiseEvent(dataSource, error);
-            return when.reject(error);
-        });
-    };
-
-    /**
      * Asynchronously loads the provided KMZ, replacing any existing data.
      *
      * @param {Blob} kmz The KMZ document to be processed.
@@ -1046,13 +1051,13 @@ define(['../Core/createGuid',
      *
      * @exception {DeveloperError} kmz is required.
      */
-    KmlDataSource.prototype.loadKmz = function(kmz) {
+    KmlDataSource.prototype.loadKmz = function(kmz, url) {
         if (!defined(kmz)) {
             throw new DeveloperError('kmz is required.');
         }
 
         var deferred = when.defer();
-        loadKmz(this, kmz, deferred);
+        loadKmz(this, kmz, url, deferred);
         return deferred.promise;
     };
 
@@ -1065,14 +1070,38 @@ define(['../Core/createGuid',
      *
      * @exception {DeveloperError} url is required.
      */
-    KmlDataSource.prototype.loadKmzUrl = function(url) {
+    KmlDataSource.prototype.loadUrl = function(url) {
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 
         var that = this;
         return when(loadBlob(url), function(blob) {
-            return that.loadKmz(blob);
+            var deferred = when.defer();
+
+            //Get the blob "magic number" to determine if it's a zip or KML
+            var slice = blob.slice(0, 4);
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(slice);
+            reader.onload = function(e) {
+                var buffer = reader.result;
+                var view = new DataView(buffer);
+
+                //If it's a zip file, treat it as a KMZ
+                if (view.getUint32(0, false) === 0x504b0304) {
+                    return loadKmz(that, blob, url, deferred);
+                }
+
+                //Else, reader it as an XML file.
+                reader = new FileReader();
+                reader.addEventListener("loadend", function() {
+                    var parser = new DOMParser();
+                    that.load(parser.parseFromString(reader.result, 'text/xml'), url);
+                    deferred.resolve();
+                });
+                reader.readAsText(blob);
+            };
+            return deferred;
         }, function(error) {
             that._error.raiseEvent(that, error);
             return when.reject(error);

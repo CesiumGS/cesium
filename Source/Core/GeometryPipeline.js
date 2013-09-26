@@ -764,8 +764,9 @@ define([
             var length = values.length;
             for (var i = 0; i < length; i += 3) {
                 Cartesian3.unpack(values, i, scratchCartesian3);
-                Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian4);
-                Cartesian3.pack(scratchCartesian4, values, i);
+                Matrix3.multiplyByVector(matrix, scratchCartesian3, scratchCartesian3);
+                scratchCartesian3 = Cartesian3.normalize(scratchCartesian3, scratchCartesian3);
+                Cartesian3.pack(scratchCartesian3, values, i);
             }
         }
     }
@@ -827,8 +828,7 @@ define([
         var boundingSphere = instance.geometry.boundingSphere;
 
         if (defined(boundingSphere)) {
-            Matrix4.multiplyByPoint(modelMatrix, boundingSphere.center, boundingSphere.center);
-            boundingSphere.center = Cartesian3.fromCartesian4(boundingSphere.center);
+            instance.geometry.boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
         }
 
         instance.modelMatrix = Matrix4.IDENTITY.clone();
