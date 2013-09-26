@@ -7,9 +7,9 @@ Beta Releases
 ### b21 - 2013-10-01
 
 * Breaking changes:
-   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `Cesium.BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
+   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
 
-            Cesium.BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+            BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
 
    * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
 
@@ -25,7 +25,6 @@ Beta Releases
                // Use p.primitive
             }
 
-   * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
    * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
    * The following prototype functions were removed:
@@ -44,26 +43,27 @@ Beta Releases
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
    * Removed `canvasDimensions` from `FrameState`.
    * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
+   * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
-* Improved runtime generation of GLSL shaders.
-* Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
 * Added `heading` and `tilt` properties to `CameraController`.
-* Made sun size accurate.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
-* Fix geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
+* Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
+* Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Added proper support for browser zoom.
+* Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.
     * Rendering over a thousand polylines in the same collection with different materials went from 20 to 40 frames per second.
-* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
-* Fix `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
-* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
-* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
-* Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
-* `Viewer` no longer losses visual fidelity when using browser zoom.
-* Added `Geometries` tab to Sandcastle with an example for each geometry type.
+* Improved runtime generation of GLSL shaders.
+* Fixed geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
+* Fixed `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
 
         var p = new Primitive(/* ... */);
