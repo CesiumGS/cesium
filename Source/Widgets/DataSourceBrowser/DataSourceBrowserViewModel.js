@@ -242,11 +242,9 @@ define([
         var objects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = objects.length; i < len; ++i) {
             var object = objects[i];
-            if (defined(object.position)) {
-                var name = defaultValue(object.name, object.id);
-                var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
-                dataSourceViewModel.children.push(dynamicObjectViewModel);
-            }
+            var name = defaultValue(object.name, object.id);
+            var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
+            dataSourceViewModel.children.push(dynamicObjectViewModel);
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);
