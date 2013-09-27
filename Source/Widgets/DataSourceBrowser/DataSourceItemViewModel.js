@@ -13,7 +13,7 @@ define([
         knockout) {
     "use strict";
 
-    var DataSourceViewModel = function(name, rootViewModel, dataSource) {
+    var DataSourceItemViewModel = function(name, rootViewModel, dataSource, dynamicObject) {
         if (!defined(rootViewModel)) {
             throw new DeveloperError('rootViewModel is required.');
         }
@@ -21,8 +21,11 @@ define([
             throw new DeveloperError('dataSource is required.');
         }
 
-        this._rootViewModel = rootViewModel;
+        var that = this;
+
         this._dataSource = dataSource;
+        this._rootViewModel = rootViewModel;
+        this._dynamicObject = dynamicObject;
 
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
         this.name = name;
@@ -31,8 +34,6 @@ define([
 
         knockout.track(this, ['name', 'children', 'expanded']);
 
-        var that = this;
-
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
             return that.children.length > 0;
@@ -40,12 +41,11 @@ define([
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return that._rootViewModel.selectedItem === that;
+            return rootViewModel.selectedItem === that;
         });
 
         this.isFilteredOut = undefined;
         knockout.defineProperty(this, 'isFilteredOut', function() {
-            var rootViewModel = that._rootViewModel;
             if (rootViewModel.searchText.length < 1) {
                 // No filtering in progress, nothing filtered out.
                 return false;
@@ -53,7 +53,7 @@ define([
 
             // If any child is visible, we must be visible.
             var len = that.children.length;
-            for ( var i = 0; i < len; ++i) {
+            for (var i = 0; i < len; ++i) {
                 var kidFilteredOut = that.children[i].isFilteredOut;
                 if (!kidFilteredOut) {
                     return false;
@@ -72,31 +72,12 @@ define([
         knockout.defineProperty(this, 'expandIndicator', function() {
             return that.expanded ? '&#9660;' : '&#9658;';
         });
-
-        /**
-         * True if the clock icon is selected.
-         * @type {Boolean}
-         */
-        this.clockTracking = undefined;
-        knockout.defineProperty(this, 'clockTracking', function() {
-            return that._rootViewModel.clockTrackedDataSource === that._dataSource;
-        });
-
-        /**
-         * True if this is the only data source loaded.
-         * @type {Boolean}
-         */
-        this.isSoleSource = undefined;
-        knockout.defineProperty(this, 'isSoleSource', function() {
-            var rootViewModel = that._rootViewModel;
-            return rootViewModel.dataSourcesLength === 1 && rootViewModel.dataSources.get(0) === that._dataSource;
-        });
     };
 
-    defineProperties(DataSourceViewModel.prototype, {
+    defineProperties(DataSourceItemViewModel.prototype, {
         /**
-         * Gets the {@link DataSource} that this view model represents.
-         * @memberof DataSourceViewModel.prototype
+         * Gets the {@link DataSource} that contains this item.
+         * @memberof DataSourceItemViewModel.prototype
          * @type {DataSource}
          */
         dataSource : {
@@ -107,37 +88,34 @@ define([
 
         /**
          * Gets the root view model for this view model.
-         * @memberof DataSourceViewModel.prototype
+         * @memberof DataSourceItemViewModel.prototype
          * @type {DataSourceBrowserViewModel}
          */
         rootViewModel : {
             get : function() {
                 return this._rootViewModel;
             }
+        },
+
+        /**
+         * Gets the {@link DynamicObject} for this item.
+         * @memberof DataSourceItemViewModel.prototype
+         * @type {DynamicObject}
+         */
+        dynamicObject : {
+            get : function() {
+                return this._dynamicObject;
+            }
         }
     });
 
-    DataSourceViewModel.prototype.select = function() {
+    DataSourceItemViewModel.prototype.select = function() {
         this._rootViewModel.selectedItem = this;
     };
 
-    DataSourceViewModel.prototype.trackClock = function() {
-        this._rootViewModel.clockTrackedDataSource = this._dataSource;
-    };
-
-    DataSourceViewModel.prototype.toggleExpanded = function() {
+    DataSourceItemViewModel.prototype.toggleExpanded = function() {
         this.expanded = !this.expanded;
     };
 
-    DataSourceViewModel.prototype.remove = function() {
-        this._rootViewModel.dataSources.remove(this._dataSource);
-    };
-
-    DataSourceViewModel.prototype.destroy = function() {
-        if (typeof this._dataSource.destroy === 'function') {
-            this._dataSource.destroy();
-        }
-    };
-
-    return DataSourceViewModel;
+    return DataSourceItemViewModel;
 });

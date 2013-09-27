@@ -7,6 +7,7 @@ define([
         '../../Core/Event',
         '../createCommand',
         './DataSourceViewModel',
+        './DataSourceItemViewModel',
         './DataSourcePanelViewModel',
         '../../ThirdParty/knockout'
     ], function(
@@ -17,6 +18,7 @@ define([
         Event,
         createCommand,
         DataSourceViewModel,
+        DataSourceItemViewModel,
         DataSourcePanelViewModel,
         knockout) {
     "use strict";
@@ -45,13 +47,18 @@ define([
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._onObjectSelected = new Event();
         this._onClockSelected = new Event();
-        this._maxHeight = 500;
 
         this._addDataSourceCommand = createCommand(function() {
             that._dataSourcePanelViewModel.visible = true;
         });
 
         this.dataSourceViewModels = [];
+
+        /**
+         * Gets or sets the maximum height of the widget in pixels.  This property is observable.
+         * @type {Number}
+         */
+        this.maxHeight = 500;
 
         /**
          * Gets or sets the tooltip for the "add data source" button.  This property is observable.
@@ -79,7 +86,7 @@ define([
         this._dataSourcesLength = 0;
 
         knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels',
-                              '_maxHeight', 'visible', '_dataSourcesLength', 'searchText']);
+                              'maxHeight', 'visible', '_dataSourcesLength', 'searchText']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -117,6 +124,24 @@ define([
         this.dataSourceViewModels = undefined;
         knockout.defineProperty(this, 'dataSourceViewModels', function() {
             return that._dataSourceViewModels;
+        });
+
+        /**
+         * Gets the number of data sources.  This property is observable.
+         * @type {Number}
+         */
+        this.dataSourcesLength = undefined;
+        knockout.defineProperty(this, 'dataSourcesLength', function() {
+            return this._dataSourcesLength;
+        });
+
+        /**
+         * Gets a message if there are no data sources.  This property is observable.
+         * @type {String}
+         */
+        this.infoText = undefined;
+        knockout.defineProperty(this, 'infoText', function() {
+            return this._dataSourceViewModels.length > 0 ? '' : 'Empty globe.';
         });
     };
 
@@ -178,42 +203,6 @@ define([
             get : function() {
                 return this._dataSourceCollection;
             }
-        },
-
-        /**
-         * Gets the number of data sources.  This is an observable copy of dataSources.getLength().
-         * @memberof DataSourceBrowserViewModel.prototype
-         * @type {Number}
-         */
-        dataSourcesLength : {
-            get : function() {
-                return this._dataSourcesLength;
-            }
-        },
-
-        /**
-         * Gets or sets the maximum height of the widget in pixels.
-         * @memberof DataSourceBrowserViewModel.prototype
-         * @type {Number}
-         */
-        maxHeight : {
-            get : function() {
-                return this._maxHeight;
-            },
-            set : function(value) {
-                this._maxHeight = value;
-            }
-        },
-
-        /**
-         * Gets a message if there are no data sources.
-         * @memberof DataSourceBrowserViewModel.prototype
-         * @type {string}
-         */
-        infoText : {
-            get : function() {
-                return this._dataSourceViewModels.length ? '' : 'Empty globe.';
-            }
         }
     });
 
@@ -224,7 +213,7 @@ define([
      * @returns {String}
      */
     DataSourceBrowserViewModel.prototype.maxHeightOffset = function(offset) {
-        return (this._maxHeight - offset).toString() + 'px';
+        return (this.maxHeight - offset).toString() + 'px';
     };
 
     /**
@@ -235,19 +224,19 @@ define([
         this.visible = !this.visible;
     };
 
-    function insertIntoTree(that, root, object, dataSourceViewModelHash, dataSource) {
+    function insertIntoTree(rootViewModel, root, object, dataSourceViewModelHash, dataSource) {
         var id = object.id;
         if (!defined(dataSourceViewModelHash[id])) {
             var parent;
             var name = defaultValue(object.name, id);
-            var dynamicObjectViewModel = new DataSourceViewModel(name, that, dataSource, object);
+            var dynamicObjectViewModel = new DataSourceItemViewModel(name, rootViewModel, dataSource, object);
             dataSourceViewModelHash[id] = dynamicObjectViewModel;
             parent = object.parent;
             if (defined(parent)) {
                 var parentId = parent.id;
                 var parentViewModel = dataSourceViewModelHash[parentId];
                 if (!defined(parentViewModel)) {
-                    parentViewModel = insertIntoTree(that, root, parent, dataSourceViewModelHash, dataSource);
+                    parentViewModel = insertIntoTree(rootViewModel, root, parent, dataSourceViewModelHash, dataSource);
                 }
                 parentViewModel.children.push(dynamicObjectViewModel);
             } else {
