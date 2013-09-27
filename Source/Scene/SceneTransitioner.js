@@ -354,9 +354,9 @@ define([
         var frame = Matrix4.multiply(Matrix4.inverseTransformation(transform), camera.transform);
         camera.transform = Matrix4.clone(transform);
 
-        camera.position = Cartesian3.fromCartesian4(frame.multiplyByVector(pos));
-        camera.direction = Cartesian3.fromCartesian4(frame.multiplyByVector(dir));
-        camera.up = Cartesian3.fromCartesian4(frame.multiplyByVector(up));
+        camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, pos));
+        camera.direction = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, dir));
+        camera.up = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, up));
         camera.right = Cartesian3.cross(camera.direction, camera.up);
     }
 
