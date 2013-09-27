@@ -118,6 +118,21 @@ defineSuite([
         expect(widget.centralBody.terrainProvider).toBe(options.terrainProvider);
     });
 
+    it('sets expected options skyBoxSources', function() {
+        var options = {
+            skyBoxSources : {
+                positiveX : './Data/Images/Blue.png',
+                negativeX : './Data/Images/Green.png',
+                positiveY : './Data/Images/Blue.png',
+                negativeY : './Data/Images/Green.png',
+                positiveZ : './Data/Images/Blue.png',
+                negativeZ : './Data/Images/Green.png'
+            }
+        };
+        widget = new CesiumWidget(container, options);
+        expect(widget.scene.skyBox.getSources()).toBe(options.skyBoxSources);
+    });
+
     it('can set contextOptions', function() {
         var contextOptions = {
             alpha : true,

@@ -57,6 +57,7 @@ Beta Releases
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Added proper support for browser zoom.
 * Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
+* Added `skyBoxSources` to the `CesiumWidget` and `Viewer` constructors.
 * Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.

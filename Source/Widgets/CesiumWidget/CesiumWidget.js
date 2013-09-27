@@ -100,6 +100,7 @@ define([
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     * @param {Object} [skyBoxSources=undefined] An object with the source URL or <code>Image</code> object for each of the six cube map faces (<code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>, <code>negativeY</code>, <code>positiveZ</code>, <code>negativeZ</code>) used for the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -121,7 +122,16 @@ define([
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : 'http://cesium.agi.com/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
-     *     })
+     *     }),
+     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
+     *     skyBoxSources : {
+     *         positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
+     *         negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
+     *         positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
+     *         negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
+     *         positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
+     *         negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
+     *     }
      * });
      */
     var CesiumWidget = function(container, options) {
@@ -171,14 +181,14 @@ define([
             var centralBody = new CentralBody(ellipsoid);
             scene.getPrimitives().setCentralBody(centralBody);
 
-            scene.skyBox = new SkyBox({
+            scene.skyBox = new SkyBox(defaultValue(options.skyBoxSources, {
                 positiveX : getDefaultSkyBoxUrl('px'),
                 negativeX : getDefaultSkyBoxUrl('mx'),
                 positiveY : getDefaultSkyBoxUrl('py'),
                 negativeY : getDefaultSkyBoxUrl('my'),
                 positiveZ : getDefaultSkyBoxUrl('pz'),
                 negativeZ : getDefaultSkyBoxUrl('mz')
-            });
+            }));
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
             scene.sun = new Sun();
 
