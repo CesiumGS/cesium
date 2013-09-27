@@ -28,13 +28,10 @@ require(['Cesium'], function(Cesium) {
     "use strict";
 
     Cesium.Math.setRandomNumberSeed(1234);
-
     var viewer = new Cesium.Viewer('cesiumContainer');
-
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-
     var solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE);
 
     // Combine instances for an extent, polygon, ellipse, and circle into a single primitive.
@@ -241,7 +238,8 @@ require(['Cesium'], function(Cesium) {
     var topRadius = 150000.0;
     var bottomRadius = 150000.0;
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-70.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0));
+        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-70.0, 45.0))),
+        new Cesium.Cartesian3(0.0, 0.0, 100000.0));
     var cylinderInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.CylinderGeometry({
             length : length,
@@ -328,11 +326,11 @@ require(['Cesium'], function(Cesium) {
     for (i = 0; i < 5; ++i) {
         height = 100000.0 + (200000.0 * i);
         boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-106.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-106.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
         ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
         sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-98.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-98.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
 
         instances.push(new Cesium.GeometryInstance({
             geometry : boxGeometry,
@@ -593,7 +591,7 @@ require(['Cesium'], function(Cesium) {
     topRadius = 0.0;
     bottomRadius = 200000.0;
     modelMatrix = Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-70.0, 40.0))), new Cesium.Cartesian3(0.0, 0.0, 200000.0));
+        ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-70.0, 40.0))), new Cesium.Cartesian3(0.0, 0.0, 200000.0));
     cylinderInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.CylinderGeometry({
             length : length,
@@ -680,12 +678,11 @@ require(['Cesium'], function(Cesium) {
     for (i = 0; i < 5; ++i) {
         height = 100000.0 + (200000.0 * i);
         boxModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-108.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-108.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
         ellipsoidModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-104.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-104.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
         sphereModelMatrix = Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
-
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0);
         instances.push(new Cesium.GeometryInstance({
             geometry : boxGeometry,
             modelMatrix : boxModelMatrix,
@@ -718,7 +715,7 @@ require(['Cesium'], function(Cesium) {
             closed : true
         })
     }));
-    
+
     positions = [];
     var colors = [];
     for (i = 0; i < 40; ++i) {
@@ -745,7 +742,7 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
-    
+
     // create a polyline with a material
     positions = [];
     for (i = 0; i < 40; ++i) {
@@ -764,7 +761,7 @@ require(['Cesium'], function(Cesium) {
             material : Cesium.Material.fromType(scene.getContext(), Cesium.Material.PolylineGlowType)
         })
     }));
-    
+
     // create a polyline with per segment colors
     positions = [];
     colors = [];
@@ -784,7 +781,7 @@ require(['Cesium'], function(Cesium) {
         }),
         appearance : new Cesium.PolylineColorAppearance()
     }));
-    
+
     // create a polyline with per vertex colors
     positions = [];
     colors = [];
@@ -926,7 +923,7 @@ require(['Cesium'], function(Cesium) {
     var polylineVolumeFill = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
             polylinePositions : positions,
-                        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             shapePositions : starPositions(7, 30000.0, 20000.0)
         }),
         attributes : {
@@ -951,7 +948,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Cartographic.fromDegrees(-105.0, 20.0),
                 Cesium.Cartographic.fromDegrees(-110.0, 20.0)
             ]),
-                        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             shapePositions : starPositions(7, 30000, 20000)
         }),
         attributes : {
@@ -990,7 +987,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(1.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : 1.0
             }
         })
     }));

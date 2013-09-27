@@ -62,37 +62,37 @@ define([
         var indicesCount = (length - 1) * (shapeLength) * 6 + firstEndIndices.length * 2;
         var indices = IndexDatatype.createTypedArray(vertexCount, indicesCount);
         var i, j;
-        var LL, UL, UR, LR;
+        var ll, ul, ur, lr;
         var offset = shapeLength * 2;
         var index = 0;
         for (i = 0; i < length - 1; i++) {
             for (j = 0; j < shapeLength - 1; j++) {
-                LL = j * 2 + i * shapeLength * 2;
-                LR = LL + offset;
-                UL = LL + 1;
-                UR = UL + offset;
+                ll = j * 2 + i * shapeLength * 2;
+                lr = ll + offset;
+                ul = ll + 1;
+                ur = ul + offset;
 
-                indices[index++] = UL;
-                indices[index++] = LL;
-                indices[index++] = UR;
-                indices[index++] = UR;
-                indices[index++] = LL;
-                indices[index++] = LR;
+                indices[index++] = ul;
+                indices[index++] = ll;
+                indices[index++] = ur;
+                indices[index++] = ur;
+                indices[index++] = ll;
+                indices[index++] = lr;
             }
-            LL = shapeLength * 2 - 2 + i * shapeLength * 2;
-            UL = LL + 1;
-            UR = UL + offset;
-            LR = LL + offset;
+            ll = shapeLength * 2 - 2 + i * shapeLength * 2;
+            ul = ll + 1;
+            ur = ul + offset;
+            lr = ll + offset;
 
-            indices[index++] = UL;
-            indices[index++] = LL;
-            indices[index++] = UR;
-            indices[index++] = UR;
-            indices[index++] = LL;
-            indices[index++] = LR;
+            indices[index++] = ul;
+            indices[index++] = ll;
+            indices[index++] = ur;
+            indices[index++] = ur;
+            indices[index++] = ll;
+            indices[index++] = lr;
         }
 
-        if (vertexFormat.st) {
+        if (vertexFormat.st || vertexFormat.tangent || vertexFormat.binormal) { // st required for tangent/binormal calculation
             var st = new Float32Array(vertexCount * 2);
             var lengthSt = 1 / (length - 1);
             var heightSt = 1 / (boundingRectangle.height);
@@ -162,6 +162,15 @@ define([
 
         if (vertexFormat.tangent || vertexFormat.binormal) {
             geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+            if (!vertexFormat.tangent) {
+                geometry.attributes.tangent = undefined;
+            }
+            if (!vertexFormat.binormal) {
+                geometry.attributes.binormal = undefined;
+            }
+            if (!vertexFormat.st) {
+                geometry.attributes.st = undefined;
+            }
         }
 
         return geometry;
@@ -173,8 +182,8 @@ define([
      * @alias PolylineVolumeGeometry
      * @constructor
      *
-     * @param {Array} options.polylinePositions An array of {Cartesain3} positions that define the center of the polyline volume.
-     * @param {Number} options.shapePositions An array of {Cartesian2} positions that define the shape to be extruded along the polyline
+     * @param {Array} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
+     * @param {Number} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
@@ -210,7 +219,7 @@ define([
         this._positions = positions;
         this._shape = shape;
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._height = defaultValue(options.height, 0);
+        this._height = defaultValue(options.height, 0.0);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);

@@ -45,16 +45,19 @@ define([
     var scratch1 = new Cartesian3();
     var scratch2 = new Cartesian3();
 
+    /**
+     * @private
+     */
     var PolylineVolumeGeometryLibrary = {};
 
     var cartographic = new Cartographic();
     function scaleToSurface(positions, ellipsoid) {
         var heights = new Array(positions.length);
-        for(var i = 0; i < positions.length; i++) {
+        for ( var i = 0; i < positions.length; i++) {
             var pos = positions[i];
             cartographic = ellipsoid.cartesianToCartographic(pos, cartographic);
             heights[i] = cartographic.height;
-            positions[i] = ellipsoid.scaleToGeodeticSurface(pos);
+            positions[i] = ellipsoid.scaleToGeodeticSurface(pos, pos);
         }
         return heights;
     }
@@ -63,7 +66,7 @@ define([
         var p0 = points[0];
         var p1 = points[1];
         var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var numPoints = Math.ceil(angleBetween/granularity);
+        var numPoints = Math.ceil(angleBetween / granularity);
         var heights = new Array(numPoints);
         var i;
         if (h0 === h1) {
@@ -78,7 +81,7 @@ define([
         var heightPerVertex = dHeight / (numPoints);
 
         for (i = 1; i < numPoints; i++) {
-            var h = h0 + i*heightPerVertex;
+            var h = h0 + i * heightPerVertex;
             heights[i] = h;
         }
 
@@ -140,7 +143,7 @@ define([
     function addPositions(centers, left, shape, finalPositions, ellipsoid, heights, xScalar) {
         for ( var i = 0; i < centers.length; i += 3) {
             var center = Cartesian3.fromArray(centers, i, centerScratch);
-            finalPositions = addPosition(center, left, shape, finalPositions, ellipsoid, heights[i/3], xScalar, 1);
+            finalPositions = addPosition(center, left, shape, finalPositions, ellipsoid, heights[i / 3], xScalar, 1);
         }
         return finalPositions;
     }
@@ -243,9 +246,6 @@ define([
         return finalPositions;
     }
 
-    /**
-     * @private
-     */
     PolylineVolumeGeometryLibrary.removeDuplicates = function(shapePositions) {
         var length = shapePositions.length;
         var cleanedPositions = [];
@@ -276,9 +276,6 @@ define([
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
     };
 
-    /**
-     * @private
-     */
     PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
         var ellipsoid = geometry._ellipsoid;
         var heights = scaleToSurface(positions, ellipsoid);
@@ -335,7 +332,7 @@ define([
                 var scalar = 1 / Math.max(0.25, (Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1))));
                 var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 if (leftIsOutside) {
-                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar*width, cornerDirection), pivot);
+                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar * width, cornerDirection), pivot);
                     start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, width, start), start);
                     scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
@@ -353,7 +350,7 @@ define([
                     }
                     previousPosition = Cartesian3.clone(end, previousPosition);
                 } else {
-                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar*width, cornerDirection), pivot);
+                    pivot = Cartesian3.add(position, Cartesian3.multiplyByScalar(cornerDirection, scalar * width, cornerDirection), pivot);
                     start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, -width, start), start);
                     scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
                     scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);

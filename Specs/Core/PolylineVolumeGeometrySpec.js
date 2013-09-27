@@ -159,7 +159,7 @@ defineSuite([
 
         var corners = 90/5 * 2;
         expect(m.attributes.position.values.length).toEqual(3 * (corners * 4 * 2 * 2 + 4 * 2 * 9));
-        expect(m.indices.length).toEqual(3 * (corners * 4 * 2 * 2 + 4 * 7 * 2  + 4));
+        expect(m.indices.length).toEqual(3 * (corners * 4 * 2 * 2 + 4 * 7 * 2 + 4));
     });
 
     it('computes with beveled corners', function() {
@@ -177,6 +177,6 @@ defineSuite([
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * (2 * 8 + 4 * 2 * 9));
-        expect(m.indices.length).toEqual(3 * (8 * 2 + 4 * 7 * 2  + 4));
+        expect(m.indices.length).toEqual(3 * (8 * 2 + 4 * 7 * 2 + 4));
     });
 });
