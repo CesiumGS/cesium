@@ -36,7 +36,7 @@
 .cesium-widget-button:focus {
     color: #fff;  /* For text buttons */
     fill: #fff;   /* For SVG buttons */
-border-color: #ea4;
+    border-color: #ea4;
 }
 
 .cesium-widget-button:hover {

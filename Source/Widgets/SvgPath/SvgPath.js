@@ -18,7 +18,6 @@ define([
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";
-    var xlinkNS = "http://www.w3.org/1999/xlink";
 
     /**
      * The SvgPath widget creates a DOM element for a single SVG path.
@@ -67,9 +66,6 @@ define([
         var svg = document.createElementNS(svgNS, 'svg:svg');
         this._svgNode = svg;
 
-        // Define the XLink namespace that SVG uses
-        svg.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', xlinkNS);
-
         svg.style.cssText = 'width: 100%; height: 100%; position: relative; overflow: hidden;';
         svg.setAttribute('width', pathWidth);
         svg.setAttribute('height', pathHeight);
@@ -108,11 +104,6 @@ define([
             }
         }
     });
-
-    //TODO: Tooltip
-    //SvgPath.prototype.setTooltip = function(tooltip) {
-    //    this._svgNode.getElementsByTagName('title')[0].textContent = tooltip;
-    //};
 
     /**
      * @memberof SvgPath

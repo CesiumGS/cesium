@@ -209,10 +209,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            var homeButtonContainer = document.createElement('div');
-            homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
-            toolbar.appendChild(homeButtonContainer);
-            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
         }
 
         //SceneModePicker
