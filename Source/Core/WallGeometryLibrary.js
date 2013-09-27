@@ -78,6 +78,7 @@ define([
         if (hasBottomHeights) {
             cleanedBottomHeights.push(bottomHeights[0]);
         }
+        var j=1;
         for (var i = 1; i < length; ++i) {
             var v1 = positions[i];
             var c1 = ellipsoid.cartesianToCartographic(v1, scratchCartographic2);
@@ -87,14 +88,15 @@ define([
             if (!latLonEquals(c0, c1)) {
                 cleanedPositions.push(v1); // Shallow copy!
                 cleanedTopHeights.push(c1.height);
+                j++;
                 if (hasBottomHeights) {
                     cleanedBottomHeights.push(bottomHeights[i]);
                 }
             } else if (c0.height < c1.height) {
-                cleanedTopHeights[i-1] = c1.height;
+                cleanedTopHeights[j-1] = c1.height;
             }
 
-            c0 = c1.clone(c0);
+            c1.clone(c0); // clone c1 to c0
         }
 
         return {
