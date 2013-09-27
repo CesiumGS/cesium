@@ -72,7 +72,7 @@ define([
         this._show = defaultValue(description.show, true);
 
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
-        this._actualPosition = this._position.clone(); // For columbus view and 2D
+        this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
         this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
         this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
@@ -809,17 +809,17 @@ define([
         var positionEC = Matrix4.multiplyByPoint(mv, position);
 
         // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = eyeOffset.multiplyComponents(positionEC.normalize());
+        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC));
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC);
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC);
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
-        var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
+        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
 

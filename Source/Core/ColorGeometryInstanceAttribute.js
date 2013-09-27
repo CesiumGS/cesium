@@ -126,21 +126,25 @@ define([
      * Converts a color to a typed array that can be used to assign a color attribute.
      *
      * @param {Color} color The color.
+     * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
      *
-     * @returns {Uint8Array} The typed array in the attribute's format.
+     * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
      *
      * @exception {DeveloperError} color is required.
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
+     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA, attributes.color);
      */
-    ColorGeometryInstanceAttribute.toValue = function(color) {
+    ColorGeometryInstanceAttribute.toValue = function(color, result) {
         if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
 
-        return new Uint8Array(color.toBytes());
+        if (!defined(result)) {
+            return new Uint8Array(color.toBytes());
+        }
+        return color.toBytes(result);
     };
 
     return ColorGeometryInstanceAttribute;

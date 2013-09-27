@@ -61,8 +61,8 @@ define([
             throw new DeveloperError('options.maximumCorner is required');
         }
 
-        this._min = min;
-        this._max = max;
+        this._min = Cartesian3.clone(min);
+        this._max = Cartesian3.clone(max);
         this._workerName = 'createBoxOutlineGeometry';
     };
 
@@ -95,8 +95,8 @@ define([
             throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
         }
 
-        var corner = dimensions.multiplyByScalar(0.5);
-        var min = corner.negate();
+        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5);
+        var min = Cartesian3.negate(corner);
         var max = corner;
 
         var newOptions = {
@@ -186,7 +186,7 @@ define([
         indices[23] = 7;
 
         var diff = Cartesian3.subtract(max, min, diffScratch);
-        var radius = diff.magnitude() * 0.5;
+        var radius = Cartesian3.magnitude(diff) * 0.5;
 
         return new Geometry({
             attributes : attributes,

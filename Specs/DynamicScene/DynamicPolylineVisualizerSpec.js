@@ -246,7 +246,7 @@ defineSuite([
         visualizer.update(time);
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         expect(primitive.getShow()).toEqual(false);
     });
 

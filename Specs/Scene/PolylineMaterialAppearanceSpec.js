@@ -49,7 +49,7 @@ defineSuite([
     beforeEach(function() {
         frameState = createFrameState(createCamera(context));
         us = context.getUniformState();
-        us.update(frameState);
+        us.update(context, frameState);
     });
 
     it('constructor', function() {
@@ -78,7 +78,7 @@ defineSuite([
                 })
             }),
             appearance : new PolylineMaterialAppearance({
-                material : Material.fromType(context, Material.PolylineOutlineType),
+                material : Material.fromType(Material.PolylineOutlineType),
                 translucent : false
             }),
             asynchronous : false

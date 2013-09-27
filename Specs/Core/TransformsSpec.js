@@ -400,7 +400,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = Matrix3.multiplyByVector(t, inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -450,7 +450,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = Matrix3.multiplyByVector(t, inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -520,7 +520,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
@@ -533,7 +533,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });

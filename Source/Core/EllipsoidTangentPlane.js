@@ -126,9 +126,9 @@ define([
         }
 
         if (defined(intersectionPoint)) {
-            var v = intersectionPoint.subtract(this._origin, intersectionPoint);
-            var x = this._xAxis.dot(v);
-            var y = this._yAxis.dot(v);
+            var v = Cartesian3.subtract(intersectionPoint, this._origin, intersectionPoint);
+            var x = Cartesian3.dot(this._xAxis, v);
+            var y = Cartesian3.dot(this._yAxis, v);
 
             if (!defined(result)) {
                 return new Cartesian2(x, y);
@@ -204,9 +204,9 @@ define([
 
         for ( var i = 0; i < length; ++i) {
             var position = cartesians[i];
-            xAxis.multiplyByScalar(position.x, tmp);
+            Cartesian3.multiplyByScalar(xAxis, position.x, tmp);
             var point = result[i] = Cartesian3.add(origin, tmp, result[i]);
-            yAxis.multiplyByScalar(position.y, tmp);
+            Cartesian3.multiplyByScalar(yAxis, position.y, tmp);
             Cartesian3.add(point, tmp, point);
             ellipsoid.scaleToGeocentricSurface(point, point);
         }
