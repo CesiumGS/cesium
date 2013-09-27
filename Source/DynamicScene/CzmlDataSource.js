@@ -1154,6 +1154,13 @@ define([
         return clock;
     }
 
+    function setLoading(dataSource, isLoading) {
+        if (dataSource._isLoading !== isLoading) {
+            dataSource._isLoading = isLoading;
+            dataSource._loading.raiseEvent(dataSource, isLoading);
+        }
+    }
+
     /**
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
@@ -1166,6 +1173,8 @@ define([
         this._name = undefined;
         this._changed = new Event();
         this._error = new Event();
+        this._isLoading = false;
+        this._loading = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
@@ -1262,6 +1271,29 @@ define([
     };
 
     /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    CzmlDataSource.prototype.getIsLoading = function() {
+        return this._isLoading;
+    };
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    CzmlDataSource.prototype.getLoadingEvent = function() {
+        return this._loading;
+    };
+
+    /**
      * Processes the provided CZML without clearing any existing data.
      *
      * @param {Object} czml The CZML to be processed.
@@ -1309,10 +1341,14 @@ define([
             throw new DeveloperError('url is required.');
         }
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
+            setLoading(this, false);
         }, function(error) {
+            setLoading(this, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -1332,10 +1368,14 @@ define([
             throw new DeveloperError('url is required.');
         }
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
+            setLoading(this, false);
         }, function(error) {
+            setLoading(this, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });

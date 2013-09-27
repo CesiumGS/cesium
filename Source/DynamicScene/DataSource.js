@@ -73,5 +73,24 @@ define([
      */
     DataSource.prototype.getIsTimeVarying = throwInstantiationError;
 
+    /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    DataSource.prototype.getIsLoading = throwInstantiationError;
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    DataSource.prototype.getLoadingEvent = throwInstantiationError;
+
     return DataSource;
 });

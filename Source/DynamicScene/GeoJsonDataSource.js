@@ -218,6 +218,13 @@ define([
         Topology : processTopology
     };
 
+    function setLoading(dataSource, isLoading) {
+        if (dataSource._isLoading !== isLoading) {
+            dataSource._isLoading = isLoading;
+            dataSource._loading.raiseEvent(dataSource, isLoading);
+        }
+    }
+
     /**
      * A {@link DataSource} which processes both GeoJSON and TopoJSON data.  Since GeoJSON has no standard for styling
      * content, we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties. Any
@@ -281,6 +288,8 @@ define([
 
         this._changed = new Event();
         this._error = new Event();
+        this._isLoading = false;
+        this._loading = new Event();
         this._dynamicObjectCollection = new DynamicObjectCollection();
 
         /**
@@ -365,6 +374,29 @@ define([
     };
 
     /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof GeoJsonDataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    GeoJsonDataSource.prototype.getIsLoading = function() {
+        return this._isLoading;
+    };
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof GeoJsonDataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    GeoJsonDataSource.prototype.getLoadingEvent = function() {
+        return this._loading;
+    };
+
+    /**
      * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.
@@ -378,10 +410,13 @@ define([
             throw new DeveloperError('url is required.');
         }
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(loadJson(url), function(geoJson) {
             return dataSource.load(geoJson, url);
         }, function(error) {
+            setLoading(this, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -458,11 +493,15 @@ define([
 
         this._dynamicObjectCollection.removeAll();
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(crsFunction, function(crsFunction) {
             typeHandler(dataSource, geoJson, geoJson, crsFunction, source);
             dataSource._changed.raiseEvent(dataSource);
+            setLoading(this, false);
         }, function(error) {
+            setLoading(this, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
