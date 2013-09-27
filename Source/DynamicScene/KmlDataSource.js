@@ -512,7 +512,7 @@ define(['../Core/createGuid',
             var styleMap = styleMaps.item(i);
             id = defined(styleMap.attributes.id) ? styleMap.attributes.id.textContent : undefined;
             if (defined(id)) {
-                var pairs = styleMap.children;
+                var pairs = styleMap.childNodes;
                 for ( var p = 0; p < pairs.length; p++) {
                     var pair = pairs[p];
                     var key = pair.getElementsByTagName('key')[0];
@@ -571,10 +571,10 @@ define(['../Core/createGuid',
             dynamicObjectCollection.add(parent);
         }
 
-        var children = node.children;
-        var length = children.length;
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
         for ( var i = 0; i < length; i++) {
-            iterateNodes(dataSource, children[i], parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+            iterateNodes(dataSource, childNodes[i], parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
         }
     }
 
@@ -582,7 +582,7 @@ define(['../Core/createGuid',
         var name;
         var document = kml.getElementsByTagName('Document');
         if (document.length > 0) {
-            var childNodes = document[0].children;
+            var childNodes = document[0].childNodes;
             var length = childNodes.length;
             for ( var i = 0; i < length; i++) {
                 var node = childNodes[i];
