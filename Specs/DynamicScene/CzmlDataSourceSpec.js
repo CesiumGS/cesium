@@ -169,7 +169,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
         });
     });
 
@@ -177,7 +177,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
         });
 
         runs(function() {
@@ -185,7 +185,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 13;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
         });
     });
 
@@ -193,7 +193,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
         });
 
         runs(function() {
@@ -213,7 +213,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(12);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(11);
         });
     });
 
@@ -225,10 +225,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length === 12);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length === 11);
 
             dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length === 13);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length === 12);
         });
     });
 
@@ -240,7 +240,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(12);
+            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(11);
 
             dataSource.load(vehicle, vehicleUrl);
             expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
@@ -428,13 +428,13 @@ defineSuite([
         dataSource.load(clockPacket);
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
-        expect(dynamicObject.clock).toBeDefined();
-        expect(dynamicObject.clock.startTime).toEqual(interval.start);
-        expect(dynamicObject.clock.stopTime).toEqual(interval.stop);
-        expect(dynamicObject.clock.currentTime).toEqual(currentTime);
-        expect(dynamicObject.clock.clockRange).toEqual(range);
-        expect(dynamicObject.clock.clockStep).toEqual(step);
-        expect(dynamicObject.clock.multiplier).toEqual(multiplier);
+        expect(dataSource.getClock()).toBeDefined();
+        expect(dataSource.getClock().startTime).toEqual(interval.start);
+        expect(dataSource.getClock().stopTime).toEqual(interval.stop);
+        expect(dataSource.getClock().currentTime).toEqual(currentTime);
+        expect(dataSource.getClock().clockRange).toEqual(range);
+        expect(dataSource.getClock().clockStep).toEqual(step);
+        expect(dataSource.getClock().multiplier).toEqual(multiplier);
     });
 
     it('CZML only adds clock data on the document object.', function() {
@@ -451,8 +451,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
-        expect(dynamicObject.clock).toBeUndefined();
+        expect(dataSource.getClock()).toBeUndefined();
     });
 
 
@@ -1458,20 +1457,43 @@ defineSuite([
 
     it('Processes parent property out of order.', function() {
         var parentChildCzml = [{
-            'id' : 'child',
-            'parent' : 'parent'
+            id : 'child',
+            parent : 'parent'
         }, {
-            'id' : 'parent'
+            id : 'child2',
+            parent : 'parent'
+        }, {
+            id : 'grandparent'
+        }, {
+            id : 'grandparent2'
+        }, {
+            id : 'parent',
+            parent : 'grandparent'
+        }, {
+            id : 'parent2',
+            parent : 'grandparent'
         }];
 
         var dataSource = new CzmlDataSource();
         dataSource.load(parentChildCzml);
         var objects = dataSource.getDynamicObjectCollection();
 
+        var grandparent = objects.getById('grandparent');
+        expect(grandparent.parent).toBeUndefined();
+
+        var grandparent2 = objects.getById('grandparent');
+        expect(grandparent2.parent).toBeUndefined();
+
         var parent = objects.getById('parent');
-        expect(parent.parent).toBeUndefined();
+        expect(parent.parent).toBe(grandparent);
+
+        var parent2 = objects.getById('parent2');
+        expect(parent2.parent).toBe(grandparent);
 
         var child = objects.getById('child');
         expect(child.parent).toBe(parent);
+
+        var child2 = objects.getById('child2');
+        expect(child2.parent).toBe(parent);
     });
 });

@@ -53,6 +53,7 @@ define(['../Core/createGuid',
         this._ellipse = undefined;
         this._label = undefined;
         this._name = undefined;
+        this._parent = undefined;
         this._path = undefined;
         this._point = undefined;
         this._polygon = undefined;

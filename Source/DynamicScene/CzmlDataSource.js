@@ -1082,25 +1082,27 @@ define([
             var i;
             var unresolvedParents;
             var parentId = packet.parent;
-            var parent = defined(parentId) ? dynamicObjectCollection.getById(parentId) : undefined;
+            if (defined(parentId)) {
+                var parent = dynamicObjectCollection.getById(parentId);
 
-            //If we have already loaded the parent, resolve it,
-            if (defined(parent)) {
-                dynamicObject.parent = parent;
-            } else {
-                unresolvedParents = dataSource._unresolvedParents[parentId];
-                if (!defined(unresolvedParents)) {
-                    dataSource._unresolvedParents[parentId] = [dynamicObject];
+                //If we have already loaded the parent, resolve it,
+                if (defined(parent)) {
+                    dynamicObject.parent = parent;
                 } else {
-                    unresolvedParents.push(objectId);
+                    unresolvedParents = dataSource._unresolvedParents[parentId];
+                    if (!defined(unresolvedParents)) {
+                        dataSource._unresolvedParents[parentId] = [dynamicObject];
+                    } else {
+                        unresolvedParents.push(dynamicObject);
+                    }
                 }
-            }
-            unresolvedParents = dataSource._unresolvedParents[objectId];
-            if (defined(unresolvedParents)) {
-                for (i = 0; i < unresolvedParents.length; i++) {
-                    unresolvedParents[i].parent = dynamicObject;
+                unresolvedParents = dataSource._unresolvedParents[objectId];
+                if (defined(unresolvedParents)) {
+                    for (i = 0; i < unresolvedParents.length; i++) {
+                        unresolvedParents[i].parent = dynamicObject;
+                    }
+                    dataSource._unresolvedParents[objectId] = undefined;
                 }
-                dataSource._unresolvedParents[objectId] = undefined;
             }
 
             for (i = updaterFunctions.length - 1; i > -1; i--) {
