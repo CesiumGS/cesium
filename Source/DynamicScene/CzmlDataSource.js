@@ -50,7 +50,6 @@ define([
         './DynamicPyramid',
         './DynamicVector',
         './DynamicVertexPositionsProperty',
-        './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
         './TimeIntervalCollectionPositionProperty',
@@ -108,7 +107,6 @@ define([
         DynamicPyramid,
         DynamicVector,
         DynamicVertexPositionsProperty,
-        ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionPositionProperty,
@@ -703,13 +701,6 @@ define([
         }
     }
 
-    function processParent(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var parent = packet.parent;
-        if (defined(parent)) {
-            dynamicObject.parent = new ReferenceProperty(dynamicObjectCollection, parent);
-        }
-    }
-
     function processViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var viewFromData = packet.viewFrom;
         if (defined(viewFromData)) {
@@ -1064,7 +1055,7 @@ define([
         processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri);
     }
 
-    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri) {
+    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource) {
         var objectId = packet.id;
         if (!defined(objectId)) {
             objectId = createGuid();
@@ -1073,16 +1064,41 @@ define([
         if (packet['delete'] === true) {
             dynamicObjectCollection.removeById(objectId);
         } else {
-            var object = dynamicObjectCollection.getOrCreateObject(objectId);
-            for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-                updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri);
+            var dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
+
+            var i;
+            var unresolvedParents;
+            var parentId = packet.parent;
+            var parent = defined(parentId) ? dynamicObjectCollection.getById(parentId) : undefined;
+
+            //If we have already loaded the parent, resolve it,
+            if (defined(parent)) {
+                dynamicObject.parent = parent;
+            } else {
+                unresolvedParents = dataSource._unresolvedParents[parentId];
+                if (!defined(unresolvedParents)) {
+                    dataSource._unresolvedParents[parentId] = [dynamicObject];
+                } else {
+                    unresolvedParents.push(objectId);
+                }
+            }
+            unresolvedParents = dataSource._unresolvedParents[objectId];
+            if (defined(unresolvedParents)) {
+                for (i = 0; i < unresolvedParents.length; i++) {
+                    unresolvedParents[i].parent = dynamicObject;
+                }
+                dataSource._unresolvedParents[objectId] = undefined;
+            }
+
+            for (i = updaterFunctions.length - 1; i > -1; i--) {
+                updaterFunctions[i](dynamicObject, packet, dynamicObjectCollection, sourceUri);
             }
         }
     }
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri);
+        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
@@ -1120,6 +1136,7 @@ define([
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this._unresolvedParents = {};
     };
 
     /**
@@ -1139,7 +1156,6 @@ define([
     processPolyline, //
     processPyramid, //
     processVector, //
-    processParent, //
     processPosition, //
     processViewFrom, //
     processOrientation, //
@@ -1229,6 +1245,7 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
+        this._unresolvedParents = {};
         this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
@@ -1322,15 +1339,15 @@ define([
      */
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
-    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
+    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri);
+                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
             }
         } else {
-            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri);
+            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
         }
     };
 

@@ -161,7 +161,7 @@ define(['../Core/createGuid',
         /**
          * Gets or sets the parent object.
          * @memberof DynamicObject.prototype
-         * @type {ConstantProperty}
+         * @type {DynamicObject}
          */
         parent : createDynamicPropertyDescriptor('parent', '_parent'),
         /**
