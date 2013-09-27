@@ -654,6 +654,34 @@ define([
     };
 
     /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [right] The right hand side matrix.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    Matrix2.prototype.equals = function(right) {
+        return Matrix2.equals(this, right);
+    };
+
+    /**
+     * Compares this matrix to the provided matrix componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} [right] The right hand side matrix.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Matrix2.prototype.equalsEpsilon = function(right, epsilon) {
+        return Matrix2.equalsEpsilon(this, right, epsilon);
+    }; 
+
+    /**
      * Creates a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1)'.
      * @memberof Matrix2

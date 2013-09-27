@@ -31,7 +31,7 @@ Beta Releases
       * From `Quaternion`: `conjugate`, `magnitudeSquared`, `magnitude`, `normalize`, `inverse`, `add`, `subtract`, `negate`, `dot`, `multiply`, `multiplyByScalar`, `divideByScalar`, `getAxis`, `getAngle`, `lerp`, `slerp`, `equals`, `equalsEpsilon`
       * From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, and `equalsEpsilon`.
       * From `Cartesian3`: `cross`
-      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `equals`, `equalsEpsilon`, `negate`, and `transpose`
+      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `quaternion.magnitude();` should now look like `Quaternion.magnitude(quaternion);`.
