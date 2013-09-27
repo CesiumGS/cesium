@@ -4,12 +4,14 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EventHelper',
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
         defined,
         defineProperties,
         DeveloperError,
+        EventHelper,
         knockout) {
     "use strict";
 
@@ -25,13 +27,33 @@ define([
         this._dataSource = dataSource;
 
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
+
+        /**
+         * Gets or sets the name of this data source.  This property is observable.
+         * @type {String}
+         */
         this.name = name;
         this.children = [];
         this.expanded = false;
+        this._isLoading = false;
 
-        knockout.track(this, ['name', 'children', 'expanded']);
+        knockout.track(this, ['name', 'children', 'expanded', '_isLoading']);
 
         var that = this;
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(dataSource.getLoadingEvent(), function(isLoading) {
+            that._isLoading = isLoading;
+        });
+
+        /**
+         * Gets whether the data source is currently loading.  This property is observable.
+         * @type {Boolean}
+         */
+        this.isLoading = undefined;
+        knockout.defineProperty(this, 'isLoading', function() {
+            return that._isLoading;
+        });
 
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
@@ -134,6 +156,7 @@ define([
     };
 
     DataSourceViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
         if (typeof this._dataSource.destroy === 'function') {
             this._dataSource.destroy();
         }
