@@ -679,7 +679,7 @@ define([
      */
     Matrix2.prototype.equalsEpsilon = function(right, epsilon) {
         return Matrix2.equalsEpsilon(this, right, epsilon);
-    }; 
+    };
 
     /**
      * Creates a string representing this Matrix with each row being

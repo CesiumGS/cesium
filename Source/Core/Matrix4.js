@@ -2067,7 +2067,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Matrix4.prototype.equals = function(right) {
-        return Matrix2.equals(this, right);
+        return Matrix4.equals(this, right);
     };
 
     /**
@@ -2083,8 +2083,8 @@ define([
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Matrix4.prototype.equalsEpsilon = function(right, epsilon) {
-        return Matrix2.equalsEpsilon(this, right, epsilon);
-    }; 
+        return Matrix4.equalsEpsilon(this, right, epsilon);
+    };
 
     /**
      * Computes a string representing this Matrix with each row being
