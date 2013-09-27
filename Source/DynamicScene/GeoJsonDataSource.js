@@ -416,7 +416,7 @@ define([
         return when(loadJson(url), function(geoJson) {
             return dataSource.load(geoJson, url);
         }, function(error) {
-            setLoading(this, false);
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -499,9 +499,9 @@ define([
         return when(crsFunction, function(crsFunction) {
             typeHandler(dataSource, geoJson, geoJson, crsFunction, source);
             dataSource._changed.raiseEvent(dataSource);
-            setLoading(this, false);
+            setLoading(dataSource, false);
         }, function(error) {
-            setLoading(this, false);
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });

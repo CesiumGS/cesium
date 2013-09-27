@@ -1345,9 +1345,9 @@ define([
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
-            setLoading(this, false);
+            setLoading(dataSource, false);
         }, function(error) {
-            setLoading(this, false);
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -1372,9 +1372,9 @@ define([
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
-            setLoading(this, false);
+            setLoading(dataSource, false);
         }, function(error) {
-            setLoading(this, false);
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
