@@ -112,14 +112,26 @@ define([
                 indices = PolygonPipeline.triangulate(positions2D);
             } catch (error) {
                 if (error.intersection) {
-                    // Intersection found; simplify the polygon
-                    positions = PolygonPipeline.simplify(cleanedPositions, error.intersection, tangentPlane);
-                    cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-                    positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
-                } else {
+                    try {
+                        // Intersection found; simplify the polygon
+                        positions = PolygonPipeline.simplify(cleanedPositions, error.intersection, tangentPlane);
+                        cleanedPositions = PolygonPipeline.removeDuplicates(positions);
+                        positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+                    } catch (error) {
+                        if (error.message === 'Invalid intersection specification cannot be corrected.') {
+                            // Probably invalid winding order.
+                            positions2D.reverse();
+                            cleanedPositions.reverse();
+                        } else {
+                            throw error;
+                        }
+                    }
+                } else if (error.message === 'Invalid polygon: couldn\'t find valid division or intersection. Check winding order?') {
                     // If nothing else works, try reversing the winding order
                     positions2D.reverse();
                     cleanedPositions.reverse();
+                } else {
+                    throw error;
                 }
             }
         }

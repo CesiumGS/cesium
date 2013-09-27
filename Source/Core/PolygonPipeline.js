@@ -534,16 +534,21 @@ define([
      * @private
      */
     function getNextVertex(index, pArray, direction) {
-        var next = index + direction;
-        if (next < 0) {
-            next = pArray.length - 1;
-        }
-        if (next === pArray.length) {
-            next = 0;
-        }
+        var next = getNextInArray(index, pArray.length, direction);
 
         validateVertex(next, pArray);
 
+        return next;
+    }
+
+    function getNextInArray(index, length, direction) {
+        var next = index + direction;
+        if (next < 0) {
+            next = length - 1;
+        }
+        if (next === length) {
+            next = 0;
+        }
         return next;
     }
 
@@ -768,6 +773,10 @@ define([
             }
             var intersection = intersectsSide(nodeArray[v1].position, nodeArray[v2].position, nodeArray);
             if (intersection) {
+                var plot = "";
+                for (var i = 0; i < nodeArray.length; i++) {
+                    plot += nodeArray[i].position.x+","+nodeArray[i].position.y+"\n";
+                }
                 return {
                     a1i: nodeArray[v1].index,
                     a2i: nodeArray[v2].index,
@@ -1012,8 +1021,27 @@ define([
          *                              intersection back to 3d coordinates
          *
          * @returns {Array} - The resulting polygon positions
+         *
+         * @exception {DeveloperError} Invalid intersection specification cannot be corrected.
          */
         simplify: function(positions3D, intersection, tangentPlane) {
+
+            // Check to make sure that second intersection actually represents side
+            if (intersection.b2i !== getNextInArray(intersection.b1i, positions3D.length, AFTER)) {
+                var last = getNextInArray(intersection.b2i, positions3D.length, BEFORE);
+                var next = getNextInArray(intersection.b2i, positions3D.length, AFTER);
+                // Same as next vertex?
+                if (Cartesian3.equals(positions3D[next], positions3D[intersection.b1i])) {
+                    intersection.b1i = intersection.b2i;
+                    intersection.b2i = next;
+                // Same as previous vertex?
+                } else if (Cartesian3.equals(positions3D[last], positions3D[intersection.b1i])) {
+                    intersection.b1i = last;
+                } else {
+                    throw new DeveloperError('Invalid intersection specification cannot be corrected.');
+                }
+            }
+
             var iPoint = tangentPlane.projectPointsOntoEllipsoid([intersection.point])[0];
             var invertedArea = positions3D.splice(intersection.a2i, (intersection.b1i - intersection.a2i + 1));
             invertedArea.reverse();
