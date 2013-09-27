@@ -884,6 +884,13 @@ define([
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
     }
 
+    function processDescription(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var descriptionData = packet.description;
+        if (defined(descriptionData)) {
+            processPacketData(String, dynamicObject, 'balloon', descriptionData, undefined, sourceUri);
+        }
+    }
+
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
@@ -1061,7 +1068,7 @@ define([
         processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri);
     }
 
-    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri) {
+    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource) {
         var objectId = packet.id;
         if (!defined(objectId)) {
             objectId = createGuid();
@@ -1070,16 +1077,43 @@ define([
         if (packet['delete'] === true) {
             dynamicObjectCollection.removeById(objectId);
         } else {
-            var object = dynamicObjectCollection.getOrCreateObject(objectId);
-            for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-                updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri);
+            var dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
+
+            var i;
+            var unresolvedParents;
+            var parentId = packet.parent;
+            if (defined(parentId)) {
+                var parent = dynamicObjectCollection.getById(parentId);
+
+                //If we have already loaded the parent, resolve it,
+                if (defined(parent)) {
+                    dynamicObject.parent = parent;
+                } else {
+                    unresolvedParents = dataSource._unresolvedParents[parentId];
+                    if (!defined(unresolvedParents)) {
+                        dataSource._unresolvedParents[parentId] = [dynamicObject];
+                    } else {
+                        unresolvedParents.push(dynamicObject);
+                    }
+                }
+                unresolvedParents = dataSource._unresolvedParents[objectId];
+                if (defined(unresolvedParents)) {
+                    for (i = 0; i < unresolvedParents.length; i++) {
+                        unresolvedParents[i].parent = dynamicObject;
+                    }
+                    dataSource._unresolvedParents[objectId] = undefined;
+                }
+            }
+
+            for (i = updaterFunctions.length - 1; i > -1; i--) {
+                updaterFunctions[i](dynamicObject, packet, dynamicObjectCollection, sourceUri);
             }
         }
     }
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri);
+        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
@@ -1115,6 +1149,8 @@ define([
 
         dataSource._name = name;
 
+        //FIXME This is a temporary hack to sstop the document from showing up in the DataSourceBrowser.
+        dynamicObjectCollection.removeById('document');
         return clock;
     }
 
@@ -1122,6 +1158,9 @@ define([
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
      * @constructor
+     *
+     * @param {String} [name] The name of this data source.  If undefined, a name will be read from the
+     *                        loaded CZML document, or the name of the CZML file.
      */
     var CzmlDataSource = function() {
         this._name = undefined;
@@ -1130,6 +1169,7 @@ define([
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this._unresolvedParents = {};
     };
 
     /**
@@ -1142,6 +1182,7 @@ define([
     processEllipse, //
     processEllipsoid, //
     processCone, //
+    processDescription, //
     processLabel, //
     processName, //
     processPath, //
@@ -1249,6 +1290,7 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
+        this._unresolvedParents = {};
         this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
@@ -1342,15 +1384,15 @@ define([
      */
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
-    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
+    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri);
+                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
             }
         } else {
-            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri);
+            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
         }
     };
 

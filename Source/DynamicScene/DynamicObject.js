@@ -53,6 +53,7 @@ define(['../Core/createGuid',
         this._ellipse = undefined;
         this._label = undefined;
         this._name = undefined;
+        this._parent = undefined;
         this._path = undefined;
         this._point = undefined;
         this._polygon = undefined;
@@ -178,6 +179,12 @@ define(['../Core/createGuid',
          * @type {DynamicLabel}
          */
         label : createDynamicPropertyDescriptor('label', '_label'),
+        /**
+         * Gets or sets the parent object.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicObject}
+         */
+        parent : createDynamicPropertyDescriptor('parent', '_parent'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
