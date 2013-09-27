@@ -15,6 +15,7 @@ define([
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer',
         './GxTourVisualizer',
+        './WallVisualizer',
         './VisualizerCollection'
     ], function(
         defaultValue,
@@ -32,6 +33,7 @@ define([
         DynamicPolylineVisualizer,
         DynamicPyramidVisualizer,
         GxTourVisualizer,
+        WallVisualizer,
         VisualizerCollection) {
     "use strict";
 
@@ -44,7 +46,8 @@ define([
                                   DynamicPolylineVisualizer,
                                   DynamicPyramidVisualizer,
                                   DynamicPathVisualizer,
-                                  GxTourVisualizer];
+                                  GxTourVisualizer,
+                                  WallVisualizer];
 
     /**
      * Visualizes a collection of {@link DataSource} instances.

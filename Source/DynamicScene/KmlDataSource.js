@@ -22,6 +22,7 @@ define(['../Core/createGuid',
         '../Core/OrientationInterpolator',
         '../Core/Quaternion',
         '../Core/TimeInterval',
+        '../Core/WallGeometry',
         '../Core/loadBlob',
         '../Core/loadXML',
         './ConstantProperty',
@@ -68,6 +69,7 @@ define(['../Core/createGuid',
         OrientationInterpolator,
         Quaternion,
         TimeInterval,
+        WallGeometry,
         loadBlob,
         loadXML,
         ConstantProperty,
@@ -101,6 +103,12 @@ define(['../Core/createGuid',
         return Ellipsoid.WGS84.cartographicToCartesian(scratch);
     }
 
+    /**
+     * Parse cartographic coordinate tuples
+     * and return them converted to cartesian coordinates
+     *
+     * @return Array of {Cartesian} coordinates
+     */
     function readCoordinates(element) {
         var tuples = element.textContent.trim().split(/[\s\n]+/g);
         var numberOfCoordinates = tuples.length;
@@ -220,11 +228,20 @@ define(['../Core/createGuid',
     }
 
     function processLineString(dataSource, dynamicObject, kml, node) {
-        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
+        //TODO gx:altitudeOffset, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
+        //
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
+
+        if (getNumericValue(node, 'extrude') === 1) {
+            var myWall = {
+                geometry: new WallGeometry({positions: dynamicObject.vertexPositions._value})
+            };
+
+            dynamicObject.wall = myWall;
+        }
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node) {
@@ -431,6 +448,9 @@ define(['../Core/createGuid',
             targetObject.polyline = undefined;
             break;
         case 'LineString':
+            // save for extruded line strings!
+            targetObject.wpolygon = targetObject.polygon;
+            // no break statement here!
         case 'LinearRing':
             targetObject.billboard = undefined;
             targetObject.label = undefined;
