@@ -252,7 +252,6 @@ define(['../Core/createGuid',
 
     function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
-        dynamicObjectCollection.remove(dynamicObject);
 
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
@@ -262,6 +261,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+                //childObject.parent = new ReferenceProperty(dynamicObjectCollection, dynamicObject.id);
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 
@@ -272,8 +272,6 @@ define(['../Core/createGuid',
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
-        dynamicObjectCollection.remove(dynamicObject);
-
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
@@ -282,6 +280,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+                //childObject.parent = new ReferenceProperty(dynamicObjectCollection, dynamicObject.id);
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 
@@ -515,6 +514,9 @@ define(['../Core/createGuid',
                 var pairs = styleMap.childNodes;
                 for ( var p = 0; p < pairs.length; p++) {
                     var pair = pairs[p];
+                    if (pair.nodeName !== 'Pair') {
+                        continue;
+                    }
                     var key = pair.getElementsByTagName('key')[0];
                     if (defined(key) && key.textContent === 'normal') {
                         var styleUrl = pair.getElementsByTagName('styleUrl')[0];
