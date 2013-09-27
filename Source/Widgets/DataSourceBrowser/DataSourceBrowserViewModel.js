@@ -235,36 +235,37 @@ define([
         this.visible = !this.visible;
     };
 
+    function insertIntoTree(that, root, object, dataSourceViewModelHash, dataSource) {
+        var id = object.id;
+        if (!defined(dataSourceViewModelHash[id])) {
+            var parent;
+            var name = defaultValue(object.name, id);
+            var dynamicObjectViewModel = new DataSourceViewModel(name, that, dataSource, object);
+            dataSourceViewModelHash[id] = dynamicObjectViewModel;
+            parent = object.parent;
+            if (defined(parent)) {
+                var parentId = parent.id;
+                var parentViewModel = dataSourceViewModelHash[parentId];
+                if (!defined(parentViewModel)) {
+                    parentViewModel = insertIntoTree(that, root, parent, dataSourceViewModelHash, dataSource);
+                }
+                parentViewModel.children.push(dynamicObjectViewModel);
+            } else {
+                root.children.push(dynamicObjectViewModel);
+            }
+            return dynamicObjectViewModel;
+        }
+        return undefined;
+    }
+
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModelHash = {};
-
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this, dataSource);
-
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         var objects = dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = objects.length; i < len; ++i) {
-            var object = objects[i];
 
-            var parent;
-            var id = object.id;
-            if (!defined(dataSourceViewModelHash[id])) {
-                parent = undefined;
-                var name = defaultValue(object.name, id);
-                var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
-                dataSourceViewModelHash[id] = dynamicObjectViewModel;
-                parent = object.parent;
-                if (defined(parent)) {
-                    var parentId = parent.id;
-                    var parentViewModel = dataSourceViewModelHash[parentId];
-                    if (!defined(parentViewModel)) {
-                        parentViewModel = new DataSourceViewModel(defaultValue(parent.name, parentId), this, dataSource, parent);
-                        dataSourceViewModelHash[parentId] = parentViewModel;
-                    }
-                    parentViewModel.children.push(dynamicObjectViewModel);
-                } else {
-                    dataSourceViewModel.children.push(dynamicObjectViewModel);
-                }
-            }
+        for ( var i = 0, len = objects.length; i < len; ++i) {
+            insertIntoTree(this, dataSourceViewModel, objects[i], dataSourceViewModelHash, dataSource);
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);
