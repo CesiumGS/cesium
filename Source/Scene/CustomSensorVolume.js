@@ -484,7 +484,7 @@ define([
                 this._id = this.id;
                 this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this,
+                    primitive : this._pickIdThis,
                     id : this.id
                 });
             }
