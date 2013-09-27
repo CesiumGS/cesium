@@ -735,7 +735,6 @@ define([
             // Make sure we don't go into an endless loop
             var maxTries = nodeArray.length * 10;
             if (tries > maxTries) {
-                console.warn('Tried ' + maxTries + ' times to find a valid cut to triangulate polygon and couldn\'t.');
                 // Hopefully that part of the polygon isn't important
                 return [];
             }
