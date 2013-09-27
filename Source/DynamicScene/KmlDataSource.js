@@ -20,6 +20,7 @@ define(['../Core/createGuid',
         './ConstantProperty',
         './ConstantPositionProperty',
         './ColorMaterialProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionProperty',
         '../Scene/LabelStyle',
@@ -57,6 +58,7 @@ define(['../Core/createGuid',
         ConstantProperty,
         ConstantPositionProperty,
         ColorMaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionProperty,
         LabelStyle,
@@ -154,9 +156,14 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+    function processPlacemark(dataSource, parent, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
         var id = defined(placemark.id) ? placemark.id : createGuid();
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+
+        if (defined(parent)) {
+            //TODO we should be able to assign parent directly here, but can't because we require clone.
+            //dynamicObject.parent = new ReferenceProperty(dynamicObjectCollection, parent.id);
+        }
 
         var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
 
@@ -554,6 +561,23 @@ define(['../Core/createGuid',
         return promises;
     }
 
+    function iterateNodes(dataSource, node, parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+        var nodeName = node.nodeName;
+        if (nodeName === 'Placemark') {
+            processPlacemark(dataSource, parent, node, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+        } else if (nodeName === 'Folder') {
+            parent = new DynamicObject(defined(node.id) ? node.id : createGuid());
+            parent.name = getStringValue(node, 'name');
+            dynamicObjectCollection.add(parent);
+        }
+
+        var children = node.children;
+        var length = children.length;
+        for ( var i = 0; i < length; i++) {
+            iterateNodes(dataSource, children[i], parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+        }
+    }
+
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
         var name;
         var document = kml.getElementsByTagName('Document');
@@ -579,11 +603,7 @@ define(['../Core/createGuid',
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
-            var placemarks = kml.getElementsByTagName('Placemark');
-            var length = placemarks.length;
-            for ( var i = 0; i < length; i++) {
-                processPlacemark(dataSource, placemarks[i], dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
-            }
+            iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
             dataSource._changed.raiseEvent(this);
         });
     }
