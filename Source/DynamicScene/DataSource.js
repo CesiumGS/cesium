@@ -18,6 +18,14 @@ define(['../Core/DeveloperError'
     var DataSource = throwInstantiationError;
 
     /**
+     * Gets the name of this data source.
+     * @memberof DataSource
+     *
+     * @returns {String} The name.
+     */
+    DataSource.prototype.getName = throwInstantiationError;
+
+    /**
      * Gets an event that will be raised when non-time-Varying data changes
      * or if the return value of getIsTimeVarying changes.
      * @memberof DataSource
