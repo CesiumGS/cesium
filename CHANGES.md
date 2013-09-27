@@ -56,6 +56,7 @@ Beta Releases
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Added proper support for browser zoom.
+* Added `options` argument to the `EllipsoidPrimitive` constructor.
 * Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
 * Made sun size accurate.
 * Improved graphics performance.
