@@ -115,5 +115,11 @@ define([
         this.rootViewModel.dataSources.remove(this.dataSource);
     };
 
+    DataSourceViewModel.prototype.destroy = function() {
+        if (typeof this._dataSource.destroy === 'function') {
+            this._dataSource.destroy();
+        }
+    };
+
     return DataSourceViewModel;
 });

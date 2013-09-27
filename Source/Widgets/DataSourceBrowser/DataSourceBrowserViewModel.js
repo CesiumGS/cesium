@@ -279,6 +279,7 @@ define([
             var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel.dataSource === dataSource) {
                 dataSourceViewModels.splice(i, 1);
+                dataSourceViewModel.destroy();
                 this._dataSourcesLength = this.dataSources.getLength();
                 return;
             }
