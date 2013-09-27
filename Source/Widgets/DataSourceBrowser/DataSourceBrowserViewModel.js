@@ -252,9 +252,7 @@ define([
                 var name = defaultValue(object.name, id);
                 var dynamicObjectViewModel = new DataSourceViewModel(name, this, dataSource, object);
                 dataSourceViewModelHash[id] = dynamicObjectViewModel;
-                if (defined(object.parent)) {
-                    parent = object.parent.getValue();
-                }
+                parent = object.parent;
                 if (defined(parent)) {
                     var parentId = parent.id;
                     var parentViewModel = dataSourceViewModelHash[parentId];
