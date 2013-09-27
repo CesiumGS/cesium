@@ -26,6 +26,18 @@
     border-color: #ea0;
 }
 
+.cesium-lighter .cesium-widget-button:disabled,
+.cesium-lighter .cesium-widget-button-disabled,
+.cesium-lighter .cesium-widget-button-disabled:focus,
+.cesium-lighter .cesium-widget-button-disabled:hover,
+.cesium-lighter .cesium-widget-button-disabled:active {
+    background: #ccc;
+    border-color: #999;
+    color: #999;  /* For text buttons */
+    fill: #999;   /* For SVG buttons */
+    box-shadow: none;
+}
+
 .cesium-lighter .cesium-widget-errorPanel {
     background: rgba(255, 255, 255, 0.7);
 }

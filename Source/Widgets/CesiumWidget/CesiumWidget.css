@@ -55,6 +55,19 @@
     box-shadow: 0 0 8px #fff;
 }
 
+.cesium-widget-button:disabled,
+.cesium-widget-button-disabled,
+.cesium-widget-button-disabled:focus,
+.cesium-widget-button-disabled:hover,
+.cesium-widget-button-disabled:active {
+    background: #303336;
+    border-color: #444;
+    color: #646464;  /* For text buttons */
+    fill: #646464;   /* For SVG buttons */
+    box-shadow: none;
+    cursor: default;
+}
+
 .cesium-widget-svg-path {
     box-sizing: border-box;
     width: 32px;

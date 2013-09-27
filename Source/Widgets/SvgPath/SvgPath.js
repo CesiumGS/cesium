@@ -101,6 +101,12 @@ define([
         path : {
             get : function() {
                 return this._path;
+            },
+            set : function(value) {
+                if (this._path !== value) {
+                    this._pathElement.setAttribute('d', value);
+                    this._path = value;
+                }
             }
         }
     });
