@@ -232,7 +232,7 @@ template : { if: activeDataSourcePanel,\
 
         var finishAddDataSourceButton = document.createElement('span');
         finishAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
-        finishAddDataSourceButton.textContent = 'OK';
+        finishAddDataSourceButton.textContent = 'Load';
         finishAddDataSourceButton.setAttribute('data-bind', '\
 click: function () { finishCommand.canExecute && finishCommand(); },\
 css: { \'cesium-dataSourceBrowser-button-disabled\': !finishCommand.canExecute }');
