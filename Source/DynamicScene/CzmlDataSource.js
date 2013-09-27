@@ -1166,11 +1166,10 @@ define([
      * @alias CzmlDataSource
      * @constructor
      *
-     * @param {String} [name] The name of this data source.  If undefined, a name will be read from the
-     *                        loaded CZML document, or the name of the CZML file.
+     * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      */
-    var CzmlDataSource = function() {
-        this._name = undefined;
+    var CzmlDataSource = function(name) {
+        this._name = name;
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
