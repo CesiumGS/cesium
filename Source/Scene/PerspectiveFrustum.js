@@ -160,12 +160,12 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      *
-     * @exception {DeveloperError} canvasDimensions is required.
-     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
-     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions is required.
+     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -182,17 +182,17 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = primitive.boundingVolume.center.subtract(position);      // vector from camera to a primitive
-     * var toCenterProj = direction.multiplyByScalar(direction.dot(toCenter)); // project vector onto camera direction vector
-     * var distance = toCenterProj.magnitude();
+     * var toCenter = Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
+     * var toCenterProj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
+     * var distance = Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize({
      *     width : canvas.clientWidth,
      *     height : canvas.clientHeight
      * }, distance);
      */
-    PerspectiveFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
+    PerspectiveFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance) {
         update(this);
-        return this._offCenterFrustum.getPixelSize(canvasDimensions, distance);
+        return this._offCenterFrustum.getPixelSize(drawingBufferDimensions, distance);
     };
 
     /**

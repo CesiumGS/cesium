@@ -51,7 +51,7 @@ define([
         var normals = attr.normals;
         var tangents = attr.tangents;
         var binormals = attr.binormals;
-        var forward = Cartesian3.cross(left, normal, scratch1).normalize(scratch1);
+        var forward = Cartesian3.normalize(Cartesian3.cross(left, normal, scratch1), scratch1);
         if (vertexFormat.normal) {
             CorridorGeometryLibrary.addAttribute(normals, normal, front, back);
         }
@@ -170,7 +170,7 @@ define([
         for (i = 0; i < length; i += 3) {
             rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, i, scratch1), scratch1);
             leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - i, scratch2), scratch2);
-            normal = rightNormal.add(leftNormal, normal).normalize(normal);
+            normal = Cartesian3.normalize(Cartesian3.add(rightNormal, leftNormal, normal), normal);
             addNormals(attr, normal, left, front, back, vertexFormat);
 
             LL = front / 3;
@@ -190,7 +190,7 @@ define([
 
         rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, length, scratch1), scratch1);
         leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length, scratch2), scratch2);
-        normal = rightNormal.add(leftNormal, normal).normalize(normal);
+        normal = Cartesian3.normalize(Cartesian3.add(rightNormal, leftNormal, normal), normal);
         compIndex += 3;
         for (i = 0; i < corners.length; i++) {
             var j;
@@ -216,14 +216,14 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
                     previousPoint = Cartesian3.fromArray(finalPositions, (start - j - 1) * 3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, pivot * 3, nextPoint);
-                    left = previousPoint.subtract(nextPoint, left).normalize(left);
+                    left = Cartesian3.normalize(Cartesian3.subtract(previousPoint, nextPoint, left), left);
                     addNormals(attr, normal, left, undefined, back, vertexFormat);
                     back -= 3;
                 }
                 outsidePoint = Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
-                previousPoint = Cartesian3.fromArray(finalPositions, (start) * 3, previousPoint).subtract(outsidePoint, previousPoint);
-                nextPoint = Cartesian3.fromArray(finalPositions, (start - j) * 3, nextPoint).subtract(outsidePoint, nextPoint);
-                left = previousPoint.add(nextPoint, left).normalize(left);
+                previousPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start) * 3, previousPoint), outsidePoint, previousPoint);
+                nextPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start - j) * 3, nextPoint), outsidePoint, nextPoint);
+                left = Cartesian3.normalize(Cartesian3.add(previousPoint, nextPoint, left), left);
                 addNormals(attr, normal, left, front, undefined, vertexFormat);
                 front += 3;
             } else {
@@ -239,14 +239,14 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
                     previousPoint = Cartesian3.fromArray(finalPositions, pivot * 3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, (start + j) * 3, nextPoint);
-                    left = previousPoint.subtract(nextPoint, left).normalize(left);
+                    left = Cartesian3.normalize(Cartesian3.subtract(previousPoint, nextPoint, left), left);
                     addNormals(attr, normal, left, front, undefined, vertexFormat);
                     front += 3;
                 }
                 outsidePoint = Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
-                previousPoint = Cartesian3.fromArray(finalPositions, (start + j) * 3, previousPoint).subtract(outsidePoint, previousPoint);
-                nextPoint = Cartesian3.fromArray(finalPositions, start * 3, nextPoint).subtract(outsidePoint, nextPoint);
-                left = nextPoint.add(previousPoint, left).negate(left).normalize(left);
+                previousPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start + j) * 3, previousPoint), outsidePoint, previousPoint);
+                nextPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, start * 3, nextPoint), outsidePoint, nextPoint);
+                left = Cartesian3.normalize(Cartesian3.negate(Cartesian3.add(nextPoint, previousPoint, left), left), left);
                 addNormals(attr, normal, left, undefined, back, vertexFormat);
                 back -= 3;
             }
@@ -263,7 +263,7 @@ define([
             for (j = 0; j < leftEdge.length; j += 3) {
                 rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, j, scratch1), scratch1);
                 leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - j, scratch2), scratch2);
-                normal = rightNormal.add(leftNormal, normal).normalize(normal);
+                normal = Cartesian3.normalize(Cartesian3.add(rightNormal, leftNormal, normal), normal);
                 addNormals(attr, normal, left, front, back, vertexFormat);
 
                 LR = front / 3;
@@ -443,12 +443,12 @@ define([
             var attrIndex = sixSize;
             for (i = 0; i < threeSize; i += 3) {
                 var attrIndexOffset = attrIndex + sixSize;
-                topPosition = Cartesian3.fromArray(positions, i, topPosition);
-                bottomPosition = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
+                topPosition      = Cartesian3.fromArray(positions, i, topPosition);
+                bottomPosition   = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
                 previousPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, previousPosition);
-                bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
-                previousPosition = previousPosition.subtract(topPosition, previousPosition);
-                normal = bottomPosition.cross(previousPosition, normal).normalize(normal);
+                bottomPosition   = Cartesian3.subtract(bottomPosition,   topPosition, bottomPosition);
+                previousPosition = Cartesian3.subtract(previousPosition, topPosition, previousPosition);
+                normal = Cartesian3.normalize(Cartesian3.cross(bottomPosition, previousPosition, normal), normal);
                 if (vertexFormat.normal) {
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset);
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset + 3);
@@ -465,7 +465,7 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
-                        tangent = binormal.cross(normal, tangent).normalize(tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset + 3);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex);

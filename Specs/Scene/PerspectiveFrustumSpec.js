@@ -24,7 +24,7 @@ defineSuite([
         frustum.far = 2.0;
         frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
-        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y).planes;
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
     });
 
     it('out of range fov causes an exception', function() {
@@ -152,7 +152,7 @@ defineSuite([
         frustum2.fovy = (Math.PI) / 3.0;
         frustum2.aspectRatio = 1.0;
         frustum2.position = new Cartesian3();
-        frustum2.direction =  Cartesian3.UNIT_Z.negate();
+        frustum2.direction =  Cartesian3.negate(Cartesian3.UNIT_Z);
         frustum2.up = Cartesian3.UNIT_Y;
         expect(frustum.equals(frustum2)).toEqual(true);
     });

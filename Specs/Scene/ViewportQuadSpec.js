@@ -47,7 +47,7 @@ defineSuite([
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterEach(function() {
@@ -62,7 +62,7 @@ defineSuite([
     });
 
     it('constructs with a material', function() {
-        var material = Material.fromType(undefined, Material.ErosionType);
+        var material = Material.fromType(Material.ErosionType);
         var quad = new ViewportQuad(undefined, material);
         expect(quad.material.type).toEqual(material.type);
     });
@@ -116,7 +116,7 @@ defineSuite([
                 source : testImage
             });
 
-            viewportQuad.material = Material.fromType(context, Material.ImageType);
+            viewportQuad.material = Material.fromType(Material.ImageType);
             viewportQuad.material.uniforms.image = texture;
 
             ClearCommand.ALL.execute(context);

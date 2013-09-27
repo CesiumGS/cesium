@@ -157,7 +157,7 @@ defineSuite([
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
         expect(c.material.uniforms).toEqual(testObject.cone.outerMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
+        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(testObject.orientation.getValue(time))), testObject.position.getValue(time)));
 
         cone.show.value = false;
         visualizer.update(time);
@@ -231,7 +231,7 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(true);
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         expect(scene.getPrimitives().get(0).show).toEqual(false);

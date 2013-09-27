@@ -112,11 +112,14 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Adds a primitive to a composite primitive.  When a composite is rendered
+     * so are all of the primitives in the composite.
      *
      * @memberof CompositePrimitive
      *
-     * @param {Object} primitive DOC_TBA
+     * @param {Object} primitive The primitive to add to the composite.
+     *
+     * @returns {Object} The primitive added to the composite.
      *
      * @exception {DeveloperError} primitive is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -139,6 +142,8 @@ define([
         };
 
         this._primitives.push(primitive);
+
+        return primitive;
     };
 
     /**
