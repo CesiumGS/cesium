@@ -740,7 +740,7 @@ defineSuite([
                 })
             });
             var appearance = new EllipsoidSurfaceAppearance({
-                material : Material.fromType(undefined, 'Stripe')
+                material : Material.fromType('Stripe')
             });
             render3D(rotated, undefined, appearance);
         });

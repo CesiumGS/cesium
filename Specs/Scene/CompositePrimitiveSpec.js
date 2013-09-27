@@ -121,7 +121,8 @@ defineSuite([
     });
 
     it('adds a primitive with add()', function() {
-        primitives.add(createLabels());
+        var p = createLabels();
+        expect(primitives.add(p)).toBe(p);
         expect(primitives.getLength()).toEqual(1);
     });
 

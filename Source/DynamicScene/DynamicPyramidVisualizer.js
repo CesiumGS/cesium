@@ -187,7 +187,6 @@ define([
     var position;
     var orientation;
     function updateObject(dynamicPyramidVisualizer, time, dynamicObject) {
-        var context = dynamicPyramidVisualizer._scene.getContext();
         var dynamicPyramid = dynamicObject._pyramid;
         if (!defined(dynamicPyramid)) {
             return;
@@ -245,7 +244,7 @@ define([
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
             pyramid.intersectionWidth = 5.0;
-            pyramid.material = Material.fromType(context, Material.ColorType);
+            pyramid.material = Material.fromType(Material.ColorType);
         } else {
             pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
         }
@@ -270,7 +269,7 @@ define([
             Quaternion.clone(orientation, pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid._material, pyramid.material);
+        pyramid.material = MaterialProperty.getValue(time, dynamicPyramid._material, pyramid.material);
 
         var property = dynamicPyramid._intersectionColor;
         if (defined(property)) {
