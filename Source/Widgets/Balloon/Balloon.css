@@ -6,6 +6,15 @@
     -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in;
 }
 
+.cesium-balloon-container h1,
+.cesium-balloon-container h2,
+.cesium-balloon-container h3,
+.cesium-balloon-container h4,
+.cesium-balloon-container h5,
+.cesium-balloon-container h6 {
+    margin-top: 0;
+}
+
 .cesium-balloon-container-visible {
     visibility: visible;
     opacity: 1;
