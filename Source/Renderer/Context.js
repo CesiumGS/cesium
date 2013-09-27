@@ -2531,7 +2531,7 @@ define([
      *
      * @memberof Context
      *
-     * @see Context#pick
+     * @see Scene#pick
      */
     Context.prototype.createPickFramebuffer = function() {
         return new PickFramebuffer(this);

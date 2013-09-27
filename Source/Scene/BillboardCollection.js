@@ -257,7 +257,8 @@ define([
      *   scale : 1.0,
      *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
-     *   color : Color.WHITE
+     *   color : Color.WHITE,
+     *   id : undefined
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.

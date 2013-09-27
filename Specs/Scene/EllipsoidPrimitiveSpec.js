@@ -128,9 +128,11 @@ defineSuite([
 
     it('is picked', function() {
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
+        ellipsoid.id = 'id';
 
         var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
         expect(pickedObject.primitive).toEqual(ellipsoid);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {

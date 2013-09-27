@@ -11,7 +11,7 @@ Beta Releases
 
             BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
 
-   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself, and a user-defined `id`.  For example, code that looked like:
 
             var primitive = scene.pick(/* ... */);
             if (defined(primitive)) {
@@ -22,7 +22,7 @@ Beta Releases
 
             var p = scene.pick(/* ... */);
             if (defined(p) && defined(p.primitive)) {
-               // Use p.primitive
+               // Use p.primitive and perhaps p.id
             }
 
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
