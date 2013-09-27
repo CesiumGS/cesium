@@ -20,7 +20,6 @@ define(['../Core/createGuid',
         './ConstantProperty',
         './ConstantPositionProperty',
         './ColorMaterialProperty',
-        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionProperty',
         '../Scene/LabelStyle',
@@ -58,7 +57,6 @@ define(['../Core/createGuid',
         ConstantProperty,
         ConstantPositionProperty,
         ColorMaterialProperty,
-        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionProperty,
         LabelStyle,
@@ -161,8 +159,7 @@ define(['../Core/createGuid',
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
 
         if (defined(parent)) {
-            //TODO we should be able to assign parent directly here, but can't because we require clone.
-            //dynamicObject.parent = new ReferenceProperty(dynamicObjectCollection, parent.id);
+            dynamicObject.parent = parent;
         }
 
         var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
@@ -261,7 +258,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
-                //childObject.parent = new ReferenceProperty(dynamicObjectCollection, dynamicObject.id);
+                childObject.parent = dynamicObject;
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 
@@ -280,7 +277,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
-                //childObject.parent = new ReferenceProperty(dynamicObjectCollection, dynamicObject.id);
+                childObject.parent = dynamicObject;
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 

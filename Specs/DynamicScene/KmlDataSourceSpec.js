@@ -427,9 +427,9 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
-        var object0 = objects[0];
-        var object1 = objects[1];
-        expect(objects.length).toEqual(2);
+        var object0 = objects[1];
+        var object1 = objects[2];
+        expect(objects.length).toEqual(3);
         expect(object0.position.getValue(time)).toEqual(object1.position.getValue(time));
     });
 
@@ -463,11 +463,11 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
-        expect(objects.length).toEqual(2);
-        expect(objects[0].vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
-        expect(objects[0].vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
-        expect(objects[1].vertexPositions.getValue()[0]).toEqual(cartesianPosition3);
-        expect(objects[1].vertexPositions.getValue()[1]).toEqual(cartesianPosition4);
+        expect(objects.length).toEqual(3);
+        expect(objects[1].vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(objects[1].vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
+        expect(objects[2].vertexPositions.getValue()[0]).toEqual(cartesianPosition3);
+        expect(objects[2].vertexPositions.getValue()[1]).toEqual(cartesianPosition4);
     });
 
     it('handles MultiGeometry with style', function() {
@@ -503,9 +503,9 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
-        var object1 = objects[0];
-        var object2 = objects[1];
-        expect(objects.length).toEqual(2);
+        var object1 = objects[1];
+        var object2 = objects[2];
+        expect(objects.length).toEqual(3);
         expect(object1.billboard.scale.getValue()).toEqual(object2.billboard.scale.getValue());
         expect(object1.billboard.image.getValue()).toEqual(object2.billboard.image.getValue());
         expect(object1.billboard.color.red).toEqual(object2.billboard.color.red);
