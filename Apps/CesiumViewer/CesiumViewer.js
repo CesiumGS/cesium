@@ -1,23 +1,5 @@
 /*global define*/
-define(['Core/CorridorGeometry',
-        'Core/Cartographic',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/Color',
-        'Core/CornerType',
-        'Core/Math',
-        'Core/PolylineVolumeGeometry',
-        'Core/PolylineVolumeOutlineGeometry',
-        'Core/Extent',
-        'Core/ExtentGeometry',
-        'Core/Cartesian2',
-        'Core/ExtentOutlineGeometry',
-        'Core/EllipseGeometry',
-        'Core/GeometryInstance',
-        'Core/VertexFormat',
-        'Scene/createTangentSpaceDebugPrimitive',
-        'Scene/DebugAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
+define([
         'Core/defined',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
@@ -28,25 +10,6 @@ define(['Core/CorridorGeometry',
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
-            CorridorGeometry,
-            Cartographic,
-            ColorGeometryInstanceAttribute,
-            Color,
-            CornerType,
-            CesiumMath,
-            PolylineVolumeGeometry,
-            PolylineVolumeOutlineGeometry,
-            Extent,
-            ExtentGeometry,
-            Cartesian2,
-            ExtentOutlineGeometry,
-            EllipseGeometry,
-            GeometryInstance,
-            VertexFormat,
-            createTangentSpaceDebugPrimitive,
-            DebugAppearance,
-            PerInstanceColorAppearance,
-            Primitive,
         defined,
         CzmlDataSource,
         GeoJsonDataSource,
@@ -144,7 +107,7 @@ define(['Core/CorridorGeometry',
                     viewer.dataSources.add(source);
 
                     if (defined(endUserOptions.lookAt)) {
-                        var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
+                        var dynamicObject = source.getDynamicObjectCollection().getById(endUserOptions.lookAt);
                         if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
@@ -177,139 +140,5 @@ define(['Core/CorridorGeometry',
                 console.error(error);
             }
         }
-
-        var primitives = scene.getPrimitives();
-        var ellipsoid = viewer.centralBody.getEllipsoid();
-
-       // var solidWhite = new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0);
-
-     /*   var positions = ellipsoid.cartographicArrayToCartesianArray([
-                                                                     Cartographic.fromDegrees(-89.0, -3.0),
-                                                                     Cartographic.fromDegrees(-89.0, -2.0),
-                                                                     Cartographic.fromDegrees(-90.0, -2.0),
-                                                                     Cartographic.fromDegrees(-90.0, -1.0),
-                                                                     Cartographic.fromDegrees(-90.0, 0.0)
-
-                                                                 ]);
-       */
-//        var positions = ellipsoid.cartographicArrayToCartesianArray([
-  //                                                                   Cartographic.fromDegrees(-120.0, 40.0),
-    //                                                                 Cartographic.fromDegrees(-120.0, 50.0)
-      //                                                           ]);
-
-        var positions = ellipsoid.cartographicArrayToCartesianArray([
-                     //       Cartographic.fromDegrees(-85.0, 35.0, 0),
-            //           Cartographic.fromDegrees(-85.0, 36.0, 0),
-                            Cartographic.fromDegrees(-87.0, 38.0),
-                   //         Cartographic.fromDegrees(-86, 39.0),
-                            Cartographic.fromDegrees(-90.0, 40.0)
-        ]);
-
-        function ellipsePositions(horizontalRadius, verticalRadius) {
-            var pos = [];
-            var theta = CesiumMath.toRadians(1);
-            var posCount = Math.PI*2/theta;
-            for (var i = 0; i < posCount; i++) {
-                pos.push(new Cartesian2(horizontalRadius * Math.cos(theta * i), verticalRadius * Math.sin(theta * i)));
-            }
-            return pos;
-        }
-
-
-        function starPositions(arms, rOuter, rInner) {
-            var angle = Math.PI / arms;
-
-            var pos = [];
-
-            for (var i = 0; i < 2 * arms; i++) {
-                var r = (i % 2) === 0 ? rOuter : rInner;
-                var p = new Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
-                pos.push(p);
-            }
-            return pos;
-        }
-
-        function boxPositions() {
-            return [new Cartesian2(-50000, -50000), new Cartesian2(50000, -50000), new Cartesian2(50000, 50000), new Cartesian2(-50000, 50000)];
-        }
-
-        var geo = PolylineVolumeGeometry.createGeometry(new PolylineVolumeGeometry({
-            polylinePositions : positions,
-            vertexFormat: VertexFormat.ALL,
-     //       shapePositions:  boxPositions(),
-         //   shapePositions: starPositions(7, 20000, 10000),
-            shapePositions:  ellipsePositions(40000, 40000),
-            cornerType: CornerType.MITERED
-        }));
-
-        var volume = new GeometryInstance({
-            geometry: geo,
-            attributes: {
-                color : ColorGeometryInstanceAttribute.fromColor(Color.fromRandom({alpha : 1.0}))
-            }
-        });
-
-        var p = new Primitive({
-            geometryInstances: [volume],
-            appearance : new DebugAppearance({
-                attributeName: 'st'
-            })/*new PerInstanceColorAppearance({
-                translucent : false,
-                closed : true
-            })*/
-        });
-
-        primitives.add(p);
-/*
-        var outlineGeo = new PolylineVolumeOutlineGeometry({
-            polylinePositions : positions,
-            shapePositions:  boxPositions(),
-          //  shapePositions: starPositions(7, 20000, 10000),
-        //    shapePositions:  ellipsePositions(40000, 40000),
-            cornerType: CornerType.MITERED
-        });
-
-       var inst = new GeometryInstance({
-            geometry: PolylineVolumeOutlineGeometry.createGeometry(outlineGeo),
-            attributes : {
-                color : solidWhite
-            }
-        });
-
-        primitives.add(new Primitive({
-            geometryInstances: inst,
-            appearance : new PerInstanceColorAppearance({
-                flat : true,
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    },
-                    lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
-                }
-            })
-        }));
-*/
-        var debugp = createTangentSpaceDebugPrimitive({
-            geometry : geo
-        });
-        primitives.add(debugp);
-
-
-
-        /*
-                primitives.add(createTangentSpaceDebugPrimitive({
-                    geometry: airspaceGeo
-                }));
-                var drawCommand = new DrawCommand();
-                drawCommand.owner = p;
-                p.command = drawCommand;
-
-                scene.debugCommandFilter = function(command) {
-                    if (command.owner === p) {
-                        command.boundingVolume = p._boundingSphere;
-                        command.debugShowBoundingVolume = true;
-                    }
-                    return true;
-                };*/
     }
 });
