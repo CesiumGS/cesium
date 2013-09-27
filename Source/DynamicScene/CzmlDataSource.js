@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -69,6 +70,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermitePolynomialApproximation,
         Iso8601,
         JulianDate,
@@ -694,6 +696,10 @@ define([
         }
     }
 
+    function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -876,6 +882,13 @@ define([
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
+    }
+
+    function processDescription(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var descriptionData = packet.description;
+        if (defined(descriptionData)) {
+            processPacketData(String, dynamicObject, 'balloon', descriptionData, undefined, sourceUri);
+        }
     }
 
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1069,25 +1082,27 @@ define([
             var i;
             var unresolvedParents;
             var parentId = packet.parent;
-            var parent = defined(parentId) ? dynamicObjectCollection.getById(parentId) : undefined;
+            if (defined(parentId)) {
+                var parent = dynamicObjectCollection.getById(parentId);
 
-            //If we have already loaded the parent, resolve it,
-            if (defined(parent)) {
-                dynamicObject.parent = parent;
-            } else {
-                unresolvedParents = dataSource._unresolvedParents[parentId];
-                if (!defined(unresolvedParents)) {
-                    dataSource._unresolvedParents[parentId] = [dynamicObject];
+                //If we have already loaded the parent, resolve it,
+                if (defined(parent)) {
+                    dynamicObject.parent = parent;
                 } else {
-                    unresolvedParents.push(objectId);
+                    unresolvedParents = dataSource._unresolvedParents[parentId];
+                    if (!defined(unresolvedParents)) {
+                        dataSource._unresolvedParents[parentId] = [dynamicObject];
+                    } else {
+                        unresolvedParents.push(dynamicObject);
+                    }
                 }
-            }
-            unresolvedParents = dataSource._unresolvedParents[objectId];
-            if (defined(unresolvedParents)) {
-                for (i = 0; i < unresolvedParents.length; i++) {
-                    unresolvedParents[i].parent = dynamicObject;
+                unresolvedParents = dataSource._unresolvedParents[objectId];
+                if (defined(unresolvedParents)) {
+                    for (i = 0; i < unresolvedParents.length; i++) {
+                        unresolvedParents[i].parent = dynamicObject;
+                    }
+                    dataSource._unresolvedParents[objectId] = undefined;
                 }
-                dataSource._unresolvedParents[objectId] = undefined;
             }
 
             for (i = updaterFunctions.length - 1; i > -1; i--) {
@@ -1122,6 +1137,20 @@ define([
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
+
+        var name;
+        if (defined(documentObject) && defined(documentObject.name)) {
+            name = documentObject.name;
+        }
+
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        dataSource._name = name;
+
+        //FIXME This is a temporary hack to sstop the document from showing up in the DataSourceBrowser.
+        dynamicObjectCollection.removeById('document');
         return clock;
     }
 
@@ -1129,8 +1158,12 @@ define([
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
      * @constructor
+     *
+     * @param {String} [name] The name of this data source.  If undefined, a name will be read from the
+     *                        loaded CZML document, or the name of the CZML file.
      */
     var CzmlDataSource = function() {
+        this._name = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
@@ -1149,7 +1182,9 @@ define([
     processEllipse, //
     processEllipsoid, //
     processCone, //
+    processDescription, //
     processLabel, //
+    processName, //
     processPath, //
     processPoint, //
     processPolygon, //
@@ -1161,6 +1196,16 @@ define([
     processOrientation, //
     processVertexPositions, //
     processAvailability];
+
+    /**
+     * Gets the name of this data source.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    CzmlDataSource.prototype.getName = function() {
+        return this._name;
+    };
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
