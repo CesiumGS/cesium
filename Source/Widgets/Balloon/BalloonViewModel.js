@@ -18,6 +18,10 @@ define([
     var arrowMin = 0;
     var screenSpacePos = new Cartesian2();
 
+    function toPx(value) {
+        return Math.round(value).toString() + 'px';
+    }
+
     function shiftPosition(viewModel, position, arrow, screen) {
         var arrowX;
         var arrowY;
@@ -27,8 +31,8 @@ define([
         var containerWidth = container.clientWidth;
         var containerHeight = container.clientHeight;
 
-        viewModel._maxWidth = containerWidth * 0.50 + 'px';
-        viewModel._maxHeight = containerHeight * 0.50 + 'px';
+        viewModel._maxWidth = toPx(containerWidth * 0.50);
+        viewModel._maxHeight = toPx(containerHeight * 0.50);
         var arrowMaxY = containerHeight - 15;
         var arrowMaxX = containerWidth - 16;
         var arrowXOffset = position.x - 15;
@@ -105,11 +109,23 @@ define([
             }
         }
 
-        viewModel._arrowX = arrowX + 'px';
-        viewModel._arrowY = arrowY + 'px';
+        var arrowXPx = toPx(arrowX);
+        if (viewModel._arrowX !== arrowXPx) {
+            viewModel._arrowX = arrowXPx;
+        }
+        var arrowYPx = toPx(arrowY);
+        if (viewModel._arrowY !== arrowXPx) {
+            viewModel._arrowY = arrowYPx;
+        }
 
-        viewModel._positionX = posX + 'px';
-        viewModel._positionY = posY + 'px';
+        var positionXPx = toPx(posX);
+        if (viewModel._positionX !== positionXPx) {
+            viewModel._positionX = positionXPx;
+        }
+        var positionYPx = toPx(posY);
+        if (viewModel._positionY !== positionYPx) {
+            viewModel._positionY = positionYPx;
+        }
     }
 
     /**
@@ -242,7 +258,7 @@ define([
          *
          * @type {Number}
          */
-        this._maxWidth = this._container.clientWidth * 0.95 + 'px';
+        this._maxWidth = toPx(this._container.clientWidth * 0.95);
 
         /**
          * The maximum height of the balloon element.
@@ -250,7 +266,7 @@ define([
          *
          * @type {Number}
          */
-        this._maxHeight = this._container.clientHeight * 0.50 + 'px';
+        this._maxHeight = toPx(this._container.clientHeight * 0.50);
 
         knockout.track(this, ['showArrow', 'showBalloon', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
