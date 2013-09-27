@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -69,6 +70,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermitePolynomialApproximation,
         Iso8601,
         JulianDate,
@@ -694,6 +696,10 @@ define([
         }
     }
 
+    function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -1097,6 +1103,18 @@ define([
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
+
+        var name;
+        if (defined(documentObject) && defined(documentObject.name)) {
+            name = documentObject.name;
+        }
+
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        dataSource._name = name;
+
         return clock;
     }
 
@@ -1104,8 +1122,11 @@ define([
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
      * @constructor
+     *
+     * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      */
-    var CzmlDataSource = function() {
+    var CzmlDataSource = function(name) {
+        this._name = name;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
@@ -1124,6 +1145,7 @@ define([
     processEllipsoid, //
     processCone, //
     processLabel, //
+    processName, //
     processPath, //
     processPoint, //
     processPolygon, //
@@ -1135,6 +1157,16 @@ define([
     processOrientation, //
     processVertexPositions, //
     processAvailability];
+
+    /**
+     * Gets the name of this data source.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    CzmlDataSource.prototype.getName = function() {
+        return this._name;
+    };
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
