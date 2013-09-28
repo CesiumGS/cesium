@@ -41,8 +41,8 @@ Beta Releases
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
-   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking a `sources` argument.
-   * Replaced `SkyBox.getSources` with `SkyBox.prototype.sources`.
+   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
+   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
    * Removed `canvasDimensions` from `FrameState`.
    * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
