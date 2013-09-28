@@ -578,6 +578,8 @@ define(['../Core/createGuid',
     }
 
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        dataSource._isLoading = true;
+        dataSource._isLoadingEvent.raiseEvent(dataSource, true);
         var name;
         var document = kml.getElementsByTagName('Document');
         if (document.length > 0) {
@@ -603,6 +605,8 @@ define(['../Core/createGuid',
         //my loading all styles first, before doing anything else.
         return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
             iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+            dataSource._isLoading = false;
+            dataSource._isLoadingEvent.raiseEvent(dataSource, false);
             dataSource._changed.raiseEvent(this);
         });
     }
@@ -667,10 +671,12 @@ define(['../Core/createGuid',
     var KmlDataSource = function() {
         this._changed = new Event();
         this._error = new Event();
+        this._isLoadingEvent = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
         this._name = undefined;
+        this._isLoading = false;
     };
 
     /**
@@ -692,6 +698,28 @@ define(['../Core/createGuid',
      */
     KmlDataSource.prototype.getErrorEvent = function() {
         return this._error;
+    };
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    KmlDataSource.prototype.getLoadingEvent = function() {
+        return this._isLoadingEvent;
+    };
+    /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    KmlDataSource.prototype.getIsLoading = function() {
+        return this._isLoading;
     };
 
     KmlDataSource.prototype.getName = function() {
