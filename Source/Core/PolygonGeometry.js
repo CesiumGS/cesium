@@ -92,23 +92,18 @@ define([
     var createGeometryFromPositionsPositions = [];
 
     function createGeometryFromPositions(ellipsoid, positions, granularity) {
-        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-        if (cleanedPositions.length < 3) {
-            throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
-        }
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            cleanedPositions.reverse();
+            positions.reverse();
         }
 
         var indices = PolygonPipeline.triangulate(positions2D);
         return new GeometryInstance({
-            geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
+            geometry : PolygonPipeline.computeSubdivision(positions, indices, granularity)
         });
     }
 
@@ -131,8 +126,7 @@ define([
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
-            var cleanedPositions = PolygonPipeline.removeDuplicates(outerPositions);
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
             var origin = appendTextureCoordinatesOrigin;
@@ -628,25 +622,30 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-
+            var holes = outerNode.holes;
+            outerRing = PolygonPipeline.removeDuplicates(outerRing);
             if (outerRing.length < 3) {
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            var numChildren = holes ? holes.length : 0;
             if (numChildren === 0) {
                 // The outer polygon is a simple polygon with no nested inner polygon.
                 polygonHierarchy.push({
                     outerRing: outerRing,
                     holes: []
                 });
-                polygons.push(outerNode.positions);
+                polygons.push(outerRing);
             } else {
                 // The outer polygon contains inner polygons
-                var holes = [];
+                var polygonHoles = [];
                 for (i = 0; i < numChildren; i++) {
-                    var hole = outerNode.holes[i];
-                    holes.push(hole.positions);
+                    var hole = holes[i];
+                    hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                    if (hole.positions.length < 3) {
+                        throw new DeveloperError('At least three positions are required.');
+                    }
+                    polygonHoles.push(hole.positions);
 
                     var numGrandchildren = 0;
                     if (defined(hole.holes)) {
@@ -659,9 +658,9 @@ define([
                 }
                 polygonHierarchy.push({
                     outerRing: outerRing,
-                    holes: holes
+                    holes: polygonHoles
                 });
-                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, polygonHoles);
                 polygons.push(combinedPolygon);
             }
         }
