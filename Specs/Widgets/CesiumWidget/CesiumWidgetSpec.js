@@ -8,6 +8,7 @@ defineSuite([
          'Scene/Scene',
          'Scene/SceneMode',
          'Scene/SceneTransitioner',
+         'Scene/SkyBox',
          'Scene/TileCoordinatesImageryProvider',
          'Specs/EventHelper'
      ], function(
@@ -19,6 +20,7 @@ defineSuite([
          Scene,
          SceneMode,
          SceneTransitioner,
+         SkyBox,
          TileCoordinatesImageryProvider,
          EventHelper) {
     "use strict";
@@ -118,19 +120,21 @@ defineSuite([
         expect(widget.centralBody.terrainProvider).toBe(options.terrainProvider);
     });
 
-    it('sets expected options skyBoxSources', function() {
+    it('sets expected options skyBox', function() {
         var options = {
-            skyBoxSources : {
-                positiveX : './Data/Images/Blue.png',
-                negativeX : './Data/Images/Green.png',
-                positiveY : './Data/Images/Blue.png',
-                negativeY : './Data/Images/Green.png',
-                positiveZ : './Data/Images/Blue.png',
-                negativeZ : './Data/Images/Green.png'
-            }
+            skyBox : new SkyBox({
+                sources : {
+                    positiveX : './Data/Images/Blue.png',
+                    negativeX : './Data/Images/Green.png',
+                    positiveY : './Data/Images/Blue.png',
+                    negativeY : './Data/Images/Green.png',
+                    positiveZ : './Data/Images/Blue.png',
+                    negativeZ : './Data/Images/Green.png'
+                }
+            })
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.scene.skyBox.getSources()).toBe(options.skyBoxSources);
+        expect(widget.scene.skyBox).toBe(options.skyBox);
     });
 
     it('can set contextOptions', function() {

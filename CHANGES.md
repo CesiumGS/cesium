@@ -41,6 +41,8 @@ Beta Releases
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
+   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking a `sources` argument.
+   * Replaced `SkyBox.getSources` with `SkyBox.prototype.sources`.
    * Removed `canvasDimensions` from `FrameState`.
    * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
@@ -57,7 +59,7 @@ Beta Releases
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Added proper support for browser zoom.
 * Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
-* Added `skyBoxSources` to the `CesiumWidget` and `Viewer` constructors.
+* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 * Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.
