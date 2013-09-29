@@ -20,6 +20,7 @@
 
 .cesium-widget-button {
     display: inline-block;
+    position: relative;
     background: #303336;
     border: 1px solid #444;
     color: #edffff;  /* For text buttons */
@@ -75,6 +76,14 @@
     height: 32px;
     padding: 0;
     vertical-align: middle;
+}
+
+.cesium-widget-vertical-icon {
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    margin: 3px 0;
 }
 
 .cesium-widget-errorPanel {

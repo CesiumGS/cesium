@@ -93,6 +93,18 @@ define([
         },
 
         /**
+         * Gets the root node of the SVG.
+         *
+         * @memberof SvgPath.prototype
+         * @type {Element}
+         */
+        element : {
+            get : function() {
+                return this._svgNode;
+            }
+        },
+
+        /**
          * Gets the path.
          *
          * @memberof SvgPath.prototype
