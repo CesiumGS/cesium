@@ -24,10 +24,11 @@
     border: 1px solid #444;
     color: #edffff;  /* For text buttons */
     fill: #edffff;   /* For SVG buttons */
-    border-radius: 5px;
+    border-radius: 14%;
     padding: 4px 12px;
     margin: 0 3px;
     cursor: pointer;
+    overflow: hidden;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
@@ -68,7 +69,7 @@
     cursor: default;
 }
 
-.cesium-widget-svg-path {
+.cesium-widget-small-icon {
     box-sizing: border-box;
     width: 32px;
     height: 32px;
