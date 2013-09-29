@@ -102,6 +102,23 @@ define([
             }
         });
 
+        /**
+         * Gets he current search text as a regular expression.
+         *
+         * @type String
+         */
+        knockout.defineProperty(this, 'searchTextRegex', {
+            get : function() {
+                if (defined(this.searchText)) {
+                    return new RegExp(this.searchText, 'i');
+                }
+                return undefined;
+            }
+        });
+        knockout.getObservable(this, 'searchTextRegex').extend({
+            throttle : 10
+        });
+
         this.clockTrackedDataSource = undefined;
         var clockTrackViewModel = knockout.observable();
         knockout.defineProperty(this, 'clockTrackedDataSource', {
@@ -205,6 +222,25 @@ define([
             }
         }
     });
+
+    DataSourceBrowserViewModel.prototype.isNodeFiltered = function(node) {
+        var regex = this.searchTextRegex;
+        if (!defined(regex)) {
+            return false;
+        }
+
+        // If any child is visible, we must be visible.
+        var len = node.children.length;
+        for ( var i = 0; i < len; ++i) {
+            var kidFilteredOut = node.children[i].isFilteredOut;
+            if (!kidFilteredOut) {
+                return false;
+            }
+        }
+
+        // No visible kids, return actual match against filter.
+        return !regex.test(node.name);
+    };
 
     /**
      * Gets the maximum height of panels within the widget, minus an offset, in CSS-ready form.
