@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/EventHelper',
         '../createCommand',
         './DataSourceViewModel',
         './DataSourceItemViewModel',
@@ -16,6 +17,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        EventHelper,
         createCommand,
         DataSourceViewModel,
         DataSourceItemViewModel,
@@ -38,15 +40,20 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
 
-        var that = this;
-
-        dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
-        dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
         this._dataSourceCollection = dataSourceCollection;
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
+        this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
+
+        this._dynamicObjectCollectionChangedListeners = {};
+        this._dataSourceViewModelHash = {};
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._onObjectSelected = new Event();
         this._onClockSelected = new Event();
+
+        var that = this;
 
         this._addDataSourceCommand = createCommand(function() {
             that._dataSourcePanelViewModel.visible = true;
@@ -160,6 +167,10 @@ define([
         knockout.defineProperty(this, 'infoText', function() {
             return this._dataSourceViewModels.length > 0 ? '' : 'Empty globe.';
         });
+
+        for ( var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+            this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
+        }
     };
 
     defineProperties(DataSourceBrowserViewModel.prototype, {
@@ -260,38 +271,78 @@ define([
         this.visible = !this.visible;
     };
 
-    function insertIntoTree(rootViewModel, root, object, dataSourceViewModelHash, dataSource) {
+    DataSourceBrowserViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
+    };
+
+    function insertIntoTree(browserViewModel, rootViewModel, object, dataSourceViewModelHash, dataSource) {
         var id = object.id;
-        if (!defined(dataSourceViewModelHash[id])) {
-            var parent;
-            var name = defaultValue(object.name, id);
-            var dynamicObjectViewModel = new DataSourceItemViewModel(name, rootViewModel, dataSource, object);
-            dataSourceViewModelHash[id] = dynamicObjectViewModel;
-            parent = object.parent;
-            if (defined(parent)) {
-                var parentId = parent.id;
-                var parentViewModel = dataSourceViewModelHash[parentId];
-                if (!defined(parentViewModel)) {
-                    parentViewModel = insertIntoTree(rootViewModel, root, parent, dataSourceViewModelHash, dataSource);
-                }
-                parentViewModel.children.push(dynamicObjectViewModel);
-            } else {
-                root.children.push(dynamicObjectViewModel);
-            }
+        var dynamicObjectViewModel = dataSourceViewModelHash[id];
+        if (defined(dynamicObjectViewModel)) {
+            // already exists
             return dynamicObjectViewModel;
         }
-        return undefined;
+
+        var name = defaultValue(object.name, id);
+        dynamicObjectViewModel = new DataSourceItemViewModel(name, browserViewModel, dataSource, object);
+        dataSourceViewModelHash[id] = dynamicObjectViewModel;
+
+        var parent = object.parent;
+        if (defined(parent)) {
+            var parentViewModel = insertIntoTree(browserViewModel, rootViewModel, parent, dataSourceViewModelHash, dataSource);
+            parentViewModel.children.push(dynamicObjectViewModel);
+        } else {
+            rootViewModel.children.push(dynamicObjectViewModel);
+        }
+
+        return dynamicObjectViewModel;
+    }
+
+    function removeFromTree(rootViewModel, object, dataSourceViewModelHash) {
+        var id = object.id;
+        var dynamicObjectViewModel = dataSourceViewModelHash[id];
+        if (!defined(dynamicObjectViewModel)) {
+            // doesn't exist
+            return;
+        }
+
+        var parent = object.parent;
+        if (defined(parent)) {
+            var parentViewModel = dataSourceViewModelHash[parent.id];
+            parentViewModel.children.remove(dynamicObjectViewModel);
+        } else {
+            rootViewModel.children.remove(dynamicObjectViewModel);
+        }
     }
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var dataSourceViewModelHash = {};
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this, dataSource);
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
-        var objects = dynamicObjectCollection.getObjects();
+        var dynamicObjectCollectionId = dynamicObjectCollection.id;
 
-        for ( var i = 0, len = objects.length; i < len; ++i) {
-            insertIntoTree(this, dataSourceViewModel, objects[i], dataSourceViewModelHash, dataSource);
+        var dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId];
+        if (!defined(dataSourceViewModelHash)) {
+            dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId] = {};
         }
+
+        var that = this;
+
+        function onCollectionChanged(collection, added, removed) {
+            var i;
+            var len;
+            for (i = 0, len = added.length; i < len; ++i) {
+                insertIntoTree(that, dataSourceViewModel, added[i], dataSourceViewModelHash, dataSource);
+            }
+            for (i = 0, len = removed.length; i < len; ++i) {
+                removeFromTree(dataSourceViewModel, removed[i], dataSourceViewModelHash);
+            }
+        }
+
+        // add existing
+        onCollectionChanged(dynamicObjectCollection, dynamicObjectCollection.getObjects(), []);
+
+        var removalFunc = dynamicObjectCollection.collectionChanged.addEventListener(onCollectionChanged, this);
+        this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = removalFunc;
 
         this._dataSourceViewModels.push(dataSourceViewModel);
         this._dataSourcesLength = this.dataSources.getLength();
@@ -303,9 +354,17 @@ define([
         for ( var i = 0, len = dataSourceViewModels.length; i < len; ++i) {
             var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel.dataSource === dataSource) {
+                // unsubscribe from collectionChanged
+                var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+                var dynamicObjectCollectionId = dynamicObjectCollection.id;
+                this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId]();
+                this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = undefined;
+
                 dataSourceViewModels.splice(i, 1);
                 dataSourceViewModel.destroy();
+
                 this._dataSourcesLength = this.dataSources.getLength();
+
                 return;
             }
         }
