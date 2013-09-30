@@ -4,33 +4,23 @@ defineSuite([
          'Specs/createScene',
          'Specs/destroyScene',
          'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/frameState',
-         'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Extent',
-         'Core/Math',
-         'Renderer/ClearCommand',
-         'Scene/SceneMode'
+         'Core/Math'
      ], 'Scene/Pick', function(
          ExtentPrimitive,
          createScene,
          destroyScene,
          createCamera,
-         createFrameState,
-         frameState,
-         BoundingSphere,
          Cartesian2,
          Cartesian3,
          Cartographic,
          Ellipsoid,
          Extent,
-         CesiumMath,
-         ClearCommand,
-         SceneMode) {
+         CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -72,6 +62,12 @@ defineSuite([
         return e;
     }
 
+    it('pick (undefined window position)', function() {
+        expect(function() {
+            scene.pick(undefined);
+        }).toThrow();
+    });
+
     it('is picked', function() {
         var extent = createExtent();
         scene.render();
@@ -98,9 +94,7 @@ defineSuite([
     });
 
     it('is picked (top primitive only)', function() {
-        var extent1 = createExtent();
-        extent1.height = 0;
-
+        createExtent();
         var extent2 = createExtent();
         extent2.height = 0.01;
 
@@ -109,10 +103,14 @@ defineSuite([
         expect(pickedObject.primitive).toEqual(extent2);
     });
 
+    it('drill pick (undefined window position)', function() {
+        expect(function() {
+            scene.pick(undefined);
+        }).toThrow();
+    });
+
     it('drill pick (all picked)', function() {
         var extent1 = createExtent();
-        extent1.height = 0;
-
         var extent2 = createExtent();
         extent2.height = 0.01;
 
@@ -125,8 +123,6 @@ defineSuite([
 
     it('drill pick (show === false)', function() {
         var extent1 = createExtent();
-        extent1.height = 0;
-
         var extent2 = createExtent();
         extent2.height = 0.01;
         extent2.show = false;
@@ -139,8 +135,6 @@ defineSuite([
 
     it('drill pick (alpha === 0.0)', function() {
         var extent1 = createExtent();
-        extent1.height = 0;
-
         var extent2 = createExtent();
         extent2.height = 0.01;
         extent2.material.uniforms.color.alpha = 0.0;
@@ -150,11 +144,4 @@ defineSuite([
         expect(pickedObjects.length).toEqual(1);
         expect(pickedObjects[0].primitive).toEqual(extent1);
     });
-
-
-
-
-
-
-
 }, 'WebGL');
