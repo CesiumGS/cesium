@@ -102,6 +102,10 @@ define([
         }
 
         var indices = PolygonPipeline.triangulate(positions2D);
+        /* If polygon is completely unrenderable, just use the first three vertices */
+        if (indices.length < 3) {
+            indices = [0, 1, 2];
+        }
         return new GeometryInstance({
             geometry : PolygonPipeline.computeSubdivision(positions, indices, granularity)
         });
