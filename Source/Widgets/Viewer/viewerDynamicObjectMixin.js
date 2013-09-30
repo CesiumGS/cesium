@@ -81,11 +81,16 @@ define([
 
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
+            var time = clock.currentTime;
             if (defined(dynamicObjectView)) {
-                dynamicObjectView.update(clock.currentTime);
+                dynamicObjectView.update(time);
             }
             if (defined(balloonedObject) && defined(balloonedObject.position)) {
-                balloonViewModel.position = balloonedObject.position.getValue(clock.currentTime, balloonViewModel.position);
+                var showBalloon = balloonedObject.isAvailable(time);
+                if (showBalloon) {
+                    balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+                }
+                balloonViewModel.showBalloon = showBalloon;
                 balloonViewModel.update();
             }
         }
@@ -124,7 +129,9 @@ define([
                 var removedObject = removed[i];
                 if (viewer.trackedObject === removedObject) {
                     viewer.homeButton.viewModel.command();
-                    break;
+                }
+                if (viewer.balloonedObject === removedObject) {
+                    viewer.balloonedObject = undefined;
                 }
             }
         }
@@ -139,6 +146,9 @@ define([
             if (defined(trackedObject)) {
                 if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
                     viewer.homeButton.viewModel.command();
+                }
+                if (dataSource.getDynamicObjectCollection().getById(viewer.balloonedObject.id) === viewer.balloonedObject) {
+                    viewer.balloonedObject = undefined;
                 }
             }
         }
