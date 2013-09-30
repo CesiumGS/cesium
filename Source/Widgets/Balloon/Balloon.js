@@ -37,7 +37,7 @@ define([
         container = getElement(container);
 
         this._container = container;
-        container.setAttribute('data-bind', 'css: { "cesium-balloon-container" : true, "cesium-balloon-container-visible" : showBalloon }');
+        container.setAttribute('data-bind', 'css: { "cesium-balloon-container" : true, "cesium-balloon-container-visible" : showBalloon && !userClosed }');
 
         var el = document.createElement('div');
         this._element = el;
@@ -52,7 +52,7 @@ define([
         var ex = document.createElement('a');
         ex.href = '#';
         ex.className = 'cesium-balloon-close';
-        ex.setAttribute('data-bind', 'click: function(){showBalloon = false; return false;}');
+        ex.setAttribute('data-bind', 'click: function(){userClosed = true; return false;}');
         el.appendChild(ex);
 
         this._content = document.createElement('div');

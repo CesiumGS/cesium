@@ -212,7 +212,21 @@ define([
          *
          * @type {Boolean}
          */
-        this.showBalloon = false;
+        this.showBalloon = undefined;
+        var showBalloon = knockout.observable();
+        knockout.defineProperty(this, 'showBalloon', {
+            get : function() {
+                return showBalloon();
+            },
+            set : function(value) {
+                showBalloon(value);
+                if (value) {
+                    this.userClosed = false;
+                }
+            }
+        });
+
+        this.userClosed = false;
 
         /**
          * Determines the visibility of the balloon arrow
@@ -270,7 +284,7 @@ define([
          */
         this._maxHeight = toPx(this._container.clientHeight * 0.50);
 
-        knockout.track(this, ['showArrow', 'showBalloon', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
+        knockout.track(this, ['showArrow', 'userClosed', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
 
     /**
@@ -279,23 +293,38 @@ define([
      */
     BalloonViewModel.prototype.update = function() {
         if (!this._timerRunning) {
+            var pos;
             if (this._updateContent) {
+                var wasShowing = (this.showBalloon && !this.userClosed);
+
                 this.showBalloon = false;
+                this.userClosed = false;
                 this._timerRunning = true;
-                var that = this;
-                //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
-                setTimeout(function() {
-                    that._contentHTML = that._content;
-                    if (defined(that._position)) {
-                        var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
-                        pos = shiftPosition(that, pos);
+
+                //If the balloon is already up, we need to set a timeout so that we don't show the new balloon
+                //until it is done fading out from its old position.
+                if (wasShowing) {
+                    var that = this;
+                    setTimeout(function() {
+                        that._contentHTML = that._content;
+                        if (defined(that._position)) {
+                            pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
+                            pos = shiftPosition(that, pos);
+                        }
+                        that.showBalloon = true;
+                        that._timerRunning = false;
+                    }, 100);
+                } else {
+                    this._contentHTML = this._content;
+                    if (defined(this._position)) {
+                        pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+                        pos = shiftPosition(this, pos);
                     }
-                    that.showBalloon = true;
-                    that._timerRunning = false;
-                }, 100);
+                    this.showBalloon = true;
+                    this._timerRunning = false;
+                }
                 this._updateContent = false;
-            } else if (this.showBalloon) {
-                var pos;
+            } else if (this.showBalloon && !this.userClosed) {
                 if (defined(this._position)) {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                     this.showArrow = true;

@@ -11,7 +11,8 @@ define([
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
         '../Balloon/Balloon',
-        '../../DynamicScene/DynamicObjectView'
+        '../../DynamicScene/DynamicObjectView',
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
@@ -24,7 +25,8 @@ define([
         wrapFunction,
         SceneMode,
         Balloon,
-        DynamicObjectView) {
+        DynamicObjectView,
+        knockout) {
     "use strict";
 
     /**
@@ -70,6 +72,7 @@ define([
         viewer.container.appendChild(balloonContainer);
 
         var balloon = new Balloon(balloonContainer, viewer.scene);
+
         var balloonViewModel = balloon.viewModel;
         viewer._balloon = balloon;
 
@@ -79,20 +82,40 @@ define([
         var dynamicObjectView;
         var balloonedObject;
 
+        function balloonClosed(value) {
+            if (!value) {
+                balloonedObject = undefined;
+            }
+        }
+        knockout.getObservable(balloonViewModel, 'userClosed').subscribe(balloonClosed);
+
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
             if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(time);
             }
-            if (defined(balloonedObject) && defined(balloonedObject.position)) {
-                var showBalloon = balloonedObject.isAvailable(time);
-                if (showBalloon) {
-                    balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+
+            var showBalloon = defined(balloonedObject) && defined(balloonedObject.position) && balloonedObject.isAvailable(time);
+            if (showBalloon) {
+                balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+
+                var content;
+                if (defined(balloonedObject.balloon)) {
+                    content = balloonedObject.balloon.getValue(time);
                 }
-                balloonViewModel.showBalloon = showBalloon;
-                balloonViewModel.update();
+
+                var heading = balloonedObject.name;
+                if (defined(content) && defined(heading)) {
+                    content = '<h3>' + heading + '</h3>' + content;
+                } else if (!defined(content)) {
+                    content = '<h3>' + defaultValue(heading, balloonedObject.id) + '</h3>';
+                }
+                balloonViewModel.content = content;
             }
+
+            balloonViewModel.update();
+            balloonViewModel.showBalloon = showBalloon;
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
@@ -147,6 +170,8 @@ define([
                 if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
                     viewer.homeButton.viewModel.command();
                 }
+            }
+            if (defined(balloonedObject)) {
                 if (dataSource.getDynamicObjectCollection().getById(viewer.balloonedObject.id) === viewer.balloonedObject) {
                     viewer.balloonedObject = undefined;
                 }
@@ -220,28 +245,7 @@ define([
                     return balloonedObject;
                 },
                 set : function(value) {
-                    var content;
-                    var position;
-                    if (defined(value)) {
-                        if (defined(value.position)) {
-                            position = value.position.getValue(viewer.clock.currentTime);
-                        }
-
-                        if (defined(value.balloon)) {
-                            content = value.balloon.getValue(viewer.clock.currentTime);
-                        }
-
-                        var heading = value.name;
-                        if (defined(content) && defined(heading)) {
-                            content = '<h3>' + heading + '</h3>' + content;
-                        } else if (!defined(content)) {
-                            content = '<h3>' + defaultValue(heading, value.id) + '</h3>';
-                        }
-                        balloonViewModel.content = content;
-                    }
                     balloonedObject = value;
-                    balloonViewModel.position = position;
-                    balloonViewModel.showBalloon = defined(content);
                 }
             }
         });
