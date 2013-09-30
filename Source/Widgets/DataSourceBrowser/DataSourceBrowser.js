@@ -60,7 +60,7 @@ data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }"
     \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <span data-bind="html: expandIndicator"></span>\
     <span data-bind="text: name"></span></span>\
-<ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\
+<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item" \
@@ -151,7 +151,7 @@ valueUpdate: \'afterkeydown\'');
     \'cesium-dataSourceBrowser-clock-hidden\': isSoleSource && clockTracking }">clock</span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
     data-bind="click: remove">&times;</span></span>\
-<ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul></div>\
+<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
