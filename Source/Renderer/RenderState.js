@@ -124,8 +124,8 @@ define([
         };
         this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
-            (!defined(viewport.width)) ? context.getCanvas().clientWidth : viewport.width,
-            (!defined(viewport.height)) ? context.getCanvas().clientHeight : viewport.height) : undefined;
+            (!defined(viewport.width)) ? context.getDrawingBufferWidth() : viewport.width,
+            (!defined(viewport.height)) ? context.getDrawingBufferHeight() : viewport.height) : undefined;
 
         // Validate
 
@@ -407,10 +407,9 @@ define([
         var viewport = renderState.viewport;
 
         if (!defined(viewport)) {
-            var canvas = passState.context.getCanvas();
             viewport = scratchViewport;
-            viewport.width = canvas.clientWidth;
-            viewport.height = canvas.clientHeight;
+            viewport.width = passState.context.getDrawingBufferWidth();
+            viewport.height = passState.context.getDrawingBufferHeight();
         }
 
         passState.context.getUniformState().setViewport(viewport);

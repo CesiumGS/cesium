@@ -218,7 +218,7 @@ define([
         plane.x = -right.x;
         plane.y = -right.y;
         plane.z = -right.z;
-        plane.w = -Cartesian3.dot(right.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(right), point);
 
         // Bottom plane
         Cartesian3.multiplyByScalar(up, b, point);
@@ -244,7 +244,7 @@ define([
         plane.x = -up.x;
         plane.y = -up.y;
         plane.z = -up.z;
-        plane.w = -Cartesian3.dot(up.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(up), point);
 
         // Near plane
         plane = planes[4];
@@ -267,7 +267,7 @@ define([
         plane.x = -direction.x;
         plane.y = -direction.y;
         plane.z = -direction.z;
-        plane.w = -Cartesian3.dot(direction.negate(), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(direction), point);
 
         return this._cullingVolume;
     };
@@ -277,11 +277,11 @@ define([
      *
      * @memberof OrthographicFrustum
      *
-     * @param {Cartesian2} canvasDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} canvasDimensions is required.
-     * @exception {DeveloperError} canvasDimensions.x must be greater than zero.
-     * @exception {DeveloperError} canvasDimensione.y must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions is required.
+     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
+     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
      * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -290,22 +290,22 @@ define([
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
      */
-    OrthographicFrustum.prototype.getPixelSize = function(canvasDimensions) {
+    OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions) {
         update(this);
 
-        if (!defined(canvasDimensions)) {
-            throw new DeveloperError('canvasDimensions is required.');
+        if (!defined(drawingBufferDimensions)) {
+            throw new DeveloperError('drawingBufferDimensions is required.');
         }
 
-        var width = canvasDimensions.x;
-        var height = canvasDimensions.y;
+        var width = drawingBufferDimensions.x;
+        var height = drawingBufferDimensions.y;
 
         if (width <= 0) {
-            throw new DeveloperError('canvasDimensions.x must be greater than zero.');
+            throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
         }
 
         if (height <= 0) {
-            throw new DeveloperError('canvasDimensions.y must be greater than zero.');
+            throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
         }
 
         var frustumWidth = this.right - this.left;

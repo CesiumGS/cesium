@@ -29,13 +29,15 @@ define([
         frameState.time = defaultValue(time, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));
 
         camera = defaultValue(camera, new Camera({
-            clientHeight : 1,
-            clientWidth : 1
+            getDrawingBufferWidth : function() {
+                return 1;
+            },
+            getDrawingBufferHeight : function() {
+                return 1;
+            }
         }));
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-        frameState.canvasDimensions.x = 1.0;
-        frameState.canvasDimensions.y = 1.0;
 
         frameState.passes.color = true;
         frameState.passes.overlay = true;

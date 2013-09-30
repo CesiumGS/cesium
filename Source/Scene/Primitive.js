@@ -103,7 +103,7 @@ define([
      * var primitive = new Primitive({
      *   geometryInstances : instance,
      *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType(scene.getContext(), 'Checkerboard')
+     *     material : Material.fromType('Checkerboard')
      *   })
      * });
      * scene.getPrimitives().add(primitive);
@@ -459,6 +459,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
             (!frameState.passes.color && !frameState.passes.pick)) {
@@ -601,7 +602,7 @@ define([
                     instances : clonedInstances,
                     pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
-                    isGeographic : projection,
+                    projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this._allow3DOnly,
                     vertexCacheOptimize : this._vertexCacheOptimize,
@@ -680,6 +681,10 @@ define([
         } else if (this._material !== material ) {
             this._material = material;
             createSP = true;
+        }
+
+        if (defined(this._material)) {
+            this._material.update(context);
         }
 
         if (createRS) {

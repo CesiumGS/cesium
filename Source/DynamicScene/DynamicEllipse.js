@@ -1,16 +1,23 @@
 /*global define*/
-define([
+define(['../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/Shapes'
-        ], function (
-            defaultValue,
-            defined,
-            Cartesian3,
-            Ellipsoid,
-            Shapes) {
+        '../Core/Event',
+        '../Core/Shapes',
+        './createDynamicPropertyDescriptor'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Ellipsoid,
+        Event,
+        Shapes,
+        createDynamicPropertyDescriptor) {
     "use strict";
 
     /**
@@ -20,59 +27,83 @@ define([
      * @constructor
      */
     var DynamicEllipse = function() {
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
-         * @type {Property}
-         */
-        this.semiMajorAxis = undefined;
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
-         * @type {Property}
-         */
-        this.semiMinorAxis = undefined;
-
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
-         * @type {Property}
-         */
-        this.bearing = undefined;
-
+        this._semiMajorAxis = undefined;
+        this._semiMinorAxis = undefined;
+        this._bearing = undefined;
         this._lastPosition = undefined;
         this._lastSemiMajorAxis = undefined;
         this._lastSemiMinorAxis = undefined;
         this._lastBearing = undefined;
         this._cachedVertexPositions = undefined;
+        this._propertyChanged = new Event();
     };
 
-    /**
-     * Given two DynamicObjects, takes the ellipse properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
-     *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     */
-    DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
-        var ellipseToMerge = objectToMerge.ellipse;
-        if (defined(ellipseToMerge)) {
-
-            var targetEllipse = targetObject.ellipse;
-            if (!defined(targetEllipse)) {
-                targetObject.ellipse = targetEllipse = new DynamicEllipse();
+    defineProperties(DynamicEllipse.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicEllipse.prototype
+         * @type {Event}
+         */
+        propertyChanged : {
+            get : function() {
+                return this._propertyChanged;
             }
+        },
 
-            targetEllipse.bearing = defaultValue(targetEllipse.bearing, ellipseToMerge.bearing);
-            targetEllipse.semiMajorAxis = defaultValue(targetEllipse.semiMajorAxis, ellipseToMerge.semiMajorAxis);
-            targetEllipse.semiMinorAxis = defaultValue(targetEllipse.semiMinorAxis, ellipseToMerge.semiMinorAxis);
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        semiMajorAxis : createDynamicPropertyDescriptor('semiMajorAxis', '_semiMajorAxis'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        semiMinorAxis : createDynamicPropertyDescriptor('semiMinorAxis', '_semiMinorAxis'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        bearing : createDynamicPropertyDescriptor('bearing', '_bearing')
+    });
+
+    /**
+     * Duplicates a DynamicEllipse instance.
+     * @memberof DynamicEllipse
+     *
+     * @param {DynamicEllipse} [result] The object onto which to store the result.
+     * @returns {DynamicEllipse} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicEllipse.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new DynamicEllipse();
         }
+        result.bearing = this.bearing;
+        result.semiMajorAxis = this.semiMajorAxis;
+        result.semiMinorAxis = this.semiMinorAxis;
+        return result;
     };
 
     /**
-     * Given a DynamicObject, undefines the ellipse associated with it.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     * @memberof DynamicEllipse
      *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipse from.
+     * @param {DynamicEllipse} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicEllipse.undefineProperties = function(dynamicObject) {
-        dynamicObject.ellipse = undefined;
+    DynamicEllipse.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
+        }
+        this.bearing = defaultValue(this.bearing, source.bearing);
+        this.semiMajorAxis = defaultValue(this.semiMajorAxis, source.semiMajorAxis);
+        this.semiMinorAxis = defaultValue(this.semiMinorAxis, source.semiMinorAxis);
     };
 
     /**
@@ -84,8 +115,8 @@ define([
      * @returns An array of vertex positions.
      */
     DynamicEllipse.prototype.getValue = function(time, position) {
-        var semiMajorAxisProperty = this.semiMajorAxis;
-        var semiMinorAxisProperty = this.semiMinorAxis;
+        var semiMajorAxisProperty = this._semiMajorAxis;
+        var semiMinorAxisProperty = this._semiMinorAxis;
 
         if (!defined(position) || //
             !defined(semiMajorAxisProperty) || //
@@ -97,7 +128,7 @@ define([
         var semiMinorAxis = semiMinorAxisProperty.getValue(time);
 
         var bearing = 0.0;
-        var bearingProperty = this.bearing;
+        var bearingProperty = this._bearing;
         if (defined(bearingProperty)) {
             bearing = bearingProperty.getValue(time);
         }

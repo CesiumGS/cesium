@@ -106,7 +106,7 @@ defineSuite([
 
     function viewSphere3D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
@@ -116,7 +116,7 @@ defineSuite([
         Cartesian3.normalize(right, right);
         Cartesian3.cross(right, direction, camera.up);
 
-        var scalar = center.magnitude() + radius;
+        var scalar = Cartesian3.magnitude(center) + radius;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
@@ -142,7 +142,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -156,7 +156,7 @@ defineSuite([
     function viewSphereCV(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius * 0.5;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -199,7 +199,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -213,7 +213,7 @@ defineSuite([
     function viewSphere2D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -263,7 +263,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -296,7 +296,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
@@ -330,7 +330,7 @@ defineSuite([
                 afterView(frameState, primitive);
             }
 
-            context.getUniformState().update(frameState);
+            context.getUniformState().update(context, frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -736,7 +736,7 @@ defineSuite([
                 })
             });
             var appearance = new EllipsoidSurfaceAppearance({
-                material : Material.fromType(undefined, 'Stripe')
+                material : Material.fromType('Stripe')
             });
             render3D(rotated, undefined, appearance);
         });
@@ -1066,7 +1066,7 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = frameState.camera.position.clone();
+                var translation = Cartesian3.clone(frameState.camera.position);
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);

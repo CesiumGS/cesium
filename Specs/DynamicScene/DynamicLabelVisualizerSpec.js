@@ -226,7 +226,7 @@ defineSuite([
 
         //Clearing won't actually remove the label because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         visualizer.update(time);
         expect(l.getShow()).toEqual(false);
     });
