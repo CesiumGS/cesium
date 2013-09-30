@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Fly to a specified location or view a geographic extent.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
@@ -174,7 +175,7 @@ require(['Cesium'], function(Cesium) {
         camera.transform = Cesium.Matrix4.IDENTITY;
         camera.controller.constrainedAxis = undefined;
         camera.controller.lookAt(
-                new Cesium.Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * ellipsoid.getMaximumRadius()),
+                Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.getMaximumRadius()),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
 

@@ -52,7 +52,7 @@ defineSuite([
         extent = new ExtentPrimitive();
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
@@ -134,7 +134,7 @@ defineSuite([
         extent = createExtent();
 
         var pickedObject = pick(context, frameState, extent, 0, 0);
-        expect(pickedObject).toEqual(extent);
+        expect(pickedObject.primitive).toEqual(extent);
     });
 
     it('is not picked (show === false)', function() {

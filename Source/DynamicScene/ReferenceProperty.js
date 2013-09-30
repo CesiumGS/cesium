@@ -12,8 +12,8 @@ define([
     function resolve(referenceProperty) {
         var targetProperty = referenceProperty._targetProperty;
         if (!defined(targetProperty)) {
-            var resolveBuffer = defaultValue(referenceProperty._dynamicObjectCollection.compositeCollection, referenceProperty._dynamicObjectCollection);
-            var targetObject = resolveBuffer.getObject(referenceProperty._targetObjectId);
+            var resolveBuffer = referenceProperty._dynamicObjectCollection;
+            var targetObject = resolveBuffer.getById(referenceProperty._targetObjectId);
             if (defined(targetObject)) {
                 targetProperty = targetObject[referenceProperty._targetPropertyName];
                 referenceProperty._targetProperty = targetProperty;

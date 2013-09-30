@@ -23,6 +23,7 @@ define([
         './Material',
         './SceneMode',
         './Polyline',
+        '../Shaders/PolylineCommon',
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS'
     ], function(
@@ -49,6 +50,7 @@ define([
         Material,
         SceneMode,
         Polyline,
+        PolylineCommon,
         PolylineVS,
         PolylineFS) {
     "use strict";
@@ -455,14 +457,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(this, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, context, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(this, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, context, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -473,7 +475,7 @@ define([
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
+    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -530,6 +532,7 @@ define([
                         }
 
                         currentMaterial = polyline._material;
+                        currentMaterial.update(context);
                         currentId = mId;
                     }
 
@@ -1037,10 +1040,11 @@ define([
             return;
         }
 
+        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsPick, attributeIndices);
+        this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeIndices);
+        this.pickShaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsPick, attributeIndices);
     };
 
     function intersectsIDL(polyline) {

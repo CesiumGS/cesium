@@ -10,6 +10,7 @@ defineSuite([
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
+         'Core/PolylineGeometry',
          'Core/WallGeometry',
          'Core/CorridorGeometry',
          'Core/CornerType',
@@ -29,8 +30,10 @@ defineSuite([
          'Core/Cartographic',
          'Core/BoundingSphere',
          'Core/Math',
+         'Core/Color',
          'Renderer/ClearCommand',
          'Scene/PerInstanceColorAppearance',
+         'Scene/PolylineColorAppearance',
          'Scene/Primitive',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
@@ -38,8 +41,6 @@ defineSuite([
          'Scene/Material',
          'Specs/render',
          'Specs/pick',
-         'Specs/createCanvas',
-         'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState'
@@ -54,6 +55,7 @@ defineSuite([
          ExtentGeometry,
          PolygonGeometry,
          SimplePolylineGeometry,
+         PolylineGeometry,
          WallGeometry,
          CorridorGeometry,
          CornerType,
@@ -73,8 +75,10 @@ defineSuite([
          Cartographic,
          BoundingSphere,
          CesiumMath,
+         Color,
          ClearCommand,
          PerInstanceColorAppearance,
+         PolylineColorAppearance,
          Primitive,
          SceneMode,
          OrthographicFrustum,
@@ -82,8 +86,6 @@ defineSuite([
          Material,
          render,
          pick,
-         createCanvas,
-         destroyCanvas,
          createContext,
          destroyContext,
          createFrameState) {
@@ -104,7 +106,7 @@ defineSuite([
 
     function viewSphere3D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         var direction = ellipsoid.geodeticSurfaceNormal(center, camera.direction);
@@ -114,7 +116,7 @@ defineSuite([
         Cartesian3.normalize(right, right);
         Cartesian3.cross(right, direction, camera.up);
 
-        var scalar = center.magnitude() + radius;
+        var scalar = Cartesian3.magnitude(center) + radius;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
@@ -140,7 +142,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -154,7 +156,7 @@ defineSuite([
     function viewSphereCV(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius * 0.5;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -167,12 +169,16 @@ defineSuite([
         camera.position.z = center.x + radius;
     }
 
-    function renderCV(instance, afterView) {
+    function renderCV(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -193,7 +199,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -207,7 +213,7 @@ defineSuite([
     function viewSphere2D(camera, sphere, modelMatrix) {
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
-        var center = sphere.center.clone();
+        var center = Cartesian3.clone(sphere.center);
         var radius = sphere.radius;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
@@ -226,12 +232,16 @@ defineSuite([
         frustum.bottom = -frustum.top;
     }
 
-    function render2D(instance) {
+    function render2D(instance, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -253,7 +263,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -264,12 +274,16 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function pickGeometry(instance, afterView) {
+    function pickGeometry(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -282,19 +296,25 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(frameState);
+        context.getUniformState().update(context, frameState);
 
-        expect(pick(context, frameState, primitive)).toEqual(instance.id);
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject.primitive).toEqual(primitive);
+        expect(pickObject.id).toEqual(instance.id);
 
         primitive = primitive && primitive.destroy();
     }
 
-    function renderAsync(instance, afterView) {
+    function renderAsync(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+            appearance : appearance
         });
 
         var frameState = createFrameState();
@@ -310,7 +330,7 @@ defineSuite([
                 afterView(frameState, primitive);
             }
 
-            context.getUniformState().update(frameState);
+            context.getUniformState().update(context, frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -716,7 +736,7 @@ defineSuite([
                 })
             });
             var appearance = new EllipsoidSurfaceAppearance({
-                material : Material.fromType(undefined, 'Stripe')
+                material : Material.fromType('Stripe')
             });
             render3D(rotated, undefined, appearance);
         });
@@ -1046,7 +1066,7 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = frameState.camera.position.clone();
+                var translation = Cartesian3.clone(frameState.camera.position);
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
@@ -1266,6 +1286,111 @@ defineSuite([
 
         it('async', function() {
             renderAsync(instance);
+        });
+
+        it('per segment colors', function() {
+            instance = new GeometryInstance({
+                geometry : new SimplePolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                }),
+                id : 'polyline'
+            });
+            render3D(instance);
+        });
+
+        it('per vertex colors', function() {
+            instance = new GeometryInstance({
+                geometry : new SimplePolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    colorsPerVertex : true
+                }),
+                id : 'polyline'
+            });
+            render3D(instance);
+        });
+    });
+
+    describe('PolylineGeometry', function() {
+        var instance;
+        var appearance;
+
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                },
+                id : 'polyline'
+            });
+
+            appearance = new PolylineColorAppearance({
+                translucent : false
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance, undefined, appearance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance, undefined, appearance);
+        });
+
+        it('2D', function() {
+            render2D(instance, appearance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance, undefined, appearance);
+        });
+
+        it('async', function() {
+            renderAsync(instance, undefined, appearance);
+        });
+
+        it('per segment colors', function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0,
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                }),
+                id : 'polyline'
+            });
+            render3D(instance, undefined, appearance);
+        });
+
+        it('per vertex colors', function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0,
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    colorsPerVertex : true
+                }),
+                id : 'polyline'
+            });
+            render3D(instance, undefined, appearance);
         });
     });
 

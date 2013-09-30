@@ -29,6 +29,7 @@ define([
         './CullingVolume',
         './AnimationCollection',
         './SceneMode',
+        './SceneTransforms',
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
@@ -67,6 +68,7 @@ define([
         CullingVolume,
         AnimationCollection,
         SceneMode,
+        SceneTransforms,
         FrameState,
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
@@ -120,14 +122,14 @@ define([
         this._context = context;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(canvas);
+        this._camera = new Camera(context);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera.controller);
 
         this._animations = new AnimationCollection();
 
         this._shaderFrameCount = 0;
 
-        this._sunPostProcess = new SunPostProcess();
+        this._sunPostProcess = undefined;
 
         this._commandList = [];
         this._frustumCommandsList = [];
@@ -167,6 +169,15 @@ define([
          * @default undefined
          */
         this.sun = undefined;
+
+        /**
+         * Uses a bloom filter on the sun when enabled.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.sunBloom = true;
+        this._sunBloom = undefined;
 
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
@@ -374,17 +385,15 @@ define([
         frameState.frameNumber = frameNumber;
         frameState.time = time;
         frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = undefined;
-        frameState.canvasDimensions.x = scene._canvas.clientWidth;
-        frameState.canvasDimensions.y = scene._canvas.clientHeight;
 
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
+            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.positionWC);
             frameState.occluder = occluder;
         }
 
@@ -460,8 +469,8 @@ define([
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
 
-        var direction = camera.getDirectionWC();
-        var position = camera.getPositionWC();
+        var direction = camera.directionWC;
+        var position = camera.positionWC;
 
         if (scene.debugShowFrustums) {
             scene.debugFrustumStatistics = {
@@ -657,12 +666,25 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
+        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
+            if (scene.sunBloom) {
+                scene._sunPostProcess = new SunPostProcess();
+            } else {
+                scene._sunPostProcess = scene._sunPostProcess.destroy();
+            }
+
+            scene._sunBloom = scene.sunBloom;
+        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
+            scene._sunPostProcess = scene._sunPostProcess.destroy();
+            scene._sunBloom = false;
+        }
+
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         }
 
@@ -670,7 +692,7 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
         }
 
@@ -690,8 +712,11 @@ define([
 
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
-            scene._sunPostProcess.execute(context);
-            passState.framebuffer = undefined;
+
+            if (scene.sunBloom) {
+                scene._sunPostProcess.execute(context);
+                passState.framebuffer = undefined;
+            }
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -763,9 +788,9 @@ define([
         frameState.passes.overlay = true;
         frameState.creditDisplay.beginFrame();
 
-        us.update(frameState);
-
         var context = this._context;
+
+        us.update(context, frameState);
 
         this._commandList.length = 0;
         this._primitives.update(context, frameState, this._commandList);
@@ -777,20 +802,21 @@ define([
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
+        context.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
-    function getPickOrthographicCullingVolume(scene, windowPosition, width, height) {
-        var canvas = scene._canvas;
+    function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
+        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var canvasWidth = canvas.clientWidth;
-        var canvasHeight = canvas.clientHeight;
+        var drawingBufferWidth = context.getDrawingBufferWidth();
+        var drawingBufferHeight = context.getDrawingBufferHeight();
 
-        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
+        var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
-        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
         var position = camera.position;
@@ -798,7 +824,7 @@ define([
         position.y += x;
         position.z += y;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
 
         var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -808,29 +834,29 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.getDirectionWC(), camera.getUpWC());
+        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
-    function getPickPerspectiveCullingVolume(scene, windowPosition, width, height) {
-        var canvas = scene._canvas;
+    function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
+        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var canvasWidth = canvas.clientWidth;
-        var canvasHeight = canvas.clientHeight;
+        var drawingBufferWidth = context.getDrawingBufferWidth();
+        var drawingBufferHeight = context.getDrawingBufferHeight();
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
-        var x = (2.0 / canvasWidth) * windowPosition.x - 1.0;
-        var y = (2.0 / canvasHeight) * (canvasHeight - windowPosition.y) - 1.0;
+        var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
+        var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
 
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(canvasWidth, canvasHeight));
+        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
@@ -842,15 +868,15 @@ define([
         offCenter.near = near;
         offCenter.far = frustum.far;
 
-        return offCenter.computeCullingVolume(camera.getPositionWC(), camera.getDirectionWC(), camera.getUpWC());
+        return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    function getPickCullingVolume(scene, windowPosition, width, height) {
+    function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
         if (scene.mode === SceneMode.SCENE2D) {
-            return getPickOrthographicCullingVolume(scene, windowPosition, width, height);
+            return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
-        return getPickPerspectiveCullingVolume(scene, windowPosition, width, height);
+        return getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height);
     }
 
     // pick rectangle width and height, assumed odd
@@ -868,13 +894,15 @@ define([
         var primitives = this._primitives;
         var frameState = this._frameState;
 
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
+
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 
         // Update with previous frame's number and time, assuming that render is called before picking.
         updateFrameState(this, frameState.frameNumber, frameState.time);
-        frameState.cullingVolume = getPickCullingVolume(this, windowPosition, rectangleWidth, rectangleHeight);
+        frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
         var commandLists = this._commandList;
@@ -882,11 +910,13 @@ define([
         primitives.update(context, frameState, commandLists);
         createPotentiallyVisibleSet(this, 'pickList');
 
-        scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
-        return this._pickFramebuffer.end(scratchRectangle);
+        var object = this._pickFramebuffer.end(scratchRectangle);
+        context.endFrame();
+        return object;
     };
 
     /**

@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw 3D ellipsoids, using different radii on different axes.">
-    <meta name="cesium-sandcastle-labels" content="">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
@@ -35,7 +35,7 @@ require(['Cesium'], function(Cesium) {
         e.center = ellipsoid.cartographicToCartesian(
             Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
         e.radii = new Cesium.Cartesian3(500000.0, 500000.0, 500000.0);
-        e.material = Cesium.Material.fromType(undefined, Cesium.Material.RimLightingType);
+        e.material = Cesium.Material.fromType(Cesium.Material.RimLightingType);
         primitives.add(e);
 
         var e2 = new Cesium.EllipsoidPrimitive();
@@ -44,7 +44,7 @@ require(['Cesium'], function(Cesium) {
             ellipsoid.cartographicToCartesian(
               Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0)));
         e2.radii = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
-        e2.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.StripeType);
+        e2.material = Cesium.Material.fromType(Cesium.Material.StripeType);
         primitives.add(e2);
     }
 

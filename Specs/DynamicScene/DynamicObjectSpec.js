@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicObject',
+             'DynamicScene/ConstantProperty',
              'Core/JulianDate',
              'Core/Cartesian3',
              'Core/Quaternion',
@@ -8,6 +9,7 @@ defineSuite([
              'Core/TimeInterval'
             ], function(
               DynamicObject,
+              ConstantProperty,
               JulianDate,
               Cartesian3,
               Quaternion,
@@ -41,92 +43,114 @@ defineSuite([
     });
 
     it('isAvailable works.', function() {
-        var dynamicObject = new DynamicObject('dynamicObject');
+        var dynamicObject = new DynamicObject();
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        dynamicObject._setAvailability(interval);
+        dynamicObject.availability = interval;
         expect(dynamicObject.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop.addSeconds(1))).toEqual(false);
     });
 
-    it('mergeProperties does not change a fully configured billboard', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.position = 1;
-        objectToMerge.orientation = 2;
-        objectToMerge.vertexPositions = 3;
-        objectToMerge.availability = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        objectToMerge.viewFrom = 5;
+    it('propertyChanged works for all properties', function() {
+        var dynamicObject = new DynamicObject();
+        var propertyNames = dynamicObject.propertyNames;
+        var propertyNamesLength = propertyNames.length;
 
-        var targetObject = new DynamicObject('targetObject');
-        targetObject.position = 6;
-        targetObject.orientation = 7;
-        targetObject.vertexPositions = 8;
-        targetObject.availability = TimeInterval.fromIso8601('2002-01-01/2003-01-01');
-        targetObject.viewFrom = 10;
+        spyOn(dynamicObject.propertyChanged, 'raiseEvent');
 
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.position).toEqual(6);
-        expect(targetObject.orientation).toEqual(7);
-        expect(targetObject.vertexPositions).toEqual(8);
-        expect(targetObject.availability).toEqual(objectToMerge.availability); //Is currently always overwritten
-        expect(targetObject.viewFrom).toEqual(10);
+        var i;
+        var name;
+        var newValue;
+        var oldValue;
+        //We loop through twice to ensure that oldValue is properly passed in.
+        for ( var x = 0; x < 2; x++) {
+            for (i = 0; i < propertyNamesLength; i++) {
+                name = propertyNames[i];
+                newValue = new ConstantProperty(1);
+                oldValue = dynamicObject[propertyNames[i]];
+                dynamicObject[name] = newValue;
+                expect(dynamicObject.propertyChanged.raiseEvent).toHaveBeenCalledWith(dynamicObject, name, newValue, oldValue);
+            }
+        }
     });
 
-    it('mergeProperties creates and configures an undefined object', function() {
-        var objectToMerge = new DynamicObject('objectToMerge');
-        objectToMerge.position = 1;
-        objectToMerge.orientation = 2;
-        objectToMerge.vertexPositions = 3;
-        objectToMerge.availability = 4;
-        objectToMerge.viewFrom = 4;
+    it('merge always overwrites availability', function() {
+        var dynamicObject = new DynamicObject();
+        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        dynamicObject.availability = interval;
 
-        var targetObject = new DynamicObject('targetObject');
+        var dynamicObject2 = new DynamicObject();
+        var interval2 = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        dynamicObject2.availability = interval2;
 
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.position).toEqual(objectToMerge.position);
-        expect(targetObject.orientation).toEqual(objectToMerge.orientation);
-        expect(targetObject.vertexPositions).toEqual(objectToMerge.vertexPositions);
-        expect(targetObject.availability).toEqual(objectToMerge.availability);
-        expect(targetObject.viewFrom).toEqual(objectToMerge.viewFrom);
+        dynamicObject.merge(dynamicObject2);
+        expect(dynamicObject.availability).toBe(interval2);
     });
 
-    it('mergeProperties does not change when used with an undefined object', function() {
-        var objectToMerge = new DynamicObject('targetObject');
-
-        var targetObject = new DynamicObject('objectToMerge');
-        targetObject.position = 1;
-        targetObject.orientation = 2;
-        targetObject.vertexPositions = 3;
-        targetObject.availability = 4;
-        targetObject.viewFrom = 5;
-
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
-
-        expect(targetObject.position).toEqual(1);
-        expect(targetObject.orientation).toEqual(2);
-        expect(targetObject.vertexPositions).toEqual(3);
-        expect(targetObject.availability).toEqual(4);
-        expect(targetObject.viewFrom).toEqual(5);
+    it('merge throws with undefined source', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.merge(undefined);
+        }).toThrow();
     });
 
-    it('undefineProperties works', function() {
-        var dynamicObject = new DynamicObject('testObject');
+    it('can add and remove custom properties.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(dynamicObject.hasOwnProperty('bob')).toBe(false);
+        dynamicObject.addProperty('bob');
+        expect(dynamicObject.hasOwnProperty('bob')).toBe(true);
+        dynamicObject.removeProperty('bob');
+        expect(dynamicObject.hasOwnProperty('bob')).toBe(false);
+    });
 
-        dynamicObject.position = 1;
-        dynamicObject.orientation = 2;
-        dynamicObject.vertexPositions = 3;
-        dynamicObject.availability = 4;
-        dynamicObject.viewFrom = 5;
+    it('addProperty throws with no property specified.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.addProperty(undefined);
+        }).toThrow();
+    });
 
-        DynamicObject.undefineProperties(dynamicObject);
+    it('addProperty throws with no property specified.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.addProperty(undefined);
+        }).toThrow();
+    });
 
-        expect(dynamicObject.position).toBeUndefined();
-        expect(dynamicObject.orientation).toBeUndefined();
-        expect(dynamicObject.vertexPositions).toBeUndefined();
-        expect(dynamicObject.availability).toBeUndefined();
-        expect(dynamicObject.viewFrom).toBeUndefined();
+    it('removeProperty throws with no property specified.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.removeProperty(undefined);
+        }).toThrow();
+    });
+
+    it('addProperty throws when adding an existing property.', function() {
+        var dynamicObject = new DynamicObject();
+        dynamicObject.addProperty('bob');
+        expect(function() {
+            dynamicObject.addProperty('bob');
+        }).toThrow();
+    });
+
+    it('removeProperty throws when non-existent property.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.removeProperty('bob');
+        }).toThrow();
+    });
+
+    it('addProperty throws with reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.addProperty('merge');
+        }).toThrow();
+    });
+
+    it('removeProperty throws with reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(function() {
+            dynamicObject.removeProperty('merge');
+        }).toThrow();
     });
 });

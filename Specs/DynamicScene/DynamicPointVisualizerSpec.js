@@ -174,7 +174,7 @@ defineSuite([
         visualizer.update(time);
         //Clearing won't actually remove the billboard because of the
         //internal cache used by the visualizer, instead it just hides it.
-        dynamicObjectCollection.clear();
+        dynamicObjectCollection.removeAll();
         expect(bb.getShow()).toEqual(false);
     });
 

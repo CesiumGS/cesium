@@ -53,7 +53,7 @@ defineSuite([
         context = createContext();
 
         var us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -648,7 +648,7 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
-        expect(pickedObject).toEqual(label);
+        expect(pickedObject.primitive).toEqual(label);
     });
 
     it('does not pick a label with show set to false', function() {

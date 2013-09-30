@@ -68,11 +68,12 @@ define([
         eventHelper.add(viewer.clock.onTick, updateView);
 
         function pickAndTrackObject(e) {
-            var pickedPrimitive = viewer.scene.pick(e.position);
-            if (defined(pickedPrimitive) &&
-                defined(pickedPrimitive.dynamicObject) &&
-                defined(pickedPrimitive.dynamicObject.position)) {
-                viewer.trackedObject = pickedPrimitive.dynamicObject;
+            var p = viewer.scene.pick(e.position);
+            if (defined(p) &&
+                defined(p.primitive) &&
+                defined(p.primitive.dynamicObject) &&
+                defined(p.primitive.dynamicObject.position)) {
+                viewer.trackedObject = p.primitive.dynamicObject;
             }
         }
 
