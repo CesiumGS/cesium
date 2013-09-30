@@ -27,7 +27,7 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('mousedown event closes dropdown if target is not container', function() {
+    it('mousedown event closes dropdown if target is not inside container', function() {
         var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
@@ -39,14 +39,14 @@ defineSuite([
         expect(widget.viewModel.dropDownVisible).toEqual(false);
 
         widget.viewModel.dropDownVisible = true;
-        EventHelper.fireMouseDown(container);
+        EventHelper.fireMouseDown(container.firstChild);
         expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
     });
 
-    it('touchstart event closes dropdown if target is not container', function() {
+    it('touchstart event closes dropdown if target is not inside container', function() {
         var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
@@ -60,7 +60,7 @@ defineSuite([
         expect(widget.viewModel.dropDownVisible).toEqual(false);
 
         widget.viewModel.dropDownVisible = true;
-        EventHelper.fireTouchStart(container);
+        EventHelper.fireTouchStart(container.firstChild);
         expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();

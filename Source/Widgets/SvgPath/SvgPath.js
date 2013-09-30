@@ -5,16 +5,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../getElement',
-        '../../ThirdParty/knockout'
+        '../getElement'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        getElement,
-        knockout) {
+        getElement) {
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";
@@ -37,7 +35,10 @@ define([
      * @exception {DeveloperError} path is required.
      *
      * @example
-     * // TODO: example
+     * // Create a home button
+     * var svgPath = new SvgPath(container, 28, 28, 'M14,4l-10,8.75h20l-4.25-3.7188v-4.6562\
+     * h-2.812v2.1875l-2.938-2.5625zm-7.0938,9.906v10.094h14.094v-10.094h-14.094zm2.1876,2.313\
+     * h3.3122v4.25h-3.3122v-4.25zm5.8442,1.281h3.406v6.438h-3.406v-6.438z');
      */
     var SvgPath = function(container, pathWidth, pathHeight, path) {
         if (!defined(container)) {
@@ -137,6 +138,7 @@ define([
      * @memberof SvgPath
      */
     SvgPath.prototype.destroy = function() {
+        this._container.removeChild(this._svgNode);
         return destroyObject(this);
     };
 
