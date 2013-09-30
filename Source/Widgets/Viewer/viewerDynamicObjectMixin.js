@@ -116,6 +116,44 @@ define([
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, onHomeButtonClicked);
         }
 
+        //We need to subscribe to the data sources and collections so that we can clear the
+        //tracked object when it is removed from the scene.
+        function onDynamicCollectionChanged(collection, added, removed) {
+            var length = removed.length;
+            for ( var i = 0; i < length; i++) {
+                var removedObject = removed[i];
+                if (viewer.trackedObject === removedObject) {
+                    viewer.homeButton.viewModel.command();
+                    break;
+                }
+            }
+        }
+
+        function dataSourceAdded(dataSourceCollection, dataSource) {
+            dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(onDynamicCollectionChanged);
+        }
+
+        function dataSourceRemoved(dataSourceCollection, dataSource) {
+            dataSource.getDynamicObjectCollection().collectionChanged.removeEventListener(onDynamicCollectionChanged);
+
+            if (defined(trackedObject)) {
+                if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
+                    viewer.homeButton.viewModel.command();
+                }
+            }
+        }
+
+        //Subscribe to current data sources
+        var dataSources = viewer.dataSources;
+        var dataSourceLength = dataSources.length;
+        for ( var i = 0; i < dataSourceLength; i++) {
+            dataSourceAdded(dataSources, dataSources.get(i));
+        }
+
+        //Hook up events so that we can subscribe to future sources.
+        eventHelper.add(viewer.dataSources.dataSourceAdded, dataSourceAdded);
+        eventHelper.add(viewer.dataSources.dataSourceRemoved, dataSourceRemoved);
+
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -204,6 +242,13 @@ define([
             balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+            //Unsubscribe from data sources
+            var dataSources = viewer.dataSources;
+            var dataSourceLength = dataSources.length;
+            for ( var i = 0; i < dataSourceLength; i++) {
+                dataSourceRemoved(dataSources, dataSources.get(i));
+            }
         });
     };
 
