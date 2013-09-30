@@ -120,6 +120,8 @@ define([
         this._nextID = 0;
     };
 
+    var empyTransferableObjectArray = [];
+
     /**
      * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
      * tasks active than the maximum set by the constructor, will immediately return undefined.
@@ -156,6 +158,10 @@ define([
         }
 
         ++this._activeTasks;
+
+        if (!defined(transferableObjects)) {
+            transferableObjects = empyTransferableObjectArray;
+        }
 
         var id = this._nextID++;
         var deferred = when.defer();

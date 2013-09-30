@@ -6,7 +6,6 @@ define([
         '../Core/HeightmapTessellator',
         '../Core/Math',
         '../Core/TaskProcessor',
-		'../Workers/createVerticesFromHeightmap',
         './GeographicTilingScheme',
         './TerrainMesh',
         './TerrainProvider',
@@ -18,7 +17,6 @@ define([
         HeightmapTessellator,
         CesiumMath,
         TaskProcessor,
-		createVerticesFromHeightmap,
         GeographicTilingScheme,
         TerrainMesh,
         TerrainProvider,
@@ -164,8 +162,7 @@ define([
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
 
         var verticesPromise = taskProcessor.scheduleTask({
-// 		var verticesPromise = createVerticesFromHeightmap({
-           heightmap : this._buffer,
+            heightmap : this._buffer,
             structure : structure,
             width : this._width,
             height : this._height,
@@ -175,7 +172,7 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
             isGeographic : tilingScheme instanceof GeographicTilingScheme
-        }, []);
+        });
 
         if (!defined(verticesPromise)) {
             // Postponed
@@ -186,7 +183,6 @@ define([
             return new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
-					//result.vertices,
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
                     result.minimumHeight,
                     result.maximumHeight,

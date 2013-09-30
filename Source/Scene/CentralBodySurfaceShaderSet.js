@@ -84,11 +84,9 @@ define([
 
             for (var i = 0; i < textureCount; ++i) {
                 fs +=
-//                    'vec4 sample' + i + ' = texture2D(u_dayTextures[' + i + '], textureCoordinates * u_dayTextureTranslationAndScale[' + i + '].zw + u_dayTextureTranslationAndScale[' + i + '].xy);\n' +
                     'color = sampleAndBlend(\n' +
                     '   color,\n' +
                     '   u_dayTextures[' + i + '],\n' +
-//                    '   sample' + i + ',\n' +
                     '   textureCoordinates,\n' +
                     '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +
