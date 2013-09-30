@@ -602,7 +602,7 @@ define([
                     instances : clonedInstances,
                     pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
-                    isGeographic : projection,
+                    projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this._allow3DOnly,
                     vertexCacheOptimize : this._vertexCacheOptimize,
