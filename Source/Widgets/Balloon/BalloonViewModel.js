@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian2',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Scene/SceneTransforms',
@@ -9,6 +10,7 @@ define([
     ], function(
         Cartesian2,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         SceneTransforms,
@@ -142,11 +144,11 @@ define([
      *
      */
     var BalloonViewModel = function(scene, balloonElement, container) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
-        if (typeof balloonElement === 'undefined') {
+        if (!defined(balloonElement)) {
             throw new DeveloperError('balloonElement is required.');
         }
 
@@ -284,7 +286,7 @@ define([
                 //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
                 setTimeout(function() {
                     that._contentHTML = that._content;
-                    if (typeof that._position !== 'undefined') {
+                    if (defined(that._position)) {
                         var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
                         pos = shiftPosition(that, pos);
                     }
@@ -294,7 +296,7 @@ define([
                 this._updateContent = false;
             } else if (this.showBalloon) {
                 var pos;
-                if (typeof this._position !== 'undefined') {
+                if (defined(this._position)) {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                     this.showArrow = true;
                 } else {
@@ -354,7 +356,7 @@ define([
             },
             set : function(value) {
                 if (this._content !== value) {
-                    if (typeof value === 'undefined') {
+                    if (!defined(value)) {
                         this._content = '';
                     } else {
                         this._content = value;
