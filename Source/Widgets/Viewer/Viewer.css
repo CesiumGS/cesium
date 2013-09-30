@@ -3,6 +3,7 @@
 @import url(../CesiumWidget/CesiumWidget.css);
 @import url(../FullscreenButton/FullscreenButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
+@import url(../SvgPath/SvgPath.css);
 @import url(../Timeline/Timeline.css);
 
 .cesium-viewer {
@@ -58,12 +59,4 @@
 	position: absolute;
 	top: 5px;
 	right: 5px;
-}
-
-.cesium-viewer-sceneModePickerContainer {
-    display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	margin: 1px;
 }

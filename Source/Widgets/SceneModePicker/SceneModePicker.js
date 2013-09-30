@@ -72,25 +72,27 @@ define([
         this._viewModel = viewModel;
         this._container = container;
 
+        var wrapper = document.createElement('span');
+        wrapper.className = 'cesium-sceneModePicker-wrapper cesium-widget-small-icon';
+        container.appendChild(wrapper);
+        this._wrapper = wrapper;
+
         var widgetNode = this._element = document.createElement('button');
         widgetNode.type = 'button';
         widgetNode.className = 'cesium-widget-button cesium-widget-small-icon';
         this._svgPathButton3D = new SvgPath(widgetNode, 64, 64, globePath);
-        this._svgPathButton3D.element.style.position = 'absolute';
-        this._svgPathButton3D.element.setAttribute('class', 'cesium-sceneModePicker-slide-svg cesium-sceneModePicker-icon3D');
+        this._svgPathButton3D.element.setAttribute('class', 'cesium-svgPath-svg cesium-sceneModePicker-slide-svg cesium-sceneModePicker-icon3D');
         this._svgPathButton2D = new SvgPath(widgetNode, 64, 64, flatMapPath);
-        this._svgPathButton2D.element.style.position = 'absolute';
-        this._svgPathButton2D.element.setAttribute('class', 'cesium-sceneModePicker-slide-svg cesium-sceneModePicker-icon2D');
+        this._svgPathButton2D.element.setAttribute('class', 'cesium-svgPath-svg cesium-sceneModePicker-slide-svg cesium-sceneModePicker-icon2D');
         this._svgPathButtonCV = new SvgPath(widgetNode, 64, 64, columbusViewPath);
-        this._svgPathButtonCV.element.style.position = 'absolute';
-        this._svgPathButtonCV.element.setAttribute('class', 'cesium-sceneModePicker-slide-svg cesium-sceneModePicker-iconColumbusView');
+        this._svgPathButtonCV.element.setAttribute('class', 'cesium-svgPath-svg cesium-sceneModePicker-slide-svg cesium-sceneModePicker-iconColumbusView');
         widgetNode.setAttribute('data-bind', '\
                                  css: { "cesium-sceneModePicker-button2D": sceneMode === _sceneMode.SCENE2D,\
                                         "cesium-sceneModePicker-button3D": sceneMode === _sceneMode.SCENE3D,\
                                         "cesium-sceneModePicker-buttonColumbusView": sceneMode === _sceneMode.COLUMBUS_VIEW,\
                                         "cesium-sceneModePicker-selected": dropDownVisible},\
                                  attr: { title: selectedTooltip }, click: toggleDropDown');
-        container.appendChild(widgetNode);
+        wrapper.appendChild(widgetNode);
 
         var node3D = document.createElement('button');
         node3D.type = 'button';
@@ -102,7 +104,7 @@ define([
                                     "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                              attr: { title: tooltip3D },\
                              click: morphTo3D');
-        container.appendChild(node3D);
+        wrapper.appendChild(node3D);
         this._node3D = node3D;
 
         var node2D = document.createElement('button');
@@ -115,7 +117,7 @@ define([
                                     "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                              attr: { title: tooltip2D },\
                              click: morphTo2D');
-        container.appendChild(node2D);
+        wrapper.appendChild(node2D);
         this._node2D = node2D;
 
         var nodeColumbus = document.createElement('button');
@@ -128,13 +130,13 @@ define([
                                           "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                                    attr: { title: tooltipColumbusView },\
                                    click: morphToColumbusView');
-        container.appendChild(nodeColumbus);
+        wrapper.appendChild(nodeColumbus);
         this._nodeColumbus = nodeColumbus;
 
-        knockout.applyBindings(viewModel, container);
+        knockout.applyBindings(viewModel, wrapper);
 
         this._closeDropDown = function(e) {
-            if (!container.contains(e.target)) {
+            if (!wrapper.contains(e.target)) {
                 viewModel.dropDownVisible = false;
             }
         };
@@ -186,12 +188,12 @@ define([
         this._viewModel.destroy();
         document.removeEventListener('mousedown', this._closeDropDown, true);
         document.removeEventListener('touchstart', this._closeDropDown, true);
-        var container = this._container;
-        knockout.cleanNode(container);
-        container.removeChild(this._element);
-        container.removeChild(this._node3D);
-        container.removeChild(this._node2D);
-        container.removeChild(this._nodeColumbus);
+        var wrapper = this._wrapper;
+        knockout.cleanNode(wrapper);
+        wrapper.removeChild(this._element);
+        wrapper.removeChild(this._node3D);
+        wrapper.removeChild(this._node2D);
+        wrapper.removeChild(this._nodeColumbus);
         return destroyObject(this);
     };
 

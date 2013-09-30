@@ -1,3 +1,9 @@
+.cesium-sceneModePicker-wrapper {
+    display: inline-block;
+    position: relative;
+    margin: 0 3px;
+}
+
 .cesium-sceneModePicker-visible {
     visibility: visible;
     opacity: 1;
@@ -23,6 +29,12 @@
     -moz-transition: left 2s;
     transition: left 2s;
     top: 0;
+}
+
+.cesium-sceneModePicker-button3D,
+.cesium-sceneModePicker-buttonColumbusView,
+.cesium-sceneModePicker-button2D {
+    margin: 0 0 3px 0;
 }
 
 .cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon3D {
@@ -62,5 +74,6 @@
 }
 
 .cesium-sceneModePicker-selected {
+    border-color: #2e2;
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }

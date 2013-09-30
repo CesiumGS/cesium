@@ -106,7 +106,7 @@ enable: isFullscreenEnabled');
     FullscreenButton.prototype.destroy = function() {
         this._subscription.dispose();
         var container = this._container;
-        knockout.cleanNode(container);
+        knockout.cleanNode(this._element);
         this._viewModel.destroy();
         container.removeChild(this._element);
         return destroyObject(this);

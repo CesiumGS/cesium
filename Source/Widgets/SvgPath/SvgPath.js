@@ -66,7 +66,7 @@ define([
         var svg = document.createElementNS(svgNS, 'svg:svg');
         this._svgNode = svg;
 
-        svg.style.cssText = 'width: 100%; height: 100%; position: relative; overflow: hidden;';
+        svg.setAttribute('class', 'cesium-svgPath-svg');
         svg.setAttribute('width', pathWidth);
         svg.setAttribute('height', pathHeight);
         svg.setAttribute('viewBox', '0 0 ' + pathWidth + ' ' + pathHeight);

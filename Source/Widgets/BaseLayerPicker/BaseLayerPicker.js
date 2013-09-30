@@ -114,7 +114,7 @@ define([
         this._viewModel = viewModel;
         this._container = container;
 
-        this._element = document.createElement('button');
+        var element = this._element = document.createElement('button');
         this._element.type = 'button';
         this._element.className = 'cesium-widget-button cesium-widget-small-icon';
         this._element.setAttribute('data-bind', 'attr: { title: selectedName }, click: toggleDropDown');
@@ -161,7 +161,7 @@ define([
         knockout.applyBindings(viewModel, choices);
 
         this._closeDropDown = function(e) {
-            if (!container.contains(e.target)) {
+            if (!(element.contains(e.target) || choices.contains(e.target))) {
                 viewModel.dropDownVisible = false;
             }
         };
@@ -212,8 +212,9 @@ define([
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown, true);
         document.removeEventListener('touchstart', this._closeDropDown, true);
+        knockout.cleanNode(this._element);
+        knockout.cleanNode(this._choices);
         var container = this._container;
-        knockout.cleanNode(container);
         container.removeChild(this._element);
         container.removeChild(this._choices);
         return destroyObject(this);

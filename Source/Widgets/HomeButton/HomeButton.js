@@ -94,7 +94,7 @@ define([
      */
     HomeButton.prototype.destroy = function() {
         var container = this._container;
-        knockout.cleanNode(container);
+        knockout.cleanNode(this._element);
         container.removeChild(this._element);
         return destroyObject(this);
     };

@@ -27,6 +27,7 @@
     right: 0;
     width: 240px;
     max-height: 500px;
+    margin-top: 5px;
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
     overflow: auto;
