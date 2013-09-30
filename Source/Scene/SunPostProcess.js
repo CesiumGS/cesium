@@ -143,6 +143,7 @@ define([
                     ]
                 })
             },
+            indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -183,7 +184,7 @@ define([
             this._clearFBO2Command.color = new Color();
             this._clearFBO2Command.framebuffer = this._downSampleFBO2;
 
-            var primitiveType = PrimitiveType.TRIANGLE_FAN;
+            var primitiveType = PrimitiveType.TRIANGLES;
             var vertexArray = getVertexArray(context);
 
             var downSampleCommand = this._downSampleCommand = new DrawCommand();

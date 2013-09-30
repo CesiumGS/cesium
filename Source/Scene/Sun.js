@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PrimitiveType',
         '../Core/Geometry',
@@ -35,6 +36,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        IndexDatatype,
         CesiumMath,
         PrimitiveType,
         Geometry,
@@ -157,6 +159,7 @@ define([
                     ]
                 })
             },
+            indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -224,7 +227,7 @@ define([
 
             var drawCommand = new DrawCommand();
             drawCommand.owner = this;
-            drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            drawCommand.primitiveType = PrimitiveType.TRIANGLES;
             drawCommand.vertexArray = getVertexArray(context);
             drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeIndices);
             drawCommand.framebuffer = fbo;
@@ -259,29 +262,30 @@ define([
                 direction : 0
             };
 
-            var directions = new Uint8Array(4 * 2);
+            var directions = new Float32Array(4 * 2);
             directions[0] = 0;
             directions[1] = 0;
 
-            directions[2] = 255;
+            directions[2] = 1.0;
             directions[3] = 0.0;
 
-            directions[4] = 255;
-            directions[5] = 255;
+            directions[4] = 1.0;
+            directions[5] = 1.0;
 
             directions[6] = 0.0;
-            directions[7] = 255;
+            directions[7] = 1.0;
 
             var vertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
             var attributes = [{
                 index : attributeIndices.direction,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 2,
-                normalize : true,
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE
+                componentDatatype : ComponentDatatype.FLOAT,
+                strideInBytes : 8
             }];
-            command.vertexArray = context.createVertexArray(attributes);
-            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
+            command.primitiveType = PrimitiveType.TRIANGLES;
 
             command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeIndices);
             command.renderState = context.createRenderState({

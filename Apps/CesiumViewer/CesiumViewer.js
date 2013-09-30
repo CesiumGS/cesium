@@ -79,7 +79,6 @@ define([
         });
 
         var scene = viewer.scene;
-		scene.sun.show = false;
 		scene.skyBox.show = false;
 		scene.skyAtmosphere.show = false;
         var context = scene.getContext();
