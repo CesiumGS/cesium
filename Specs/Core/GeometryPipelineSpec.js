@@ -635,7 +635,7 @@ defineSuite([
         expect(function() {
             GeometryPipeline.projectTo2D(new Geometry({
                 attributes : {
-                    position : new GeometryAttribute({
+                    normal : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
@@ -809,6 +809,46 @@ defineSuite([
         expect(transformed.geometry.attributes.position.values).toEqual(transformedPositions);
         expect(transformed.geometry.attributes.normal.values).toEqual(transformedNormals);
         expect(transformed.geometry.boundingSphere).toEqual(new BoundingSphere(new Cartesian3(0.0, 0.5, 0.5), 1.0));
+        expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it('transformToWorldCoordinates with non-uniform scale', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+            }),
+            modelMatrix : Matrix4.fromScale(new Cartesian3(1.0, 2.0, 4.0))
+        });
+
+        var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+        var transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 2.0, 0.0];
+        var transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+
+        expect(transformed.geometry.attributes.position.values).toEqual(transformedPositions);
+        expect(transformed.geometry.attributes.normal.values).toEqual(transformedNormals);
+        expect(transformed.geometry.boundingSphere).toEqual(new BoundingSphere(new Cartesian3(0.5, 1.0, 0.0), 4.0));
         expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 
@@ -1245,13 +1285,13 @@ defineSuite([
         var normals = geometry.attributes.normal.values;
         expect(normals.length).toEqual(4*3);
 
-        var a = new Cartesian3(-1, 0, 1).normalize();
+        var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1));
 
         expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
         expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
         expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
 
-        a = new Cartesian3(1, 0, 1).normalize();
+        a = Cartesian3.normalize(new Cartesian3(1, 0, 1));
         expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
     });
 
@@ -1273,23 +1313,23 @@ defineSuite([
         var normals = geometry.attributes.normal.values;
         expect(normals.length).toEqual(7*3);
 
-        var a = new Cartesian3(-1, -1, -1).normalize();
+        var a = Cartesian3.normalize(new Cartesian3(-1, -1, -1));
         expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        a = new Cartesian3(0, -1, -1).normalize();
+        a = Cartesian3.normalize(new Cartesian3(0, -1, -1));
         expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y), CesiumMath.EPSILON7);
 
-        a = new Cartesian3(-1, -1, 0).normalize();
+        a = Cartesian3.normalize(new Cartesian3(-1, -1, 0));
         expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(Cartesian3.UNIT_X.negate(), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X), CesiumMath.EPSILON7);
 
-        a = new Cartesian3(-1, 0, -1).normalize();
+        a = Cartesian3.normalize(new Cartesian3(-1, 0, -1));
         expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.UNIT_Z.negate(), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z), CesiumMath.EPSILON7);
     });
 
     it('computeBinormalAndTangent throws when geometry is undefined', function() {
@@ -2125,8 +2165,8 @@ defineSuite([
 
         for (var i = 0; i < positions.length; i += 3) {
             expect(Cartesian3.fromArray(normals, i)).toEqual(Cartesian3.UNIT_Z);
-            expect(Cartesian3.fromArray(binormals, i)).toEqual(Cartesian3.UNIT_Y.negate());
-            expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.UNIT_X.negate());
+            expect(Cartesian3.fromArray(binormals, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_Y));
+            expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_X));
         }
     });
 

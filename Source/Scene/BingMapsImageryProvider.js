@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/jsonp',
+        '../Core/BingMapsApi',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -17,6 +18,7 @@ define([
         defaultValue,
         defined,
         jsonp,
+        BingMapsApi,
         Cartesian2,
         DeveloperError,
         Event,
@@ -36,8 +38,13 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Bing Maps server hosting the imagery.
-     * @param {String} [description.key] An optional Bing Maps key, which can be created at
-     *        <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     * @param {String} [description.key] The Bing Maps key for your application, which can be
+     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
+     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
+     *        written to the console reminding you that you must create and supply a Bing Maps
+     *        key as soon as possible.  Please do not deploy an application that uses
+     *        Bing Maps imagery without creating a separate key for your application.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
@@ -67,6 +74,7 @@ define([
      * @example
      * var bing = new BingMapsImageryProvider({
      *     url : 'http://dev.virtualearth.net',
+     *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : BingMapsStyle.AERIAL
      * });
      */
@@ -77,8 +85,9 @@ define([
             throw new DeveloperError('description.url is required.');
         }
 
+        this._key = BingMapsApi.getKey(description.key);
+
         this._url = description.url;
-        this._key = defaultValue(description.key, 'AkMnCOd4RF1U7D7qgdBz3Fk1aJB3rgCCI_DO841suDGxqOg0SMICTE8Ivy5HhAf5');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;

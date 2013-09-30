@@ -155,7 +155,7 @@ define([
         radiusScratch.x = length * 0.5;
         radiusScratch.y = Math.max(bottomRadius, topRadius);
 
-        var boundingSphere = new BoundingSphere(Cartesian3.ZERO, radiusScratch.magnitude());
+        var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
 
         return new Geometry({
             attributes : attributes,

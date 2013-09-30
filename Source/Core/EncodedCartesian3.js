@@ -33,7 +33,7 @@ define([
          * @type {Cartesian3}
          * @default {@link Cartesian3.ZERO}
          */
-        this.high = Cartesian3.ZERO.clone();
+        this.high = Cartesian3.clone(Cartesian3.ZERO);
 
         /**
          * The low bits for each component.  Bits 7 to 22 store the whole value, and bits 0 to 6 store the fraction.  Bits 23 to 31 are not used.
@@ -44,7 +44,7 @@ define([
          * @type {Cartesian3}
          * @default {@link Cartesian3.ZERO}
          */
-        this.low = Cartesian3.ZERO.clone();
+        this.low = Cartesian3.clone(Cartesian3.ZERO);
     };
 
     /**

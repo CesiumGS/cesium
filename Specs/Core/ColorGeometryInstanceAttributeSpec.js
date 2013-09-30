@@ -39,7 +39,17 @@ defineSuite([
 
     it('toValue', function() {
         var color = Color.AQUA;
-        expect(ColorGeometryInstanceAttribute.toValue(color)).toEqual(new Uint8Array(color.toBytes()));
+        var expectedResult = new Uint8Array(color.toBytes());
+        expect(ColorGeometryInstanceAttribute.toValue(color)).toEqual(expectedResult);
+    });
+
+    it('toValue works with result parameter', function() {
+        var color = Color.AQUA;
+        var expectedResult = new Uint8Array(color.toBytes());
+        var result = new Uint8Array(4);
+        var returnedResult = ColorGeometryInstanceAttribute.toValue(color, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(expectedResult);
     });
 
     it('toValue throws without a color', function() {

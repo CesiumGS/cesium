@@ -164,9 +164,8 @@ define([
     var postProcessMatrix4Scratch= new Matrix4();
 
     SunPostProcess.prototype.update = function(context) {
-        var canvas = context.getCanvas();
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var width = context.getDrawingBufferWidth();
+        var height = context.getDrawingBufferHeight();
 
         var that = this;
 

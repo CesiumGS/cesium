@@ -118,7 +118,7 @@ define([
         tangent.z = 0.0;
         Cartesian3.normalize(tangent, tangent);
 
-        normal.cross(tangent, bitangent);
+        Cartesian3.cross(normal, tangent, bitangent);
 
         if (!defined(result)) {
             return new Matrix4(
@@ -222,7 +222,7 @@ define([
         tangent.z = 0.0;
         Cartesian3.normalize(tangent, tangent);
 
-        normal.cross(tangent, bitangent);
+        Cartesian3.cross(normal, tangent, bitangent);
 
         if (!defined(result)) {
             return new Matrix4(

@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './defined',
         './DeveloperError'
     ], function(
+        Cartesian2,
         Cartesian3,
         defined,
         DeveloperError) {
@@ -46,15 +48,30 @@ define([
         }
 
         // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
-        var v0 = p1.subtract(p0, scratchCartesian1);
-        var v1 = p2.subtract(p0, scratchCartesian2);
-        var v2 = point.subtract(p0, scratchCartesian3);
+        var v0, v1, v2;
+        var dot00, dot01, dot02, dot11, dot12;
 
-        var dot00 = v0.dot(v0);
-        var dot01 = v0.dot(v1);
-        var dot02 = v0.dot(v2);
-        var dot11 = v1.dot(v1);
-        var dot12 = v1.dot(v2);
+        if(!defined(p0.z)) {
+          v0 = Cartesian2.subtract(p1, p0, scratchCartesian1);
+          v1 = Cartesian2.subtract(p2, p0, scratchCartesian2);
+          v2 = Cartesian2.subtract(point, p0, scratchCartesian3);
+
+          dot00 = Cartesian2.dot(v0, v0);
+          dot01 = Cartesian2.dot(v0, v1);
+          dot02 = Cartesian2.dot(v0, v2);
+          dot11 = Cartesian2.dot(v1, v1);
+          dot12 = Cartesian2.dot(v1, v2);
+        } else {
+          v0 = Cartesian3.subtract(p1, p0, scratchCartesian1);
+          v1 = Cartesian3.subtract(p2, p0, scratchCartesian2);
+          v2 = Cartesian3.subtract(point, p0, scratchCartesian3);
+
+          dot00 = Cartesian3.dot(v0, v0);
+          dot01 = Cartesian3.dot(v0, v1);
+          dot02 = Cartesian3.dot(v0, v2);
+          dot11 = Cartesian3.dot(v1, v1);
+          dot12 = Cartesian3.dot(v1, v2);
+        }
 
         var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
         result.y = (dot11 * dot02 - dot01 * dot12) * q;

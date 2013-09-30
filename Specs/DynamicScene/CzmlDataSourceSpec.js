@@ -57,6 +57,11 @@ defineSuite([
         }
     };
 
+    var czmlDelete = {
+        'id' : 'test',
+        'delete' : true
+    };
+
     var dynamicCzml = {
         id : 'test',
         availability : '2000-01-01/2001-01-01',
@@ -1340,7 +1345,7 @@ defineSuite([
     });
 
     it('CZML adds data for infinite vector.', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var vectorPacket = {
             vector : {
                 color : {
@@ -1368,7 +1373,7 @@ defineSuite([
     });
 
     it('CZML adds data for constrained vector.', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var vectorPacket = {
             vector : {
                 interval : '2000-01-01/2001-01-01',
@@ -1403,5 +1408,14 @@ defineSuite([
         expect(dynamicObject.vector.direction.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.length.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzml deletes an existing object.', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(staticCzml);
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        dataSource.load(czmlDelete);
+        expect(objects.length).toEqual(0);
     });
 });

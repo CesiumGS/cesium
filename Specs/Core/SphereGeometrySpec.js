@@ -76,8 +76,8 @@ defineSuite([
             var tangent = Cartesian3.fromArray(tangents, i);
             var binormal = Cartesian3.fromArray(binormals, i);
 
-            expect(position.magnitude()).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
-            expect(normal).toEqualEpsilon(position.normalize(), CesiumMath.EPSILON7);
+            expect(Cartesian3.magnitude(position)).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
+            expect(normal).toEqualEpsilon(Cartesian3.normalize(position), CesiumMath.EPSILON7);
             expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent), CesiumMath.EPSILON7);
         }

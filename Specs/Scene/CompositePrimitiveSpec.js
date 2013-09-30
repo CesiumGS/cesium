@@ -63,10 +63,10 @@ defineSuite([
         camera = createCamera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.up = Cartesian3.UNIT_Z;
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
 
         us = context.getUniformState();
-        us.update(createFrameState(camera));
+        us.update(context, createFrameState(camera));
     });
 
     afterEach(function() {
@@ -121,7 +121,8 @@ defineSuite([
     });
 
     it('adds a primitive with add()', function() {
-        primitives.add(createLabels());
+        var p = createLabels();
+        expect(primitives.add(p)).toBe(p);
         expect(primitives.getLength()).toEqual(1);
     });
 
