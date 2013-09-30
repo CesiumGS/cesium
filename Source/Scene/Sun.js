@@ -280,8 +280,7 @@ define([
                 index : attributeIndices.direction,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 2,
-                componentDatatype : ComponentDatatype.FLOAT,
-                strideInBytes : 8
+                componentDatatype : ComponentDatatype.FLOAT
             }];
             var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             command.vertexArray = context.createVertexArray(attributes, indexBuffer);
