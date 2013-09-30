@@ -31,13 +31,23 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
+#ifdef SHOW_REFLECTIVE_OCEAN
+uniform sampler2D u_waterMask;
+uniform vec4 u_waterMaskTranslationAndScale;
+uniform float u_zoomedOutOceanSpecularIntensity;
+#endif
+
+#ifdef SHOW_OCEAN_WAVES
+uniform sampler2D u_oceanNormalMap;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
 
 vec3 sampleAndBlend(
     vec3 previousColor,
-    vec4 sampledColor,
+    sampler2D texture,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateExtent,
     vec4 textureCoordinateTranslationAndScale,
@@ -61,7 +71,12 @@ vec3 sampleAndBlend(
 	alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
 	textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
 
-	vec3 color = sampledColor.rgb;
+    vec2 translation = textureCoordinateTranslationAndScale.xy;
+    vec2 scale = textureCoordinateTranslationAndScale.zw;
+    vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
+    vec4 sample = texture2D(texture, textureCoordinates);
+	vec3 color = sample.rgb;
+	float alpha = sample.a;
 
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
@@ -83,7 +98,7 @@ vec3 sampleAndBlend(
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
-    return mix(previousColor, color, sampledColor.a * textureAlpha);
+    return mix(previousColor, color, alpha * textureAlpha);
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
