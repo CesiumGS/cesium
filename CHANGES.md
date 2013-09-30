@@ -74,6 +74,7 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
+* Fixed bug in triangulation that fails on complex polygons. Instead, it makes a "best effort" to render what it can.
 * Added `DynamicObject.name` property, which is a non-unique, user-readable name for the object.
 
 ### b20 - 2013-09-03
