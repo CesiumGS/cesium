@@ -79,8 +79,6 @@ define([
         });
 
         var scene = viewer.scene;
-		scene.skyBox.show = false;
-		scene.skyAtmosphere.show = false;
         var context = scene.getContext();
         if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);

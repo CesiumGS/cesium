@@ -179,7 +179,9 @@ define([
                 positiveZ : getDefaultSkyBoxUrl('pz'),
                 negativeZ : getDefaultSkyBoxUrl('mz')
             });
+            scene.skyBox.show = false;
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+            scene.skyAtmosphere.show = false;
             scene.sun = new Sun();
 
             //Set the base imagery layer
