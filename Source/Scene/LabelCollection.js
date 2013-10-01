@@ -177,11 +177,11 @@ define([
                     billboard.setHorizontalOrigin(HorizontalOrigin.LEFT);
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
-                    billboard.setTranslucencyByDistance(label._translucencyByDistance);
                     billboard._pickIdThis = label;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
+                glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
             }
         }
 

@@ -1186,6 +1186,28 @@ defineSuite([
         expect(pickedObject).not.toBeDefined();
     });
 
+    it('pick a billboard using translucencyByDistance', function() {
+        billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
+        var b = billboards.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            imageIndex : 0
+        });
+
+        var translucency = new NearFarScalar(1.0, 1.0, 3.0e9, 0.9);
+        b.setTranslucencyByDistance(translucency);
+        var pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject.primitive).toEqual(b);
+        translucency.nearValue = 0.0;
+        translucency.farValue = 0.0;
+        b.setTranslucencyByDistance(translucency);
+        pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject).toBeUndefined();
+    });
+
     it('computes screen space position (1)', function() {
         billboards.setTextureAtlas(createTextureAtlas([whiteImage]));
         var b = billboards.add({

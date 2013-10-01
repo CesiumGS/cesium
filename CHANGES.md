@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b22 - 2013-11-01
+
+* Added `Billboard.translucencyByDistance` and `Label.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+
+
 ### b21 - 2013-10-01
 
 * Breaking changes:

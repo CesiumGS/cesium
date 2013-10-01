@@ -710,6 +710,29 @@ defineSuite([
         expect(pickedObject).toBeUndefined();
     });
 
+    it('pick a label using translucencyByDistance', function() {
+        var label = labels.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        var translucency = new NearFarScalar(1.0, 1.0, 3.0e9, 0.9);
+        label.setTranslucencyByDistance(translucency);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        translucency.nearValue = 0.0;
+        translucency.farValue = 0.0;
+        label.setTranslucencyByDistance(translucency);
+        pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject).toBeUndefined();
+    });
+
     it('throws when calling get without an index', function() {
         expect(function() {
             labels.get();
