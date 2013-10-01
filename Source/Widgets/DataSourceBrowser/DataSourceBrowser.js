@@ -163,6 +163,9 @@ valueUpdate: \'afterkeydown\'');
 <!-- /ko -->';
         dataSourcesRootElement.appendChild(dataSourceListItem);
 
+        container.appendChild(element);
+        this._element = element;
+
         // === Add Data Source Panel ===
 
         // The root of the panel that adds new data sources.
@@ -171,7 +174,8 @@ valueUpdate: \'afterkeydown\'');
         dataSourcePanelContainer.setAttribute('data-bind', '\
 with: dataSourcePanelViewModel,\
 css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourcePanelViewModel.visible }');
-        element.appendChild(dataSourcePanelContainer);
+        container.appendChild(dataSourcePanelContainer);
+        this._dataSourcePanelContainer = dataSourcePanelContainer;
 
         // The header of the add new data source panel.
         var dataSourcePanelHeader = document.createElement('div');
@@ -219,7 +223,7 @@ text : description');
         var activeDataSourcePanelContainer = document.createElement('div');
         activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
-style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(85) },\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(105) },\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
              data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');
@@ -251,10 +255,8 @@ visible: error !== "",\
 text: error');
         dataSourcePanelFooter.appendChild(finishAddDataSourceError);
 
-        container.appendChild(element);
-        this._element = element;
-
         knockout.applyBindings(viewModel, element);
+        knockout.applyBindings(viewModel, dataSourcePanelContainer);
     };
 
     defineProperties(DataSourceBrowser.prototype, {
@@ -300,6 +302,7 @@ text: error');
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
+        container.removeChild(this._dataSourcePanelContainer);
         return destroyObject(this);
     };
 
