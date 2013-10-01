@@ -19,7 +19,7 @@ define([
      *
      * @type {String}
      */
-    BingMapsApi.defaultKey = undefined;
+    BingMapsApi.defaultKey = 'AuQVSGKrGaAfsgpuGwkEd_JZRIBjlu8ZDSqa3AHbknlQ_2G8R55EM7TiJI7_fNkO'; // For use on cesium.agi.com only
 
     var printedBingWarning = false;
 
