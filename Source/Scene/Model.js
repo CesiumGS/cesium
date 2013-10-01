@@ -785,7 +785,7 @@ define([
     function createCommand(model, node, context) {
         node.czmExtra = defaultValue(node.czmExtra, {});
         node.czmExtra.meshesCommands = defaultValue(node.czmExtra.meshesCommands, {});
-        var meshesCommands = node.czmExtra.meshesCommands;
+        var extraMeshesCommands = node.czmExtra.meshesCommands;
 
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
@@ -814,8 +814,8 @@ define([
             // The glTF node hierarchy is a DAG so a node can have more than one
             // parent, so a node may already have commands.  If so, append more
             // since they will have a different model matrix.
-            meshesCommands[name] = defaultValue(meshesCommands[name], []);
-            var meshesCommands = meshesCommands[name];
+            extraMeshesCommands[name] = defaultValue(extraMeshesCommands[name], []);
+            var meshesCommands = extraMeshesCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
