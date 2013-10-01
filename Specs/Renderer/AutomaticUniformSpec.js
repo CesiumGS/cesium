@@ -517,7 +517,7 @@ defineSuite([
 
     it('has czm_inverseViewProjection', function() {
         var us = context.getUniformState();
-        us.update(createFrameState(createMockCamera(
+        us.update(context, createFrameState(createMockCamera(
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 8.0,
                         0.0, 0.0, 1.0, 0.0,
@@ -569,7 +569,7 @@ defineSuite([
 
     it('has czm_inverseModelViewProjection', function() {
         var us = context.getUniformState();
-        us.update(createFrameState(createMockCamera(
+        us.update(context, createFrameState(createMockCamera(
             new Matrix4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 8.0,
                         0.0, 0.0, 1.0, 0.0,
