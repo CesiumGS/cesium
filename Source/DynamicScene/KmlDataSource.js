@@ -180,9 +180,13 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+    function processPlacemark(dataSource, parent, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
         var id = defined(placemark.id) ? placemark.id : createGuid();
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+
+        if (defined(parent)) {
+            dynamicObject.parent = parent;
+        }
 
         var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
 
@@ -196,7 +200,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
             }
             dynamicObject.label.text = new ConstantProperty(name);
-            dynamicObject.name = dynamicObject.label.text;
+            dynamicObject.name = name;
         }
 
         var foundGeometry = false;
@@ -280,7 +284,6 @@ define(['../Core/createGuid',
 
     function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         //TODO gx:interpolate, altitudeMode
-        dynamicObjectCollection.remove(dynamicObject);
 
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
@@ -290,6 +293,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+                childObject.parent = dynamicObject;
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 
@@ -300,8 +304,6 @@ define(['../Core/createGuid',
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
-        dynamicObjectCollection.remove(dynamicObject);
-
         var childNodes = node.childNodes;
         for ( var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
@@ -310,6 +312,7 @@ define(['../Core/createGuid',
             if (featureTypes.hasOwnProperty(childNodeName)) {
                 var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
+                childObject.parent = dynamicObject;
 
                 mergeStyles(childNodeName, dynamicObject, childObject);
 
@@ -543,9 +546,12 @@ define(['../Core/createGuid',
             var styleMap = styleMaps.item(i);
             id = defined(styleMap.attributes.id) ? styleMap.attributes.id.textContent : undefined;
             if (defined(id)) {
-                var pairs = styleMap.children;
+                var pairs = styleMap.childNodes;
                 for ( var p = 0; p < pairs.length; p++) {
                     var pair = pairs[p];
+                    if (pair.nodeName !== 'Pair') {
+                        continue;
+                    }
                     var key = pair.getElementsByTagName('key')[0];
                     if (defined(key) && key.textContent === 'normal') {
                         var styleUrl = pair.getElementsByTagName('styleUrl')[0];
@@ -591,7 +597,6 @@ define(['../Core/createGuid',
 
         return promises;
     }
-
 
     /** -- Functions required for the gx:Tour parser module -- **/
 
@@ -822,6 +827,23 @@ define(['../Core/createGuid',
 
 
 
+    function iterateNodes(dataSource, node, parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+        var nodeName = node.nodeName;
+        if (nodeName === 'Placemark') {
+            processPlacemark(dataSource, parent, node, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+        } else if (nodeName === 'Folder') {
+            parent = new DynamicObject(defined(node.id) ? node.id : createGuid());
+            parent.name = getStringValue(node, 'name');
+            dynamicObjectCollection.add(parent);
+        }
+
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
+        for ( var i = 0; i < length; i++) {
+            iterateNodes(dataSource, childNodes[i], parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+        }
+    }
+
     /**
      * The main callback function that transforms KML nodes to Cesium objects
      *
@@ -831,10 +853,12 @@ define(['../Core/createGuid',
      * @param {Object} uriResolver
      */
     function loadKml(dataSource, kml, sourceUri, uriResolver) {
+        dataSource._isLoading = true;
+        dataSource._isLoadingEvent.raiseEvent(dataSource, true);
         var name;
         var document = kml.getElementsByTagName('Document');
         if (document.length > 0) {
-            var childNodes = document[0].children;
+            var childNodes = document[0].childNodes;
             var length = childNodes.length;
             for ( var i = 0; i < length; i++) {
                 var node = childNodes[i];
@@ -855,12 +879,7 @@ define(['../Core/createGuid',
         //Since KML external styles can be asynchonous, we start off
         //by loading all styles first, before doing anything else.
         return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
-            var i;
-            var placemarks = kml.getElementsByTagName('Placemark');
-            var length = placemarks.length;
-            for ( i = 0; i < length; i++) {
-                processPlacemark(dataSource, placemarks[i], dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
-            }
+            iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
 
             /** Process gx:Tour nodes START **/
             // process gx:Tour
@@ -900,6 +919,8 @@ define(['../Core/createGuid',
             }
             /** Process gx:Tour nodes END **/
 
+            dataSource._isLoading = false;
+            dataSource._isLoadingEvent.raiseEvent(dataSource, false);
             dataSource._changed.raiseEvent(this);
         });
     }
@@ -967,10 +988,12 @@ define(['../Core/createGuid',
     var KmlDataSource = function(terrainProvider) {
         this._changed = new Event();
         this._error = new Event();
+        this._isLoadingEvent = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
         this._name = undefined;
+        this._isLoading = false;
 
         this._terrainProvider = defaultValue(terrainProvider, undefined);
     };
@@ -994,6 +1017,28 @@ define(['../Core/createGuid',
      */
     KmlDataSource.prototype.getErrorEvent = function() {
         return this._error;
+    };
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    KmlDataSource.prototype.getLoadingEvent = function() {
+        return this._isLoadingEvent;
+    };
+    /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    KmlDataSource.prototype.getIsLoading = function() {
+        return this._isLoading;
     };
 
     KmlDataSource.prototype.getName = function() {
