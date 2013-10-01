@@ -6,6 +6,7 @@ define([
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         ///////////////////////////////////////////////////////////////////////
+        'Core/defined',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -21,6 +22,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         ///////////////////////////////////////////////////////////////////////
+        defined,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -60,8 +62,11 @@ define([
             loadingIndicator.style.display = 'none';
         }
     }).otherwise(function(e) {
+        loadingIndicator.style.display = 'none';
         console.error(e);
-        window.alert(e);
+        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+            window.alert(e);
+        }
     });
 
     function endsWith(str, suffix) {
@@ -75,59 +80,55 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
-        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
-            console.log(error);
-            window.alert(error);
-        });
+        var showLoadError = function(name, error) {
+            var title = 'An error occurred while loading the file: ' + name;
+            viewer.cesiumWidget.showErrorPanel(title, error);
+            console.error(error);
+        };
 
         viewer.onDropError.addEventListener(function(viewerArg, name, error) {
-            console.log(error);
-            window.alert(error);
+            showLoadError(name, error);
         });
 
         var scene = viewer.scene;
         var context = scene.getContext();
-//        if (endUserOptions.debug) {
+        if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);
             context.setValidateFramebuffer(true);
             context.setLogShaderCompilation(true);
             context.setThrowOnWebGLError(true);
-//        }
+        }
 
-        if (typeof endUserOptions.source !== 'undefined') {
+        if (defined(endUserOptions.source)) {
             var source;
             var sourceUrl = endUserOptions.source.toUpperCase();
-            if (endsWith(sourceUrl, ".GEOJSON") || //
-            endsWith(sourceUrl, ".JSON") || //
-            endsWith(sourceUrl, ".TOPOJSON")) {
+            if (endsWith(sourceUrl, '.GEOJSON') || //
+                endsWith(sourceUrl, '.JSON') || //
+                endsWith(sourceUrl, '.TOPOJSON')) {
                 source = new GeoJsonDataSource();
-            } else if (endsWith(sourceUrl, ".CZML")) {
+            } else if (endsWith(sourceUrl, '.CZML')) {
                 source = new CzmlDataSource();
             } else {
                 loadingIndicator.style.display = 'none';
-                window.alert("Unknown format: " + endUserOptions.source);
+
+                showLoadError(endUserOptions.source, 'Unknown format.');
             }
-            if (typeof source !== 'undefined') {
+
+            if (defined(source)) {
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
 
-                    var dataClock = source.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        viewer.timeline.updateFromClock();
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                    }
-
-                    if (typeof endUserOptions.lookAt !== 'undefined') {
-                        var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
-                        if (typeof dynamicObject !== 'undefined') {
+                    if (defined(endUserOptions.lookAt)) {
+                        var dynamicObject = source.getDynamicObjectCollection().getById(endUserOptions.lookAt);
+                        if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
-                            window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
+                            var error = 'No object with id "' + endUserOptions.lookAt + '" exists in the provided source.';
+                            showLoadError(endUserOptions.source, error);
                         }
                     }
-                }, function(e) {
-                    window.alert(e);
+                }, function(error) {
+                    showLoadError(endUserOptions.source, error);
                 }).always(function() {
                     loadingIndicator.style.display = 'none';
                 });
@@ -141,12 +142,14 @@ define([
         }
 
         var theme = endUserOptions.theme;
-        if (typeof theme !== 'undefined') {
+        if (defined(theme)) {
             if (endUserOptions.theme === 'lighter') {
                 document.body.classList.add('cesium-lighter');
                 viewer.animation.applyThemeChanges();
             } else {
-                window.alert('Unknown theme: ' + theme);
+                var error = 'Unknown theme: ' + theme;
+                viewer.cesiumWidget.showErrorPanel(error);
+                console.error(error);
             }
         }
 
@@ -176,6 +179,5 @@ define([
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
-
     }
 });
