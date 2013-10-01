@@ -51,6 +51,7 @@ define([
      * and add new billboards instead of modifying each one.
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -65,6 +66,10 @@ define([
 
         if (defined(description.scaleByDistance) && description.scaleByDistance.far <= description.scaleByDistance.near) {
             throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+        }
+        if (defined(description.translucencyByDistance) &&
+                description.translucencyByDistance.far <= description.translucencyByDistance.near) {
+            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
 
         this._show = defaultValue(description.show, true);
@@ -84,6 +89,7 @@ define([
         this._width = description.width;
         this._height = description.height;
         this._scaleByDistance = description.scaleByDistance;
+        this._translucencyByDistance = description.translucencyByDistance;
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -104,7 +110,8 @@ define([
     var ROTATION_INDEX = Billboard.ROTATION_INDEX = 9;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
-    Billboard.NUMBER_OF_PROPERTIES = 12;
+    var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
+    Billboard.NUMBER_OF_PROPERTIES = 13;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -328,6 +335,59 @@ define([
 
         makeDirty(this, SCALE_BY_DISTANCE_INDEX);
         this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
+    };
+
+    /**
+     * Returns the near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @returns {NearFarScalar} The near/far translucency values based on camera distance to the billboard
+     *
+     * @see Billboard#setTranslucencyByDistance
+     */
+    Billboard.prototype.getTranslucencyByDistance = function() {
+        return this._translucencyByDistance;
+    };
+
+    /**
+     * Sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.  If undefined,
+     * translucencyByDistance will be disabled.
+     *
+     * @memberof Billboard
+     *
+     * @param {NearFarScalar} translucency The configuration of near and far distances and their respective translucency values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Billboard#getTranslucencyByDistance
+     *
+     * @example
+     * // Example 1.
+     * // Set a billboard's translucencyByDistance to 1.0 when the
+     * // camera is 1500 meters from the billboard and disappear as
+     * // the camera distance approaches 8.0e6 meters.
+     * b.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     *
+     * // Example 2.
+     * // disable translucency by distance
+     * b.setTranslucencyByDistance(undefined);
+     */
+    Billboard.prototype.setTranslucencyByDistance = function(translucency) {
+        if (NearFarScalar.equals(this._translucencyByDistance, translucency)) {
+            return;
+        }
+
+        if (translucency.far <= translucency.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
+        this._translucencyByDistance = NearFarScalar.clone(translucency, this._translucencyByDistance);
     };
 
     /**
@@ -886,7 +946,8 @@ define([
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
-               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance);
+               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
+               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance);
     };
 
     Billboard.prototype._destroy = function() {

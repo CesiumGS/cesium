@@ -33,6 +33,7 @@ define(['../Core/defaultValue',
         this._eyeOffset = undefined;
         this._pixelOffset = undefined;
         this._show = undefined;
+        this._nearFarScalar = undefined;
         this._propertyChanged = new Event();
     };
 
