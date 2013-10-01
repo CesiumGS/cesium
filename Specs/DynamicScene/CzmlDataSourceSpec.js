@@ -57,6 +57,11 @@ defineSuite([
         }
     };
 
+    var czmlDelete = {
+        'id' : 'test',
+        'delete' : true
+    };
+
     var dynamicCzml = {
         id : 'test',
         availability : '2000-01-01/2001-01-01',
@@ -620,6 +625,29 @@ defineSuite([
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
+    it('CZML sampled positions work without epoch.', function() {
+        var lastDate = new JulianDate();
+        var firstDate = new JulianDate(lastDate.getJulianDayNumber() - 1, 0);
+
+        var czml = {
+            position : {
+                cartographicDegrees : [firstDate.toIso8601(), 34, 117, 10000, lastDate.toIso8601(), 34, 117, 20000]
+            }
+        };
+        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
+        var cartographic2 = Cartographic.fromDegrees(34, 117, 20000);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(czml);
+
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var resultCartesian = dynamicObject.position.getValue(firstDate);
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+
+        resultCartesian = dynamicObject.position.getValue(lastDate);
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+    });
+
     it('CZML constant cartographicRadians positions work.', function() {
         var czml = {
             position : {
@@ -657,6 +685,29 @@ defineSuite([
 
         resultCartesian = dynamicObject.position.getValue(epoch.addSeconds(1));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+    });
+
+    it('CZML sampled numbers work without epoch.', function() {
+        var firstDate = Iso8601.MINIMUM_VALUE;
+        var midDate = firstDate.addDays(1);
+        var lastDate = firstDate.addDays(2);
+
+        var ellipsePacket = {
+            ellipse : {
+                semiMajorAxis : {
+                    number : [firstDate.toIso8601(), 0, lastDate.toIso8601(), 10]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(ellipsePacket);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+
+        expect(dynamicObject.ellipse).toBeDefined();
+        expect(dynamicObject.ellipse.semiMajorAxis.getValue(firstDate)).toEqual(0);
+        expect(dynamicObject.ellipse.semiMajorAxis.getValue(midDate)).toEqual(5);
+        expect(dynamicObject.ellipse.semiMajorAxis.getValue(lastDate)).toEqual(10);
     });
 
     it('CZML adds data for infinite ellipse.', function() {
@@ -1294,7 +1345,7 @@ defineSuite([
     });
 
     it('CZML adds data for infinite vector.', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var vectorPacket = {
             vector : {
                 color : {
@@ -1322,7 +1373,7 @@ defineSuite([
     });
 
     it('CZML adds data for constrained vector.', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var vectorPacket = {
             vector : {
                 interval : '2000-01-01/2001-01-01',
@@ -1357,5 +1408,14 @@ defineSuite([
         expect(dynamicObject.vector.direction.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.length.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.vector.show.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('processCzml deletes an existing object.', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(staticCzml);
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        dataSource.load(czmlDelete);
+        expect(objects.length).toEqual(0);
     });
 });

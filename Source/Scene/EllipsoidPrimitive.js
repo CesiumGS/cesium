@@ -87,7 +87,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.center = Cartesian3.ZERO.clone();
+        this.center = Cartesian3.clone(Cartesian3.ZERO);
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
@@ -150,18 +150,18 @@ define([
          * </p>
          *
          * @type {Material}
-         * @default Material.fromType(undefined, Material.ColorType)
+         * @default Material.fromType(Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
          * e.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * e.material = Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = Material.fromType(undefined, Material.ColorType);
+        this.material = Material.fromType(Material.ColorType);
         this._material = undefined;
 
         this._sp = undefined;
@@ -277,6 +277,7 @@ define([
 
         var materialChanged = this._material !== this.material;
         this._material = this.material;
+        this._material.update(context);
 
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;
@@ -305,7 +306,9 @@ define([
             var pickCommand = this._pickCommand;
 
             if (!defined(this._pickId)) {
-                this._pickId = context.createPickId(this);
+                this._pickId = context.createPickId({
+                    primitive : this
+                });
             }
 
             // Recompile shader when material changes

@@ -1,5 +1,9 @@
 /*global defineSuite*/
-defineSuite(['Core/NearFarScalar'], function(NearFarScalar) {
+defineSuite(['Core/NearFarScalar',
+             'Specs/createPackableSpecs'
+     ], function(
+             NearFarScalar,
+             createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -40,4 +44,6 @@ defineSuite(['Core/NearFarScalar'], function(NearFarScalar) {
         var returnedResult = NearFarScalar.clone(scalar, scalar);
         expect(scalar).toBe(returnedResult);
     });
+
+    createPackableSpecs(NearFarScalar, new NearFarScalar(1, 2, 3, 4), [1, 2, 3, 4]);
 });

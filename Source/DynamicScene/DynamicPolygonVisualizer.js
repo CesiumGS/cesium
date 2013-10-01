@@ -82,12 +82,12 @@ define([
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
             if (defined(oldCollection)) {
-                oldCollection.objectsRemoved.removeEventListener(DynamicPolygonVisualizer.prototype._onObjectsRemoved, this);
+                oldCollection.collectionChanged.removeEventListener(DynamicPolygonVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
             if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPolygonVisualizer.prototype._onObjectsRemoved, this);
+                dynamicObjectCollection.collectionChanged.addEventListener(DynamicPolygonVisualizer.prototype._onObjectsRemoved, this);
             }
         }
     };
@@ -174,16 +174,16 @@ define([
 
     var cachedPosition = new Cartesian3();
     function updateObject(dynamicPolygonVisualizer, time, dynamicObject) {
-        var dynamicPolygon = dynamicObject.polygon;
+        var dynamicPolygon = dynamicObject._polygon;
         if (!defined(dynamicPolygon)) {
             return;
         }
 
         var polygon;
-        var showProperty = dynamicPolygon.show;
-        var ellipseProperty = dynamicObject.ellipse;
-        var positionProperty = dynamicObject.position;
-        var vertexPositionsProperty = dynamicObject.vertexPositions;
+        var showProperty = dynamicPolygon._show;
+        var ellipseProperty = dynamicObject._ellipse;
+        var positionProperty = dynamicObject._position;
+        var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
         var hasVertexPostions = defined(vertexPositionsProperty);
@@ -200,7 +200,6 @@ define([
             return;
         }
 
-        var context = dynamicPolygonVisualizer._scene.getContext();
         if (!defined(polygonVisualizerIndex)) {
             var unusedIndexes = dynamicPolygonVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
@@ -210,6 +209,7 @@ define([
             } else {
                 polygonVisualizerIndex = dynamicPolygonVisualizer._polygonCollection.length;
                 polygon = new Polygon();
+                polygon.asynchronous = false;
                 dynamicPolygonVisualizer._polygonCollection.push(polygon);
                 dynamicPolygonVisualizer._primitives.add(polygon);
             }
@@ -217,7 +217,7 @@ define([
             polygon.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polygon.material = Material.fromType(context, Material.ColorType);
+            polygon.material = Material.fromType(Material.ColorType);
         } else {
             polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
         }
@@ -238,10 +238,10 @@ define([
             polygon._visualizerPositions = vertexPositions;
         }
 
-        polygon.material = MaterialProperty.getValue(time, context, dynamicPolygon.material, polygon.material);
+        polygon.material = MaterialProperty.getValue(time, dynamicPolygon._material, polygon.material);
     }
 
-    DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
+    DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisPolygonCollection = this._polygonCollection;
         var thisUnusedIndexes = this._unusedIndexes;
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
