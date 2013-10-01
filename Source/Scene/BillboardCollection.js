@@ -882,9 +882,9 @@ define([
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.scaleByDistance];
         var near = 0.0;
-        var nearValue = 0.0;
-        var far = 0.0;
-        var farValue = 0.0;
+        var nearValue = 1.0;
+        var far = 1.0;
+        var farValue = 1.0;
 
         var scale = billboard.getScaleByDistance();
         if (defined(scale)) {
@@ -911,9 +911,9 @@ define([
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.translucencyByDistance];
         var near = 0.0;
-        var nearValue = 0.0;
-        var far = 0.0;
-        var farValue = 0.0;
+        var nearValue = 1.0;
+        var far = 1.0;
+        var farValue = 1.0;
 
         var translucency = billboard.getTranslucencyByDistance();
         if (defined(translucency)) {

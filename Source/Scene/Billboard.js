@@ -368,7 +368,7 @@ define([
      *
      * @example
      * // Example 1.
-     * // Set a billboard's translucencyByDistance to 1.0 when the
+     * // Set a billboard's translucency to 1.0 when the
      * // camera is 1500 meters from the billboard and disappear as
      * // the camera distance approaches 8.0e6 meters.
      * b.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));

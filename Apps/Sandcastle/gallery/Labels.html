@@ -93,13 +93,17 @@ require(['Cesium'], function(Cesium) {
     function labelTranslucencyByDistance(scene, ellipsoid) {
         Sandcastle.declare(labelTranslucencyByDistance); // For highlighting in Sandcastle.
         var labels = new Cesium.LabelCollection();
-        var l = labels.add({
+        labels.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-73.94, 40.67)),
+            text     : 'New York'
+        });
+        labels.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
             text     : 'Philadelphia',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.0),
-            pixelOffset : new Cesium.Cartesian2(0, 50)
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.0)
         });
 
+        // add a billboard to mark Philadelphia on the globe
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
