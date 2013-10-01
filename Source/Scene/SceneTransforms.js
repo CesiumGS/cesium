@@ -35,6 +35,7 @@ define([
 
     var actualPosition = new Cartesian3();
     var positionCC = new Cartesian4();
+    var viewProjectionScratch;
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -79,8 +80,9 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.getUniformState().getViewProjection();
-        viewProjection.multiplyByPoint(actualPosition, positionCC);
+        var camera = scene.getCamera();
+        viewProjectionScratch = camera.frustum.projectionMatrix.multiply(camera.viewMatrix, viewProjectionScratch);
+        viewProjectionScratch.multiplyByPoint(actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
     };
