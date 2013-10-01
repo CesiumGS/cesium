@@ -262,8 +262,6 @@ define([
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
-     *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
-     *   translucencyByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
      *   color : Color.WHITE
      * });
