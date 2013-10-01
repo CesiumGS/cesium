@@ -2,6 +2,8 @@
 define([
         'Core/Cartesian3',
         'Core/Matrix4',
+        'Core/Transforms',
+        'Core/Ellipsoid',
         'Scene/Model',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
@@ -18,6 +20,8 @@ define([
     ], function(
         Cartesian3,
         Matrix4,
+        Transforms,
+        Ellipsoid,
         Model,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
@@ -154,26 +158,48 @@ define([
         }
 
         ///////////////////////////////////////////////////////////////////////
-        scene.getPrimitives().setCentralBody(undefined);
-        scene.skyBox = undefined;
+        //scene.getPrimitives().setCentralBody(undefined);
+        //scene.skyBox = undefined;
+        //scene.skyAtmosphere = undefined;
 
 //      var url = './Gallery/model/SuperMurdoch/SuperMurdoch.json';
 //      var url = './Gallery/model/rambler/Rambler.json';
 //      var url = './Gallery/model/wine/wine.json';
-        var url = './Gallery/model/duck/duck.json';
+      var url = './Gallery/model/duck/duck.json';
 
-        scene.getPrimitives().add(Model.fromText({
+        var model = scene.getPrimitives().add(Model.fromText({
             url : url,
-          modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
-          scale : 10000.0
-//          debugShowBoundingVolume : true
+            modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 7000000.0)),
+            scale : 100.0
+//            debugShowBoundingVolume : true
         }));
+        model.onComplete.addEventListener(function() {
+            var center = model.worldBoundingSphere.center;
+            var transform = Transforms.eastNorthUpToFixedFrame(center);
+
+            // View in east-north-up frame
+            var camera = scene.getCamera();
+            camera.transform = transform;
+            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+
+            var controller = scene.getScreenSpaceCameraController();
+            controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            controller.enableTilt = false;
+
+            // Zoom in
+            camera.controller.lookAt(
+                    new Cartesian3(model.worldBoundingSphere.radius, 0.0, 0.0),
+                    Cartesian3.ZERO,
+                    Cartesian3.UNIT_Z);
+        });
+
+//        scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.endPosition);
-                if (typeof pickedObject !== 'undefined') {
+                if (defined(pickedObject)) {
                     console.log("Node " + pickedObject.node.name + ", Mesh " + pickedObject.mesh.name);
                 }
             },

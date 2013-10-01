@@ -20,6 +20,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Core/Math',
+        '../Core/Event',
         '../Renderer/TextureWrap',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
@@ -50,6 +51,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         CesiumMath,
+        Event,
         TextureWrap,
         TextureMinificationFilter,
         TextureMagnificationFilter,
@@ -171,13 +173,25 @@ define([
 
         /**
          * DOC_TBA
+         */
+        this.onComplete = new Event();
+
+// TODO: will change with animation
+// TODO: only load external files if within bounding sphere
+// TODO: cull whole model, not commands?  Good for our use-cases, but not buildings, etc.
+        /**
+         * DOC_TBA
+         */
+        this.worldBoundingSphere = new BoundingSphere();
+
+        /**
+         * DOC_TBA
          *
          * @readonly
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
-        this._computedModelMatrix = Matrix4.IDENTITY.clone();   // Derived from modelMatrix and scale
-        this._nodeStack = [];                                   // To reduce allocations in update()
+        this._computedModelMatrix = Matrix4.IDENTITY.clone(); // Derived from modelMatrix and scale
 
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
@@ -883,8 +897,7 @@ define([
 
                 meshesCommands.push({
                     command : command,
-                    pickCommand : pickCommand,
-                    unscaledBoundingSphere : boundingSphere
+                    pickCommand : pickCommand
                 });
             }
         }
@@ -944,6 +957,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    // To reduce allocations in update()
+    var scratchNodeStack = [];
+    var scratchSpheres = [];
+
     function updateModelMatrix(model) {
         var gltf = model.gltf;
         var scenes = gltf.scenes;
@@ -953,8 +970,11 @@ define([
         var sceneNodes = scene.nodes;
         var length = sceneNodes.length;
 
-        var nodeStack = model._nodeStack;
-        var scale = model.scale;
+        var nodeStack = scratchNodeStack;
+
+        // Compute bounding sphere that includes all transformed nodes
+        var spheres = scratchSpheres;
+        var sphereCenter = new Cartesian3();
 
         for (var i = 0; i < length; ++i) {
             var n = nodes[sceneNodes[i]];
@@ -984,12 +1004,10 @@ define([
                                 Matrix4.multiply(model._computedModelMatrix, transformToRoot, command.modelMatrix);
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
 
-                                var bs = primitiveCommand.unscaledBoundingSphere;
-                                if (defined(bs)) {
-                                    var radius = bs.radius * scale;
-                                    command.boundingVolume.radius = radius;
-                                    pickCommand.boundingVolume.radius = radius;
-                                }
+                                var bs = new BoundingSphere();
+                                BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
+                                Cartesian3.add(bs.center, sphereCenter, sphereCenter);
+                                spheres.push(bs);
                             }
                         }
                     }
@@ -1006,6 +1024,23 @@ define([
                 }
             }
         }
+
+        // Compute bounding sphere around the model
+        var radius = 0;
+
+        length = spheres.length;
+        Cartesian3.divideByScalar(sphereCenter, length, sphereCenter);
+        for (i = 0; i < length; ++i) {
+            var bbs = spheres[i];
+            var r = Cartesian3.magnitude(Cartesian3.subtract(bbs.center, sphereCenter)) + bbs.radius;
+
+            if (r > radius) {
+                radius = r;
+            }
+        }
+
+        Cartesian3.clone(sphereCenter, model.worldBoundingSphere.center);
+        model.worldBoundingSphere.radius = radius;
     }
 
     /**
@@ -1051,6 +1086,11 @@ define([
 
                 updateModelMatrix(this);
             }
+        }
+
+        if (justLoaded) {
+            // Call after modelMatrix update.
+            frameState.events.push(this.onComplete);
         }
 
         commandList.push(commandLists);
