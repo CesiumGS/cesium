@@ -1,8 +1,11 @@
 /*global defineSuite*/
 defineSuite([
+         'Core/defined',
+         'Core/defaultValue',
          'Core/Color',
          'Core/Cartesian3',
          'Core/BoundingSphere',
+         'Core/Event',
          'Renderer/DrawCommand',
          'Renderer/CommandLists',
          'Renderer/Context',
@@ -15,9 +18,12 @@ defineSuite([
          'Specs/createScene',
          'Specs/destroyScene'
      ], 'Scene/Scene', function(
+         defined,
+         defaultValue,
          Color,
          Cartesian3,
          BoundingSphere,
+         Event,
          DrawCommand,
          CommandLists,
          Context,
@@ -82,17 +88,42 @@ defineSuite([
         destroyScene(scene);
     });
 
-    function getMockPrimitive(command) {
+    function getMockPrimitive(options) {
         return {
             update : function(context, frameState, commandList) {
-                var commandLists = new CommandLists();
-                commandLists.colorList.push(command);
-                commandList.push(commandLists);
+                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+                if (defined(options.command)) {
+                    var commandLists = new CommandLists();
+                    commandLists.colorList.push(options.command);
+                    commandList.push(commandLists);
+                }
+
+                if (defined(options.event)) {
+                    frameState.events.push(options.event);
+                }
             },
             destroy : function() {
             }
         };
     }
+
+    it('fires FrameState events', function() {
+        var spyListener = jasmine.createSpy('listener');
+        var event = new Event();
+        event.addEventListener(spyListener);
+
+        var scene = createScene();
+        scene.getPrimitives().add(getMockPrimitive({
+            event : event
+        }));
+
+        scene.initializeFrame();
+        scene.render();
+        expect(spyListener).toHaveBeenCalled();
+
+        destroyScene(scene);
+    });
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand();
@@ -100,7 +131,9 @@ defineSuite([
         spyOn(c, 'execute');
 
         var scene = createScene();
-        scene.getPrimitives().add(getMockPrimitive(c));
+        scene.getPrimitives().add(getMockPrimitive({
+            command : c
+        }));
 
         scene.debugCommandFilter = function(command) {
             return command !== c;   // Do not execute command
@@ -119,7 +152,9 @@ defineSuite([
         spyOn(c, 'execute');
 
         var scene = createScene();
-        scene.getPrimitives().add(getMockPrimitive(c));
+        scene.getPrimitives().add(getMockPrimitive({
+            command : c
+        }));
 
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.initializeFrame();
@@ -136,7 +171,9 @@ defineSuite([
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
         var scene = createScene();
-        scene.getPrimitives().add(getMockPrimitive(c));
+        scene.getPrimitives().add(getMockPrimitive({
+            command : c
+        }));
 
         scene.initializeFrame();
         scene.render();
