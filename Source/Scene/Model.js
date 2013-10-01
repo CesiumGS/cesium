@@ -329,14 +329,14 @@ define([
         while (loadResources.bufferViewsToCreate.length > 0) {
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
-            bufferView.extra = defaultValue(bufferView.extra, {});
+            bufferView.czmExtra = defaultValue(bufferView.czmExtra, {});
 
             if (bufferView.target === 'ARRAY_BUFFER') {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
                 vertexBuffer.setVertexArrayDestroyable(false);
-                bufferView.extra.czmBuffer = vertexBuffer;
+                bufferView.czmExtra.buffer = vertexBuffer;
             }
         }
 
@@ -349,11 +349,11 @@ define([
                 var instance = indices[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if (!defined(bufferView.extra.czmBuffer)) {
+                if (!defined(bufferView.czmExtra.buffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
                     indexBuffer.setVertexArrayDestroyable(false);
-                    bufferView.extra.czmBuffer = indexBuffer;
+                    bufferView.czmExtra.buffer = indexBuffer;
                     // In theory, several glTF indices with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -386,10 +386,10 @@ define([
                 pickColorQualifier : 'uniform'
             });
 
-            program.extra = defaultValue(program.extra, {});
-            program.extra.czmProgram = context.getShaderCache().getShaderProgram(vs, fs);
-            program.extra.czmPickProgram = context.getShaderCache().getShaderProgram(vs, pickFS);
-// TODO: in theory, czmPickProgram could have a different set of attribute locations
+            program.czmExtra = defaultValue(program.czmExtra, {});
+            program.czmExtra.program = context.getShaderCache().getShaderProgram(vs, fs);
+            program.czmExtra.pickProgram = context.getShaderCache().getShaderProgram(vs, pickFS);
+// TODO: in theory, pickProgram could have a different set of attribute locations
         }
     }
 
@@ -404,8 +404,8 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    sampler.extra = defaultValue(sampler.extra, {});
-                    sampler.extra.czmSampler = context.createSampler({
+                    sampler.czmExtra = defaultValue(sampler.czmExtra, {});
+                    sampler.czmExtra.sampler = context.createSampler({
                         wrapS : TextureWrap[sampler.wrapS],
                         wrapT : TextureWrap[sampler.wrapT],
                         minificationFilter : TextureMinificationFilter[sampler.minFilter],
@@ -426,7 +426,7 @@ define([
                     }
 
                     // Can't mipmap, REPEAT, or MIRRORED_REPEAT NPOT texture.
-                    sampler.extra.czmSamplerWithoutMipmaps = context.createSampler({
+                    sampler.czmExtra.samplerWithoutMipmaps = context.createSampler({
                         wrapS : TextureWrap.CLAMP,
                         wrapT : TextureWrap.CLAMP,
                         minificationFilter : TextureMinificationFilter[minFilter],
@@ -448,8 +448,8 @@ define([
 
 // TODO: consider target, format, and internalFormat
             var texture = textures[textureToCreate.name];
-            texture.extra = defaultValue(texture.extra, {});
-            texture.extra.czmTexture = context.createTexture2D({
+            texture.czmExtra = defaultValue(texture.czmExtra, {});
+            texture.czmExtra.texture = context.createTexture2D({
                 source : textureToCreate.image,
                 flipY : false
             });
@@ -493,7 +493,7 @@ define([
         var instanceProgram = pass.instanceProgram;
         var program = programs[instanceProgram.program];
         var attributes = instanceProgram.attributes;
-        var attributeLocations = program.extra.czmProgram.getVertexAttributes();
+        var attributeLocations = program.czmExtra.program.getVertexAttributes();
 
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
@@ -539,7 +539,7 @@ define([
                                  var type = gltfTypes[a.type];
                                  attrs.push({
                                      index                  : semanticToAttributeLocations[name],
-                                     vertexBuffer           : bufferViews[a.bufferView].extra.czmBuffer,
+                                     vertexBuffer           : bufferViews[a.bufferView].czmExtra.buffer,
                                      componentsPerAttribute : type.componentsPerAttribute,
                                      componentDatatype      : type.componentDatatype,
 // TODO: is normalize part of glTF attribute?
@@ -551,10 +551,10 @@ define([
                          }
 
                          var i = indices[primitive.indices];
-                         var indexBuffer = bufferViews[i.bufferView].extra.czmBuffer;
+                         var indexBuffer = bufferViews[i.bufferView].czmExtra.buffer;
 
-                         primitive.extra = defaultValue(primitive.extra, {});
-                         primitive.extra.czmVertexArray = context.createVertexArray(attrs, indexBuffer);
+                         primitive.czmExtra = defaultValue(primitive.czmExtra, {});
+                         primitive.czmExtra.vertexArray = context.createVertexArray(attrs, indexBuffer);
                      }
                  }
              }
@@ -574,8 +574,8 @@ define([
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
 
-                    states.extra = defaultValue(states.extra, {});
-                    states.extra.czmRenderState = context.createRenderState({
+                    states.czmExtra = defaultValue(states.czmExtra, {});
+                    states.czmExtra.renderState = context.createRenderState({
                         cull : {
                             enabled : states.cullFaceEnable
                         },
@@ -684,13 +684,13 @@ define([
          },
          SAMPLER_2D : function(value, model, context) {
              var texture = model.gltf.textures[value];
-             var tx = texture.extra.czmTexture;
+             var tx = texture.czmExtra.texture;
              var sampler = model.gltf.samplers[texture.sampler];
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
              var dimensions = tx.getDimensions();
              if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
-                 tx.setSampler(sampler.extra.czmSamplerWithoutMipmaps);
+                 tx.setSampler(sampler.czmExtra.samplerWithoutMipmaps);
              } else {
 // End workaround
                  if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
@@ -699,7 +699,7 @@ define([
                      (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
                      tx.generateMipmap();
                  }
-                 tx.setSampler(sampler.extra.czmSampler);
+                 tx.setSampler(sampler.czmExtra.sampler);
              }
 
              return function() {
@@ -770,8 +770,8 @@ define([
                     }
                 }
 
-                instanceTechnique.extra = defaultValue(instanceProgram.extra, {});
-                instanceTechnique.extra.czmUniformMap = uniformMap;
+                instanceTechnique.czmExtra = defaultValue(instanceProgram.czmExtra, {});
+                instanceTechnique.czmExtra.uniformMap = uniformMap;
             }
         }
     }
@@ -783,9 +783,9 @@ define([
     }
 
     function createCommand(model, node, context) {
-        node.extra = defaultValue(node.extra, {});
-        node.extra.czmMeshesCommands = defaultValue(node.extra.czmMeshesCommands, {});
-        var czmMeshesCommands = node.extra.czmMeshesCommands;
+        node.czmExtra = defaultValue(node.czmExtra, {});
+        node.czmExtra.meshesCommands = defaultValue(node.czmExtra.meshesCommands, {});
+        var meshesCommands = node.czmExtra.meshesCommands;
 
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
@@ -814,8 +814,8 @@ define([
             // The glTF node hierarchy is a DAG so a node can have more than one
             // parent, so a node may already have commands.  If so, append more
             // since they will have a different model matrix.
-            czmMeshesCommands[name] = defaultValue(czmMeshesCommands[name], []);
-            var meshesCommands = czmMeshesCommands[name];
+            meshesCommands[name] = defaultValue(meshesCommands[name], []);
+            var meshesCommands = meshesCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
@@ -833,11 +833,11 @@ define([
                 }
 
                 var primitiveType = PrimitiveType[primitive.primitive];
-                var vertexArray = primitive.extra.czmVertexArray;
+                var vertexArray = primitive.czmExtra.vertexArray;
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
-                var uniformMap = instanceTechnique.extra.czmUniformMap;
-                var rs = pass.states.extra.czmRenderState;
+                var uniformMap = instanceTechnique.czmExtra.uniformMap;
+                var rs = pass.states.czmExtra.renderState;
                 var owner = {
                     instance : model,
                     node : node,
@@ -852,7 +852,7 @@ define([
                 command.vertexArray = vertexArray;
                 command.count = count;
                 command.offset = offset;
-                command.shaderProgram = programs[instanceProgram.program].extra.czmProgram;
+                command.shaderProgram = programs[instanceProgram.program].czmExtra.program;
                 command.uniformMap = uniformMap;
                 command.renderState = rs;
                 command.owner = owner;
@@ -875,7 +875,7 @@ define([
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
                 pickCommand.offset = offset;
-                pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
+                pickCommand.shaderProgram = programs[instanceProgram.program].czmExtra.pickProgram;
                 pickCommand.uniformMap = pickUniformMap;
                 pickCommand.renderState = rs;
                 pickCommand.owner = owner;
@@ -969,8 +969,8 @@ define([
                 n = top.node;
 
 //TODO: handle camera and light nodes
-                if (defined(n.extra) && defined(n.extra.czmMeshesCommands)) {
-                    var meshCommands = n.extra.czmMeshesCommands;
+                if (defined(n.czmExtra) && defined(n.czmExtra.meshesCommands)) {
+                    var meshCommands = n.czmExtra.meshesCommands;
                     var name;
                     for (name in meshCommands) {
                         if (meshCommands.hasOwnProperty(name)) {
@@ -1072,12 +1072,12 @@ define([
         return false;
     };
 
-    function destroyExtra(property, resourceName) {
+    function destroyCzmExtra(property, resourceName) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                var extra = property[name].extra;
-                if (defined(extra) && defined(extra[resourceName])) {
-                    extra[resourceName] = extra[resourceName].destroy();
+                var czmExtra = property[name].czmExtra;
+                if (defined(czmExtra) && defined(czmExtra[resourceName])) {
+                    czmExtra[resourceName] = czmExtra[resourceName].destroy();
                 }
             }
         }
@@ -1104,10 +1104,10 @@ define([
      */
     Model.prototype.destroy = function() {
         var gltf = this.gltf;
-        destroyExtra(gltf.bufferViews, 'czmBuffer');
-        destroyExtra(gltf.programs, 'czmProgram');
-        destroyExtra(gltf.programs, 'czmPickProgram');
-        destroyExtra(gltf.textures, 'czmTexture');
+        destroyCzmExtra(gltf.bufferViews, 'buffer');
+        destroyCzmExtra(gltf.programs, 'program');
+        destroyCzmExtra(gltf.programs, 'pickProgram');
+        destroyCzmExtra(gltf.textures, 'texture');
 
         var meshes = gltf.meshes;
         var name;
@@ -1118,9 +1118,9 @@ define([
 
                 for (name in primitives) {
                     if (primitives.hasOwnProperty(name)) {
-                        var extra = primitives[name].extra;
-                        if (defined(extra) && defined(extra.czmVertexArray)) {
-                            extra.czmVertexArray = extra.czmVertexArray.destroy();
+                        var czmExtra = primitives[name].czmExtra;
+                        if (defined(czmExtra) && defined(czmExtra.vertexArray)) {
+                            czmExtra.vertexArray = czmExtra.vertexArray.destroy();
                         }
                     }
                 }
