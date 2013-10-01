@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b22 - 2013-11-01
+
+* Breaking changes:
+   *
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+
 ### b21 - 2013-10-01
 
 * Breaking changes:
