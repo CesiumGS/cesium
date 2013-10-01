@@ -48,6 +48,8 @@ define([
      * @alias Label
      * @internalConstructor
      *
+     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     *
      * @see LabelCollection
      * @see LabelCollection#add
      *
@@ -55,6 +57,11 @@ define([
      */
     var Label = function(description, labelCollection) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+
+        if (defined(description.translucencyByDistance) &&
+                description.translucencyByDistance.far <= description.translucencyByDistance.near) {
+            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
 
         this._text = defaultValue(description.text, '');
         this._show = defaultValue(description.show, true);
@@ -495,10 +502,16 @@ define([
      * text.setTranslucencyByDistance(undefined);
      */
     Label.prototype.setTranslucencyByDistance = function(value) {
-        if (!NearFarScalar.equals(this._translucencyByDistance, value)) {
-            NearFarScalar.clone(value, this._translucencyByDistance);
-            rebindAllGlyphs(this);
+        if (NearFarScalar.equals(this._translucencyByDistance, value)) {
+            return;
         }
+
+        if (value.far <= value.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        this._translucencyByDistance = NearFarScalar.clone(value, this._translucencyByDistance);
+        rebindAllGlyphs(this);
     };
 
     /**
