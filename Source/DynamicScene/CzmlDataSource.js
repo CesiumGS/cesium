@@ -1293,6 +1293,19 @@ define([
     };
 
     /**
+     * Updates the data source to the provided time.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     *
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    CzmlDataSource.prototype.update = function(time) {
+        return true;
+    };
+
+    /**
      * Processes the provided CZML without clearing any existing data.
      *
      * @param {Object} czml The CZML to be processed.

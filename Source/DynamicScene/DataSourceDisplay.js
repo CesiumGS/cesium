@@ -151,6 +151,8 @@ define([
      *
      * @param {JulianDate} time The simulation time.
      *
+     * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
+     *
      * @exception {DeveloperError} time is required.
      */
     DataSourceDisplay.prototype.update = function(time) {
@@ -158,21 +160,33 @@ define([
             throw new DeveloperError('time is required.');
         }
 
+        var result = true;
         var timeVaryingSources = this._timeVaryingSources;
         var i;
         var length = timeVaryingSources.length;
+        var dataSource;
         for (i = 0; i < length; i++) {
-            timeVaryingSources[i]._visualizerCollection.update(time);
+            dataSource = timeVaryingSources[i];
+            if (!dataSource.update(time)) {
+                result = false;
+            }
+            dataSource._visualizerCollection.update(time);
         }
 
         var staticSourcesToUpdate = this._staticSourcesToUpdate;
         length = staticSourcesToUpdate.length;
         if (length > 0) {
             for (i = 0; i < length; i++) {
-                staticSourcesToUpdate[i]._visualizerCollection.update(time);
+                dataSource = staticSourcesToUpdate[i];
+                if (!dataSource.update(time)) {
+                    result = false;
+                }
+                dataSource._visualizerCollection.update(time);
             }
             staticSourcesToUpdate.length = 0;
         }
+
+        return result;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

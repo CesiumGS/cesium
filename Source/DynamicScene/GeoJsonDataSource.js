@@ -397,6 +397,19 @@ define([
     };
 
     /**
+     * Updates the data source to the provided time.
+     * @memberof GeoJsonDataSource
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     *
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    GeoJsonDataSource.prototype.update = function(time) {
+        return true;
+    };
+
+    /**
      * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.

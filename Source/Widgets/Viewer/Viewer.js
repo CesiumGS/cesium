@@ -313,7 +313,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         function updateDataSourceDisplay(clock) {
-            dataSourceDisplay.update(clock.currentTime);
+            clockViewModel.canAnimate = dataSourceDisplay.update(clock.currentTime);
         }
 
         eventHelper.add(clock.onTick, updateDataSourceDisplay);

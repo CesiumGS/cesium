@@ -92,5 +92,16 @@ define([
      */
     DataSource.prototype.getLoadingEvent = throwInstantiationError;
 
+    /**
+     * Updates the data source to the provided time.
+     * @memberof DataSource
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     *
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    DataSource.prototype.update = throwInstantiationError;
+
     return DataSource;
 });
