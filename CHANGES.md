@@ -4,6 +4,24 @@ Change Log
 Beta Releases
 -------------
 
+### b22 - 2013-11-01
+
+* Breaking changes:
+   *
+* Added a user-defined `id` to all primitives for use with picking.  For example:
+
+            primitives.add(new Polygon({
+                id : {
+                    // User-defined object returned by Scene.pick
+                },
+                // ...
+            }));
+            // ...
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.id)) {
+               // Use properties and functions in p.id
+            }
+
 ### b21 - 2013-10-01
 
 * Breaking changes:
@@ -11,7 +29,7 @@ Beta Releases
 
             BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
 
-   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself, and a user-defined `id`.  For example, code that looked like:
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
 
             var primitive = scene.pick(/* ... */);
             if (defined(primitive)) {
@@ -22,7 +40,7 @@ Beta Releases
 
             var p = scene.pick(/* ... */);
             if (defined(p) && defined(p.primitive)) {
-               // Use p.primitive and perhaps p.id
+               // Use p.primitive
             }
 
    * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
