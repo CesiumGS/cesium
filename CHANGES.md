@@ -44,10 +44,11 @@ Beta Releases
    * Removed `canvasDimensions` from `FrameState`.
    * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
-* Added `Geometries` tab to Sandcastle with an example for each geometry type.
+* Added proper support for browser zoom.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
@@ -55,13 +56,13 @@ Beta Releases
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
-* Added proper support for browser zoom.
 * Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
-* Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.
     * Rendering over a thousand polylines in the same collection with different materials went from 20 to 40 frames per second.
 * Improved runtime generation of GLSL shaders.
+* Made sun size accurate.
+* Fixed bug in triangulation that fails on complex polygons. Instead, it makes a best effort to render what it can. [#1121](https://github.com/AnalyticalGraphicsInc/cesium/issues/1121)
 * Fixed geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Fixed `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
@@ -75,7 +76,6 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
-* Fixed bug in triangulation that fails on complex polygons. Instead, it makes a "best effort" to render what it can.
 
 ### b20 - 2013-09-03
 
