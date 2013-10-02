@@ -10,6 +10,7 @@ define(['Core/Event',
         //Values to be fiddled with by the test
         this.changedEvent = new Event();
         this.errorEvent = new Event();
+        this.loadEvent = new Event();
         this.clock = undefined;
         this.dynamicObjectCollection = new DynamicObjectCollection();
         this.isTimeVarying = false;
@@ -23,6 +24,10 @@ define(['Core/Event',
 
         this.getErrorEvent = function() {
             return that.errorEvent;
+        };
+
+        this.getLoadingEvent = function() {
+            return that.loadEvent;
         };
 
         this.getName = function() {
@@ -39,6 +44,10 @@ define(['Core/Event',
 
         this.getIsTimeVarying = function() {
             return that.isTimeVarying;
+        };
+
+        this.update = function() {
+            return true;
         };
 
         this.destroy = function() {
