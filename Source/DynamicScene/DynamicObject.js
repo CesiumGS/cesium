@@ -64,7 +64,7 @@ define(['../Core/createGuid',
         this._viewFrom = undefined;
 
         this._propertyChanged = new Event();
-        this._propertyNames = ['position', 'orientation', 'billboard', //
+        this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
     };
