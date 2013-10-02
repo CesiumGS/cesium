@@ -222,7 +222,7 @@ defineSuite([
 
     it('toArray works without a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
-        var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray();
+        var returnedResult = Matrix3.toArray(Matrix3.fromColumnMajorArray(expected));
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
     });
@@ -230,7 +230,7 @@ defineSuite([
     it('toArray works with a result parameter', function() {
         var expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
         var result = [];
-        var returnedResult = Matrix3.fromColumnMajorArray(expected).toArray(result);
+        var returnedResult = Matrix3.toArray(Matrix3.fromColumnMajorArray(expected), result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
@@ -253,9 +253,9 @@ defineSuite([
         var expectedColumn1 = new Cartesian3(2.0, 5.0, 8.0);
         var expectedColumn2 = new Cartesian3(3.0, 6.0, 9.0);
 
-        var resultColumn0 = matrix.getColumn(0);
-        var resultColumn1 = matrix.getColumn(1);
-        var resultColumn2 = matrix.getColumn(2);
+        var resultColumn0 = Matrix3.getColumn(matrix, 0);
+        var resultColumn1 = Matrix3.getColumn(matrix, 1);
+        var resultColumn2 = Matrix3.getColumn(matrix, 2);
 
         expect(resultColumn0).toEqual(expectedColumn0);
         expect(resultColumn1).toEqual(expectedColumn1);
@@ -271,9 +271,9 @@ defineSuite([
         var resultColumn0 = new Cartesian3();
         var resultColumn1 = new Cartesian3();
         var resultColumn2 = new Cartesian3();
-        var returnedResultColumn0 = matrix.getColumn(0, resultColumn0);
-        var returnedResultColumn1 = matrix.getColumn(1, resultColumn1);
-        var returnedResultColumn2 = matrix.getColumn(2, resultColumn2);
+        var returnedResultColumn0 = Matrix3.getColumn(matrix, 0, resultColumn0);
+        var returnedResultColumn1 = Matrix3.getColumn(matrix, 1, resultColumn1);
+        var returnedResultColumn2 = Matrix3.getColumn(matrix, 2, resultColumn2);
 
         expect(resultColumn0).toBe(returnedResultColumn0);
         expect(resultColumn0).toEqual(expectedColumn0);
@@ -287,15 +287,15 @@ defineSuite([
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
 
         var expected = new Matrix3(10.0, 2.0, 3.0, 11.0, 5.0, 6.0, 12.0, 8.0, 9.0);
-        var result = matrix.setColumn(0, new Cartesian3(10.0, 11.0, 12.0));
+        var result = Matrix3.setColumn(matrix, 0, new Cartesian3(10.0, 11.0, 12.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 13.0, 3.0, 4.0, 14.0, 6.0, 7.0, 15.0, 9.0);
-        result = matrix.setColumn(1, new Cartesian3(13.0, 14.0, 15.0));
+        result = Matrix3.setColumn(matrix, 1, new Cartesian3(13.0, 14.0, 15.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 16.0, 4.0, 5.0, 17.0, 7.0, 8.0, 18.0);
-        result = matrix.setColumn(2, new Cartesian3(16.0, 17.0, 18.0));
+        result = Matrix3.setColumn(matrix, 2, new Cartesian3(16.0, 17.0, 18.0));
         expect(result).toEqual(expected);
     });
 
@@ -304,17 +304,17 @@ defineSuite([
         var result = new Matrix3();
 
         var expected = new Matrix3(10.0, 2.0, 3.0, 11.0, 5.0, 6.0, 12.0, 8.0, 9.0);
-        var returnedResult = matrix.setColumn(0, new Cartesian3(10.0, 11.0, 12.0), result);
+        var returnedResult = Matrix3.setColumn(matrix, 0, new Cartesian3(10.0, 11.0, 12.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 13.0, 3.0, 4.0, 14.0, 6.0, 7.0, 15.0, 9.0);
-        returnedResult = matrix.setColumn(1, new Cartesian3(13.0, 14.0, 15.0), result);
+        returnedResult = Matrix3.setColumn(matrix, 1, new Cartesian3(13.0, 14.0, 15.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 16.0, 4.0, 5.0, 17.0, 7.0, 8.0, 18.0);
-        returnedResult = matrix.setColumn(2, new Cartesian3(16.0, 17.0, 18.0), result);
+        returnedResult = Matrix3.setColumn(matrix, 2, new Cartesian3(16.0, 17.0, 18.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
@@ -325,9 +325,9 @@ defineSuite([
         var expectedRow1 = new Cartesian3(4.0, 5.0, 6.0);
         var expectedRow2 = new Cartesian3(7.0, 8.0, 9.0);
 
-        var resultRow0 = matrix.getRow(0);
-        var resultRow1 = matrix.getRow(1);
-        var resultRow2 = matrix.getRow(2);
+        var resultRow0 = Matrix3.getRow(matrix, 0);
+        var resultRow1 = Matrix3.getRow(matrix, 1);
+        var resultRow2 = Matrix3.getRow(matrix, 2);
 
         expect(resultRow0).toEqual(expectedRow0);
         expect(resultRow1).toEqual(expectedRow1);
@@ -343,9 +343,9 @@ defineSuite([
         var resultRow0 = new Cartesian3();
         var resultRow1 = new Cartesian3();
         var resultRow2 = new Cartesian3();
-        var returnedResultRow0 = matrix.getRow(0, resultRow0);
-        var returnedResultRow1 = matrix.getRow(1, resultRow1);
-        var returnedResultRow2 = matrix.getRow(2, resultRow2);
+        var returnedResultRow0 = Matrix3.getRow(matrix, 0, resultRow0);
+        var returnedResultRow1 = Matrix3.getRow(matrix, 1, resultRow1);
+        var returnedResultRow2 = Matrix3.getRow(matrix, 2, resultRow2);
 
         expect(resultRow0).toBe(returnedResultRow0);
         expect(resultRow0).toEqual(expectedRow0);
@@ -359,15 +359,15 @@ defineSuite([
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
 
         var expected = new Matrix3(10.0, 11.0, 12.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        var result = matrix.setRow(0, new Cartesian3(10.0, 11.0, 12.0));
+        var result = Matrix3.setRow(matrix, 0, new Cartesian3(10.0, 11.0, 12.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 3.0, 13.0, 14.0, 15.0, 7.0, 8.0, 9.0);
-        result = matrix.setRow(1, new Cartesian3(13.0, 14.0, 15.0));
+        result = Matrix3.setRow(matrix, 1, new Cartesian3(13.0, 14.0, 15.0));
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 16.0, 17.0, 18.0);
-        result = matrix.setRow(2, new Cartesian3(16.0, 17.0, 18.0));
+        result = Matrix3.setRow(matrix, 2, new Cartesian3(16.0, 17.0, 18.0));
         expect(result).toEqual(expected);
     });
 
@@ -376,17 +376,17 @@ defineSuite([
         var result = new Matrix3();
 
         var expected = new Matrix3(10.0, 11.0, 12.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        var returnedResult = matrix.setRow(0, new Cartesian3(10.0, 11.0, 12.0), result);
+        var returnedResult = Matrix3.setRow(matrix, 0, new Cartesian3(10.0, 11.0, 12.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 3.0, 13.0, 14.0, 15.0, 7.0, 8.0, 9.0);
-        returnedResult = matrix.setRow(1, new Cartesian3(13.0, 14.0, 15.0), result);
+        returnedResult = Matrix3.setRow(matrix, 1, new Cartesian3(13.0, 14.0, 15.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
 
         expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 16.0, 17.0, 18.0);
-        returnedResult = matrix.setRow(2, new Cartesian3(16.0, 17.0, 18.0), result);
+        returnedResult = Matrix3.setRow(matrix, 2, new Cartesian3(16.0, 17.0, 18.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
@@ -395,7 +395,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
-        var result = left.multiply(right);
+        var result = Matrix3.multiply(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -404,16 +404,16 @@ defineSuite([
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
         var result = new Matrix3();
-        var returnedResult = left.multiply(right, result);
+        var returnedResult = Matrix3.multiply(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
 
-    it('multiply works with "this" result parameter', function() {
+    it('multiply works with a result parameter that is an input result parameter', function() {
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Matrix3(10, 11, 12, 13, 14, 15, 16, 17, 18);
         var expected = new Matrix3(84, 90, 96, 201, 216, 231, 318, 342, 366);
-        var returnedResult = left.multiply(right, left);
+        var returnedResult = Matrix3.multiply(left, right, left);
         expect(returnedResult).toBe(left);
         expect(left).toEqual(expected);
     });
@@ -422,7 +422,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Cartesian3(10, 11, 12);
         var expected = new Cartesian3(68, 167, 266);
-        var result = left.multiplyByVector(right);
+        var result = Matrix3.multiplyByVector(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -431,7 +431,7 @@ defineSuite([
         var right = new Cartesian3(10, 11, 12);
         var expected = new Cartesian3(68, 167, 266);
         var result = new Cartesian3();
-        var returnedResult = left.multiplyByVector(right, result);
+        var returnedResult = Matrix3.multiplyByVector(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -440,7 +440,7 @@ defineSuite([
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = 2;
         var expected = new Matrix3(2, 4, 6, 8, 10, 12, 14, 16, 18);
-        var result = left.multiplyByScalar(right);
+        var result = Matrix3.multiplyByScalar(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -449,7 +449,7 @@ defineSuite([
         var right = 2;
         var expected = new Matrix3(2, 4, 6, 8, 10, 12, 14, 16, 18);
         var result = new Matrix3();
-        var returnedResult = left.multiplyByScalar(right, result);
+        var returnedResult = Matrix3.multiplyByScalar(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -457,7 +457,7 @@ defineSuite([
     it('negate works without a result parameter', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0);
-        var result = matrix.negate();
+        var result = Matrix3.negate(matrix);
         expect(result).toEqual(expected);
     });
 
@@ -465,15 +465,15 @@ defineSuite([
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0);
         var result = new Matrix3();
-        var returnedResult = matrix.negate(result);
+        var returnedResult = Matrix3.negate(matrix, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
-    it('negate works with "this" result parameter', function() {
+    it('negate works with a result parameter that is an input result parameter', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0);
-        var returnedResult = matrix.negate(matrix);
+        var returnedResult = Matrix3.negate(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });
@@ -481,7 +481,7 @@ defineSuite([
     it('transpose works without a result parameter', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0);
-        var result = matrix.transpose();
+        var result = Matrix3.transpose(matrix);
         expect(result).toEqual(expected);
     });
 
@@ -489,15 +489,15 @@ defineSuite([
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0);
         var result = new Matrix3();
-        var returnedResult = matrix.transpose(result);
+        var returnedResult = Matrix3.transpose(matrix, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
-    it('transpose works with "this" result parameter', function() {
+    it('transpose works with a result parameter that is an input result parameter', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0);
-        var returnedResult = matrix.transpose(matrix);
+        var returnedResult = Matrix3.transpose(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
     });
@@ -505,43 +505,43 @@ defineSuite([
     it('equals works in all cases', function() {
         var left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(true);
+        expect(Matrix3.equals(left, right)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 7.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 9.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 7.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 11.0, 8.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 12.0, 9.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 13.0);
-        expect(left.equals(right)).toEqual(false);
+        expect(Matrix3.equals(left, right)).toEqual(false);
     });
 
     it('equals works with undefined', function() {
@@ -553,52 +553,52 @@ defineSuite([
     it('equalsEpsilon works in all cases', function() {
         var left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 1.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 1.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(5.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 6.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 7.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 8.0, 5.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 9.0, 6.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 10.0, 7.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 11.0, 8.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 12.0, 9.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
 
         left = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         right = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 13.0);
-        expect(left.equalsEpsilon(right, 3.9)).toEqual(false);
-        expect(left.equalsEpsilon(right, 4.0)).toEqual(true);
+        expect(Matrix3.equalsEpsilon(left, right, 3.9)).toEqual(false);
+        expect(Matrix3.equalsEpsilon(left, right, 4.0)).toEqual(true);
     });
 
     it('equalsEpsilon works with undefined', function() {
