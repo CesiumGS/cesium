@@ -698,8 +698,6 @@ define([
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
-        var moonCommand = (frameState.passes.color && defined(scene.moon)) ? scene.moon.update(context, frameState) : undefined;
-        var moonVisible = isVisible(moonCommand, frameState);
 
 
         if (sunVisible && scene.sunBloom) {
@@ -735,10 +733,6 @@ define([
                 scene._sunPostProcess.execute(context);
                 passState.framebuffer = undefined;
             }
-        }
-
-        if (defined(moonCommand) && moonVisible) {
-            executeCommand(moonCommand, scene, context, passState);
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -816,6 +810,10 @@ define([
 
         this._commandList.length = 0;
         this._primitives.update(context, frameState, this._commandList);
+
+        if (defined(this.moon)) {
+            this.moon.update(context, frameState, this._commandList);
+        }
 
         createPotentiallyVisibleSet(this, 'colorList');
 

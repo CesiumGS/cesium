@@ -92,7 +92,7 @@ define([
     var translationScratch = new Cartesian3();
     var scratchCommandList = [];
 
-    Moon.prototype.update = function(context, frameState) {
+    Moon.prototype.update = function(context, frameState, commandList) {
         if (!this.show || !frameState.passes.color) {
             return;
         }
@@ -118,11 +118,11 @@ define([
 
         if (scratchCommandList.length > 0 && defined(scratchCommandList[0].colorList)) {
             var command = scratchCommandList[0].colorList[0];
+            command.executeInClosestFrustum = false;
+            command.owner = this;
+            commandList.push(scratchCommandList[0]);
             scratchCommandList.length = 0;
-            return command;
         }
-
-        return undefined;
     };
 
     /**
