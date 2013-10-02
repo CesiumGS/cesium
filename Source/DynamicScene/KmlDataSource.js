@@ -76,6 +76,10 @@ define(['../Core/createGuid',
 
     var scratch = new Cartographic();
 
+    function createId(node) {
+        return defined(node.id) && node.id.length !== 0 ? node.id : createGuid();
+    }
+
     //Helper functions
     function readCoordinate(element) {
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
@@ -155,7 +159,7 @@ define(['../Core/createGuid',
 
     // KML processing functions
     function processPlacemark(dataSource, parent, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
-        var id = defined(placemark.id) ? placemark.id : createGuid();
+        var id = createId(placemark.id);
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
 
         if (defined(parent)) {
@@ -256,7 +260,7 @@ define(['../Core/createGuid',
             var childNodeName = childNode.nodeName;
 
             if (featureTypes.hasOwnProperty(childNodeName)) {
-                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childNodeId = createId(childNode);
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
                 childObject.parent = dynamicObject;
 
@@ -275,7 +279,7 @@ define(['../Core/createGuid',
             var childNodeName = childNode.nodeName;
 
             if (featureTypes.hasOwnProperty(childNodeName)) {
-                var childNodeId = defined(childNode.id) ? childNode.id : createGuid();
+                var childNodeId = createId(childNode);
                 var childObject = dynamicObjectCollection.getOrCreateObject(childNodeId);
                 childObject.parent = dynamicObject;
 
@@ -565,7 +569,7 @@ define(['../Core/createGuid',
         if (nodeName === 'Placemark') {
             processPlacemark(dataSource, parent, node, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
         } else if (nodeName === 'Folder') {
-            parent = new DynamicObject(defined(node.id) ? node.id : createGuid());
+            parent = new DynamicObject(createId(node));
             parent.name = getStringValue(node, 'name');
             dynamicObjectCollection.add(parent);
         }
