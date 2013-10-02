@@ -21,14 +21,17 @@ define([
     var screenSpacePos = new Cartesian2();
 
     function toPx(value) {
-        return Math.round(value).toString() + 'px';
+        if (value === 0) {
+            return '0';
+        }
+        return value.toString() + 'px';
     }
 
     function shiftPosition(viewModel, position, arrow, screen) {
-        var arrowX;
-        var arrowY;
-        var posX;
-        var posY;
+        var arrowX = 0;
+        var arrowY = 0;
+        var posX = 0;
+        var posY = 0;
         var container = viewModel._container;
         var containerWidth = container.clientWidth;
         var containerHeight = container.clientHeight;
@@ -116,7 +119,7 @@ define([
             viewModel._arrowX = arrowXPx;
         }
         var arrowYPx = toPx(arrowY);
-        if (viewModel._arrowY !== arrowXPx) {
+        if (viewModel._arrowY !== arrowYPx) {
             viewModel._arrowY = arrowYPx;
         }
 
@@ -333,6 +336,8 @@ define([
                     this.showArrow = false;
                 }
 
+                pos.x = Math.floor(pos.x);
+                pos.y = Math.floor(pos.y);
                 pos = shiftPosition(this, pos);
             }
         }
