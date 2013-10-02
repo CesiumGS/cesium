@@ -194,7 +194,7 @@ define([
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position));
+            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position), camera._positionWC);
         }
 
         if (directionChanged || upChanged || rightChanged) {
