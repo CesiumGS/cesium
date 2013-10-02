@@ -156,8 +156,8 @@ define([
                                       u.x,  u.y,  u.z, -Cartesian3.dot(u, e),
                                      -d.x, -d.y, -d.z,  Cartesian3.dot(d, e),
                                       0.0,  0.0,  0.0,      1.0);
-        camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
-        camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
+        camera._viewMatrix = Matrix4.multiply(viewMatrix, camera._invTransform);
+        camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
     }
 
     function update(camera) {
@@ -190,11 +190,11 @@ define([
         if (transformChanged) {
             transform = camera._transform = Matrix4.clone(camera.transform);
 
-            camera._invTransform = camera._transform.inverseTransformation();
+            camera._invTransform = Matrix4.inverseTransformation(camera._transform);
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position), camera._positionWC);
+            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position), camera._positionWC);
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -216,15 +216,15 @@ define([
         }
 
         if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            camera._directionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera._upWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera._rightWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {

@@ -182,7 +182,7 @@ define([
         var segmentLengths = this._segments.lengths;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
-        if (!modelMatrix.equals(this._modelMatrix) || positionsChanged) {
+        if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
             this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
         }
 
