@@ -249,13 +249,13 @@ define([
      *   result);
      */
     Matrix4.fromTranslationQuaternionRotationScale = function(translation, rotation, scale, result) {
-        if (!defined(rotation)) {
+        if (!defined(translation)) {
             throw new DeveloperError('translation is required.');
         }
-        if (!defined(translation)) {
+        if (!defined(rotation)) {
             throw new DeveloperError('rotation is required.');
         }
-        if (!defined(translation)) {
+        if (!defined(scale)) {
             throw new DeveloperError('scale is required.');
         }
 
