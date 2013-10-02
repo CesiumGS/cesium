@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian2',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Scene/SceneTransforms',
@@ -9,6 +10,7 @@ define([
     ], function(
         Cartesian2,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         SceneTransforms,
@@ -19,14 +21,17 @@ define([
     var screenSpacePos = new Cartesian2();
 
     function toPx(value) {
-        return Math.round(value).toString() + 'px';
+        if (value === 0) {
+            return '0';
+        }
+        return value.toString() + 'px';
     }
 
     function shiftPosition(viewModel, position, arrow, screen) {
-        var arrowX;
-        var arrowY;
-        var posX;
-        var posY;
+        var arrowX = 0;
+        var arrowY = 0;
+        var posX = 0;
+        var posY = 0;
         var container = viewModel._container;
         var containerWidth = container.clientWidth;
         var containerHeight = container.clientHeight;
@@ -114,7 +119,7 @@ define([
             viewModel._arrowX = arrowXPx;
         }
         var arrowYPx = toPx(arrowY);
-        if (viewModel._arrowY !== arrowXPx) {
+        if (viewModel._arrowY !== arrowYPx) {
             viewModel._arrowY = arrowYPx;
         }
 
@@ -142,11 +147,11 @@ define([
      *
      */
     var BalloonViewModel = function(scene, balloonElement, container) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
-        if (typeof balloonElement === 'undefined') {
+        if (!defined(balloonElement)) {
             throw new DeveloperError('balloonElement is required.');
         }
 
@@ -210,7 +215,21 @@ define([
          *
          * @type {Boolean}
          */
-        this.showBalloon = false;
+        this.showBalloon = undefined;
+        var showBalloon = knockout.observable();
+        knockout.defineProperty(this, 'showBalloon', {
+            get : function() {
+                return showBalloon();
+            },
+            set : function(value) {
+                showBalloon(value);
+                if (value) {
+                    this.userClosed = false;
+                }
+            }
+        });
+
+        this.userClosed = false;
 
         /**
          * Determines the visibility of the balloon arrow
@@ -268,7 +287,7 @@ define([
          */
         this._maxHeight = toPx(this._container.clientHeight * 0.50);
 
-        knockout.track(this, ['showArrow', 'showBalloon', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
+        knockout.track(this, ['showArrow', 'userClosed', '_positionX', '_positionY', '_arrowX', '_arrowY', '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
 
     /**
@@ -277,24 +296,39 @@ define([
      */
     BalloonViewModel.prototype.update = function() {
         if (!this._timerRunning) {
+            var pos;
             if (this._updateContent) {
+                var wasShowing = (this.showBalloon && !this.userClosed);
+
                 this.showBalloon = false;
+                this.userClosed = false;
                 this._timerRunning = true;
-                var that = this;
-                //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
-                setTimeout(function() {
-                    that._contentHTML = that._content;
-                    if (typeof that._position !== 'undefined') {
-                        var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
-                        pos = shiftPosition(that, pos);
+
+                //If the balloon is already up, we need to set a timeout so that we don't show the new balloon
+                //until it is done fading out from its old position.
+                if (wasShowing) {
+                    var that = this;
+                    setTimeout(function() {
+                        that._contentHTML = that._content;
+                        if (defined(that._position)) {
+                            pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
+                            pos = shiftPosition(that, pos);
+                        }
+                        that.showBalloon = true;
+                        that._timerRunning = false;
+                    }, 100);
+                } else {
+                    this._contentHTML = this._content;
+                    if (defined(this._position)) {
+                        pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+                        pos = shiftPosition(this, pos);
                     }
-                    that.showBalloon = true;
-                    that._timerRunning = false;
-                }, 100);
+                    this.showBalloon = true;
+                    this._timerRunning = false;
+                }
                 this._updateContent = false;
-            } else if (this.showBalloon) {
-                var pos;
-                if (typeof this._position !== 'undefined') {
+            } else if (this.showBalloon && !this.userClosed) {
+                if (defined(this._position)) {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                     this.showArrow = true;
                 } else {
@@ -302,6 +336,8 @@ define([
                     this.showArrow = false;
                 }
 
+                pos.x = Math.floor(pos.x);
+                pos.y = Math.floor(pos.y);
                 pos = shiftPosition(this, pos);
             }
         }
@@ -354,7 +390,7 @@ define([
             },
             set : function(value) {
                 if (this._content !== value) {
-                    if (typeof value === 'undefined') {
+                    if (!defined(value)) {
                         this._content = '';
                     } else {
                         this._content = value;

@@ -11,7 +11,8 @@ define([
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
         '../Balloon/Balloon',
-        '../../DynamicScene/DynamicObjectView'
+        '../../DynamicScene/DynamicObjectView',
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
@@ -24,7 +25,8 @@ define([
         wrapFunction,
         SceneMode,
         Balloon,
-        DynamicObjectView) {
+        DynamicObjectView,
+        knockout) {
     "use strict";
 
     /**
@@ -70,6 +72,7 @@ define([
         viewer.container.appendChild(balloonContainer);
 
         var balloon = new Balloon(balloonContainer, viewer.scene);
+
         var balloonViewModel = balloon.viewModel;
         viewer._balloon = balloon;
 
@@ -79,15 +82,40 @@ define([
         var dynamicObjectView;
         var balloonedObject;
 
+        function balloonClosed(value) {
+            if (!value) {
+                balloonedObject = undefined;
+            }
+        }
+        knockout.getObservable(balloonViewModel, 'userClosed').subscribe(balloonClosed);
+
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
+            var time = clock.currentTime;
             if (defined(dynamicObjectView)) {
-                dynamicObjectView.update(clock.currentTime);
+                dynamicObjectView.update(time);
             }
-            if (defined(balloonedObject) && defined(balloonedObject.position)) {
-                balloonViewModel.position = balloonedObject.position.getValue(clock.currentTime, balloonViewModel.position);
-                balloonViewModel.update();
+
+            var showBalloon = defined(balloonedObject) && defined(balloonedObject.position) && balloonedObject.isAvailable(time);
+            if (showBalloon) {
+                balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+
+                var content;
+                if (defined(balloonedObject.balloon)) {
+                    content = balloonedObject.balloon.getValue(time);
+                }
+
+                var heading = balloonedObject.name;
+                if (defined(content) && defined(heading)) {
+                    content = '<h3>' + heading + '</h3>' + content;
+                } else if (!defined(content)) {
+                    content = '<h3>' + defaultValue(heading, balloonedObject.id) + '</h3>';
+                }
+                balloonViewModel.content = content;
             }
+
+            balloonViewModel.update();
+            balloonViewModel.showBalloon = showBalloon;
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
@@ -129,6 +157,51 @@ define([
         if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, onHomeButtonClicked);
         }
+
+        //We need to subscribe to the data sources and collections so that we can clear the
+        //tracked object when it is removed from the scene.
+        function onDynamicCollectionChanged(collection, added, removed) {
+            var length = removed.length;
+            for ( var i = 0; i < length; i++) {
+                var removedObject = removed[i];
+                if (viewer.trackedObject === removedObject) {
+                    viewer.homeButton.viewModel.command();
+                }
+                if (viewer.balloonedObject === removedObject) {
+                    viewer.balloonedObject = undefined;
+                }
+            }
+        }
+
+        function dataSourceAdded(dataSourceCollection, dataSource) {
+            dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(onDynamicCollectionChanged);
+        }
+
+        function dataSourceRemoved(dataSourceCollection, dataSource) {
+            dataSource.getDynamicObjectCollection().collectionChanged.removeEventListener(onDynamicCollectionChanged);
+
+            if (defined(trackedObject)) {
+                if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
+                    viewer.homeButton.viewModel.command();
+                }
+            }
+            if (defined(balloonedObject)) {
+                if (dataSource.getDynamicObjectCollection().getById(viewer.balloonedObject.id) === viewer.balloonedObject) {
+                    viewer.balloonedObject = undefined;
+                }
+            }
+        }
+
+        //Subscribe to current data sources
+        var dataSources = viewer.dataSources;
+        var dataSourceLength = dataSources.length;
+        for ( var i = 0; i < dataSourceLength; i++) {
+            dataSourceAdded(dataSources, dataSources.get(i));
+        }
+
+        //Hook up events so that we can subscribe to future sources.
+        eventHelper.add(viewer.dataSources.dataSourceAdded, dataSourceAdded);
+        eventHelper.add(viewer.dataSources.dataSourceRemoved, dataSourceRemoved);
 
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
@@ -190,28 +263,7 @@ define([
                     return balloonedObject;
                 },
                 set : function(value) {
-                    var content;
-                    var position;
-                    if (defined(value)) {
-                        if (defined(value.position)) {
-                            position = value.position.getValue(viewer.clock.currentTime);
-                        }
-
-                        if (defined(value.balloon)) {
-                            content = value.balloon.getValue(viewer.clock.currentTime);
-                        }
-
-                        var heading = value.name;
-                        if (defined(content) && defined(heading)) {
-                            content = '<h3>' + heading + '</h3>' + content;
-                        } else if (!defined(content)) {
-                            content = '<h3>' + defaultValue(heading, value.id) + '</h3>';
-                        }
-                        balloonViewModel.content = content;
-                    }
                     balloonedObject = value;
-                    balloonViewModel.position = position;
-                    balloonViewModel.showBalloon = defined(content);
                 }
             }
         });
@@ -222,6 +274,13 @@ define([
             balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+            //Unsubscribe from data sources
+            var dataSources = viewer.dataSources;
+            var dataSourceLength = dataSources.length;
+            for ( var i = 0; i < dataSourceLength; i++) {
+                dataSourceRemoved(dataSources, dataSources.get(i));
+            }
         });
     };
 
