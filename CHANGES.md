@@ -11,6 +11,7 @@ Beta Releases
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+* Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 
 ### b21 - 2013-10-01
 
@@ -56,7 +57,7 @@ Beta Releases
 * Added `CorridorOutlineGeometry`.
 * Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 * Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
-* Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
+* Added proper support for browser zoom.
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
