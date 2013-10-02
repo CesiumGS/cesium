@@ -226,7 +226,7 @@ define([
         var timeVec = new Cartesian4(0.0, u * u, u);
         timeVec.x = timeVec.y * u;
 
-        var coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
+        var coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec);
         var p0 = Cartesian3.multiplyByScalar(this._points[i].point,       coefs.x);
         var p1 = Cartesian3.multiplyByScalar(this._points[i + 1].point,   coefs.y);
         var p2 = Cartesian3.multiplyByScalar(this._points[i].tangent,     coefs.z);

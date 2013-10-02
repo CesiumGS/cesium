@@ -4,6 +4,14 @@ Change Log
 Beta Releases
 -------------
 
+### b22 - 2013-11-01
+* Breaking changes:
+   * The following prototype functions were removed:
+      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
+      * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
+
+      Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+
 ### b21 - 2013-10-01
 
 * Breaking changes:

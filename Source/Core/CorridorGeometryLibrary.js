@@ -82,7 +82,7 @@ define([
         var index = 0;
         startPoint = Cartesian3.clone(startPoint, scratch1);
         for ( var i = 0; i < granularity; i++) {
-            startPoint = m.multiplyByVector(startPoint, startPoint);
+            startPoint = Matrix3.multiplyByVector(m, startPoint, startPoint);
             array[index++] = startPoint.x;
             array[index++] = startPoint.y;
             array[index++] = startPoint.z;
