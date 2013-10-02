@@ -69,7 +69,8 @@ require(['Cesium'], function(Cesium) {
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
-        modelMatrix = modelMatrix.multiply(
+        modelMatrix = Cesium.Matrix4.multiply(
+                modelMatrix,
                 Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)),
                 modelMatrix);
 

@@ -337,7 +337,7 @@ define([
          *   text     : 'Up'
          * });
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
     };
 
     /**
