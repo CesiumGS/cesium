@@ -81,8 +81,8 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var camera = scene.getCamera();
-        viewProjectionScratch = camera.frustum.projectionMatrix.multiply(camera.viewMatrix, viewProjectionScratch);
-        viewProjectionScratch.multiplyByPoint(actualPosition, positionCC);
+        viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
+        Matrix4.multiplyByPoint(viewProjectionScratch, actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
     };
