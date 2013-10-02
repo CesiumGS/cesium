@@ -14,6 +14,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Quaternion',
         '../Core/Matrix4',
         '../Core/BoundingSphere',
         '../Core/IndexDatatype',
@@ -45,6 +46,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Quaternion,
         Matrix4,
         BoundingSphere,
         IndexDatatype,
@@ -317,12 +319,47 @@ define([
         }
     }
 
+    var defaultTranslation = Cartesian3.clone(Cartesian3.ZERO);
+    var defaultRotation = Quaternion.clone(Quaternion.IDENTITY);
+    var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
+
+    function parseNodes(model) {
+        var nodes = model.gltf.nodes;
+        for (var name in nodes) {
+            if (nodes.hasOwnProperty(name)) {
+                var node = nodes[name];
+
+                node.czmExtra = {
+                    meshesCommands : {},
+                    transformToRoot : new Matrix4(),
+                    translation : defaultTranslation,
+                    rotation : defaultRotation,
+                    scale : defaultScale
+                };
+
+                // TRS converted to Cesium types
+                if (defined(node.translation)) {
+                    node.czmExtra.translation = Cartesian3.unpack(node.translation);
+                }
+
+                if (defined(node.rotation)) {
+                    node.czmExtra.rotation = Quaternion.fromAxisAngle(Cartesian3.unpack(node.rotation), node.rotation[3]);
+                }
+
+                if (defined(node.scale)) {
+                    node.czmExtra.scale = Cartesian3.unpack(node.scale);
+                }
+            }
+        }
+    }
+
     function parse(model) {
         parseBuffers(model);
         parseBufferViews(model);
         parseShaders(model);
         parsePrograms(model);
         parseTextures(model);
+        parseNodes(model);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -343,7 +380,9 @@ define([
         while (loadResources.bufferViewsToCreate.length > 0) {
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
-            bufferView.czmExtra = defaultValue(bufferView.czmExtra, {});
+            bufferView.czmExtra = {
+                buffer : undefined
+            };
 
             if (bufferView.target === 'ARRAY_BUFFER') {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
@@ -400,9 +439,10 @@ define([
                 pickColorQualifier : 'uniform'
             });
 
-            program.czmExtra = defaultValue(program.czmExtra, {});
-            program.czmExtra.program = context.getShaderCache().getShaderProgram(vs, fs);
-            program.czmExtra.pickProgram = context.getShaderCache().getShaderProgram(vs, pickFS);
+            program.czmExtra = {
+                program : context.getShaderCache().getShaderProgram(vs, fs),
+                pickProgram : context.getShaderCache().getShaderProgram(vs, pickFS)
+            };
 // TODO: in theory, pickProgram could have a different set of attribute locations
         }
     }
@@ -418,13 +458,14 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    sampler.czmExtra = defaultValue(sampler.czmExtra, {});
-                    sampler.czmExtra.sampler = context.createSampler({
-                        wrapS : TextureWrap[sampler.wrapS],
-                        wrapT : TextureWrap[sampler.wrapT],
-                        minificationFilter : TextureMinificationFilter[sampler.minFilter],
-                        magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
-                    });
+                    sampler.czmExtra = {
+                        sampler : context.createSampler({
+                            wrapS : TextureWrap[sampler.wrapS],
+                            wrapT : TextureWrap[sampler.wrapT],
+                            minificationFilter : TextureMinificationFilter[sampler.minFilter],
+                            magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
+                        })
+                    };
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
                     var minFilter;
@@ -462,11 +503,12 @@ define([
 
 // TODO: consider target, format, and internalFormat
             var texture = textures[textureToCreate.name];
-            texture.czmExtra = defaultValue(texture.czmExtra, {});
-            texture.czmExtra.texture = context.createTexture2D({
-                source : textureToCreate.image,
-                flipY : false
-            });
+            texture.czmExtra = {
+                texture : context.createTexture2D({
+                    source : textureToCreate.image,
+                    flipY : false
+                })
+            };
 // TODO: texture cache
         }
     }
@@ -567,8 +609,9 @@ define([
                          var i = indices[primitive.indices];
                          var indexBuffer = bufferViews[i.bufferView].czmExtra.buffer;
 
-                         primitive.czmExtra = defaultValue(primitive.czmExtra, {});
-                         primitive.czmExtra.vertexArray = context.createVertexArray(attrs, indexBuffer);
+                         primitive.czmExtra = {
+                             vertexArray : context.createVertexArray(attrs, indexBuffer)
+                         };
                      }
                  }
              }
@@ -588,17 +631,18 @@ define([
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
 
-                    states.czmExtra = defaultValue(states.czmExtra, {});
-                    states.czmExtra.renderState = context.createRenderState({
-                        cull : {
-                            enabled : states.cullFaceEnable
-                        },
-                        depthTest : {
-                            enabled : states.depthTestEnable
-                        },
-                        depthMask : states.depthMask,
-                        blending : states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
-                    });
+                    states.czmExtra = {
+                        renderState : context.createRenderState({
+                            cull : {
+                                enabled : states.cullFaceEnable
+                            },
+                            depthTest : {
+                                enabled : states.depthTestEnable
+                            },
+                            depthMask : states.depthMask,
+                            blending : states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                        })
+                    };
                 }
             }
         }
@@ -784,8 +828,9 @@ define([
                     }
                 }
 
-                instanceTechnique.czmExtra = defaultValue(instanceProgram.czmExtra, {});
-                instanceTechnique.czmExtra.uniformMap = uniformMap;
+                instanceTechnique.czmExtra = {
+                    uniformMap : uniformMap
+                };
             }
         }
     }
@@ -797,8 +842,6 @@ define([
     }
 
     function createCommand(model, node, context) {
-        node.czmExtra = defaultValue(node.czmExtra, {});
-        node.czmExtra.meshesCommands = defaultValue(node.czmExtra.meshesCommands, {});
         var extraMeshesCommands = node.czmExtra.meshesCommands;
 
         var colorCommands = model._commandLists.colorList;
@@ -957,6 +1000,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function getNodeMatrix(node, result) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromColumnMajorArray(node.matrix, result);
+        }
+
+        return Matrix4.fromTranslationQuaternionRotationScale(node.czmExtra.translation, node.czmExtra.rotation, node.czmExtra.scale, result);
+    }
+
     // To reduce allocations in update()
     var scratchNodeStack = [];
     var scratchSpheres = [];
@@ -978,37 +1029,33 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var n = nodes[sceneNodes[i]];
-            nodeStack.push({
-                node : n,
-                transformToRoot : Matrix4.fromColumnMajorArray(n.matrix)
-            });
+
+            getNodeMatrix(n, n.czmExtra.transformToRoot);
+            nodeStack.push(n);
 
             while (nodeStack.length > 0) {
-                var top = nodeStack.pop();
-                var transformToRoot = top.transformToRoot;
-                n = top.node;
+                n = nodeStack.pop();
+                var transformToRoot = n.czmExtra.transformToRoot;
 
 //TODO: handle camera and light nodes
-                if (defined(n.czmExtra) && defined(n.czmExtra.meshesCommands)) {
-                    var meshCommands = n.czmExtra.meshesCommands;
-                    var name;
-                    for (name in meshCommands) {
-                        if (meshCommands.hasOwnProperty(name)) {
-                            var meshCommand = meshCommands[name];
-                            var meshCommandLength = meshCommand.length;
-                            for (var j = 0 ; j < meshCommandLength; ++j) {
-                                var primitiveCommand = meshCommand[j];
-                                var command = primitiveCommand.command;
-                                var pickCommand = primitiveCommand.pickCommand;
+                var meshCommands = n.czmExtra.meshesCommands;
+                var name;
+                for (name in meshCommands) {
+                    if (meshCommands.hasOwnProperty(name)) {
+                        var meshCommand = meshCommands[name];
+                        var meshCommandLength = meshCommand.length;
+                        for (var j = 0 ; j < meshCommandLength; ++j) {
+                            var primitiveCommand = meshCommand[j];
+                            var command = primitiveCommand.command;
+                            var pickCommand = primitiveCommand.pickCommand;
 
-                                Matrix4.multiply(model._computedModelMatrix, transformToRoot, command.modelMatrix);
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+                            Matrix4.multiply(model._computedModelMatrix, transformToRoot, command.modelMatrix);
+                            Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
 
-                                var bs = new BoundingSphere();
-                                BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
-                                Cartesian3.add(bs.center, sphereCenter, sphereCenter);
-                                spheres.push(bs);
-                            }
+                            var bs = new BoundingSphere();
+                            BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
+                            Cartesian3.add(bs.center, sphereCenter, sphereCenter);
+                            spheres.push(bs);
                         }
                     }
                 }
@@ -1017,10 +1064,11 @@ define([
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = nodes[children[k]];
-                    nodeStack.push({
-                        node : child,
-                        transformToRoot : Matrix4.multiply(transformToRoot, Matrix4.fromColumnMajorArray(child.matrix))
-                    });
+
+                    var childMatrix = getNodeMatrix(child, child.czmExtra.transformToRoot);
+                    Matrix4.multiply(transformToRoot, childMatrix, child.czmExtra.transformToRoot);
+
+                    nodeStack.push(child);
                 }
             }
         }
