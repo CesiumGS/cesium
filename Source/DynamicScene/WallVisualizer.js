@@ -173,62 +173,12 @@ define([
         // ---------- //
         var sc = visualizer.getScene();
 
-
-
-        // FIXME: this is a hack!
-        /* var wallMaterial = Material.fromType('Color');
-        wallMaterial.uniforms.color = new Color(1, 1, 0, 0.4);
-        var wallAppearance = new MaterialAppearance({
-            renderState : {
-                cull : {
-                    enabled : false
-                },
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : true,
-                blending : BlendingState.ALPHA_BLEND
-            },
-            flat        : true,
-            faceForward : true,
-            translucent : true,
-            material    : wallMaterial
-        }); */
-
-        // FIXME: end of hack
-
-
         var wall = dynamicObject.wall; /* expects a WallGeometry instance */
         var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wall.geometry) });
 
         var lineMaterial   = Material.fromType('Color'); // HACK HACK HACK
         lineMaterial.uniforms.color = new Color(1, 1, 0, 0.4);
         var lineWidth      = 1;
-
-        /** if (typeof style !== 'undefined') {
-            var material = Material.fromType(sc.getContext(), 'Color');
-            material.uniforms.color = Color.fromRgba( parseInt(style['poly']['color'], 16) );
-            wallAppearance = new MaterialAppearance({
-                renderState : {
-                    cull : {
-                        enabled : false
-                    },
-                    depthTest : {
-                        enabled : true
-                    },
-                    depthMask : true,
-                    blending : Cesium.BlendingState.ALPHA_BLEND
-                },
-                flat        : true,
-                faceForward : true,
-                translucent : true,
-                material    : material
-            });
-
-            lineMaterial = Material.fromType(sc.getContext(), 'Color');
-            lineMaterial.uniforms.color = Color.fromRgba( parseInt(style['line']['color'], 16) );
-            lineWidth = style['line']['width'];
-        } **/
 
         var material = Material.fromType('Color');
         // material.uniforms.color = dynamicObject.wpolygon.material;
