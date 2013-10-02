@@ -466,7 +466,7 @@ define([
      * var fixedToIcrf = Transforms.computeIcrfToFixedMatrix(now);
      * var pointInInertial;
      * if (defined(fixedToIcrf)) {
-     *     pointInInertial = fixedToIcrf.multiplyByVector(pointInFixed);
+     *     pointInInertial = Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
