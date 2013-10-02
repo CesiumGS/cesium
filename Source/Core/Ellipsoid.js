@@ -412,7 +412,7 @@ define([
         return result;
     };
 
-    var scaleToGeodeticSurfaceIntersection;
+    var scaleToGeodeticSurfaceIntersection = new Cartesian3();
     var scaleToGeodeticSurfaceGradient = new Cartesian3();
 
     /**
