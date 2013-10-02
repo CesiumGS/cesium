@@ -92,12 +92,8 @@ define([
 
     function computeRotationAngle(start, end, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, start, nextScratch), nextScratch);
         var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, end, prevScratch), prevScratch);
-        prev = Cartesian2.subtract(prev, origin, prev);
-        next = Cartesian2.subtract(next, origin, next);
-
         var angle = Cartesian2.angleBetween(next, prev);
 
         return (prev.x * next.y - prev.y * next.x >= 0.0) ? -angle : angle;
@@ -108,8 +104,8 @@ define([
     var translation = new Matrix4();
     var rotationZ = new Matrix3();
     var scaleMatrix = Matrix3.IDENTITY.clone();
-    var westScratch = new Cartesian3();
-    var finalPosScratch = new Cartesian3();
+    var westScratch = new Cartesian4();
+    var finalPosScratch = new Cartesian4();
     var heightCartesian = new Cartesian3();
     function addPosition(center, left, shape, finalPositions, ellipsoid, height, xScalar, repeat) {
         var west = westScratch;
@@ -117,7 +113,6 @@ define([
         transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, transform);
 
         west = Matrix4.multiplyByVector(transform, negativeX, west);
-        west = Cartesian3.fromCartesian4(west, west);
         west = Cartesian3.normalize(west, west);
         var angle = computeRotationAngle(west, left, center, ellipsoid);
         rotationZ = Matrix3.fromRotationZ(angle, rotationZ);
@@ -261,17 +256,12 @@ define([
         return cleanedPositions;
     };
 
-    var originScratch = new Cartesian3();
     var nextScratch = new Cartesian3();
     var prevScratch = new Cartesian3();
     PolylineVolumeGeometryLibrary.angleIsGreaterThanPi = function(forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
         var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
-
-        prev = Cartesian2.subtract(prev, origin, prev);
-        next = Cartesian2.subtract(next, origin, next);
 
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
     };

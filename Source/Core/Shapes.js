@@ -235,16 +235,16 @@ define([
          * Computes a 2D circle about the origin.
          *
          * @param {Number} [radius = 1.0] The radius of the circle
+         * @param {Number} [granularity = Cesium.RADIANS_PER_DEGREE*2] The radius of the circle
          *
          * @returns The set of points that form the ellipse's boundary.
          *
          * @example
          * var circle = Shapes.compute2DCircle(100000.0);
          */
-        compute2DCircle : function(radius) {
-            if (!defined(radius)) {
-                radius = 1.0;
-            }
+        compute2DCircle : function(radius, granularity) {
+            radius = defaultValue(radius, 1.0);
+            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE*2);
             var positions = [];
             var theta = CesiumMath.toRadians(1.0);
             var posCount = Math.PI*2/theta;
