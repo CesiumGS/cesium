@@ -187,7 +187,7 @@ define([
          *
          * @see Scene#skyBox
          */
-        this.backgroundColor = Color.BLACK.clone();
+        this.backgroundColor = Color.clone(Color.BLACK);
 
         /**
          * The current mode of the scene.

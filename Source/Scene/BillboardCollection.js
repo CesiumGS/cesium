@@ -194,8 +194,8 @@ define([
          * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
-        this._modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
@@ -945,11 +945,11 @@ define([
         if (billboardCollection._mode !== mode ||
             billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
-            !modelMatrix.equals(billboardCollection.modelMatrix)) {
+            !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
 
             billboardCollection._mode = mode;
             billboardCollection._projection = projection;
-            billboardCollection.modelMatrix.clone(modelMatrix);
+            Matrix4.clone(billboardCollection.modelMatrix, modelMatrix);
             billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
