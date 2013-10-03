@@ -143,6 +143,18 @@ define([
         this.show = true;
 
         /**
+         * User-defined object returned when the ellipsoid is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = undefined;
+        this._id = undefined;
+
+        /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
          * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
          * <p>
@@ -305,9 +317,12 @@ define([
         if (frameState.passes.pick) {
             var pickCommand = this._pickCommand;
 
-            if (!defined(this._pickId)) {
+            if (!defined(this._pickId) || (this._id !== this.id)) {
+                this._id = this.id;
+                this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this
+                    primitive : this,
+                    id : this.id
                 });
             }
 
