@@ -13,6 +13,7 @@ Beta Releases
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
 
+* Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
 * Added a user-defined `id` to all primitives for use with picking.  For example:
 
