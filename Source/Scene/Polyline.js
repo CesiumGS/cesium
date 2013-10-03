@@ -47,6 +47,7 @@ define([
         }
 
         this._positions = positions;
+        this._length = positions.length;
 
         var modelMatrix;
         if (defined(this._polylineCollection)) {
@@ -158,11 +159,12 @@ define([
             throw new DeveloperError('value is required.');
         }
 
-        if (this._positions.length !== value.length) {
+        if (this._positions.length !== value.length || this._positions.length !== this._length) {
             makeDirty(this, POSITION_SIZE_INDEX);
         }
 
         this._positions = value;
+        this._length = value.length;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
 
