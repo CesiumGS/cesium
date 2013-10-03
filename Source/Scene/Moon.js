@@ -79,10 +79,13 @@ define([
          */
         this.onlySunLighting = defaultValue(options.onlySunLighting, true);
 
-        this._ellipsoidPrimitive = new EllipsoidPrimitive();
-        this._ellipsoidPrimitive.radii = this.ellipsoid.getRadii();
-        this._ellipsoidPrimitive.material = Material.fromType(Material.ImageType);
-        this._ellipsoidPrimitive.onlySunLighting = this.onlySunLighting;
+        this._ellipsoidPrimitive = new EllipsoidPrimitive({
+            radii : this.ellipsoid.getRadii(),
+            material : Material.fromType(Material.ImageType),
+            onlySunLighting : this.onlySunLighting,
+            _owner : this,
+            _executeInClosestFrustum : false
+        });
 
         this._axes = new IauOrientationAxes();
     };
@@ -90,7 +93,6 @@ define([
     var icrfToFixed = new Matrix3();
     var rotationScratch = new Matrix3();
     var translationScratch = new Cartesian3();
-    var scratchCommandList = [];
 
     Moon.prototype.update = function(context, frameState, commandList) {
         if (!this.show || !frameState.passes.color) {
@@ -114,15 +116,7 @@ define([
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
-        ellipsoidPrimitive.update(context, frameState, scratchCommandList);
-
-        if (scratchCommandList.length > 0 && defined(scratchCommandList[0].colorList)) {
-            var command = scratchCommandList[0].colorList[0];
-            command.executeInClosestFrustum = false;
-            command.owner = this;
-            commandList.push(scratchCommandList[0]);
-            scratchCommandList.length = 0;
-        }
+        ellipsoidPrimitive.update(context, frameState, commandList);
     };
 
     /**
