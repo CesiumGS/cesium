@@ -119,6 +119,20 @@ define([
         }
     }
 
+    function makeGetterSetter(gl, propertyName, logFunc) {
+        return {
+            get : function() {
+                var value = gl[propertyName];
+                logFunc(gl, 'get: ' + propertyName, value);
+                return gl[propertyName];
+            },
+            set : function(value) {
+                gl[propertyName] = value;
+                logFunc(gl, 'set: ' + propertyName, value);
+            }
+        };
+    }
+
     function wrapGL(gl, logFunc) {
         if (!logFunc) {
             return gl;
@@ -146,7 +160,7 @@ define([
             if (typeof property === 'function') {
                 glWrapper[propertyName] = wrapFunction(property);
             } else {
-                glWrapper[propertyName] = property;
+                Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunc));
             }
         }
 
@@ -234,6 +248,7 @@ define([
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
         this._vertexArrayObject = gl.getExtension('OES_vertex_array_object');
+        this._fragDepth = gl.getExtension('EXT_frag_depth');
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
@@ -787,6 +802,22 @@ define([
      */
     Context.prototype.getVertexArrayObject = function() {
         return !!this._vertexArrayObject;
+    };
+
+    /**
+     * Returns <code>true</code> if the EXT_frag_depth extension is supported.  This
+     * extension provides access to the <code>gl_FragDepthEXT<code> built-in output variable
+     * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
+     * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if EXT_frag_depth is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/'>EXT_frag_depth</a>
+     */
+    Context.prototype.getFragmentDepth = function() {
+        return !!this._fragDepth;
     };
 
     /**

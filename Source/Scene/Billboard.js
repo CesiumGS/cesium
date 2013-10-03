@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/NearFarScalar',
+        '../Core/Matrix4',
         './HorizontalOrigin',
         './VerticalOrigin',
         './SceneMode',
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         Cartesian4,
         NearFarScalar,
+        Matrix4,
         HorizontalOrigin,
         VerticalOrigin,
         SceneMode,
@@ -792,7 +794,7 @@ define([
             return position;
         }
 
-        modelMatrix.multiplyByPoint(position, tempCartesian4);
+        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian4);
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
     };
 
@@ -803,8 +805,8 @@ define([
         var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
-        var mv = view.multiply(modelMatrix);
-        var positionEC = mv.multiplyByPoint(position);
+        var mv = Matrix4.multiply(view, modelMatrix);
+        var positionEC = Matrix4.multiplyByPoint(mv, position);
 
         // Apply eye offset, e.g., czm_eyeOffset
         var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC));
@@ -812,7 +814,7 @@ define([
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        var positionCC = projection.multiplyByVector(positionEC); // clip coordinates
+        var positionCC = Matrix4.multiplyByVector(projection, positionEC); // clip coordinates
         var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC);
 
         // Apply pixel offset

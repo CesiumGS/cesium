@@ -158,7 +158,7 @@ define([
             var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
-            command.modelMatrix = Matrix4.IDENTITY.clone();
+            command.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry: geometry,
                 attributeIndices: attributeIndices,

@@ -51,7 +51,7 @@ defineSuite([
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedNWCornerCartographic = projection.unproject(rotation.multiplyByVector(projectedNWCorner));
+        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner));
         var rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedNWCornerCartographic);
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);
         expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
@@ -104,7 +104,7 @@ defineSuite([
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
-        var rotatedNWCornerCartographic = projection.unproject(rotation.multiplyByVector(projectedNWCorner));
+        var rotatedNWCornerCartographic = projection.unproject(Matrix2.multiplyByVector(rotation, projectedNWCorner));
         rotatedNWCornerCartographic.height = 2;
         var rotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedNWCornerCartographic);
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);

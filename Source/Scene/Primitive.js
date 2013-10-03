@@ -223,7 +223,7 @@ define([
          *
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
@@ -602,7 +602,7 @@ define([
                     instances : clonedInstances,
                     pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
-                    isGeographic : projection,
+                    projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this._allow3DOnly,
                     vertexCacheOptimize : this._vertexCacheOptimize,
