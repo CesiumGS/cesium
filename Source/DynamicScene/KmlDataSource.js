@@ -93,7 +93,7 @@ define(['../Core/createGuid',
         var result = new Array(numberOfCoordinates);
         var resultIndex = 0;
 
-        for ( var i = 0; i < tuples.length; i++) {
+        for (var i = 0; i < tuples.length; i++) {
             var coordinates = tuples[i].split(/[\s,\n]+/g);
             scratch = Cartographic.fromDegrees(parseFloat(coordinates[0]), parseFloat(coordinates[1]), defined(coordinates[2]) ? parseFloat(coordinates[2]) : 0, scratch);
             result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratch);
@@ -183,7 +183,7 @@ define(['../Core/createGuid',
 
         var foundGeometry = false;
         var nodes = placemark.childNodes;
-        for ( var i = 0, len = nodes.length; i < len; i++) {
+        for (var i = 0, len = nodes.length; i < len; i++) {
             var node = nodes.item(i);
             var nodeName = node.nodeName;
             if (nodeName === 'TimeSpan') {
@@ -199,6 +199,13 @@ define(['../Core/createGuid',
         if (!foundGeometry) {
             mergeStyles(undefined, styleObject, dynamicObject);
         }
+
+        var billboard = dynamicObject.billboard;
+        if (defined(billboard)) {
+            if (!defined(billboard.image)) {
+                billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
+            }
+        }
     }
 
     function processPoint(dataSource, dynamicObject, kml, node) {
@@ -207,6 +214,11 @@ define(['../Core/createGuid',
 
         var cartesian3 = readCoordinate(el[0]);
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
+
+        //Anything with a position gets a billboard
+        if (!defined(dynamicObject.billboard)) {
+            dynamicObject.billboard = createDefaultBillboard();
+        }
     }
 
     function processLineString(dataSource, dynamicObject, kml, node) {
@@ -231,7 +243,7 @@ define(['../Core/createGuid',
     function processPolygon(dataSource, dynamicObject, kml, node) {
         //TODO innerBoundaryIS, extrude, tessellate, altitudeMode
         var el = node.getElementsByTagName('outerBoundaryIs');
-        for ( var j = 0; j < el.length; j++) {
+        for (var j = 0; j < el.length; j++) {
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
     }
@@ -242,7 +254,7 @@ define(['../Core/createGuid',
         var coordinates = new Array(coordsEl.length);
         var timesEl = node.getElementsByTagName('when');
         var times = new Array(timesEl.length);
-        for ( var i = 0; i < times.length; i++) {
+        for (var i = 0; i < times.length; i++) {
             coordinates[i] = readCoordinate(coordsEl[i]);
             times[i] = JulianDate.fromIso8601(timesEl[i].textContent);
         }
@@ -255,7 +267,7 @@ define(['../Core/createGuid',
         //TODO gx:interpolate, altitudeMode
 
         var childNodes = node.childNodes;
-        for ( var i = 0, len = childNodes.length; i < len; i++) {
+        for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var childNodeName = childNode.nodeName;
 
@@ -274,7 +286,7 @@ define(['../Core/createGuid',
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection) {
         var childNodes = node.childNodes;
-        for ( var i = 0, len = childNodes.length; i < len; i++) {
+        for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var childNodeName = childNode.nodeName;
 
@@ -324,14 +336,21 @@ define(['../Core/createGuid',
         MultiGeometry : processMultiGeometry
     };
 
+    function createDefaultBillboard() {
+        var billboard = new DynamicBillboard();
+        billboard.width = new ConstantProperty(32);
+        billboard.height = new ConstantProperty(32);
+        billboard.nearFarScalar = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.0));
+        return billboard;
+    }
+
     function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
-        for ( var i = 0, len = styleNode.childNodes.length; i < len; i++) {
+        for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
 
             if (node.nodeName === 'IconStyle') {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
-                var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
                 var color = getColorValue(node, 'color');
                 var icon = getStringValue(node, 'href');
@@ -349,13 +368,20 @@ define(['../Core/createGuid',
                     icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
                 }
 
-                billboard.width = new ConstantProperty(32);
-                billboard.height = new ConstantProperty(32);
-                billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
-                billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
-                billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
-                billboard.nearFarScalar = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.0));
-                dynamicObject.billboard = billboard;
+                var billboard = dynamicObject.billboard;
+                if (!defined(billboard)) {
+                    billboard = createDefaultBillboard();
+                    dynamicObject.billboard = billboard;
+                }
+                if (defined(icon)) {
+                    billboard.image = new ConstantProperty(icon);
+                }
+                if (defined(scale)) {
+                    billboard.scale = new ConstantProperty(scale);
+                }
+                if (defined(color)) {
+                    billboard.color = new ConstantProperty(color);
+                }
             } else if (node.nodeName === 'LabelStyle') {
                 //Map style to label properties
                 var label = defined(dynamicObject.label) ? dynamicObject.label : new DynamicLabel();
@@ -370,13 +396,6 @@ define(['../Core/createGuid',
                 label.font = new ConstantProperty('16pt Arial');
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 dynamicObject.label = label;
-                //default billboard image
-                if (!defined(dynamicObject.billboard)) {
-                    dynamicObject.billboard = new DynamicBillboard();
-                    dynamicObject.billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
-                    dynamicObject.billboard.width = new ConstantProperty(32);
-                    dynamicObject.billboard.height = new ConstantProperty(32);
-                }
             } else if (node.nodeName === 'LineStyle') {
                 //Map style to line properties
                 //TODO PhysicalWidth, labelVisibility
@@ -432,7 +451,6 @@ define(['../Core/createGuid',
             targetObject.label = undefined;
             targetObject.path = undefined;
             targetObject.point = undefined;
-            targetObject.polyline = undefined;
             break;
         case 'gx:Track':
             targetObject.polygon = undefined;
@@ -513,7 +531,7 @@ define(['../Core/createGuid',
             id = defined(styleMap.attributes.id) ? styleMap.attributes.id.textContent : undefined;
             if (defined(id)) {
                 var pairs = styleMap.childNodes;
-                for ( var p = 0; p < pairs.length; p++) {
+                for (var p = 0; p < pairs.length; p++) {
                     var pair = pairs[p];
                     if (pair.nodeName !== 'Pair') {
                         continue;
@@ -576,7 +594,7 @@ define(['../Core/createGuid',
 
         var childNodes = node.childNodes;
         var length = childNodes.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             iterateNodes(dataSource, childNodes[i], parent, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
         }
     }
@@ -589,7 +607,7 @@ define(['../Core/createGuid',
         if (document.length > 0) {
             var childNodes = document[0].childNodes;
             var length = childNodes.length;
-            for ( var i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 var node = childNodes[i];
                 if (node.nodeName === 'name') {
                     name = node.textContent;
@@ -639,7 +657,7 @@ define(['../Core/createGuid',
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
-                for ( var i = 0; i < entries.length; i++) {
+                for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
                         var innerDefer = when.defer();
@@ -761,6 +779,10 @@ define(['../Core/createGuid',
      */
     KmlDataSource.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
+    };
+
+    KmlDataSource.prototype.update = function() {
+        return true;
     };
 
     /**
