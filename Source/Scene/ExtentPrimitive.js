@@ -210,6 +210,7 @@ define([
             this._height = this.height;
             this._rotation = this.rotation;
             this._textureRotationAngle = this.textureRotationAngle;
+            this._id = this.id;
 
             var instance = new GeometryInstance({
                 geometry : new ExtentGeometry({
