@@ -181,7 +181,6 @@ define([
          * @see Scene#pick
          */
         this.id = options.id;
-        this._id = undefined;
 
         var customSensorOptions = clone(options);
         customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
