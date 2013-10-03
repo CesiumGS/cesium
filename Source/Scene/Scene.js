@@ -793,7 +793,6 @@ define([
         frameState.creditDisplay.beginFrame();
 
         var context = this._context;
-
         us.update(context, frameState);
 
         this._commandList.length = 0;
@@ -909,7 +908,7 @@ define([
         }
 
         var context = this._context;
-        var primitives = this._primitives;
+        var us = this.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
@@ -922,10 +921,12 @@ define([
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
+        
+        us.update(context, frameState);
 
         var commandLists = this._commandList;
         commandLists.length = 0;
-        primitives.update(context, frameState, commandLists);
+        this._primitives.update(context, frameState, commandLists);
         createPotentiallyVisibleSet(this, 'pickList');
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
@@ -936,7 +937,7 @@ define([
         context.endFrame();
         return object;
     };
-
+    
     /**
      * Returns a list of objects, each containing a `primitive` property, for all primitives at
      * a particular window coordinate position. Other properties may also be set depending on the

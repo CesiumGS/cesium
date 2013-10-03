@@ -70,7 +70,6 @@ defineSuite([
 
     it('is picked', function() {
         var extent = createExtent();
-        scene.render();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject.primitive).toEqual(extent);
     });
@@ -79,7 +78,6 @@ defineSuite([
         var extent = createExtent();
         extent.show = false;
 
-        scene.render();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject).not.toBeDefined();
     });
@@ -88,7 +86,6 @@ defineSuite([
         var extent = createExtent();
         extent.material.uniforms.color.alpha = 0.0;
 
-        scene.render();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject).not.toBeDefined();
     });
@@ -98,7 +95,6 @@ defineSuite([
         var extent2 = createExtent();
         extent2.height = 0.01;
 
-        scene.render();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject.primitive).toEqual(extent2);
     });
@@ -114,7 +110,6 @@ defineSuite([
         var extent2 = createExtent();
         extent2.height = 0.01;
 
-        scene.render();
         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
         expect(pickedObjects.length).toEqual(2);
         expect(pickedObjects[0].primitive).toEqual(extent2);
@@ -127,7 +122,6 @@ defineSuite([
         extent2.height = 0.01;
         extent2.show = false;
 
-        scene.render();
         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
         expect(pickedObjects.length).toEqual(1);
         expect(pickedObjects[0].primitive).toEqual(extent1);
@@ -139,7 +133,6 @@ defineSuite([
         extent2.height = 0.01;
         extent2.material.uniforms.color.alpha = 0.0;
 
-        scene.render();
         var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
         expect(pickedObjects.length).toEqual(1);
         expect(pickedObjects[0].primitive).toEqual(extent1);
