@@ -214,7 +214,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     color: #ff0;
 }
 
-.cesium-dataSourceBrowser-item-clock {
+.cesium-dataSourceBrowser-item-buttons {
     display: block;
     position: absolute;
     top: 1px;
@@ -224,13 +224,15 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     line-height: 16px;
 }
 
-.cesium-dataSourceBrowser-clock-selected {
-    border-color: #2e2;
-    color: #2e2;
+.cesium-dataSourceBrowser-item-clock,
+.cesium-dataSourceBrowser-item-configure {
+    padding: 0 10px;
 }
 
-.cesium-dataSourceBrowser-clock-hidden {
-    display: none;
+.cesium-dataSourceBrowser-clock-selected,
+.cesium-dataSourceBrowser-configure-selected {
+    border-color: #2e2;
+    color: #2e2;
 }
 
 .cesium-dataSourceBrowser-dataSource {
@@ -350,4 +352,45 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../Images/ajax-loader.gif);
+}
+
+.cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer {
+    display: block;
+    position: absolute;
+    top: 5px;
+    left: 365px;
+    opacity: 0;
+    visibility: hidden;
+    background-color: rgba(38, 38, 38, 0.85);
+    border: 1px solid #444;
+    padding: 6px;
+    border-radius: 7px;
+    width: 480px;
+    -webkit-transition: visibility 0s 0.25s, opacity 0.2s ease-in;
+    -moz-transition: visibility 0s 0.25s, opacity 0.2s ease-in;
+    transition: visibility 0s 0.25s, opacity 0.2s ease-in;
+}
+
+.cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-visible {
+    left: 365px;
+    opacity: 1;
+    visibility: visible;
+    -webkit-transition: opacity 0.2s ease-out;
+    -moz-transition: opacity 0.2s ease-out;
+    transition: opacity 0.2s ease-out;
+}
+
+.cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-header {
+    margin: 0 0 5px 130px;
+}
+
+.cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-footer {
+    margin-top: 5px;
+    text-align: right;
+}
+
+.cesium-dataSourceBrowser-activeDataSourceConfigurationPanelContainer {
+    max-height: 420px;
+    overflow-x: hidden;
+    overflow-y: auto;
 }

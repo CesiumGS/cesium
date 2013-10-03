@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
@@ -12,18 +13,19 @@ define([
         defineProperties,
         DeveloperError,
         EventHelper,
+        createCommand,
         knockout) {
     "use strict";
 
-    var DataSourceViewModel = function(name, rootViewModel, dataSource) {
-        if (!defined(rootViewModel)) {
-            throw new DeveloperError('rootViewModel is required.');
+    var DataSourceViewModel = function(name, dataSourceBrowserViewModel, dataSource) {
+        if (!defined(dataSourceBrowserViewModel)) {
+            throw new DeveloperError('dataSourceBrowserViewModel is required.');
         }
         if (!defined(dataSource)) {
             throw new DeveloperError('dataSource is required.');
         }
 
-        this._rootViewModel = rootViewModel;
+        this._dataSourceBrowserViewModel = dataSourceBrowserViewModel;
         this._dataSource = dataSource;
 
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
@@ -62,12 +64,12 @@ define([
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return that._rootViewModel.selectedItem === that;
+            return that._dataSourceBrowserViewModel.selectedItem === that;
         });
 
         this.isFilteredOut = undefined;
         knockout.defineProperty(this, 'isFilteredOut', function() {
-            return rootViewModel.isNodeFiltered(that);
+            return dataSourceBrowserViewModel.isNodeFiltered(that);
         });
 
         knockout.getObservable(this, 'isFilteredOut').extend({
@@ -89,7 +91,7 @@ define([
          */
         this.clockTracking = undefined;
         knockout.defineProperty(this, 'clockTracking', function() {
-            return that._rootViewModel.clockTrackedDataSource === that._dataSource;
+            return that._dataSourceBrowserViewModel.clockTrackedDataSource === that._dataSource;
         });
 
         /**
@@ -98,9 +100,43 @@ define([
          */
         this.isSoleSource = undefined;
         knockout.defineProperty(this, 'isSoleSource', function() {
-            var rootViewModel = that._rootViewModel;
-            return rootViewModel.dataSourcesLength === 1 && rootViewModel.dataSources.get(0) === that._dataSource;
+            var dataSourceBrowserViewModel = that._dataSourceBrowserViewModel;
+            return dataSourceBrowserViewModel.dataSourcesLength === 1 && dataSourceBrowserViewModel.dataSources.get(0) === that._dataSource;
         });
+
+        /**
+         * True if this data source is being configured.
+         * @type {Boolean}
+         */
+        this.isConfiguring = undefined;
+        knockout.defineProperty(this, 'isConfiguring', function() {
+            var dataSourceConfigurationPanelViewModel = that._dataSourceBrowserViewModel.dataSourceConfigurationPanelViewModel;
+            return defined(that._dataSource.getConfigurationPanel) &&
+                   dataSourceConfigurationPanelViewModel.visible &&
+                   dataSourceConfigurationPanelViewModel.activeDataSourceConfigurationPanel === that._dataSource.getConfigurationPanel();
+        });
+
+        this._trackClock = createCommand(function() {
+            that._dataSourceBrowserViewModel.clockTrackedDataSource = that._dataSource;
+        });
+
+        this._toggleExpanded = createCommand(function() {
+            that.expanded = !that.expanded;
+        });
+
+        this._select = createCommand(function() {
+            that._dataSourceBrowserViewModel.selectedItem = that;
+        });
+
+        this._remove = createCommand(function() {
+            that._dataSourceBrowserViewModel.dataSources.remove(that._dataSource);
+        });
+
+        this._configure = createCommand(function() {
+            var dataSourceConfigurationPanelViewModel = that._dataSourceBrowserViewModel.dataSourceConfigurationPanelViewModel;
+            dataSourceConfigurationPanelViewModel.visible = true;
+            dataSourceConfigurationPanelViewModel.activeDataSourceConfigurationPanel = that._dataSource.getConfigurationPanel();
+        }, defined(that._dataSource.getConfigurationPanel));
     };
 
     defineProperties(DataSourceViewModel.prototype, {
@@ -120,28 +156,42 @@ define([
          * @memberof DataSourceViewModel.prototype
          * @type {DataSourceBrowserViewModel}
          */
-        rootViewModel : {
+        dataSourceBrowserViewModel : {
             get : function() {
-                return this._rootViewModel;
+                return this._dataSourceBrowserViewModel;
+            }
+        },
+
+        trackClock : {
+            get : function() {
+                return this._trackClock;
+            }
+        },
+
+        toggleExpanded : {
+            get : function() {
+                return this._toggleExpanded;
+            }
+        },
+
+        select : {
+            get : function() {
+                return this._select;
+            }
+        },
+
+        remove : {
+            get : function() {
+                return this._remove;
+            }
+        },
+
+        configure : {
+            get : function() {
+                return this._configure;
             }
         }
     });
-
-    DataSourceViewModel.prototype.select = function() {
-        this._rootViewModel.selectedItem = this;
-    };
-
-    DataSourceViewModel.prototype.trackClock = function() {
-        this._rootViewModel.clockTrackedDataSource = this._dataSource;
-    };
-
-    DataSourceViewModel.prototype.toggleExpanded = function() {
-        this.expanded = !this.expanded;
-    };
-
-    DataSourceViewModel.prototype.remove = function() {
-        this._rootViewModel.dataSources.remove(this._dataSource);
-    };
 
     DataSourceViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

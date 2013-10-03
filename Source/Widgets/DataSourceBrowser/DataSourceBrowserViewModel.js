@@ -10,6 +10,7 @@ define([
         './DataSourceViewModel',
         './DataSourceItemViewModel',
         './DataSourcePanelViewModel',
+        './DataSourceConfigurationPanelViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
@@ -22,6 +23,7 @@ define([
         DataSourceViewModel,
         DataSourceItemViewModel,
         DataSourcePanelViewModel,
+        DataSourceConfigurationPanelViewModel,
         knockout) {
     "use strict";
 
@@ -50,6 +52,7 @@ define([
         this._dataSourceViewModelHash = {};
 
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
+        this._dataSourceConfigurationPanelViewModel = new DataSourceConfigurationPanelViewModel(this);
         this._onObjectSelected = new Event();
         this._onClockSelected = new Event();
 
@@ -199,6 +202,18 @@ define([
         },
 
         /**
+         * Gets the view model for the data source panel.
+         * @memberof DataSourceBrowserViewModel.prototype
+         *
+         * @type {dataSourceConfigurationPanelViewModel}
+         */
+        dataSourceConfigurationPanelViewModel : {
+            get : function() {
+                return this._dataSourceConfigurationPanelViewModel;
+            }
+        },
+
+        /**
          * Gets an event that will be raised when an object is selected in the browser.
          * @memberof DataSourceBrowserViewModel.prototype
          *
@@ -309,10 +324,13 @@ define([
         var parent = object.parent;
         if (defined(parent)) {
             var parentViewModel = dataSourceViewModelHash[parent.id];
-            parentViewModel.children.remove(dynamicObjectViewModel);
+            if (defined(parentViewModel)) {
+                parentViewModel.children.remove(dynamicObjectViewModel);
+            }
         } else {
             rootViewModel.children.remove(dynamicObjectViewModel);
         }
+        dataSourceViewModelHash[id] = undefined;
     }
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

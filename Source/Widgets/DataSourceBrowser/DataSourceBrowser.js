@@ -141,25 +141,44 @@ valueUpdate: \'afterkeydown\'');
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded,\
                         \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
-    data-bind="click: toggleExpanded, css: { \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <span data-bind="html: expandIndicator"></span>\
     <span data-bind="text: name"></span>\
-    <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
-    data-bind="click: function () { toggleExpanded(); trackClock(); }, \
-    css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking, \
-    \'cesium-dataSourceBrowser-clock-hidden\': isSoleSource && clockTracking }">clock</span>\
+    <span class="cesium-dataSourceBrowser-item-buttons">\
+        <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+            data-bind="visible: !isSoleSource || !clockTracking, \
+                       click: trackClock, \
+                       clickBubble: false, \
+                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }">clock</span>\
+        <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+            data-bind="visible: configure.canExecute, \
+                       click: configure, \
+                       clickBubble: false, \
+                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }">configure</span>\
+    </span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
-    data-bind="click: remove">&times;</span></span>\
+        data-bind="click: remove">&times;</span></span>\
 <ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
-    data-bind="text: name, click: select, css: { \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected,\
-    \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+    data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
+                      \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+    <span data-bind="text: name"></span>\
+    <span class="cesium-dataSourceBrowser-item-buttons">\
+        <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+            data-bind="visible: !isSoleSource || !clockTracking, \
+                       click: trackClock, \
+                       clickBubble: false, \
+                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }">clock</span>\
+        <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+            data-bind="visible: configure.canExecute, \
+                       click: configure, \
+                       clickBubble: false, \
+                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }">configure</span>\
+    </span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
-    data-bind="click: remove">&times;</span></span>\
+        data-bind="click: remove">&times;</span></span>\
 <!-- /ko -->';
         dataSourcesRootElement.appendChild(dataSourceListItem);
 
@@ -254,6 +273,42 @@ click: cancelCommand');
 visible: error !== "",\
 text: error');
         dataSourcePanelFooter.appendChild(finishAddDataSourceError);
+
+        // The root of the panel that configures loaded data sources.
+        var dataSourceConfigurationPanelContainer = document.createElement('div');
+        dataSourceConfigurationPanelContainer.className = 'cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer';
+        dataSourceConfigurationPanelContainer.setAttribute('data-bind', '\
+with: dataSourceConfigurationPanelViewModel,\
+css: { "cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-visible" : dataSourceConfigurationPanelViewModel.visible }');
+        element.appendChild(dataSourceConfigurationPanelContainer);
+
+        // The header of the configure data source panel.
+        var dataSourceConfigurationPanelHeader = document.createElement('div');
+        dataSourceConfigurationPanelHeader.className = 'cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-header';
+        dataSourceConfigurationPanelHeader.setAttribute('data-bind', '\
+text: activeDataSourceConfigurationPanel && activeDataSourceConfigurationPanel.name');
+        dataSourceConfigurationPanelContainer.appendChild(dataSourceConfigurationPanelHeader);
+
+        var activeDataSourceConfigurationPanelContainer = document.createElement('div');
+        activeDataSourceConfigurationPanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourceConfigurationPanelContainer';
+        activeDataSourceConfigurationPanelContainer.setAttribute('data-bind', '\
+style : { maxHeight : dataSourceBrowserViewModel.maxHeightOffset(85) },\
+template : { if: activeDataSourceConfigurationPanel,\
+             name: activeDataSourceConfigurationPanel && activeDataSourceConfigurationPanel.templateID,\
+             data: activeDataSourceConfigurationPanel && activeDataSourceConfigurationPanel.viewModel }');
+        dataSourceConfigurationPanelContainer.appendChild(activeDataSourceConfigurationPanelContainer);
+
+        // Footer contains Done button.
+        var dataSourceConfigurationPanelFooter = document.createElement('div');
+        dataSourceConfigurationPanelFooter.className = 'cesium-dataSourceBrowser-dataSourceConfigurationPanelContainer-footer';
+        dataSourceConfigurationPanelContainer.appendChild(dataSourceConfigurationPanelFooter);
+
+        var doneConfigurationPanelButton = document.createElement('span');
+        doneConfigurationPanelButton.className = 'cesium-dataSourceBrowser-button';
+        doneConfigurationPanelButton.textContent = 'Done';
+        doneConfigurationPanelButton.setAttribute('data-bind', '\
+click: doneCommand');
+        dataSourceConfigurationPanelContainer.appendChild(doneConfigurationPanelButton);
 
         knockout.applyBindings(viewModel, element);
         knockout.applyBindings(viewModel, dataSourcePanelContainer);
