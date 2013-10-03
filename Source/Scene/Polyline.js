@@ -29,25 +29,26 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
-    var Polyline = function(description, polylineCollection) {
-        description = defaultValue(description, EMPTY_OBJECT);
+    var Polyline = function(options, polylineCollection) {
+        options = defaultValue(options, EMPTY_OBJECT);
 
-        this._show = defaultValue(description.show, true);
-        this._width = defaultValue(description.width, 1.0);
+        this._show = defaultValue(options.show, true);
+        this._width = defaultValue(options.width, 1.0);
 
-        this._material = description.material;
+        this._material = options.material;
         if (!defined(this._material)) {
             this._material = Material.fromType(Material.ColorType);
             this._material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         }
 
-        var positions = description.positions;
+        var positions = options.positions;
         if (!defined(positions)) {
             positions = [];
         }
 
         this._positions = positions;
         this._length = positions.length;
+        this._id = options.id;
 
         var modelMatrix;
         if (defined(this._polylineCollection)) {
@@ -63,7 +64,7 @@ define([
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
-        this._pickIdThis = description._pickIdThis;
+        this._pickIdThis = options._pickIdThis;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
     };
@@ -282,10 +283,25 @@ define([
         }
     };
 
+    /**
+     * Returns the user-defined object returned when the polyline is picked.
+     *
+     * @memberof Polyline
+     *
+     * @returns {Object} The user-defined object returned when the polyline is picked.
+     */
+    Polyline.prototype.getId = function() {
+        return this._id;
+    };
+
+    /**
+     * @private
+     */
     Polyline.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
-                primitive : defaultValue(this._pickIdThis, this)
+                primitive : defaultValue(this._pickIdThis, this),
+                id : this._id
             });
         }
         return this._pickId;

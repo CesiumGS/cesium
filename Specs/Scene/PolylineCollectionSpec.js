@@ -68,6 +68,7 @@ defineSuite([
         expect(p.getPositions().length).toEqual(0);
         expect(p.getWidth()).toEqual(1.0);
         expect(p.getMaterial().uniforms.color).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
+        expect(p.getId()).not.toBeDefined();
     });
 
     it('explicitly constructs a polyline', function() {
@@ -76,7 +77,8 @@ defineSuite([
             show : false,
             positions : [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)],
             width : 2,
-            material : material
+            material : material,
+            id : 'id'
         });
 
         expect(p.getShow()).toEqual(false);
@@ -86,6 +88,7 @@ defineSuite([
         expect(p.getMaterial().uniforms.color).toEqual(material.uniforms.color);
         expect(p.getMaterial().uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
         expect(p.getMaterial().uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
+        expect(p.getId()).toEqual('id');
     });
 
     it('sets polyline properties', function() {
@@ -1371,11 +1374,13 @@ defineSuite([
                 x : 0.0,
                 y : 1.0,
                 z : 0.0
-            }]
+            }],
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, polylines, 0, 0);
         expect(pickedObject.primitive).toEqual(p);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {
