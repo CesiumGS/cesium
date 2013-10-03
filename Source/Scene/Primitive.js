@@ -69,7 +69,7 @@ define([
      * </p>
      * <p>
      * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
+     * Instances can be individually picked; {@link Scene#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      * <p>
@@ -223,7 +223,7 @@ define([
          *
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
