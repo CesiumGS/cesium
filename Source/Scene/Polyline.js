@@ -47,6 +47,7 @@ define([
         }
 
         this._positions = positions;
+        this._length = positions.length;
         this._id = options.id;
 
         var modelMatrix;
@@ -159,11 +160,12 @@ define([
             throw new DeveloperError('value is required.');
         }
 
-        if (this._positions.length !== value.length) {
+        if (this._positions.length !== value.length || this._positions.length !== this._length) {
             makeDirty(this, POSITION_SIZE_INDEX);
         }
 
         this._positions = value;
+        this._length = value.length;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions, this._boundingVolume);
         makeDirty(this, POSITION_INDEX);
 
@@ -183,7 +185,7 @@ define([
         var segmentLengths = this._segments.lengths;
 
         var positionsChanged = this._propertiesChanged[POSITION_INDEX] > 0 || this._propertiesChanged[POSITION_SIZE_INDEX] > 0;
-        if (!modelMatrix.equals(this._modelMatrix) || positionsChanged) {
+        if (!Matrix4.equals(modelMatrix, this._modelMatrix) || positionsChanged) {
             this._segments = PolylinePipeline.wrapLongitude(this._positions, modelMatrix);
         }
 
