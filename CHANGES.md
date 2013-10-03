@@ -12,7 +12,9 @@ Beta Releases
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
+* Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
 * Added a user-defined `id` to all primitives for use with picking.  For example:
 
