@@ -174,8 +174,9 @@ define(['../Core/createGuid',
                 dynamicObject.label = new DynamicLabel();
                 dynamicObject.label.font = new ConstantProperty('16pt Arial');
                 dynamicObject.label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
-                dynamicObject.label.pixelOffset = new ConstantProperty(new Cartesian2(0, -16));
-                dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+                dynamicObject.label.pixelOffset = new ConstantProperty(new Cartesian2(0, 16));
+                dynamicObject.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+                dynamicObject.label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
             }
             dynamicObject.label.text = new ConstantProperty(name);
             dynamicObject.name = name;
@@ -340,7 +341,7 @@ define(['../Core/createGuid',
         var billboard = new DynamicBillboard();
         billboard.width = new ConstantProperty(32);
         billboard.height = new ConstantProperty(32);
-        billboard.nearFarScalar = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.0));
+        billboard.scaleByDistance = new ConstantProperty(new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1));
         return billboard;
     }
 
@@ -388,11 +389,12 @@ define(['../Core/createGuid',
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
 
+                label.translucencyByDistance = new ConstantProperty(new NearFarScalar(1500000, 1.0, 3400000, 0.0));
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(0, 16));
-                label.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+                label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
                 label.font = new ConstantProperty('16pt Arial');
                 label.style = new ConstantProperty(LabelStyle.FILL_AND_OUTLINE);
                 dynamicObject.label = label;
