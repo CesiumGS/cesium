@@ -31,8 +31,6 @@ require(['Cesium'], function(Cesium) {
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
 
-    Cesium.Math.setRandomNumberSeed(1234);
-    
     var instances = [];
     
     for (var i = 0; i < 4; i++) {
