@@ -181,6 +181,7 @@ define([
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
+                glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
             }
         }
 
@@ -336,7 +337,7 @@ define([
          *   text     : 'Up'
          * });
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
     };
 
     /**
@@ -375,7 +376,7 @@ define([
      *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.LEFT,
      *   verticalOrigin : VerticalOrigin.BOTTOM,
-     *   scale : 1.0,
+     *   scale : 1.0
      * });
      *
      * // Example 2:  Specify only the label's cartographic position,

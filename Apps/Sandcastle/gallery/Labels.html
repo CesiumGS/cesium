@@ -90,6 +90,39 @@ require(['Cesium'], function(Cesium) {
         scene.getPrimitives().add(labels);
     }
 
+    function labelTranslucencyByDistance(scene, ellipsoid) {
+        Sandcastle.declare(labelTranslucencyByDistance); // For highlighting in Sandcastle.
+        var labels = new Cesium.LabelCollection();
+        labels.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-73.94, 40.67)),
+            text     : 'New York'
+        });
+        labels.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+            text     : 'Philadelphia',
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.0)
+        });
+
+        // add a billboard to mark Philadelphia on the globe
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                image : image
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+                imageIndex : 0
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../images/facility.gif';
+
+        scene.getPrimitives().add(labels);
+    }
+
     function createButtons(widget) {
         var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
@@ -134,6 +167,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(addLabelsInReferenceFrame);
         };
         button.textContent = 'Add labels in reference frame';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            primitives.removeAll();
+            labelTranslucencyByDistance(scene, ellipsoid);
+            Sandcastle.highlight(labelTranslucencyByDistance);
+        };
+        button.textContent = 'Fade label by distance';
         toolbar.appendChild(button);
     }
 
