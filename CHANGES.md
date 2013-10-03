@@ -13,6 +13,22 @@ Beta Releases
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
 
+* Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
+* Added `options` argument to the `EllipsoidPrimitive` constructor.
+* Added a user-defined `id` to all primitives for use with picking.  For example:
+
+            primitives.add(new Polygon({
+                id : {
+                    // User-defined object returned by Scene.pick
+                },
+                // ...
+            }));
+            // ...
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.id)) {
+               // Use properties and functions in p.id
+            }
+
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 
 ### b21 - 2013-10-01
