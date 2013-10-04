@@ -11,7 +11,6 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './defaultValue',
@@ -33,7 +32,6 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
-        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         defaultValue,
@@ -240,12 +238,12 @@ define([
     var brScratch = new BoundingRectangle();
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);
         if (cleanPositions.length < 2) {
             throw new DeveloperError('Count of unique polyline positions must be greater than 1.');
         }
         var shape2D = polylineVolumeGeometry._shape;
-        shape2D = PolylineVolumeGeometryLibrary.removeDuplicates(shape2D);
+        shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
         if (shape2D.length < 3) {
             throw new DeveloperError('Count of unique shape positions must be at least 3.');
         }

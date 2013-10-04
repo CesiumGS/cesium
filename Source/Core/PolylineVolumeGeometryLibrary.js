@@ -241,7 +241,7 @@ define([
         return finalPositions;
     }
 
-    PolylineVolumeGeometryLibrary.removeDuplicates = function(shapePositions) {
+    PolylineVolumeGeometryLibrary.removeDuplicatesFromShape = function(shapePositions) {
         var length = shapePositions.length;
         var cleanedPositions = [];
         for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
@@ -264,6 +264,34 @@ define([
         var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
 
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
+    };
+
+    function latLonEquals(c0, c1) {
+        return ((CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON6)));
+    }
+    var carto0 = new Cartographic();
+    var carto1 = new Cartographic();
+    PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions = function(positions, ellipsoid) {
+        var length = positions.length;
+        if (length < 2) {
+            return positions.slice(0);
+        }
+
+        var cleanedPositions = [];
+        cleanedPositions.push(positions[0]);
+
+        for (var i = 1; i < length; ++i) {
+            var v0 = positions[i - 1];
+            var v1 = positions[i];
+            var c0 = ellipsoid.cartesianToCartographic(v0, carto0);
+            var c1 = ellipsoid.cartesianToCartographic(v1, carto1);
+
+            if (!latLonEquals(c0, c1)) {
+                cleanedPositions.push(v1); // Shallow copy!
+            }
+        }
+
+        return cleanedPositions;
     };
 
     PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
@@ -358,6 +386,9 @@ define([
                     previousPosition = Cartesian3.clone(end, previousPosition);
                 }
                 backward = Cartesian3.negate(forward, backward);
+            } else {
+                finalPositions = addPosition(previousPosition, left, shapeForSides, finalPositions, ellipsoid, h0 + heightOffset, 1, 1);
+                previousPosition = position;
             }
             h0 = h1;
             h1 = heights[i + 1];
