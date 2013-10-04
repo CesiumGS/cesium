@@ -3,6 +3,7 @@ Change Log
 
 Beta Releases
 -------------
+
 ### b22 - 2013-11-01
 
 * Breaking changes:
@@ -95,6 +96,7 @@ Beta Releases
 * Fixed geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
 * Fixed `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
 * `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
+
         var p = new Primitive(/* ... */);
         primitives.add(p);
         return p;
