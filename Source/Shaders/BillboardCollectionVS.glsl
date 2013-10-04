@@ -80,7 +80,7 @@ void main()
     // push vertex behind near plane for clipping
     if (scale == 0.0)
     {
-        positionEC.xyz *= scale;
+        positionEC.xyz = vec3(0.0);
     }
 #endif
 
@@ -90,7 +90,7 @@ void main()
     // push vertex behind near plane for clipping
     if (translucency == 0.0)
     {
-        positionEC.xyz *= translucency;
+        positionEC.xyz = vec3(0.0);
     }
 #endif
 
