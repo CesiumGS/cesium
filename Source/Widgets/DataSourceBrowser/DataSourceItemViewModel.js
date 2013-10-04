@@ -98,6 +98,10 @@ define([
         }
     });
 
+    DataSourceItemViewModel.prototype.doubleClick = function(){
+        this._rootViewModel.onObjectDoubleClick.raiseEvent(this._dynamicObject);
+    };
+
     DataSourceItemViewModel.prototype.select = function() {
         this._rootViewModel.selectedItem = this;
     };

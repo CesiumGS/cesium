@@ -52,7 +52,7 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         templateElement.type = 'text/html';
         templateElement.id = templateID;
         templateElement.textContent = '<li \
-data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }, event: { dblclick: doubleClick}">\
 <!-- ko if: hasChildren -->\
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
 <span class="cesium-dataSourceBrowser-item" \

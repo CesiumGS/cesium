@@ -54,6 +54,7 @@ define([
         this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
         this._dataSourceConfigurationPanelViewModel = new DataSourceConfigurationPanelViewModel(this);
         this._onObjectSelected = new Event();
+        this._onObjectDoubleClick = new Event();
         this._onClockSelected = new Event();
 
         var that = this;
@@ -222,6 +223,12 @@ define([
         onObjectSelected : {
             get : function() {
                 return this._onObjectSelected;
+            }
+        },
+
+        onObjectDoubleClick : {
+            get : function() {
+                return this._onObjectDoubleClick;
             }
         },
 

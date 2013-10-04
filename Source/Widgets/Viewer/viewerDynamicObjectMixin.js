@@ -217,6 +217,7 @@ define([
 
         if (defined(viewer.dataSourceBrowser)) {
             eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectSelected, showBalloon);
+            eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectDoubleClick, trackObject);
         }
 
         defineProperties(viewer, {
