@@ -80,7 +80,7 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        viewProjection.multiplyByPoint(actualPosition, positionCC);
+        Matrix4.multiplyByPoint(viewProjection, actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
     };
@@ -129,7 +129,7 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        viewProjection.multiplyByPoint(actualPosition, positionCC);
+        Matrix4.multiplyByPoint(viewProjection, actualPosition, positionCC);
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene.getContext(), positionCC, result);
     };

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/Cartesian3',
+        '../../Core/Matrix3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -18,6 +19,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         Cartesian3,
+        Matrix3,
         defaultValue,
         defined,
         defineProperties,
@@ -67,10 +69,10 @@ define([
         } else if (mode === SceneMode.SCENE3D) {
             Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
             var rotation = Matrix4.getRotation(camera.transform);
-            rotation.multiplyByVector(camera.direction, camera.direction);
-            rotation.multiplyByVector(camera.up, camera.up);
-            rotation.multiplyByVector(camera.right, camera.right);
-            camera.transform = Matrix4.IDENTITY.clone();
+            Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
+            Matrix3.multiplyByVector(rotation, camera.up, camera.up);
+            Matrix3.multiplyByVector(rotation, camera.right, camera.right);
+            camera.transform = Matrix4.clone(Matrix4.IDENTITY);
             var defaultCamera = new Camera(context);
             description = {
                 destination : defaultCamera.position,
