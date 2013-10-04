@@ -96,9 +96,17 @@ define([
                 dynamicObjectView.update(time);
             }
 
-            var showBalloon = defined(balloonedObject) && defined(balloonedObject.position) && balloonedObject.isAvailable(time);
+            var showBalloon = defined(balloonedObject) && balloonedObject.isAvailable(time);
             if (showBalloon) {
-                balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+                if (defined(balloonedObject.position)) {
+                    balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+                } else {
+                    balloonViewModel.position = undefined;
+                    balloonViewModel.defaultPosition = {
+                            x : 415,
+                            y : viewer._lastHeight - 10
+                        };
+                }
 
                 var content;
                 if (defined(balloonedObject.balloon)) {
@@ -135,7 +143,7 @@ define([
         }
 
         function showBalloon(dynamicObject) {
-            if (defined(dynamicObject) && defined(dynamicObject.position)) {
+            if (defined(dynamicObject)) {
                 viewer.balloonedObject = dynamicObject;
             }
         }

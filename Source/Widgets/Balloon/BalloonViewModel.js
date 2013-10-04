@@ -313,6 +313,10 @@ define([
                         if (defined(that._position)) {
                             pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
                             pos = shiftPosition(that, pos);
+                        } else {
+                            pos = that._defaultPosition;
+                            that.showArrow = false;
+                            pos = shiftPosition(that, pos);
                         }
                         that.showBalloon = true;
                         that._timerRunning = false;
@@ -321,6 +325,10 @@ define([
                     this._contentHTML = this._content;
                     if (defined(this._position)) {
                         pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+                        pos = shiftPosition(this, pos);
+                    } else {
+                        pos = this._defaultPosition;
+                        this.showArrow = false;
                         pos = shiftPosition(this, pos);
                     }
                     this.showBalloon = true;
@@ -331,13 +339,13 @@ define([
                 if (defined(this._position)) {
                     pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                     this.showArrow = true;
+                    pos.x = Math.floor(pos.x);
+                    pos.y = Math.floor(pos.y);
+                    pos = shiftPosition(this, pos);
                 } else {
                     pos = this._defaultPosition;
                     this.showArrow = false;
                 }
-
-                pos.x = Math.floor(pos.x);
-                pos.y = Math.floor(pos.y);
                 pos = shiftPosition(this, pos);
             }
         }
