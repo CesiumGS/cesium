@@ -274,6 +274,8 @@ define([
             return defaultValue(czmlInterval['number'], czmlInterval);
         case String:
             return defaultValue(czmlInterval['string'], czmlInterval);
+        case Array:
+            return czmlInterval['array'];
         case Quaternion:
             return czmlInterval.unitQuaternion;
         case VerticalOrigin:
@@ -315,7 +317,7 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = defaultValue(type.packedLength, 1);
         var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-        var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+        var isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
