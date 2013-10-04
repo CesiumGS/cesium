@@ -63,6 +63,27 @@ defineSuite([
         expect(ellipsoid.material.type).toEqual(Material.ColorType);
     });
 
+    it('Constructs with options', function() {
+        var material = Material.fromType(Material.StripeType);
+        var e = new EllipsoidPrimitive({
+            center : new Cartesian3(1.0, 2.0, 3.0),
+            radii : new Cartesian3(4.0, 5.0, 6.0),
+            modelMatrix : Matrix4.fromScale(2.0),
+            show : false,
+            material : material,
+            id : 'id'
+        });
+
+        expect(e.center).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(e.radii).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(e.modelMatrix).toEqual(Matrix4.fromScale(2.0));
+        expect(e.show).toEqual(false);
+        expect(e.material).toBe(material);
+        expect(e.id).toEqual('id');
+
+        e.destroy();
+    });
+
     it('renders with the default material', function() {
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -128,9 +149,11 @@ defineSuite([
 
     it('is picked', function() {
         ellipsoid.radii = new Cartesian3(1.0, 1.0, 1.0);
+        ellipsoid.id = 'id';
 
         var pickedObject = pick(context, frameState, ellipsoid, 0, 0);
         expect(pickedObject.primitive).toEqual(ellipsoid);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {

@@ -83,6 +83,7 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(label.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(label.getScale()).toEqual(1.0);
+        expect(label.getId()).not.toBeDefined();
     });
 
     it('can add a label with specified values', function() {
@@ -123,7 +124,8 @@ defineSuite([
             eyeOffset : eyeOffset,
             horizontalOrigin : horizontalOrigin,
             verticalOrigin : verticalOrigin,
-            scale : scale
+            scale : scale,
+            id : 'id'
         });
 
         expect(label.getShow()).toEqual(show);
@@ -139,6 +141,7 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(horizontalOrigin);
         expect(label.getVerticalOrigin()).toEqual(verticalOrigin);
         expect(label.getScale()).toEqual(scale);
+        expect(label.getId()).toEqual('id');
     });
 
     it('can specify font using units other than pixels', function() {
@@ -644,11 +647,13 @@ defineSuite([
             },
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('does not pick a label with show set to false', function() {

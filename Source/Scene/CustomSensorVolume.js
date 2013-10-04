@@ -205,6 +205,18 @@ define([
          */
         this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
 
+        /**
+         * User-defined object returned when the sensors is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = undefined;
+
         var that = this;
         this._uniforms = {
             u_showThroughEllipsoid : function() {
@@ -468,9 +480,12 @@ define([
         if (pass.pick) {
             var pickCommand = this._pickCommand;
 
-            if (!defined(this._pickId)) {
+            if (!defined(this._pickId) || (this._id !== this.id)) {
+                this._id = this.id;
+                this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this._pickIdThis
+                    primitive : this._pickIdThis,
+                    id : this.id
                 });
             }
 
