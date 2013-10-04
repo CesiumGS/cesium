@@ -331,6 +331,11 @@ define([
                 label.setVerticalOrigin(verticalOrigin);
             }
         }
+
+        property = dynamicLabel._translucencyByDistance;
+        if (defined(property)) {
+            label.setTranslucencyByDistance(property.getValue(time));
+        }
     }
 
     DynamicLabelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
