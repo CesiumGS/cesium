@@ -29,6 +29,9 @@ Beta Releases
                // Use properties and functions in p.id
             }
 
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+* Added `FrameState.events`.
+
 ### b21 - 2013-10-01
 
 * Breaking changes:
