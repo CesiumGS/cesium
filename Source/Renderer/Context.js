@@ -2590,7 +2590,8 @@ define([
      *
      * @example
      * this._pickId = context.createPickId({
-     *   primitive : this
+     *   primitive : this,
+     *   id : this.id
      * });
      */
     Context.prototype.createPickId = function(object) {
