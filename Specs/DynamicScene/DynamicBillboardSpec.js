@@ -34,7 +34,8 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.width = new ConstantProperty(24);
         source.height = new ConstantProperty(36);
-        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicBillboard();
         target.merge(source);
@@ -51,7 +52,8 @@ defineSuite([
         expect(target.show).toBe(source.show);
         expect(target.width).toBe(source.width);
         expect(target.height).toBe(source.height);
-        expect(target.nearFarScalar).toBe(source.nearFarScalar);
+        expect(target.scaleByDistance).toBe(source.scaleByDistance);
+        expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -68,7 +70,8 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.width = new ConstantProperty(24);
         source.height = new ConstantProperty(36);
-        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var image = new ConstantProperty('');
         var rotation = new ConstantProperty(5);
@@ -82,7 +85,8 @@ defineSuite([
         var show = new ConstantProperty(false);
         var width = new ConstantProperty(2);
         var height = new ConstantProperty(3);
-        var nearFarScalar = new ConstantProperty(new NearFarScalar());
+        var scaleByDistance = new ConstantProperty(new NearFarScalar());
+        var translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicBillboard();
         target.image = image;
@@ -97,7 +101,8 @@ defineSuite([
         target.show = show;
         target.width = width;
         target.height = height;
-        target.nearFarScalar = nearFarScalar;
+        target.scaleByDistance = scaleByDistance;
+        target.translucencyByDistance = translucencyByDistance;
 
         target.merge(source);
 
@@ -113,7 +118,8 @@ defineSuite([
         expect(target.show).toBe(show);
         expect(target.width).toBe(width);
         expect(target.height).toBe(height);
-        expect(target.nearFarScalar).toBe(nearFarScalar);
+        expect(target.scaleByDistance).toBe(scaleByDistance);
+        expect(target.translucencyByDistance).toBe(translucencyByDistance);
     });
 
     it('clone works', function() {
@@ -130,7 +136,8 @@ defineSuite([
         source.show = new ConstantProperty(false);
         source.width = new ConstantProperty(24);
         source.height = new ConstantProperty(36);
-        source.nearFarScalar = new ConstantProperty(new NearFarScalar());
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
@@ -145,7 +152,8 @@ defineSuite([
         expect(result.show).toBe(source.show);
         expect(result.width).toBe(source.width);
         expect(result.height).toBe(source.height);
-        expect(result.nearFarScalar).toBe(source.nearFarScalar);
+        expect(result.scaleByDistance).toBe(source.scaleByDistance);
+        expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
     });
 
     it('merge throws if source undefined', function() {

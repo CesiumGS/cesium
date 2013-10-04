@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -20,6 +21,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -44,6 +46,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        DeveloperError,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -59,6 +62,7 @@ define([
         GeometryInstance,
         GeometryPipeline,
         ColorGeometryInstanceAttribute,
+        ShowGeometryInstanceAttribute,
         Context,
         ClearCommand,
         PassState,
@@ -187,7 +191,7 @@ define([
          *
          * @see Scene#skyBox
          */
-        this.backgroundColor = Color.BLACK.clone();
+        this.backgroundColor = Color.clone(Color.BLACK);
 
         /**
          * The current mode of the scene.
@@ -806,7 +810,6 @@ define([
         frameState.creditDisplay.beginFrame();
 
         var context = this._context;
-
         us.update(context, frameState);
 
         this._commandList.length = 0;
@@ -904,12 +907,26 @@ define([
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
-     * DOC_TBA
+     * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+     * at a particular window coordinate or undefined if nothing is at the location. Other properties may
+     * potentially be set depending on the type of primitive.
+     *
      * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     *
+     * @returns {Object} Object containing the picked primitive.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
      */
     Scene.prototype.pick = function(windowPosition) {
+        if(!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+
         var context = this._context;
-        var primitives = this._primitives;
+        var us = this.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
@@ -922,10 +939,12 @@ define([
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
+        
+        us.update(context, frameState);
 
         var commandLists = this._commandList;
         commandLists.length = 0;
-        primitives.update(context, frameState, commandLists);
+        this._primitives.update(context, frameState, commandLists);
         createPotentiallyVisibleSet(this, 'pickList');
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
@@ -936,6 +955,71 @@ define([
         context.endFrame();
         executeEvents(frameState);
         return object;
+    };
+    
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive. The primitives in the list are ordered by their visual order in the
+     * scene (front to back).
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     *
+     * @returns {Array} Array of objects, each containing 1 picked primitives.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
+     * @example
+     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     */
+    Scene.prototype.drillPick = function(windowPosition) {
+        // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
+        // we could update the primitive once, and then just execute their commands for each pass,
+        // and cull commands for picked primitives.  e.g., base on the command's owner.
+        if (!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+
+        var pickedObjects = [];
+
+        var pickedResult = this.pick(windowPosition);
+        while (defined(pickedResult) && defined(pickedResult.primitive)) {
+            var primitive = pickedResult.primitive;
+            pickedObjects.push(pickedResult);
+
+            // hide the picked primitive and call picking again to get the next primitive
+            if (defined(primitive.show)) {
+                primitive.show = false;
+            } else if (typeof primitive.setShow === 'function') {
+                primitive.setShow(false);
+            } else if (typeof primitive.getGeometryInstanceAttributes === 'function') {
+                var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                if (defined(attributes) && defined(attributes.show)) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(false);
+                }
+            }
+
+            pickedResult = this.pick(windowPosition);
+        }
+
+        // unhide the picked primitives
+        for (var i = 0; i < pickedObjects.length; ++i) {
+            var p = pickedObjects[i].primitive;
+            if (defined(p.show)) {
+                p.show = true;
+            } else if (typeof p.setShow === 'function') {
+                p.setShow(true);
+            } else if (typeof p.getGeometryInstanceAttributes === 'function') {
+                var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
+                if (defined(attr) && defined(attr.show)) {
+                    attr.show = ShowGeometryInstanceAttribute.toValue(true);
+                }
+            }
+        }
+
+        return pickedObjects;
     };
 
     /**

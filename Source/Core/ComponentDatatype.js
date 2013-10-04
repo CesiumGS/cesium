@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        './defaultValue',
         './defined',
         './DeveloperError',
         './FeatureDetection',
         './Enumeration'
     ], function(
+        defaultValue,
         defined,
         DeveloperError,
         FeatureDetection,
@@ -190,6 +192,9 @@ define([
         if (!defined(buffer)) {
             throw new DeveloperError('buffer is required.');
         }
+
+        byteOffset = defaultValue(byteOffset, 0);
+        length = defaultValue(length, (buffer.byteLength - byteOffset) / componentDatatype.sizeInBytes);
 
         switch (componentDatatype.value) {
         case ComponentDatatype.BYTE.value:
