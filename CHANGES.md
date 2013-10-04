@@ -30,6 +30,7 @@ Beta Releases
             if (defined(p) && defined(p.id)) {
                // Use properties and functions in p.id
             }
+* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
 
 ### b21 - 2013-10-01
 
