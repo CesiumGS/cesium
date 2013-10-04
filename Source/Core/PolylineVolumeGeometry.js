@@ -98,30 +98,30 @@ define([
             var s, t;
             var stindex = 0;
             for (i = 0; i < length; i++) {
-                t = i * lengthSt;
-                s = heightSt * (shape[0].y + heightOffset);
+                s = i * lengthSt;
+                t = heightSt * (shape[0].y + heightOffset);
                 st[stindex++] = s;
                 st[stindex++] = t;
                 for (j = 1; j < shapeLength; j++) {
-                    s = heightSt * (shape[j].y + heightOffset);
+                    t = heightSt * (shape[j].y + heightOffset);
                     st[stindex++] = s;
                     st[stindex++] = t;
                     st[stindex++] = s;
                     st[stindex++] = t;
                 }
-                s = heightSt * (shape[0].y + heightOffset);
+                t = heightSt * (shape[0].y + heightOffset);
                 st[stindex++] = s;
                 st[stindex++] = t;
             }
             for (j = 0; j < shapeLength; j++) {
-                t = 0;
-                s = heightSt * (shape[j].y + heightOffset);
+                s = 0;
+                t = heightSt * (shape[j].y + heightOffset);
                 st[stindex++] = s;
                 st[stindex++] = t;
             }
             for (j = 0; j < shapeLength; j++) {
-                t = (length - 1) * lengthSt;
-                s = heightSt * (shape[j].y + heightOffset);
+                s = (length - 1) * lengthSt;
+                t = heightSt * (shape[j].y + heightOffset);
                 st[stindex++] = s;
                 st[stindex++] = t;
             }
