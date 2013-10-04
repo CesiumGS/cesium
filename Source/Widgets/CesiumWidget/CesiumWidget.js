@@ -18,6 +18,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Credit',
+        '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
@@ -44,6 +45,7 @@ define([
         BingMapsImageryProvider,
         CentralBody,
         Credit,
+        Moon,
         Scene,
         SceneMode,
         SceneTransitioner,
@@ -200,6 +202,7 @@ define([
             scene.skyBox = skyBox;
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
             scene.sun = new Sun();
+            scene.moon = new Moon();
 
             //Set the base imagery layer
             var imageryProvider = options.imageryProvider;

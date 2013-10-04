@@ -12,7 +12,10 @@ Beta Releases
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 
+* Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
 * Added a user-defined `id` to all primitives for use with picking.  For example:
@@ -28,6 +31,7 @@ Beta Releases
             if (defined(p) && defined(p.id)) {
                // Use properties and functions in p.id
             }
+* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
 
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 

@@ -7,6 +7,7 @@ attribute vec2 pixelOffset;
 attribute vec4 eyeOffsetAndScale;               // eye offset in meters
 attribute vec4 rotationAndAlignedAxis;
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
+attribute vec4 translucencyByDistance;          // near, nearTrans, far, farTrans
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -23,6 +24,23 @@ varying vec4 v_pickColor;
 #else
 varying vec4 v_color;
 #endif
+
+float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
+{
+    float valueAtMin = nearFarScalar.y;
+    float valueAtMax = nearFarScalar.w;
+    float nearDistanceSq = nearFarScalar.x * nearFarScalar.x;
+    float farDistanceSq = nearFarScalar.z * nearFarScalar.z;
+
+    // ensure that t will fall within the range of [0.0, 1.0]
+    cameraDistSq = clamp(cameraDistSq, nearDistanceSq, farDistanceSq);
+
+    float t = (cameraDistSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
+
+    t = pow(t, 0.15);
+
+    return mix(valueAtMin, valueAtMax, t);
+}
 
 void main() 
 {
@@ -44,8 +62,7 @@ void main()
     positionEC.xyz *= show;
     
     ///////////////////////////////////////////////////////////////////////////     
-    
-#ifdef EYE_DISTANCE_SCALING  // scale based on eye distance
+
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -58,19 +75,23 @@ void main()
         lengthSq = dot(positionEC.xyz, positionEC.xyz);
     }
 
-    float scaleAtMin = scaleByDistance.y;
-    float scaleAtMax = scaleByDistance.w;
-    float nearDistanceSq = scaleByDistance.x * scaleByDistance.x;
-    float farDistanceSq = scaleByDistance.z * scaleByDistance.z;
+#ifdef EYE_DISTANCE_SCALING
+    scale *= getNearFarScalar(scaleByDistance, lengthSq);
+    // push vertex behind near plane for clipping
+    if (scale == 0.0)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
+#endif
 
-    // ensure that t will fall within the range of [0.0, 1.0]
-    lengthSq = clamp(lengthSq, nearDistanceSq, farDistanceSq);
-
-    float t = (lengthSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
-
-    t = pow(t, 0.15);
-
-    scale *= mix(scaleAtMin, scaleAtMax, t);
+    float translucency = 1.0;
+#ifdef EYE_DISTANCE_TRANSLUCENCY
+    translucency = getNearFarScalar(translucencyByDistance, lengthSq);
+    // push vertex behind near plane for clipping
+    if (translucency == 0.0)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
@@ -113,5 +134,6 @@ void main()
     v_pickColor = pickColor;
 #else
     v_color = color;
+    v_color.a *= translucency;
 #endif
 }
