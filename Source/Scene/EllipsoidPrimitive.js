@@ -195,6 +195,7 @@ define([
 
         this._owner = options._owner;
         this._executeInClosestFrustum = defaultValue(options._executeInClosestFrustum, true);
+        this._writeDepth = defaultValue(options._writeDepth, false);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -277,10 +278,15 @@ define([
                 },
                 // Do not write depth since the depth for the bounding box is
                 // wrong; it is not the true of the ray casted ellipsoid.
-                // Once WebGL has the extension for writing gl_FragDepth,
-                // we can write the correct depth.  For now, most ellipsoids
-                // will be translucent so we don't want to write depth anyway.
-                depthMask : false,
+                // For now, most ellipsoids will be translucent so we don't want
+                // to write depth anyway.
+                //
+                // For ellipsoids that we know are opaque and the EXT_frag_depth
+                // extension is available, we can set _writeDepth to true. This is
+                // a workaround and should be updated when we know which primitives
+                // are translucent.
+                // See the road map: https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details
+                depthMask : this._writeDepth && context.getFragmentDepth(),
                 blending : BlendingState.ALPHA_BLEND
             });
         }
@@ -320,7 +326,10 @@ define([
             // Recompile shader when material changes
             if (materialChanged || lightingChanged) {
                 var colorFS = createShaderSource({
-                    defines : [this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : ''],
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
                     sources : [this.material.shaderSource, EllipsoidFS] }
                 );
 
@@ -356,7 +365,10 @@ define([
             // Recompile shader when material changes
             if (materialChanged || lightingChanged || !defined(this._pickSP)) {
                 var pickFS = createShaderSource({
-                    defines : [this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : ''],
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });

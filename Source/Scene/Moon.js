@@ -84,7 +84,8 @@ define([
             material : Material.fromType(Material.ImageType),
             onlySunLighting : this.onlySunLighting,
             _owner : this,
-            _executeInClosestFrustum : false
+            _executeInClosestFrustum : false,
+            _writeDepth : true
         });
 
         this._axes = new IauOrientationAxes();
@@ -95,7 +96,7 @@ define([
     var translationScratch = new Cartesian3();
 
     Moon.prototype.update = function(context, frameState, commandList) {
-        if (!this.show || !frameState.passes.color) {
+        if (!this.show) {
             return;
         }
 

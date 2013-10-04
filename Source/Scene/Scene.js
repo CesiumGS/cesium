@@ -774,6 +774,18 @@ define([
         }
     }
 
+    function updatePrimitives(scene) {
+        var context = scene._context;
+        var frameState = scene._frameState;
+        var commandList = scene._commandList;
+
+        scene._primitives.update(context, frameState, commandList);
+
+        if (defined(scene.moon)) {
+            scene.moon.update(context, frameState, commandList);
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -812,12 +824,7 @@ define([
         us.update(context, frameState);
 
         this._commandList.length = 0;
-        this._primitives.update(context, frameState, this._commandList);
-
-        if (defined(this.moon)) {
-            this.moon.update(context, frameState, this._commandList);
-        }
-
+        updatePrimitives(this);
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
@@ -941,12 +948,11 @@ define([
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
-        
+
         us.update(context, frameState);
 
-        var commandLists = this._commandList;
-        commandLists.length = 0;
-        this._primitives.update(context, frameState, commandLists);
+        this._commandList.length = 0;
+        updatePrimitives(this);
         createPotentiallyVisibleSet(this, 'pickList');
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
@@ -957,7 +963,7 @@ define([
         context.endFrame();
         return object;
     };
-    
+
     /**
      * Returns a list of objects, each containing a `primitive` property, for all primitives at
      * a particular window coordinate position. Other properties may also be set depending on the
