@@ -184,6 +184,14 @@ define([
         this._sunBloom = undefined;
 
         /**
+         * The {@link Moon}
+         *
+         * @type Moon
+         * @default undefined
+         */
+        this.moon = undefined;
+
+        /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
          * @type {Color}
@@ -645,7 +653,11 @@ define([
         }
     }
 
-    function isSunVisible(command, frameState) {
+    function isVisible(command, frameState) {
+        if (!defined(command)) {
+            return;
+        }
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -656,11 +668,14 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
+        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+        var transformedBV = command.boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+                  ((cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) &&
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(transformedBV)))));
     }
 
     function executeCommands(scene, passState, clearColor) {
@@ -686,7 +701,8 @@ define([
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
-        var sunVisible = isSunVisible(sunCommand, frameState);
+        var sunVisible = isVisible(sunCommand, frameState);
+
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -758,6 +774,18 @@ define([
         }
     }
 
+    function updatePrimitives(scene) {
+        var context = scene._context;
+        var frameState = scene._frameState;
+        var commandList = scene._commandList;
+
+        scene._primitives.update(context, frameState, commandList);
+
+        if (defined(scene.moon)) {
+            scene.moon.update(context, frameState, commandList);
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -796,8 +824,7 @@ define([
         us.update(context, frameState);
 
         this._commandList.length = 0;
-        this._primitives.update(context, frameState, this._commandList);
-
+        updatePrimitives(this);
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
@@ -921,12 +948,11 @@ define([
         updateFrameState(this, frameState.frameNumber, frameState.time);
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
-        
+
         us.update(context, frameState);
 
-        var commandLists = this._commandList;
-        commandLists.length = 0;
-        this._primitives.update(context, frameState, commandLists);
+        this._commandList.length = 0;
+        updatePrimitives(this);
         createPotentiallyVisibleSet(this, 'pickList');
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
@@ -937,7 +963,7 @@ define([
         context.endFrame();
         return object;
     };
-    
+
     /**
      * Returns a list of objects, each containing a `primitive` property, for all primitives at
      * a particular window coordinate position. Other properties may also be set depending on the

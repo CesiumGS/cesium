@@ -187,6 +187,16 @@ define([
         this.id = options.id;
         this._id = undefined;
 
+        /**
+         * @private
+         */
+        this.onlySunLighting = defaultValue(options.onlySunLighting, false);
+        this._onlySunLighting = false;
+
+        this._owner = options._owner;
+        this._executeInClosestFrustum = defaultValue(options._executeInClosestFrustum, true);
+        this._writeDepth = defaultValue(options._writeDepth, false);
+
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -268,10 +278,15 @@ define([
                 },
                 // Do not write depth since the depth for the bounding box is
                 // wrong; it is not the true of the ray casted ellipsoid.
-                // Once WebGL has the extension for writing gl_FragDepth,
-                // we can write the correct depth.  For now, most ellipsoids
-                // will be translucent so we don't want to write depth anyway.
-                depthMask : false,
+                // For now, most ellipsoids will be translucent so we don't want
+                // to write depth anyway.
+                //
+                // For ellipsoids that we know are opaque and the EXT_frag_depth
+                // extension is available, we can set _writeDepth to true. This is
+                // a workaround and should be updated when we know which primitives
+                // are translucent.
+                // See the road map: https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details
+                depthMask : this._writeDepth && context.getFragmentDepth(),
                 blending : BlendingState.ALPHA_BLEND
             });
         }
@@ -302,12 +317,21 @@ define([
         this._material = this.material;
         this._material.update(context);
 
+        var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
+        this._onlySunLighting = this.onlySunLighting;
+
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged) {
-                var colorFS = createShaderSource({ sources : [this.material.shaderSource, EllipsoidFS] });
+            if (materialChanged || lightingChanged) {
+                var colorFS = createShaderSource({
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
+                    sources : [this.material.shaderSource, EllipsoidFS] }
+                );
 
                 this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
 
@@ -316,7 +340,8 @@ define([
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
-                colorCommand.executeInClosestFrustum = true;
+                colorCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+                colorCommand.owner = defaultValue(this._owner, this);
             }
 
             colorCommand.boundingVolume = this._boundingSphere;
@@ -338,8 +363,12 @@ define([
             }
 
             // Recompile shader when material changes
-            if (materialChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
                 var pickFS = createShaderSource({
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });
@@ -351,7 +380,8 @@ define([
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
-                pickCommand.executeInClosestFrustum = true;
+                pickCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+                pickCommand.owner = defaultValue(this._owner, this);
             }
 
             pickCommand.boundingVolume = this._boundingSphere;
