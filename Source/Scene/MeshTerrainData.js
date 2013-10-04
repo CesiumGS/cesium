@@ -203,7 +203,7 @@ define([
         var position1 = ellipsoid.cartographicToCartesian(position1Cartographic);
         var position2 = ellipsoid.cartographicToCartesian(position2Cartographic);
 
-        var levelZeroMaxError = position1.subtract(position2).magnitude();
+        var levelZeroMaxError = Cartesian3.magnitude(Cartesian3.subtract(position1, position2));
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
 
         thisLevelMaxError *= 2.0;
@@ -273,7 +273,7 @@ define([
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-            position.subtract(center, position);
+            Cartesian3.subtract(position, center, position);
 
             vertexBuffer[vertexBufferIndex++] = position.x;
             vertexBuffer[vertexBufferIndex++] = position.y;
@@ -690,7 +690,7 @@ define([
                 cartographicScratch.height = vertices[i + hIndex];
 
                 var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-                position.subtract(center, position);
+                Cartesian3.subtract(position, center, position);
 
                 vertices[i + xIndex] = position.x;
                 vertices[i + yIndex] = position.y;
