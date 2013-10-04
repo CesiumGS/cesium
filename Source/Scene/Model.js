@@ -111,6 +111,40 @@ define([
         return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
     };
 
+    var gltfTypes = {
+        FLOAT : {
+            componentsPerAttribute : 1,
+            componentDatatype : ComponentDatatype.FLOAT,
+            createArrayBufferView : function(buffer, byteOffset, length) {
+                return new Float32Array(buffer, byteOffset, length);
+            }
+        },
+        FLOAT_VEC2 : {
+            componentsPerAttribute : 2,
+            componentDatatype : ComponentDatatype.FLOAT,
+            createArrayBufferView : function(buffer, byteOffset, length) {
+                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+            }
+        },
+        FLOAT_VEC3 : {
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT,
+            createArrayBufferView : function(buffer, byteOffset, length) {
+                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+            }
+        },
+        FLOAT_VEC4 : {
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            createArrayBufferView : function(buffer, byteOffset, length) {
+                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+            }
+        }
+// TODO: add other types
+    };
+
+// TODO: what data should we pass to all events?
+
     /**
      * DOC_TBA
      *
@@ -174,9 +208,26 @@ define([
         this._scale = this.scale;
 
         /**
+         * User-defined object returned when the model is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = options.id;
+
+        /**
          * DOC_TBA
          */
-        this.onComplete = new Event();
+        this.onJsonLoad = new Event();
+
+        /**
+         * DOC_TBA
+         */
+        this.onReadyToRender = new Event();
 
 // TODO: will change with animation
 // TODO: only load external files if within bounding sphere
@@ -193,8 +244,7 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
-        this._computedModelMatrix = Matrix4.IDENTITY.clone(); // Derived from modelMatrix and scale
-
+        this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
@@ -221,12 +271,14 @@ define([
             show : options.show,
             modelMatrix : options.modelMatrix,
             scale : options.scale,
+            id : options.id,
             debugShowBoundingVolume : options.debugShowBoundingVolume
         });
 
         loadText(url, options.headers).then(function(data) {
             model.gltf = JSON.parse(data);
             model.basePath = basePath;
+            model.onJsonLoad.raiseEvent();
         });
 
         return model;
@@ -319,9 +371,10 @@ define([
         }
     }
 
-    var defaultTranslation = Cartesian3.clone(Cartesian3.ZERO);
-    var defaultRotation = Quaternion.clone(Quaternion.IDENTITY);
+    var defaultTranslation = Cartesian3.ZERO;
+    var defaultRotation = Quaternion.IDENTITY;
     var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
+    var scratchAxis = new Cartesian3();
 
     function parseNodes(model) {
         var nodes = model.gltf.nodes;
@@ -332,22 +385,31 @@ define([
                 node.czmExtra = {
                     meshesCommands : {},
                     transformToRoot : new Matrix4(),
-                    translation : defaultTranslation,
-                    rotation : defaultRotation,
-                    scale : defaultScale
+                    translation : undefined,
+                    rotation : undefined,
+                    scale : undefined
                 };
 
                 // TRS converted to Cesium types
                 if (defined(node.translation)) {
-                    node.czmExtra.translation = Cartesian3.unpack(node.translation);
+                    node.czmExtra.translation = Cartesian3.fromArray(node.translation);
+                } else {
+                    node.czmExtra.translation = Cartesian3.clone(defaultTranslation);
                 }
 
                 if (defined(node.rotation)) {
-                    node.czmExtra.rotation = Quaternion.fromAxisAngle(Cartesian3.unpack(node.rotation), node.rotation[3]);
+                    var axis = Cartesian3.fromArray(node.rotation, 0, scratchAxis);
+                    var angle = node.rotation[3];
+                    // Negative angle to workaround https://github.com/AnalyticalGraphicsInc/cesium/issues/1221
+                    node.czmExtra.rotation = Quaternion.fromAxisAngle(axis, -angle);
+                } else {
+                    node.czmExtra.rotation = Quaternion.clone(defaultRotation);
                 }
 
                 if (defined(node.scale)) {
-                    node.czmExtra.scale = Cartesian3.unpack(node.scale);
+                    node.czmExtra.scale = Cartesian3.fromArray(node.scale);
+                } else {
+                    node.czmExtra.scale = Cartesian3.clone(defaultScale);
                 }
             }
         }
@@ -381,7 +443,7 @@ define([
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
             bufferView.czmExtra = {
-                buffer : undefined
+                webglBuffer : undefined
             };
 
             if (bufferView.target === 'ARRAY_BUFFER') {
@@ -389,8 +451,10 @@ define([
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
                 vertexBuffer.setVertexArrayDestroyable(false);
-                bufferView.czmExtra.buffer = vertexBuffer;
+                bufferView.czmExtra.webglBuffer = vertexBuffer;
             }
+
+            // bufferViews referencing animations are ignored here and handled in createAnimations.
         }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
@@ -402,11 +466,11 @@ define([
                 var instance = indices[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if (!defined(bufferView.czmExtra.buffer)) {
+                if (!defined(bufferView.czmExtra.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
                     indexBuffer.setVertexArrayDestroyable(false);
-                    bufferView.czmExtra.buffer = indexBuffer;
+                    bufferView.czmExtra.webglBuffer = indexBuffer;
                     // In theory, several glTF indices with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -513,26 +577,6 @@ define([
         }
     }
 
-    var gltfTypes = {
-        FLOAT : {
-            componentsPerAttribute : 1,
-            componentDatatype : ComponentDatatype.FLOAT
-        },
-        FLOAT_VEC2 : {
-            componentsPerAttribute : 2,
-            componentDatatype : ComponentDatatype.FLOAT
-        },
-        FLOAT_VEC3 : {
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT
-        },
-        FLOAT_VEC4 : {
-            componentsPerAttribute : 4,
-            componentDatatype : ComponentDatatype.FLOAT
-        }
-// TODO: add other types
-    };
-
     function getSemanticToAttributeLocations(model, primitive) {
 // TODO: this could be done per material, not per mesh, if we don't change glTF
         var gltf = model.gltf;
@@ -560,6 +604,39 @@ define([
         }
 
         return semanticToAttributeLocations;
+    }
+
+    function createAnimations(model) {
+        var loadResources = model._loadResources;
+
+// TODO: more fine-grained buffer-view-to-webgl-or-animation-buffer dependencies
+         if (!loadResources.finishedPendingLoads()) {
+             return;
+         }
+
+         var buffers = loadResources.buffers;
+         var gltf = model.gltf;
+         var animations = gltf.animations;
+         var bufferViews = gltf.bufferViews;
+         var name;
+
+         for (name in animations) {
+             if (animations.hasOwnProperty(name)) {
+                 var animation = animations[name];
+                 var parameters = animation.parameters;
+
+                 for (name in parameters) {
+                     if (parameters.hasOwnProperty(name)) {
+                         var parameter = parameters[name];
+                         var bufferView = bufferViews[parameter.bufferView];
+
+                         parameter.czmExtra = {
+                             typedArray : gltfTypes[parameter.type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + parameter.byteOffset, parameter.count)
+                         };
+                     }
+                 }
+             }
+         }
     }
 
     function createVertexArrays(model, context) {
@@ -595,7 +672,7 @@ define([
                                  var type = gltfTypes[a.type];
                                  attrs.push({
                                      index                  : semanticToAttributeLocations[name],
-                                     vertexBuffer           : bufferViews[a.bufferView].czmExtra.buffer,
+                                     vertexBuffer           : bufferViews[a.bufferView].czmExtra.webglBuffer,
                                      componentsPerAttribute : type.componentsPerAttribute,
                                      componentDatatype      : type.componentDatatype,
 // TODO: is normalize part of glTF attribute?
@@ -607,7 +684,7 @@ define([
                          }
 
                          var i = indices[primitive.indices];
-                         var indexBuffer = bufferViews[i.bufferView].czmExtra.buffer;
+                         var indexBuffer = bufferViews[i.bufferView].czmExtra.webglBuffer;
 
                          primitive.czmExtra = {
                              vertexArray : context.createVertexArray(attrs, indexBuffer)
@@ -896,10 +973,13 @@ define([
                 var uniformMap = instanceTechnique.czmExtra.uniformMap;
                 var rs = pass.states.czmExtra.renderState;
                 var owner = {
-                    instance : model,
-                    node : node,
-                    mesh : mesh,
-                    primitive : primitive
+                    primitive : model,
+                    id : model.id,
+                    gltf : {
+                        node : node,
+                        mesh : mesh,
+                        primitive : primitive
+                    }
                 };
 
                 var command = new DrawCommand();
@@ -916,7 +996,6 @@ define([
                 command.debugShowBoundingVolume = debugShowBoundingVolume;
                 colorCommands.push(command);
 
-// TODO: Create type for pick owner?  Use for all primitives.
                 var pickId = context.createPickId(owner);
                 pickIds.push(pickId);
 
@@ -991,6 +1070,7 @@ define([
         createSamplers(model, context);
         createTextures(model, context);
 
+        createAnimations(model);
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
@@ -1005,7 +1085,8 @@ define([
             return Matrix4.fromColumnMajorArray(node.matrix, result);
         }
 
-        return Matrix4.fromTranslationQuaternionRotationScale(node.czmExtra.translation, node.czmExtra.rotation, node.czmExtra.scale, result);
+        var extra = node.czmExtra;
+        return Matrix4.fromTranslationQuaternionRotationScale(extra.translation, extra.rotation, extra.scale, result);
     }
 
     // To reduce allocations in update()
@@ -1067,7 +1148,6 @@ define([
 
                     var childMatrix = getNodeMatrix(child, child.czmExtra.transformToRoot);
                     Matrix4.multiply(transformToRoot, childMatrix, child.czmExtra.transformToRoot);
-
                     nodeStack.push(child);
                 }
             }
@@ -1089,6 +1169,85 @@ define([
 
         Cartesian3.clone(sphereCenter, model.worldBoundingSphere.center);
         model.worldBoundingSphere.radius = radius;
+    }
+
+    var frameCount = 0;
+    var ccc_count = 0;
+
+    function raiseAnimationEvents(scheduledAnimation) {
+        if (defined(scheduledAnimation.onStart)) {
+            if (ccc_count === 0) {
+                scheduledAnimation.onStart.raiseEvent();
+            }
+        }
+
+        if (defined(scheduledAnimation.onStop)) {
+            if (ccc_count === scheduledAnimation.animation.count - 1) {
+                scheduledAnimation.onStop.raiseEvent();
+            }
+        }
+    }
+
+    function animate(model) {
+        var scheduledAnimation = model._animation;
+        if (defined(scheduledAnimation)) {
+            var animation = scheduledAnimation.animation;
+
+            raiseAnimationEvents(scheduledAnimation);
+
+            var nodes = model.gltf.nodes;
+            var parameters = animation.parameters;
+            var samplers = animation.samplers;
+            var channels = animation.channels;
+            var length = channels.length;
+
+            for (var i = 0; i < length; ++i) {
+                var channel = channels[i];
+
+                var target = channel.target;
+// TODO: assuming only animating nodes
+                var nodeCzmExtra = nodes[target.id].czmExtra;
+                var animatingProperty = nodeCzmExtra[target.path];
+
+                var sampler = samplers[channel.sampler];
+                var parameter = parameters[sampler.output];
+
+                if (parameter.type === 'FLOAT') {
+// TODO
+                } else if (parameter.type === 'FLOAT_VEC2') {
+// TODO
+                } else if (parameter.type === 'FLOAT_VEC3') {
+                    Cartesian3.fromArray(parameter.czmExtra.typedArray, 3 * ccc_count, animatingProperty);
+                } else if (parameter.type === 'FLOAT_VEC4') {
+// TODO: result param for upack
+                    // Negative angle to workaround https://github.com/AnalyticalGraphicsInc/cesium/issues/1221
+                    Quaternion.fromAxisAngle(Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count), -parameter.czmExtra.typedArray[(4 * ccc_count) + 3], animatingProperty);
+                }
+            }
+
+            if (frameCount++ % 4 === 0) {
+                if (ccc_count++ === animation.count - 1) {
+                    ccc_count = 0;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function updatePickIds(model, context) {
+        var id = model.id;
+        if (model._id !== id) {
+            model._id = id;
+
+            var pickIds = model._pickIds;
+            var length = pickIds.length;
+            for (var i = 0; i < length; ++i) {
+                context.getObjectByPickColor(pickIds[i].color).id = id;
+            }
+        }
     }
 
     /**
@@ -1126,8 +1285,10 @@ define([
 
         // Update modelMatrix throughout the tree as needed
         if (this._state === ModelState.LOADED) {
-            if (!Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
+// TODO: fine-grained partial hiearchy updates for animation
+            var animated = animate(this);
 
+            if (animated || !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
@@ -1138,10 +1299,45 @@ define([
 
         if (justLoaded) {
             // Call after modelMatrix update.
-            frameState.events.push(this.onComplete);
+            frameState.events.push(this.onReadyToRender);
         }
 
+        updatePickIds(this, context);
+
         commandList.push(commandLists);
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @param {String} options.name DOC_TBA
+     * @param {Event} [options.onStart] DOC_TBA
+     * @param {Event} [options.onStop] DOC_TBA
+     *
+     * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#onJsonLoad} event.
+     * @exception {DeveloperError} options.name is required and must be a valid animation name.
+     */
+    Model.prototype.scheduleAnimation = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+// TODO: options should take start time, etc.
+
+        if (!defined(this.gltf)) {
+            throw new DeveloperError('The gltf property is not defined.  Wait for the onJsonLoad event.');
+        }
+
+        var animation = this.gltf.animations[options.name];
+
+        if (!defined(animation)) {
+            throw new DeveloperError('options.name is required and must be a valid animation name.');
+        }
+
+
+// TODO: data structure for all animations.  Should be able to remove them, etc.
+        this._animation = {
+            animation : animation,
+            onStart : options.onStart,
+            onStop : options.onStop
+        };
     };
 
     /**
@@ -1192,7 +1388,7 @@ define([
      */
     Model.prototype.destroy = function() {
         var gltf = this.gltf;
-        destroyCzmExtra(gltf.bufferViews, 'buffer');
+        destroyCzmExtra(gltf.bufferViews, 'webglBuffer');
         destroyCzmExtra(gltf.programs, 'program');
         destroyCzmExtra(gltf.programs, 'pickProgram');
         destroyCzmExtra(gltf.textures, 'texture');
