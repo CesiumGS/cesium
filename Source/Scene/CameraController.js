@@ -291,7 +291,7 @@ define([
      */
     CameraController.prototype.lookLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.up, -amount);
+        this.look(this._camera.up, amount);
     };
 
     /**
@@ -306,7 +306,7 @@ define([
      */
     CameraController.prototype.lookRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.up, amount);
+        this.look(this._camera.up, -amount);
     };
 
     /**
@@ -321,7 +321,7 @@ define([
      */
     CameraController.prototype.lookUp = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.right, -amount);
+        this.look(this._camera.right, amount);
     };
 
     /**
@@ -336,7 +336,7 @@ define([
      */
     CameraController.prototype.lookDown = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.right, amount);
+        this.look(this._camera.right, -amount);
     };
 
     var lookScratchQuaternion = new Quaternion();
@@ -384,7 +384,7 @@ define([
      */
     CameraController.prototype.twistLeft = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, amount);
+        this.look(this._camera.direction, -amount);
     };
 
     /**
@@ -398,7 +398,7 @@ define([
      */
     CameraController.prototype.twistRight = function(amount) {
         amount = defaultValue(amount, this.defaultLookAmount);
-        this.look(this._camera.direction, -amount);
+        this.look(this._camera.direction, amount);
     };
 
     var appendTransformPosition = Cartesian4.clone(Cartesian4.UNIT_W);
@@ -505,7 +505,7 @@ define([
      */
     CameraController.prototype.rotateDown = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, angle, transform);
+        rotateVertical(this, -angle, transform);
     };
 
     /**
@@ -521,7 +521,7 @@ define([
      */
     CameraController.prototype.rotateUp = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateVertical(this, -angle, transform);
+        rotateVertical(this, angle, transform);
     };
 
     var rotateVertScratchP = new Cartesian3();
@@ -576,7 +576,7 @@ define([
      */
     CameraController.prototype.rotateRight = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, -angle, transform);
+        rotateHorizontal(this, angle, transform);
     };
 
     /**
@@ -592,7 +592,7 @@ define([
      */
     CameraController.prototype.rotateLeft = function(angle, transform) {
         angle = defaultValue(angle, this.defaultRotateAmount);
-        rotateHorizontal(this, angle, transform);
+        rotateHorizontal(this, -angle, transform);
     };
 
     function rotateHorizontal(controller, angle, transform) {
@@ -766,7 +766,7 @@ define([
     function setHeading2D(controller, angle) {
         var rightAngle = getHeading2D(controller);
         angle = rightAngle - angle;
-        controller.look(Cartesian3.UNIT_Z, angle);
+        controller.look(Cartesian3.UNIT_Z, -angle);
     }
 
     var scratchHeadingAxis = new Cartesian3();
@@ -777,7 +777,7 @@ define([
         var axis = Cartesian3.normalize(camera.position, scratchHeadingAxis);
         var upAngle = getHeading3D(controller);
         angle = upAngle - angle;
-        controller.look(axis, angle);
+        controller.look(axis, -angle);
     }
 
     function getTiltCV(controller) {
