@@ -127,6 +127,7 @@ defineSuite([
         expect(b.getTranslucencyByDistance()).not.toBeDefined();
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
+        expect(b.getId()).not.toBeDefined();
     });
 
     it('explicitly constructs a billboard', function() {
@@ -150,7 +151,8 @@ defineSuite([
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             width : 300.0,
-            height : 200.0
+            height : 200.0,
+            id : 'id'
         });
 
         expect(b.getShow()).toEqual(false);
@@ -171,6 +173,7 @@ defineSuite([
         expect(b.getTranslucencyByDistance()).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
+        expect(b.getId()).toEqual('id');
     });
 
     it('set billboard properties', function() {
@@ -1157,11 +1160,13 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            imageIndex : 0
+            imageIndex : 0,
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, billboards, 0, 0);
         expect(pickedObject.primitive).toEqual(b);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked', function() {

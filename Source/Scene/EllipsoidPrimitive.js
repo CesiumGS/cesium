@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -21,6 +22,7 @@ define([
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
+        defaultValue,
         BoxGeometry,
         Cartesian3,
         Cartesian4,
@@ -56,13 +58,20 @@ define([
      * @alias EllipsoidPrimitive
      * @constructor
      *
+     * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
+     * @param {Cartesian3} [options.radii=undefined] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
+     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
-     * var e = new EllipsoidPrimitive();
-     * e.center = ellipsoid.cartographicToCartesian(
-     *   Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
-     * e.radii = new Cartesian3(500000.0, 500000.0, 500000.0);
-     * primitives.add(e);
+     * primitives.add(new EllipsoidPrimitive({
+     *   center : ellipsoid.cartographicToCartesian(
+     *     Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+     *   radii : new Cartesian3(500000.0, 500000.0, 500000.0)
+     * }));
      *
      * @example
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
@@ -75,7 +84,9 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
      */
-    var EllipsoidPrimitive = function() {
+    var EllipsoidPrimitive = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The center of the ellipsoid in the ellipsoid's model coordinates.
          * <p>
@@ -87,7 +98,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.center = Cartesian3.clone(Cartesian3.ZERO);
+        this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
@@ -105,7 +116,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.radii = undefined;
+        this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
 
         this._oneOverEllipsoidRadiiSquared = new Cartesian3();
@@ -131,8 +142,8 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-        this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this._computedModelMatrix = new Matrix4();
 
         /**
          * Determines if the ellipsoid primitive will be shown.
@@ -140,7 +151,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
 
         /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -161,8 +172,20 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = Material.fromType(Material.ColorType);
+        this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
+
+        /**
+         * User-defined object returned when the ellipsoid is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = undefined;
 
         this._sp = undefined;
         this._rs = undefined;
@@ -305,9 +328,12 @@ define([
         if (frameState.passes.pick) {
             var pickCommand = this._pickCommand;
 
-            if (!defined(this._pickId)) {
+            if (!defined(this._pickId) || (this._id !== this.id)) {
+                this._id = this.id;
+                this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this
+                    primitive : this,
+                    id : this.id
                 });
             }
 
