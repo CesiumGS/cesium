@@ -930,6 +930,12 @@ require({
         loadDemoFromFile(index);
     }
 
+    function onShowCallback() {
+        return function() {
+            setSubtab(this.title);
+        };
+    }
+
     function addFileToTab(index) {
         var demo = gallery_demos[index];
         if (demo.label !== '') {
@@ -941,9 +947,7 @@ require({
                     var cp = new ContentPane({
                         content: '<div id="' + label + 'Container" class="demosContainer"><div class="demos" id="' + label + 'Demos"></div></div>',
                         title: label,
-                        onShow : function() {
-                            setSubtab(this.title);
-                        }
+                        onShow : onShowCallback()
                     }).placeAt("innerPanel");
                     subtabs[label] = cp;
                     registerScroll(dom.byId(label + 'Container'));
