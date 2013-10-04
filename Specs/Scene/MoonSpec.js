@@ -87,28 +87,9 @@ defineSuite([
 
         us.update(context, frameState);
 
-        var command = moon.update(context, frameState);
-        expect(command).not.toBeDefined();
-
-        moon.destroy();
-    });
-
-    it('does not render without a color pass', function() {
-        var moon = new Moon();
-
-        var context = scene.getContext();
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        frameState.passes.color = false;
-        var us = context.getUniformState();
-        us.update(context, frameState);
-
-        lookAtMoon(scene.getCamera(), frameState.time);
-
-        us.update(context, frameState);
-
-        var command = moon.update(context, frameState);
-        expect(command).not.toBeDefined();
+        var commandList = [];
+        moon.update(context, frameState, commandList);
+        expect(commandList.length).toEqual(0);
 
         moon.destroy();
     });
