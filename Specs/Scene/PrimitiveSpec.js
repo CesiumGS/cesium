@@ -121,6 +121,10 @@ defineSuite([
         expect(primitive.appearance).not.toBeDefined();
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
+        expect(primitive.debugShowBoundingVolume).toEqual(false);
+        expect(primitive.vertexCacheOptimize).toEqual(true);
+        expect(primitive.releaseGeometryInstances).toEqual(true);
+        expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.asynchronous).toEqual(true);
     });
 

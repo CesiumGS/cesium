@@ -81,11 +81,14 @@ define([
      * @alias Primitive
      * @constructor
      *
-     * @param {Array|GeometryInstance} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
-     * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -194,18 +197,6 @@ define([
         this._material = undefined;
 
         /**
-         * Determines if the geometry instances will be created and batched on
-         * a web worker.
-         *
-         * @type Boolean
-         *
-         * @default true
-         *
-         * @private
-         */
-        this.asynchronous = defaultValue(options.asynchronous, true);
-
-        /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
          * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -233,7 +224,32 @@ define([
          *
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoundingVolume = false;
+
+        /**
+         * Determines if the geometry instances will be created and batched on
+         * a web worker.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @private
+         */
+        this.asynchronous = defaultValue(options.asynchronous, true);
 
         this.state = PrimitiveState.READY;
         this._createdGeometries = [];
@@ -835,6 +851,15 @@ define([
 
             colorCommands[i].boundingVolume = boundingSphere;
             pickCommands[i].boundingVolume = boundingSphere;
+        }
+
+        if (this._debugShowBoundingVolume !== this.debugShowBoundingVolume) {
+            this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+            length = colorCommands.length;
+            for (i = 0; i < length; ++i) {
+                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+            }
         }
 
         commandList.push(this._commandLists);
