@@ -113,6 +113,7 @@ require({
     var suggestButton = registry.byId('buttonSuggest');
     var docTimer;
     var docTabs = {};
+    var subtabs = {};
     var docError = false;
     var galleryError = false;
     var galleryTooltipTimer;
@@ -134,6 +135,7 @@ require({
     var searchTerm = '';
     var searchRegExp;
     var hintTimer;
+    var currentTab = '';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -838,6 +840,7 @@ require({
         queryObject = ioQuery.queryToObject(window.location.search.substring(1));
     } else {
         queryObject.src = 'Hello World.html';
+        queryObject.subtab = 'Showcases';
     }
 
     function loadDemoFromFile(index) {
@@ -899,9 +902,8 @@ require({
             if (typeof queryObject.src !== 'undefined') {
                 if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
                     loadFromGallery(demo);
-                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html');
+                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&subtab=' + queryObject.subtab);
                     document.title = demo.name + ' - Cesium Sandcastle';
-                    queryObject.src = undefined;
                 }
             }
 
@@ -914,6 +916,12 @@ require({
 
             addFileToTab(index);
         });
+    }
+
+    function setSubtab(tabName) {
+        currentTab = (typeof queryObject.subtab !== 'undefined') ? queryObject.subtab : tabName;
+        window.history.replaceState({}, 'name', '?src=' + queryObject.src + '&subtab=' + currentTab);
+        queryObject.subtab = undefined;
     }
 
     function addFileToGallery(index) {
@@ -930,10 +938,14 @@ require({
                 var label = labels[j];
                 label = label.trim();
                 if(!dom.byId(label + 'Demos')) {
-                    new ContentPane({
-                        content:'<div id="' + label + 'Container" class="demosContainer"><div class="demos" id="' + label + 'Demos"></div></div>',
-                        title: label
-                        }).placeAt("innerPanel");
+                    var cp = new ContentPane({
+                        content: '<div id="' + label + 'Container" class="demosContainer"><div class="demos" id="' + label + 'Demos"></div></div>',
+                        title: label,
+                        onShow : function() {
+                            setSubtab(this.title);
+                        }
+                    }).placeAt("innerPanel");
+                    subtabs[label] = cp;
                     registerScroll(dom.byId(label + 'Container'));
                 }
                 var tabName = label + 'Demos';
@@ -963,7 +975,7 @@ require({
                 loadFromGallery(demo);
                 var demoSrc = demo.name + '.html';
                 if (demoSrc !== window.location.search.substring(1)) {
-                    window.history.pushState(demo, demo.name, '?src=' + demoSrc);
+                    window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&subtab=' + currentTab);
                 }
                 document.title = demo.name + ' - Cesium Sandcastle';
             }
@@ -988,6 +1000,17 @@ require({
         galleryErrorMsg.textContent = 'No demos found, please run the build script.';
         galleryErrorMsg.style.display = 'inline-block';
     } else {
+        var label = 'Showcases';
+        var cp = new ContentPane({
+            content : '<div id="showcasesContainer" class="demosContainer"><div class="demos" id="ShowcasesDemos"></div></div>',
+            title : 'Showcases',
+            onShow : function() {
+                setSubtab(this.title);
+            }
+        }).placeAt("innerPanel");
+        subtabs[label] = cp;
+        registerScroll(dom.byId('showcasesContainer'));
+
         var i;
         var len = gallery_demos.length;
 
@@ -1007,10 +1030,15 @@ require({
             }
         }
 
-        new ContentPane({
-            content:'<div id="allContainer" class="demosContainer"><div class="demos" id="allDemos"></div></div>',
-            title: 'All'
-            }).placeAt("innerPanel");
+        label = 'All';
+        cp = new ContentPane({
+            content : '<div id="allContainer" class="demosContainer"><div class="demos" id="allDemos"></div></div>',
+            title : label,
+            onShow : function() {
+                setSubtab(this.title);
+            }
+        }).placeAt("innerPanel");
+        subtabs[label] = cp;
         registerScroll(dom.byId('allContainer'));
 
         var demos = dom.byId('allDemos');
@@ -1030,4 +1058,5 @@ require({
     var searchContainer = registry.byId('searchContainer');
 
     hideSearchContainer();
+    registry.byId('innerPanel').selectChild(subtabs[currentTab]);
 });
