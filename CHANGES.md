@@ -12,6 +12,8 @@ Beta Releases
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
