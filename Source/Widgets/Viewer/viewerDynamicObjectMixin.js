@@ -132,7 +132,7 @@ define([
             if (defined(picked) &&
                 defined(picked.primitive) &&
                 defined(picked.primitive.dynamicObject)) {
-                trackObject(picked.primitive.dynamicObject);
+                viewer.trackedObject = picked.primitive.dynamicObject;
             }
         }
 

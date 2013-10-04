@@ -131,6 +131,8 @@ define([
         if (viewModel._positionY !== positionYPx) {
             viewModel._positionY = positionYPx;
         }
+
+        return position;
     }
 
     /**
