@@ -92,23 +92,22 @@ define([
     var createGeometryFromPositionsPositions = [];
 
     function createGeometryFromPositions(ellipsoid, positions, granularity) {
-        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-        if (cleanedPositions.length < 3) {
-            throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
-        }
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            cleanedPositions.reverse();
+            positions.reverse();
         }
 
         var indices = PolygonPipeline.triangulate(positions2D);
+        /* If polygon is completely unrenderable, just use the first three vertices */
+        if (indices.length < 3) {
+            indices = [0, 1, 2];
+        }
         return new GeometryInstance({
-            geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
+            geometry : PolygonPipeline.computeSubdivision(positions, indices, granularity)
         });
     }
 
@@ -131,8 +130,7 @@ define([
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
-            var cleanedPositions = PolygonPipeline.removeDuplicates(outerPositions);
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
             var origin = appendTextureCoordinatesOrigin;
@@ -194,13 +192,13 @@ define([
 
                             if (recomputeNormal) {
                                 var p2 = Cartesian3.fromArray(flatPositions, i + length, p2Scratch);
-                                p1.subtract(position, p1);
-                                p2.subtract(position, p2);
-                                normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
+                                Cartesian3.subtract(p1, position, p1);
+                                Cartesian3.subtract(p2, position, p2);
+                                normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
                                 recomputeNormal = false;
                             }
 
-                            if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
+                            if (Cartesian3.equalsEpsilon(p1, position, CesiumMath.EPSILON10)) { // if we've reached a corner
                                 recomputeNormal = true;
                             }
                         }
@@ -208,7 +206,7 @@ define([
                         if (vertexFormat.tangent || vertexFormat.binormal) {
                             binormal = ellipsoid.geodeticSurfaceNormal(position, binormal);
                             if (vertexFormat.tangent) {
-                                tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                                tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
                             }
                         }
 
@@ -216,9 +214,9 @@ define([
                         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
                         if (vertexFormat.tangent || vertexFormat.binormal) {
                             tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                            tangent = Matrix3.multiplyByVector(textureMatrix, tangent, tangent).normalize(tangent);
+                            tangent = Cartesian3.normalize(Matrix3.multiplyByVector(textureMatrix, tangent, tangent), tangent);
                             if (vertexFormat.binormal) {
-                                binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                                binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                             }
                         }
                     }
@@ -628,25 +626,30 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-
+            var holes = outerNode.holes;
+            outerRing = PolygonPipeline.removeDuplicates(outerRing);
             if (outerRing.length < 3) {
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            var numChildren = holes ? holes.length : 0;
             if (numChildren === 0) {
                 // The outer polygon is a simple polygon with no nested inner polygon.
                 polygonHierarchy.push({
                     outerRing: outerRing,
                     holes: []
                 });
-                polygons.push(outerNode.positions);
+                polygons.push(outerRing);
             } else {
                 // The outer polygon contains inner polygons
-                var holes = [];
+                var polygonHoles = [];
                 for (i = 0; i < numChildren; i++) {
-                    var hole = outerNode.holes[i];
-                    holes.push(hole.positions);
+                    var hole = holes[i];
+                    hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                    if (hole.positions.length < 3) {
+                        throw new DeveloperError('At least three positions are required.');
+                    }
+                    polygonHoles.push(hole.positions);
 
                     var numGrandchildren = 0;
                     if (defined(hole.holes)) {
@@ -659,9 +662,9 @@ define([
                 }
                 polygonHierarchy.push({
                     outerRing: outerRing,
-                    holes: holes
+                    holes: polygonHoles
                 });
-                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, polygonHoles);
                 polygons.push(combinedPolygon);
             }
         }
@@ -713,7 +716,7 @@ define([
         center = Cartesian3.add(center, scratchPosition, center);
 
         if (extrude) {
-            scratchBoundingSphere = boundingSphere.clone(scratchBoundingSphere);
+            scratchBoundingSphere = BoundingSphere.clone(boundingSphere, scratchBoundingSphere);
             center = scratchBoundingSphere.center;
             scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, extrudedHeight, scratchPosition);
             center = Cartesian3.add(ellipsoid.scaleToGeodeticSurface(center, center), scratchPosition, center);

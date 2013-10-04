@@ -138,18 +138,18 @@ define([
          * </p>
          *
          * @type {Material}
-         * @default Material.fromType(undefined, Material.ColorType)
+         * @default Material.fromType(Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
          * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * sensor.material = Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
@@ -170,6 +170,17 @@ define([
          * @see CustomSensorVolume#showIntersection
          */
         this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
+
+        /**
+         * User-defined object returned when the sensors is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
 
         var customSensorOptions = clone(options);
         customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
@@ -200,6 +211,7 @@ define([
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
         s.intersectionWidth = this.intersectionWidth;
+        s.id = this.id;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 

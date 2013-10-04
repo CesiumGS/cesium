@@ -4,8 +4,101 @@ Change Log
 Beta Releases
 -------------
 
+### b22 - 2013-11-01
+
+* Breaking changes:
+   * The following prototype functions were removed:
+      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
+      * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
+
+      Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+
+* Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
+* Added `options` argument to the `EllipsoidPrimitive` constructor.
+* Added a user-defined `id` to all primitives for use with picking.  For example:
+
+            primitives.add(new Polygon({
+                id : {
+                    // User-defined object returned by Scene.pick
+                },
+                // ...
+            }));
+            // ...
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.id)) {
+               // Use properties and functions in p.id
+            }
+
 ### b21 - 2013-10-01
+
+* Breaking changes:
+   * Cesium now prints a reminder to the console if your application uses Bing Maps imagery and you do not supply a Bing Maps key for your application.  This is a reminder that you should create a Bing Maps key for your application as soon as possible and prior to deployment.  You can generate a Bing Maps key by visiting [https://www.bingmapsportal.com/](https://www.bingmapsportal.com/).  Set the `BingMapsApi.defaultKey` property to the value of your application's key before constructing the `CesiumWidget` or any other types that use the Bing Maps API.
+
+            BingMapsApi.defaultKey = 'my-key-generated-with-bingmapsportal.com';
+
+   * `Scene.pick` now returns an object with a `primitive` property, not the primitive itself.  For example, code that looked like:
+
+            var primitive = scene.pick(/* ... */);
+            if (defined(primitive)) {
+               // Use primitive
+            }
+
+      should now look like:
+
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.primitive)) {
+               // Use p.primitive
+            }
+
+   * Removed `getViewMatrix`, `getInverseViewMatrix`, `getInverseTransform`, `getPositionWC`, `getDirectionWC`, `getUpWC` and `getRightWC` from `Camera`. Instead, use the `viewMatrix`, `inverseViewMatrix`, `inverseTransform`, `positionWC`, `directionWC`, `upWC`, and `rightWC` properties.
+   * Removed `getProjectionMatrix` and `getInfiniteProjectionMatrix` from `PerspectiveFrustum`, `PerspectiveOffCenterFrustum` and `OrthographicFrustum`. Instead, use the `projectionMatrix` and `infiniteProjectionMatrix` properties.
+   * The following prototype functions were removed:
+      * From `Quaternion`: `conjugate`, `magnitudeSquared`, `magnitude`, `normalize`, `inverse`, `add`, `subtract`, `negate`, `dot`, `multiply`, `multiplyByScalar`, `divideByScalar`, `getAxis`, `getAngle`, `lerp`, `slerp`, `equals`, `equalsEpsilon`
+      * From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, and `equalsEpsilon`.
+      * From `Cartesian3`: `cross`
+
+      Code that previously looked like `quaternion.magnitude();` should now look like `Quaternion.magnitude(quaternion);`.
+   * `DynamicObjectCollection` and `CompositeDynamicObjectCollection` have been largely re-written, see the documentation for complete details.  Highlights include:
+      * `getObject` has been renamed `getById`
+      * `removeObject` has been renamed `removeById`
+      * `collectionChanged` event added for notification of objects being added or removed.
+   * `DynamicScene` graphics object (`DynamicBillboard`, etc...) have had their static `mergeProperties` and `clean` functions removed.
+   * `UniformState.update` now takes a context as its first parameter.
+   * `Camera` constructor now takes a context instead of a canvas.
+   * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
+   * Removed `canvasDimensions` from `FrameState`.
+   * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
+   * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+* Added `Geometries` tab to Sandcastle with an example for each geometry type.
 * Added `CorridorOutlineGeometry`.
+* Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
+* Added `colors` option to `SimplePolylineGeometry` for per vertex or per segment colors.
+* Added proper support for browser zoom.
+* Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
+* Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
+* Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
+* Added `heading` and `tilt` properties to `CameraController`.
+* Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
+* Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
+* Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
+* Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
+* Improved graphics performance.
+    * An Everest terrain view went from 135-140 to over 150 frames per second.
+    * Rendering over a thousand polylines in the same collection with different materials went from 20 to 40 frames per second.
+* Improved runtime generation of GLSL shaders.
+* Made sun size accurate.
+* Fixed bug in triangulation that fails on complex polygons. Instead, it makes a best effort to render what it can. [#1121](https://github.com/AnalyticalGraphicsInc/cesium/issues/1121)
+* Fixed geometries not closing completely. [#1093](https://github.com/AnalyticalGraphicsInc/cesium/issues/1093)
+* Fixed `EllipsoidTangentPlane.projectPointOntoPlane` for tangent planes on an ellipsoid other than the unit sphere.
+* `CompositePrimitive.add` now returns the added primitive. This allows us to write more concise code.
+
+        var p = new Primitive(/* ... */);
+        primitives.add(p);
+        return p;
+
+  becomes
+
+        return primitives.add(new Primitive(/* ... */));
 
 ### b20 - 2013-09-03
 
@@ -17,7 +110,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
     * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
        * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
        * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
-          * `Property` - base interface for all properties. 
+          * `Property` - base interface for all properties.
           * `CompositeProperty` - a property composed of other properties.
           * `ConstantProperty` - a property whose value never changes.
           * `SampledProperty` - a property whose value is interpolated from a set of samples.
@@ -32,29 +125,28 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
           * `ConstantPositionProperty` - a `PositionProperty` whose value does not change in respect to the `ReferenceFrame` in which is it defined.
           * `SampledPositionProperty` - a `SampledProperty` for positions.
           * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
-    * Removed `processCzml`, use `CzmlDataSource` instead.    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
+    * Removed `processCzml`, use `CzmlDataSource` instead.
+    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
       * `options.extrudedOptions.closeBottom` -> `options.closeTop`
     * Geometry constructors no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
-```javascript
-var boxGeometry = new BoxGeometry({
-  minimumCorner : min,
-  maximumCorner : max,
-  vertexFormat : VertexFormat.POSITION_ONLY
-});
-```
+
+            var boxGeometry = new BoxGeometry({
+              minimumCorner : min,
+              maximumCorner : max,
+              vertexFormat : VertexFormat.POSITION_ONLY
+            });
 
       should now look like:
-```javascript
-var box = new BoxGeometry({
-    minimumCorner : min,
-    maximumCorner : max,
-    vertexFormat : VertexFormat.POSITION_ONLY
-});
-var geometry = BoxGeometry.createGeometry(box);
-```
+
+            var box = new BoxGeometry({
+                minimumCorner : min,
+                maximumCorner : max,
+                vertexFormat : VertexFormat.POSITION_ONLY
+            });
+            var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
@@ -70,9 +162,9 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled.
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
-* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
+* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them.
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.

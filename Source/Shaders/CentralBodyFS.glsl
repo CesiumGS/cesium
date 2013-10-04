@@ -3,12 +3,31 @@
 #if TEXTURE_UNITS > 0
 uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
+
+#ifdef APPLY_ALPHA
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_BRIGHTNESS
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_CONTRAST
 uniform float u_dayTextureContrast[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_HUE
 uniform float u_dayTextureHue[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_SATURATION
 uniform float u_dayTextureSaturation[TEXTURE_UNITS];
+#endif
+
+#ifdef APPLY_GAMMA
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
 #endif
 
@@ -25,20 +44,6 @@ uniform sampler2D u_oceanNormalMap;
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
-
-// TODO: use built-in function when shader pipeline is ready
-float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
-{
-    return max(dot(lightDirectionEC, normalEC), 0.0);
-}
-
-// TODO: use built-in function when shader pipeline is ready
-float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
-{
-    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
-    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
-    return pow(specular, shininess);
-}
 
 vec3 sampleAndBlend(
     vec3 previousColor,
@@ -188,7 +193,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     const vec3 waveHighlightColor = vec3(0.3, 0.45, 0.6);
     
     // Use diffuse light to highlight the waves
-    float diffuseIntensity = getLambertDiffuse(czm_sunDirectionEC, normalEC);
+    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC);
     vec3 diffuseHighlight = waveHighlightColor * diffuseIntensity;
     
 #ifdef SHOW_OCEAN_WAVES
@@ -201,7 +206,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 #endif
 
     // Add specular highlights in 3D, and in all modes when zoomed in.
-    float specularIntensity = getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
+    float specularIntensity = czm_getSpecular(czm_sunDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0) + 0.25 * czm_getSpecular(czm_moonDirectionEC, normalizedpositionToEyeEC, normalEC, 10.0);
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
     float specular = specularIntensity * surfaceReflectance;
     

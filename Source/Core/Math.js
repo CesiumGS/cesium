@@ -165,11 +165,11 @@ define([
     CesiumMath.GRAVITATIONALPARAMETER = 3.986004418e14;
 
     /**
-     * Radius of the sun in meters: 6.995e8
+     * Radius of the sun in meters: 6.955e8
      * @type {Number}
      * @constant
      */
-    CesiumMath.SOLAR_RADIUS = 6.995e8;
+    CesiumMath.SOLAR_RADIUS = 6.955e8;
 
     /**
      * 64 * 1024

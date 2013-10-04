@@ -42,7 +42,7 @@ defineSuite([
         var radii = Ellipsoid.WGS84.getRadii();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).toBeDefined();
@@ -61,7 +61,7 @@ defineSuite([
         var radii = Ellipsoid.WGS84.getRadii();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.5, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).toBeDefined();
@@ -78,7 +78,7 @@ defineSuite([
         var radii = Ellipsoid.WGS84.getRadii();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();
@@ -92,7 +92,7 @@ defineSuite([
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.mode = SceneMode.SCENE2D;
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();
@@ -106,7 +106,7 @@ defineSuite([
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.passes.color = false;
-        us.update(frameState);
+        us.update(context, frameState);
 
         var command = s.update(context, frameState);
         expect(command).not.toBeDefined();

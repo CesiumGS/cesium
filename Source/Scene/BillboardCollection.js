@@ -194,8 +194,8 @@ define([
          * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
-        this._modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         this._mode = SceneMode.SCENE3D;
         this._projection = undefined;
@@ -257,7 +257,8 @@ define([
      *   scale : 1.0,
      *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
-     *   color : Color.WHITE
+     *   color : Color.WHITE,
+     *   id : undefined
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.
@@ -590,7 +591,7 @@ define([
         var length = sixteenK * 6;
         var indices = new Uint16Array(length);
         for (var i = 0, j = 0; i < length; i += 6, j += 4) {
-            indices[i + 0] = j + 0;
+            indices[i] = j;
             indices[i + 1] = j + 1;
             indices[i + 2] = j + 2;
 
@@ -945,11 +946,11 @@ define([
         if (billboardCollection._mode !== mode ||
             billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
-            !modelMatrix.equals(billboardCollection.modelMatrix)) {
+            !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
 
             billboardCollection._mode = mode;
             billboardCollection._projection = projection;
-            billboardCollection.modelMatrix.clone(modelMatrix);
+            Matrix4.clone(billboardCollection.modelMatrix, modelMatrix);
             billboardCollection._createVertexArray = true;
 
             if (mode === SceneMode.SCENE3D || mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
@@ -962,7 +963,7 @@ define([
         }
     }
 
-    var scratchCanvasDimensions = new Cartesian2();
+    var scratchDrawingBufferDimensions = new Cartesian2();
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
     function updateBoundingVolume(collection, context, frameState, boundingVolume) {
@@ -973,14 +974,13 @@ define([
         var size;
         var offset;
 
-        var toCenter = camera.getPositionWC().subtract(boundingVolume.center, scratchToCenter);
-        var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
-        var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
+        var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
-        var canvas = context.getCanvas();
-        scratchCanvasDimensions.x = canvas.clientWidth;
-        scratchCanvasDimensions.y = canvas.clientHeight;
-        var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
+        scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
+        scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
+        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
         size = pixelScale * collection._maxScale * collection._maxSize * 2.0;

@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Construct and apply materials to rectangular and custom sensors.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript">
@@ -78,8 +79,11 @@ require([
     {
         var location = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, altitude));
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(location);
-        var orientation = ((Cesium.Matrix3.fromRotationZ(clock)).multiply(Cesium.Matrix3.fromRotationY(cone))).multiply(Cesium.Matrix3.fromRotationX(twist));
-        return modelMatrix.multiply(Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO));
+        var orientation = Cesium.Matrix3.multiply(
+                            Cesium.Matrix3.multiply(Cesium.Matrix3.fromRotationZ(clock), Cesium.Matrix3.fromRotationY(cone)),
+                            Cesium.Matrix3.fromRotationX(twist)
+                          );
+        return Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO));
     }
 
     function addRectangularSensor(sensors, ellipsoid, scene) {
@@ -91,7 +95,7 @@ require([
         rectangularPyramidSensor.xHalfAngle = Cesium.Math.toRadians(40.0);
         rectangularPyramidSensor.yHalfAngle = Cesium.Math.toRadians(20.0);
 
-        rectangularPyramidSensor.material = Cesium.Material.fromType(scene.getContext(), 'Color');
+        rectangularPyramidSensor.material = Cesium.Material.fromType('Color');
         rectangularPyramidSensor.material.uniforms.color = {
             red : 0.0,
             green : 1.0,

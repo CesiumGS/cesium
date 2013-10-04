@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Use the mouse to select and manipulate objects in the scene.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
@@ -81,14 +82,15 @@ require(['Cesium'], function(Cesium) {
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
-                if (billboard && pickedObject === billboard) {
-                    billboard.setScale(2.0);
-                    billboard.setColor({ red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 });
-                }
-                else if (billboard) {
-                    billboard.setScale(1.0);
-                    billboard.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 });
+                if (Cesium.defined(billboard)) {
+                    var pickedObject = scene.pick(movement.endPosition);
+                    if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard)) {
+                        billboard.setScale(2.0);
+                        billboard.setColor({ red : 1.0, green : 1.0, blue : 0.0, alpha : 1.0 });
+                    } else {
+                        billboard.setScale(1.0);
+                        billboard.setColor({ red : 1.0, green : 1.0, blue : 1.0, alpha : 1.0 });
+                    }
                 }
             },
             Cesium.ScreenSpaceEventType.MOUSE_MOVE
@@ -116,7 +118,7 @@ require(['Cesium'], function(Cesium) {
         handler.setInputAction(function (movement) {
             if (billboard) {
                 var pickedObject = scene.pick(movement.endPosition);
-                if ((pickedObject === billboard) && !billboard.highlighted) {
+                if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard) && !billboard.highlighted) {
                     // on enter
                     animation = animation || scene.getAnimations().add({
                         onUpdate : update,
@@ -172,7 +174,7 @@ require(['Cesium'], function(Cesium) {
 
         // Setup - Add the sensor.
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
+        modelMatrix = Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
         var sensors = new Cesium.SensorVolumeCollection();
         var sensor = sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,
@@ -180,7 +182,7 @@ require(['Cesium'], function(Cesium) {
             xHalfAngle : Cesium.Math.toRadians(40.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
             showIntersection : false,
-            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
+            material : Cesium.Material.fromType('Erosion')
         });
         scene.getPrimitives().add(sensors);
 
@@ -190,7 +192,7 @@ require(['Cesium'], function(Cesium) {
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.position);
-                if (!eroding && (pickedObject === sensor)) {
+                if (!eroding && Cesium.defined(pickedObject) && (pickedObject.primitive === sensor)) {
                     // Prevent multiple erosions
                     eroding = true;
                     scene.getAnimations().addProperty(sensor.material.uniforms, 'time', 1.0, 0.0, {
@@ -211,43 +213,41 @@ require(['Cesium'], function(Cesium) {
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
             handler.setInputAction(function(movement) {
                 var p = scene.pick(movement.endPosition);
-                if (primitives.contains(p)) {
-                    primitives.raiseToTop(p);
+                if (Cesium.defined(p) && primitives.contains(p.primitive)) {
+                    primitives.raiseToTop(p.primitive);
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        // Construct the primitives.
-        var redPolygon = new Cesium.Polygon();
-        redPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-70.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 30.0), Cesium.Cartographic.fromDegrees(-60.0, 40.0), Cesium.Cartographic.fromDegrees(-70.0, 40.0)]));
-        redPolygon.material.uniforms.color = {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
-
-        var bluePolygon = new Cesium.Polygon();
-        bluePolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-75.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 34.0), Cesium.Cartographic.fromDegrees(-63.0, 40.0), Cesium.Cartographic.fromDegrees(-75.0, 40.0)]));
-        bluePolygon.material.uniforms.color = {
-            red : 0.0,
-            green : 0.0,
-            blue : 1.0,
-            alpha : 0.5
-        };
-
-        var greenPolygon = new Cesium.Polygon();
-        greenPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([Cesium.Cartographic.fromDegrees(-67.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 36.0), Cesium.Cartographic.fromDegrees(-55.0, 30.0), Cesium.Cartographic.fromDegrees(-67.0, 30.0)]));
-        greenPolygon.material.uniforms.color = {
-            red : 0.0,
-            green : 1.0,
-            blue : 0.0,
-            alpha : 0.5
-        };
-
         // Add primitives from bottom to top.
-        primitives.add(redPolygon);
-        primitives.add(bluePolygon);
-        primitives.add(greenPolygon);
+        var redPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
+            ])
+        }));
+        redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+
+        var bluePolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
+            ])
+        }));
+        bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
+
+        var greenPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
+            ])
+        }));
+        greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
     }
     
     function drawExtent(scene, ellipsoid) {

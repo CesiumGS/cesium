@@ -15,16 +15,19 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var camera;
-    var canvas = {
-        clientWidth : 1024,
-        clientHeight : 768
-    };
 
     beforeEach(function() {
-        camera = new Camera(canvas);
+        camera = new Camera({
+            getDrawingBufferWidth: function() {
+                return 1024;
+            },
+            getDrawingBufferHeight: function() {
+                return 768;
+            }
+        });
         camera.position = new Cartesian3();
         camera.up = Cartesian3.UNIT_Y;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.frustum.near = 1.0;
         camera.frustum.far = 2.0;
         camera.frustum.fovy = (Math.PI) / 3;
@@ -38,7 +41,7 @@ defineSuite([
     });
 
     it('get view matrix', function() {
-        var viewMatrix = camera.getViewMatrix();
+        var viewMatrix = camera.viewMatrix;
         var position = camera.position;
         var up = camera.up;
         var dir = camera.direction;
@@ -51,19 +54,19 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = rotation.multiply(translation);
+        var expected = Matrix4.multiply(rotation, translation);
         expect(viewMatrix).toEqual(expected);
     });
 
     it('get inverse view matrix', function() {
-        var expected = camera.getViewMatrix().inverse();
-        expect(expected).toEqualEpsilon(camera.getInverseViewMatrix(), CesiumMath.EPSILON15);
+        var expected = Matrix4.inverse(camera.viewMatrix);
+        expect(expected).toEqualEpsilon(camera.inverseViewMatrix, CesiumMath.EPSILON15);
     });
 
     it('get inverse transform', function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
-        var expected = camera.transform.inverseTransformation();
-        expect(expected).toEqual(camera.getInverseTransform());
+        var expected = Matrix4.inverseTransformation(camera.transform);
+        expect(expected).toEqual(camera.inverseTransform);
     });
 
     it('worldToCameraCoordinates throws without cartesian', function() {

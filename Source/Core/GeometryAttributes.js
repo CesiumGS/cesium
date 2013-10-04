@@ -76,6 +76,18 @@ define(['./defaultValue'], function(defaultValue) {
          * @default undefined
          */
         this.tangent = options.tangent;
+
+        /**
+         * The color attribute.
+         * <p>
+         * 8-bit unsigned integer. 4 components per attribute.
+         * </p>
+         *
+         * @type GeometryAttribute
+         *
+         * @default undefined
+         */
+        this.color = options.color;
     };
 
     return GeometryAttributes;

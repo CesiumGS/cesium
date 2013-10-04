@@ -18,7 +18,16 @@ defineSuite([
     });
 
     it('toValue', function() {
-        expect(ShowGeometryInstanceAttribute.toValue(true)).toEqual(new Uint8Array([true]));
+        var expectedResult = new Uint8Array([true]);
+        expect(ShowGeometryInstanceAttribute.toValue(true)).toEqual(expectedResult);
+    });
+
+    it('toValue works with a result parameter', function() {
+        var expectedResult = new Uint8Array([true]);
+        var result = new Uint8Array(1);
+        var returnedResult = ShowGeometryInstanceAttribute.toValue(true, result);
+        expect(returnedResult).toEqual(expectedResult);
+        expect(returnedResult).toBe(result);
     });
 
     it('toValue throws without a color', function() {

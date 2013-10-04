@@ -26,57 +26,57 @@ defineSuite([
         frustum.left = -1.0;
         frustum.top = 1.0;
         frustum.bottom = -1.0;
-        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.UNIT_Z.negate(), Cartesian3.UNIT_Y).planes;
+        planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
     });
 
     it('left greater than right causes an exception', function() {
         frustum.left = frustum.right + 1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('bottom greater than top throws an exception', function() {
         frustum.bottom = frustum.top + 1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('out of range near plane throws an exception', function() {
         frustum.near = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
 
         frustum.far = 3.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('negative far plane throws an exception', function() {
         frustum.far = -1.0;
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 
     it('computeCullingVolume with no position throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume();
+            return frustum.computeCullingVolume();
         }).toThrow();
     });
 
     it('computeCullingVolume with no direction throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume(new Cartesian3());
+            return frustum.computeCullingVolume(new Cartesian3());
         }).toThrow();
     });
 
     it('computeCullingVolume with no up throws an exception', function() {
         expect(function() {
-            frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
+            return frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
         }).toThrow();
     });
 
@@ -117,7 +117,7 @@ defineSuite([
     });
 
     it('get orthographic projection matrix', function() {
-        var projectionMatrix = frustum.getProjectionMatrix();
+        var projectionMatrix = frustum.projectionMatrix;
         var expected = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
@@ -154,7 +154,7 @@ defineSuite([
     it('throws with undefined frustum parameters', function() {
         var frustum = new OrthographicFrustum();
         expect(function() {
-            frustum.getProjectionMatrix();
+            return frustum.projectionMatrix;
         }).toThrow();
     });
 });

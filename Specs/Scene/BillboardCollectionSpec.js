@@ -65,7 +65,7 @@ defineSuite([
         context = createContext();
 
         var us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -126,6 +126,7 @@ defineSuite([
         expect(b.getScaleByDistance()).not.toBeDefined();
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
+        expect(b.getId()).not.toBeDefined();
     });
 
     it('explicitly constructs a billboard', function() {
@@ -148,7 +149,8 @@ defineSuite([
             alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             width : 300.0,
-            height : 200.0
+            height : 200.0,
+            id : 'id'
         });
 
         expect(b.getShow()).toEqual(false);
@@ -168,6 +170,7 @@ defineSuite([
         expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
+        expect(b.getId()).toEqual('id');
     });
 
     it('set billboard properties', function() {
@@ -237,7 +240,7 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         // clear screen
@@ -245,11 +248,11 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         // camera at 6.0 above billboard, expect no green pixels to be rendered, as scale is 0.0
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         // revert framestate
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     it('throws setScaleByDistance with nearDistance === farDistance', function() {
@@ -1092,11 +1095,13 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            imageIndex : 0
+            imageIndex : 0,
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, billboards, 0, 0);
-        expect(pickedObject).toEqual(b);
+        expect(pickedObject.primitive).toEqual(b);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked', function() {

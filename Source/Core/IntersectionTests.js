@@ -63,8 +63,8 @@ define([
             return undefined;
         }
 
-        result = direction.multiplyByScalar(t, result);
-        return Cartesian3.add(origin, result);
+        result = Cartesian3.multiplyByScalar(direction, t, result);
+        return Cartesian3.add(origin, result, result);
     };
 
     /**
@@ -88,11 +88,11 @@ define([
         }
 
         var inverseRadii = ellipsoid.getOneOverRadii();
-        var q = inverseRadii.multiplyComponents(ray.origin);
-        var w = inverseRadii.multiplyComponents(ray.direction);
+        var q = Cartesian3.multiplyComponents(inverseRadii, ray.origin);
+        var w = Cartesian3.multiplyComponents(inverseRadii, ray.direction);
 
-        var q2 = q.magnitudeSquared();
-        var qw = q.dot(w);
+        var q2 = Cartesian3.magnitudeSquared(q);
+        var qw = Cartesian3.dot(q, w);
 
         var difference, w2, product, discriminant, temp;
 
@@ -106,7 +106,7 @@ define([
             // qw < 0.0.
             var qw2 = qw * qw;
             difference = q2 - 1.0; // Positively valued.
-            w2 = w.magnitudeSquared();
+            w2 = Cartesian3.magnitudeSquared(w);
             product = w2 * difference;
 
             if (qw2 < product) {
@@ -140,7 +140,7 @@ define([
         } else if (q2 < 1.0) {
             // Inside ellipsoid (2 intersections).
             difference = q2 - 1.0; // Negatively valued.
-            w2 = w.magnitudeSquared();
+            w2 = Cartesian3.magnitudeSquared(w);
             product = w2 * difference; // Negatively valued.
 
             discriminant = qw * qw - product;
@@ -153,7 +153,7 @@ define([
             // q2 == 1.0. On ellipsoid.
             if (qw < 0.0) {
                 // Looking inward.
-                w2 = w.magnitudeSquared();
+                w2 = Cartesian3.magnitudeSquared(w);
                 return {
                     start : 0.0,
                     stop : -qw / w2
@@ -300,14 +300,14 @@ define([
         var f = ellipsoid.transformPositionToScaledSpace(direction);
 
         // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
-        var firstAxis = f.normalize();
-        var reference = f.mostOrthogonalAxis();
-        var secondAxis = reference.cross(firstAxis).normalize();
-        var thirdAxis = firstAxis.cross(secondAxis).normalize();
+        var firstAxis = Cartesian3.normalize(f);
+        var reference = Cartesian3.mostOrthogonalAxis(f);
+        var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis));
+        var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis));
         var B = new Matrix3(firstAxis.x, secondAxis.x, thirdAxis.x,
                             firstAxis.y, secondAxis.y, thirdAxis.y,
                             firstAxis.z, secondAxis.z, thirdAxis.z);
-        var B_T = B.transpose();
+        var B_T = Matrix3.transpose(B);
 
         // Get the scaling matrix and its inverse.
         var D_I = Matrix3.fromScale(ellipsoid.getRadii());
@@ -317,12 +317,12 @@ define([
                             -direction.z, 0.0, direction.x,
                             direction.y, -direction.x, 0.0);
 
-        var temp = B_T.multiply(D).multiply(C);
-        var A = temp.multiply(D_I).multiply(B);
-        var b = temp.multiplyByVector(position);
+        var temp = Matrix3.multiply(Matrix3.multiply(B_T, D), C);
+        var A = Matrix3.multiply(Matrix3.multiply(temp, D_I), B);
+        var b = Matrix3.multiplyByVector(temp, position);
 
         // Solve for the solutions to the expression in standard form:
-        var solutions = quadraticVectorExpression(A, b.negate(), 0.0, 0.0, 1.0);
+        var solutions = quadraticVectorExpression(A, Cartesian3.negate(b), 0.0, 0.0, 1.0);
 
         var s;
         var altitude;
@@ -332,9 +332,9 @@ define([
             var maximumValue = Number.NEGATIVE_INFINITY;
 
             for ( var i = 0; i < length; ++i) {
-                s = D_I.multiplyByVector(B.multiplyByVector(solutions[i]));
-                var v = s.subtract(position).normalize();
-                var dotProduct = v.dot(direction);
+                s = Matrix3.multiplyByVector(D_I, Matrix3.multiplyByVector(B, solutions[i]));
+                var v = Cartesian3.normalize(Cartesian3.subtract(s, position));
+                var dotProduct = Cartesian3.dot(v, direction);
 
                 if (dotProduct > maximumValue) {
                     maximumValue = dotProduct;
@@ -344,7 +344,7 @@ define([
 
             var surfacePoint = ellipsoid.cartesianToCartographic(closest);
             maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
-            altitude = closest.subtract(position).magnitude() * Math.sqrt(1.0 - maximumValue * maximumValue);
+            altitude = Cartesian3.magnitude(Cartesian3.subtract(closest, position)) * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             return ellipsoid.cartographicToCartesian(new Cartographic(surfacePoint.longitude, surfacePoint.latitude, altitude));
         }
