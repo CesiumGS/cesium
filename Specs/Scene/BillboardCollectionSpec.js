@@ -240,10 +240,9 @@ defineSuite([
             imageIndex : 0
         });
 
-        // verify basis
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 1.0 above billboard, expect green pixel to be rendered, as scale is near 1.0
+
         var us = context.getUniformState();
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
@@ -251,15 +250,13 @@ defineSuite([
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-        // clear screen
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 6.0 above billboard, expect no green pixels to be rendered, as scale is 0.0
+
         eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // revert framestate
         us.update(context, createFrameState(createCamera(context)));
     });
 
@@ -275,10 +272,9 @@ defineSuite([
             imageIndex : 0
         });
 
-        // verify basis
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 1.0 above billboard, expect green pixel to be rendered, as translucency is near 1.0
+
         var us = context.getUniformState();
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
@@ -286,15 +282,13 @@ defineSuite([
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-        // clear screen
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 6.0 above billboard, expect no green pixels to be rendered, as translucency is 0.0
+
         eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // revert framestate
         us.update(context, createFrameState(createCamera(context)));
     });
 

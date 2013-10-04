@@ -4,7 +4,6 @@ varying vec2 v_textureCoordinates;
 
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-varying float v_pickTranslucency;
 #else
 varying vec4 v_color;
 #endif
@@ -12,11 +11,6 @@ varying vec4 v_color;
 void main()
 {
 #ifdef RENDER_FOR_PICK
-    if (v_pickTranslucency == 0.0)
-    {
-        discard;
-    }
-
     vec4 vertexColor = vec4(1.0, 1.0, 1.0, 1.0);
 #else
     vec4 vertexColor = v_color;
