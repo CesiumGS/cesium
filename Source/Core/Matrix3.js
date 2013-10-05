@@ -883,7 +883,32 @@ define([
 
     /**
      * Computes the eigenvectors and eigenvalues of a symmetric matrix.
-     * DOC_TBA
+     * <p>
+     * Returns a diagonal matrix and unitary matrix such that:
+     * <code>matrix = unitary matrix * diagonal matrix * transpose(unitary matrix)</code>
+     * </p>
+     * <p>
+     * The values along the diagonal of the diagonal matrix are the eigenvalues. The columns
+     * of the unitary matrix are the corresponding eigenvectors.
+     * </p>
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
+     * @param {Matrix3} [unitaryResult] The object onto which to store the unitary result.
+     * @param {Matrix3} [diagonResult] The object onto which to store the diagonal result.
+     * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
+     *
+     * @example
+     * var a = //... symetric matrix
+     * Matrix3.getEigenDecomposition(a, unitary, diagonal);
+     *
+     * var unitaryTranspose = Matrix3.transpose(unitary);
+     * var b = Matrix.multiply(unitary, diagonal);
+     * Matrix3.multipl(b, unitaryTranspose, b); // b is now equal to a
+     *
+     * var lambda = Matrix3.getColumn(diagonal, 0).x;  // first eigenvalue
+     * var v = Matrix3.getColumn(unitary, 0);          // first eigenvector
+     * var c = Cartesian3.multiplyByScalar(v, lambda); // equal to Matrix3.multiplyByVector(a, v)
      */
     Matrix3.getEigenDecomposition = function(matrix, unitaryResult, diagonalResult) {
         if (!defined(matrix)) {
@@ -892,12 +917,6 @@ define([
 
         // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
         // section 8.4.3 The Classical Jacobi Algorithm
-        //
-        // The routine takes a matrix, which is assumed to be symmetric, and
-        // finds diagonal matrix and unitary matrix such that
-        // matrix = unitary matrix * diagonal matrix * transpose(unitary matrix)
-        // where the diagonal matrix contains the approximate eigenvalues,
-        // and the unitary matrix is close to normalized eigenvectors.
 
         var tolerance = CesiumMath.EPSILON20;
         var maxSweeps = 10;
