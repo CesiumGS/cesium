@@ -908,7 +908,7 @@ define([
         var unitaryMatrix = Matrix3.clone(Matrix3.IDENTITY, unitaryResult);
         var diagMatrix = Matrix3.clone(matrix, diagonalResult);
 
-        var epsilon = tolerance * Matrix3.computeFrobeniusNorm(diagMatrix);
+        var epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
 
         while (sweep < maxSweeps && offDiagonalFrobeniusNorm(diagMatrix) > epsilon) {
             shurDecomposition(diagMatrix, jMatrix);
