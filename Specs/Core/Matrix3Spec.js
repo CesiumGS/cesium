@@ -502,6 +502,12 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
+    it('getEigenDecomposition throws without a matrix', function() {
+        expect(function() {
+            return Matrix3.getEigenDecomposition();
+        }).toThrow();
+    });
+
     it('computes eigenvalues and eigenvectors', function() {
         var a = new Matrix3(4.0, -1.0, 1.0,
                             -1.0, 3.0, -2.0,
@@ -512,6 +518,35 @@ defineSuite([
                                            0.0, 0.0, 1.0);
 
         var decomposition = Matrix3.getEigenDecomposition(a);
+        expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
+
+        var v = Matrix3.getColumn(decomposition.unitary, 0);
+        var lambda = Matrix3.getColumn(decomposition.diagonal, 0).x;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 1);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 1).y;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 2);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 2).z;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+    });
+
+    it('computes eigenvalues and eigenvectors with result parameters', function() {
+        var a = new Matrix3(4.0, -1.0, 1.0,
+                            -1.0, 3.0, -2.0,
+                            1.0, -2.0, 3.0);
+
+        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
+                                           0.0, 6.0, 0.0,
+                                           0.0, 0.0, 1.0);
+        var diagonalResult = new Matrix3();
+        var unitaryResult = new Matrix3();
+
+        var decomposition = Matrix3.getEigenDecomposition(a, unitaryResult, diagonalResult);
+        expect(decomposition.diagonal).toBe(diagonalResult);
+        expect(decomposition.unitary).toBe(unitaryResult);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 
         var v = Matrix3.getColumn(decomposition.unitary, 0);
