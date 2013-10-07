@@ -352,7 +352,7 @@ defineSuite([
 
     it('rotates', function() {
         var axis = Cartesian3.normalize(new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0));
-        var angle = -CesiumMath.PI_OVER_TWO;
+        var angle = CesiumMath.PI_OVER_TWO;
         controller.rotate(axis, angle);
 
         expect(camera.position).toEqualEpsilon(new Cartesian3(-axis.x, axis.y, 0.0), CesiumMath.EPSILON15);
