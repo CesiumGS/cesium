@@ -10,22 +10,17 @@ define([
     "use strict";
 
     function resolve(referenceProperty) {
-        var targetObject = referenceProperty._targetObject;
-        if (!defined(targetObject)) {
+        var targetProperty = referenceProperty._targetProperty;
+        if (!defined(targetProperty)) {
             var resolveBuffer = referenceProperty._dynamicObjectCollection;
-            targetObject = resolveBuffer.getById(referenceProperty._targetObjectId);
-            referenceProperty._targetObject = targetObject;
-        }
-        var targetPropertyName = referenceProperty._targetPropertyName;
-        if (defined(targetPropertyName)) {
-            var targetProperty = referenceProperty._targetProperty;
-            if (defined(targetObject) && !defined(targetProperty)) {
-                targetProperty = targetObject[targetPropertyName];
+            var targetObject = resolveBuffer.getById(referenceProperty._targetObjectId);
+            if (defined(targetObject)) {
+                targetProperty = targetObject[referenceProperty._targetPropertyName];
                 referenceProperty._targetProperty = targetProperty;
+                referenceProperty._targetObject = targetObject;
             }
-            return targetProperty;
         }
-        return targetObject;
+        return targetProperty;
     }
 
     /**
@@ -48,6 +43,9 @@ define([
         }
         if (!defined(targetObjectId)) {
             throw new DeveloperError('targetObjectId is required.');
+        }
+        if (!defined(targetPropertyName)) {
+            throw new DeveloperError('targetPropertyName is required.');
         }
 
         this._targetProperty = undefined;
@@ -81,6 +79,10 @@ define([
         }
 
         var parts = referenceString.split('.');
+        if (parts.length !== 2) {
+            throw new DeveloperError('referenceString must contain a single . delineating the target object ID and property name.');
+        }
+
         return new ReferenceProperty(dynamicObjectCollection, parts[0], parts[1]);
     };
 
@@ -96,12 +98,12 @@ define([
      * @exception {DeveloperError} time is required.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
-        var target = resolve(this);
-
-        if (defined(this._targetPropertyName)) {
-            return defined(target) && this._targetObject.isAvailable(time) ? target.getValue(time, result) : undefined;
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
         }
-        return target;
+
+        var targetProperty = resolve(this);
+        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
     return ReferenceProperty;
