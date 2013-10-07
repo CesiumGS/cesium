@@ -34,6 +34,11 @@ Beta Releases
 * Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
 * Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
 * Added `Shapes.compute2DCircle`.
+* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
+* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
+* Added `DynamicObject.name` and corresponding CZML support.  This allows a non-unique descriptive name to show the user for the object.
+* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
+* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 
 ### b21 - 2013-10-01
 
