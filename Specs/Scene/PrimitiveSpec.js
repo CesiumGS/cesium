@@ -125,6 +125,7 @@ defineSuite([
         expect(primitive.vertexCacheOptimize).toEqual(true);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allow3DOnly).toEqual(false);
+        expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
     });
 
@@ -534,6 +535,24 @@ defineSuite([
         pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
         expect(pickObject.id).toEqual('extent2');
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('does not pick when allowPicking is false', function() {
+        var primitive = new Primitive({
+            geometryInstances : [extentInstance1],
+            appearance : new PerInstanceColorAppearance(),
+            allow3DOnly : true,
+            allowPicking : false,
+            asynchronous : false
+        });
+
+        frameState.camera.controller.viewExtent(extent1);
+        us.update(context, frameState);
+
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject).not.toBeDefined();
 
         primitive = primitive && primitive.destroy();
     });

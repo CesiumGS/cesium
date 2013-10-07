@@ -160,6 +160,7 @@ define([
         var projection = parameters.projection;
         var uintIndexSupport = parameters.elementIndexUintSupported;
         var allow3DOnly = parameters.allow3DOnly;
+        var allowPicking = parameters.allowPicking;
         var vertexCacheOptimize = parameters.vertexCacheOptimize;
         var modelMatrix = parameters.modelMatrix;
 
@@ -183,7 +184,9 @@ define([
         }
 
         // Add pickColor attribute for picking individual instances
-        addPickColorAttribute(instances, pickIds);
+        if (allowPicking) {
+            addPickColorAttribute(instances, pickIds);
+        }
 
         // add attributes to the geometry for each per-instance attribute
         var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
@@ -352,6 +355,7 @@ define([
             projection : parameters.projection,
             elementIndexUintSupported : parameters.elementIndexUintSupported,
             allow3DOnly : parameters.allow3DOnly,
+            allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
             modelMatrix : Matrix4.clone(parameters.modelMatrix)
         };
