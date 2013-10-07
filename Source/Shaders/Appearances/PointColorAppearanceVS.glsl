@@ -9,5 +9,5 @@ void main()
 {
     v_color = color;
     gl_Position = czm_modelViewProjectionRelativeToEye * czm_computePosition();
-    gl_PointSize = 1.0;
+    gl_PointSize = 2.0;
 }
