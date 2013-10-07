@@ -34,6 +34,7 @@ Beta Releases
 * Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
 * Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
 * Added `Shapes.compute2DCircle`.
+* Added `Matrix3.getEigenDecomposition`.
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
