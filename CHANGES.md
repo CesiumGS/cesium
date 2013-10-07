@@ -32,7 +32,8 @@ Beta Releases
                // Use properties and functions in p.id
             }
 * Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
-
+* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
+* Added `Shapes.compute2DCircle`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
 
