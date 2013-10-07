@@ -220,10 +220,6 @@ define([
                 material = Material.fromType(Material.PolylineOutlineType);
                 polyline.setMaterial(material);
             }
-            uniforms = material.uniforms;
-            Color.clone(Color.WHITE, uniforms.color);
-            Color.clone(Color.BLACK, uniforms.outlineColor);
-            uniforms.outlineWidth = 0;
         } else {
             polyline = dynamicPolylineVisualizer._polylineCollection.get(polylineVisualizerIndex);
         }
@@ -244,7 +240,7 @@ define([
 
         var property = dynamicPolyline._material;
         if (defined(property)) {
-            polyline.setMaterial(MaterialProperty.getValue(time, context, property, polyline.getMaterial()));
+            polyline.setMaterial(MaterialProperty.getValue(time, property, polyline.getMaterial()));
         }
 
         property = dynamicPolyline._width;
