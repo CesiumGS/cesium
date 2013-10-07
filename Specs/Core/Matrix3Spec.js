@@ -541,12 +541,13 @@ defineSuite([
         var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
                                            0.0, 6.0, 0.0,
                                            0.0, 0.0, 1.0);
-        var diagonalResult = new Matrix3();
-        var unitaryResult = new Matrix3();
+        var result = {
+            unitary : new Matrix3(),
+            diagonal : new Matrix3()
+        };
 
-        var decomposition = Matrix3.getEigenDecomposition(a, unitaryResult, diagonalResult);
-        expect(decomposition.diagonal).toBe(diagonalResult);
-        expect(decomposition.unitary).toBe(unitaryResult);
+        var decomposition = Matrix3.getEigenDecomposition(a, result);
+        expect(decomposition).toBe(result);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 
         var v = Matrix3.getColumn(decomposition.unitary, 0);

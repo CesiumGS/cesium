@@ -792,10 +792,6 @@ define([
     };
 
     function computeFrobeniusNorm(matrix) {
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required.');
-        }
-
         var norm = 0.0;
         for (var i = 0; i < 9; ++i) {
             var temp = matrix[i];
@@ -805,12 +801,12 @@ define([
         return Math.sqrt(norm);
     }
 
+    var rowVal = [1, 0, 0];
+    var colVal = [2, 2, 1];
+
     function offDiagonalFrobeniusNorm(matrix) {
         // Computes the "off-diagonal" Frobenius norm.
         // Assumes matrix is symmetric.
-
-        var rowVal = [1, 0, 0];
-        var colVal = [2, 2, 1];
 
         var norm = 0.0;
         for (var i = 0; i < 3; ++i) {
@@ -829,8 +825,6 @@ define([
         // finds the largest off-diagonal term, and then creates
         // a matrix (result) which can be used to help reduce it
 
-        var rowVal = [1, 0, 0];
-        var colVal = [2, 2, 1];
         var tolerance = CesiumMath.EPSILON15;
 
         var maxDiagonal = 0.0;
@@ -894,23 +888,26 @@ define([
      * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
-     * @param {Matrix3} [unitaryResult] The object onto which to store the unitary result.
-     * @param {Matrix3} [diagonResult] The object onto which to store the diagonal result.
+     * @param {Object} [result] An object with unitary and diagonal properties which are matrices onto which to store the result.
      * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
      *
      * @example
      * var a = //... symetric matrix
-     * Matrix3.getEigenDecomposition(a, unitary, diagonal);
+     * var result = {
+     *     unitary : new Matrix3(),
+     *     diagonal : new Matrix3()
+     * };
+     * Matrix3.getEigenDecomposition(a, result);
      *
-     * var unitaryTranspose = Matrix3.transpose(unitary);
-     * var b = Matrix.multiply(unitary, diagonal);
-     * Matrix3.multipl(b, unitaryTranspose, b); // b is now equal to a
+     * var unitaryTranspose = Matrix3.transpose(result.unitary);
+     * var b = Matrix.multiply(result.unitary, result.diagonal);
+     * Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
      *
-     * var lambda = Matrix3.getColumn(diagonal, 0).x;  // first eigenvalue
-     * var v = Matrix3.getColumn(unitary, 0);          // first eigenvector
-     * var c = Cartesian3.multiplyByScalar(v, lambda); // equal to Matrix3.multiplyByVector(a, v)
+     * var lambda = Matrix3.getColumn(result.diagonal, 0).x;  // first eigenvalue
+     * var v = Matrix3.getColumn(result.unitary, 0);          // first eigenvector
+     * var c = Cartesian3.multiplyByScalar(v, lambda);        // equal to Matrix3.multiplyByVector(a, v)
      */
-    Matrix3.getEigenDecomposition = function(matrix, unitaryResult, diagonalResult) {
+    Matrix3.getEigenDecomposition = function(matrix, result) {
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
@@ -924,8 +921,12 @@ define([
         var count = 0;
         var sweep = 0;
 
-        var unitaryMatrix = Matrix3.clone(Matrix3.IDENTITY, unitaryResult);
-        var diagMatrix = Matrix3.clone(matrix, diagonalResult);
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var unitaryMatrix = result.unitary = Matrix3.clone(Matrix3.IDENTITY, result.unitary);
+        var diagMatrix = result.diagonal = Matrix3.clone(matrix, result.diagonal);
 
         var epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
 
@@ -942,10 +943,7 @@ define([
             }
         }
 
-        return {
-            diagonal : diagMatrix,
-            unitary : unitaryMatrix
-        };
+        return result;
     };
 
     /**
