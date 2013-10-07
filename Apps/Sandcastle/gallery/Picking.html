@@ -46,7 +46,52 @@ require(['Cesium'], function(Cesium) {
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
+    
+    function addOverlappingPolygons(scene, ellipsoid) {
+        var primitives = scene.getPrimitives();
+        
+        // Add primitives from bottom to top.
+        var redPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
+            ])
+        }));
+        redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
 
+        var bluePolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
+                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
+                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
+            ])
+        }));
+        bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
+
+        var greenPolygon = primitives.add(new Cesium.Polygon({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
+                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
+                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
+            ])
+        }));
+        greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
+        
+        // Give polygons identifiers for easy lookup later
+        redPolygon.id = 0;
+        bluePolygon.id = 1;
+        greenPolygon.id = 2;
+        
+        // simple flags used for multi-picking
+        redPolygon.picked = false;
+        bluePolygon.picked = false;
+        greenPolygon.picked = false;
+    }
+    
     function cleanup() {
         widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
@@ -208,6 +253,8 @@ require(['Cesium'], function(Cesium) {
 
     function layerCompositePrimitive(scene, ellipsoid) {
         Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
+        addOverlappingPolygons(scene, ellipsoid);
+        
         var primitives = scene.getPrimitives();
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
@@ -217,37 +264,56 @@ require(['Cesium'], function(Cesium) {
                     primitives.raiseToTop(p.primitive);
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+    }
+    
+    var originalColor= {};
+    function multiPickPrimitives(scene, ellipsoid) {
+        Sandcastle.declare(multiPickPrimitives);    // For highlighting in Sandcastle.
+        addOverlappingPolygons(scene, ellipsoid);
+        
+        var primitives = scene.getPrimitives();
+        // Move the primitive that the mouse is over to the top.
+        handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
+            handler.setInputAction(function(movement) {
+                // clear picked flags
+                var numberOfPrimitves = primitives.getLength();
+                for (var i = 0; i < numberOfPrimitves; ++i) {
+                    var p = primitives.get(i);
+                    p.processedPick = false;
+                }
+            
+                // get an array of all primitives at the mouse position
+                var pickedObjects = scene.drillPick(movement.endPosition);
+                if(Cesium.defined(pickedObjects)) {
+                    for( i=0; i<pickedObjects.length; ++i) {
+                        var polygon = pickedObjects[i].primitive;
+                        
+                        if(polygon.picked === false) {
+                            originalColor[polygon.id] = polygon.material.uniforms.color;
+                            polygon.material.uniforms.color = {
+                                red : 1.0,
+                                green : 1.0,
+                                blue : 0.0,
+                                alpha : 0.5
+                            };
+                            polygon.picked = true;
+                        }
+                        
+                        polygon.processedPick = true;
+                    }
+                }
+                
+                // return unpicked primitives to their original color
+                for (i = 0; i < numberOfPrimitves; ++i) {
+                    var primitive = primitives.get(i);
+                    
+                    if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
+                        primitive.material.uniforms.color = originalColor[primitive.id];
+                        primitive.picked = false;
+                    }
+                }
+            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        // Add primitives from bottom to top.
-        var redPolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
-            ])
-        }));
-        redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
-
-        var bluePolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
-                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
-                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
-            ])
-        }));
-        bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
-
-        var greenPolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
-                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
-                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
-            ])
-        }));
-        greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
     }
     
     function drawExtent(scene, ellipsoid) {
@@ -438,6 +504,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(layerCompositePrimitive);
         };
         button.textContent = 'Layer Primitives';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            cleanup();
+            multiPickPrimitives(scene, ellipsoid);
+            Sandcastle.highlight(multiPickPrimitives);
+        };
+        button.textContent = 'Drill-Down Picking';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
