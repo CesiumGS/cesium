@@ -271,7 +271,7 @@ define([
         case Image:
             return unwrapImageInterval(czmlInterval, sourceUri);
         case JulianDate:
-            return JulianDate.fromIso8601(defaultValue(czmlInterval.julianDate, czmlInterval));
+            return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Number:

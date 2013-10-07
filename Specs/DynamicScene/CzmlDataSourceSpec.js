@@ -1507,7 +1507,7 @@ defineSuite([
         expect(object.simpleDate.getValue()).toEqual(date);
 
         CzmlDataSource.processPacketData(JulianDate, object, 'objDate', {
-            julianDate : date.toIso8601()
+            date : date.toIso8601()
         });
 
         expect(object.objDate).toBeDefined();
