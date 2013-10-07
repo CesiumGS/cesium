@@ -1,0 +1,33 @@
+#awCntr
+{
+	position: relative;
+
+	width: 500px;
+	height: 500px;
+}
+
+#awCanvas
+{
+	position: absolute;
+	top: 0px;
+	left: 0;
+
+	width: 300px;
+	height: 300px;
+	border: 1px solid gray;
+}
+
+#awControlBox
+{
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+
+	display: inline-block;
+	z-index: 2;
+
+	width: 80px;
+	height: 80px;
+
+	/* border: 1px solid red; */
+}

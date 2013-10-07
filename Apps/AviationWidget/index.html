@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"> 
+    <title>Aviation Widget</title>
+    <style>
+      @import url(../../Build/Cesium/Widgets/Viewer/Viewer.css);
+    </style>
+    <link rel="stylesheet" href="main.css">
+    <script src="../../Build/Cesium/Cesium.js"></script>
+    <script src="main.js"></script>
+</head>
+<body>
+	<h1>A title goes here</h1>
+	<!-- widget template starts here -->
+	<div id="awCntr">
+		<div id="awCanvas"></div>
+		<div id="awControlBox" style="display: none;"></div>
+	</div>
+	<!-- widget template ends here -->
+	<script>
+	var av = new AviationWidget('awCanvas', {
+		routeURL: 'kml/akosmaroy-2013-08-12-LSZH-LSZL-3d.kml',
+		cockpitURL: 'kml/akosmaroy-2013-08-12-LSZH-LSZL-cockpit.kml',
+		viewer: {
+		    baseLayerPicker: false,
+		    homeButton: false,
+		    sceneModePicker: false
+		}
+	});
+	av.init();
+
+	</script>
+</body>
+</html>
