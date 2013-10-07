@@ -13,6 +13,8 @@ Beta Releases
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
+   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
@@ -34,7 +36,6 @@ Beta Releases
 * Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
-
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 
 ### b21 - 2013-10-01
@@ -74,8 +75,6 @@ Beta Releases
    * `UniformState.update` now takes a context as its first parameter.
    * `Camera` constructor now takes a context instead of a canvas.
    * `SceneTransforms.clipToWindowCoordinates` now takes a context instead of a canvas.
-   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
-   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
    * Removed `canvasDimensions` from `FrameState`.
    * Removed `context` option from `Material` constructor and parameter from `Material.fromType`.
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
@@ -92,7 +91,6 @@ Beta Releases
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 * Added support for [EXT_frag_depth](http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/).
-* Made sun size accurate.
 * Improved graphics performance.
     * An Everest terrain view went from 135-140 to over 150 frames per second.
     * Rendering over a thousand polylines in the same collection with different materials went from 20 to 40 frames per second.
