@@ -36,7 +36,7 @@ Beta Releases
 * Added `Shapes.compute2DCircle`.
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
-* Added `DynamicObject.name` and corresponding CZML support.  This allows a non-unique descriptive name to show the user for the object.
+* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
 * Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
 * Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 
@@ -110,7 +110,6 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
-* Added `DynamicObject.name` property, which is a non-unique, user-readable name for the object.
 
 ### b20 - 2013-09-03
 
