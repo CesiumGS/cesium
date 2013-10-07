@@ -4,6 +4,7 @@ defineSuite([
              'Core/Cartesian2',
              'Core/Cartesian3',
              'Core/Color',
+             'Core/NearFarScalar',
              'Scene/HorizontalOrigin',
              'Scene/VerticalOrigin',
              'Scene/LabelStyle',
@@ -13,6 +14,7 @@ defineSuite([
              Cartesian2,
              Cartesian3,
              Color,
+             NearFarScalar,
              HorizontalOrigin,
              VerticalOrigin,
              LabelStyle,
@@ -34,6 +36,7 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicLabel();
         target.merge(source);
@@ -50,6 +53,7 @@ defineSuite([
         expect(target.pixelOffset).toBe(source.pixelOffset);
         expect(target.scale).toBe(source.scale);
         expect(target.show).toBe(source.show);
+        expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -66,6 +70,7 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var text = new ConstantProperty('my text');
         var font = new ConstantProperty('10px serif');
@@ -79,6 +84,7 @@ defineSuite([
         var pixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
         var scale = new ConstantProperty(2);
         var show = new ConstantProperty(true);
+        var translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicLabel();
         target.text = text;
@@ -93,6 +99,7 @@ defineSuite([
         target.pixelOffset = pixelOffset;
         target.scale = scale;
         target.show = show;
+        target.translucencyByDistance = translucencyByDistance;
 
         target.merge(source);
 
@@ -108,6 +115,7 @@ defineSuite([
         expect(target.pixelOffset).toBe(pixelOffset);
         expect(target.scale).toBe(scale);
         expect(target.show).toBe(show);
+        expect(target.translucencyByDistance).toBe(translucencyByDistance);
     });
 
     it('clone works', function() {
@@ -124,6 +132,7 @@ defineSuite([
         source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         source.scale = new ConstantProperty(1);
         source.show = new ConstantProperty(false);
+        source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         var result = source.clone();
         expect(result.text).toBe(source.text);
@@ -138,6 +147,7 @@ defineSuite([
         expect(result.pixelOffset).toBe(source.pixelOffset);
         expect(result.scale).toBe(source.scale);
         expect(result.show).toBe(source.show);
+        expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
     });
 
     it('merge throws if source undefined', function() {

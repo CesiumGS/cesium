@@ -39,20 +39,20 @@ define([
     var UniformState = function() {
         this._viewport = new BoundingRectangle();
         this._viewportDirty = false;
-        this._viewportOrthographicMatrix = Matrix4.IDENTITY.clone();
-        this._viewportTransformation = Matrix4.IDENTITY.clone();
+        this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
 
-        this._model = Matrix4.IDENTITY.clone();
-        this._view = Matrix4.IDENTITY.clone();
-        this._inverseView = Matrix4.IDENTITY.clone();
-        this._projection = Matrix4.IDENTITY.clone();
-        this._infiniteProjection = Matrix4.IDENTITY.clone();
+        this._model = Matrix4.clone(Matrix4.IDENTITY);
+        this._view = Matrix4.clone(Matrix4.IDENTITY);
+        this._inverseView = Matrix4.clone(Matrix4.IDENTITY);
+        this._projection = Matrix4.clone(Matrix4.IDENTITY);
+        this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._pixelSize = 0.0;
 
         this._frameState = undefined;
-        this._temeToPseudoFixed = Matrix3.IDENTITY.clone();
+        this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
         this._view3DDirty = true;
@@ -224,6 +224,8 @@ define([
         this._currentFrustum.y = frustum.far;
     };
 
+    var scratchDrawingBufferDimensions = new Cartesian2();
+
     /**
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -233,7 +235,7 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(frameState) {
+    UniformState.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.scene2D.projection;
 
@@ -255,7 +257,9 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        var pixelSize = camera.frustum.getPixelSize(frameState.canvasDimensions);
+        scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
+        scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
+        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions);
         this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
         this._entireFrustum.x = camera.frustum.near;
@@ -388,7 +392,7 @@ define([
         if (this._inverseModelDirty) {
             this._inverseModelDirty = false;
 
-            this._model.inverse(this._inverseModel);
+            Matrix4.inverse(this._model, this._inverseModel);
         }
 
         return this._inverseModel;
@@ -1025,7 +1029,7 @@ define([
         if (uniformState._encodedCameraPositionMCDirty) {
             uniformState._encodedCameraPositionMCDirty = false;
 
-            uniformState.getInverseModel().multiplyByPoint(uniformState._cameraPosition, cameraPositionMC);
+            Matrix4.multiplyByPoint(uniformState.getInverseModel(), uniformState._cameraPosition, cameraPositionMC);
             EncodedCartesian3.fromCartesian(cameraPositionMC, uniformState._encodedCameraPositionMC);
         }
     }
@@ -1141,9 +1145,9 @@ define([
         var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
         // Transform each camera direction to the fixed axes.
-        enuToFixed.multiplyByVector(r, r);
-        enuToFixed.multiplyByVector(u, u);
-        enuToFixed.multiplyByVector(d, d);
+        Matrix4.multiplyByVector(enuToFixed, r, r);
+        Matrix4.multiplyByVector(enuToFixed, u, u);
+        Matrix4.multiplyByVector(enuToFixed, d, d);
 
         // Compute the view matrix based on the new fixed-frame camera position and directions.
         if (!defined(result)) {

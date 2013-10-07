@@ -52,7 +52,7 @@ defineSuite([
         extent = new ExtentPrimitive();
 
         us = context.getUniformState();
-        us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
@@ -60,13 +60,14 @@ defineSuite([
         us = undefined;
     });
 
-    function createExtent() {
+    function createExtent(id) {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         var e = new ExtentPrimitive({
             ellipsoid : ellipsoid,
             granularity : CesiumMath.toRadians(20.0),
             extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            id : id,
             asynchronous : false
         });
 
@@ -131,10 +132,11 @@ defineSuite([
     });
 
     it('is picked', function() {
-        extent = createExtent();
+        extent = createExtent('id');
 
         var pickedObject = pick(context, frameState, extent, 0, 0);
         expect(pickedObject.primitive).toEqual(extent);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {

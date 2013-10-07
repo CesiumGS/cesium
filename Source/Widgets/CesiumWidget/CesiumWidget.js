@@ -18,6 +18,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Credit',
+        '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
@@ -44,6 +45,7 @@ define([
         BingMapsImageryProvider,
         CentralBody,
         Credit,
+        Moon,
         Scene,
         SceneMode,
         SceneTransitioner,
@@ -141,6 +143,11 @@ define([
         this._element = widgetNode;
 
         try {
+            var svgNS = "http://www.w3.org/2000/svg";
+            var zoomDetector = document.createElementNS(svgNS, 'svg');
+            zoomDetector.style.display = 'none';
+            widgetNode.appendChild(zoomDetector);
+
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
                 return false;
@@ -176,6 +183,7 @@ define([
             });
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
             scene.sun = new Sun();
+            scene.moon = new Moon();
 
             //Set the base imagery layer
             var imageryProvider = options.imageryProvider;
@@ -199,6 +207,7 @@ define([
 
             this._container = container;
             this._canvas = canvas;
+            this._zoomDetector = zoomDetector;
             this._canvasWidth = canvas.width;
             this._canvasHeight = canvas.height;
             this._scene = scene;
@@ -449,8 +458,22 @@ define([
             return;
         }
 
-        canvas.width = this._canvasWidth = width;
-        canvas.height = this._canvasHeight = height;
+        var zoomFactor = 1;
+        if (this._zoomDetector.currentScale !== 1) {
+            zoomFactor = this._zoomDetector.currentScale;
+        }
+        if (window.devicePixelRatio !== 1) {
+            zoomFactor = window.devicePixelRatio;
+        }
+
+        this._canvasWidth = width;
+        this._canvasHeight = height;
+
+        width *= zoomFactor;
+        height *= zoomFactor;
+
+        canvas.width = width;
+        canvas.height = height;
 
         var canRender = width !== 0 && height !== 0;
         this._canRender = canRender;

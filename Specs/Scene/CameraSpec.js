@@ -15,13 +15,16 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var camera;
-    var canvas = {
-        clientWidth : 1024,
-        clientHeight : 768
-    };
 
     beforeEach(function() {
-        camera = new Camera(canvas);
+        camera = new Camera({
+            getDrawingBufferWidth: function() {
+                return 1024;
+            },
+            getDrawingBufferHeight: function() {
+                return 768;
+            }
+        });
         camera.position = new Cartesian3();
         camera.up = Cartesian3.UNIT_Y;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
@@ -51,18 +54,18 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = rotation.multiply(translation);
+        var expected = Matrix4.multiply(rotation, translation);
         expect(viewMatrix).toEqual(expected);
     });
 
     it('get inverse view matrix', function() {
-        var expected = camera.viewMatrix.inverse();
+        var expected = Matrix4.inverse(camera.viewMatrix);
         expect(expected).toEqualEpsilon(camera.inverseViewMatrix, CesiumMath.EPSILON15);
     });
 
     it('get inverse transform', function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
-        var expected = camera.transform.inverseTransformation();
+        var expected = Matrix4.inverseTransformation(camera.transform);
         expect(expected).toEqual(camera.inverseTransform);
     });
 

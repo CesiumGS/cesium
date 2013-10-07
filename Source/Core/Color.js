@@ -296,7 +296,7 @@ define([
 
         var namedColor = Color[color.toUpperCase()];
         if (defined(namedColor)) {
-            return namedColor.clone();
+            return Color.clone(namedColor);
         }
 
         var matches = rgbMatcher.exec(color);
@@ -528,14 +528,23 @@ define([
      * that are in the range of 0 to 255.
      * @memberof Color
      *
-     * @returns {Array} An array containing the red, green, blue, alpha values in the range 0 to 255.
+     * @param {Array} [result] The array to store the result in, if undefined a new instance will be created.
+     * @returns {Array} The modified result parameter or a new instance if result was undefined.
      */
-    Color.prototype.toBytes = function() {
+    Color.prototype.toBytes = function(result) {
         var red = Color.floatToByte(this.red);
         var green = Color.floatToByte(this.green);
         var blue = Color.floatToByte(this.blue);
         var alpha = Color.floatToByte(this.alpha);
-        return [red, green, blue, alpha];
+
+        if (!defined(result)) {
+            return [red, green, blue, alpha];
+        }
+        result[0] = red;
+        result[1] = green;
+        result[2] = blue;
+        result[3] = alpha;
+        return result;
     };
 
     /**

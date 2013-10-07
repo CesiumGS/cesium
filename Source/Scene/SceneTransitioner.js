@@ -90,7 +90,7 @@ define([
 
         this._scene = scene;
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var canvas = scene.getCanvas();
+        var context = scene.getContext();
 
         // Position camera and size frustum so the entire 2D map is visible
         var maxRadii = this._ellipsoid.getMaximumRadius();
@@ -101,7 +101,7 @@ define([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (canvas.clientHeight / canvas.clientWidth);
+        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
         frustum.bottom = -frustum.top;
 
         var transform = new Matrix4(0.0, 0.0, 1.0, 0.0, //
@@ -124,7 +124,7 @@ define([
 
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
 
         this._cameraCV = {
             position : position,
@@ -351,12 +351,12 @@ define([
         var dir = new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0);
         var up = new Cartesian4(camera.up.x, camera.up.y, camera.up.z, 0.0);
 
-        var frame = transform.inverseTransformation().multiply(camera.transform);
+        var frame = Matrix4.multiply(Matrix4.inverseTransformation(transform), camera.transform);
         camera.transform = Matrix4.clone(transform);
 
-        camera.position = Cartesian3.fromCartesian4(frame.multiplyByVector(pos));
-        camera.direction = Cartesian3.fromCartesian4(frame.multiplyByVector(dir));
-        camera.up = Cartesian3.fromCartesian4(frame.multiplyByVector(up));
+        camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, pos));
+        camera.direction = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, dir));
+        camera.up = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, up));
         camera.right = Cartesian3.cross(camera.direction, camera.up);
     }
 
@@ -715,8 +715,8 @@ define([
     function updateFrustums(transitioner) {
         var scene = transitioner._scene;
 
-        var canvas = scene.getCanvas();
-        var ratio = canvas.clientHeight / canvas.clientWidth;
+        var context = scene.getContext();
+        var ratio = context.getDrawingBufferHeight() / context.getDrawingBufferWidth();
 
         var frustum = transitioner._camera2D.frustum;
         frustum.top = frustum.right * ratio;

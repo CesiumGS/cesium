@@ -171,18 +171,18 @@ define([
          * </p>
          *
          * @type {Material}
-         * @default Material.fromType(undefined, Material.ColorType)
+         * @default Material.fromType(Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
          * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Material.fromType(scene.getContext(), Material.StripeType);
+         * sensor.material = Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;
 
         /**
@@ -204,6 +204,18 @@ define([
          * @see CustomSensorVolume#showIntersection
          */
         this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
+
+        /**
+         * User-defined object returned when the sensors is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = undefined;
 
         var that = this;
         this._uniforms = {
@@ -440,6 +452,7 @@ define([
 
         var materialChanged = this._material !== this.material;
         this._material = this.material;
+        this._material.update(context);
 
         if (pass.color) {
             var frontFaceColorCommand = this._frontFaceColorCommand;
@@ -467,9 +480,12 @@ define([
         if (pass.pick) {
             var pickCommand = this._pickCommand;
 
-            if (!defined(this._pickId)) {
+            if (!defined(this._pickId) || (this._id !== this.id)) {
+                this._id = this.id;
+                this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this._pickIdThis
+                    primitive : this._pickIdThis,
+                    id : this.id
                 });
             }
 

@@ -415,7 +415,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = transform.multiply(oldTransform);
+            camera.transform = Matrix4.multiply(transform, oldTransform);
 
             var invTransform = camera.inverseTransform;
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
@@ -987,7 +987,7 @@ define([
         var west = extent.west;
 
         var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
-        transform.setColumn(3, Cartesian4.UNIT_W);
+        Matrix4.setColumn(transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
@@ -1216,8 +1216,8 @@ define([
     var pickPerspXDir = new Cartesian3();
     var pickPerspYDir = new Cartesian3();
     function getPickRayPerspective(camera, windowPosition, result) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
+        var width = camera._context._canvas.clientWidth;
+        var height = camera._context._canvas.clientHeight;
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1242,8 +1242,8 @@ define([
     }
 
     function getPickRayOrthographic(camera, windowPosition, result) {
-        var width = camera._canvas.clientWidth;
-        var height = camera._canvas.clientHeight;
+        var width = camera._context._canvas.clientWidth;
+        var height = camera._context._canvas.clientHeight;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         x *= (camera.frustum.right - camera.frustum.left) * 0.5;
@@ -1369,7 +1369,7 @@ define([
         var updateCV = function(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(pos));
+            camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, pos));
         };
 
         return {
@@ -1390,14 +1390,14 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(Cartesian4.UNIT_X));
+        var normal = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, Cartesian4.UNIT_X));
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = camera.transform.multiplyByVector(center);
+        var centerWC = Matrix4.multiplyByVector(camera.transform, center);
 
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = camera.transform.multiplyByVector(cameraPosition);
+        var positionWC = Matrix4.multiplyByVector(camera.transform, cameraPosition);
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;

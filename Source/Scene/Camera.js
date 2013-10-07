@@ -35,14 +35,14 @@ define([
      *
      * @alias Camera
      *
-     * @exception {DeveloperError} canvas is required.
+     * @exception {DeveloperError} context is required.
      *
      * @constructor
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Camera(canvas);
+     * var camera = new Camera(context);
      * camera.position = new Cartesian3();
      * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
      * camera.up = Cartesian3.UNIT_Y;
@@ -53,9 +53,9 @@ define([
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Cesium Sandcastle Camera Demo</a>
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesium.agi.com/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
-    var Camera = function(canvas) {
-        if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
+    var Camera = function(context) {
+        if (!defined(context)) {
+            throw new DeveloperError('context is required.');
         }
 
         /**
@@ -129,7 +129,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
-        this.frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+        this.frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
 
         /**
          * Defines camera behavior. The controller can be used to perform common camera manipulations.
@@ -143,7 +143,7 @@ define([
         this._invViewMatrix = undefined;
         updateViewMatrix(this);
 
-        this._canvas = canvas;
+        this._context = context;
     };
 
     function updateViewMatrix(camera) {
@@ -156,8 +156,8 @@ define([
                                       u.x,  u.y,  u.z, -Cartesian3.dot(u, e),
                                      -d.x, -d.y, -d.z,  Cartesian3.dot(d, e),
                                       0.0,  0.0,  0.0,      1.0);
-        camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
-        camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
+        camera._viewMatrix = Matrix4.multiply(viewMatrix, camera._invTransform);
+        camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
     }
 
     function update(camera) {
@@ -190,11 +190,11 @@ define([
         if (transformChanged) {
             transform = camera._transform = Matrix4.clone(camera.transform);
 
-            camera._invTransform = camera._transform.inverseTransformation();
+            camera._invTransform = Matrix4.inverseTransformation(camera._transform);
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(transform.multiplyByPoint(position));
+            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position), camera._positionWC);
         }
 
         if (directionChanged || upChanged || rightChanged) {
@@ -216,15 +216,15 @@ define([
         }
 
         if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            camera._directionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
         }
 
         if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera._upWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(up.x, up.y, up.z, 0.0)));
         }
 
         if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(transform.multiplyByVector(new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera._rightWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(right.x, right.y, right.z, 0.0)));
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
@@ -344,7 +344,7 @@ define([
      * @returns {Camera} A new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
-        var camera = new Camera(this._canvas);
+        var camera = new Camera(this._context);
         camera.position = Cartesian3.clone(this.position);
         camera.direction = Cartesian3.clone(this.direction);
         camera.up = Cartesian3.clone(this.up);

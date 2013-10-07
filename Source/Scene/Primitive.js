@@ -69,7 +69,7 @@ define([
      * </p>
      * <p>
      * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
+     * Instances can be individually picked; {@link Scene#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      * <p>
@@ -103,7 +103,7 @@ define([
      * var primitive = new Primitive({
      *   geometryInstances : instance,
      *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType(scene.getContext(), 'Checkerboard')
+     *     material : Material.fromType('Checkerboard')
      *   })
      * });
      * scene.getPrimitives().add(primitive);
@@ -223,7 +223,7 @@ define([
          *
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
@@ -459,6 +459,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
             (!frameState.passes.color && !frameState.passes.pick)) {
@@ -601,7 +602,7 @@ define([
                     instances : clonedInstances,
                     pickIds : createPickIds(context, this, instances),
                     ellipsoid : projection.getEllipsoid(),
-                    isGeographic : projection,
+                    projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this._allow3DOnly,
                     vertexCacheOptimize : this._vertexCacheOptimize,
@@ -680,6 +681,10 @@ define([
         } else if (this._material !== material ) {
             this._material = material;
             createSP = true;
+        }
+
+        if (defined(this._material)) {
+            this._material.update(context);
         }
 
         if (createRS) {

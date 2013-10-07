@@ -170,7 +170,7 @@ define([
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
                 points.push({
-                    point : rotation.multiplyByVector(aboveEnd)
+                    point : Matrix3.multiplyByVector(rotation, aboveEnd)
                 });
             }
 
@@ -228,9 +228,9 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             camera.position = path.evaluate(time, camera.position);
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
         };
 
         return update;
@@ -344,9 +344,9 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             camera.position = path.evaluate(time, camera.position);
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
         };
 
         return update;
@@ -374,9 +374,9 @@ define([
             var zoom = camera.position.z;
             camera.position.z = height;
 
-            camera.right = rotMatrix.getRow(0, camera.right);
-            camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
+            camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
+            camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
+            camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
@@ -432,6 +432,7 @@ define([
      * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
+     * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
      * @see Scene#getAnimations
      */
@@ -441,20 +442,26 @@ define([
     CameraFlightPath.createAnimation = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
+        var direction = description.direction;
+        var up = description.up;
 
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
+
+        if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
+            throw new DeveloperError('If either direction or up is given, then both are required.');
+        }
+
         var frameState = scene.getFrameState();
         if (frameState.mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
-        var direction = description.direction;
-        var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
 
         var controller = scene.getScreenSpaceCameraController();

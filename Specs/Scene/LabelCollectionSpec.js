@@ -14,6 +14,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Color',
          'Core/Math',
+         'Core/NearFarScalar',
          'Renderer/ClearCommand',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
@@ -35,6 +36,7 @@ defineSuite([
          Cartographic,
          Color,
          CesiumMath,
+         NearFarScalar,
          ClearCommand,
          HorizontalOrigin,
          VerticalOrigin,
@@ -53,7 +55,7 @@ defineSuite([
         context = createContext();
 
         var us = context.getUniformState();
-        us.update(createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera(context)));
     });
 
     afterAll(function() {
@@ -83,6 +85,8 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(label.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(label.getScale()).toEqual(1.0);
+        expect(label.getId()).not.toBeDefined();
+        expect(label.getTranslucencyByDistance()).not.toBeDefined();
     });
 
     it('can add a label with specified values', function() {
@@ -110,6 +114,7 @@ defineSuite([
         var horizontalOrigin = HorizontalOrigin.LEFT;
         var verticalOrigin = VerticalOrigin.BOTTOM;
         var scale = 2.0;
+        var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var label = labels.add({
             show : show,
             position : position,
@@ -123,7 +128,9 @@ defineSuite([
             eyeOffset : eyeOffset,
             horizontalOrigin : horizontalOrigin,
             verticalOrigin : verticalOrigin,
-            scale : scale
+            scale : scale,
+            id : 'id',
+            translucencyByDistance : translucency
         });
 
         expect(label.getShow()).toEqual(show);
@@ -139,6 +146,8 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(horizontalOrigin);
         expect(label.getVerticalOrigin()).toEqual(verticalOrigin);
         expect(label.getScale()).toEqual(scale);
+        expect(label.getId()).toEqual('id');
+        expect(label.getTranslucencyByDistance()).toEqual(translucency);
     });
 
     it('can specify font using units other than pixels', function() {
@@ -635,6 +644,38 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
+    it('render label with translucencyByDistance', function() {
+        labels.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            translucencyByDistance: new NearFarScalar(1.0, 1.0, 3.0, 0.0)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var us = context.getUniformState();
+        var eye = new Cartesian3(0.0, 0.0, 1.0);
+        var target = Cartesian3.ZERO;
+        var up = Cartesian3.UNIT_Y;
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, labels);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        eye = new Cartesian3(0.0, 0.0, 6.0);
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, labels);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        us.update(context, createFrameState(createCamera(context)));
+    });
+
     it('can pick a label', function() {
         var label = labels.add({
             position : {
@@ -644,11 +685,13 @@ defineSuite([
             },
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('does not pick a label with show set to false', function() {
@@ -665,6 +708,29 @@ defineSuite([
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject).toBeUndefined();
+    });
+
+    it('pick a label using translucencyByDistance', function() {
+        var label = labels.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        var translucency = new NearFarScalar(1.0, 1.0, 3.0e9, 0.9);
+        label.setTranslucencyByDistance(translucency);
+        var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        translucency.nearValue = 0.0;
+        translucency.farValue = 0.0;
+        label.setTranslucencyByDistance(translucency);
+        pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject).toBeUndefined();
     });
 
@@ -793,6 +859,7 @@ defineSuite([
             var horizontalOrigin = HorizontalOrigin.LEFT;
             var verticalOrigin = VerticalOrigin.BOTTOM;
             var scale = 2.0;
+            var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
 
             label.setShow(show);
             label.setPosition(position);
@@ -807,6 +874,7 @@ defineSuite([
             label.setHorizontalOrigin(horizontalOrigin);
             label.setVerticalOrigin(verticalOrigin);
             label.setScale(scale);
+            label.setTranslucencyByDistance(translucency);
 
             expect(label.getShow()).toEqual(show);
             expect(label.getPosition()).toEqual(position);
@@ -821,6 +889,7 @@ defineSuite([
             expect(label.getHorizontalOrigin()).toEqual(horizontalOrigin);
             expect(label.getVerticalOrigin()).toEqual(verticalOrigin);
             expect(label.getScale()).toEqual(scale);
+            expect(label.getTranslucencyByDistance()).toEqual(translucency);
         });
 
         it('is destroyed after being removed', function() {
@@ -1505,6 +1574,31 @@ defineSuite([
         var label = labels.add();
         expect(function() {
             label.computeScreenSpacePosition(context, undefined);
+        }).toThrow();
+    });
+
+    it('Label.setTranslucencyByDistance throws with nearDistance === farDistance', function() {
+        var label = labels.add();
+        var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            label.setTranslucencyByDistance(translucency);
+        }).toThrow();
+    });
+
+    it('new label throws with invalid translucencyByDistance (nearDistance === farDistance)', function() {
+        var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            labels.add({
+                translucencyByDistance : translucency
+            });
+        }).toThrow();
+    });
+
+    it('Label.setTranslucencyByDistance throws with nearDistance > farDistance', function() {
+        var label = labels.add();
+        var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+        expect(function() {
+            label.setTranslucencyByDistance(translucency);
         }).toThrow();
     });
 

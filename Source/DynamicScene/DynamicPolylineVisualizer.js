@@ -215,7 +215,15 @@ define([
 
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);
-            polyline.setMaterial(Material.fromType(context, Material.ColorType));
+            var material = polyline.getMaterial();
+            if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
+                material = Material.fromType(Material.PolylineOutlineType);
+                polyline.setMaterial(material);
+            }
+            uniforms = material.uniforms;
+            Color.clone(Color.WHITE, uniforms.color);
+            Color.clone(Color.BLACK, uniforms.outlineColor);
+            uniforms.outlineWidth = 0;
         } else {
             polyline = dynamicPolylineVisualizer._polylineCollection.get(polylineVisualizerIndex);
         }

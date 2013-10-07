@@ -471,8 +471,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        var canvas = context.getCanvas();
-        var height = canvas.clientHeight;
+        var height = context.getDrawingBufferHeight();
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -485,9 +484,8 @@ define([
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var canvas = context.getCanvas();
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var width = context.getDrawingBufferWidth();
+        var height = context.getDrawingBufferHeight();
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
@@ -876,7 +874,7 @@ define([
                 centerEye.w = 1.0;
 
                 Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
-                viewMatrix.setColumn(3, centerEye, modifiedModelViewScratch);
+                Matrix4.setColumn(viewMatrix, 3, centerEye, modifiedModelViewScratch);
 
                 var tileImageryCollection = tile.imagery;
                 var imageryIndex = 0;

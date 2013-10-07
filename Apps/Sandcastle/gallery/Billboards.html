@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Add billboard images, points, and markers to the scene.">
-    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
@@ -160,6 +160,26 @@ require(['Cesium'], function(Cesium) {
             scene.getPrimitives().add(billboards);
         };
         image.src = '../images/facility.gif';
+    }
+
+    function billboardTranslucencyByDistance(scene, ellipsoid) {
+        Sandcastle.declare(billboardTranslucencyByDistance); // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                image : image
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../images/Cesium_Logo_overlay.png';
     }
 
     function addPointBillboards(scene, ellipsoid) {
@@ -429,6 +449,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(scaleBillboardByDistance);
         };
         button.textContent = 'Scale by viewer distance';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            primitives.removeAll();
+            billboardTranslucencyByDistance(scene, ellipsoid);
+            Sandcastle.highlight(billboardTranslucencyByDistance);
+        };
+        button.textContent = 'Fade by viewer distance';
         toolbar.appendChild(button);
     }
 

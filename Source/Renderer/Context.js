@@ -119,6 +119,20 @@ define([
         }
     }
 
+    function makeGetterSetter(gl, propertyName, logFunc) {
+        return {
+            get : function() {
+                var value = gl[propertyName];
+                logFunc(gl, 'get: ' + propertyName, value);
+                return gl[propertyName];
+            },
+            set : function(value) {
+                gl[propertyName] = value;
+                logFunc(gl, 'set: ' + propertyName, value);
+            }
+        };
+    }
+
     function wrapGL(gl, logFunc) {
         if (!logFunc) {
             return gl;
@@ -146,7 +160,7 @@ define([
             if (typeof property === 'function') {
                 glWrapper[propertyName] = wrapFunction(property);
             } else {
-                glWrapper[propertyName] = property;
+                Object.defineProperty(glWrapper, propertyName, makeGetterSetter(gl, propertyName, logFunc));
             }
         }
 
@@ -234,6 +248,7 @@ define([
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
         this._vertexArrayObject = gl.getExtension('OES_vertex_array_object');
+        this._fragDepth = gl.getExtension('EXT_frag_depth');
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
@@ -790,6 +805,22 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the EXT_frag_depth extension is supported.  This
+     * extension provides access to the <code>gl_FragDepthEXT<code> built-in output variable
+     * from GLSL fragment shaders.  A shader using these functions still needs to explicitly enable the
+     * extension with <code>#extension GL_EXT_frag_depth : enable</code>.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if EXT_frag_depth is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/'>EXT_frag_depth</a>
+     */
+    Context.prototype.getFragmentDepth = function() {
+        return !!this._fragDepth;
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -940,6 +971,32 @@ define([
         }
 
         return this._defaultCubeMap;
+    };
+
+    /**
+     * Returns the drawingBufferWidth of the underlying GL context.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The value in the drawingBufferWidth property of the underlying GL context.
+     *
+     * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth'>drawingBufferWidth</a>
+     */
+    Context.prototype.getDrawingBufferHeight = function() {
+        return this._gl.drawingBufferHeight;
+    };
+
+    /**
+     * Returns the drawingBufferHeight of the underlying GL context.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The value in the drawingBufferHeight property of the underlying GL context.
+     *
+     * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight'>drawingBufferHeight</a>
+     */
+    Context.prototype.getDrawingBufferWidth = function() {
+        return this._gl.drawingBufferWidth;
     };
 
     /**
@@ -1383,11 +1440,13 @@ define([
      * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
+        var gl = this._gl;
+
         pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
         framebufferXOffset = defaultValue(framebufferXOffset, 0);
         framebufferYOffset = defaultValue(framebufferYOffset, 0);
-        width = defaultValue(width, this._canvas.clientWidth);
-        height = defaultValue(height, this._canvas.clientHeight);
+        width = defaultValue(width, gl.drawingBufferWidth);
+        height = defaultValue(height, gl.drawingBufferHeight);
 
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
@@ -1405,15 +1464,14 @@ define([
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
 
-        if (framebufferXOffset + width > this._canvas.clientWidth) {
-            throw new DeveloperError('framebufferXOffset + width must be less than or equal to getCanvas().clientWidth');
+        if (framebufferXOffset + width > gl.drawingBufferWidth) {
+            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
         }
 
-        if (framebufferYOffset + height > this._canvas.clientHeight) {
-            throw new DeveloperError('framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.');
+        if (framebufferYOffset + height > gl.drawingBufferHeight) {
+            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
         }
 
-        var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
@@ -1655,12 +1713,13 @@ define([
      * @see Context#createFramebuffer
      */
     Context.prototype.createRenderbuffer = function(description) {
+        var gl = this._gl;
+
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var format = defaultValue(description.format, RenderbufferFormat.RGBA4);
-        var width = defined(description.width) ? description.width : this._canvas.clientWidth;
-        var height = defined(description.height) ? description.height : this._canvas.clientHeight;
+        var width = defined(description.width) ? description.width : gl.drawingBufferWidth;
+        var height = defined(description.height) ? description.height : gl.drawingBufferHeight;
 
-        var gl = this._gl;
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
         }
@@ -2172,11 +2231,13 @@ define([
      * @exception {DeveloperError} readState.height must be greater than zero.
      */
     Context.prototype.readPixels = function(readState) {
+        var gl = this._gl;
+
         readState = readState || {};
         var x = Math.max(readState.x || 0, 0);
         var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || this._canvas.clientWidth;
-        var height = readState.height || this._canvas.clientHeight;
+        var width = readState.width || gl.drawingBufferWidth;
+        var height = readState.height || gl.drawingBufferHeight;
         var framebuffer = readState.framebuffer || null;
 
         if (width <= 0) {
@@ -2194,7 +2255,6 @@ define([
             this._validateFramebuffer(framebuffer);
         }
 
-        var gl = this._gl;
         gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
 
         if (framebuffer) {
@@ -2485,7 +2545,7 @@ define([
      *
      * @memberof Context
      *
-     * @see Context#pick
+     * @see Scene#pick
      */
     Context.prototype.createPickFramebuffer = function() {
         return new PickFramebuffer(this);
