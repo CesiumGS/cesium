@@ -8,10 +8,10 @@ defineSuite([
              'DynamicScene/DynamicPolyline',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
+             'DynamicScene/ColorMaterialProperty',
              'Core/JulianDate',
              'Core/Cartesian2',
              'Core/Cartesian3',
-             'Core/Color',
              'Scene/Scene'
             ], function(
               DynamicPolylineVisualizer,
@@ -22,10 +22,10 @@ defineSuite([
               DynamicPolyline,
               DynamicObjectCollection,
               DynamicObject,
+              ColorMaterialProperty,
               JulianDate,
               Cartesian2,
               Cartesian3,
-              Color,
               Scene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -185,10 +185,8 @@ defineSuite([
 
         var polyline = testObject.polyline = new DynamicPolyline();
         polyline.show = new ConstantProperty(true);
-        polyline.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        polyline.material = new ColorMaterialProperty();
         polyline.width = new ConstantProperty(12.5);
-        polyline.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        polyline.outlineWidth = new ConstantProperty(2.5);
 
         visualizer.update(time);
 
@@ -202,15 +200,11 @@ defineSuite([
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         var material = primitive.getMaterial();
-        expect(material.uniforms.color).toEqual(testObject.polyline.color.getValue(time));
-        expect(material.uniforms.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(material.uniforms.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
+        expect(material.uniforms).toEqual(testObject.polyline.material.getValue(time));
 
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112)]);
-        polyline.color = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        polyline.material = new ColorMaterialProperty();
         polyline.width = new ConstantProperty(2.5);
-        polyline.outlineColor = new ConstantProperty(new Color(0.5, 0.6, 0.7, 0.8));
-        polyline.outlineWidth = new ConstantProperty(12.5);
 
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
@@ -218,9 +212,7 @@ defineSuite([
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         material = primitive.getMaterial();
-        expect(material.uniforms.color).toEqual(testObject.polyline.color.getValue(time));
-        expect(material.uniforms.outlineColor).toEqual(testObject.polyline.outlineColor.getValue(time));
-        expect(material.uniforms.outlineWidth).toEqual(testObject.polyline.outlineWidth.getValue(time));
+        expect(material.uniforms).toEqual(testObject.polyline.material.getValue(time));
 
         polyline.show = new ConstantProperty(false);
         visualizer.update(time);
