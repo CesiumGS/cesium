@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
+     * A {@link MaterialProperty} that maps to polyline outline {@link Material} uniforms.
      * @alias PolylineOutlineMaterialProperty
      * @constructor
      */
@@ -24,20 +24,20 @@ define([
         /**
          * A {@link Color} {@link Property} which determines the polyline's outline color.
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
+         * @default new ConstantProperty(Color.BLACK)
          */
         this.outlineColor = new ConstantProperty(Color.BLACK);
         /**
-         * A {@link Color} {@link Property} which determines the polylines outline width.
+         * A Number {@link Property} which determines the polyline's outline width.
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
+         * @default new ConstantProperty(1)
          */
         this.outlineWidth = new ConstantProperty(1);
     };
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof MaterialProperty
+     * @memberof PolylineOutlineMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
      * @type {String} The type of material.
@@ -48,7 +48,7 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof MaterialProperty
+     * @memberof PolylineOutlineMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
