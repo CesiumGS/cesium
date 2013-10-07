@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        './defaultValue',
+        './defined',
         './ComponentDatatype',
         './PrimitiveType',
         './BoundingSphere',
@@ -7,6 +9,8 @@ define([
         './GeometryAttributes',
         './Geometry'
     ], function(
+        defaultValue,
+        defined,
         ComponentDatatype,
         PrimitiveType,
         BoundingSphere,
@@ -18,8 +22,11 @@ define([
     /**
      * DOC_TBA
      */
-    var PointGeometry = function(typedArray) {
-        this._typedArray = typedArray;
+    var PointGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._positionsTypedArray = options.positionsTypedArray;
+        this._colorsTypedArray = options.colorsTypedArray;
         this._workerName = 'createPointGeometry';
     };
 
@@ -31,14 +38,23 @@ define([
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
             componentsPerAttribute : 3,
-            values : pointGeometry._typedArray
+            values : pointGeometry._positionsTypedArray
         });
+
+        if (defined(pointGeometry._colorsTypedArray)) {
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                values : pointGeometry._colorsTypedArray,
+                normalize : true
+            });
+        }
 
         return new Geometry({
             attributes : attributes,
             indices : undefined,
             primitiveType : PrimitiveType.POINTS,
-            boundingSphere : BoundingSphere.fromVertices(pointGeometry._typedArray)
+            boundingSphere : BoundingSphere.fromVertices(pointGeometry._positionsTypedArray)
         });
     };
 

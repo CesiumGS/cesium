@@ -88,6 +88,11 @@ define([
          * @default false
          */
         this.tangent = defaultValue(options.tangent, false);
+
+        /**
+         * DOC_TBA
+         */
+        this.color = defaultValue(options.color, false);
     };
 
     /**
@@ -177,6 +182,14 @@ define([
      * @see VertexFormat#normal
      */
     VertexFormat.DEFAULT = VertexFormat.POSITION_NORMAL_AND_ST;
+
+    /**
+     * DOC_TBA
+     */
+    VertexFormat.POSITION_AND_COLOR = freezeObject(new VertexFormat({
+        position : true,
+        color : true
+    }));
 
     return VertexFormat;
 });
