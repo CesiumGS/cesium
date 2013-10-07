@@ -69,10 +69,7 @@ define([
 
         function pickAndTrackObject(e) {
             var p = viewer.scene.pick(e.position);
-            if (defined(p) &&
-                defined(p.primitive) &&
-                defined(p.primitive.dynamicObject) &&
-                defined(p.primitive.dynamicObject.position)) {
+            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject) && defined(p.primitive.dynamicObject.position)) {
                 viewer.trackedObject = p.primitive.dynamicObject;
             }
         }
@@ -116,7 +113,7 @@ define([
 
         //Subscribe to current data sources
         var dataSources = viewer.dataSources;
-        var dataSourceLength = dataSources.length;
+        var dataSourceLength = dataSources.getLength();
         for (var i = 0; i < dataSourceLength; i++) {
             dataSourceAdded(dataSources, dataSources.get(i));
         }
@@ -179,7 +176,7 @@ define([
 
             //Unsubscribe from data sources
             var dataSources = viewer.dataSources;
-            var dataSourceLength = dataSources.length;
+            var dataSourceLength = dataSources.getLength();
             for (var i = 0; i < dataSourceLength; i++) {
                 dataSourceRemoved(dataSources, dataSources.get(i));
             }
