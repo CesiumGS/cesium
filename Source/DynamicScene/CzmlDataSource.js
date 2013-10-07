@@ -43,6 +43,7 @@ define([
         './DynamicEllipsoid',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPath',
         './DynamicPoint',
@@ -101,6 +102,7 @@ define([
         DynamicEllipsoid,
         GridMaterialProperty,
         ImageMaterialProperty,
+        DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
         DynamicPoint,
@@ -268,6 +270,8 @@ define([
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
             return unwrapImageInterval(czmlInterval, sourceUri);
+        case JulianDate:
+            return JulianDate.fromIso8601(defaultValue(czmlInterval.julianDate, czmlInterval));
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Number:
@@ -886,13 +890,6 @@ define([
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
     }
 
-    function processDescription(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var descriptionData = packet.description;
-        if (defined(descriptionData)) {
-            processPacketData(String, dynamicObject, 'balloon', descriptionData, undefined, sourceUri);
-        }
-    }
-
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
@@ -1079,7 +1076,12 @@ define([
         if (packet['delete'] === true) {
             dynamicObjectCollection.removeById(objectId);
         } else {
-            var dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
+            var dynamicObject;
+            if (objectId === 'document') {
+                dynamicObject = dataSource._document;
+            } else {
+                dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
+            }
 
             var i;
             var unresolvedParents;
@@ -1119,7 +1121,7 @@ define([
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
-        var documentObject = dynamicObjectCollection.getById('document');
+        var documentObject = dataSource._document;
         if (defined(documentObject) && defined(documentObject.clock)) {
             clock = new DynamicClock();
             clock.startTime = documentObject.clock.startTime;
@@ -1151,8 +1153,6 @@ define([
 
         dataSource._name = name;
 
-        //FIXME This is a temporary hack to sstop the document from showing up in the DataSourceBrowser.
-        dynamicObjectCollection.removeById('document');
         return clock;
     }
 
@@ -1171,6 +1171,7 @@ define([
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
         this._unresolvedParents = {};
+        this._document = new DynamicObject();
     };
 
     /**
@@ -1183,7 +1184,6 @@ define([
     processEllipse, //
     processEllipsoid, //
     processCone, //
-    processDescription, //
     processLabel, //
     processName, //
     processPath, //
@@ -1292,6 +1292,7 @@ define([
         }
 
         this._unresolvedParents = {};
+        this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
