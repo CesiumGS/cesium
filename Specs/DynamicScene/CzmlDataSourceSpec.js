@@ -1496,4 +1496,33 @@ defineSuite([
         var child2 = objects.getById('child2');
         expect(child2.parent).toBe(parent);
     });
+
+    it('Processes JulianDate packets.', function() {
+        var date = JulianDate.fromIso8601('2000-01-01');
+
+        var object = {};
+        CzmlDataSource.processPacketData(JulianDate, object, 'simpleDate', date.toIso8601());
+
+        expect(object.simpleDate).toBeDefined();
+        expect(object.simpleDate.getValue()).toEqual(date);
+
+        CzmlDataSource.processPacketData(JulianDate, object, 'objDate', {
+            julianDate : date.toIso8601()
+        });
+
+        expect(object.objDate).toBeDefined();
+        expect(object.objDate.getValue()).toEqual(date);
+    });
+
+    it('Processes array packets.', function() {
+        var arrayPacket = {
+            array : [1, 2, 3, 4, 5]
+        };
+
+        var object = {};
+        CzmlDataSource.processPacketData(Array, object, 'arrayData', arrayPacket);
+
+        expect(object.arrayData).toBeDefined();
+        expect(object.arrayData.getValue()).toEqual(arrayPacket.array);
+    });
 });
