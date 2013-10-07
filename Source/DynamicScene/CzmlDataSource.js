@@ -277,11 +277,11 @@ define([
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Number:
-            return defaultValue(czmlInterval['number'], czmlInterval);
+            return defaultValue(czmlInterval.number, czmlInterval);
         case String:
-            return defaultValue(czmlInterval['string'], czmlInterval);
+            return defaultValue(czmlInterval.string, czmlInterval);
         case Array:
-            return czmlInterval['array'];
+            return czmlInterval.array;
         case Quaternion:
             return czmlInterval.unitQuaternion;
         case VerticalOrigin:
@@ -1113,33 +1113,12 @@ define([
                 dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
             }
 
-            var i;
-            var unresolvedParents;
             var parentId = packet.parent;
             if (defined(parentId)) {
-                var parent = dynamicObjectCollection.getById(parentId);
-
-                //If we have already loaded the parent, resolve it,
-                if (defined(parent)) {
-                    dynamicObject.parent = parent;
-                } else {
-                    unresolvedParents = dataSource._unresolvedParents[parentId];
-                    if (!defined(unresolvedParents)) {
-                        dataSource._unresolvedParents[parentId] = [dynamicObject];
-                    } else {
-                        unresolvedParents.push(dynamicObject);
-                    }
-                }
-                unresolvedParents = dataSource._unresolvedParents[objectId];
-                if (defined(unresolvedParents)) {
-                    for (i = 0; i < unresolvedParents.length; i++) {
-                        unresolvedParents[i].parent = dynamicObject;
-                    }
-                    dataSource._unresolvedParents[objectId] = undefined;
-                }
+                dynamicObject.parent = dynamicObjectCollection.getOrCreateObject(parentId);
             }
 
-            for (i = updaterFunctions.length - 1; i > -1; i--) {
+            for (var i = updaterFunctions.length - 1; i > -1; i--) {
                 updaterFunctions[i](dynamicObject, packet, dynamicObjectCollection, sourceUri);
             }
         }
@@ -1200,7 +1179,6 @@ define([
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
-        this._unresolvedParents = {};
         this._document = new DynamicObject();
     };
 
@@ -1321,7 +1299,6 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
-        this._unresolvedParents = {};
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
