@@ -91,7 +91,7 @@ define([
         //tracked object when it is removed from the scene.
         function onDynamicCollectionChanged(collection, added, removed) {
             var length = removed.length;
-            for ( var i = 0; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 var removedObject = removed[i];
                 if (viewer.trackedObject === removedObject) {
                     viewer.homeButton.viewModel.command();
@@ -117,7 +117,7 @@ define([
         //Subscribe to current data sources
         var dataSources = viewer.dataSources;
         var dataSourceLength = dataSources.length;
-        for ( var i = 0; i < dataSourceLength; i++) {
+        for (var i = 0; i < dataSourceLength; i++) {
             dataSourceAdded(dataSources, dataSources.get(i));
         }
 
@@ -180,7 +180,7 @@ define([
             //Unsubscribe from data sources
             var dataSources = viewer.dataSources;
             var dataSourceLength = dataSources.length;
-            for ( var i = 0; i < dataSourceLength; i++) {
+            for (var i = 0; i < dataSourceLength; i++) {
                 dataSourceRemoved(dataSources, dataSources.get(i));
             }
         });
