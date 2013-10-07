@@ -13,6 +13,7 @@ Beta Releases
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
@@ -35,6 +36,7 @@ Beta Releases
 * Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
+* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
