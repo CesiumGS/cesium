@@ -71,20 +71,20 @@ defineSuite([
     };
 
     var clockCzml = {
-            id : 'document',
-            clock : {
-                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-                currentTime : '2012-03-15T10:00:00Z',
-                multiplier : 60.0,
-                range : 'LOOP_STOP',
-                step : 'SYSTEM_CLOCK_MULTIPLIER'
-            }
-        };
+        id : 'document',
+        clock : {
+            interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+            currentTime : '2012-03-15T10:00:00Z',
+            multiplier : 60.0,
+            range : 'LOOP_STOP',
+            step : 'SYSTEM_CLOCK_MULTIPLIER'
+        }
+    };
 
     var nameCzml = {
-            id : 'document',
-            name : 'czmlName'
-        };
+        id : 'document',
+        name : 'czmlName'
+    };
 
     var simple;
     var simpleUrl = 'Data/CZML/simple.czml';
@@ -453,7 +453,6 @@ defineSuite([
         dataSource.load(clockPacket);
         expect(dataSource.getClock()).toBeUndefined();
     });
-
 
     it('CZML adds data for infinite cone.', function() {
         var conePacket = {
@@ -945,7 +944,6 @@ defineSuite([
         expect(dynamicObject.label.scale.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.label.show.getValue(invalidTime)).toBeUndefined();
     });
-
 
     it('CZML Position works.', function() {
         var packet = {
