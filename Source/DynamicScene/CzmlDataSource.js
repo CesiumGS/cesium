@@ -35,6 +35,7 @@ define([
         './DynamicBillboard',
         './DynamicClock',
         './ColorMaterialProperty',
+        './PolylineOutlineMaterialProperty',
         './DynamicCone',
         './DynamicLabel',
         './DynamicDirectionsProperty',
@@ -92,6 +93,7 @@ define([
         DynamicBillboard,
         DynamicClock,
         ColorMaterialProperty,
+        PolylineOutlineMaterialProperty,
         DynamicCone,
         DynamicLabel,
         DynamicDirectionsProperty,
@@ -993,11 +995,39 @@ define([
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri);
-        processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri);
-        processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri);
-        processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
+        //Since CZML does not support PolylineOutlineMaterial, we map it's properties into one.
+        var materialToProcess = polyline.material;
+        if (defined(interval)) {
+            var materialInterval;
+            var composite = materialToProcess;
+            if (!(composite instanceof CompositeMaterialProperty)) {
+                composite = new CompositeMaterialProperty();
+                polyline.material = composite;
+                if (defined(materialToProcess)) {
+                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
+                    materialInterval.data = materialToProcess;
+                    composite.intervals.addInterval(materialInterval);
+                }
+            }
+            materialInterval = composite.intervals.findInterval(interval.start, interval.stop, interval.isStartIncluded, interval.isStopIncluded);
+            if (defined(materialInterval)) {
+                materialToProcess = materialInterval.data;
+            } else {
+                materialToProcess = new PolylineOutlineMaterialProperty();
+                materialInterval = interval.clone();
+                materialInterval.data = materialToProcess;
+                composite.intervals.addInterval(materialInterval);
+            }
+        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
+            materialToProcess = new PolylineOutlineMaterialProperty();
+            polyline.material = materialToProcess;
+        }
+
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri);
+        processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri);
+        processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
