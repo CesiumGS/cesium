@@ -2,11 +2,13 @@
 defineSuite([
              'DynamicScene/DynamicPoint',
              'DynamicScene/ConstantProperty',
-             'Core/Color'
+             'Core/Color',
+             'Core/NearFarScalar'
          ], function(
              DynamicPoint,
              ConstantProperty,
-             Color) {
+             Color,
+             NearFarScalar) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -17,6 +19,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty(Color.WHITE);
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicPoint();
         target.merge(source);
@@ -25,6 +28,7 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.show).toBe(source.show);
+        expect(target.scaleByDistance).toBe(source.scaleByDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -34,6 +38,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty(Color.WHITE);
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
 
         var color = new ConstantProperty(Color.WHITE);
         var pixelSize = new ConstantProperty(1);
@@ -47,6 +52,7 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.show = show;
+        target.scaleByDistance = show;
 
         target.merge(source);
         expect(target.color).toBe(color);
@@ -54,6 +60,7 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.show).toBe(show);
+        expect(target.scaleByDistance).toBe(show);
     });
 
     it('clone works', function() {
@@ -63,6 +70,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty(Color.WHITE);
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
+        source.scaleByDistance = new ConstantProperty(new NearFarScalar());
 
         var result = source.clone();
         expect(result.color).toBe(source.color);
@@ -70,6 +78,7 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.show).toBe(source.show);
+        expect(result.scaleByDistance).toBe(source.scaleByDistance);
     });
 
     it('merge throws if source undefined', function() {

@@ -53,6 +53,7 @@ define(['../Core/createGuid',
         this._ellipse = undefined;
         this._label = undefined;
         this._name = undefined;
+        this._parent = undefined;
         this._path = undefined;
         this._point = undefined;
         this._polygon = undefined;
@@ -63,7 +64,7 @@ define(['../Core/createGuid',
         this._viewFrom = undefined;
 
         this._propertyChanged = new Event();
-        this._propertyNames = ['position', 'orientation', 'billboard', //
+        this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
     };
@@ -103,7 +104,7 @@ define(['../Core/createGuid',
          * Gets or sets the name of the object.  The name is intended for end-user
          * consumption and does not need to be unique.
          * @memberof DynamicObject.prototype
-         * @type {Property}
+         * @type {String}
          */
         name : {
             configurable : false,
@@ -178,6 +179,12 @@ define(['../Core/createGuid',
          * @type {DynamicLabel}
          */
         label : createDynamicPropertyDescriptor('label', '_label'),
+        /**
+         * Gets or sets the parent object.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicObject}
+         */
+        parent : createDynamicPropertyDescriptor('parent', '_parent'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
