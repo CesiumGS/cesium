@@ -25,6 +25,7 @@ define(['../Core/defaultValue',
         this._outlineColor = undefined;
         this._outlineWidth = undefined;
         this._show = undefined;
+        this._scaleByDistance = undefined;
         this._propertyChanged = new Event();
     };
 
@@ -73,7 +74,15 @@ define(['../Core/defaultValue',
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show')
+        show : createDynamicPropertyDescriptor('show', '_show'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
+         * If undefined, a constant size is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance', '_scaleByDistance')
     });
 
     /**
@@ -92,6 +101,7 @@ define(['../Core/defaultValue',
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.show = this.show;
+        result.scaleByDistance = this.scaleByDistance;
         return result;
     };
 
@@ -112,6 +122,7 @@ define(['../Core/defaultValue',
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.show = defaultValue(this.show, source.show);
+        this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
     };
 
     return DynamicPoint;
