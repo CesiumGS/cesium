@@ -299,9 +299,7 @@ define([
         if (!defined(result)) {
             result = new Quaternion();
         }
-        sampledQuaternionRotation.x = array[0];
-        sampledQuaternionRotation.y = array[1];
-        sampledQuaternionRotation.z = array[2];
+        Cartesian3.fromArray(array, 0, sampledQuaternionRotation);
         var magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
 
         Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
@@ -312,7 +310,8 @@ define([
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }
 
-        return Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
+        Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
+        return Quaternion.conjugate(result, result);
     };
 
     /**

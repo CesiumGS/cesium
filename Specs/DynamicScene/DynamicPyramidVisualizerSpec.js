@@ -145,7 +145,7 @@ defineSuite([
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
         expect(p.material.uniforms).toEqual(testObject.pyramid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(testObject.orientation.getValue(time))), testObject.position.getValue(time)));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time)), testObject.position.getValue(time)));
 
         pyramid.show.value = false;
         visualizer.update(time);

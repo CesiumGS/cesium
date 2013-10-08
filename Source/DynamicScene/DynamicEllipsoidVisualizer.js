@@ -252,7 +252,7 @@ define([
             defined(orientation) &&
             (!Cartesian3.equals(position, ellipsoid._visualizerPosition) ||
              !Quaternion.equals(orientation, ellipsoid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(orientation), matrix3Scratch), position, ellipsoid.modelMatrix);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
             ellipsoid._visualizerPosition = Cartesian3.clone(position, ellipsoid._visualizerPosition);
             ellipsoid._visualizerOrientation = Quaternion.clone(orientation, ellipsoid._visualizerOrientation);
         }
