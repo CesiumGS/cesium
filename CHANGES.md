@@ -15,6 +15,7 @@ Beta Releases
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
    * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
    * Replaced `SkyBox.getSources` with `SkyBox.sources`.
+   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
@@ -36,6 +37,7 @@ Beta Releases
 * Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
+* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 
 ### b21 - 2013-10-01
