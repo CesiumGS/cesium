@@ -14,6 +14,7 @@ Beta Releases
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
+   * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.  
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
@@ -36,6 +37,8 @@ Beta Releases
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
+* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
+* Added prototype equals function to `NearFarScalar`, and `TimeIntervaCollection`.
 
 ### b21 - 2013-10-01
 

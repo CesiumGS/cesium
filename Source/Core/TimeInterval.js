@@ -111,15 +111,16 @@ define([
     };
 
     /**
-     * Compares the provided TimeIntervals componentwise and returns
+     * Compares the provided TimeIntervals and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof TimeInterval
      *
-     * @param {TimeInterval} [left] The first Cartesian.
-     * @param {TimeInterval} [right] The second Cartesian.
+     * @param {TimeInterval} [left] The first interval.
+     * @param {TimeInterval} [right] The second interval.
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    TimeInterval.equals = function(left, right) {
+    TimeInterval.equals = function(left, right, dataComparer) {
         return left === right ||
                defined(left) &&
                defined(right) &&
@@ -127,7 +128,9 @@ define([
                 left.isStartIncluded === right.isStartIncluded &&
                 left.isStopIncluded === right.isStopIncluded &&
                 left.start.equals(right.start) &&
-                left.stop.equals(right.stop));
+                left.stop.equals(right.stop) &&
+                (left.data === right.data ||
+                 (defined(dataComparer) && dataComparer(left.data, right.data))));
     };
 
     /**
@@ -144,7 +147,7 @@ define([
      *
      * @exception {DeveloperError} epsilon is required and must be number.
      */
-    TimeInterval.equalsEpsilon = function(left, right, epsilon) {
+    TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
@@ -156,7 +159,9 @@ define([
                 left.isStartIncluded === right.isStartIncluded &&
                 left.isStopIncluded === right.isStopIncluded &&
                 left.start.equalsEpsilon(right.start, epsilon) &&
-                left.stop.equalsEpsilon(right.stop, epsilon));
+                left.stop.equalsEpsilon(right.stop, epsilon) &&
+                (left.data === right.data ||
+                 (defined(dataComparer) && dataComparer(left.data, right.data))));
     };
 
     /**
@@ -283,8 +288,8 @@ define([
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
-    TimeInterval.prototype.equals = function(other) {
-        return TimeInterval.equals(this, other);
+    TimeInterval.prototype.equals = function(other, dataComparer) {
+        return TimeInterval.equals(this, other, dataComparer);
     };
 
     /**
@@ -299,8 +304,8 @@ define([
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
-    TimeInterval.prototype.equalsEpsilon = function(other, epsilon) {
-        return TimeInterval.equalsEpsilon(this, other, epsilon);
+    TimeInterval.prototype.equalsEpsilon = function(other, epsilon, dataComparer) {
+        return TimeInterval.equalsEpsilon(this, other, epsilon, dataComparer);
     };
 
     return TimeInterval;
