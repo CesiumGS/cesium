@@ -197,6 +197,7 @@ defineSuite([
         expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
         expect(dataSource.getErrorEvent()).toBeInstanceOf(Event);
         expect(dataSource.getClock()).toBeUndefined();
+        expect(dataSource.getName()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
         expect(dataSource.getIsTimeVarying()).toEqual(false);
@@ -479,6 +480,10 @@ defineSuite([
 
         waitsFor(function() {
             return dataSource.getDynamicObjectCollection().getObjects().length === 4;
+        });
+
+        runs(function() {
+            expect(dataSource.getName()).toEqual('test.geojson');
         });
     });
 
