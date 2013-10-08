@@ -129,7 +129,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
         var cone = testObject.cone = new DynamicCone();
         cone.minimumClockAngle = new ConstantProperty(0.1);

@@ -46,7 +46,7 @@ defineSuite([
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
 
         var returnedResult = Matrix3.fromQuaternion(quatnerion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -60,7 +60,7 @@ defineSuite([
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromQuaternion(quatnerion, result);
         expect(result).toBe(returnedResult);

@@ -5,6 +5,7 @@ defineSuite([
          'Specs/destroyScene',
          'DynamicScene/ConstantProperty',
          'Core/JulianDate',
+         'Core/Math',
          'Core/Matrix3',
          'Core/Matrix4',
          'Core/Quaternion',
@@ -20,6 +21,7 @@ defineSuite([
          destroyScene,
          ConstantProperty,
          JulianDate,
+         CesiumMath,
          Matrix3,
          Matrix4,
          Quaternion,
@@ -135,7 +137,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR)));
 
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
         ellipsoid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
