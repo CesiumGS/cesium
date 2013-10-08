@@ -362,8 +362,7 @@ define([
         }
 
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
-        var quaternion = Quaternion.fromAxisAngle(axis, turnAngle, lookScratchQuaternion);
-        Quaternion.conjugate(quaternion, quaternion);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, lookScratchQuaternion);
         var rotation = Matrix3.fromQuaternion(quaternion, lookScratchMatrix);
 
         var direction = this._camera.direction;
@@ -483,8 +482,7 @@ define([
         var camera = this._camera;
 
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-        var quaternion = Quaternion.fromAxisAngle(axis, turnAngle, rotateScratchQuaternion);
-        Quaternion.conjugate(quaternion, quaternion);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
         var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
 
         var oldTransform = appendTransform(this, transform);
