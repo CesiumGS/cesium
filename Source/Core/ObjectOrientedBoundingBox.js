@@ -24,7 +24,7 @@ define([
      */
     var ObjectOrientedBoundingBox = function() {
         this.transformMatrix;
-        this.transformedPositions;
+        this.transformedPosition;
         this.extent;
     };
 
@@ -44,7 +44,7 @@ define([
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
             result.transformMatrix = new Matrix3();
-            result.transformedPositions = new Cartesian3();
+            result.transformedPosition = new Cartesian3();
             result.extent = new Cartesian3();
         }
 
@@ -111,7 +111,7 @@ define([
 
         var center = new Cartesian3((minPoint.x+maxPoint.x)*0.5, (minPoint.y+maxPoint.y)*0.5, (minPoint.z+maxPoint.z)*0.5);
 
-        result.transformedPositions = new Cartesian3(Cartesian3.dot(r, center), Cartesian3.dot(u, center), Cartesian3.dot(f, center))
+        result.transformedPosition = new Cartesian3(Cartesian3.dot(r, center), Cartesian3.dot(u, center), Cartesian3.dot(f, center))
 
         result.extent = new Cartesian3((maxPoint.x-minPoint.x)*0.5, (maxPoint.y-minPoint.y)*0.5, (maxPoint.z-minPoint.z)*0.5);
 
@@ -119,8 +119,6 @@ define([
     };
 
     function minimum(first, second) {
-
-
         if (first.x > second.x) {
             first.x = second.x;
         }
@@ -132,9 +130,8 @@ define([
         }
         return first;
     }
+
     function maximum(first, second) {
-
-
         if (first.x < second.x) {
             first.x = second.x;
         }
@@ -147,6 +144,46 @@ define([
         return first;
     }
 
+    /**
+     * Get the describing points of the ObjectOrientedBoundingBox.
+     * @memberof ObjectOrientedBoundingBox
+     *
+     * @param {ObjectOrientedBoundingBox} box The bounding box.
+     * @param {Cartesian3} [result] The object onto which to store the resulting points.
+     * @return {Cartesian3} The object onto which to store the resulting points.
+     */
+    ObjectOrientedBoundingBox.getDescribingPoints = function(box, result) {
+        if (!defined(box)) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+          var result = [];
+        }
+
+        var r = Matrix3.getColumn(box.transformMatrix, 0, r);
+        var u = Matrix3.getColumn(box.transformMatrix, 1, u);
+        var f = Matrix3.getColumn(box.transformMatrix, 2, f);
+
+        var point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        result.push(point);
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        result.push(point);
+
+        return result;
+    };
 
     /**
      * Duplicates a ObjectOrientedBoundingBox instance. //TODO
@@ -162,8 +199,12 @@ define([
         }
 
         if (!defined(result)) {
-            return new ObjectOrientedBoundingBox();
+           var result = new ObjectOrientedBoundingBox();
         }
+
+        result.transformMatrix = box.transformMatrix;
+        result.transformedPosition = box.transformedPosition;
+        result.extent = box.extent;
 
         return result;
     };
@@ -181,9 +222,9 @@ define([
         return (left === right) ||
                ((defined(left)) &&
                 (defined(right)) &&
-                Cartesian3.equals(left.center, right.center) &&
-                Cartesian3.equals(left.minimum, right.minimum) &&
-                Cartesian3.equals(left.maximum, right.maximum)); //TODO
+                Cartesian3.equals(left.transformedPosition, right.transformedPosition) &&
+                Matrix3.equals(left.transformMatrix, right.transformMatrix) &&
+                Cartesian3.equals(left.extent, right.extent));
     };
 
     var intersectScratch = new Cartesian3();
@@ -211,21 +252,7 @@ define([
             throw new DeveloperError('plane is required.');
         }
 
-        intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);
-        var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal
-        var e = h.x * Math.abs(plane.x) + h.y * Math.abs(plane.y) + h.z * Math.abs(plane.z);
-        var s = Cartesian3.dot(box.center, plane) + plane.w; //signed distance from center
-
-        if (s - e > 0) {
-            return Intersect.INSIDE;
-        }
-
-        if (s + e < 0) {
-            //Not in front because normals point inward
-            return Intersect.OUTSIDE;
-        }
-
-        return Intersect.INTERSECTING;
+        return undefined;
     };
 
     /**
