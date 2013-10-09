@@ -13,6 +13,8 @@ Beta Releases
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
+   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead. 
@@ -39,6 +41,7 @@ Beta Releases
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
+* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
