@@ -156,15 +156,15 @@ define([
         var w2 = quaternion.w * quaternion.w;
 
         var m00 = x2 - y2 - z2 + w2;
-        var m01 = 2.0 * (xy + zw);
-        var m02 = 2.0 * (xz - yw);
+        var m01 = 2.0 * (xy - zw);
+        var m02 = 2.0 * (xz + yw);
 
-        var m10 = 2.0 * (xy - zw);
+        var m10 = 2.0 * (xy + zw);
         var m11 = -x2 + y2 - z2 + w2;
-        var m12 = 2.0 * (yz + xw);
+        var m12 = 2.0 * (yz - xw);
 
-        var m20 = 2.0 * (xz + yw);
-        var m21 = 2.0 * (yz - xw);
+        var m20 = 2.0 * (xz - yw);
+        var m21 = 2.0 * (yz + xw);
         var m22 = -x2 - y2 + z2 + w2;
 
         if (!defined(result)) {

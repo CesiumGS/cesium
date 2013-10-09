@@ -130,9 +130,9 @@ defineSuite([
             0.0, -8.0, 0.0, 3.0,
             0.0,  0.0, 0.0, 1.0);
         var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
-            new Cartesian3(1.0, 2.0, 3.0),                                           // translation
-            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(90.0)), // rotation
-            new Cartesian3(7.0, 8.0, 9.0));                                          // scale
+            new Cartesian3(1.0, 2.0, 3.0),                                            // translation
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
+            new Cartesian3(7.0, 8.0, 9.0));                                           // scale
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
@@ -145,9 +145,9 @@ defineSuite([
                 0.0,  0.0, 0.0, 1.0);
         var result = new Matrix4();
         var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
-            new Cartesian3(1.0, 2.0, 3.0),                                           // translation
-            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(90.0)), // rotation
-            new Cartesian3(7.0, 8.0, 9.0),                                           // scale
+            new Cartesian3(1.0, 2.0, 3.0),                                            // translation
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
+            new Cartesian3(7.0, 8.0, 9.0),                                            // scale
             result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(expected);
