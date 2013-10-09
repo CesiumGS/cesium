@@ -110,6 +110,24 @@ defineSuite([
         expect(interval1.equalsEpsilon(interval2, 0)).toEqual(true);
     });
 
+    it('equals and equalsEpsilon return true for identical time intervals with data', function() {
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
+        interval1.data = {};
+        var interval2 = interval1.clone();
+        interval2.data = {};
+
+        expect(interval1.equals(interval2)).toEqual(false);
+        expect(interval1.equalsEpsilon(interval2, 0)).toEqual(false);
+
+        function returnTrue() {
+            return true;
+        }
+
+        expect(interval1.equals(interval2, returnTrue)).toEqual(true);
+        expect(interval1.equalsEpsilon(interval2, 0, returnTrue)).toEqual(true);
+    });
+
+
     it('equals and equalsEpsilon return false for non-identical time intervals', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2));
@@ -117,7 +135,7 @@ defineSuite([
         expect(interval1.equalsEpsilon(interval2, 0)).toEqual(false);
     });
 
-    it('equalsEpsilon true false for non-identical time intervals within threshold', function() {
+    it('equalsEpsilon true for non-identical time intervals within threshold', function() {
         var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2));
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2));
         expect(interval1.equalsEpsilon(interval2, 86400)).toEqual(true);
@@ -143,9 +161,9 @@ defineSuite([
     });
 
     it('intersect properly intersects with an exhaustive set of cases', function() {
-        var testParameters = [new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true, 1),
-                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true, 2),
-                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true, 3),
+        var testParameters = [new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
+                new TimeInterval(JulianDate.fromTotalDays(1.5), JulianDate.fromTotalDays(2), true, true),
                 new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true),
                 new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), true, true),
                 new TimeInterval(JulianDate.fromTotalDays(0), JulianDate.fromTotalDays(0), false, false),

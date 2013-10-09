@@ -679,6 +679,31 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the provided dates are within <code>epsilon</code> seconds of
+     * each other.  That is, in order for the dates to be considered equal (and for
+     * this function to return <code>true</code>), the absolute value of the difference between them, in
+     * seconds, must be less than <code>epsilon</code>.
+     *
+     * @memberof JulianDate
+     *
+     * @param {JulianDate} left The first JulianDate to be compared.
+     * @param {JulianDate} right The second JulianDate to be compared.
+     * @param {Number} epsilon The number of seconds that should separate the two JulianDates
+     *
+     * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     *
+     * @see JulianDate#equals
+     */
+    JulianDate.equalsEpsilon = function(left, right, epsilon) {
+        if (epsilon === null || isNaN(epsilon)) {
+            throw new DeveloperError('epsilon is required and must be a number.');
+        }
+        return Math.abs(left.getSecondsDifference(right)) <= epsilon;
+    };
+
+    /**
      * Duplicates this JulianDate.
      * @memberof JulianDate
      *
@@ -1210,7 +1235,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
      *
-     * @exception {DeveloperError} epsilon is required and must be number.
+     * @exception {DeveloperError} epsilon is required and must be a number.
      *
      * @see JulianDate#equals
      *
@@ -1220,10 +1245,7 @@ define([
      * original.equalsEpsilon(clone, 2);    // true
      */
     JulianDate.prototype.equalsEpsilon = function(other, epsilon) {
-        if (epsilon === null || isNaN(epsilon)) {
-            throw new DeveloperError('epsilon is required and must be number.');
-        }
-        return Math.abs(this.getSecondsDifference(other)) <= epsilon;
+        return JulianDate.equalsEpsilon(this, other, epsilon);
     };
 
     //To avoid circular dependencies, we load the default list of leap seconds

@@ -111,23 +111,27 @@ define([
     };
 
     /**
-     * Compares the provided TimeIntervals componentwise and returns
+     * Compares the provided TimeIntervals and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof TimeInterval
      *
-     * @param {TimeInterval} [left] The first Cartesian.
-     * @param {TimeInterval} [right] The second Cartesian.
+     * @param {TimeInterval} [left] The first interval.
+     * @param {TimeInterval} [right] The second interval.
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
+     *
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    TimeInterval.equals = function(left, right) {
+    TimeInterval.equals = function(left, right, dataComparer) {
         return left === right ||
                defined(left) &&
                defined(right) &&
                (left.isEmpty && right.isEmpty ||
                 left.isStartIncluded === right.isStartIncluded &&
                 left.isStopIncluded === right.isStopIncluded &&
-                left.start.equals(right.start) &&
-                left.stop.equals(right.stop));
+                JulianDate.equals(left.start, right.start) &&
+                JulianDate.equals(left.stop, right.stop) &&
+                (left.data === right.data ||
+                 (defined(dataComparer) && dataComparer(left.data, right.data))));
     };
 
     /**
@@ -139,12 +143,13 @@ define([
      * @param {TimeInterval} [left] The first TimeInterval.
      * @param {TimeInterval} [right] The second TimeInterval.
      * @param {Number} epsilon The epsilon to use for equality testing.
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
      *
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be number.
      */
-    TimeInterval.equalsEpsilon = function(left, right, epsilon) {
+    TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
@@ -155,8 +160,10 @@ define([
                (left.isEmpty && right.isEmpty ||
                 left.isStartIncluded === right.isStartIncluded &&
                 left.isStopIncluded === right.isStopIncluded &&
-                left.start.equalsEpsilon(right.start, epsilon) &&
-                left.stop.equalsEpsilon(right.stop, epsilon));
+                JulianDate.equalsEpsilon(left.start, right.start, epsilon) &&
+                JulianDate.equalsEpsilon(left.stop, right.stop, epsilon) &&
+                (left.data === right.data ||
+                 (defined(dataComparer) && dataComparer(left.data, right.data))));
     };
 
     /**
@@ -211,14 +218,14 @@ define([
 
         if (otherStart.greaterThanOrEquals(thisStart) && thisStop.greaterThanOrEquals(otherStart)) {
 
-            isStartIncluded = (!otherStart.equals(thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
+            isStartIncluded = (!JulianDate.equals(otherStart, thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
             isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
 
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (!otherStop.equals(thisStop) && otherIsStopIncluded);
+                isStopIncluded = isStopIncluded || (!JulianDate.equals(otherStop, thisStop) && otherIsStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
@@ -228,13 +235,13 @@ define([
 
         if (otherStart.lessThanOrEquals(thisStart) && thisStart.lessThanOrEquals(otherStop)) {
 
-            isStartIncluded = (otherStart.equals(thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
+            isStartIncluded = (JulianDate.equals(otherStart, thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
             isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
             if (thisStop.greaterThanOrEquals(otherStop)) {
-                isStopIncluded = isStopIncluded || (otherStop.equals(thisStop) === false && otherIsStopIncluded);
+                isStopIncluded = isStopIncluded || (JulianDate.equals(otherStop, thisStop) === false && otherIsStopIncluded);
                 return new TimeInterval(thisStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
 
@@ -281,10 +288,12 @@ define([
      * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
+     *
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
-    TimeInterval.prototype.equals = function(other) {
-        return TimeInterval.equals(this, other);
+    TimeInterval.prototype.equals = function(other, dataComparer) {
+        return TimeInterval.equals(this, other, dataComparer);
     };
 
     /**
@@ -295,12 +304,14 @@ define([
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
+     *
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
-    TimeInterval.prototype.equalsEpsilon = function(other, epsilon) {
-        return TimeInterval.equalsEpsilon(this, other, epsilon);
+    TimeInterval.prototype.equalsEpsilon = function(other, epsilon, dataComparer) {
+        return TimeInterval.equalsEpsilon(this, other, epsilon, dataComparer);
     };
 
     return TimeInterval;

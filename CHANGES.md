@@ -16,6 +16,7 @@ Beta Releases
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead. 
+   * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.  
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
@@ -43,6 +44,8 @@ Beta Releases
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
 * Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
 * Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
+* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
+* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 
 ### b21 - 2013-10-01
 
