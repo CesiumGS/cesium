@@ -104,7 +104,7 @@ define(['../Core/createGuid',
          * Gets or sets the name of the object.  The name is intended for end-user
          * consumption and does not need to be unique.
          * @memberof DynamicObject.prototype
-         * @type {Property}
+         * @type {String}
          */
         name : {
             configurable : false,

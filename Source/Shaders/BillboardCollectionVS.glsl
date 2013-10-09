@@ -21,7 +21,6 @@ varying vec2 v_textureCoordinates;
 
 #ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
-varying float v_pickTranslucency;
 #else
 varying vec4 v_color;
 #endif
@@ -78,11 +77,21 @@ void main()
 
 #ifdef EYE_DISTANCE_SCALING
     scale *= getNearFarScalar(scaleByDistance, lengthSq);
+    // push vertex behind near plane for clipping
+    if (scale == 0.0)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
     float translucency = 1.0;
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     translucency = getNearFarScalar(translucencyByDistance, lengthSq);
+    // push vertex behind near plane for clipping
+    if (translucency == 0.0)
+    {
+        positionEC.xyz = vec3(0.0);
+    }
 #endif
 
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
@@ -123,7 +132,6 @@ void main()
 
 #ifdef RENDER_FOR_PICK
     v_pickColor = pickColor;
-    v_pickTranslucency = translucency;
 #else
     v_color = color;
     v_color.a *= translucency;

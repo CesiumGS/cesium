@@ -263,7 +263,8 @@ define([
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : Color.WHITE
+     *   color : Color.WHITE,
+     *   id : undefined
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.

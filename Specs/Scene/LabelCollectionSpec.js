@@ -85,6 +85,7 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(HorizontalOrigin.LEFT);
         expect(label.getVerticalOrigin()).toEqual(VerticalOrigin.BOTTOM);
         expect(label.getScale()).toEqual(1.0);
+        expect(label.getId()).not.toBeDefined();
         expect(label.getTranslucencyByDistance()).not.toBeDefined();
     });
 
@@ -128,6 +129,7 @@ defineSuite([
             horizontalOrigin : horizontalOrigin,
             verticalOrigin : verticalOrigin,
             scale : scale,
+            id : 'id',
             translucencyByDistance : translucency
         });
 
@@ -144,6 +146,7 @@ defineSuite([
         expect(label.getHorizontalOrigin()).toEqual(horizontalOrigin);
         expect(label.getVerticalOrigin()).toEqual(verticalOrigin);
         expect(label.getScale()).toEqual(scale);
+        expect(label.getId()).toEqual('id');
         expect(label.getTranslucencyByDistance()).toEqual(translucency);
     });
 
@@ -654,10 +657,8 @@ defineSuite([
             translucencyByDistance: new NearFarScalar(1.0, 1.0, 3.0, 0.0)
         });
 
-        // verify basis
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 1.0 above label, expect label to be rendered, as translucency is near 1.0
         var us = context.getUniformState();
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
@@ -665,15 +666,13 @@ defineSuite([
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        // clear screen
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // camera at 6.0 above label, expect no pixels to be rendered, as translucency is 0.0
+
         eye = new Cartesian3(0.0, 0.0, 6.0);
         us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        // revert framestate
         us.update(context, createFrameState(createCamera(context)));
     });
 
@@ -686,11 +685,13 @@ defineSuite([
             },
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
         });
 
         var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('does not pick a label with show set to false', function() {

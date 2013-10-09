@@ -171,6 +171,17 @@ define([
          */
         this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
 
+        /**
+         * User-defined object returned when the sensors is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+
         var customSensorOptions = clone(options);
         customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
         this._customSensor = new CustomSensorVolume(customSensorOptions);
@@ -200,6 +211,7 @@ define([
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
         s.intersectionWidth = this.intersectionWidth;
+        s.id = this.id;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 
