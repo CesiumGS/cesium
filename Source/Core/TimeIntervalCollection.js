@@ -32,6 +32,36 @@ define([
     };
 
     /**
+     * Compares the provided TimeIntervalCollections and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof TimeIntervalCollection
+     *
+     * @param {TimeInterval} [right] The right hand side collection.
+     * @param {Function} [dataComparer] A function which compares the data for each interval in the collection.  If ommitted, reference equality is used.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    TimeIntervalCollection.prototype.equals = function(right, dataComparer) {
+        if (this === right) {
+            return true;
+        }
+        if (!(right instanceof TimeIntervalCollection)) {
+            return false;
+        }
+        var intervals = this._intervals;
+        var rightIntervals = right._intervals;
+        var length = intervals.length;
+        if (length !== rightIntervals.length) {
+            return false;
+        }
+        for ( var i = 0; i < length; i++) {
+            if (!TimeInterval.equals(intervals[i], rightIntervals[i], dataComparer)) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    /**
      * Gets the interval at the specified index.
      *
      * @memberof TimeIntervalCollection

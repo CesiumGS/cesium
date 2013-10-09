@@ -743,6 +743,34 @@ define([
     };
 
     /**
+     * Compares this Cartesian against the provided Cartesian componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [right] The right hand side Cartesian.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    Cartesian3.prototype.equals = function(right) {
+        return Cartesian3.equals(this, right);
+    };
+
+    /**
+     * Compares this Cartesian against the provided Cartesian componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} [right] The right hand side Cartesian.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Cartesian3.prototype.equalsEpsilon = function(right, epsilon) {
+        return Cartesian3.equalsEpsilon(this, right, epsilon);
+    };
+
+    /**
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *
