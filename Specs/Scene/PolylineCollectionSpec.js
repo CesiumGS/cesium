@@ -1254,18 +1254,17 @@ defineSuite([
     });
 
     it('does not render with width 0.0', function() {
-        var positions = [
-        {
-            x : -1.0,
-            y : 1.0,
-            z : 0.0
-        },{
-            x : -1.0,
-            y : -1.0,
-            z : 0.0
-        }];
         var line = polylines.add({
-            positions : positions
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            width : 7
         });
 
         ClearCommand.ALL.execute(context);
