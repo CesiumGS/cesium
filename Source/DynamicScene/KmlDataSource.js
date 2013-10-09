@@ -231,6 +231,14 @@ define(['../Core/createGuid',
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
+    // TBD: extract object to a separate module
+    var DWall = function(pos) {
+        this._propertyChanged = new Event(),
+        // this._show = undefined;
+
+        this.geometry = new WallGeometry({positions: pos._value});
+    };
+
     function processLineString(dataSource, dynamicObject, kml, node) {
         //TODO gx:altitudeOffset, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
@@ -240,10 +248,7 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
 
         if (getNumericValue(node, 'extrude') === 1) {
-            var myWall = {
-                geometry: new WallGeometry({positions: dynamicObject.vertexPositions._value})
-            };
-
+            var myWall = new DWall(dynamicObject.vertexPositions);
             dynamicObject.wall = myWall;
         }
     }
