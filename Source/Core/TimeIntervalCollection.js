@@ -54,7 +54,7 @@ define([
             return false;
         }
         for ( var i = 0; i < length; i++) {
-            if (!intervals[i].equals(rightIntervals[i], dataComparer)) {
+            if (!TimeInterval.equals(intervals[i], rightIntervals[i], dataComparer)) {
                 return false;
             }
         }

@@ -38,7 +38,7 @@ Beta Releases
 * Added `Matrix3.getEigenDecomposition`.
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
 * Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
-* Added prototype equals function to `NearFarScalar`, and `TimeIntervaCollection`.
+* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 
 ### b21 - 2013-10-01
 
