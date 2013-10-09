@@ -45,7 +45,41 @@ defineSuite([
 
     it('constructor throws with undefined clone function on non-basic type', function() {
         expect(function() {
-            return new ConstantProperty({}, undefined);
+            return new ConstantProperty({
+                equals : function() {
+                    return true;
+                }
+            });
         }).toThrow();
+    });
+
+    it('constructor throws with undefined equals function on non-basic type', function() {
+        expect(function() {
+            return new ConstantProperty({
+                clone : function() {
+                    return {};
+                }
+            });
+        }).toThrow();
+    });
+
+    it('equals works for object types', function() {
+        var left = new ConstantProperty(new Cartesian3(1, 2, 3));
+        var right = new ConstantProperty(new Cartesian3(1, 2, 3));
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantProperty(new Cartesian3(1, 2, 4));
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works for simple types', function() {
+        var left = new ConstantProperty(1);
+        var right = new ConstantProperty(1);
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantProperty(2);
+        expect(left.equals(right)).toEqual(false);
     });
 });

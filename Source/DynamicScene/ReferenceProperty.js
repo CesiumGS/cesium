@@ -116,9 +116,9 @@ define([
      */
     ReferenceProperty.prototype.equals = function(other) {
         return this === other || //
-               (this.dynamicObjectCollection === other.dynamicObjectCollection && //
-                this.targetObjectId === other.targetObjectId && //
-                this.targetPropertyName === other.targetPropertyName);
+               (this._dynamicObjectCollection === other._dynamicObjectCollection && //
+                this._targetObjectId === other._targetObjectId && //
+                this._targetPropertyName === other._targetPropertyName);
     };
 
     return ReferenceProperty;

@@ -441,7 +441,7 @@ define([
         var values = this._values;
         var otherValues = other._values;
         for (i = 0; i < length; i++) {
-            if (!values[i].equals(otherValues[i])) {
+            if (values[i] !== otherValues[i]) {
                 return false;
             }
         }

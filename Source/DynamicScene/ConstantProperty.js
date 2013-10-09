@@ -74,7 +74,8 @@ define([
     ConstantProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof ConstantProperty && //
-                (!this._simple && this._value.equals(other._value)));
+                ((this._simple && (this._value === other._value)) || //
+                (!this._simple && this._value.equals(other._value))));
     };
 
     return ConstantProperty;
