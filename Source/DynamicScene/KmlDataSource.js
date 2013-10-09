@@ -242,10 +242,21 @@ define(['../Core/createGuid',
     }
 
     function processPolygon(dataSource, dynamicObject, kml, node) {
-        //TODO innerBoundaryIS, extrude, tessellate, altitudeMode
+        //TODO innerBoundaryIS, tessellate, altitudeMode
         var el = node.getElementsByTagName('outerBoundaryIs');
         for (var j = 0; j < el.length; j++) {
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
+        }
+
+        //TODO KML polygons can take into account altitude for each point, we currently can't.
+        var extrude = getNumericValue(node, 'extrude');
+        if (extrude === 1) {
+            var tmp = dynamicObject.vertexPositions.getValue()[0];
+            if (!defined(dynamicObject.polygon)) {
+                dynamicObject.polygon = new DynamicPolygon();
+            }
+            dynamicObject.polygon.height = new ConstantProperty(0);
+            dynamicObject.polygon.extrudedHeight = new ConstantProperty(Ellipsoid.WGS84.cartesianToCartographic(tmp).height);
         }
     }
 
