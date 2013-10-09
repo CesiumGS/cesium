@@ -173,6 +173,7 @@ define([
     var color;
     var position;
     var outlineColor;
+    var scaleByDistance;
     function updateObject(dynamicPointVisualizer, time, dynamicObject) {
         var dynamicPoint = dynamicObject._point;
         if (!defined(dynamicPoint)) {
@@ -265,6 +266,14 @@ define([
             if (billboard._visualizerPixelSize !== pixelSize) {
                 billboard._visualizerPixelSize = pixelSize;
                 needRedraw = true;
+            }
+        }
+
+        property = dynamicPoint._scaleByDistance;
+        if (defined(property)) {
+            scaleByDistance = property.getValue(time, scaleByDistance);
+            if (defined(scaleByDistance)) {
+                billboard.setScaleByDistance(scaleByDistance);
             }
         }
 

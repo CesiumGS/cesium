@@ -14,6 +14,8 @@ Beta Releases
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
+   * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
+   * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead. 
    * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
@@ -37,6 +39,11 @@ Beta Releases
 * Added `Shapes.compute2DCircle`.
 * Added `Matrix3.getEigenDecomposition`.
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
+* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
+* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
+* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
+* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
+* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
 
