@@ -17,17 +17,15 @@
 	border: 1px solid gray;
 }
 
-#awControlBox
+#awToolbar
 {
 	position: absolute;
-	right: 10px;
-	bottom: 10px;
+	left: 5px;
+	top: 5px;
 
 	display: inline-block;
 	z-index: 2;
 
-	width: 80px;
-	height: 80px;
-
-	/* border: 1px solid red; */
+	/* width: 80px;
+	height: 80px; */
 }
