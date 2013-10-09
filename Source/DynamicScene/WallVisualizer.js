@@ -101,12 +101,20 @@ define([
         if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-                try {
-                    updateObject(this, time, dynamicObjects[i]);
-                } catch (exc) {
-                    console.log("BENG >>");
-                    console.log(exc);
-                }
+                updateObject(this, time, dynamicObjects[i]);
+            }
+        }
+    };
+
+    /**
+     * Removes all primitives from the scene.
+     */
+    WallVisualizer.prototype.removeAllPrimitives = function() {
+        if (defined(this._dynamicObjectCollection)) {
+            var dynamicObjects = this._dynamicObjectCollection.getObjects();
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+                this._scene.getPrimitives().remove(dynamicObjects[i]._wprimitive);
+                dynamicObjects[i]._wprimitive = undefined;
             }
         }
     };
@@ -150,39 +158,26 @@ define([
         return destroyObject(this);
     };
 
-    var _objIds = [];
 
     /**
-     * Render wall geometry
+     * Construct a wall primitive from a Wall geometry and a polygon
+     *
+     * @param {WallGeometry}
+     * @param {Polygon}
+     * @param {Scene} scene
+     *
+     * @return {Primitive}
      */
-    function updateObject(visualizer, time, dynamicObject) {
-        if (_objIds.indexOf(dynamicObject._id) > -1) {
-            return;
-        }
-
-        // expects wall geometry assigned to 'wall' property of dynamicObject
-        if (typeof dynamicObject.wall === 'undefined') {
-            return;
-        }
-
-        var show = dynamicObject.isAvailable(time) /* && (!defined(showProperty) || showProperty.getValue(time)) */;
-        if (!show ) {
-            return;
-        }
-
-        // ---------- //
-        var sc = visualizer.getScene();
-
-        var wall = dynamicObject.wall; /* expects a WallGeometry instance */
-        var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wall.geometry) });
+    function createPrimitive(wallGeometry, polygon, scene, time) {
+        var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wallGeometry.geometry) });
 
         var lineMaterial   = Material.fromType('Color'); // HACK HACK HACK
         lineMaterial.uniforms.color = new Color(1, 1, 0, 0.4);
-        var lineWidth      = 1;
+
 
         var material = Material.fromType('Color');
-        // material.uniforms.color = dynamicObject.wpolygon.material;
-        MaterialProperty.getValue(time, dynamicObject.wpolygon._material, material);
+        // material.uniforms.color = polygon.material;
+        MaterialProperty.getValue(time, polygon._material, material);
         var wallAppearance = new MaterialAppearance({
             renderState : {
                 cull : {
@@ -213,8 +208,48 @@ define([
         line.setWidth(lineWidth); */
         // ---------- //
 
-        sc.getPrimitives().add(wallPrimitive);
-        _objIds.push(dynamicObject._id);
+        return wallPrimitive;
+    }
+
+    /**
+     * Render wall geometry
+     */
+    function updateObject(visualizer, time, dynamicObject) {
+        if (typeof dynamicObject.wall === 'undefined') {
+            return;
+        }
+
+        var sc = visualizer.getScene();
+        var showProperty = dynamicObject.wall._show;
+        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        if (!show ) {
+            if (typeof dynamicObject.wall._wprimitive !== 'undefined') {
+                sc.getPrimitives().remove(dynamicObject.wall._wprimitive);
+                dynamicObject.wall._wprimitive = undefined;
+            }
+            return;
+        }
+
+        // ---------- //
+
+        var wallPrimitive = dynamicObject.wall._wprimitive;
+        if (typeof wallPrimitive === 'undefined') {
+            wallPrimitive = createPrimitive(dynamicObject.wall, dynamicObject.wpolygon, sc, time);
+
+            sc.getPrimitives().add(wallPrimitive);
+
+            dynamicObject.wall._wprimitive = wallPrimitive;
+        }
+
+
+        // create the line that highlights the edge of the wall
+        // var lines = new PolylineCollection();
+        // var line = lines.add({positions: positions, material: lineMaterial, width: lineWidth});
+        /* line.setPositions(positions);
+        line.setMaterial(lineMaterial);
+        line.setWidth(lineWidth); */
+        // ---------- //
+
     }
 
     return WallVisualizer;
