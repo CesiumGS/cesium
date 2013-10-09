@@ -67,4 +67,16 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(result.color).toEqual(Color.RED);
     });
+
+    it('equals works', function() {
+        var left = new ColorMaterialProperty();
+        left.color = new ConstantProperty(Color.WHITE);
+
+        var right = new ColorMaterialProperty();
+        right.color = new ConstantProperty(Color.WHITE);
+        expect(left.equals(right)).toEqual(true);
+
+        right.color = new ConstantProperty(Color.BLACK);
+        expect(left.equals(right)).toEqual(false);
+    });
 });

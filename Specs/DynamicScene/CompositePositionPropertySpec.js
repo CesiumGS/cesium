@@ -140,10 +140,37 @@ defineSuite([
         expect(result2).toEqual(interval2.data.getValueInReferenceFrame(interval2.stop, ReferenceFrame.FIXED));
     });
 
-    it('throws with no time parameter', function() {
+    it('equals works', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantPositionProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantPositionProperty(new Cartesian3(4, 5, 6)));
+
+        var left = new CompositePositionProperty();
+        left.intervals.addInterval(interval1);
+        left.intervals.addInterval(interval2);
+
+        var right = new CompositePositionProperty();
+        right.intervals.addInterval(interval1);
+        expect(left.equals(right)).toEqual(false);
+
+        right.intervals.addInterval(interval2);
+        expect(left.equals(right)).toEqual(true);
+
+        right.referenceFrame = ReferenceFrame.INTERTIAL;
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('getValue throws with no time parameter', function() {
         var property = new CompositePositionProperty();
         expect(function() {
             property.getValue(undefined);
+        }).toThrow();
+    });
+
+    it('getValueInReferenceFrame throws with no referenceFrame parameter', function() {
+        var property = new CompositePositionProperty();
+        var time = new JulianDate();
+        expect(function() {
+            property.getValueInReferenceFrame(time, undefined);
         }).toThrow();
     });
 });

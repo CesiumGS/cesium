@@ -57,6 +57,22 @@ defineSuite([
         expect(result2).toEqual(interval2.data.getValue(interval2.stop));
     });
 
+    it('equals works', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+
+        var left = new CompositeProperty();
+        left.intervals.addInterval(interval1);
+        left.intervals.addInterval(interval2);
+
+        var right = new CompositeProperty();
+        right.intervals.addInterval(interval1);
+        expect(left.equals(right)).toEqual(false);
+
+        right.intervals.addInterval(interval2);
+        expect(left.equals(right)).toEqual(true);
+    });
+
     it('getValue throws with no time parameter', function() {
         var property = new CompositeProperty();
         expect(function() {
