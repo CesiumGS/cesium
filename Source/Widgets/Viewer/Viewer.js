@@ -107,6 +107,7 @@ define([
      * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
+     * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -143,6 +144,17 @@ define([
      *     //Use OpenStreetMaps
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'http://tile.openstreetmap.org/'
+     *     }),
+     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
+     *     skyBox : new Cesium.SkyBox({
+     *         sources : {
+     *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
+     *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
+     *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
+     *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
+     *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
+     *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
+     *         }
      *     })
      * });
      *
@@ -191,6 +203,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
+            skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : false
