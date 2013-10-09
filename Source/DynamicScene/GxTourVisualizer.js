@@ -94,6 +94,13 @@ define([
     };
 
     /**
+     * Removes all primitives from the scene.
+     */
+    GxTourVisualizer.prototype.removeAllPrimitives = function() {
+        // Empty method
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
