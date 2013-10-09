@@ -690,8 +690,8 @@ define(['../Core/createGuid',
                     node.camera.orientation[2]
                 );
 
-                var v1 = mat1.getColumn(1); /*rmat.multiplyByVector(mat1.getColumn(1), v1);*/ // up
-                var v2 = mat1.getColumn(2); /* rmat.multiplyByVector(mat1.getColumn(2), v2); */ // dir
+                var v1 = Matrix3.getColumn(mat1, 1); /*rmat.multiplyByVector(mat1.getColumn(1), v1);*/ // up
+                var v2 = Matrix3.getColumn(mat1, 2); /* rmat.multiplyByVector(mat1.getColumn(2), v2); */ // dir
                 // v11 = rmat.multiplyByVector(v1); // up
                 // v22 = rmat.multiplyByVector(v2); // dir
 
@@ -835,9 +835,9 @@ define(['../Core/createGuid',
         // Roll (-180 < 0 < 180)
         // Roll around the calculated direction axis
         if (r !== 0) {
-            var right = mat.getColumn(0);
-            var up = mat.getColumn(1);
-            var direction = mat.getColumn(2);
+            var right = Matrix3.getColumn(mat, 0);
+            var up = Matrix3.getColumn(mat, 1);
+            var direction = Matrix3.getColumn(mat, 2);
 
             var rad = CesiumMath.toRadians(r);
             mr = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(direction, rad));
@@ -846,9 +846,9 @@ define(['../Core/createGuid',
             Matrix3.multiplyByVector(mr, up, up);
             Matrix3.multiplyByVector(mr, direction, direction);
 
-            mat = mat.setColumn(0, right);
-            mat = mat.setColumn(1, up);
-            mat = mat.setColumn(2, direction);
+            mat = Matrix3.setColumn(mat, 0, right);
+            mat = Matrix3.setColumn(mat, 1, up);
+            mat = Matrix3.setColumn(mat, 2, direction);
         }
 
         return mat;

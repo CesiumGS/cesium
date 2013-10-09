@@ -160,9 +160,9 @@ define([
         Matrix3.fromQuaternion(orientation, rotMatrix);
 
         camera.position = path.evaluate(millisecs);
-        camera.right = rotMatrix.getRow(0);
-        camera.up = rotMatrix.getRow(1);
-        camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
+        camera.right = Matrix3.getRow(rotMatrix, 0);
+        camera.up = Matrix3.getRow(rotMatrix, 1);
+        camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
     }
 
     return GxTourVisualizer;
