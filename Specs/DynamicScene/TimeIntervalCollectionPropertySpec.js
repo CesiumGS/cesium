@@ -32,26 +32,6 @@ defineSuite([
         expect(property.getValue(interval2.stop)).toBe(interval2.data);
     });
 
-    it('works with non-clonable objects', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, {});
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, {});
-
-        var timesCalled = 0;
-        function noClone(value, result) {
-            timesCalled++;
-            return value;
-        }
-
-        var property = new TimeIntervalCollectionProperty(noClone);
-        property.intervals.addInterval(interval1);
-        property.intervals.addInterval(interval2);
-
-        expect(property.getValue(interval1.start)).toBe(interval1.data);
-        expect(timesCalled).toEqual(1);
-        expect(property.getValue(interval2.stop)).toBe(interval2.data);
-        expect(timesCalled).toEqual(2);
-    });
-
     it('works with clonable objects', function() {
         var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));

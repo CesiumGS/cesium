@@ -106,5 +106,20 @@ define([
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof ReferenceProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    ReferenceProperty.prototype.equals = function(other) {
+        return this === other || //
+               (this.dynamicObjectCollection === other.dynamicObjectCollection && //
+                this.targetObjectId === other.targetObjectId && //
+                this.targetPropertyName === other.targetPropertyName);
+    };
+
     return ReferenceProperty;
 });

@@ -18,18 +18,6 @@ defineSuite([
         expect(property.getValue(time)).toBe(expected);
     });
 
-    it('works with clone function', function() {
-        var expected = {};
-        var cloneCalled = false;
-        var cloneFunction = function() {
-            cloneCalled = true;
-            return expected;
-        };
-        var property = new ConstantProperty(expected, cloneFunction);
-        expect(property.getValue(time)).toBe(expected);
-        expect(cloneCalled).toEqual(true);
-    });
-
     it('works with clonable objects', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
@@ -51,8 +39,7 @@ defineSuite([
 
     it('constructor throws with undefined value', function() {
         expect(function() {
-            return new ConstantProperty(undefined, function() {
-            });
+            return new ConstantProperty(undefined);
         }).toThrow();
     });
 
