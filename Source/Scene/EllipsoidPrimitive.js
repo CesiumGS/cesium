@@ -131,8 +131,8 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
-        this._computedModelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the ellipsoid primitive will be shown.

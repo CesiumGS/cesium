@@ -10,6 +10,7 @@ defineSuite([
              'Core/Cartesian2',
              'Core/Cartesian3',
              'Core/Color',
+             'Core/NearFarScalar',
              'Scene/LabelCollection',
              'Scene/HorizontalOrigin',
              'Scene/VerticalOrigin',
@@ -25,6 +26,7 @@ defineSuite([
               Cartesian2,
               Cartesian3,
               Color,
+              NearFarScalar,
               LabelCollection,
               HorizontalOrigin,
               VerticalOrigin,
@@ -148,6 +150,7 @@ defineSuite([
         label.pixelOffset = new ConstantProperty(new Cartesian2(3, 2));
         label.scale = new ConstantProperty(12.5);
         label.show = new ConstantProperty(true);
+        label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         visualizer.update(time);
 
@@ -169,6 +172,7 @@ defineSuite([
         expect(l.getPixelOffset()).toEqual(testObject.label.pixelOffset.getValue(time));
         expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
         expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
+        expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -183,6 +187,7 @@ defineSuite([
         label.pixelOffset = new ConstantProperty(new Cartesian2(2, 3));
         label.scale = new ConstantProperty(2.5);
         label.show = new ConstantProperty(true);
+        label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
 
         visualizer.update(time);
         expect(l.getPosition()).toEqual(testObject.position.getValue(time));
@@ -198,6 +203,7 @@ defineSuite([
         expect(l.getPixelOffset()).toEqual(testObject.label.pixelOffset.getValue(time));
         expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
         expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
+        expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);

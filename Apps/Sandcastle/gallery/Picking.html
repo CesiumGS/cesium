@@ -174,7 +174,7 @@ require(['Cesium'], function(Cesium) {
 
         // Setup - Add the sensor.
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
+        modelMatrix = Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
         var sensors = new Cesium.SensorVolumeCollection();
         var sensor = sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,

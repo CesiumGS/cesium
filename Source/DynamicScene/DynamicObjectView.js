@@ -180,7 +180,7 @@ define([
             updateColumbusCartesian4.z = projectedPosition.y;
 
             var tranform = camera.transform;
-            tranform.setColumn(3, updateColumbusCartesian4, tranform);
+            Matrix4.setColumn(tranform, 3, updateColumbusCartesian4, tranform);
 
             var controller = that._screenSpaceCameraController;
             controller.enableTranslate = false;
@@ -227,7 +227,7 @@ define([
 
                 var theta = startTheta - endTheta;
                 var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, update3DControllerQuaternion);
-                Matrix3.fromQuaternion(rotation, update3DControllerMatrix3).multiplyByVector(offset, offset);
+                Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, update3DControllerMatrix3), offset, offset);
             }
             Cartesian3.multiplyByScalar(Cartesian3.normalize(offset, offset), that._lastDistance, offset);
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);

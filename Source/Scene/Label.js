@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defined',
+        '../Core/NearFarScalar',
         './Billboard',
         './LabelStyle',
         './HorizontalOrigin',
@@ -17,6 +18,7 @@ define([
         Cartesian3,
         Color,
         defined,
+        NearFarScalar,
         Billboard,
         LabelStyle,
         HorizontalOrigin,
@@ -46,6 +48,8 @@ define([
      * @alias Label
      * @internalConstructor
      *
+     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     *
      * @see LabelCollection
      * @see LabelCollection#add
      *
@@ -53,6 +57,11 @@ define([
      */
     var Label = function(description, labelCollection) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+
+        if (defined(description.translucencyByDistance) &&
+                description.translucencyByDistance.far <= description.translucencyByDistance.near) {
+            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
 
         this._text = defaultValue(description.text, '');
         this._show = defaultValue(description.show, true);
@@ -67,6 +76,7 @@ define([
         this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
         this._scale = defaultValue(description.scale, 1.0);
+        this._translucencyByDistance = description.translucencyByDistance;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -452,6 +462,59 @@ define([
     };
 
     /**
+     * Returns the near and far translucency properties of a Label based on the label's distance from the camera.
+     *
+     * @memberof Label
+     *
+     * @returns {NearFarScalar} The near/far translucency values based on camera distance to the billboard
+     *
+     * @see Label#setTranslucencyByDistance
+     */
+    Label.prototype.getTranslucencyByDistance = function() {
+        return this._translucencyByDistance;
+    };
+
+    /**
+     * Sets near and far translucency properties of a Label based on the Label's distance from the camera.
+     * A label's translucency will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the label's translucency remains clamped to the nearest bound.  If undefined,
+     * translucencyByDistance will be disabled.
+     *
+     * @memberof Label
+     *
+     * @param {NearFarScalar} translucency The configuration of near and far distances and their respective translucency values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Label#getTranslucencyByDistance
+     *
+     * @example
+     * // Example 1.
+     * // Set a label's translucencyByDistance to 1.0 when the
+     * // camera is 1500 meters from the label and disappear as
+     * // the camera distance approaches 8.0e6 meters.
+     * text.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     *
+     * // Example 2.
+     * // disable translucency by distance
+     * text.setTranslucencyByDistance(undefined);
+     */
+    Label.prototype.setTranslucencyByDistance = function(value) {
+        if (NearFarScalar.equals(this._translucencyByDistance, value)) {
+            return;
+        }
+
+        if (value.far <= value.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        this._translucencyByDistance = NearFarScalar.clone(value, this._translucencyByDistance);
+        rebindAllGlyphs(this);
+    };
+
+    /**
      * Returns the 3D Cartesian offset applied to this label in eye coordinates.
      *
      * @memberof Label
@@ -726,7 +789,8 @@ define([
                Color.equals(this._fillColor, other._fillColor) &&
                Color.equals(this._outlineColor, other._outlineColor) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
-               Cartesian3.equals(this._eyeOffset, other._eyeOffset);
+               Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
+               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance);
     };
 
     /**
