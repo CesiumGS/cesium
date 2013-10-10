@@ -970,8 +970,7 @@ define([
         var m23 = matrix[5];
         var m33 = matrix[8];
 
-        var determinant = m11 * (m22 * m33 - m23 * m32) + m12 * (m23 * m31 - m21 * m33) + m13 * (m21 * m32 - m22 * m31);
-        return determinant;
+        return m11 * (m22 * m33 - m23 * m32) + m12 * (m23 * m31 - m21 * m33) + m13 * (m21 * m32 - m22 * m31);
     };
 
     /**
@@ -1010,21 +1009,7 @@ define([
                             m23 * m31 - m21 * m33, m11 * m33 - m13 * m31, m13 * m21 - m11 * m23,
                             m21 * m32 - m22 * m31, m12 * m31 - m11 * m32, m11 * m22 - m12 * m21);
        var scale = 1.0 / determinant;
-       var temp =  m.multiplyByScalar(scale);
-
-        if (!defined(result)) {
-            return temp;
-        }
-        result[0] = temp.column0Row0;
-        result[1] = temp.column0Row1;
-        result[2] = temp.column0Row2;
-        result[3] = temp.column1Row0;
-        result[4] = temp.column1Row1;
-        result[5] = temp.column1Row2;
-        result[6] = temp.column2Row0;
-        result[7] = temp.column2Row1;
-        result[8] = temp.column2Row2;
-        return result;
+       return Matrix3.multiplyByScalar(m, scale, result);
     };
 
     /**
