@@ -68,7 +68,7 @@
             // 3D KML
             var tourKml = options.routeURL;
 
-            if (tourKml !== 'undefined') {
+            if (typeof tourKml !== 'undefined') {
                 that._tourDataSource = new Cesium.KmlDataSource();
                 that._tourDataSource.loadUrl(tourKml).then(function() {
                     that.viewer.dataSources.add(that._tourDataSource);
@@ -77,11 +77,18 @@
             }
             // Cockpit KML
             var cockpitKml = options.cockpitURL;
-            if (cockpitKml !== 'undefined') {
+            if (typeof cockpitKml !== 'undefined') {
                 that._cockpitDataSource = new Cesium.KmlDataSource();
                 that._cockpitDataSource.loadUrl(cockpitKml).then(function() {
                     that.viewer.dataSources.add(that._cockpitDataSource);
                     console.log('cockpit loaded ...');
+
+                    // stretch timeline according to flight data
+                    (function(){
+                        var dataSourceClock = that._cockpitDataSource.getClock();
+                        var timeline = that.viewer.timeline;
+                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+                    })();
                 });
             }
 
