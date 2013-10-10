@@ -661,6 +661,23 @@ defineSuite([
         }).toThrow();
     });
 
+    it('projectTo2D throws when trying to project a point close to the origin', function() {
+        var p1 = new Cartesian3(100000, 200000, 300000);
+        var p2 = new Cartesian3(400000, 500000, 600000);
+
+        var geometry = {};
+        geometry.attributes = {};
+        geometry.attributes.position = {
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : [100000.0, 200000.0, 300000.0, 0.0, 0.0, 0.0]
+        };
+
+        expect(function() {
+            return GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
+        }).toThrow();
+    });
+
     it('encodeAttribute encodes positions', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);
