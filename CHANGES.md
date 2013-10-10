@@ -16,6 +16,7 @@ Beta Releases
    * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
    * Replaced `SkyBox.getSources` with `SkyBox.sources`.
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
+   * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
    * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
