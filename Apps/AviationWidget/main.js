@@ -97,6 +97,8 @@
             _toolbar.appendChild(_sel); */
 
             var _it, _obj;
+
+            // add toggle checkbox for 3D route visualization
             if (that._tourDataSource) {
                 _it = document.createElement('input');
                 _it.setAttribute('type', 'checkbox');
@@ -123,6 +125,8 @@
                 _obj = document.createTextNode('Tour');
                 _toolbar.appendChild(_obj);
             }
+
+            // add toggle checkbox for Cockpit animation
             if (that._cockpitDataSource) {
                 _it = document.createElement('input');
                 _it.setAttribute('type', 'checkbox');
@@ -131,10 +135,13 @@
                 _toolbar.appendChild(_it);
 
                 _it.onchange = function(ev) {
-                    if (ev.target.checked) {
-                        that.viewer.dataSources.add(that._cockpitDataSource);
-                    } else {
-                        that.viewer.dataSources.remove(that._cockpitDataSource);
+                    var coll = that._cockpitDataSource.getDynamicObjectCollection().getObjects();
+                    var i;
+                    var flag = ev.target.checked;
+                    for (i=0; i<coll.length; i++) {
+                        if (typeof coll[i].gxTour !== 'undefined') {
+                            coll[i].gxTour._show = flag ? AlwaysTrue : AlwaysFalse;
+                        }
                     }
                 };
 

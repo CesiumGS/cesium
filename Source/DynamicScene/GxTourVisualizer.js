@@ -143,9 +143,16 @@ define([
         if (typeof dynamicObject.gxTour === 'undefined') {
             return;
         }
-        if (!dynamicObject.availability.contains(time)) {
+
+        var showProperty = dynamicObject.gxTour._show;
+        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        if (!show ) {
             return;
         }
+
+        /* if (!dynamicObject.availability.contains(time)) {
+            return;
+        } */
 
         var millisecs = dynamicObject.availability.start.getSecondsDifference(time) * 1000;
         if (dynamicObject.durationms < millisecs) {
