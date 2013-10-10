@@ -635,6 +635,11 @@ define([
 
         for ( var i = 0; i < values3D.length; i += 3) {
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
+
+            if (Cartesian3.equals(value, Cartesian3.ZERO)) {
+                continue;
+            }
+
             var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
             var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 
@@ -831,7 +836,7 @@ define([
             instance.geometry.boundingSphere = BoundingSphere.transform(boundingSphere, modelMatrix, boundingSphere);
         }
 
-        instance.modelMatrix = Matrix4.IDENTITY.clone();
+        instance.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         return instance;
     };

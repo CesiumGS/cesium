@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/getFilenameFromUri',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -24,6 +25,7 @@ define([
         Color,
         defined,
         DeveloperError,
+        getFilenameFromUri,
         RuntimeError,
         Ellipsoid,
         Event,
@@ -222,26 +224,26 @@ define([
         //default line
         var defaultLine = new DynamicObject('GeoJsonDataSource.defaultLine');
         var polyline = new DynamicPolyline();
-        polyline.color = new ConstantProperty(Color.YELLOW);
+        var material = new ColorMaterialProperty();
+        material.color = new ConstantProperty(Color.YELLOW);
+        polyline.material = material;
         polyline.width = new ConstantProperty(2);
-        polyline.outlineColor = new ConstantProperty(Color.BLACK);
-        polyline.outlineWidth = new ConstantProperty(1);
         defaultLine.polyline = polyline;
 
         //default polygon
         var defaultPolygon = new DynamicObject('GeoJsonDataSource.defaultPolygon');
 
         polyline = new DynamicPolyline();
-        polyline.color = new ConstantProperty(Color.YELLOW);
+        material = new ColorMaterialProperty();
+        material.color = new ConstantProperty(Color.YELLOW);
+        polyline.material = material;
         polyline.width = new ConstantProperty(1);
-        polyline.outlineColor = new ConstantProperty(Color.BLACK);
-        polyline.outlineWidth = new ConstantProperty(0);
         defaultPolygon.polyline = polyline;
 
         var polygon = new DynamicPolygon();
         defaultPolygon.polygon = polygon;
 
-        var material = new ColorMaterialProperty();
+        material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.1));
         polygon.material = material;
 
@@ -266,6 +268,18 @@ define([
          * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
+
+        this._name = undefined;
+    };
+
+    /**
+     * Gets the name of this data source.
+     * @memberof GeoJsonDataSource
+     *
+     * @returns {String} The name.
+     */
+    GeoJsonDataSource.prototype.getName = function() {
+        return this._name;
     };
 
     /**
@@ -360,6 +374,11 @@ define([
     GeoJsonDataSource.prototype.load = function(geoJson, source) {
         if (!defined(geoJson)) {
             throw new DeveloperError('geoJson is required.');
+        }
+
+        this._name = undefined;
+        if (defined(source)) {
+            this._name = getFilenameFromUri(source);
         }
 
         var typeHandler = geoJsonObjectTypes[geoJson.type];

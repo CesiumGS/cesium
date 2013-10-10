@@ -296,7 +296,7 @@ define([
 
         var namedColor = Color[color.toUpperCase()];
         if (defined(namedColor)) {
-            return namedColor.clone();
+            return Color.clone(namedColor);
         }
 
         var matches = rgbMatcher.exec(color);

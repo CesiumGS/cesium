@@ -387,7 +387,7 @@ define([
         var after = getNextVertex(a1i, pArray, AFTER);
 
         var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
-        var s2 = Cartesian2.subtract(pArray[after].position,  a1.position);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1.position);
         var cut = Cartesian2.subtract(a2.position, a1.position);
 
         // Convert to 3-dimensional so we can use cross product
@@ -515,7 +515,7 @@ define([
         }
 
         var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position);
-        var s2 = Cartesian2.subtract(pArray[after].position,  pArray[index].position);
+        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position);
 
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
@@ -708,7 +708,6 @@ define([
      * @returns {Array} Index array representing triangles that fill the polygon
      *
      * @exception {DeveloperError} Invalid polygon: must have at least three vertices.
-     * @exception {DeveloperERror} Tried x times to find a vild cut and couldn't.
      *
      * @private
      */
@@ -736,7 +735,8 @@ define([
             // Make sure we don't go into an endless loop
             var maxTries = nodeArray.length * 10;
             if (tries > maxTries) {
-                throw new DeveloperError('Tried ' + maxTries + ' times to find a valid cut and couldn\'t.');
+                // Hopefully that part of the polygon isn't important
+                return [];
             }
             tries++;
 

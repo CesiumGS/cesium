@@ -30,22 +30,21 @@ require(['Cesium'], function(Cesium) {
     function createPrimitives(scene, ellipsoid) {
         var primitives = scene.getPrimitives();
 
-        var e = new Cesium.EllipsoidPrimitive();
+        var e = primitives.add(new Cesium.EllipsoidPrimitive({
+            center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+            radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
+            material : Cesium.Material.fromType(Cesium.Material.RimLightingType)
+        }));
         Sandcastle.declare(e); // For Sandcastle highlighting.
-        e.center = ellipsoid.cartographicToCartesian(
-            Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
-        e.radii = new Cesium.Cartesian3(500000.0, 500000.0, 500000.0);
-        e.material = Cesium.Material.fromType(Cesium.Material.RimLightingType);
-        primitives.add(e);
 
-        var e2 = new Cesium.EllipsoidPrimitive();
+        var e2 = primitives.add(new Cesium.EllipsoidPrimitive({
+            modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(
+                ellipsoid.cartographicToCartesian(
+                    Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0))),
+            radii : new Cesium.Cartesian3(300000.0, 300000.0, 500000.0),
+            material : Cesium.Material.fromType(Cesium.Material.StripeType)
+        }));
         Sandcastle.declare(e2); // For Sandcastle highlighting.
-        e2.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-            ellipsoid.cartographicToCartesian(
-              Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0)));
-        e2.radii = new Cesium.Cartesian3(300000.0, 300000.0, 500000.0);
-        e2.material = Cesium.Material.fromType(Cesium.Material.StripeType);
-        primitives.add(e2);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
