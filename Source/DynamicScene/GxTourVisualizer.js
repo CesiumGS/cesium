@@ -6,6 +6,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/destroyObject',
+        '../Core/Quaternion',
+        '../Scene/CameraController',
         '../Scene/Polygon',
         '../Scene/Material',
         './MaterialProperty'
@@ -16,6 +18,8 @@ define([
          DeveloperError,
          Ellipsoid,
          destroyObject,
+         Quaternion,
+         CameraController,
          Polygon,
          Material,
          MaterialProperty) {
@@ -139,6 +143,26 @@ define([
         return destroyObject(this);
     };
 
+
+
+
+    var lookScratchQuaternion = new Quaternion();
+    var lookScratchMatrix = new Matrix3();
+    var applyFreeLook = function(freeLook, camera) {
+        var ctx = {
+            _camera: camera,
+            defaultLookAmount: Math.PI / 60.0,
+
+            lookUp: CameraController.prototype.lookUp,
+            lookRight: CameraController.prototype.lookRight,
+            look: CameraController.prototype.look
+        };
+
+        ctx.lookUp(Cesium.Math.toRadians(freeLook.vangle));
+        ctx.lookRight(Cesium.Math.toRadians(freeLook.hangle));
+    };
+
+
     function updateObject(visualizer, time, dynamicObject) {
         if (typeof dynamicObject.gxTour === 'undefined') {
             return;
@@ -150,10 +174,6 @@ define([
             return;
         }
 
-        /* if (!dynamicObject.availability.contains(time)) {
-            return;
-        } */
-
         var millisecs = dynamicObject.availability.start.getSecondsDifference(time) * 1000;
         if (dynamicObject.durationms < millisecs) {
             return;
@@ -161,15 +181,23 @@ define([
 
         var scene = visualizer.getScene();
         var camera = scene.getCamera();
+
+        /* Apply basic mods to camera */
         var orientation = dynamicObject.orientations.evaluate(millisecs);
         var rotMatrix = new Matrix3();
         var path = dynamicObject.camerapath;
         Matrix3.fromQuaternion(orientation, rotMatrix);
 
         camera.position = path.evaluate(millisecs);
+
         camera.right = Matrix3.getRow(rotMatrix, 0);
         camera.up = Matrix3.getRow(rotMatrix, 1);
         camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
+
+
+        if (scene.freeLook) {
+            applyFreeLook(scene.freeLook, camera);
+        }
     }
 
     return GxTourVisualizer;

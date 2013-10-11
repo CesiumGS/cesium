@@ -1,4 +1,3 @@
-// require(['Cesium'], function(Cesium) {
     "use strict";
 
 
@@ -154,89 +153,57 @@
 
                 _obj = document.createTextNode('Cockpit');
                 _toolbar.appendChild(_obj);
-            }
 
-
-
-            // -- Create buttons -- //
-            // FIXME
-            /**
-             * Initialize head controls
-             */
-            var createButtons = function() {
+                // ** FREE LOOK SECTION ** //
                 var scene = that.viewer.scene;
-                var primitives = scene.getPrimitives();
-                var toolbar = document.getElementById('toolbar');
+                var _freeLook =  new Cesium.FreeLook();
+                scene.freeLook = _freeLook;
 
                 // Left button
                 var button = document.createElement('button');
                 button.className = 'cesium-button';
                 button.onclick = function() {
-                    luhead.hangle -= luhead.hstep;
+                    _freeLook.lookLeft();
                 };
                 button.innerHTML = '&larr;';
-                toolbar.appendChild(button);
+                _toolbar.appendChild(button);
 
                 // Up button
                 button = document.createElement('button');
                 button.className = 'cesium-button';
                 button.onclick = function() {
-                    luhead.vangle += luhead.vstep;
+                    _freeLook.lookUp();
                 };
                 button.innerHTML = '&uarr;';
-                toolbar.appendChild(button);
+                _toolbar.appendChild(button);
 
                 // Center button
                 button = document.createElement('button');
                 button.className = 'cesium-button';
                 button.onclick = function() {
-                    luhead.hangle = 0;
-                    luhead.vangle = 0;
+                    _freeLook.reset();
                 };
                 button.innerHTML = '&oplus;';
-                toolbar.appendChild(button);
+                _toolbar.appendChild(button);
 
                 // Down button
                 button = document.createElement('button');
                 button.className = 'cesium-button';
                 button.onclick = function() {
-                    luhead.vangle -= luhead.vstep;
+                    _freeLook.lookDown();
                 };
                 button.innerHTML = '&darr;';
-                toolbar.appendChild(button);
+                _toolbar.appendChild(button);
 
                 // Right button
                 button = document.createElement('button');
                 button.className = 'cesium-button';
                 button.onclick = function() {
-                    luhead.hangle += luhead.hstep;
+                    _freeLook.lookRight();
                 };
                 button.innerHTML = '&rarr;';
-                toolbar.appendChild(button);
-            };
+                _toolbar.appendChild(button);
+            }
         };
 
     };
-
-
-    /** lookout angles **/
-    var luhead = {
-        /* maxHRange: 90,
-        maxVRange: 90, */
-
-        hstep: 5,
-        vstep: 5,
-
-		hangle: 0,
-		vangle: 0
-    };
-
-
-    // ** init buttons **
-    // createButtons(viewer);
-
-    // ** start animation  ** //
-    // tick();
-
-    // return AviationWidget;
-// });
