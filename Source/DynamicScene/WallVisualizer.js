@@ -15,6 +15,7 @@ define([
         '../Scene/Primitive',
         '../Scene/Material',
         '../Scene/MaterialAppearance',
+        '../DynamicWall',
         './MaterialProperty'
        ], function(
          Cartesian3,
@@ -32,6 +33,7 @@ define([
          Primitive,
          Material,
          MaterialAppearance,
+         DynamicWall,
          MaterialProperty) {
     "use strict";
 
@@ -162,13 +164,14 @@ define([
     /**
      * Construct a wall primitive from a Wall geometry and a polygon
      *
-     * @param {WallGeometry}
-     * @param {Polygon}
+     * @param {DynamicWall}
+     * -@param {Polygon}- DELETE
      * @param {Scene} scene
+     * @param {JulianDate} scene
      *
      * @return {Primitive}
      */
-    function createPrimitive(wallGeometry, polygon, scene, time) {
+    function createPrimitive(wallGeometry, /* polygon, */ scene, time) {
         var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wallGeometry.geometry) });
 
         var lineMaterial   = Material.fromType('Color'); // HACK HACK HACK
@@ -177,7 +180,7 @@ define([
 
         var material = Material.fromType('Color');
         // material.uniforms.color = polygon.material;
-        MaterialProperty.getValue(time, polygon._material, material);
+        MaterialProperty.getValue(time, wallGeometry._material /* polygon._material */, material);
         var wallAppearance = new MaterialAppearance({
             renderState : {
                 cull : {
@@ -213,6 +216,10 @@ define([
 
     /**
      * Render wall geometry
+     *
+     * @param {WallVisualizer} visualizer
+     * @param {JulianDate} time
+     * @param {DynamicObject} dynamicObject
      */
     function updateObject(visualizer, time, dynamicObject) {
         if (typeof dynamicObject.wall === 'undefined') {
@@ -225,7 +232,9 @@ define([
         if (!show ) {
             if (typeof dynamicObject.wall._wprimitive !== 'undefined') {
                 sc.getPrimitives().remove(dynamicObject.wall._wprimitive);
-                dynamicObject.wall._wprimitive = undefined;
+
+                // remove reference to primitive
+                delete dynamicObject.wall._wprimitive;
             }
             return;
         }
@@ -234,22 +243,12 @@ define([
 
         var wallPrimitive = dynamicObject.wall._wprimitive;
         if (typeof wallPrimitive === 'undefined') {
-            wallPrimitive = createPrimitive(dynamicObject.wall, dynamicObject.wpolygon, sc, time);
+            wallPrimitive = createPrimitive(dynamicObject.wall, /* dynamicObject.wpolygon, */ sc, time);
 
             sc.getPrimitives().add(wallPrimitive);
 
             dynamicObject.wall._wprimitive = wallPrimitive;
         }
-
-
-        // create the line that highlights the edge of the wall
-        // var lines = new PolylineCollection();
-        // var line = lines.add({positions: positions, material: lineMaterial, width: lineWidth});
-        /* line.setPositions(positions);
-        line.setMaterial(lineMaterial);
-        line.setWidth(lineWidth); */
-        // ---------- //
-
     }
 
     return WallVisualizer;
