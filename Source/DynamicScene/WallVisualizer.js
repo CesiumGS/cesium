@@ -165,13 +165,12 @@ define([
      * Construct a wall primitive from a Wall geometry and a polygon
      *
      * @param {DynamicWall}
-     * -@param {Polygon}- DELETE
      * @param {Scene} scene
      * @param {JulianDate} scene
      *
      * @return {Primitive}
      */
-    function createPrimitive(wallGeometry, /* polygon, */ scene, time) {
+    function createPrimitive(wallGeometry, scene, time) {
         var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wallGeometry.geometry) });
 
         var lineMaterial   = Material.fromType('Color'); // HACK HACK HACK
@@ -179,8 +178,7 @@ define([
 
 
         var material = Material.fromType('Color');
-        // material.uniforms.color = polygon.material;
-        MaterialProperty.getValue(time, wallGeometry._material /* polygon._material */, material);
+        MaterialProperty.getValue(time, wallGeometry._material, material);
         var wallAppearance = new MaterialAppearance({
             renderState : {
                 cull : {
@@ -243,7 +241,7 @@ define([
 
         var wallPrimitive = dynamicObject.wall._wprimitive;
         if (typeof wallPrimitive === 'undefined') {
-            wallPrimitive = createPrimitive(dynamicObject.wall, /* dynamicObject.wpolygon, */ sc, time);
+            wallPrimitive = createPrimitive(dynamicObject.wall, sc, time);
 
             sc.getPrimitives().add(wallPrimitive);
 

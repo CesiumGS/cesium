@@ -250,15 +250,6 @@ define(['../Core/createGuid',
         }
     }
 
-    // TBD: extract object to a separate module
-    // @obsolete
-    var DWall = function(pos) {
-        this._propertyChanged = new Event(),
-        // this._show = undefined;
-
-        this.geometry = new WallGeometry({positions: pos._value});
-    };
-
     function processLineString(dataSource, dynamicObject, kml, node) {
         //TODO gx:altitudeOffset, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
@@ -269,8 +260,6 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
 
         if (getNumericValue(node, 'extrude') === 1) {
-            // var myWall = new DWall(dynamicObject.vertexPositions);
-            // dynamicObject.wall = myWall;
             dynamicObject.wall = new DynamicWall(coordinates);
 
             if (typeof dynamicObject.wpolygon !== 'undefined') {
