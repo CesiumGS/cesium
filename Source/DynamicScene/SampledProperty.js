@@ -60,28 +60,29 @@ define([
         return epoch.addSeconds(date);
     }
 
+    var timesSpliceArgs = [];
+    var valuesSpliceArgs = [];
+
     var mergeNewSamples = function(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
         var timesInsertionPoint;
         var valuesInsertionPoint;
-        var timesSpliceArgs;
-        var valuesSpliceArgs;
         var currentTime;
         var nextTime;
 
         while (newDataIndex < newData.length) {
             currentTime = convertDate(newData[newDataIndex], epoch);
             timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
+            var timesSpliceArgsCount = 0;
+            var valuesSpliceArgsCount = 0;
 
             if (timesInsertionPoint < 0) {
                 //Doesn't exist, insert as many additional values as we can.
                 timesInsertionPoint = ~timesInsertionPoint;
-                timesSpliceArgs = [];
 
                 valuesInsertionPoint = timesInsertionPoint * packedLength;
-                valuesSpliceArgs = [];
                 prevItem = undefined;
                 nextTime = times[timesInsertionPoint];
                 while (newDataIndex < newData.length) {
@@ -89,17 +90,22 @@ define([
                     if ((defined(prevItem) && JulianDate.compare(prevItem, currentTime) >= 0) || (defined(nextTime) && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
-                    timesSpliceArgs.push(currentTime);
+                    timesSpliceArgs[timesSpliceArgsCount++] = currentTime;
                     newDataIndex = newDataIndex + 1;
                     for (i = 0; i < packedLength; i++) {
-                        valuesSpliceArgs.push(newData[newDataIndex]);
+                        valuesSpliceArgs[valuesSpliceArgsCount++] = newData[newDataIndex];
                         newDataIndex = newDataIndex + 1;
                     }
                     prevItem = currentTime;
                 }
 
-                arrayInsert(values, valuesInsertionPoint, valuesSpliceArgs);
-                arrayInsert(times, timesInsertionPoint, timesSpliceArgs);
+                if (timesSpliceArgsCount > 0) {
+                    valuesSpliceArgs.length = valuesSpliceArgsCount;
+                    arrayInsert(values, valuesInsertionPoint, valuesSpliceArgs);
+
+                    timesSpliceArgs.length = timesSpliceArgsCount;
+                    arrayInsert(times, timesInsertionPoint, timesSpliceArgs);
+                }
             } else {
                 //Found an exact match
                 for (i = 0; i < packedLength; i++) {

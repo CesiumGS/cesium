@@ -61,9 +61,9 @@ define([
 
         var m;
         if (leftIsOutside) {
-            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion), rotMatrix);
-        } else {
             m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(Cartesian3.negate(cornerPoint, scratch1), angle / granularity, quaterion), rotMatrix);
+        } else {
+            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion), rotMatrix);
         }
 
         var index = 0;

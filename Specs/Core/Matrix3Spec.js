@@ -46,7 +46,7 @@ defineSuite([
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
 
         var returnedResult = Matrix3.fromQuaternion(quatnerion);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -60,7 +60,7 @@ defineSuite([
 
         var tmp = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 0.0, 1.0), sPiOver4);
         var quatnerion = new Quaternion(tmp.x, tmp.y, tmp.z, cPiOver4);
-        var expected = new Matrix3(cPiOver2, sPiOver2, 0.0, -sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
+        var expected = new Matrix3(cPiOver2, -sPiOver2, 0.0, sPiOver2, cPiOver2, 0.0, 0.0, 0.0, 1.0);
         var result = new Matrix3();
         var returnedResult = Matrix3.fromQuaternion(quatnerion, result);
         expect(result).toBe(returnedResult);
@@ -500,6 +500,67 @@ defineSuite([
         var returnedResult = Matrix3.transpose(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
+    });
+
+    it('getEigenDecomposition throws without a matrix', function() {
+        expect(function() {
+            return Matrix3.getEigenDecomposition();
+        }).toThrow();
+    });
+
+    it('computes eigenvalues and eigenvectors', function() {
+        var a = new Matrix3(4.0, -1.0, 1.0,
+                            -1.0, 3.0, -2.0,
+                            1.0, -2.0, 3.0);
+
+        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
+                                           0.0, 6.0, 0.0,
+                                           0.0, 0.0, 1.0);
+
+        var decomposition = Matrix3.getEigenDecomposition(a);
+        expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
+
+        var v = Matrix3.getColumn(decomposition.unitary, 0);
+        var lambda = Matrix3.getColumn(decomposition.diagonal, 0).x;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 1);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 1).y;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 2);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 2).z;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+    });
+
+    it('computes eigenvalues and eigenvectors with result parameters', function() {
+        var a = new Matrix3(4.0, -1.0, 1.0,
+                            -1.0, 3.0, -2.0,
+                            1.0, -2.0, 3.0);
+
+        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
+                                           0.0, 6.0, 0.0,
+                                           0.0, 0.0, 1.0);
+        var result = {
+            unitary : new Matrix3(),
+            diagonal : new Matrix3()
+        };
+
+        var decomposition = Matrix3.getEigenDecomposition(a, result);
+        expect(decomposition).toBe(result);
+        expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
+
+        var v = Matrix3.getColumn(decomposition.unitary, 0);
+        var lambda = Matrix3.getColumn(decomposition.diagonal, 0).x;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 1);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 1).y;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+
+        v = Matrix3.getColumn(decomposition.unitary, 2);
+        lambda = Matrix3.getColumn(decomposition.diagonal, 2).z;
+        expect(Cartesian3.multiplyByScalar(v, lambda)).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
     });
 
     it('equals works in all cases', function() {

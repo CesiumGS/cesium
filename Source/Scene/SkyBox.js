@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/defined',
@@ -17,6 +18,7 @@ define([
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
     ], function(
+        defaultValue,
         BoxGeometry,
         Cartesian3,
         defined,
@@ -44,47 +46,36 @@ define([
      * @alias SkyBox
      * @constructor
      *
-     * @param {Object} sources The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
-     *
-     * @exception {DeveloperError} sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
-     * @exception {DeveloperError} sources properties must all be the same type.
+     * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
      * @example
      * scene.skyBox = new SkyBox({
+     *   sources : {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
      *     positiveY : 'skybox_py.png',
      *     negativeY : 'skybox_ny.png',
      *     positiveZ : 'skybox_pz.png',
      *     negativeZ : 'skybox_nz.png'
+     *   }
      * });
      *
      * @see Scene#skyBox
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
-    var SkyBox = function(sources) {
-        if ((!defined(sources)) ||
-            (!defined(sources.positiveX)) ||
-            (!defined(sources.negativeX)) ||
-            (!defined(sources.positiveY)) ||
-            (!defined(sources.negativeY)) ||
-            (!defined(sources.positiveZ)) ||
-            (!defined(sources.negativeZ))) {
-            throw new DeveloperError('sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
-        }
-
-        if ((typeof sources.positiveX !== typeof sources.negativeX) ||
-            (typeof sources.positiveX !== typeof sources.positiveY) ||
-            (typeof sources.positiveX !== typeof sources.negativeY) ||
-            (typeof sources.positiveX !== typeof sources.positiveZ) ||
-            (typeof sources.positiveX !== typeof sources.negativeZ)) {
-            throw new DeveloperError('sources properties must all be the same type.');
-        }
-
-        this._command = new DrawCommand();
-        this._command.owner = this;
-        this._cubeMap = undefined;
-        this._sources = sources;
+    var SkyBox = function(options) {
+        /**
+         * The sources used to create the cube map faces: an object
+         * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
+         * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
+         * These can be either URLs or <code>Image</code> objects.
+         *
+         * @type Object
+         * @default undefined
+         */
+        this.sources = options.sources;
+        this._sources = undefined;
 
         /**
          * Determines if the sky box will be shown.
@@ -92,25 +83,17 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
+
+        this._command = new DrawCommand();
+        this._command.owner = this;
+        this._cubeMap = undefined;
     };
 
     /**
-     * Returns the sources used to create the cube map faces: an object
-     * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
-     * <code>negativeY</code>, <code>positiveZ</code>, and <code>negativeZ</code> properties.
-     * These are either URLs or <code>Image</code> objects, depending on how the sky box
-     * was constructed.
+     * @exception {DeveloperError} sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+     * @exception {DeveloperError} sources properties must all be the same type.
      *
-     * @memberof SkyBox
-     *
-     * @returns {Object} The sources used to create the cube map faces.
-     */
-    SkyBox.prototype.getSources = function() {
-        return this._sources;
-    };
-
-    /**
      * @private
      */
     SkyBox.prototype.update = function(context, frameState) {
@@ -128,22 +111,45 @@ define([
             return undefined;
         }
 
-        var command = this._command;
+        if (this._sources !== this.sources) {
+            this._sources = this.sources;
+            var sources = this.sources;
 
-        if (!defined(command.vertexArray)) {
-            var sources = this._sources;
-            var that = this;
+            if ((!defined(sources.positiveX)) ||
+                (!defined(sources.negativeX)) ||
+                (!defined(sources.positiveY)) ||
+                (!defined(sources.negativeY)) ||
+                (!defined(sources.positiveZ)) ||
+                (!defined(sources.negativeZ))) {
+                throw new DeveloperError('sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+            }
+
+            if ((typeof sources.positiveX !== typeof sources.negativeX) ||
+                (typeof sources.positiveX !== typeof sources.positiveY) ||
+                (typeof sources.positiveX !== typeof sources.negativeY) ||
+                (typeof sources.positiveX !== typeof sources.positiveZ) ||
+                (typeof sources.positiveX !== typeof sources.negativeZ)) {
+                throw new DeveloperError('sources properties must all be the same type.');
+            }
 
             if (typeof sources.positiveX === 'string') {
                 // Given urls for cube-map images.  Load them.
                 loadCubeMap(context, this._sources).then(function(cubeMap) {
+                    that._cubeMap = that._cubeMap && that._cubeMap.destroy();
                     that._cubeMap = cubeMap;
                 });
             } else {
+                this._cubeMap = this._cubeMap && this._cubeMap.destroy();
                 this._cubeMap = context.createCubeMap({
                     source : sources
                 });
             }
+        }
+
+        var command = this._command;
+
+        if (!defined(command.vertexArray)) {
+            var that = this;
 
             command.uniformMap = {
                 u_cubeMap: function() {
