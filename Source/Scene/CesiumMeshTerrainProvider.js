@@ -1,7 +1,10 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/loadArrayBuffer',
+        '../Core/loadJson',
+        '../Core/makeRelativeUrlAbsolute',
         '../Core/throttleRequestByServer',
         '../Core/writeTextToCanvas',
         '../Core/BoundingSphere',
@@ -12,10 +15,14 @@ define([
         './GeographicTilingScheme',
         './MeshTerrainData',
         './TerrainProvider',
+        './TileProviderError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         loadArrayBuffer,
+        loadJson,
+        makeRelativeUrlAbsolute,
         throttleRequestByServer,
         writeTextToCanvas,
         BoundingSphere,
@@ -26,6 +33,7 @@ define([
         GeographicTilingScheme,
         MeshTerrainData,
         TerrainProvider,
+        TileProviderError,
         when) {
     "use strict";
 
@@ -49,6 +57,9 @@ define([
         }
 
         this._url = description.url;
+        if (this._url.length === 0 || this._url[this._url.length - 1] !== '/') {
+            this._url = this._url + '/';
+        }
         this._proxy = description.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
@@ -61,11 +72,50 @@ define([
 
         this._errorEvent = new Event();
 
-        var credit = description.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
+        this._tileUrlTemplates = undefined;
+        this._availableTiles = undefined;
+
+        this._ready = false;
+
+        this._credit = description.credit;
+        if (typeof this._credit === 'string') {
+            this._credit = new Credit(this._credit);
         }
-        this._credit = credit;
+
+        var metadataUrl = this._url + 'layer.json';
+        if (defined(this._proxy)) {
+            metadataUrl = this._proxy.getURL(this._url);
+        }
+
+        var that = this;
+        var metadataError;
+
+        function metadataSuccess(data) {
+            that._tileUrlTemplates = data.tiles;
+            for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
+                that._tileUrlTemplates[i] = makeRelativeUrlAbsolute(metadataUrl, that._tileUrlTemplates[i]);
+            }
+
+            that._availableTiles = data.available;
+
+            if (!defined(that._credit) && defined(data.attribution) && data.attribution !== null) {
+                that._credit = new Credit(data.attribution);
+            }
+
+            that._ready = true;
+        }
+
+        function metadataFailure(data) {
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
+            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+        }
+
+        function requestMetadata() {
+            var metadata = loadJson(metadataUrl);
+            when(metadata, metadataSuccess, metadataFailure);
+        }
+
+        requestMetadata();
     };
 
     /**
@@ -85,9 +135,22 @@ define([
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    CesiumMeshTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    CesiumMeshTerrainProvider.prototype.requestTileGeometry = function (x, y, level, throttleRequests) {
+        if (!this._ready) {
+            throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
+        }
+
+        var urlTemplates = this._tileUrlTemplates;
+        if (urlTemplates.length === 0) {
+            return undefined;
+        }
+
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = this._url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
+
+        y = (yTiles - y - 1);
+
+        // TODO: use all the available URL templates.
+        var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', y);
 
         var proxy = this._proxy;
         if (typeof proxy !== 'undefined') {
@@ -106,6 +169,7 @@ define([
             promise = loadArrayBuffer(url);
         }
 
+        var that = this;
         return when(promise, function(buffer) {
             var pos = 0;
             var uint16Length = 2;
@@ -186,7 +250,8 @@ define([
                 westVertices : westVertices,
                 southVertices : southVertices,
                 eastVertices : eastVertices,
-                northVertices : northVertices
+                northVertices: northVertices,
+                childTileMask: getChildMaskForTile(that, level, x, y)
             });
         });
     };
@@ -265,8 +330,39 @@ define([
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     CesiumMeshTerrainProvider.prototype.isReady = function() {
-        return true;
+        return this._ready;
     };
+
+    function getChildMaskForTile(terrainProvider, level, x, y) {
+        var available = terrainProvider._availableTiles;
+
+        var childLevel = level + 1;
+        if (childLevel >= available.length) {
+            return 0;
+        }
+
+        var levelAvailable = available[childLevel];
+
+        var mask = 0;
+
+        mask |= isTileInRange(levelAvailable, 2 * x, 2 * y) ? 1 : 0;
+        mask |= isTileInRange(levelAvailable, 2 * x + 1, 2 * y) ? 2 : 0;
+        mask |= isTileInRange(levelAvailable, 2 * x, 2 * y + 1) ? 4 : 0;
+        mask |= isTileInRange(levelAvailable, 2 * x + 1, 2 * y + 1) ? 8 : 0;
+
+        return mask;
+    }
+
+    function isTileInRange(levelAvailable, x, y) {
+        for (var i = 0, len = levelAvailable.length; i < len; ++i) {
+            var range = levelAvailable[i];
+            if (x >= range.startX && x <= range.endX && y >= range.startY && y <= range.endY) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     return CesiumMeshTerrainProvider;
 });

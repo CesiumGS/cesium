@@ -708,7 +708,8 @@ define([
             westVertices : westVertices,
             southVertices : southVertices,
             eastVertices : eastVertices,
-            northVertices : northVertices
+            northVertices: northVertices,
+            childTileMask: 0
         });
     };
 
