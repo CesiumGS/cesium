@@ -86,7 +86,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
+     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
@@ -241,33 +241,48 @@ define([
         this._debugShowBoundingVolume = false;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+         *
+         * @type {Boolean}
+         *
+         * @default true
          *
          * @readonly
          */
         this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+         *
+         * @type {Boolean}
+         *
+         * @default true
          *
          * @readonly
          */
         this.releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+         *
+         * @type {Boolean}
+         *
+         * @default false
          *
          * @readonly
          */
         this.allow3DOnly = defaultValue(options.allow3DOnly, false);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         *
+         * @type {Boolean}
+         *
+         * @default true
          *
          * @readonly
          */
         this.allowPicking = defaultValue(options.allowPicking, true);
-// TODO: should this still occlude during the pick pass?
 
         /**
          * Determines if the geometry instances will be created and batched on
@@ -304,6 +319,7 @@ define([
         this._backFaceRS = undefined;
         this._sp = undefined;
 
+        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
 
@@ -665,9 +681,10 @@ define([
             }
         }
 
+        var attributeIndices = this._attributeIndices;
+
         if (this.state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
-            var attributeIndices = this._attributeIndices;
             var vaAttributes = this._vaAttributes;
 
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
@@ -733,8 +750,10 @@ define([
             this._material.update(context);
         }
 
+        var twoPasses = appearance.closed && appearance.translucent;
+
         if (createRS) {
-            if (appearance.closed && appearance.translucent) {
+            if (twoPasses) {
                 var rs = clone(appearance.renderState, false);
                 rs.cull = {
                     enabled : true,
@@ -746,6 +765,22 @@ define([
                 this._backFaceRS = context.createRenderState(rs);
             } else {
                 this._frontFaceRS = context.createRenderState(appearance.renderState);
+                this._backFaceRS = this._frontFaceRS;
+            }
+
+            if (allowPicking) {
+                // Only need backface pass for picking when two-pass rendering is used.
+                this._pickRS = this._backFaceRS;
+            } else {
+                // Still occlude if not pickable.
+                var pickRS = clone(appearance.renderState, false);
+                pickRS.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                this._pickRS = context.createRenderState(pickRS);
             }
         }
 
@@ -755,35 +790,30 @@ define([
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            validateShaderMatching(this._sp, this._attributeIndices);
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, attributeIndices);
+            validateShaderMatching(this._sp, attributeIndices);
 
             if (allowPicking) {
                 var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, this._attributeIndices);
-                validateShaderMatching(this._pickSP, this._attributeIndices);
+                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeIndices);
+            } else {
+                this._pickSP = shaderCache.getShaderProgram(vs, fs, attributeIndices);
             }
+
+            validateShaderMatching(this._pickSP, attributeIndices);
         }
 
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
-            if (defined(this._backFaceRS)) {
-                colorCommands.length = this._va.length * 2;
-                if (allowPicking) {
-                    pickCommands.length = this._va.length * 2;
-                }
-            } else {
-                colorCommands.length = this._va.length;
-                if (allowPicking) {
-                    pickCommands.length = this._va.length;
-                }
-            }
+            colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
+            pickCommands.length = this._va.length;
 
             length = colorCommands.length;
             var vaIndex = 0;
+            var j = 0;
             for (i = 0; i < length; ++i) {
-                if (defined(this._backFaceRS)) {
+                if (twoPasses) {
                     colorCommand = colorCommands[i];
                     if (!defined(colorCommand)) {
                         colorCommand = colorCommands[i] = new DrawCommand();
@@ -794,19 +824,6 @@ define([
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
-
-                    if (allowPicking) {
-                        pickCommand = pickCommands[i];
-                        if (!defined(pickCommand)) {
-                            pickCommand = pickCommands[i] = new DrawCommand();
-                        }
-                        pickCommand.owner = this;
-                        pickCommand.primitiveType = this._primitiveType;
-                        pickCommand.vertexArray = this._va[vaIndex];
-                        pickCommand.renderState = this._backFaceRS;
-                        pickCommand.shaderProgram = this._pickSP;
-                        pickCommand.uniformMap = uniforms;
-                    }
 
                     ++i;
                 }
@@ -822,18 +839,17 @@ define([
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
-                if (allowPicking) {
-                    pickCommand = pickCommands[i];
-                    if (!defined(pickCommand)) {
-                        pickCommand = pickCommands[i] = new DrawCommand();
-                    }
-                    pickCommand.owner = this;
-                    pickCommand.primitiveType = this._primitiveType;
-                    pickCommand.vertexArray = this._va[vaIndex];
-                    pickCommand.renderState = this._frontFaceRS;
-                    pickCommand.shaderProgram = this._pickSP;
-                    pickCommand.uniformMap = uniforms;
+                pickCommand = pickCommands[j];
+                if (!defined(pickCommand)) {
+                    pickCommand = pickCommands[j] = new DrawCommand();
                 }
+                pickCommand.owner = this;
+                pickCommand.primitiveType = this._primitiveType;
+                pickCommand.vertexArray = this._va[vaIndex];
+                pickCommand.renderState = this._pickRS;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = uniforms;
+                ++j;
 
                 ++vaIndex;
             }
@@ -888,11 +904,12 @@ define([
         for (i = 0; i < length; ++i) {
             colorCommands[i].modelMatrix = this.modelMatrix;
             colorCommands[i].boundingVolume = boundingSphere;
+        }
 
-            if (allowPicking) {
-                pickCommands[i].modelMatrix = this.modelMatrix;
-                pickCommands[i].boundingVolume = boundingSphere;
-            }
+        length = pickCommands.length;
+        for (i = 0; i < length; ++i) {
+            pickCommands[i].modelMatrix = this.modelMatrix;
+            pickCommands[i].boundingVolume = boundingSphere;
         }
 
         if (this._debugShowBoundingVolume !== this.debugShowBoundingVolume) {
