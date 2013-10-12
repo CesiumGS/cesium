@@ -263,7 +263,6 @@ define([
             result = new Matrix4();
         }
 
-// TODO: optimize this for glTF animations?
         scratchTrsRotation = Matrix3.fromQuaternion(rotation, scratchTrsRotation);
         result = Matrix4.fromRotationTranslation(scratchTrsRotation, translation, result);
         return Matrix4.multiplyByScale(result, scale, result);
@@ -1332,7 +1331,7 @@ define([
                 scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
                 scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
                 scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
-                0.0,               0.0,               0.0,                1.0);
+                0.0, 0.0, 0.0, 1.0);
         }
 
         result[0] = scale * matrix[0];
