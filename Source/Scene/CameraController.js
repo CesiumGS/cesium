@@ -16,6 +16,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Core/Transforms',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -35,6 +36,7 @@ define([
         Matrix4,
         Quaternion,
         Ray,
+        Transforms,
         SceneMode,
         Tween) {
     "use strict";
@@ -757,12 +759,20 @@ define([
         return Math.atan2(camera.right.y, camera.right.x);
     }
 
-    var scratchHeadingCartesian4 = new Cartesian4();
+    var scratchHeadingMatrix4 = new Matrix4();
+    var scratchHeadingMatrix3 = new Matrix3();
+    var scratchHeadingCartesian3 = new Cartesian3();
 
     function getHeading3D(controller) {
         var camera = controller._camera;
-        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
-        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+
+        var ellipsoid = controller._projection.getEllipsoid();
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
+        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
+        Matrix3.transpose(transform, transform);
+
+        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
+        return Math.atan2(right.y, right.x);
     }
 
     function setHeading2D(controller, angle) {

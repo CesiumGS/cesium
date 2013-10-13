@@ -290,6 +290,31 @@ defineSuite([
         expect(geometry.attributes.positions.values[17]).toEqual(14);
     });
 
+    it('reoderForPreVertexCache removes unused vertices', function() {
+        var geometry = new Geometry({
+            attributes : {
+                weight : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 1,
+                    values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+                }),
+                positions : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+                })
+            },
+            indices : [5, 3, 2, 4, 1, 3],
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        GeometryPipeline.reorderForPreVertexCache(geometry);
+
+        expect(geometry.indices.length).toEqual(6);
+        expect(geometry.attributes.positions.values.length).toEqual((6 - 1) * 3);
+        expect(geometry.attributes.weight.values.length).toEqual(6 - 1);
+    });
+
     it('reorderForPreVertexCache throws without a geometry', function() {
         expect(function() {
             GeometryPipeline.reorderForPreVertexCache(undefined);
@@ -658,6 +683,23 @@ defineSuite([
                 }
             });
             GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
+        }).toThrow();
+    });
+
+    it('projectTo2D throws when trying to project a point close to the origin', function() {
+        var p1 = new Cartesian3(100000, 200000, 300000);
+        var p2 = new Cartesian3(400000, 500000, 600000);
+
+        var geometry = {};
+        geometry.attributes = {};
+        geometry.attributes.position = {
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : [100000.0, 200000.0, 300000.0, 0.0, 0.0, 0.0]
+        };
+
+        expect(function() {
+            return GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
         }).toThrow();
     });
 

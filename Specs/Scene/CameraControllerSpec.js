@@ -11,7 +11,9 @@ defineSuite([
          'Core/GeographicProjection',
          'Core/Extent',
          'Core/Math',
+         'Core/Matrix3',
          'Core/Matrix4',
+         'Core/Transforms',
          'Core/WebMercatorProjection',
          'Scene/AnimationCollection',
          'Scene/Camera',
@@ -29,7 +31,9 @@ defineSuite([
          GeographicProjection,
          Extent,
          CesiumMath,
+         Matrix3,
          Matrix4,
+         Transforms,
          WebMercatorProjection,
          AnimationCollection,
          Camera,
@@ -938,8 +942,13 @@ defineSuite([
     it('get heading in 3D', function() {
         controller._mode = SceneMode.SCENE3D;
 
-        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z);
-        var heading = CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+        var ellipsoid = Ellipsoid.WGS84;
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
+        var transform = Matrix4.getRotation(toFixedFrame);
+        Matrix3.transpose(transform, transform);
+
+        var right = Matrix3.multiplyByVector(transform, camera.right);
+        var heading = Math.atan2(right.y, right.x);
 
         expect(controller.heading).toEqual(heading);
     });
