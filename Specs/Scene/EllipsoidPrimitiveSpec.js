@@ -5,6 +5,8 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createCamera',
          'Specs/createFrameState',
+         'Specs/createScene',
+         'Specs/destroyScene',
          'Specs/pick',
          'Specs/render',
          'Core/Cartesian3',
@@ -18,6 +20,8 @@ defineSuite([
          destroyContext,
          createCamera,
          createFrameState,
+         createScene,
+         destroyScene,
          pick,
          render,
          Cartesian3,
@@ -61,6 +65,7 @@ defineSuite([
         expect(ellipsoid.radii).toBeUndefined();
         expect(ellipsoid.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(ellipsoid.material.type).toEqual(Material.ColorType);
+        expect(ellipsoid.debugShowBoundingVolume).toEqual(false);
     });
 
     it('Constructs with options', function() {
@@ -71,7 +76,8 @@ defineSuite([
             modelMatrix : Matrix4.fromScale(2.0),
             show : false,
             material : material,
-            id : 'id'
+            id : 'id',
+            debugShowBoundingVolume : true
         });
 
         expect(e.center).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -80,6 +86,7 @@ defineSuite([
         expect(e.show).toEqual(false);
         expect(e.material).toBe(material);
         expect(e.id).toEqual('id');
+        expect(e.debugShowBoundingVolume).toEqual(true);
 
         e.destroy();
     });
@@ -123,6 +130,29 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         ellipsoid2.destroy();
+    });
+
+    it('renders bounding volume with debugShowBoundingVolume', function() {
+        var scene = createScene();
+        scene.getPrimitives().add(new EllipsoidPrimitive({
+            radii : new Cartesian3(1.0, 1.0, 1.0),
+            debugShowBoundingVolume : true
+        }));
+
+        var camera = scene.getCamera();
+        camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.up = Cartesian3.UNIT_Z;
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+        expect(pixels[3]).toEqual(255);
+
+        destroyScene();
     });
 
     it('does not render when show is false', function() {
