@@ -811,7 +811,7 @@ define([
 
             length = colorCommands.length;
             var vaIndex = 0;
-            var j = 0;
+            var k = 0;
             for (i = 0; i < length; ++i) {
                 if (twoPasses) {
                     colorCommand = colorCommands[i];
@@ -839,9 +839,9 @@ define([
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
-                pickCommand = pickCommands[j];
+                pickCommand = pickCommands[k];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[j] = new DrawCommand();
+                    pickCommand = pickCommands[k] = new DrawCommand();
                 }
                 pickCommand.owner = this;
                 pickCommand.primitiveType = this._primitiveType;
@@ -849,7 +849,7 @@ define([
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
-                ++j;
+                ++k;
 
                 ++vaIndex;
             }
