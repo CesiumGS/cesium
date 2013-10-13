@@ -246,6 +246,68 @@ define([
     };
 
     /**
+     *
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} A cartesian to compare.
+     * @param {Cartesian3} A cartesian to compare.
+     * @returns {Number} A cartesian with the minimum components.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.getMinimumByComponent = function(first, second) {
+        if (!defined(first)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        var minimum = first.clone();
+        if (first.x > second.x) {
+            minimum.x = second.x;
+        }
+        if (first.y > second.y) {
+            minimum.y = second.y;
+        }
+        if (first.z > second.z) {
+            minimum.z = second.z;
+        }
+        return minimum;
+    };
+
+    /**
+     *
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} A cartesian to compare.
+     * @param {Cartesian3} A cartesian to compare.
+     * @returns {Number} A cartesian with the maximum components.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Cartesian3.getMaximumByComponent =  function(first, second) {
+        if (!defined(first)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('cartesian is required');
+        }
+
+        var maximum = first.clone();
+        if (first.x < second.x) {
+            maximum.x = second.x;
+        }
+        if (first.y < second.y) {
+            maximum.y = second.y;
+        }
+        if (first.z < second.z) {
+            maximum.z = second.z;
+        }
+        return maximum;
+    };
+
+    /**
      * Computes the provided Cartesian's squared magnitude.
      * @memberof Cartesian3
      *

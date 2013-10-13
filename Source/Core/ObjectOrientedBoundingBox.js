@@ -57,9 +57,8 @@ define([
         var length = positions.length;
         for ( var i = 0; i < length; i++) {
             var p = positions[i];
-            meanPoint = Cartesian3.add(meanPoint, p, meanPoint);
+            meanPoint = Cartesian3.add(meanPoint, Cartesian3.multiplyByScalar(p, 1/length));
         }
-        meanPoint = Cartesian3.multiplyByScalar(meanPoint, 1/length, meanPoint);
         var exx=0.0;
         var exy=0.0;
         var exz=0.0;
@@ -105,44 +104,19 @@ define([
         for ( var i = 1; i < length; i++) {
             p = positions[i];
             tempPoint = new Cartesian3(Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p));
-            minPoint = minimum(minPoint, tempPoint);
-            maxPoint = maximum(maxPoint, tempPoint);
+            minPoint = Cartesian3.getMinimumByComponent(minPoint, tempPoint);
+            maxPoint = Cartesian3.getMaximumByComponent(maxPoint, tempPoint);
         }
 
         var center = new Cartesian3((minPoint.x+maxPoint.x)*0.5, (minPoint.y+maxPoint.y)*0.5, (minPoint.z+maxPoint.z)*0.5);
 
-        result.transformedPosition = new Cartesian3(Cartesian3.dot(r, center), Cartesian3.dot(u, center), Cartesian3.dot(f, center))
+        result.transformedPosition = new Cartesian3(Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 0), center), Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 1), center), Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 2), center))
 
         result.extent = new Cartesian3((maxPoint.x-minPoint.x)*0.5, (maxPoint.y-minPoint.y)*0.5, (maxPoint.z-minPoint.z)*0.5);
 
         return result;
     };
 
-    function minimum(first, second) {
-        if (first.x > second.x) {
-            first.x = second.x;
-        }
-        if (first.y > second.y) {
-            first.y = second.y;
-        }
-        if (first.z > second.z) {
-            first.z = second.z;
-        }
-        return first;
-    }
-
-    function maximum(first, second) {
-        if (first.x < second.x) {
-            first.x = second.x;
-        }
-        if (first.y < second.y) {
-            first.y = second.y;
-        }
-        if (first.z < second.z) {
-            first.z = second.z;
-        }
-        return first;
-    }
 
     /**
      * Get the describing points of the ObjectOrientedBoundingBox.
@@ -165,21 +139,21 @@ define([
         var u = Matrix3.getColumn(box.transformMatrix, 1, u);
         var f = Matrix3.getColumn(box.transformMatrix, 2, f);
 
-        var point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        var point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(-1))),Cartesian3.multiplyByScalar(u, box.extent.y*(-1))),Cartesian3.multiplyByScalar(f, box.extent.z*(-1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(1))),Cartesian3.multiplyByScalar(u, box.extent.y*(-1))),Cartesian3.multiplyByScalar(f, box.extent.z*(-1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(1))),Cartesian3.multiplyByScalar(u, box.extent.y*(-1))),Cartesian3.multiplyByScalar(f, box.extent.z*(1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(-1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(-1))),Cartesian3.multiplyByScalar(u, box.extent.y*(-1))),Cartesian3.multiplyByScalar(f, box.extent.z*(1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(-1))),Cartesian3.multiplyByScalar(u, box.extent.y*(1))),Cartesian3.multiplyByScalar(f, box.extent.z*(-1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(-1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(1))),Cartesian3.multiplyByScalar(u, box.extent.y*(1))),Cartesian3.multiplyByScalar(f, box.extent.z*(-1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(1))),Cartesian3.multiplyByScalar(u, box.extent.y*(1))),Cartesian3.multiplyByScalar(f, box.extent.z*(1)));
         result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent[0]*(-1))),Cartesian3.multiplyByScalar(u, box.extent[1]*(1))),Cartesian3.multiplyByScalar(f, box.extent[2]*(1)));
+        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition,Cartesian3.multiplyByScalar(r, box.extent.x*(-1))),Cartesian3.multiplyByScalar(u, box.extent.y*(1))),Cartesian3.multiplyByScalar(f, box.extent.z*(1)));
         result.push(point);
 
         return result;
