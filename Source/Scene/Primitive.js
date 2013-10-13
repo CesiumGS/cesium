@@ -228,19 +228,6 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * This property is for debugging only; it is not for production use nor is it optimized.
-         * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
-         * </p>
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoundingVolume = false;
-
-        /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
          * @type {Boolean}
@@ -295,6 +282,19 @@ define([
          * @private
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoundingVolume = false;
 
         this.state = PrimitiveState.READY;
         this._createdGeometries = [];
