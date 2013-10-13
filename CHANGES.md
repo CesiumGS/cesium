@@ -55,7 +55,7 @@ Beta Releases
 * Added `FrameState.events`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
 * Added `PointGeometry`, `PointAppearance`, and `PointColorAppearance` for drawing massive amounts of points.
-* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, and **TODO**.
+* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and **TODO**.
 
 ### b21 - 2013-10-01
 
