@@ -29,6 +29,28 @@ defineSuite([
         expect(target.show).toBe(source.show);
     });
 
+    it('merge does not assign assigned properties', function() {
+        var source = new DynamicWall();
+        source.geometry = new WallGeometry({positions: []});
+        source.material = new ColorMaterialProperty();
+        source.show = new ConstantProperty(true);
+
+        var geometry = new WallGeometry({positions: []});
+        var material = new ColorMaterialProperty();
+        var show = new ConstantProperty(true);
+
+        var target = new DynamicWall();
+        target.geometry = geometry;
+        target.material = material;
+        target.show = show;
+
+        target.merge(source);
+
+        expect(target.geometry).toBe(geometry);
+        expect(target.material).toBe(material);
+        expect(target.show).toBe(show);
+    });
+
     it('clone works', function() {
         var source = new DynamicWall();
         source.geometry = new WallGeometry({positions: []});
