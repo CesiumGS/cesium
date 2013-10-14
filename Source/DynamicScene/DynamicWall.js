@@ -28,7 +28,7 @@ define(['../Core/defaultValue',
         // @memberof {... ??}
         this._material = undefined;
 
-        if (typeof vertexPositions !== 'undefined') {
+        if (typeof coordinates !== 'undefined') {
             this._geometry = new WallGeometry({positions: coordinates});
         }
 
