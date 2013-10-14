@@ -97,7 +97,7 @@ defineSuite([
                 transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(timesOfDay[i], transformMatrix);
             }
             var position = PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(timesOfDay[i]);
-            transformMatrix.multiplyByVector(position, position);
+            Matrix3.multiplyByVector(transformMatrix, position, position);
             angles.push(CesiumMath.convertLongitudeRange(Math.atan2(position.y, position.x)));
         }
         //Expect a clockwise motion.

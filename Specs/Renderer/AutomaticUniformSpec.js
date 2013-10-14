@@ -44,13 +44,13 @@ defineSuite([
 
     function createMockCamera(view, projection, infiniteProjection, position, direction, right, up) {
         return {
-            viewMatrix : defaultValue(view, Matrix4.IDENTITY.clone()),
-            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.IDENTITY.clone())),
+            viewMatrix : defaultValue(view, Matrix4.clone(Matrix4.IDENTITY)),
+            inverseViewMatrix : Matrix4.inverseTransformation(defaultValue(view, Matrix4.clone(Matrix4.IDENTITY))),
             frustum : {
                 near : 1.0,
                 far : 1000.0,
-                projectionMatrix : defaultValue(projection, Matrix4.IDENTITY.clone()),
-                infiniteProjectionMatrix : defaultValue(infiniteProjection, Matrix4.IDENTITY.clone()),
+                projectionMatrix : defaultValue(projection, Matrix4.clone(Matrix4.IDENTITY)),
+                infiniteProjectionMatrix : defaultValue(infiniteProjection, Matrix4.clone(Matrix4.IDENTITY)),
                 computeCullingVolume : function() {
                     return undefined;
                 },
@@ -455,7 +455,7 @@ defineSuite([
 
     it('has czm_inverseModelView', function() {
         var us = context.getUniformState();
-        us.update(context, createFrameState(createMockCamera(Matrix4.IDENTITY.clone())));
+        us.update(context, createFrameState(createMockCamera(Matrix4.clone(Matrix4.IDENTITY))));
 
         var fs =
             'void main() { ' +
@@ -474,7 +474,7 @@ defineSuite([
 
     it('has czm_inverseModelView3D', function() {
         var us = context.getUniformState();
-        us.update(context, createFrameState(createMockCamera(Matrix4.IDENTITY.clone())));
+        us.update(context, createFrameState(createMockCamera(Matrix4.clone(Matrix4.IDENTITY))));
 
         var fs =
             'void main() { ' +

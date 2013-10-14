@@ -172,6 +172,15 @@ define([
     CesiumMath.SOLAR_RADIUS = 6.955e8;
 
     /**
+     * The mean radius of the moon, according to the "Report of the IAU/IAG Working Group on
+     * Cartographic Coordinates and Rotational Elements of the Planets and satellites: 2000",
+     * Celestial Mechanics 82: 83-110, 2002.
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.LUNAR_RADIUS = 1737400.0;
+
+    /**
      * 64 * 1024
      * @type {Number}
      * @constant

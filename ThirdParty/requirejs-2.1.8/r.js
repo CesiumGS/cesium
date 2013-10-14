@@ -1,5 +1,5 @@
 /**
- * @license r.js 2.1.6 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license r.js 2.1.8 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -20,7 +20,7 @@ var requirejs, require, define, xpcUtil;
 (function (console, args, readFileFunc) {
     var fileName, env, fs, vm, path, exec, rhinoContext, dir, nodeRequire,
         nodeDefine, exists, reqMain, loadedOptimizedLib, existsForNode, Cc, Ci,
-        version = '2.1.6',
+        version = '2.1.8',
         jsSuffixRegExp = /\.js$/,
         commandOption = '',
         useLibLoaded = {},
@@ -232,7 +232,7 @@ var requirejs, require, define, xpcUtil;
     }
 
     /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.6 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.8 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -245,7 +245,7 @@ var requirejs, require, define, xpcUtil;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.6',
+        version = '2.1.8',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -2028,6 +2028,19 @@ var requirejs, require, define, xpcUtil;
     req.onError = defaultOnError;
 
     /**
+     * Creates the node for the load command. Only used in browser envs.
+     */
+    req.createNode = function (config, moduleName, url) {
+        var node = config.xhtml ?
+                document.createElementNS('http://www.w3.org/1999/xhtml', 'html:script') :
+                document.createElement('script');
+        node.type = config.scriptType || 'text/javascript';
+        node.charset = 'utf-8';
+        node.async = true;
+        return node;
+    };
+
+    /**
      * Does the request to load a module for the browser case.
      * Make this a separate function to allow other environments
      * to override it.
@@ -2041,12 +2054,7 @@ var requirejs, require, define, xpcUtil;
             node;
         if (isBrowser) {
             //In the browser so use a script tag
-            node = config.xhtml ?
-                    document.createElementNS('http://www.w3.org/1999/xhtml', 'html:script') :
-                    document.createElement('script');
-            node.type = config.scriptType || 'text/javascript';
-            node.charset = 'utf-8';
-            node.async = true;
+            node = req.createNode(config, moduleName, url);
 
             node.setAttribute('data-requirecontext', context.contextName);
             node.setAttribute('data-requiremodule', moduleName);
@@ -2443,10 +2451,11 @@ var requirejs, require, define, xpcUtil;
     };
 
     req.load = function (context, moduleName, url) {
-        var contents, err;
+        var contents, err,
+            config = context.config;
 
-        if (context.config.shim[moduleName]) {
-            throw new Error('Shim config not supported in Node: detected ' +
+        if (config.shim[moduleName] && (!config.suppress || !config.suppress.nodeShim)) {
+            console.warn('Shim config not supported in Node, may or may not work. Detected ' +
                             'for module: ' + moduleName);
         }
 
@@ -4404,8 +4413,6 @@ define('logger', ['env!env/print'], function (print) {
 //so that the build does not attempt to inline some env modules,
 //like Node's fs and path.
 
-//Commit 465a4eae86c7bae191b1ee427571543ace777117 on July 19, 2012
-define('esprima', ['exports'], function(exports) {
 /*
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2012 Mathias Bynens <mathias@qiwi.be>
@@ -4437,7 +4444,7 @@ define('esprima', ['exports'], function(exports) {
 */
 
 /*jslint bitwise:true plusplus:true */
-/*global esprima:true, exports:true,
+/*global esprima:true, define:true, exports:true, window: true,
 throwError: true, createLiteral: true, generateStatement: true,
 parseAssignmentExpression: true, parseBlock: true, parseExpression: true,
 parseFunctionDeclaration: true, parseFunctionExpression: true,
@@ -4445,7 +4452,19 @@ parseFunctionSourceElements: true, parseVariableIdentifier: true,
 parseLeftHandSideExpression: true,
 parseStatement: true, parseSourceElement: true */
 
-(function (exports) {
+(function (root, factory) {
+    'use strict';
+
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js,
+    // Rhino, and plain browser loading.
+    if (typeof define === 'function' && define.amd) {
+        define('esprima', ['exports'], factory);
+    } else if (typeof exports !== 'undefined') {
+        factory(exports);
+    } else {
+        factory((root.esprima = {}));
+    }
+}(this, function (exports) {
     'use strict';
 
     var Token,
@@ -4547,6 +4566,7 @@ parseStatement: true, parseSourceElement: true */
         UnterminatedRegExp:  'Invalid regular expression: missing /',
         InvalidLHSInAssignment:  'Invalid left-hand side in assignment',
         InvalidLHSInForIn:  'Invalid left-hand side in for-in',
+        MultipleDefaultsInSwitch: 'More than one default clause in switch statement',
         NoCatchOrFinally:  'Missing catch or finally after try',
         UnknownLabel: 'Undefined label \'%0\'',
         Redeclaration: '%0 \'%1\' has already been declared',
@@ -4735,12 +4755,6 @@ parseStatement: true, parseSourceElement: true */
         return isFutureReservedWord(id);
     }
 
-    // Return the next character and move forward.
-
-    function nextChar() {
-        return source[index++];
-    }
-
     // 7.4 Comments
 
     function skipComment() {
@@ -4753,7 +4767,7 @@ parseStatement: true, parseSourceElement: true */
             ch = source[index];
 
             if (lineComment) {
-                ch = nextChar();
+                ch = source[index++];
                 if (isLineTerminator(ch)) {
                     lineComment = false;
                     if (ch === '\r' && source[index] === '\n') {
@@ -4774,7 +4788,7 @@ parseStatement: true, parseSourceElement: true */
                         throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
                     }
                 } else {
-                    ch = nextChar();
+                    ch = source[index++];
                     if (index >= length) {
                         throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
                     }
@@ -4821,7 +4835,7 @@ parseStatement: true, parseSourceElement: true */
         len = (prefix === 'u') ? 4 : 2;
         for (i = 0; i < len; ++i) {
             if (index < length && isHexDigit(source[index])) {
-                ch = nextChar();
+                ch = source[index++];
                 code = code * 16 + '0123456789abcdef'.indexOf(ch.toLowerCase());
             } else {
                 return '';
@@ -4857,7 +4871,7 @@ parseStatement: true, parseSourceElement: true */
                 id = 'u';
             }
         } else {
-            id = nextChar();
+            id = source[index++];
         }
 
         while (index < length) {
@@ -4883,7 +4897,7 @@ parseStatement: true, parseSourceElement: true */
                     id += 'u';
                 }
             } else {
-                id += nextChar();
+                id += source[index++];
             }
         }
 
@@ -4982,7 +4996,7 @@ parseStatement: true, parseSourceElement: true */
         if (ch1 === '.' && !isDecimalDigit(ch2)) {
             return {
                 type: Token.Punctuator,
-                value: nextChar(),
+                value: source[index++],
                 lineNumber: lineNumber,
                 lineStart: lineStart,
                 range: [start, index]
@@ -5100,7 +5114,7 @@ parseStatement: true, parseSourceElement: true */
         if ('[]<>+-*%&|^!~?:=/'.indexOf(ch1) >= 0) {
             return {
                 type: Token.Punctuator,
-                value: nextChar(),
+                value: source[index++],
                 lineNumber: lineNumber,
                 lineStart: lineStart,
                 range: [start, index]
@@ -5120,20 +5134,20 @@ parseStatement: true, parseSourceElement: true */
         start = index;
         number = '';
         if (ch !== '.') {
-            number = nextChar();
+            number = source[index++];
             ch = source[index];
 
             // Hex number starts with '0x'.
             // Octal number starts with '0'.
             if (number === '0') {
                 if (ch === 'x' || ch === 'X') {
-                    number += nextChar();
+                    number += source[index++];
                     while (index < length) {
                         ch = source[index];
                         if (!isHexDigit(ch)) {
                             break;
                         }
-                        number += nextChar();
+                        number += source[index++];
                     }
 
                     if (number.length <= 2) {
@@ -5155,13 +5169,13 @@ parseStatement: true, parseSourceElement: true */
                         range: [start, index]
                     };
                 } else if (isOctalDigit(ch)) {
-                    number += nextChar();
+                    number += source[index++];
                     while (index < length) {
                         ch = source[index];
                         if (!isOctalDigit(ch)) {
                             break;
                         }
-                        number += nextChar();
+                        number += source[index++];
                     }
 
                     if (index < length) {
@@ -5191,38 +5205,38 @@ parseStatement: true, parseSourceElement: true */
                 if (!isDecimalDigit(ch)) {
                     break;
                 }
-                number += nextChar();
+                number += source[index++];
             }
         }
 
         if (ch === '.') {
-            number += nextChar();
+            number += source[index++];
             while (index < length) {
                 ch = source[index];
                 if (!isDecimalDigit(ch)) {
                     break;
                 }
-                number += nextChar();
+                number += source[index++];
             }
         }
 
         if (ch === 'e' || ch === 'E') {
-            number += nextChar();
+            number += source[index++];
 
             ch = source[index];
             if (ch === '+' || ch === '-') {
-                number += nextChar();
+                number += source[index++];
             }
 
             ch = source[index];
             if (isDecimalDigit(ch)) {
-                number += nextChar();
+                number += source[index++];
                 while (index < length) {
                     ch = source[index];
                     if (!isDecimalDigit(ch)) {
                         break;
                     }
-                    number += nextChar();
+                    number += source[index++];
                 }
             } else {
                 ch = 'character ' + ch;
@@ -5262,13 +5276,13 @@ parseStatement: true, parseSourceElement: true */
         ++index;
 
         while (index < length) {
-            ch = nextChar();
+            ch = source[index++];
 
             if (ch === quote) {
                 quote = '';
                 break;
             } else if (ch === '\\') {
-                ch = nextChar();
+                ch = source[index++];
                 if (!isLineTerminator(ch)) {
                     switch (ch) {
                     case 'n':
@@ -5298,7 +5312,7 @@ parseStatement: true, parseSourceElement: true */
                         str += '\f';
                         break;
                     case 'v':
-                        str += '\v';
+                        str += '\x0B';
                         break;
 
                     default:
@@ -5312,14 +5326,14 @@ parseStatement: true, parseSourceElement: true */
 
                             if (index < length && isOctalDigit(source[index])) {
                                 octal = true;
-                                code = code * 8 + '01234567'.indexOf(nextChar());
+                                code = code * 8 + '01234567'.indexOf(source[index++]);
 
                                 // 3 digits are only allowed when string starts
                                 // with 0, 1, 2, 3
                                 if ('0123'.indexOf(ch) >= 0 &&
                                         index < length &&
                                         isOctalDigit(source[index])) {
-                                    code = code * 8 + '01234567'.indexOf(nextChar());
+                                    code = code * 8 + '01234567'.indexOf(source[index++]);
                                 }
                             }
                             str += String.fromCharCode(code);
@@ -5356,7 +5370,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function scanRegExp() {
-        var str = '', ch, start, pattern, flags, value, classMarker = false, restore;
+        var str, ch, start, pattern, flags, value, classMarker = false, restore, terminated = false;
 
         buffer = null;
         skipComment();
@@ -5364,10 +5378,10 @@ parseStatement: true, parseSourceElement: true */
         start = index;
         ch = source[index];
         assert(ch === '/', 'Regular expression literal must start with a slash');
-        str = nextChar();
+        str = source[index++];
 
         while (index < length) {
-            ch = nextChar();
+            ch = source[index++];
             str += ch;
             if (classMarker) {
                 if (ch === ']') {
@@ -5375,13 +5389,14 @@ parseStatement: true, parseSourceElement: true */
                 }
             } else {
                 if (ch === '\\') {
-                    ch = nextChar();
+                    ch = source[index++];
                     // ECMA-262 7.8.5
                     if (isLineTerminator(ch)) {
                         throwError({}, Messages.UnterminatedRegExp);
                     }
                     str += ch;
                 } else if (ch === '/') {
+                    terminated = true;
                     break;
                 } else if (ch === '[') {
                     classMarker = true;
@@ -5391,7 +5406,7 @@ parseStatement: true, parseSourceElement: true */
             }
         }
 
-        if (str.length === 1) {
+        if (!terminated) {
             throwError({}, Messages.UnterminatedRegExp);
         }
 
@@ -5568,7 +5583,6 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function throwErrorTolerant() {
-        var error;
         try {
             throwError.apply(null, arguments);
         } catch (e) {
@@ -5584,8 +5598,6 @@ parseStatement: true, parseSourceElement: true */
     // Throw an exception because of the token.
 
     function throwUnexpected(token) {
-        var s;
-
         if (token.type === Token.EOF) {
             throwError(token, Messages.UnexpectedEOS);
         }
@@ -5606,7 +5618,8 @@ parseStatement: true, parseSourceElement: true */
             if (isFutureReservedWord(token.value)) {
                 throwError(token, Messages.UnexpectedReserved);
             } else if (strict && isStrictModeReservedWord(token.value)) {
-                throwError(token, Messages.StrictReservedWord);
+                throwErrorTolerant(token, Messages.StrictReservedWord);
+                return;
             }
             throwError(token, Messages.UnexpectedToken, token.value);
         }
@@ -5696,7 +5709,6 @@ parseStatement: true, parseSourceElement: true */
         if (token.type !== Token.EOF && !match('}')) {
             throwUnexpected(token);
         }
-        return;
     }
 
     // Return true if provided expression is LeftHandSideExpression
@@ -5708,15 +5720,14 @@ parseStatement: true, parseSourceElement: true */
     // 11.1.4 Array Initialiser
 
     function parseArrayInitialiser() {
-        var elements = [],
-            undef;
+        var elements = [];
 
         expect('[');
 
         while (!match(']')) {
             if (match(',')) {
                 lex();
-                elements.push(undef);
+                elements.push(null);
             } else {
                 elements.push(parseAssignmentExpression());
 
@@ -5742,7 +5753,7 @@ parseStatement: true, parseSourceElement: true */
         previousStrict = strict;
         body = parseFunctionSourceElements();
         if (first && strict && isRestrictedWord(param[0].name)) {
-            throwError(first, Messages.StrictParamName);
+            throwErrorTolerant(first, Messages.StrictParamName);
         }
         strict = previousStrict;
 
@@ -5750,7 +5761,11 @@ parseStatement: true, parseSourceElement: true */
             type: Syntax.FunctionExpression,
             id: null,
             params: param,
-            body: body
+            defaults: [],
+            body: body,
+            rest: null,
+            generator: false,
+            expression: false
         };
     }
 
@@ -5762,7 +5777,7 @@ parseStatement: true, parseSourceElement: true */
 
         if (token.type === Token.StringLiteral || token.type === Token.NumericLiteral) {
             if (strict && token.octal) {
-                throwError(token, Messages.StrictOctalLiteral);
+                throwErrorTolerant(token, Messages.StrictOctalLiteral);
             }
             return createLiteral(token);
         }
@@ -5799,16 +5814,24 @@ parseStatement: true, parseSourceElement: true */
                 expect('(');
                 token = lookahead();
                 if (token.type !== Token.Identifier) {
-                    throwUnexpected(lex());
+                    expect(')');
+                    throwErrorTolerant(token, Messages.UnexpectedToken, token.value);
+                    return {
+                        type: Syntax.Property,
+                        key: key,
+                        value: parsePropertyFunction([]),
+                        kind: 'set'
+                    };
+                } else {
+                    param = [ parseVariableIdentifier() ];
+                    expect(')');
+                    return {
+                        type: Syntax.Property,
+                        key: key,
+                        value: parsePropertyFunction(param, token),
+                        kind: 'set'
+                    };
                 }
-                param = [ parseVariableIdentifier() ];
-                expect(')');
-                return {
-                    type: Syntax.Property,
-                    key: key,
-                    value: parsePropertyFunction(param, token),
-                    kind: 'set'
-                };
             } else {
                 expect(':');
                 return {
@@ -5833,7 +5856,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseObjectInitialiser() {
-        var token, properties = [], property, name, kind, map = {}, toString = String;
+        var properties = [], property, name, kind, map = {}, toString = String;
 
         expect('{');
 
@@ -5851,13 +5874,13 @@ parseStatement: true, parseSourceElement: true */
                     if (strict && kind === PropertyKind.Data) {
                         throwErrorTolerant({}, Messages.StrictDuplicateProperty);
                     } else if (kind !== PropertyKind.Data) {
-                        throwError({}, Messages.AccessorDataProperty);
+                        throwErrorTolerant({}, Messages.AccessorDataProperty);
                     }
                 } else {
                     if (kind === PropertyKind.Data) {
-                        throwError({}, Messages.AccessorDataProperty);
+                        throwErrorTolerant({}, Messages.AccessorDataProperty);
                     } else if (map[name] & kind) {
-                        throwError({}, Messages.AccessorGetSet);
+                        throwErrorTolerant({}, Messages.AccessorGetSet);
                     }
                 }
                 map[name] |= kind;
@@ -5880,11 +5903,25 @@ parseStatement: true, parseSourceElement: true */
         };
     }
 
+    // 11.1.6 The Grouping Operator
+
+    function parseGroupExpression() {
+        var expr;
+
+        expect('(');
+
+        expr = parseExpression();
+
+        expect(')');
+
+        return expr;
+    }
+
+
     // 11.1 Primary Expressions
 
     function parsePrimaryExpression() {
-        var expr,
-            token = lookahead(),
+        var token = lookahead(),
             type = token.type;
 
         if (type === Token.Identifier) {
@@ -5935,10 +5972,7 @@ parseStatement: true, parseSourceElement: true */
         }
 
         if (match('(')) {
-            lex();
-            state.lastParenthesized = expr = parseExpression();
-            expect(')');
-            return expr;
+            return parseGroupExpression();
         }
 
         if (match('/') || match('/=')) {
@@ -5983,36 +6017,22 @@ parseStatement: true, parseSourceElement: true */
         };
     }
 
-    function parseNonComputedMember(object) {
-        return {
-            type: Syntax.MemberExpression,
-            computed: false,
-            object: object,
-            property: parseNonComputedProperty()
-        };
+    function parseNonComputedMember() {
+        expect('.');
+
+        return parseNonComputedProperty();
     }
 
-    function parseComputedMember(object) {
-        var property, expr;
+    function parseComputedMember() {
+        var expr;
 
         expect('[');
-        property = parseExpression();
-        expr = {
-            type: Syntax.MemberExpression,
-            computed: true,
-            object: object,
-            property: property
-        };
-        expect(']');
-        return expr;
-    }
 
-    function parseCallMember(object) {
-        return {
-            type: Syntax.CallExpression,
-            callee: object,
-            'arguments': parseArguments()
-        };
+        expr = parseExpression();
+
+        expect(']');
+
+        return expr;
     }
 
     function parseNewExpression() {
@@ -6034,41 +6054,58 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseLeftHandSideExpressionAllowCall() {
-        var useNew, expr;
+        var expr;
 
-        useNew = matchKeyword('new');
-        expr = useNew ? parseNewExpression() : parsePrimaryExpression();
+        expr = matchKeyword('new') ? parseNewExpression() : parsePrimaryExpression();
 
-        while (index < length) {
-            if (match('.')) {
-                lex();
-                expr = parseNonComputedMember(expr);
+        while (match('.') || match('[') || match('(')) {
+            if (match('(')) {
+                expr = {
+                    type: Syntax.CallExpression,
+                    callee: expr,
+                    'arguments': parseArguments()
+                };
             } else if (match('[')) {
-                expr = parseComputedMember(expr);
-            } else if (match('(')) {
-                expr = parseCallMember(expr);
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: true,
+                    object: expr,
+                    property: parseComputedMember()
+                };
             } else {
-                break;
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: false,
+                    object: expr,
+                    property: parseNonComputedMember()
+                };
             }
         }
 
         return expr;
     }
 
+
     function parseLeftHandSideExpression() {
-        var useNew, expr;
+        var expr;
 
-        useNew = matchKeyword('new');
-        expr = useNew ? parseNewExpression() : parsePrimaryExpression();
+        expr = matchKeyword('new') ? parseNewExpression() : parsePrimaryExpression();
 
-        while (index < length) {
-            if (match('.')) {
-                lex();
-                expr = parseNonComputedMember(expr);
-            } else if (match('[')) {
-                expr = parseComputedMember(expr);
+        while (match('.') || match('[')) {
+            if (match('[')) {
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: true,
+                    object: expr,
+                    property: parseComputedMember()
+                };
             } else {
-                break;
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: false,
+                    object: expr,
+                    property: parseNonComputedMember()
+                };
             }
         }
 
@@ -6078,12 +6115,17 @@ parseStatement: true, parseSourceElement: true */
     // 11.3 Postfix Expressions
 
     function parsePostfixExpression() {
-        var expr = parseLeftHandSideExpressionAllowCall();
+        var expr = parseLeftHandSideExpressionAllowCall(), token;
+
+        token = lookahead();
+        if (token.type !== Token.Punctuator) {
+            return expr;
+        }
 
         if ((match('++') || match('--')) && !peekLineTerminator()) {
             // 11.3.1, 11.3.2
             if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
-                throwError({}, Messages.StrictLHSPostfix);
+                throwErrorTolerant({}, Messages.StrictLHSPostfix);
             }
 
             if (!isLeftHandSide(expr)) {
@@ -6106,12 +6148,17 @@ parseStatement: true, parseSourceElement: true */
     function parseUnaryExpression() {
         var token, expr;
 
+        token = lookahead();
+        if (token.type !== Token.Punctuator && token.type !== Token.Keyword) {
+            return parsePostfixExpression();
+        }
+
         if (match('++') || match('--')) {
             token = lex();
             expr = parseUnaryExpression();
             // 11.4.4, 11.4.5
             if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
-                throwError({}, Messages.StrictLHSPrefix);
+                throwErrorTolerant({}, Messages.StrictLHSPrefix);
             }
 
             if (!isLeftHandSide(expr)) {
@@ -6131,7 +6178,8 @@ parseStatement: true, parseSourceElement: true */
             expr = {
                 type: Syntax.UnaryExpression,
                 operator: lex().value,
-                argument: parseUnaryExpression()
+                argument: parseUnaryExpression(),
+                prefix: true
             };
             return expr;
         }
@@ -6140,7 +6188,8 @@ parseStatement: true, parseSourceElement: true */
             expr = {
                 type: Syntax.UnaryExpression,
                 operator: lex().value,
-                argument: parseUnaryExpression()
+                argument: parseUnaryExpression(),
+                prefix: true
             };
             if (strict && expr.operator === 'delete' && expr.argument.type === Syntax.Identifier) {
                 throwErrorTolerant({}, Messages.StrictDelete);
@@ -6354,8 +6403,9 @@ parseStatement: true, parseSourceElement: true */
     // 11.13 Assignment Operators
 
     function parseAssignmentExpression() {
-        var expr;
+        var token, expr;
 
+        token = lookahead();
         expr = parseConditionalExpression();
 
         if (matchAssign()) {
@@ -6366,7 +6416,7 @@ parseStatement: true, parseSourceElement: true */
 
             // 11.13.1
             if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
-                throwError({}, Messages.StrictLHSAssignment);
+                throwErrorTolerant(token, Messages.StrictLHSAssignment);
             }
 
             expr = {
@@ -6480,13 +6530,13 @@ parseStatement: true, parseSourceElement: true */
     function parseVariableDeclarationList(kind) {
         var list = [];
 
-        while (index < length) {
+        do {
             list.push(parseVariableDeclaration(kind));
             if (!match(',')) {
                 break;
             }
             lex();
-        }
+        } while (index < length);
 
         return list;
     }
@@ -6946,7 +6996,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseSwitchStatement() {
-        var discriminant, cases, oldInSwitch;
+        var discriminant, cases, clause, oldInSwitch, defaultFound;
 
         expectKeyword('switch');
 
@@ -6970,12 +7020,20 @@ parseStatement: true, parseSourceElement: true */
 
         oldInSwitch = state.inSwitch;
         state.inSwitch = true;
+        defaultFound = false;
 
         while (index < length) {
             if (match('}')) {
                 break;
             }
-            cases.push(parseSwitchCase());
+            clause = parseSwitchCase();
+            if (clause.test === null) {
+                if (defaultFound) {
+                    throwError({}, Messages.MultipleDefaultsInSwitch);
+                }
+                defaultFound = true;
+            }
+            cases.push(clause);
         }
 
         state.inSwitch = oldInSwitch;
@@ -7018,19 +7076,21 @@ parseStatement: true, parseSourceElement: true */
         expectKeyword('catch');
 
         expect('(');
-        if (!match(')')) {
-            param = parseExpression();
-            // 12.14.1
-            if (strict && param.type === Syntax.Identifier && isRestrictedWord(param.name)) {
-                throwErrorTolerant({}, Messages.StrictCatchVariable);
-            }
+        if (match(')')) {
+            throwUnexpected(lookahead());
         }
+
+        param = parseVariableIdentifier();
+        // 12.14.1
+        if (strict && isRestrictedWord(param.name)) {
+            throwErrorTolerant({}, Messages.StrictCatchVariable);
+        }
+
         expect(')');
 
         return {
             type: Syntax.CatchClause,
             param: param,
-            guard: null,
             body: parseBlock()
         };
     }
@@ -7058,6 +7118,7 @@ parseStatement: true, parseSourceElement: true */
         return {
             type: Syntax.TryStatement,
             block: block,
+            guardedHandlers: [],
             handlers: handlers,
             finalizer: finalizer
         };
@@ -7187,7 +7248,7 @@ parseStatement: true, parseSourceElement: true */
             if (directive === 'use strict') {
                 strict = true;
                 if (firstRestricted) {
-                    throwError(firstRestricted, Messages.StrictOctalLiteral);
+                    throwErrorTolerant(firstRestricted, Messages.StrictOctalLiteral);
                 }
             } else {
                 if (!firstRestricted && token.octal) {
@@ -7231,14 +7292,14 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function parseFunctionDeclaration() {
-        var id, param, params = [], body, token, firstRestricted, message, previousStrict, paramSet;
+        var id, param, params = [], body, token, stricted, firstRestricted, message, previousStrict, paramSet;
 
         expectKeyword('function');
         token = lookahead();
         id = parseVariableIdentifier();
         if (strict) {
             if (isRestrictedWord(token.value)) {
-                throwError(token, Messages.StrictFunctionName);
+                throwErrorTolerant(token, Messages.StrictFunctionName);
             }
         } else {
             if (isRestrictedWord(token.value)) {
@@ -7259,10 +7320,12 @@ parseStatement: true, parseSourceElement: true */
                 param = parseVariableIdentifier();
                 if (strict) {
                     if (isRestrictedWord(token.value)) {
-                        throwError(token, Messages.StrictParamName);
+                        stricted = token;
+                        message = Messages.StrictParamName;
                     }
                     if (Object.prototype.hasOwnProperty.call(paramSet, token.value)) {
-                        throwError(token, Messages.StrictParamDupe);
+                        stricted = token;
+                        message = Messages.StrictParamDupe;
                     }
                 } else if (!firstRestricted) {
                     if (isRestrictedWord(token.value)) {
@@ -7292,18 +7355,25 @@ parseStatement: true, parseSourceElement: true */
         if (strict && firstRestricted) {
             throwError(firstRestricted, message);
         }
+        if (strict && stricted) {
+            throwErrorTolerant(stricted, message);
+        }
         strict = previousStrict;
 
         return {
             type: Syntax.FunctionDeclaration,
             id: id,
             params: params,
-            body: body
+            defaults: [],
+            body: body,
+            rest: null,
+            generator: false,
+            expression: false
         };
     }
 
     function parseFunctionExpression() {
-        var token, id = null, firstRestricted, message, param, params = [], body, previousStrict, paramSet;
+        var token, id = null, stricted, firstRestricted, message, param, params = [], body, previousStrict, paramSet;
 
         expectKeyword('function');
 
@@ -7312,7 +7382,7 @@ parseStatement: true, parseSourceElement: true */
             id = parseVariableIdentifier();
             if (strict) {
                 if (isRestrictedWord(token.value)) {
-                    throwError(token, Messages.StrictFunctionName);
+                    throwErrorTolerant(token, Messages.StrictFunctionName);
                 }
             } else {
                 if (isRestrictedWord(token.value)) {
@@ -7334,10 +7404,12 @@ parseStatement: true, parseSourceElement: true */
                 param = parseVariableIdentifier();
                 if (strict) {
                     if (isRestrictedWord(token.value)) {
-                        throwError(token, Messages.StrictParamName);
+                        stricted = token;
+                        message = Messages.StrictParamName;
                     }
                     if (Object.prototype.hasOwnProperty.call(paramSet, token.value)) {
-                        throwError(token, Messages.StrictParamDupe);
+                        stricted = token;
+                        message = Messages.StrictParamDupe;
                     }
                 } else if (!firstRestricted) {
                     if (isRestrictedWord(token.value)) {
@@ -7367,13 +7439,20 @@ parseStatement: true, parseSourceElement: true */
         if (strict && firstRestricted) {
             throwError(firstRestricted, message);
         }
+        if (strict && stricted) {
+            throwErrorTolerant(stricted, message);
+        }
         strict = previousStrict;
 
         return {
             type: Syntax.FunctionExpression,
             id: id,
             params: params,
-            body: body
+            defaults: [],
+            body: body,
+            rest: null,
+            generator: false,
+            expression: false
         };
     }
 
@@ -7418,7 +7497,7 @@ parseStatement: true, parseSourceElement: true */
             if (directive === 'use strict') {
                 strict = true;
                 if (firstRestricted) {
-                    throwError(firstRestricted, Messages.StrictOctalLiteral);
+                    throwErrorTolerant(firstRestricted, Messages.StrictOctalLiteral);
                 }
             } else {
                 if (!firstRestricted && token.octal) {
@@ -7450,7 +7529,7 @@ parseStatement: true, parseSourceElement: true */
     // The following functions are needed only when the option to preserve
     // the comments is active.
 
-    function addComment(start, end, type, value) {
+    function addComment(type, value, start, end, loc) {
         assert(typeof start === 'number', 'Comment must have valid position');
 
         // Because the way the actual token is scanned, often the comments
@@ -7464,14 +7543,15 @@ parseStatement: true, parseSourceElement: true */
         }
 
         extra.comments.push({
-            range: [start, end],
             type: type,
-            value: value
+            value: value,
+            range: [start, end],
+            loc: loc
         });
     }
 
     function scanComment() {
-        var comment, ch, start, blockComment, lineComment;
+        var comment, ch, loc, start, blockComment, lineComment;
 
         comment = '';
         blockComment = false;
@@ -7481,20 +7561,28 @@ parseStatement: true, parseSourceElement: true */
             ch = source[index];
 
             if (lineComment) {
-                ch = nextChar();
-                if (index >= length) {
+                ch = source[index++];
+                if (isLineTerminator(ch)) {
+                    loc.end = {
+                        line: lineNumber,
+                        column: index - lineStart - 1
+                    };
                     lineComment = false;
-                    comment += ch;
-                    addComment(start, index, 'Line', comment);
-                } else if (isLineTerminator(ch)) {
-                    lineComment = false;
-                    addComment(start, index, 'Line', comment);
+                    addComment('Line', comment, start, index - 1, loc);
                     if (ch === '\r' && source[index] === '\n') {
                         ++index;
                     }
                     ++lineNumber;
                     lineStart = index;
                     comment = '';
+                } else if (index >= length) {
+                    lineComment = false;
+                    comment += ch;
+                    loc.end = {
+                        line: lineNumber,
+                        column: length - lineStart
+                    };
+                    addComment('Line', comment, start, length, loc);
                 } else {
                     comment += ch;
                 }
@@ -7513,7 +7601,7 @@ parseStatement: true, parseSourceElement: true */
                         throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
                     }
                 } else {
-                    ch = nextChar();
+                    ch = source[index++];
                     if (index >= length) {
                         throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
                     }
@@ -7524,7 +7612,11 @@ parseStatement: true, parseSourceElement: true */
                             comment = comment.substr(0, comment.length - 1);
                             blockComment = false;
                             ++index;
-                            addComment(start, index, 'Block', comment);
+                            loc.end = {
+                                line: lineNumber,
+                                column: index - lineStart
+                            };
+                            addComment('Block', comment, start, index, loc);
                             comment = '';
                         }
                     }
@@ -7532,13 +7624,33 @@ parseStatement: true, parseSourceElement: true */
             } else if (ch === '/') {
                 ch = source[index + 1];
                 if (ch === '/') {
+                    loc = {
+                        start: {
+                            line: lineNumber,
+                            column: index - lineStart
+                        }
+                    };
                     start = index;
                     index += 2;
                     lineComment = true;
+                    if (index >= length) {
+                        loc.end = {
+                            line: lineNumber,
+                            column: index - lineStart
+                        };
+                        lineComment = false;
+                        addComment('Line', comment, start, index, loc);
+                    }
                 } else if (ch === '*') {
                     start = index;
                     index += 2;
                     blockComment = true;
+                    loc = {
+                        start: {
+                            line: lineNumber,
+                            column: index - lineStart - 2
+                        }
+                    };
                     if (index >= length) {
                         throwError({}, Messages.UnexpectedToken, 'ILLEGAL');
                     }
@@ -7560,10 +7672,44 @@ parseStatement: true, parseSourceElement: true */
         }
     }
 
+    function filterCommentLocation() {
+        var i, entry, comment, comments = [];
+
+        for (i = 0; i < extra.comments.length; ++i) {
+            entry = extra.comments[i];
+            comment = {
+                type: entry.type,
+                value: entry.value
+            };
+            if (extra.range) {
+                comment.range = entry.range;
+            }
+            if (extra.loc) {
+                comment.loc = entry.loc;
+            }
+            comments.push(comment);
+        }
+
+        extra.comments = comments;
+    }
+
     function collectToken() {
-        var token = extra.advance(),
-            range,
-            value;
+        var start, loc, token, range, value;
+
+        skipComment();
+        start = index;
+        loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart
+            }
+        };
+
+        token = extra.advance();
+        loc.end = {
+            line: lineNumber,
+            column: index - lineStart
+        };
 
         if (token.type !== Token.EOF) {
             range = [token.range[0], token.range[1]];
@@ -7571,7 +7717,8 @@ parseStatement: true, parseSourceElement: true */
             extra.tokens.push({
                 type: TokenName[token.type],
                 value: value,
-                range: range
+                range: range,
+                loc: loc
             });
         }
 
@@ -7579,12 +7726,23 @@ parseStatement: true, parseSourceElement: true */
     }
 
     function collectRegex() {
-        var pos, regex, token;
+        var pos, loc, regex, token;
 
         skipComment();
 
         pos = index;
+        loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart
+            }
+        };
+
         regex = extra.scanRegExp();
+        loc.end = {
+            line: lineNumber,
+            column: index - lineStart
+        };
 
         // Pop the previous token, which is likely '/' or '/='
         if (extra.tokens.length > 0) {
@@ -7599,10 +7757,32 @@ parseStatement: true, parseSourceElement: true */
         extra.tokens.push({
             type: 'RegularExpression',
             value: regex.literal,
-            range: [pos, index]
+            range: [pos, index],
+            loc: loc
         });
 
         return regex;
+    }
+
+    function filterTokenLocation() {
+        var i, entry, token, tokens = [];
+
+        for (i = 0; i < extra.tokens.length; ++i) {
+            entry = extra.tokens[i];
+            token = {
+                type: entry.type,
+                value: entry.value
+            };
+            if (extra.range) {
+                token.range = entry.range;
+            }
+            if (extra.loc) {
+                token.loc = entry.loc;
+            }
+            tokens.push(token);
+        }
+
+        extra.tokens = tokens;
     }
 
     function createLiteral(token) {
@@ -7620,6 +7800,174 @@ parseStatement: true, parseSourceElement: true */
         };
     }
 
+    function createLocationMarker() {
+        var marker = {};
+
+        marker.range = [index, index];
+        marker.loc = {
+            start: {
+                line: lineNumber,
+                column: index - lineStart
+            },
+            end: {
+                line: lineNumber,
+                column: index - lineStart
+            }
+        };
+
+        marker.end = function () {
+            this.range[1] = index;
+            this.loc.end.line = lineNumber;
+            this.loc.end.column = index - lineStart;
+        };
+
+        marker.applyGroup = function (node) {
+            if (extra.range) {
+                node.groupRange = [this.range[0], this.range[1]];
+            }
+            if (extra.loc) {
+                node.groupLoc = {
+                    start: {
+                        line: this.loc.start.line,
+                        column: this.loc.start.column
+                    },
+                    end: {
+                        line: this.loc.end.line,
+                        column: this.loc.end.column
+                    }
+                };
+            }
+        };
+
+        marker.apply = function (node) {
+            if (extra.range) {
+                node.range = [this.range[0], this.range[1]];
+            }
+            if (extra.loc) {
+                node.loc = {
+                    start: {
+                        line: this.loc.start.line,
+                        column: this.loc.start.column
+                    },
+                    end: {
+                        line: this.loc.end.line,
+                        column: this.loc.end.column
+                    }
+                };
+            }
+        };
+
+        return marker;
+    }
+
+    function trackGroupExpression() {
+        var marker, expr;
+
+        skipComment();
+        marker = createLocationMarker();
+        expect('(');
+
+        expr = parseExpression();
+
+        expect(')');
+
+        marker.end();
+        marker.applyGroup(expr);
+
+        return expr;
+    }
+
+    function trackLeftHandSideExpression() {
+        var marker, expr;
+
+        skipComment();
+        marker = createLocationMarker();
+
+        expr = matchKeyword('new') ? parseNewExpression() : parsePrimaryExpression();
+
+        while (match('.') || match('[')) {
+            if (match('[')) {
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: true,
+                    object: expr,
+                    property: parseComputedMember()
+                };
+                marker.end();
+                marker.apply(expr);
+            } else {
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: false,
+                    object: expr,
+                    property: parseNonComputedMember()
+                };
+                marker.end();
+                marker.apply(expr);
+            }
+        }
+
+        return expr;
+    }
+
+    function trackLeftHandSideExpressionAllowCall() {
+        var marker, expr;
+
+        skipComment();
+        marker = createLocationMarker();
+
+        expr = matchKeyword('new') ? parseNewExpression() : parsePrimaryExpression();
+
+        while (match('.') || match('[') || match('(')) {
+            if (match('(')) {
+                expr = {
+                    type: Syntax.CallExpression,
+                    callee: expr,
+                    'arguments': parseArguments()
+                };
+                marker.end();
+                marker.apply(expr);
+            } else if (match('[')) {
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: true,
+                    object: expr,
+                    property: parseComputedMember()
+                };
+                marker.end();
+                marker.apply(expr);
+            } else {
+                expr = {
+                    type: Syntax.MemberExpression,
+                    computed: false,
+                    object: expr,
+                    property: parseNonComputedMember()
+                };
+                marker.end();
+                marker.apply(expr);
+            }
+        }
+
+        return expr;
+    }
+
+    function filterGroup(node) {
+        var n, i, entry;
+
+        n = (Object.prototype.toString.apply(node) === '[object Array]') ? [] : {};
+        for (i in node) {
+            if (node.hasOwnProperty(i) && i !== 'groupRange' && i !== 'groupLoc') {
+                entry = node[i];
+                if (entry === null || typeof entry !== 'object' || entry instanceof RegExp) {
+                    n[i] = entry;
+                } else {
+                    n[i] = filterGroup(entry);
+                }
+            }
+        }
+        return n;
+    }
+
     function wrapTrackingFunction(range, loc) {
 
         return function (parseFunction) {
@@ -7630,6 +7978,8 @@ parseStatement: true, parseSourceElement: true */
             }
 
             function visit(node) {
+                var start, end;
+
                 if (isBinary(node.left)) {
                     visit(node.left);
                 }
@@ -7637,70 +7987,57 @@ parseStatement: true, parseSourceElement: true */
                     visit(node.right);
                 }
 
-                if (range && typeof node.range === 'undefined') {
-                    node.range = [node.left.range[0], node.right.range[1]];
+                if (range) {
+                    if (node.left.groupRange || node.right.groupRange) {
+                        start = node.left.groupRange ? node.left.groupRange[0] : node.left.range[0];
+                        end = node.right.groupRange ? node.right.groupRange[1] : node.right.range[1];
+                        node.range = [start, end];
+                    } else if (typeof node.range === 'undefined') {
+                        start = node.left.range[0];
+                        end = node.right.range[1];
+                        node.range = [start, end];
+                    }
                 }
-                if (loc && typeof node.loc === 'undefined') {
-                    node.loc = {
-                        start: node.left.loc.start,
-                        end: node.right.loc.end
-                    };
+                if (loc) {
+                    if (node.left.groupLoc || node.right.groupLoc) {
+                        start = node.left.groupLoc ? node.left.groupLoc.start : node.left.loc.start;
+                        end = node.right.groupLoc ? node.right.groupLoc.end : node.right.loc.end;
+                        node.loc = {
+                            start: start,
+                            end: end
+                        };
+                    } else if (typeof node.loc === 'undefined') {
+                        node.loc = {
+                            start: node.left.loc.start,
+                            end: node.right.loc.end
+                        };
+                    }
                 }
             }
 
             return function () {
-                var node, rangeInfo, locInfo;
+                var marker, node;
 
                 skipComment();
-                rangeInfo = [index, 0];
-                locInfo = {
-                    start: {
-                        line: lineNumber,
-                        column: index - lineStart
-                    }
-                };
 
+                marker = createLocationMarker();
                 node = parseFunction.apply(null, arguments);
-                if (typeof node !== 'undefined') {
+                marker.end();
 
-                    if (range) {
-                        rangeInfo[1] = index;
-                        node.range = rangeInfo;
-                    }
-
-                    if (loc) {
-                        locInfo.end = {
-                            line: lineNumber,
-                            column: index - lineStart
-                        };
-                        node.loc = locInfo;
-                    }
-
-                    if (isBinary(node)) {
-                        visit(node);
-                    }
-
-                    if (node.type === Syntax.MemberExpression) {
-                        if (typeof node.object.range !== 'undefined') {
-                            node.range[0] = node.object.range[0];
-                        }
-                        if (typeof node.object.loc !== 'undefined') {
-                            node.loc.start = node.object.loc.start;
-                        }
-                    }
-
-                    if (node.type === Syntax.CallExpression) {
-                        if (typeof node.callee.range !== 'undefined') {
-                            node.range[0] = node.callee.range[0];
-                        }
-                        if (typeof node.callee.loc !== 'undefined') {
-                            node.loc.start = node.callee.loc.start;
-                        }
-                    }
-                    return node;
+                if (range && typeof node.range === 'undefined') {
+                    marker.apply(node);
                 }
-            };
 
+                if (loc && typeof node.loc === 'undefined') {
+                    marker.apply(node);
+                }
+
+                if (isBinary(node)) {
+                    visit(node);
+                }
+
+                return node;
+            };
         };
     }
 
@@ -7720,6 +8057,13 @@ parseStatement: true, parseSourceElement: true */
 
         if (extra.range || extra.loc) {
 
+            extra.parseGroupExpression = parseGroupExpression;
+            extra.parseLeftHandSideExpression = parseLeftHandSideExpression;
+            extra.parseLeftHandSideExpressionAllowCall = parseLeftHandSideExpressionAllowCall;
+            parseGroupExpression = trackGroupExpression;
+            parseLeftHandSideExpression = trackLeftHandSideExpression;
+            parseLeftHandSideExpressionAllowCall = trackLeftHandSideExpressionAllowCall;
+
             wrapTracking = wrapTrackingFunction(extra.range, extra.loc);
 
             extra.parseAdditiveExpression = parseAdditiveExpression;
@@ -7729,7 +8073,6 @@ parseStatement: true, parseSourceElement: true */
             extra.parseBitwiseXORExpression = parseBitwiseXORExpression;
             extra.parseBlock = parseBlock;
             extra.parseFunctionSourceElements = parseFunctionSourceElements;
-            extra.parseCallMember = parseCallMember;
             extra.parseCatchClause = parseCatchClause;
             extra.parseComputedMember = parseComputedMember;
             extra.parseConditionalExpression = parseConditionalExpression;
@@ -7743,7 +8086,6 @@ parseStatement: true, parseSourceElement: true */
             extra.parseLogicalORExpression = parseLogicalORExpression;
             extra.parseMultiplicativeExpression = parseMultiplicativeExpression;
             extra.parseNewExpression = parseNewExpression;
-            extra.parseNonComputedMember = parseNonComputedMember;
             extra.parseNonComputedProperty = parseNonComputedProperty;
             extra.parseObjectProperty = parseObjectProperty;
             extra.parseObjectPropertyKey = parseObjectPropertyKey;
@@ -7766,7 +8108,6 @@ parseStatement: true, parseSourceElement: true */
             parseBitwiseXORExpression = wrapTracking(extra.parseBitwiseXORExpression);
             parseBlock = wrapTracking(extra.parseBlock);
             parseFunctionSourceElements = wrapTracking(extra.parseFunctionSourceElements);
-            parseCallMember = wrapTracking(extra.parseCallMember);
             parseCatchClause = wrapTracking(extra.parseCatchClause);
             parseComputedMember = wrapTracking(extra.parseComputedMember);
             parseConditionalExpression = wrapTracking(extra.parseConditionalExpression);
@@ -7776,11 +8117,11 @@ parseStatement: true, parseSourceElement: true */
             parseForVariableDeclaration = wrapTracking(extra.parseForVariableDeclaration);
             parseFunctionDeclaration = wrapTracking(extra.parseFunctionDeclaration);
             parseFunctionExpression = wrapTracking(extra.parseFunctionExpression);
+            parseLeftHandSideExpression = wrapTracking(parseLeftHandSideExpression);
             parseLogicalANDExpression = wrapTracking(extra.parseLogicalANDExpression);
             parseLogicalORExpression = wrapTracking(extra.parseLogicalORExpression);
             parseMultiplicativeExpression = wrapTracking(extra.parseMultiplicativeExpression);
             parseNewExpression = wrapTracking(extra.parseNewExpression);
-            parseNonComputedMember = wrapTracking(extra.parseNonComputedMember);
             parseNonComputedProperty = wrapTracking(extra.parseNonComputedProperty);
             parseObjectProperty = wrapTracking(extra.parseObjectProperty);
             parseObjectPropertyKey = wrapTracking(extra.parseObjectPropertyKey);
@@ -7823,7 +8164,6 @@ parseStatement: true, parseSourceElement: true */
             parseBitwiseXORExpression = extra.parseBitwiseXORExpression;
             parseBlock = extra.parseBlock;
             parseFunctionSourceElements = extra.parseFunctionSourceElements;
-            parseCallMember = extra.parseCallMember;
             parseCatchClause = extra.parseCatchClause;
             parseComputedMember = extra.parseComputedMember;
             parseConditionalExpression = extra.parseConditionalExpression;
@@ -7833,11 +8173,13 @@ parseStatement: true, parseSourceElement: true */
             parseForVariableDeclaration = extra.parseForVariableDeclaration;
             parseFunctionDeclaration = extra.parseFunctionDeclaration;
             parseFunctionExpression = extra.parseFunctionExpression;
+            parseGroupExpression = extra.parseGroupExpression;
+            parseLeftHandSideExpression = extra.parseLeftHandSideExpression;
+            parseLeftHandSideExpressionAllowCall = extra.parseLeftHandSideExpressionAllowCall;
             parseLogicalANDExpression = extra.parseLogicalANDExpression;
             parseLogicalORExpression = extra.parseLogicalORExpression;
             parseMultiplicativeExpression = extra.parseMultiplicativeExpression;
             parseNewExpression = extra.parseNewExpression;
-            parseNonComputedMember = extra.parseNonComputedMember;
             parseNonComputedProperty = extra.parseNonComputedProperty;
             parseObjectProperty = extra.parseObjectProperty;
             parseObjectPropertyKey = extra.parseObjectPropertyKey;
@@ -7887,7 +8229,6 @@ parseStatement: true, parseSourceElement: true */
         state = {
             allowIn: true,
             labelSet: {},
-            lastParenthesized: null,
             inFunctionBody: false,
             inIteration: false,
             inSwitch: false
@@ -7929,13 +8270,18 @@ parseStatement: true, parseSourceElement: true */
         try {
             program = parseProgram();
             if (typeof extra.comments !== 'undefined') {
+                filterCommentLocation();
                 program.comments = extra.comments;
             }
             if (typeof extra.tokens !== 'undefined') {
+                filterTokenLocation();
                 program.tokens = extra.tokens;
             }
             if (typeof extra.errors !== 'undefined') {
                 program.errors = extra.errors;
+            }
+            if (extra.range || extra.loc) {
+                program.body = filterGroup(program.body);
             }
         } catch (e) {
             throw e;
@@ -7948,7 +8294,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     // Sync with package.json.
-    exports.version = '1.0.0-dev';
+    exports.version = '1.0.3';
 
     exports.parse = parse;
 
@@ -7973,10 +8319,30 @@ parseStatement: true, parseSourceElement: true */
         return types;
     }());
 
-}(typeof exports === 'undefined' ? (esprima = {}) : exports));
+}));
 /* vim: set sw=4 ts=4 et tw=80 : */
+/**
+ * @license Copyright (c) 2012, The Dojo Foundation All Rights Reserved.
+ * Available via the MIT or new BSD license.
+ * see: http://github.com/jrburke/requirejs for details
+ */
 
-});define('uglifyjs/consolidator', ["require", "exports", "module", "./parse-js", "./process"], function(require, exports, module) {
+/*global define, Reflect */
+
+/*
+ * xpcshell has a smaller stack on linux and windows (1MB vs 9MB on mac),
+ * and the recursive nature of esprima can cause it to overflow pretty
+ * quickly. So favor it built in Reflect parser:
+ * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
+ */
+define('esprimaAdapter', ['./esprima', 'env'], function (esprima, env) {
+    if (env.get() === 'xpconnect' && typeof Reflect !== 'undefined') {
+        return Reflect;
+    } else {
+        return esprima;
+    }
+});
+define('uglifyjs/consolidator', ["require", "exports", "module", "./parse-js", "./process"], function(require, exports, module) {
 /**
  * @preserve Copyright 2012 Robert Gust-Bardon <http://robert.gust-bardon.org/>.
  * All rights reserved.
@@ -13438,9 +13804,9 @@ define('source-map/source-map-consumer', function (require, exports, module) {
     };
 
   /**
-   * Returns the original source content. The only argument is
-   * the url of the original source file. Returns null if no
-   * original source content is availible.
+   * Returns the original source content. The only argument is the url of the
+   * original source file. Returns null if no original source content is
+   * availible.
    */
   SourceMapConsumer.prototype.sourceContentFor =
     function SourceMapConsumer_sourceContentFor(aSource) {
@@ -13449,15 +13815,30 @@ define('source-map/source-map-consumer', function (require, exports, module) {
       }
 
       if (this.sourceRoot) {
-        // Try to remove the sourceRoot
-        var relativeUrl = util.relative(this.sourceRoot, aSource);
-        if (this._sources.has(relativeUrl)) {
-          return this.sourcesContent[this._sources.indexOf(relativeUrl)];
-        }
+        aSource = util.relative(this.sourceRoot, aSource);
       }
 
       if (this._sources.has(aSource)) {
         return this.sourcesContent[this._sources.indexOf(aSource)];
+      }
+
+      var url;
+      if (this.sourceRoot
+          && (url = util.urlParse(this.sourceRoot))) {
+        // XXX: file:// URIs and absolute paths lead to unexpected behavior for
+        // many users. We can help them out when they expect file:// URIs to
+        // behave like it would if they were running a local HTTP server. See
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=885597.
+        var fileUriAbsPath = aSource.replace(/^file:\/\//, "");
+        if (url.scheme == "file"
+            && this._sources.has(fileUriAbsPath)) {
+          return this.sourcesContent[this._sources.indexOf(fileUriAbsPath)]
+        }
+
+        if ((!url.path || url.path == "/")
+            && this._sources.has("/" + aSource)) {
+          return this.sourcesContent[this._sources.indexOf("/" + aSource)];
+        }
       }
 
       throw new Error('"' + aSource + '" is not in the SourceMap.');
@@ -13848,7 +14229,7 @@ define('source-map/source-map-generator', function (require, exports, module) {
       var result = '';
       var mapping;
 
-      // The mappings must be guarenteed to be in sorted order before we start
+      // The mappings must be guaranteed to be in sorted order before we start
       // serializing them or else the generated line numbers (which are defined
       // via the ';' separators) will be all messed up. Note: it might be more
       // performant to maintain the sorting as we insert them, rather than as we
@@ -14339,6 +14720,25 @@ define('source-map/util', function (require, exports, module) {
       path: match[7]
     };
   }
+  exports.urlParse = urlParse;
+
+  function urlGenerate(aParsedUrl) {
+    var url = aParsedUrl.scheme + "://";
+    if (aParsedUrl.auth) {
+      url += aParsedUrl.auth + "@"
+    }
+    if (aParsedUrl.host) {
+      url += aParsedUrl.host;
+    }
+    if (aParsedUrl.port) {
+      url += ":" + aParsedUrl.port
+    }
+    if (aParsedUrl.path) {
+      url += aParsedUrl.path;
+    }
+    return url;
+  }
+  exports.urlGenerate = urlGenerate;
 
   function join(aRoot, aPath) {
     var url;
@@ -14348,7 +14748,8 @@ define('source-map/util', function (require, exports, module) {
     }
 
     if (aPath.charAt(0) === '/' && (url = urlParse(aRoot))) {
-      return aRoot.replace(url.path, '') + aPath;
+      url.path = aPath;
+      return urlGenerate(url);
     }
 
     return aRoot.replace(/\/$/, '') + '/' + aPath;
@@ -14376,6 +14777,12 @@ define('source-map/util', function (require, exports, module) {
 
   function relative(aRoot, aPath) {
     aRoot = aRoot.replace(/\/$/, '');
+
+    var url = urlParse(aRoot);
+    if (aPath.charAt(0) == "/" && url && url.path == "/") {
+      return aPath.slice(1);
+    }
+
     return aPath.indexOf(aRoot + '/') === 0
       ? aPath.substr(aRoot.length + 1)
       : aPath;
@@ -14581,6 +14988,10 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             compareTo(words);
         }
         return new Function("str", f);
+    }
+    function all(array, predicate) {
+        for (var i = array.length; --i >= 0; ) if (!predicate(array[i])) return false;
+        return true;
     }
     function Dictionary() {
         this._values = Object.create(null);
@@ -15453,7 +15864,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
     var RE_OCT_NUMBER = /^0[0-7]+$/;
     var RE_DEC_NUMBER = /^\d*\.?\d*(?:e[+-]?\d*(?:\d\.?|\.?\d)\d*)?$/i;
     var OPERATORS = makePredicate([ "in", "instanceof", "typeof", "new", "void", "delete", "++", "--", "+", "-", "!", "~", "&", "|", "^", "*", "/", "%", ">>", "<<", ">>>", "<", ">", "<=", ">=", "==", "===", "!=", "!==", "?", "=", "+=", "-=", "/=", "*=", "%=", ">>=", "<<=", ">>>=", "|=", "^=", "&=", "&&", "||" ]);
-    var WHITESPACE_CHARS = makePredicate(characters("  \n\r	\f​᠎             　"));
+    var WHITESPACE_CHARS = makePredicate(characters(" \u00a0\n\r\t\f\u000b\u200b\u180e\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000"));
     var PUNC_BEFORE_EXPRESSION = makePredicate(characters("[{(,.;:"));
     var PUNC_CHARS = makePredicate(characters("[]{}(),;:"));
     var REGEXP_MODIFIERS = makePredicate(characters("gmsiy"));
@@ -15491,6 +15902,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
     function is_identifier_string(str) {
         var i = str.length;
         if (i == 0) return false;
+        if (is_digit(str.charCodeAt(0))) return false;
         while (--i >= 0) {
             if (!is_identifier_char(str.charAt(i))) return false;
         }
@@ -15851,7 +16263,8 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
         options = defaults(options, {
             strict: false,
             filename: null,
-            toplevel: null
+            toplevel: null,
+            expression: false
         });
         var S = {
             input: typeof $TEXT == "string" ? tokenizer($TEXT, options.filename) : $TEXT,
@@ -15985,7 +16398,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                   case "do":
                     return new AST_Do({
                         body: in_loop(statement),
-                        condition: (expect_token("keyword", "while"), tmp = parenthesised(), semicolon(), 
+                        condition: (expect_token("keyword", "while"), tmp = parenthesised(), semicolon(),
                         tmp)
                     });
 
@@ -16007,7 +16420,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                   case "return":
                     if (S.in_function == 0) croak("'return' outside of function");
                     return new AST_Return({
-                        value: is("punc", ";") ? (next(), null) : can_insert_semicolon() ? null : (tmp = expression(true), 
+                        value: is("punc", ";") ? (next(), null) : can_insert_semicolon() ? null : (tmp = expression(true),
                         semicolon(), tmp)
                     });
 
@@ -16615,6 +17028,9 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             --S.in_loop;
             return ret;
         }
+        if (options.expression) {
+            return expression(true);
+        }
         return function() {
             var start = S.token;
             var body = [];
@@ -16886,6 +17302,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                     } else {
                         g = new SymbolDef(self, globals.size(), node);
                         g.undeclared = true;
+                        g.global = true;
                         globals.set(name, g);
                     }
                     node.thedef = g;
@@ -17185,7 +17602,8 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             bracketize: false,
             semicolons: true,
             comments: false,
-            preserve_line: false
+            preserve_line: false,
+            negate_iife: !(options && options.beautify)
         }, true);
         var indentation = 0;
         var current_col = 0;
@@ -17472,7 +17890,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             var self = this, generator = self._codegen;
             stream.push_node(self);
             var needs_parens = self.needs_parens(stream);
-            var fc = self instanceof AST_Function && !stream.option("beautify");
+            var fc = self instanceof AST_Function && stream.option("negate_iife");
             if (force_parens || needs_parens && !fc) {
                 stream.with_parens(function() {
                     self.add_comments(stream);
@@ -18086,7 +18504,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             var a = output.stack(), i = a.length, node = a[--i], p = a[--i];
             while (i > 0) {
                 if (p instanceof AST_Statement && p.body === node) return true;
-                if (p instanceof AST_Seq && p.car === node || p instanceof AST_Call && p.expression === node || p instanceof AST_Dot && p.expression === node || p instanceof AST_Sub && p.expression === node || p instanceof AST_Conditional && p.condition === node || p instanceof AST_Binary && p.left === node || p instanceof AST_UnaryPostfix && p.expression === node) {
+                if (p instanceof AST_Seq && p.car === node || p instanceof AST_Call && p.expression === node && !(p instanceof AST_New) || p instanceof AST_Dot && p.expression === node || p instanceof AST_Sub && p.expression === node || p instanceof AST_Conditional && p.condition === node || p instanceof AST_Binary && p.left === node || p instanceof AST_UnaryPostfix && p.expression === node) {
                     node = p;
                     p = a[--i];
                 } else {
@@ -19613,6 +20031,45 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                                 value: ""
                             })
                         });
+
+                      case "Function":
+                        if (all(self.args, function(x) {
+                            return x instanceof AST_String;
+                        })) {
+                            try {
+                                var code = "(function(" + self.args.slice(0, -1).map(function(arg) {
+                                    return arg.value;
+                                }).join(",") + "){" + self.args[self.args.length - 1].value + "})()";
+                                var ast = parse(code);
+                                ast.figure_out_scope();
+                                var comp = new Compressor(compressor.options);
+                                ast = ast.transform(comp);
+                                ast.figure_out_scope();
+                                ast.mangle_names();
+                                var fun = ast.body[0].body.expression;
+                                var args = fun.argnames.map(function(arg, i) {
+                                    return make_node(AST_String, self.args[i], {
+                                        value: arg.print_to_string()
+                                    });
+                                });
+                                var code = OutputStream();
+                                AST_BlockStatement.prototype._codegen.call(fun, fun, code);
+                                code = code.toString().replace(/^\{|\}$/g, "");
+                                args.push(make_node(AST_String, self.args[self.args.length - 1], {
+                                    value: code
+                                }));
+                                self.args = args;
+                                return self;
+                            } catch (ex) {
+                                if (ex instanceof JS_Parse_Error) {
+                                    compressor.warn("Error parsing code passed to new Function [{file}:{line},{col}]", self.args[self.args.length - 1].start);
+                                    compressor.warn(ex.toString());
+                                } else {
+                                    console.log(ex);
+                                }
+                            }
+                        }
+                        break;
                     }
                 } else if (exp instanceof AST_Dot && exp.property == "toString" && self.args.length == 0) {
                     return make_node(AST_Binary, self, {
@@ -20216,6 +20673,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
     exports["set_difference"] = set_difference;
     exports["set_intersection"] = set_intersection;
     exports["makePredicate"] = makePredicate;
+    exports["all"] = all;
     exports["Dictionary"] = Dictionary;
     exports["DEFNODE"] = DEFNODE;
     exports["AST_Token"] = AST_Token;
@@ -20484,7 +20942,7 @@ exports.describe_ast = function() {
 /*jslint plusplus: true */
 /*global define: false */
 
-define('parse', ['./esprima', 'lang'], function (esprima, lang) {
+define('parse', ['./esprimaAdapter', 'lang'], function (esprima, lang) {
     'use strict';
 
     function arrayToString(ary) {
@@ -20526,6 +20984,28 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
         }
     }
 
+    //Like traverse, but visitor returning false just
+    //stops that subtree analysis, not the rest of tree
+    //visiting.
+    function traverseBroad(object, visitor) {
+        var key, child;
+
+        if (!object) {
+            return;
+        }
+
+        if (visitor.call(null, object) === false) {
+            return false;
+        }
+        for (key in object) {
+            if (object.hasOwnProperty(key)) {
+                child = object[key];
+                if (typeof child === 'object' && child !== null) {
+                    traverse(child, visitor);
+                }
+            }
+        }
+    }
 
     /**
      * Pulls out dependencies from an array literal with just string members.
@@ -20641,6 +21121,9 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
         return result || null;
     }
 
+    parse.traverse = traverse;
+    parse.traverseBroad = traverseBroad;
+
     /**
      * Handles parsing a file recursively for require calls.
      * @param {Array} parentNode the AST node to start with.
@@ -20713,12 +21196,14 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
      * will be added to a modified define() call that lists the dependencies
      * on the outside of the function.
      * @param {String} fileName
-     * @param {String} fileContents
+     * @param {String|Object} fileContents: a string of contents, or an already
+     * parsed AST tree.
      * @returns {Array} an array of module names that are dependencies. Always
      * returns an array, but could be of length zero.
      */
     parse.getAnonDeps = function (fileName, fileContents) {
-        var astRoot = esprima.parse(fileContents),
+        var astRoot = typeof fileContents === 'string' ?
+                      esprima.parse(fileContents) : fileContents,
             defFunc = this.findAnonDefineFactory(astRoot);
 
         return parse.getAnonDepsFromNode(defFunc);
@@ -20750,6 +21235,12 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
         return deps;
     };
 
+    parse.isDefineNodeWithArgs = function (node) {
+        return node && node.type === 'CallExpression' &&
+               node.callee && node.callee.type === 'Identifier' &&
+               node.callee.name === 'define' && node[argPropName];
+    };
+
     /**
      * Finds the function in define(function (require, exports, module){});
      * @param {Array} node
@@ -20761,9 +21252,7 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
         traverse(node, function (node) {
             var arg0, arg1;
 
-            if (node && node.type === 'CallExpression' &&
-                    node.callee && node.callee.type === 'Identifier' &&
-                    node.callee.name === 'define' && node[argPropName]) {
+            if (parse.isDefineNodeWithArgs(node)) {
 
                 //Just the factory function passed to define
                 arg0 = node[argPropName][0];
@@ -20801,10 +21290,10 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
      */
     parse.findConfig = function (fileContents) {
         /*jslint evil: true */
-        var jsConfig, foundRange, foundConfig, quote, quoteMatch,
+        var jsConfig, foundConfig, stringData, foundRange, quote, quoteMatch,
             quoteRegExp = /(:\s|\[\s*)(['"])/,
             astRoot = esprima.parse(fileContents, {
-                range: true
+                loc: true
             });
 
         traverse(astRoot, function (node) {
@@ -20819,21 +21308,24 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
                 arg = node[argPropName] && node[argPropName][0];
 
                 if (arg && arg.type === 'ObjectExpression') {
-                    jsConfig = parse.nodeToString(fileContents, arg);
-                    foundRange = arg.range;
+                    stringData = parse.nodeToString(fileContents, arg);
+                    jsConfig = stringData.value;
+                    foundRange = stringData.range;
                     return false;
                 }
             } else {
                 arg = parse.getRequireObjectLiteral(node);
                 if (arg) {
-                    jsConfig = parse.nodeToString(fileContents, arg);
-                    foundRange = arg.range;
+                    stringData = parse.nodeToString(fileContents, arg);
+                    jsConfig = stringData.value;
+                    foundRange = stringData.range;
                     return false;
                 }
             }
         });
 
         if (jsConfig) {
+            // Eval the config
             quoteMatch = quoteRegExp.exec(jsConfig);
             quote = (quoteMatch && quoteMatch[2]) || '"';
             foundConfig = eval('(' + jsConfig + ')');
@@ -20868,26 +21360,39 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
      * @return {String} the fileContents with the namespace applied
      */
     parse.renameNamespace = function (fileContents, ns) {
-        var ranges = [],
+        var lines,
+            locs = [],
             astRoot = esprima.parse(fileContents, {
-                range: true
+                loc: true
             });
 
         parse.recurse(astRoot, function (callName, config, name, deps, node) {
-            ranges.push(node.range);
+            locs.push(node.loc);
             //Do not recurse into define functions, they should be using
             //local defines.
             return callName !== 'define';
         }, {});
 
-        //Go backwards through the found ranges, adding in the namespace name
-        //in front.
-        ranges.reverse();
-        ranges.forEach(function (range) {
-            fileContents = fileContents.substring(0, range[0]) +
-                           ns + '.' +
-                           fileContents.substring(range[0]);
-        });
+        if (locs.length) {
+            lines = fileContents.split('\n');
+
+            //Go backwards through the found locs, adding in the namespace name
+            //in front.
+            locs.reverse();
+            locs.forEach(function (loc) {
+                var startIndex = loc.start.column,
+                //start.line is 1-based, not 0 based.
+                lineIndex = loc.start.line - 1,
+                line = lines[lineIndex];
+
+                lines[lineIndex] = line.substring(0, startIndex) +
+                                   ns + '.' +
+                                   line.substring(startIndex,
+                                                      line.length);
+            });
+
+            fileContents = lines.join('\n');
+        }
 
         return fileContents;
     };
@@ -20950,6 +21455,15 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
             node.left && node.left.type === 'MemberExpression' &&
             node.left.object && node.left.object.name === 'define' &&
             node.left.property && node.left.property.name === 'amd';
+    };
+
+    //define.amd reference, as in: if (define.amd)
+    parse.refsDefineAmd = function (node) {
+        return node && node.type === 'MemberExpression' &&
+        node.object && node.object.name === 'define' &&
+        node.object.type === 'Identifier' &&
+        node.property && node.property.name === 'amd' &&
+        node.property.type === 'Identifier';
     };
 
     //require(), requirejs(), require.config() and requirejs.config()
@@ -21055,7 +21569,7 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
 
         traverse(esprima.parse(fileContents), function (node) {
             var type,
-                exp = node.expression;
+                exp = node.expression || node.init;
 
             if (node.type === 'Identifier' &&
                     (node.name === '__dirname' || node.name === '__filename')) {
@@ -21129,7 +21643,7 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
      * Otherwise null.
      */
     parse.parseNode = function (node, onMatch) {
-        var name, deps, cjsDeps, arg, factory,
+        var name, deps, cjsDeps, arg, factory, exp, refsDefine, bodyNode,
             args = node && node[argPropName],
             callName = parse.hasRequire(node);
 
@@ -21202,20 +21716,68 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
             }
 
             return onMatch("define", null, name, deps, node);
+        } else if (node.type === 'CallExpression' && node.callee &&
+                   node.callee.type === 'FunctionExpression' &&
+                   node.callee.body && node.callee.body.body &&
+                   node.callee.body.body.length === 1 &&
+                   node.callee.body.body[0].type === 'IfStatement') {
+            bodyNode = node.callee.body.body[0];
+            //Look for a define(Identifier) case, but only if inside an
+            //if that has a define.amd test
+            if (bodyNode.consequent && bodyNode.consequent.body) {
+                exp = bodyNode.consequent.body[0];
+                if (exp.type === 'ExpressionStatement' && exp.expression &&
+                    parse.hasDefine(exp.expression) &&
+                    exp.expression.arguments &&
+                    exp.expression.arguments.length === 1 &&
+                    exp.expression.arguments[0].type === 'Identifier') {
+
+                    //Calls define(Identifier) as first statement in body.
+                    //Confirm the if test references define.amd
+                    traverse(bodyNode.test, function (node) {
+                        if (parse.refsDefineAmd(node)) {
+                            refsDefine = true;
+                            return false;
+                        }
+                    });
+
+                    if (refsDefine) {
+                        return onMatch("define", null, null, null, exp.expression);
+                    }
+                }
+            }
         }
     };
 
     /**
      * Converts an AST node into a JS source string by extracting
      * the node's location from the given contents string. Assumes
-     * esprima.parse() with ranges was done.
+     * esprima.parse() with loc was done.
      * @param {String} contents
      * @param {Object} node
      * @returns {String} a JS source string.
      */
     parse.nodeToString = function (contents, node) {
-        var range = node.range;
-        return contents.substring(range[0], range[1]);
+        var loc = node.loc,
+            lines = contents.split('\n'),
+            firstLine = loc.start.line > 1 ?
+                        lines.slice(0, loc.start.line - 1).join('\n') + '\n' :
+                        '',
+            preamble = firstLine +
+                       lines[loc.start.line - 1].substring(0, loc.start.column),
+            extracted =  lines[loc.start.line - 1].substring(loc.start.column) +
+                     '\n' +
+                     lines.slice(loc.start.line, loc.end.line - 1).join('\n') +
+                     '\n' +
+                     lines[loc.end.line - 1].substring(0, loc.end.column);
+
+        return {
+            value: extracted,
+            range: [
+                preamble.length,
+                preamble.length + extracted.length
+            ]
+        };
     };
 
     /**
@@ -21226,8 +21788,13 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
      */
     parse.getLicenseComments = function (fileName, contents) {
         var commentNode, refNode, subNode, value, i, j,
+            //xpconnect's Reflect does not support comment or range, but
+            //prefer continued operation vs strict parity of operation,
+            //as license comments can be expressed in other ways, like
+            //via wrap args, or linked via sourcemaps.
             ast = esprima.parse(contents, {
-                comment: true
+                comment: true,
+                range: true
             }),
             result = '',
             existsMap = {},
@@ -21250,7 +21817,7 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
                         for (j = i + 1; j < ast.comments.length; j++) {
                             subNode = ast.comments[j];
                             if (subNode.type === 'Line' &&
-                                    subNode.range[0] === refNode.range[1]) {
+                                    subNode.range[0] === refNode.range[1] + 1) {
                                 //Adjacent single line comment. Collect it.
                                 value += '//' + subNode.value + lineEnd;
                                 refNode = subNode;
@@ -21291,10 +21858,10 @@ define('parse', ['./esprima', 'lang'], function (esprima, lang) {
  * see: http://github.com/jrburke/requirejs for details
  */
 
-/*jslint */
 /*global define */
 
-define('transform', [ './esprima', './parse', 'logger', 'lang'], function (esprima, parse, logger, lang) {
+define('transform', [ './esprimaAdapter', './parse', 'logger', 'lang'],
+function (esprima, parse, logger, lang) {
     'use strict';
     var transform,
         baseIndentRegExp = /^([ \t]+)/,
@@ -21310,22 +21877,20 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
         return str.replace(regExp, '$&' + indent);
     }
 
-    return (transform = {
+    transform = {
         toTransport: function (namespace, moduleName, path, contents, onFound, options) {
             options = options || {};
 
-            var tokens, foundAnon, deps, lastRange, parenCount, inDefine,
+            var astRoot, contentLines, modLine,
+                foundAnon,
                 scanCount = 0,
                 scanReset = false,
-                defineRanges = [],
-                contentInsertion = '',
-                depString = '';
+                defineInfos = [];
 
             try {
-                tokens = esprima.parse(contents, {
-                    tokens: true,
-                    range: true
-                }).tokens;
+                astRoot = esprima.parse(contents, {
+                    loc: true
+                });
             } catch (e) {
                 logger.trace('toTransport skipping ' + path + ': ' +
                              e.toString());
@@ -21333,201 +21898,99 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
             }
 
             //Find the define calls and their position in the files.
-            tokens.some(function (token, i) {
-                var prev, prev2, next, next2, next3, next4, next5,
-                    needsId, depAction, nameCommaRange, foundId,
+            parse.traverseBroad(astRoot, function (node) {
+                var args, firstArg, firstArgLoc, factoryNode,
+                    needsId, depAction, foundId,
                     sourceUrlData, range,
                     namespaceExists = false;
 
-                if (inDefine && token.type === 'Punctuator') {
-                    //Looking for the end of the define call.
-                    if (token.value === '(') {
-                        parenCount += 1;
-                    } else if (token.value === ')') {
-                        parenCount -= 1;
-                    }
+                namespaceExists = namespace &&
+                                node.type === 'CallExpression' &&
+                                node.callee  && node.callee.object &&
+                                node.callee.object.type === 'Identifier' &&
+                                node.callee.object.name === namespace &&
+                                node.callee.property.type === 'Identifier' &&
+                                node.callee.property.name === 'define';
 
-                    if (parenCount === 0) {
-                        inDefine = false;
-
-                        //Found the end of the define call. Hold onto
-                        //it.
-                        lastRange = defineRanges.length &&
-                            defineRanges[defineRanges.length - 1];
-                        if (lastRange && !lastRange.defineEndRange) {
-                            lastRange.defineEndRange = token.range;
-                        }
-                    }
-                }
-
-                if (token.type === 'Identifier' && token.value === 'define') {
-                    //Possible match. Do not want something.define calls
-                    //though, and only defines follow by a paren
-                    prev = tokens[i - 1];
-                    next = tokens[i + 1];
-
-                    if (prev && prev.type === 'Punctuator' &&
-                            prev.value === '.') {
-                        //a define on a sub-object, not a top level
-                        //define() call. If the sub object is the
-                        //namespace, then it is ok.
-                        prev2 = tokens[i - 2];
-                        if (!prev2) {
-                            return;
-                        }
-
-                        //If the prev2 does not match namespace, then bail.
-                        if (!namespace || prev2.type !== 'Identifier' ||
-                                prev2.value !== namespace) {
-                            return;
-                        } else if (namespace) {
-                            namespaceExists = true;
-                        }
-                    }
-
-                    if (!next || next.type !== 'Punctuator' ||
-                            next.value !== '(') {
-                       //Not a define() function call. Bail.
+                if (namespaceExists || parse.isDefineNodeWithArgs(node)) {
+                    //The arguments are where its at.
+                    args = node.arguments;
+                    if (!args || !args.length) {
                         return;
                     }
 
-                    if (prev && prev.type === 'Keyword' &&
-                            prev.value === 'function') {
-                        //A declaration of a define function. Skip it.
-                        return;
-                    }
+                    firstArg = args[0];
+                    firstArgLoc = firstArg.loc;
 
-                    next2 = tokens[i + 2];
-                    if (!next2) {
-                        return;
-                    }
-
-                    //Figure out if this needs a named define call.
-                    if (next2.type === 'Punctuator' && next2.value === '[') {
-                        //Dependency array
-                        needsId = true;
-                        depAction = 'skip';
-                    } else if (next2.type === 'Punctuator' &&
-                            next2.value === '{') {
-                        //Object literal
-                        needsId = true;
-                        depAction = 'skip';
-                    } else if (next2.type === 'Keyword' &&
-                               next2.value === 'function') {
-                        //function
-                        needsId = true;
-                        depAction = 'scan';
-                    } else if (next2.type === 'String') {
-                        //Named module
-                        needsId = false;
-
-                        //The value includes the quotes around the string,
-                        //so remove them.
-                        foundId = next2.value.substring(1,
-                                                        next2.value.length - 1);
-
-                        //assumed it does not need dependencies injected
-
-                        //If next argument is a function it means we need
-                        //dependency scanning.
-                        next3 = tokens[i + 3];
-                        next4 = tokens[i + 4];
-                        if (!next3 || !next4) {
-                            return;
-                        }
-
-                        if (next3.type === 'Punctuator' &&
-                                next3.value === ',' &&
-                                next4.type === 'Keyword' &&
-                                next4.value === 'function') {
+                    if (args.length === 1) {
+                        if (firstArg.type === 'Identifier') {
+                            //The define(factory) case, but
+                            //only allow it if one Identifier arg,
+                            //to limit impact of false positives.
+                            needsId = true;
+                            depAction = 'empty';
+                        } else if (firstArg.type === 'FunctionExpression') {
+                            //define(function(){})
+                            factoryNode = firstArg;
+                            needsId = true;
                             depAction = 'scan';
-                            nameCommaRange = next3.range;
-                        } else {
-                            depAction = 'skip';
-                        }
-                    } else if (next2.type === 'Identifier') {
-                        //May be the define(factory); type.
-                        next3 = tokens[i + 3];
-                        if (!next3) {
-                            return;
-                        }
-                        if (next3.type === 'Punctuator' &&
-                                next3.value === ')') {
-                            needsId = true;
-                            depAction = 'empty';
-                        } else {
-                            return;
-                        }
-                    } else if (next2.type === 'Numeric') {
-                        //May be the define(12345); type.
-                        next3 = tokens[i + 3];
-                        if (!next3) {
-                            return;
-                        }
-                        if (next3.type === 'Punctuator' &&
-                                next3.value === ')') {
+                        } else if (firstArg.type === 'ObjectExpression') {
+                            //define({});
                             needsId = true;
                             depAction = 'skip';
-                        } else {
-                            return;
-                        }
-                    } else if (next2.type === 'Punctuator' &&
-                               next2.value === '-') {
-                        //May be the define(-12345); type.
-                        next3 = tokens[i + 3];
-                        if (!next3) {
-                            return;
-                        }
-                        if (next3.type === 'Numeric') {
-                            next4 = tokens[i + 4];
-                            if (!next4) {
-                                return;
-                            }
-                            if (next4.type === 'Punctuator' &&
-                                    next4.value === ')') {
-                                needsId = true;
-                                depAction = 'skip';
-                            } else {
-                                return;
-                            }
-                        } else {
-                            return;
-                        }
-                    } else if (next2.type === 'Keyword' && next2.value === 'this') {
-                        //May be the define(this.key); type
-                        next3 = tokens[i + 3];
-                        next4 = tokens[i + 4];
-                        next5 = tokens[i + 5];
-                        if (!next3 || !next4 || !next5) {
-                            return;
-                        }
-
-                        if (next3.type === 'Punctuator' && next3.value === '.' &&
-                                next4.type === 'Identifier' &&
-                                next5.type === 'Punctuator' && next5.value === ')') {
+                        } else if (firstArg.type === 'Literal' &&
+                                   typeof firstArg.value === 'number') {
+                            //define('12345');
+                            needsId = true;
+                            depAction = 'skip';
+                        } else if (firstArg.type === 'UnaryExpression' &&
+                                   firstArg.operator === '-' &&
+                                   firstArg.argument &&
+                                   firstArg.argument.type === 'Literal' &&
+                                   typeof firstArg.argument.value === 'number') {
+                            //define('-12345');
+                            needsId = true;
+                            depAction = 'skip';
+                        } else if (firstArg.type === 'MemberExpression' &&
+                                   firstArg.object &&
+                                   firstArg.property &&
+                                   firstArg.property.type === 'Identifier') {
+                            //define(this.key);
                             needsId = true;
                             depAction = 'empty';
+                        }
+                    } else if (firstArg.type === 'ArrayExpression') {
+                        //define([], ...);
+                        needsId = true;
+                        depAction = 'skip';
+                    } else if (firstArg.type === 'Literal' &&
+                               typeof firstArg.value === 'string') {
+                        //define('string', ....)
+                        //Already has an ID.
+                        needsId = false;
+                        if (args.length === 2 &&
+                            args[1].type === 'FunctionExpression') {
+                            //Needs dependency scanning.
+                            factoryNode = args[1];
+                            depAction = 'scan';
                         } else {
-                            return;
+                            depAction = 'skip';
                         }
                     } else {
-                        //Not a match, skip it.
+                        //Unknown define entity, keep looking, even
+                        //in the subtree for this node.
                         return;
                     }
-
-                    //A valid define call. Need to find the end, start counting
-                    //parentheses.
-                    inDefine = true;
-                    parenCount = 0;
 
                     range = {
                         foundId: foundId,
                         needsId: needsId,
                         depAction: depAction,
                         namespaceExists: namespaceExists,
-                        defineRange: token.range,
-                        parenRange: next.range,
-                        nameCommaRange: nameCommaRange,
+                        node: node,
+                        defineLoc: node.loc,
+                        firstArgLoc: firstArgLoc,
+                        factoryNode: factoryNode,
                         sourceUrlData: sourceUrlData
                     };
 
@@ -21542,11 +22005,11 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
                             logger.trace(path + ' has more than one anonymous ' +
                                 'define. May be a built file from another ' +
                                 'build system like, Ender. Skipping normalization.');
-                            defineRanges = [];
-                            return true;
+                            defineInfos = [];
+                            return false;
                         } else {
                             foundAnon = range;
-                            defineRanges.push(range);
+                            defineInfos.push(range);
                         }
                     } else if (depAction === 'scan') {
                         scanCount += 1;
@@ -21555,36 +22018,52 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
                             //anon one, since this is an already optimized
                             //file like the phonegap one.
                             if (!scanReset) {
-                                defineRanges =  foundAnon ? [foundAnon] : [];
+                                defineInfos =  foundAnon ? [foundAnon] : [];
                                 scanReset = true;
                             }
                         } else {
-                            defineRanges.push(range);
+                            defineInfos.push(range);
                         }
                     }
                 }
             });
 
-            if (!defineRanges.length) {
+            if (!defineInfos.length) {
                 return contents;
             }
 
             //Reverse the matches, need to start from the bottom of
             //the file to modify it, so that the ranges are still true
             //further up.
-            defineRanges.reverse();
+            defineInfos.reverse();
 
-            defineRanges.forEach(function (info) {
+            contentLines = contents.split('\n');
+
+            modLine = function (loc, contentInsertion) {
+                var startIndex = loc.start.column,
+                //start.line is 1-based, not 0 based.
+                lineIndex = loc.start.line - 1,
+                line = contentLines[lineIndex];
+                contentLines[lineIndex] = line.substring(0, startIndex) +
+                                           contentInsertion +
+                                           line.substring(startIndex,
+                                                              line.length);
+            };
+
+            defineInfos.forEach(function (info) {
+                var deps,
+                    contentInsertion = '',
+                    depString = '';
+
                 //Do the modifications "backwards", in other words, start with the
                 //one that is farthest down and work up, so that the ranges in the
-                //defineRanges still apply. So that means deps, id, then namespace.
-
+                //defineInfos still apply. So that means deps, id, then namespace.
                 if (info.needsId && moduleName) {
                     contentInsertion += "'" + moduleName + "',";
                 }
 
                 if (info.depAction === 'scan') {
-                    deps = parse.getAnonDeps(path, contents.substring(info.defineRange[0], info.defineEndRange[1]));
+                    deps = parse.getAnonDepsFromNode(info.factoryNode);
 
                     if (deps.length) {
                         depString = '[' + deps.map(function (dep) {
@@ -21595,32 +22074,23 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
                     }
                     depString +=  ',';
 
-                    if (info.nameCommaRange) {
+                    if (info.factoryNode) {
                         //Already have a named module, need to insert the
                         //dependencies after the name.
-                        contents = contents.substring(0, info.nameCommaRange[1]) +
-                                   depString +
-                                   contents.substring(info.nameCommaRange[1],
-                                                  contents.length);
+                        modLine(info.factoryNode.loc, depString);
                     } else {
-                        contentInsertion +=  depString;
+                        contentInsertion += depString;
                     }
                 }
 
                 if (contentInsertion) {
-                    contents = contents.substring(0, info.parenRange[1]) +
-                               contentInsertion +
-                               contents.substring(info.parenRange[1],
-                                                  contents.length);
+                    modLine(info.firstArgLoc, contentInsertion);
                 }
 
                 //Do namespace last so that ui does not mess upthe parenRange
                 //used above.
                 if (namespace && !info.namespaceExists) {
-                    contents = contents.substring(0, info.defineRange[0]) +
-                               namespace + '.' +
-                               contents.substring(info.defineRange[0],
-                                                  contents.length);
+                    modLine(info.defineLoc, namespace + '.');
                 }
 
                 //Notify any listener for the found info
@@ -21629,9 +22099,11 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
                 }
             });
 
+            contents = contentLines.join('\n');
+
             if (options.useSourceUrl) {
                 contents = 'eval("' + lang.jsEscape(contents) +
-                    '\\n//@ sourceURL=' + (path.indexOf('/') === 0 ? '' : '/') +
+                    '\\n//# sourceURL=' + (path.indexOf('/') === 0 ? '' : '/') +
                     path +
                     '");\n';
             }
@@ -21746,7 +22218,7 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
                 value = 'null';
             } else if (obj === undefined) {
                 value = 'undefined';
-            } else if (typeof obj === 'number') {
+            } else if (typeof obj === 'number' || typeof obj === 'boolean') {
                 value = obj;
             } else if (typeof obj === 'string') {
                 //Use double quotes in case the config may also work as JSON.
@@ -21794,8 +22266,11 @@ define('transform', [ './esprima', './parse', 'logger', 'lang'], function (espri
 
             return value;
         }
-    });
-});/**
+    };
+
+    return transform;
+});
+/**
  * @license Copyright (c) 2010-2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
@@ -22226,7 +22701,7 @@ define('rhino/optimize', ['logger', 'env!env/file'], function (logger, file) {
                     file.saveFile(outFileNameMap,
                         file.readFile(outFileNameMap).replace(mapRegExp, '"file":"' + baseName + '"'));
 
-                    fileContents = optimized + "\n//@ sourceMappingURL=" + outBaseName + ".map";
+                    fileContents = optimized + "\n//# sourceMappingURL=" + outBaseName + ".map";
                 } else {
                     fileContents = optimized;
                 }
@@ -22487,8 +22962,6 @@ function (lang,   logger,   envOptimize,        file,           parse,
                             throw new Error('Cannot parse file: ' + fileName + ' for comments. Skipping it. Error is:\n' + e.toString());
                         }
                     }
-if (fileName.indexOf('sourcemap') !== -1)
-    debugger;
 
                     fileContents = licenseContents + optFunc(fileName,
                                                              fileContents,
@@ -22682,7 +23155,7 @@ if (fileName.indexOf('sourcemap') !== -1)
                 logger.trace("Uglify2 file: " + fileName);
 
                 try {
-                    //var tempContents = fileContents.replace(/\/\/\@ sourceMappingURL=.*$/, '');
+                    //var tempContents = fileContents.replace(/\/\/\# sourceMappingURL=.*$/, '');
                     result = uglify2.minify(fileContents, uconfig, baseName + '.src.js');
                     if (uconfig.outSourceMap && result.map) {
                         resultMap = result.map;
@@ -22695,7 +23168,7 @@ if (fileName.indexOf('sourcemap') !== -1)
                             file.saveFile(outFileName + '.src.js', fileContents);
                         }
                         file.saveFile(outFileName + '.map', resultMap);
-                        fileContents = result.code + "\n//@ sourceMappingURL=" + baseName + ".map";
+                        fileContents = result.code + "\n//# sourceMappingURL=" + baseName + ".map";
                     } else {
                         fileContents = result.code;
                     }
@@ -23591,9 +24064,11 @@ define('build', function (require) {
                         module._sourcePath = buildContext.nameToUrl(module.name);
                         //If the module does not exist, and this is not a "new" module layer,
                         //as indicated by a true "create" property on the module, and
-                        //it is not a plugin-loaded resource, then throw an error.
+                        //it is not a plugin-loaded resource, and there is no
+                        //'rawText' containing the module's source then throw an error.
                         if (!file.exists(module._sourcePath) && !module.create &&
-                                module.name.indexOf('!') === -1) {
+                                module.name.indexOf('!') === -1 &&
+                                (!config.rawText || !lang.hasProp(config.rawText, module.name))) {
                             throw new Error("ERROR: module path does not exist: " +
                                             module._sourcePath + " for module named: " + module.name +
                                             ". Path is relative to: " + file.absPath('.'));
@@ -23732,7 +24207,7 @@ define('build', function (require) {
                                 if (builtModule.sourceMap) {
                                     baseName = module._buildPath.split('/');
                                     baseName = baseName.pop();
-                                    finalText += '\n//@ sourceMappingURL=' + baseName + '.map';
+                                    finalText += '\n//# sourceMappingURL=' + baseName + '.map';
                                     file.saveUtf8File(module._buildPath + '.map', builtModule.sourceMap);
                                 }
                                 file.saveUtf8File(module._buildPath + '-temp', finalText);
@@ -24015,7 +24490,9 @@ define('build', function (require) {
                 "include": true,
                 "exclude": true,
                 "excludeShallow": true,
-                "insertRequire": true
+                "insertRequire": true,
+                "stubModules": true,
+                "deps": true
             };
 
         for (i = 0; i < ary.length; i++) {
@@ -24286,7 +24763,8 @@ define('build', function (require) {
                         ' correctly while running in the optimizer. Try only' +
                         ' using a config that is also valid JSON, or do not use' +
                         ' mainConfigFile and instead copy the config values needed' +
-                        ' into a build file or command line arguments given to the optimizer.');
+                        ' into a build file or command line arguments given to the optimizer.\n' +
+                        'Source error from parsing: ' + mainConfigFile + ': ' + configError);
             }
             if (mainConfig) {
                 mainConfigPath = mainConfigFile.substring(0, mainConfigFile.lastIndexOf('/'));
@@ -24381,10 +24859,21 @@ define('build', function (require) {
                             ' for optimization, and "dir" if you want the appDir' +
                             ' or baseUrl directories optimized.');
         }
-        if (config.dir && config.appDir && config.dir === config.appDir) {
-            throw new Error('"dir" and "appDir" set to the same directory.' +
-                            ' This could result in the deletion of appDir.' +
-                            ' Stopping.');
+
+        if (config.dir) {
+            // Make sure the output dir is not set to a parent of the
+            // source dir or the same dir, as it will result in source
+            // code deletion.
+            if (config.dir === config.baseUrl ||
+                config.dir === config.appDir ||
+                (config.baseUrl && build.makeRelativeFilePath(config.dir,
+                                           config.baseUrl).indexOf('..') !== 0) ||
+                (config.appDir &&
+                    build.makeRelativeFilePath(config.dir, config.appDir).indexOf('..') !== 0)) {
+                throw new Error('"dir" is set to a parent or same directory as' +
+                                ' "appDir" or "baseUrl". This can result in' +
+                                ' the deletion of source code. Stopping.');
+            }
         }
 
         if (config.insertRequire && !lang.isArray(config.insertRequire)) {
@@ -24628,24 +25117,35 @@ define('build', function (require) {
             });
         }
 
-        //Figure out module layer dependencies by calling require to do the work.
-        //Configure the callbacks to be called.
-        deferred.resolve.__requireJsBuild = true;
-        deferred.reject.__requireJsBuild = true;
-        require(include, deferred.resolve, deferred.reject);
 
-        //If a sync build environment, check for errors here, instead of
-        //in the then callback below, since some errors, like two IDs pointed
-        //to same URL but only one anon ID will leave the loader in an
-        //unresolved state since a setTimeout cannot be used to check for
-        //timeout.
-        if (syncChecks[env.get()]) {
-            try {
-                build.checkForErrors(context);
-            } catch (e) {
-                deferred.reject(e);
+        //Configure the callbacks to be called.
+        deferred.reject.__requireJsBuild = true;
+
+        //Use a wrapping function so can check for errors.
+        function includeFinished(value) {
+            //If a sync build environment, check for errors here, instead of
+            //in the then callback below, since some errors, like two IDs pointed
+            //to same URL but only one anon ID will leave the loader in an
+            //unresolved state since a setTimeout cannot be used to check for
+            //timeout.
+            var hasError = false;
+            if (syncChecks[env.get()]) {
+                try {
+                    build.checkForErrors(context);
+                } catch (e) {
+                    hasError = true;
+                    deferred.reject(e);
+                }
+            }
+
+            if (!hasError) {
+                deferred.resolve(value);
             }
         }
+        includeFinished.__requireJsBuild = true;
+
+        //Figure out module layer dependencies by calling require to do the work.
+        require(include, includeFinished, deferred.reject);
 
         return deferred.promise.then(function () {
             //Reset config
@@ -25214,7 +25714,7 @@ function (args, quit, logger, build) {
     } else if (commandOption === 'v') {
         console.log('r.js: ' + version +
                     ', RequireJS: ' + this.requirejsVars.require.version +
-                    ', UglifyJS2: 2.3.2, UglifyJS: 1.3.4');
+                    ', UglifyJS2: 2.3.6, UglifyJS: 1.3.4');
     } else if (commandOption === 'convert') {
         loadLib();
 

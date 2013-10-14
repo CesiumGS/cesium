@@ -61,7 +61,7 @@ defineSuite([
         us = undefined;
     });
 
-    function createPolygon() {
+    function createPolygon(id) {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         return new Polygon({
@@ -73,6 +73,7 @@ defineSuite([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
             ],
+            id : id,
             asynchronous : false
         });
     }
@@ -329,10 +330,11 @@ defineSuite([
     });
 
     it('is picked', function() {
-        polygon = createPolygon();
+        polygon = createPolygon('id');
 
         var pickedObject = pick(context, frameState, polygon, 0, 0);
         expect(pickedObject.primitive).toEqual(polygon);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {
