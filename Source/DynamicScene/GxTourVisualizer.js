@@ -160,8 +160,8 @@ define([
             look: CameraController.prototype.look
         };
 
-        ctx.lookUp(CesiumMath.toRadians(freeLook.vangle));
         ctx.lookRight(CesiumMath.toRadians(freeLook.hangle));
+        ctx.lookUp(CesiumMath.toRadians(freeLook.vangle));
     };
 
 
@@ -191,6 +191,14 @@ define([
         Matrix3.fromQuaternion(orientation, rotMatrix);
 
         camera.position = path.evaluate(millisecs);
+
+        /* if (scene.freeLook) {
+            var mu = Matrix3.fromRotationX(CesiumMath.toRadians(scene.freeLook.vangle) ),
+                mr = Matrix3.fromRotationY(CesiumMath.toRadians(scene.freeLook.hangle) );
+
+            Matrix3.multiply(rotMatrix, mu, rotMatrix);
+            Matrix3.multiply(rotMatrix, mr, rotMatrix);
+        } */
 
         camera.right = Matrix3.getRow(rotMatrix, 0);
         camera.up = Matrix3.getRow(rotMatrix, 1);
