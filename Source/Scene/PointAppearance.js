@@ -34,7 +34,7 @@ define([
          */
         this.renderState = defaultValue(options.renderState, {
             depthTest : {
-//                enabled : true
+                enabled : true
             }
         });
 
