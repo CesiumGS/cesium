@@ -262,10 +262,11 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantProperty(coordinates);
 
         if (getNumericValue(node, 'extrude') === 1) {
+            // initialize wall with
             dynamicObject.wall = new DynamicWall(coordinates);
 
             if (typeof dynamicObject.wpolygon !== 'undefined') {
-                dynamicObject.wall.material = dynamicObject.wpolygon._material;
+                dynamicObject.wall.material = dynamicObject.wpolygon.material;
 
                 // wipe this property
                 dynamicObject.wpolygon = null;
