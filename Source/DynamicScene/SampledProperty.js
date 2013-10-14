@@ -433,7 +433,7 @@ define([
 
         var i;
         for (i = 0; i < length; i++) {
-            if (!times[i].equals(otherTimes[i])) {
+            if (!JulianDate.equals(times[i], otherTimes[i])) {
                 return false;
             }
         }
