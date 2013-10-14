@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+	'../Core/Math',
         '../Core/Matrix3',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -13,6 +14,7 @@ define([
         './MaterialProperty'
        ], function(
          Cartesian3,
+         CesiumMath,
          Matrix3,
          defined,
          DeveloperError,
@@ -158,8 +160,8 @@ define([
             look: CameraController.prototype.look
         };
 
-        ctx.lookUp(Cesium.Math.toRadians(freeLook.vangle));
-        ctx.lookRight(Cesium.Math.toRadians(freeLook.hangle));
+        ctx.lookUp(CesiumMath.toRadians(freeLook.vangle));
+        ctx.lookRight(CesiumMath.toRadians(freeLook.hangle));
     };
 
 
