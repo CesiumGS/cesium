@@ -173,10 +173,6 @@ define([
     function createPrimitive(wallGeometry, scene, time) {
         var gi = new GeometryInstance({ geometry: WallGeometry.createGeometry(wallGeometry.geometry) });
 
-        var lineMaterial   = Material.fromType('Color'); // HACK HACK HACK
-        lineMaterial.uniforms.color = new Color(1, 1, 0, 0.4);
-
-
         var material = Material.fromType('Color');
         MaterialProperty.getValue(time, wallGeometry._material, material);
         var wallAppearance = new MaterialAppearance({
@@ -200,14 +196,6 @@ define([
             geometryInstances : [ gi ],
             appearance        : wallAppearance
         });
-
-        // create the line that highlights the edge of the wall
-        // var lines = new PolylineCollection();
-        // var line = lines.add({positions: positions, material: lineMaterial, width: lineWidth});
-        /* line.setPositions(positions);
-        line.setMaterial(lineMaterial);
-        line.setWidth(lineWidth); */
-        // ---------- //
 
         return wallPrimitive;
     }
