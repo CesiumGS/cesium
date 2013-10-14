@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -21,6 +22,7 @@ define([
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
+        defaultValue,
         BoxGeometry,
         Cartesian3,
         Cartesian4,
@@ -56,13 +58,20 @@ define([
      * @alias EllipsoidPrimitive
      * @constructor
      *
+     * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
+     * @param {Cartesian3} [options.radii=undefined] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
+     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
-     * var e = new EllipsoidPrimitive();
-     * e.center = ellipsoid.cartographicToCartesian(
-     *   Cartographic.fromDegrees(-75.0, 40.0, 500000.0));
-     * e.radii = new Cartesian3(500000.0, 500000.0, 500000.0);
-     * primitives.add(e);
+     * primitives.add(new EllipsoidPrimitive({
+     *   center : ellipsoid.cartographicToCartesian(
+     *     Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+     *   radii : new Cartesian3(500000.0, 500000.0, 500000.0)
+     * }));
      *
      * @example
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
@@ -75,7 +84,9 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
      */
-    var EllipsoidPrimitive = function() {
+    var EllipsoidPrimitive = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The center of the ellipsoid in the ellipsoid's model coordinates.
          * <p>
@@ -87,7 +98,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.center = Cartesian3.clone(Cartesian3.ZERO);
+        this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
@@ -105,7 +116,7 @@ define([
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
-        this.radii = undefined;
+        this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
 
         this._oneOverEllipsoidRadiiSquared = new Cartesian3();
@@ -131,8 +142,8 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-        this._computedModelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this._computedModelMatrix = new Matrix4();
 
         /**
          * Determines if the ellipsoid primitive will be shown.
@@ -140,7 +151,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
 
         /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -161,8 +172,30 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = Material.fromType(Material.ColorType);
+        this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
+
+        /**
+         * User-defined object returned when the ellipsoid is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = undefined;
+
+        /**
+         * @private
+         */
+        this.onlySunLighting = defaultValue(options.onlySunLighting, false);
+        this._onlySunLighting = false;
+
+        this._owner = options._owner;
+        this._executeInClosestFrustum = defaultValue(options._executeInClosestFrustum, true);
+        this._writeDepth = defaultValue(options._writeDepth, false);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -245,10 +278,15 @@ define([
                 },
                 // Do not write depth since the depth for the bounding box is
                 // wrong; it is not the true of the ray casted ellipsoid.
-                // Once WebGL has the extension for writing gl_FragDepth,
-                // we can write the correct depth.  For now, most ellipsoids
-                // will be translucent so we don't want to write depth anyway.
-                depthMask : false,
+                // For now, most ellipsoids will be translucent so we don't want
+                // to write depth anyway.
+                //
+                // For ellipsoids that we know are opaque and the EXT_frag_depth
+                // extension is available, we can set _writeDepth to true. This is
+                // a workaround and should be updated when we know which primitives
+                // are translucent.
+                // See the road map: https://github.com/AnalyticalGraphicsInc/cesium/wiki/Data-Driven-Renderer-Details
+                depthMask : this._writeDepth && context.getFragmentDepth(),
                 blending : BlendingState.ALPHA_BLEND
             });
         }
@@ -279,12 +317,21 @@ define([
         this._material = this.material;
         this._material.update(context);
 
+        var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
+        this._onlySunLighting = this.onlySunLighting;
+
         if (frameState.passes.color) {
             var colorCommand = this._colorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged) {
-                var colorFS = createShaderSource({ sources : [this.material.shaderSource, EllipsoidFS] });
+            if (materialChanged || lightingChanged) {
+                var colorFS = createShaderSource({
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
+                    sources : [this.material.shaderSource, EllipsoidFS] }
+                );
 
                 this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
 
@@ -293,7 +340,8 @@ define([
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
-                colorCommand.executeInClosestFrustum = true;
+                colorCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+                colorCommand.owner = defaultValue(this._owner, this);
             }
 
             colorCommand.boundingVolume = this._boundingSphere;
@@ -305,15 +353,22 @@ define([
         if (frameState.passes.pick) {
             var pickCommand = this._pickCommand;
 
-            if (!defined(this._pickId)) {
+            if (!defined(this._pickId) || (this._id !== this.id)) {
+                this._id = this.id;
+                this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this
+                    primitive : this,
+                    id : this.id
                 });
             }
 
             // Recompile shader when material changes
-            if (materialChanged || !defined(this._pickSP)) {
+            if (materialChanged || lightingChanged || !defined(this._pickSP)) {
                 var pickFS = createShaderSource({
+                    defines : [
+                        this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
+                        (this._writeDepth && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    ],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });
@@ -325,7 +380,8 @@ define([
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
-                pickCommand.executeInClosestFrustum = true;
+                pickCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+                pickCommand.owner = defaultValue(this._owner, this);
             }
 
             pickCommand.boundingVolume = this._boundingSphere;

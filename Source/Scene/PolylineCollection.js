@@ -428,6 +428,7 @@ define([
             this._polylinesUpdated = false;
         }
 
+        properties = this._propertiesChanged;
         for ( var k = 0; k < NUMBER_OF_PROPERTIES; ++k) {
             properties[k] = 0;
         }
@@ -504,7 +505,7 @@ define([
                     var polyline = polylines[s];
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
-                        if (defined(currentId)) {
+                        if (defined(currentId) && count > 0) {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
                                 command.owner = polylineCollection;

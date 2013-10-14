@@ -95,31 +95,14 @@ require(['Cesium'], function(Cesium) {
         var labels = new Cesium.LabelCollection();
         labels.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-73.94, 40.67)),
-            text     : 'New York'
+            text     : 'New York',
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
         });
         labels.add({
-            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
-            text     : 'Philadelphia',
-            translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.0)
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-84.39, 33.75)),
+            text     : 'Atlanta',
+            translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
         });
-
-        // add a billboard to mark Philadelphia on the globe
-        var image = new Image();
-        image.onload = function() {
-            var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
-                image : image
-            });
-            billboards.setTextureAtlas(textureAtlas);
-
-            billboards.add({
-                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
-                imageIndex : 0
-            });
-            scene.getPrimitives().add(billboards);
-        };
-        image.src = '../images/facility.gif';
-
         scene.getPrimitives().add(labels);
     }
 
