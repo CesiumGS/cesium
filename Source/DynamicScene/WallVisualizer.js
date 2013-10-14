@@ -15,7 +15,7 @@ define([
         '../Scene/Primitive',
         '../Scene/Material',
         '../Scene/MaterialAppearance',
-        '../DynamicWall',
+        './DynamicWall',
         './MaterialProperty'
        ], function(
          Cartesian3,
