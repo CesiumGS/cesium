@@ -1,25 +1,3 @@
-    "use strict";
-
-
-    // FIXME
-    /** var animate = function() {
-        var camera = scene.getCamera();
-        var controller = camera.controller;
-
-        controller.lookUp(Cesium.Math.toRadians(luhead.vangle));
-        controller.lookRight(Cesium.Math.toRadians(luhead.hangle));
-    };
-
-    function tick() {
-        scene.initializeFrame();
-        animate();
-        scene.render();
-
-        Cesium.requestAnimationFrame(tick);
-    }
-    tick();
-    **/
-
     var AlwaysTrue = {
         getValue: function(t) {return true;}
     };
