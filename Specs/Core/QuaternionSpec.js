@@ -55,7 +55,7 @@ defineSuite([
     });
 
     it('fromRotationMatrix works when m22 is max', function() {
-        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, Math.PI);
+        var q = Quaternion.fromAxisAngle(Cartesian3.negate(Cartesian3.UNIT_Z), Math.PI);
         var rotation = new Matrix3(-1.0,  0.0, 0.0,
                                     0.0, -1.0, 0.0,
                                     0.0,  0.0, 1.0);
@@ -63,7 +63,7 @@ defineSuite([
     });
 
     it('fromRotationMatrix works when m11 is max', function() {
-        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, Math.PI);
+        var q = Quaternion.fromAxisAngle(Cartesian3.negate(Cartesian3.UNIT_Y), Math.PI);
         var rotation = new Matrix3(-1.0, 0.0,  0.0,
                                     0.0, 1.0,  0.0,
                                     0.0, 0.0, -1.0);
@@ -71,7 +71,7 @@ defineSuite([
     });
 
     it('fromRotationMatrix works when m00 is max', function() {
-        var q = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, Math.PI);
+        var q = Quaternion.fromAxisAngle(Cartesian3.negate(Cartesian3.UNIT_X), Math.PI);
         var rotation = new Matrix3(1.0,  0.0,  0.0,
                                    0.0, -1.0,  0.0,
                                    0.0,  0.0, -1.0);
