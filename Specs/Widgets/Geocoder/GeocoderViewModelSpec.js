@@ -34,29 +34,4 @@ defineSuite([
             destroyScene(scene);
         });
     });
-
-    it('moves camera when enter pressed in the textbox', function() {
-        var scene = createScene();
-
-        var viewModel = new GeocoderViewModel({
-            scene : scene
-        });
-
-        var cameraPosition = scene.getCamera().position;
-
-        viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
-        viewModel.inputKeypress({}, { which: 13 });
-
-        waitsFor(function() {
-            scene.getAnimations().update();
-            var newCameraPosition = scene.getCamera().position;
-            return cameraPosition.x !== newCameraPosition.x ||
-                   cameraPosition.y !== newCameraPosition.y ||
-                   cameraPosition.z !== newCameraPosition.z;
-        });
-
-        runs(function() {
-            destroyScene(scene);
-        });
-    });
 }, 'WebGL');
