@@ -19,7 +19,7 @@ define([
         '../CesiumWidget/CesiumWidget',
         '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
-        '../GeocodingWidget/GeocodingWidget',
+        '../Geocoder/Geocoder',
         '../getElement',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
@@ -45,7 +45,7 @@ define([
         CesiumWidget,
         ClockViewModel,
         FullscreenButton,
-        GeocodingWidget,
+        Geocoder,
         getElement,
         HomeButton,
         SceneModePicker,
@@ -301,14 +301,14 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        //Geocoding
-        var geocodingWidget;
-        if (!defined(options.geocodingWidget) || options.geocodingWidget !== false) {
-            var geocodingWidgetContainer = document.createElement('div');
-            geocodingWidgetContainer.className = 'cesium-viewer-geocodingWidgetContainer';
-            viewerContainer.appendChild(geocodingWidgetContainer);
-            geocodingWidget = new GeocodingWidget({
-                container : geocodingWidgetContainer,
+        //Geocoder
+        var geocoder;
+        if (!defined(options.geocoder) || options.geocoder !== false) {
+            var geocoderContainer = document.createElement('div');
+            geocoderContainer.className = 'cesium-viewer-geocoderContainer';
+            viewerContainer.appendChild(geocoderContainer);
+            geocoder = new Geocoder({
+                container : geocoderContainer,
                 scene : cesiumWidget.scene,
                 ellipsoid : cesiumWidget.centralBody.getEllipsoid()
             });
@@ -350,7 +350,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
-        this._geocodingWidget = geocodingWidget;
+        this._geocoder = geocoder;
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;

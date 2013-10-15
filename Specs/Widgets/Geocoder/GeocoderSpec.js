@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/GeocodingWidget/GeocodingWidget',
+         'Widgets/Geocoder/Geocoder',
          'Specs/EventHelper',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
-         GeocodingWidget,
+         Geocoder,
          EventHelper,
          createScene,
          destroyScene) {
@@ -18,7 +18,7 @@ defineSuite([
         document.body.appendChild(container);
 
         var scene = createScene();
-        var widget = new GeocodingWidget({
+        var widget = new Geocoder({
             container : 'testContainer',
             scene : scene
         });
@@ -36,7 +36,7 @@ defineSuite([
 
     it('constructor throws with no scene', function() {
         expect(function() {
-            return new GeocodingWidget({
+            return new Geocoder({
                 container : document.body
             });
         }).toThrow();
@@ -45,7 +45,7 @@ defineSuite([
     it('constructor throws with no element', function() {
         var scene = createScene();
         expect(function() {
-            return new GeocodingWidget({
+            return new Geocoder({
                 scene : scene
             });
         }).toThrow();
@@ -55,7 +55,7 @@ defineSuite([
     it('constructor throws with string element that does not exist', function() {
         var scene = createScene();
         expect(function() {
-            return new GeocodingWidget({
+            return new Geocoder({
                 container : 'does not exist',
                 scene : scene
             });

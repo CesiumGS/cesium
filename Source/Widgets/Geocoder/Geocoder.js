@@ -5,7 +5,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../getElement',
-        './GeocodingWidgetViewModel',
+        './GeocoderViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defined,
@@ -13,7 +13,7 @@ define([
         destroyObject,
         DeveloperError,
         getElement,
-        GeocodingWidgetViewModel,
+        GeocoderViewModel,
         knockout) {
     "use strict";
 
@@ -21,7 +21,7 @@ define([
      * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
      * performed using the <a href="http://msdn.microsoft.com/en-us/library/ff701715.aspx">Bing Maps Locations API</a>.
      *
-     * @alias GeocodingWidget
+     * @alias Geocoder
      * @constructor
      *
      * @param {Element|String} description.container The DOM element or ID that will contain the widget.
@@ -40,7 +40,7 @@ define([
      * @exception {DeveloperError} description.container is required.
      * @exception {DeveloperError} description.scene is required.
      */
-    var GeocodingWidget = function(description) {
+    var Geocoder = function(description) {
         if (!defined(description) || !defined(description.container)) {
             throw new DeveloperError('description.container is required.');
         }
@@ -52,17 +52,17 @@ define([
 
         this._container = container;
 
-        this._viewModel = new GeocodingWidgetViewModel(description);
+        this._viewModel = new GeocoderViewModel(description);
 
         var textBox = document.createElement('input');
-        textBox.className = 'cesium-geocodingWidget-input';
+        textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', 'value: searchText, event: { keypress: inputKeypress }, valueUpdate: "afterkeydown"');
         this._textBox = textBox;
         container.appendChild(textBox);
 
         var goButton = document.createElement('span');
-        goButton.className = 'cesium-geocodingWidget-goButton';
+        goButton.className = 'cesium-geocoder-goButton';
         goButton.setAttribute('data-bind', 'click: search');
         this._goButton = goButton;
         container.appendChild(goButton);
@@ -70,10 +70,10 @@ define([
         knockout.applyBindings(this._viewModel, this._container);
     };
 
-    defineProperties(GeocodingWidget.prototype, {
+    defineProperties(Geocoder.prototype, {
         /**
          * Gets the parent container.
-         * @memberof GeocodingWidget.prototype
+         * @memberof Geocoder.prototype
          *
          * @type {Element}
          */
@@ -85,9 +85,9 @@ define([
 
         /**
          * Gets the view model.
-         * @memberof GeocodingWidget.prototype
+         * @memberof Geocoder.prototype
          *
-         * @type {GeocodingWidgetViewModel}
+         * @type {GeocoderViewModel}
          */
         viewModel : {
             get : function() {
@@ -97,19 +97,19 @@ define([
     });
 
     /**
-     * @memberof GeocodingWidget
+     * @memberof Geocoder
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
-    GeocodingWidget.prototype.isDestroyed = function() {
+    Geocoder.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof GeocodingWidget
+     * @memberof Geocoder
      */
-    GeocodingWidget.prototype.destroy = function() {
+    Geocoder.prototype.destroy = function() {
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._textBox);
@@ -117,5 +117,5 @@ define([
         return destroyObject(this);
     };
 
-    return GeocodingWidget;
+    return Geocoder;
 });

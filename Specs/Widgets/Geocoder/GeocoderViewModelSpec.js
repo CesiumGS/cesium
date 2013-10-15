@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/GeocodingWidget/GeocodingWidgetViewModel',
+         'Widgets/Geocoder/GeocoderViewModel',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
-         GeocodingWidgetViewModel,
+         GeocoderViewModel,
          createScene,
          destroyScene) {
     "use strict";
@@ -13,7 +13,7 @@ defineSuite([
     it('moves camera when search command invoked', function() {
         var scene = createScene();
 
-        var viewModel = new GeocodingWidgetViewModel({
+        var viewModel = new GeocoderViewModel({
             scene : scene
         });
 
@@ -38,7 +38,7 @@ defineSuite([
     it('moves camera when enter pressed in the textbox', function() {
         var scene = createScene();
 
-        var viewModel = new GeocodingWidgetViewModel({
+        var viewModel = new GeocoderViewModel({
             scene : scene
         });
 

@@ -5,7 +5,7 @@
 @import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
 @import url(../Timeline/Timeline.css);
-@import url(../GeocodingWidget/GeocodingWidget.css);
+@import url(../Geocoder/Geocoder.css);
 
 .cesium-viewer {
     font-family: sans-serif;
@@ -86,7 +86,7 @@
 	margin: 1px;
 }
 
-.cesium-viewer-geocodingWidgetContainer {
+.cesium-viewer-geocoderContainer {
     display: block;
     position: absolute;
     top: 5px;

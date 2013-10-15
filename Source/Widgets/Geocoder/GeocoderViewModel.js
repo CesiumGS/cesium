@@ -32,8 +32,8 @@ define([
     "use strict";
 
     /**
-     * The view model for {@link GeocodingWidget}.
-     * @alias GeocodingWidgetViewModel
+     * The view model for the {@link Geocoder} widget.
+     * @alias GeocoderViewModel
      * @constructor
      *
      * @param {Scene} description.scene The Scene instance to use.
@@ -50,7 +50,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var GeocodingWidgetViewModel = function(description) {
+    var GeocoderViewModel = function(description) {
         if (!defined(description) || !defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
@@ -82,10 +82,10 @@ define([
         knockout.track(this, ['_searchText']);
     };
 
-    defineProperties(GeocodingWidgetViewModel.prototype, {
+    defineProperties(GeocoderViewModel.prototype, {
         /**
          * Gets or sets the text to search for.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {String}
          */
@@ -96,7 +96,7 @@ define([
 
         /**
          * Gets the scene to control.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {Scene}
          */
@@ -108,7 +108,7 @@ define([
 
         /**
          * Gets the ellipsoid to be viewed.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {Ellipsoid}
          */
@@ -120,7 +120,7 @@ define([
 
         /**
          * Gets the Command that is executed when the button is clicked.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {Command}
          */
@@ -133,7 +133,7 @@ define([
         /**
          * Gets the Command that is executed when a key is pressed while the geocoding
          * widget has focus.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {Command}
          */
@@ -146,7 +146,7 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in milliseconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
-         * @memberof GeocodingWidgetViewModel.prototype
+         * @memberof GeocoderViewModel.prototype
          *
          * @type {Number}
          */
@@ -220,5 +220,5 @@ define([
         });
     }
 
-    return GeocodingWidgetViewModel;
+    return GeocoderViewModel;
 });
