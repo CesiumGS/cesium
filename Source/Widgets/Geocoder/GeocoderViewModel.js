@@ -175,7 +175,6 @@ define([
         });
 
         var geocodeInProgress = viewModel._geocodeInProgress = when(promise, function(result) {
-            setTimeout(function() {
             if (geocodeInProgress.cancel) {
                 return;
             }
@@ -226,7 +225,6 @@ define([
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
             viewModel._scene.getAnimations().add(flight);
-            }, 2000);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;
