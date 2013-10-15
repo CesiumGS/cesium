@@ -56,18 +56,17 @@ define([
 
         var form = document.createElement('form');
         form.setAttribute('data-bind', 'submit: search');
+        this._form = form;
 
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', 'value: searchText');
-        this._textBox = textBox;
         form.appendChild(textBox);
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocoder-goButton';
         goButton.setAttribute('data-bind', 'click: search, css: { "cesium-geocoder-stopButton" : isSearchInProgress }');
-        this._goButton = goButton;
         form.appendChild(goButton);
 
         container.appendChild(form);
@@ -117,8 +116,7 @@ define([
     Geocoder.prototype.destroy = function() {
         var container = this._container;
         knockout.cleanNode(container);
-        container.removeChild(this._textBox);
-        container.removeChild(this._goButton);
+        container.removeChild(this._form);
         return destroyObject(this);
     };
 
