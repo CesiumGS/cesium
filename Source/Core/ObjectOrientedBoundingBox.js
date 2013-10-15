@@ -78,9 +78,8 @@ define([
 
         var covarianceMatrix = new Matrix3(exx,exy,exz,exy,eyy,eyz,exz,eyz,ezz);
 
-        var unitaryMatrix = new Matrix3();
-        var diagonalMatrix = new Matrix3(); //we don't need the eigenvalues
-        Matrix3.getEigenDecomposition(covarianceMatrix, unitaryMatrix, diagonalMatrix);
+        var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix);
+        var unitaryMatrix = eigenDecomposition.unitary;
 
         //eigenvectors of covMatrix
         var v1 = Matrix3.getColumn(unitaryMatrix, 0, v1);
