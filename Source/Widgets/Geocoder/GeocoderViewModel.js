@@ -72,13 +72,6 @@ define([
             geocode(that);
         });
 
-        this._inputKeypressCommand = createCommand(function(data, event) {
-           if (event.which === 13) {
-               that._searchCommand();
-           }
-           return true;
-        });
-
         knockout.track(this, ['_searchText']);
     };
 
@@ -127,19 +120,6 @@ define([
         search : {
             get : function() {
                 return this._searchCommand;
-            }
-        },
-
-        /**
-         * Gets the Command that is executed when a key is pressed while the geocoding
-         * widget has focus.
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {Command}
-         */
-        inputKeypress : {
-            get : function() {
-                return this._inputKeypressCommand;
             }
         },
 

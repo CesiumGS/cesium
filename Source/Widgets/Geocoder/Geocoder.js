@@ -54,18 +54,23 @@ define([
 
         this._viewModel = new GeocoderViewModel(description);
 
+        var form = document.createElement('form');
+        form.setAttribute('data-bind', 'submit: search');
+
         var textBox = document.createElement('input');
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
-        textBox.setAttribute('data-bind', 'value: searchText, event: { keypress: inputKeypress }, valueUpdate: "afterkeydown"');
+        textBox.setAttribute('data-bind', 'value: searchText');
         this._textBox = textBox;
-        container.appendChild(textBox);
+        form.appendChild(textBox);
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocoder-goButton';
         goButton.setAttribute('data-bind', 'click: search');
         this._goButton = goButton;
-        container.appendChild(goButton);
+        form.appendChild(goButton);
+
+        container.appendChild(form);
 
         knockout.applyBindings(this._viewModel, this._container);
     };
