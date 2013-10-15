@@ -121,7 +121,7 @@ define([
                 var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
                 that._extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
             } else {
-                that._extent = that._extent.clone();
+                that._extent = Extent.clone(that._extent);
             }
 
             // tiling scheme handling

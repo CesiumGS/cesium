@@ -173,6 +173,7 @@ define([
     var color;
     var position;
     var outlineColor;
+    var scaleByDistance;
     function updateObject(dynamicPointVisualizer, time, dynamicObject) {
         var dynamicPoint = dynamicObject._point;
         if (!defined(dynamicPoint)) {
@@ -216,8 +217,8 @@ define([
             billboard.dynamicObject = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            billboard._visualizerColor = Color.WHITE.clone(billboard._visualizerColor);
-            billboard._visualizerOutlineColor = Color.BLACK.clone(billboard._visualizerOutlineColor);
+            billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
+            billboard._visualizerOutlineColor = Color.clone(Color.BLACK, billboard._visualizerOutlineColor);
             billboard._visualizerOutlineWidth = 0;
             billboard._visualizerPixelSize = 1;
             needRedraw = true;
@@ -265,6 +266,14 @@ define([
             if (billboard._visualizerPixelSize !== pixelSize) {
                 billboard._visualizerPixelSize = pixelSize;
                 needRedraw = true;
+            }
+        }
+
+        property = dynamicPoint._scaleByDistance;
+        if (defined(property)) {
+            scaleByDistance = property.getValue(time, scaleByDistance);
+            if (defined(scaleByDistance)) {
+                billboard.setScaleByDistance(scaleByDistance);
             }
         }
 

@@ -76,6 +76,8 @@ define([
         if (defined(billboard)) {
             billboard.setShow(false);
             billboard.setImageIndex(-1);
+            // Destroy pickId to allow setting _pickIdThis and _id when the billboard is reused.
+            billboard._pickId = billboard._pickId && billboard._pickId.destroy();
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
@@ -178,9 +180,11 @@ define([
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
+                    billboard._id = label._id;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
+                glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
             }
         }
 
@@ -336,7 +340,7 @@ define([
          *   text     : 'Up'
          * });
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
     };
 
     /**
@@ -375,7 +379,7 @@ define([
      *   eyeOffset : Cartesian3.ZERO,
      *   horizontalOrigin : HorizontalOrigin.LEFT,
      *   verticalOrigin : VerticalOrigin.BOTTOM,
-     *   scale : 1.0,
+     *   scale : 1.0
      * });
      *
      * // Example 2:  Specify only the label's cartographic position,

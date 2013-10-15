@@ -210,6 +210,37 @@ defineSuite([
         expect(context.getVertexArrayObject()).toBeDefined();
     });
 
+    it('get the fragment depth extension', function() {
+        var fs =
+            'void main()\n' +
+            '{\n' +
+            '  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n' +
+            '}';
+
+        var pixel = renderFragment(context, fs, 0.5, true);
+        expect(pixel).toEqual([255, 0, 0, 255]);
+
+        var fsDragDepth =
+            '#ifdef GL_EXT_frag_depth\n' +
+            '  #extension GL_EXT_frag_depth : enable\n' +
+            '#endif\n' +
+            'void main()\n' +
+            '{\n' +
+            '  gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n' +
+            '#ifdef GL_EXT_frag_depth\n' +
+            '  gl_FragDepthEXT = 0.0;\n' +
+            '#endif\n' +
+            '}';
+
+        pixel = renderFragment(context, fsDragDepth, 1.0, false);
+
+        if (context.getFragmentDepth()) {
+            expect(pixel).toEqual([0, 255, 0, 255]);
+        } else {
+            expect(pixel).toEqual([255, 0, 0, 255]);
+        }
+    });
+
     it('sets shader program validation', function() {
         context.setValidateShaderProgram(false);
         expect(context.getValidateShaderProgram()).toEqual(false);

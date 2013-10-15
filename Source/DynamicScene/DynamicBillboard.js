@@ -33,6 +33,8 @@ define(['../Core/defaultValue',
         this._eyeOffset = undefined;
         this._pixelOffset = undefined;
         this._show = undefined;
+        this._scaleByDistance = undefined;
+        this._translucencyByDistance = undefined;
         this._propertyChanged = new Event();
     };
 
@@ -140,7 +142,15 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        nearFarScalar : createDynamicPropertyDescriptor('nearFarScalar', '_nearFarScalar')
+        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance', '_scaleByDistance'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to set translucency based on distance.
+         * If undefined, a constant size is used.
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        translucencyByDistance : createDynamicPropertyDescriptor('translucencyByDistance', '_translucencyByDistance')
     });
 
     /**
@@ -166,7 +176,8 @@ define(['../Core/defaultValue',
         result.verticalOrigin = this._verticalOrigin;
         result.width = this._width;
         result.height = this._height;
-        result.nearFarScalar = this._nearFarScalar;
+        result.scaleByDistance = this._scaleByDistance;
+        result.translucencyByDistance = this._translucencyByDistance;
         return result;
     };
 
@@ -194,7 +205,8 @@ define(['../Core/defaultValue',
         this.verticalOrigin = defaultValue(this._verticalOrigin, source._verticalOrigin);
         this.width = defaultValue(this._width, source._width);
         this.height = defaultValue(this._height, source._height);
-        this.nearFarScalar = defaultValue(this._nearFarScalar, source._nearFarScalar);
+        this.scaleByDistance = defaultValue(this._scaleByDistance, source._scaleByDistance);
+        this.translucencyByDistance = defaultValue(this._translucencyByDistance, source._translucencyByDistance);
     };
 
     return DynamicBillboard;

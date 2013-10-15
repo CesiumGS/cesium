@@ -109,7 +109,7 @@ define([
             result.z = 0.0;
         }
 
-        return perifocalToEquatorial.multiplyByVector(result, result);
+        return Matrix3.multiplyByVector(perifocalToEquatorial, result, result);
     }
 
     function chooseOrbit(eccentricity, tolerance) {
@@ -464,9 +464,8 @@ define([
     var moonEarthMassRatio = 0.012300034; // From 1992 mu value in Table 2
     var factor = moonEarthMassRatio / (moonEarthMassRatio + 1.0) * -1;
     function computeSimonEarth(date, result) {
-        var moon = computeSimonMoon(date);
-        result = Cartesian3.multiplyByScalar(moon, factor, result);
-        return result;
+        result = computeSimonMoon(date, result);
+        return Cartesian3.multiplyByScalar(result, factor, result);
     }
 
     // Values for the <code>axesTransformation</code> needed for the rotation were found using the STK Components
@@ -495,7 +494,7 @@ define([
         computeSimonEarth(date, translation);
 
         Cartesian3.subtract(result, translation, result);
-        axesTransformation.multiplyByVector(result, result);
+        Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;
     };
@@ -512,7 +511,7 @@ define([
             date = new JulianDate();
         }
         result = computeSimonMoon(date, result);
-        axesTransformation.multiplyByVector(result, result);
+        Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;
     };

@@ -61,23 +61,23 @@ define([
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
             currentTime = new JulianDate();
-            startTime = currentTime.clone();
+            startTime = JulianDate.clone(currentTime);
             stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && stopTimeUndefined) {
-            startTime = currentTime.clone();
+            startTime = JulianDate.clone(currentTime);
             stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined && currentTimeUndefined) {
             startTime = stopTime.addDays(-1.0);
-            currentTime = startTime.clone();
+            currentTime = JulianDate.clone(startTime);
         } else if (currentTimeUndefined && stopTimeUndefined) {
-            currentTime = startTime.clone();
+            currentTime = JulianDate.clone(startTime);
             stopTime = startTime.addDays(1.0);
         } else if (currentTimeUndefined) {
-            currentTime = startTime.clone();
+            currentTime = JulianDate.clone(startTime);
         } else if (stopTimeUndefined) {
             stopTime = currentTime.addDays(1.0);
         } else if (startTimeUndefined) {
-            startTime = currentTime.clone();
+            startTime = JulianDate.clone(currentTime);
         }
 
         if (startTime.greaterThan(stopTime)) {
@@ -175,7 +175,7 @@ define([
                     }
                 } else if (this.clockRange === ClockRange.LOOP_STOP) {
                     if (currentTime.lessThan(startTime)) {
-                        currentTime = startTime.clone();
+                        currentTime = JulianDate.clone(startTime);
                     }
                     while (currentTime.greaterThan(stopTime)) {
                         currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
