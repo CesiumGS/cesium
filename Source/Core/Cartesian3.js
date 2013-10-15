@@ -246,65 +246,72 @@ define([
     };
 
     /**
-     *
+     * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesian.
      * @memberof Cartesian3
      *
-     * @param {Cartesian3} A cartesian to compare.
-     * @param {Cartesian3} A cartesian to compare.
+     * @param {Cartesian3} first A cartesian to compare.
+     * @param {Cartesian3} second A cartesian to compare.
      * @returns {Number} A cartesian with the minimum components.
      *
-     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
      */
-    Cartesian3.getMinimumByComponent = function(first, second) {
+    Cartesian3.getMinimumByComponent = function(first, second, result) {
         if (!defined(first)) {
-            throw new DeveloperError('cartesian is required');
+            throw new DeveloperError('first cartesian is missing');
         }
         if (!defined(second)) {
-            throw new DeveloperError('cartesian is required');
+            throw new DeveloperError('second cartesian is missing');
+        }
+        if (!defined(result)) {
+            result = Cartesian3.clone(first);
         }
 
-        var minimum = first.clone();
         if (first.x > second.x) {
-            minimum.x = second.x;
+            result.x = second.x;
         }
         if (first.y > second.y) {
-            minimum.y = second.y;
+            result.y = second.y;
         }
         if (first.z > second.z) {
-            minimum.z = second.z;
+            result.z = second.z;
         }
-        return minimum;
+        return result;
     };
 
     /**
-     *
+     * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesian.
      * @memberof Cartesian3
      *
-     * @param {Cartesian3} A cartesian to compare.
-     * @param {Cartesian3} A cartesian to compare.
+     * @param {Cartesian3} first A cartesian to compare.
+     * @param {Cartesian3} second A cartesian to compare.
      * @returns {Number} A cartesian with the maximum components.
      *
-     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
      */
-    Cartesian3.getMaximumByComponent =  function(first, second) {
+    Cartesian3.getMaximumByComponent =  function(first, second, result) {
         if (!defined(first)) {
-            throw new DeveloperError('cartesian is required');
+            throw new DeveloperError('first cartesian is missing');
         }
         if (!defined(second)) {
-            throw new DeveloperError('cartesian is required');
+            throw new DeveloperError('second cartesian is missing');
         }
 
-        var maximum = first.clone();
+        if (!defined(result)) {
+            result = Cartesian3.clone(first);
+        }
+
         if (first.x < second.x) {
-            maximum.x = second.x;
+            result.x = second.x;
         }
         if (first.y < second.y) {
-            maximum.y = second.y;
+            result.y = second.y;
         }
         if (first.z < second.z) {
-            maximum.z = second.z;
+            result.z = second.z;
         }
-        return maximum;
+        return result;
     };
 
     /**
