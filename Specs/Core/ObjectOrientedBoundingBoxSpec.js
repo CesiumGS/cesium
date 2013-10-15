@@ -65,14 +65,14 @@ defineSuite([
 
     it('fromPoints constructs empty box with undefined positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(undefined);
-        expect(box.transformMatrix).toEqual(new Matrix3());
+        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
         expect(box.transformedPosition).toEqual(Cartesian3.ZERO);
         expect(box.extent).toEqual(Cartesian3.ZERO);
     });
 
     it('fromPoints constructs empty box with empty positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints([]);
-        expect(box.transformMatrix).toEqual(new Matrix3());
+        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
         expect(box.transformedPosition).toEqual(Cartesian3.ZERO);
         expect(box.extent).toEqual(Cartesian3.ZERO);
     });
