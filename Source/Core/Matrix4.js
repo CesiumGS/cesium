@@ -263,7 +263,6 @@ define([
             result = new Matrix4();
         }
 
-// TODO: optimize this for glTF animations?
         scratchTrsRotation = Matrix3.fromQuaternion(rotation, scratchTrsRotation);
         result = Matrix4.fromRotationTranslation(scratchTrsRotation, translation, result);
         return Matrix4.multiplyByScale(result, scale, result);
@@ -1292,6 +1291,8 @@ define([
         return result;
     };
 
+    var uniformScaleScratch = new Cartesian3();
+
     /**
      * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit uniform scale matrix.  This is an optimization
@@ -1316,42 +1317,14 @@ define([
      * Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required');
         }
 
-        if (scale === 1.0) {
-            return Matrix4.clone(matrix, result);
-        }
-
-        if (!defined(result)) {
-            return new Matrix4(
-                scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
-                scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
-                scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
-                0.0,               0.0,               0.0,                1.0);
-        }
-
-        result[0] = scale * matrix[0];
-        result[1] = scale * matrix[1];
-        result[2] = scale * matrix[2];
-        result[3] = 0.0;
-        result[4] = scale * matrix[4];
-        result[5] = scale * matrix[5];
-        result[6] = scale * matrix[6];
-        result[7] = 0.0;
-        result[8] = scale * matrix[8];
-        result[9] = scale * matrix[9];
-        result[10] = scale * matrix[10];
-        result[11] = 0.0;
-        result[12] = matrix[12];
-        result[13] = matrix[13];
-        result[14] = matrix[14];
-        result[15] = 1.0;
-        return result;
+        uniformScaleScratch.x = scale;
+        uniformScaleScratch.y = scale;
+        uniformScaleScratch.z = scale;
+        return Matrix4.multiplyByScale(matrix, uniformScaleScratch, result);
     };
 
     /**
