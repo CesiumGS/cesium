@@ -66,7 +66,7 @@ define([
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocoder-goButton';
-        goButton.setAttribute('data-bind', 'click: search');
+        goButton.setAttribute('data-bind', 'click: search, css: { "cesium-geocoder-stopButton" : isSearchInProgress }');
         this._goButton = goButton;
         form.appendChild(goButton);
 

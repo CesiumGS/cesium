@@ -65,14 +65,19 @@ define([
         this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
         this._flightDuration = defaultValue(description.flightDuration, 1500);
         this._searchText = '';
-        this._resultText = '';
+        this._isSearchInProgress = false;
+        this._geocodeInProgress = undefined;
 
         var that = this;
         this._searchCommand = createCommand(function() {
-            geocode(that);
+            if (that.isSearchInProgress) {
+                cancelGeocode(that);
+            } else {
+                geocode(that);
+            }
         });
 
-        knockout.track(this, ['_searchText']);
+        knockout.track(this, ['_searchText', '_isSearchInProgress']);
     };
 
     defineProperties(GeocoderViewModel.prototype, {
@@ -83,8 +88,21 @@ define([
          * @type {String}
          */
         searchText : {
-            get : function() { return this._searchText; },
+            get : function() {
+                if (this.isSearchInProgress) {
+                    return 'Searching...';
+                }
+                return this._searchText;
+            },
             set : function(value) { this._searchText = value; }
+        },
+
+        /**
+         * Gets or sets a value indicating whether a search is current in progress.
+         */
+        isSearchInProgress : {
+            get : function() { return this._isSearchInProgress; },
+            set : function(value) { this._isSearchInProgress = value; }
         },
 
         /**
@@ -144,22 +162,33 @@ define([
     });
 
     function geocode(viewModel) {
+        var query = viewModel.searchText;
+        viewModel.isSearchInProgress = true;
+
         var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
-                query : viewModel._searchText,
+                query : query,
                 key : viewModel._key
 
             },
             callbackParameterName : 'jsonp'
         });
 
-        when(promise, function(result) {
+        var geocodeInProgress = viewModel._geocodeInProgress = when(promise, function(result) {
+            setTimeout(function() {
+            if (geocodeInProgress.cancel) {
+                return;
+            }
+            viewModel.isSearchInProgress = false;
+
             if (result.resourceSets.length === 0) {
+                viewModel.searchText = viewModel._searchText + ' (not found)';
                 return;
             }
 
             var resourceSet = result.resourceSets[0];
             if (resourceSet.resources.length === 0) {
+                viewModel.searchText = viewModel._searchText + ' (not found)';
                 return;
             }
 
@@ -197,7 +226,23 @@ define([
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
             viewModel._scene.getAnimations().add(flight);
+            }, 2000);
+        }, function() {
+            if (geocodeInProgress.cancel) {
+                return;
+            }
+
+            viewModel.isSearchInProgress = false;
+            viewModel.searchText = viewModel._searchText + ' (error)';
         });
+    }
+
+    function cancelGeocode(viewModel) {
+        viewModel.isSearchInProgress = false;
+        if (defined(viewModel._geocodeInProgress)) {
+            viewModel._geocodeInProgress.cancel = true;
+            viewModel._geocodeInProgress = undefined;
+        }
     }
 
     return GeocoderViewModel;

@@ -31,6 +31,10 @@
     vertical-align: middle;
 }
 
+.cesium-geocoder-stopButton {
+    background-image: url(../Images/stop.svg);
+}
+
 .cesium-geocoder-goButton:hover {
     background-color: rgba(76, 142, 184, 0.8);
 }
