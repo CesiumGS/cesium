@@ -51,6 +51,7 @@ Beta Releases
 * Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 * Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
+* Added a new `GeocodingWidget` that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer`.
 
 ### b21 - 2013-10-01
 
@@ -100,7 +101,6 @@ Beta Releases
 * Added `propertyChanged` event to `DynamicScene` graphics objects for receiving change notifications.
 * Added prototype `clone` and `merge` functions to `DynamicScene` graphics objects.
 * Added `width`, `height`, and `nearFarScalar` properties to `DynamicBillboard` for controlling the image size.
-* Added a new `GeocodingWidget` that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer`.
 * Added `heading` and `tilt` properties to `CameraController`.
 * Added `Scene.sunBloom` to enable/disable the bloom filter on the sun. The bloom filter should be disabled for better frame rates on mobile devices.
 * Added `getDrawingBufferWidth` and `getDrawingBufferHeight` to `Context`.
