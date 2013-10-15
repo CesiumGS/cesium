@@ -20,12 +20,31 @@ define([
      * @alias ObjectOrientedBoundingBox
      * @constructor
      *
+     * @param {Cartesian3} [transformMatrix=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
+     * @param {Cartesian3} [transformedPosition=Cartesian3.ZERO] The position of the box.
+     * @param {Cartesian3} [extent=Cartesian3.ZERO] The scale of the box.
+     *
      * @see BoundingSphere
      */
-    var ObjectOrientedBoundingBox = function() {
-        this.transformMatrix;
-        this.transformedPosition;
-        this.extent;
+    var ObjectOrientedBoundingBox = function(transformMatrix, transformedPosition, extent) {
+        /**
+         * The transformation matrix, to rotate the box to the right position.
+         * @type {Matrix3}
+         * @default {@link Matrix3.IDENTITY}
+         */
+        this.transformMatrix = Matrix3.clone(defaultValue(transformMatrix, Matrix3.IDENTITY));
+        /**
+         * The position of the box.
+         * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
+         */
+        this.transformedPosition = Cartesian3.clone(defaultValue(transformedPosition, Cartesian3.ZERO));
+        /**
+         * The scale of the box.
+         * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
+         */
+        this.extent = Cartesian3.clone(defaultValue(extent, Cartesian3.ZERO));
     };
 
     /**
