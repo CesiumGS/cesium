@@ -68,6 +68,13 @@ defineSuite([
         }).toThrow();
     });
 
+    it('getValue throws with undefined time', function() {
+        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
+        expect(function() {
+            property.getValue(undefined);
+        }).toThrow();
+    });
+
     it('getValue returned undefined for unresolved property', function() {
         var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
         expect(property.getValue(new JulianDate())).toBeUndefined();
@@ -82,5 +89,19 @@ defineSuite([
         expect(result.expectedValue).toEqual(true);
         expect(result.expectedTime).toEqual(validTime);
         expect(property.getValue(invalidTime, result)).toBeUndefined();
+    });
+
+    it('equals works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        createTestObject(dynamicObjectCollection, 'getValue');
+        var left = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
+        var right = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ReferenceProperty(dynamicObjectCollection, 'testObject', 'property2');
+        expect(left.equals(right)).toEqual(false);
+
+        right = new ReferenceProperty(dynamicObjectCollection, 'testObject2', 'property');
+        expect(left.equals(right)).toEqual(false);
     });
 });

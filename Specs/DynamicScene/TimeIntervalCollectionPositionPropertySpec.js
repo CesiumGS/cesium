@@ -126,4 +126,37 @@ defineSuite([
             property.getValue(undefined);
         }).toThrow();
     });
+
+    it('throws with no reference frame parameter', function() {
+        var property = new TimeIntervalCollectionPositionProperty();
+        var time = new JulianDate();
+        expect(function() {
+            property.getValueInReferenceFrame(time, undefined);
+        }).toThrow();
+    });
+
+    it('equals works for differing referenceFrames', function() {
+        var left = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
+        var right = new TimeIntervalCollectionPositionProperty(ReferenceFrame.INERTIAL);
+        expect(left.equals(right)).toEqual(false);
+
+        right = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
+        expect(left.equals(right)).toEqual(true);
+    });
+
+    it('equals works for differing intervals', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+
+        var left = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
+        left.intervals.addInterval(interval1);
+        left.intervals.addInterval(interval2);
+
+        var right = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
+        right.intervals.addInterval(interval1);
+
+        expect(left.equals(right)).toEqual(false);
+        right.intervals.addInterval(interval2);
+        expect(left.equals(right)).toEqual(true);
+    });
 });

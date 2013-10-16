@@ -104,4 +104,38 @@ defineSuite([
         expect(result.lineCount).toEqual(new Cartesian2(3.4, 5.0));
         expect(result.lineThickness).toEqual(new Cartesian2(2, 3));
     });
+
+    it('equals works', function() {
+        var left = new GridMaterialProperty();
+        left.color = new ConstantProperty(Color.RED);
+        left.cellAlpha = new ConstantProperty(1.0);
+        left.lineCount = new ConstantProperty(new Cartesian2(3.4, 5.0));
+        left.lineThickness = new ConstantProperty(new Cartesian2(2, 3));
+
+        var right = new GridMaterialProperty();
+        right.color = new ConstantProperty(Color.RED);
+        right.cellAlpha = new ConstantProperty(1.0);
+        right.lineCount = new ConstantProperty(new Cartesian2(3.4, 5.0));
+        right.lineThickness = new ConstantProperty(new Cartesian2(2, 3));
+
+        expect(left.equals(right)).toEqual(true);
+
+        right.color = new ConstantProperty(Color.BLUE);
+        expect(left.equals(right)).toEqual(false);
+
+        right.color = left.color;
+        right.cellAlpha = new ConstantProperty(0.5);
+        expect(left.equals(right)).toEqual(false);
+
+        right.cellAlpha = left.cellAlpha;
+        right.lineCount = new ConstantProperty(new Cartesian2(4, 5.0));
+        expect(left.equals(right)).toEqual(false);
+
+        right.lineCount = left.lineCount;
+        right.lineThickness = new ConstantProperty(new Cartesian2(3, 2));
+        expect(left.equals(right)).toEqual(false);
+
+        right.lineThickness = left.lineThickness;
+        expect(left.equals(right)).toEqual(true);
+    });
 });
