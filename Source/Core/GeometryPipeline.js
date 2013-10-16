@@ -375,11 +375,13 @@ define([
                     var elementsIn = attribute.values;
                     var intoElementsIn = 0;
                     var numComponents = attribute.componentsPerAttribute;
-                    var elementsOut = ComponentDatatype.createTypedArray(attribute.componentDatatype, elementsIn.length);
+                    var elementsOut = ComponentDatatype.createTypedArray(attribute.componentDatatype, nextIndex * numComponents);
                     while (intoElementsIn < numVertices) {
                         var temp = indexCrossReferenceOldToNew[intoElementsIn];
-                        for (i = 0; i < numComponents; i++) {
-                            elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                        if (temp !== -1) {
+                            for (i = 0; i < numComponents; i++) {
+                                elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                            }
                         }
                         ++intoElementsIn;
                     }
@@ -595,6 +597,7 @@ define([
      * @exception {DeveloperError} attributeName2D is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
+     * @exception {DeveloperError} Could not project a point to 2D.
      *
      * @example
      * geometry = GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
@@ -636,11 +639,11 @@ define([
         for ( var i = 0; i < values3D.length; i += 3) {
             var value = Cartesian3.fromArray(values3D, i, scratchProjectTo2DCartesian3);
 
-            if (Cartesian3.equals(value, Cartesian3.ZERO)) {
-                continue;
+            var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
+            if (!defined(lonLat)) {
+                throw new DeveloperError('Could not project point (' + value.x + ', ' + value.y + ', ' + value.z + ') to 2D.');
             }
 
-            var lonLat = ellipsoid.cartesianToCartographic(value, scratchProjectTo2DCartographic);
             var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 
             projectedValues[index++] = projectedLonLat.x;
