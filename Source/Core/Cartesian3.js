@@ -246,7 +246,7 @@ define([
     };
 
     /**
-     * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesian.
+     * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} first A cartesian to compare.
@@ -280,7 +280,7 @@ define([
     };
 
     /**
-     * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesian.
+     * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} first A cartesian to compare.
