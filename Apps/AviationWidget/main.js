@@ -1,3 +1,5 @@
+/*global Cesium*/
+
     var AlwaysTrue = {
         getValue: function(t) {return true;}
     };
@@ -10,6 +12,7 @@
      * @param {Object} TBD {routeURL: {String}, cockpitURL: {String}}
      */
     var AviationWidget = function(canvasId, options) {
+        "use strict";
         var that = this;
 
         options = Cesium.defaultValue(options, Cesium.defaultValue.EMPTY_OBJECT);
@@ -45,7 +48,6 @@
                 that._tourDataSource = new Cesium.KmlDataSource();
                 that._tourDataSource.loadUrl(tourKml).then(function() {
                     that.viewer.dataSources.add(that._tourDataSource);
-                    console.log('route loaded ...');
                 });
             }
             // Cockpit KML
@@ -54,7 +56,6 @@
                 that._cockpitDataSource = new Cesium.KmlDataSource();
                 that._cockpitDataSource.loadUrl(cockpitKml).then(function() {
                     that.viewer.dataSources.add(that._cockpitDataSource);
-                    console.log('cockpit loaded ...');
 
                     // stretch timeline according to flight data
                     (function(){
@@ -101,7 +102,6 @@
             // add toggle checkbox for Cockpit animation
             if (that._cockpitDataSource) {
                 // ** FREE LOOK SECTION ** //
-                var scene = that.viewer.scene;
                 var _freeLook =  new Cesium.FreeLook();
                 scene.freeLook = _freeLook;
 

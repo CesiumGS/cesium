@@ -14,6 +14,7 @@ defineSuite([
              Color,
              WallGeometry) {
     "use strict";
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('merge assigns unassigned properties', function() {
         var source = new DynamicWall();
