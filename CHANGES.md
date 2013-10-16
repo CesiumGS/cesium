@@ -53,6 +53,8 @@ Beta Releases
 * Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 * Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+* Added `FrameState.events`.
 
 ### b21 - 2013-10-01
 
