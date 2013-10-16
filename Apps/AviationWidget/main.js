@@ -14,9 +14,6 @@
 
         options = Cesium.defaultValue(options, Cesium.defaultValue.EMPTY_OBJECT);
 
-        var _hasTourModel = false;
-        var _hasCockpitModel = false;
-
         var _viewerOpts = Cesium.defaultValue(options.viewer, Cesium.defaultValue.EMPTY_OBJECT);
 
         var _toolbar;
@@ -25,7 +22,6 @@
          * Initialize widget
          */
         this.init = function() {
-            // that.viewer = new Cesium.CesiumWidget(canvasId);
             that.viewer = new Cesium.Viewer(canvasId, _viewerOpts);
             var scene = that.viewer.scene;
 
@@ -71,29 +67,21 @@
 
 
             // -- add toolbar -- //
-            _toolbar = document.createElement('div');
-            _toolbar.setAttribute('id', 'awToolbar');
+            _toolbar = document.getElementById('awToolbar');
 
-
-            that.viewer._element.parentNode.insertBefore(_toolbar, that.viewer._element.nextSibling);
-
-            /* var _sel = document.createElement('select');
-            _toolbar.appendChild(_sel); */
 
             var _it, _obj;
 
             // add toggle checkbox for 3D route visualization
             if (that._tourDataSource) {
-                _it = document.createElement('input');
-                _it.setAttribute('type', 'checkbox');
-                _it.setAttribute('name', 'gxaviation');
-                _it.checked = true;
-                _toolbar.appendChild(_it);
-
-                _it.onchange = function(ev) {
+                _it = document.getElementById('awToggleRouteBtn');
+                _it.onclick = function(ev) {
                     var coll = that._tourDataSource.getDynamicObjectCollection().getObjects();
                     var i;
-                    var flag = ev.target.checked;
+
+                    var flag = !( 'true' === ev.target.dataset.toggle);
+                    ev.target.dataset.toggle = flag.toString();
+
                     for (i=0; i<coll.length; i++) {
                         // the wall
                         if (typeof coll[i].wall !== 'undefined') {
@@ -105,82 +93,59 @@
                         }
                     }
                 };
-
-                _obj = document.createTextNode('Tour');
-                _toolbar.appendChild(_obj);
+            } else {
+                _it = document.getElementById('awToggleRouteBtn');
+                _it.style.display = 'none';
             }
 
             // add toggle checkbox for Cockpit animation
             if (that._cockpitDataSource) {
-                _it = document.createElement('input');
-                _it.setAttribute('type', 'checkbox');
-                _it.setAttribute('name', 'gxaviation');
-                _it.checked = true;
-                _toolbar.appendChild(_it);
+                // ** FREE LOOK SECTION ** //
+                var scene = that.viewer.scene;
+                var _freeLook =  new Cesium.FreeLook();
+                scene.freeLook = _freeLook;
 
-                _it.onchange = function(ev) {
+                document.getElementsByClassName('awcLeft')[0].onclick = function(ev) {
+                    _freeLook.lookLeft();
+                };
+                document.getElementsByClassName('awcRight')[0].onclick = function(ev) {
+                    _freeLook.lookRight();
+                };
+                document.getElementsByClassName('awcUp')[0].onclick = function(ev) {
+                    _freeLook.lookUp();
+                };
+                document.getElementsByClassName('awcDown')[0].onclick = function(ev) {
+                    _freeLook.lookDown();
+                };
+                document.getElementsByClassName('awcCenter')[0].onclick = function(ev) {
+                    _freeLook.reset();
+                };
+
+                _it = document.getElementById('awToggleCockpitBtn');
+                _it.onclick = function(ev) {
                     var coll = that._cockpitDataSource.getDynamicObjectCollection().getObjects();
                     var i;
-                    var flag = ev.target.checked;
+
+                    var flag = !( 'true' === ev.target.dataset.toggle);
+                    ev.target.dataset.toggle = flag.toString();
+
+                    if (flag) {
+                        document.getElementsByClassName('awCockpitNav')[0].style.display = '';
+                    } else {
+                        document.getElementsByClassName('awCockpitNav')[0].style.display = 'none';
+                    }
+
                     for (i=0; i<coll.length; i++) {
                         if (typeof coll[i].gxTour !== 'undefined') {
                             coll[i].gxTour._show = flag ? AlwaysTrue : AlwaysFalse;
                         }
                     }
                 };
-
-                _obj = document.createTextNode('Cockpit');
-                _toolbar.appendChild(_obj);
-
-                // ** FREE LOOK SECTION ** //
-                var scene = that.viewer.scene;
-                var _freeLook =  new Cesium.FreeLook();
-                scene.freeLook = _freeLook;
-
-                // Left button
-                var button = document.createElement('button');
-                button.className = 'cesium-button';
-                button.onclick = function() {
-                    _freeLook.lookLeft();
-                };
-                button.innerHTML = '&larr;';
-                _toolbar.appendChild(button);
-
-                // Up button
-                button = document.createElement('button');
-                button.className = 'cesium-button';
-                button.onclick = function() {
-                    _freeLook.lookUp();
-                };
-                button.innerHTML = '&uarr;';
-                _toolbar.appendChild(button);
-
-                // Center button
-                button = document.createElement('button');
-                button.className = 'cesium-button';
-                button.onclick = function() {
-                    _freeLook.reset();
-                };
-                button.innerHTML = '&oplus;';
-                _toolbar.appendChild(button);
-
-                // Down button
-                button = document.createElement('button');
-                button.className = 'cesium-button';
-                button.onclick = function() {
-                    _freeLook.lookDown();
-                };
-                button.innerHTML = '&darr;';
-                _toolbar.appendChild(button);
-
-                // Right button
-                button = document.createElement('button');
-                button.className = 'cesium-button';
-                button.onclick = function() {
-                    _freeLook.lookRight();
-                };
-                button.innerHTML = '&rarr;';
-                _toolbar.appendChild(button);
+            } else {
+                _it = document.getElementById('awToggleCockpitBtn');
+                _it.style.display = 'none';
+                _it = document.getElementsByClassName('awCockpitNav')[0];
+                _it.style.display = 'none';
             }
         };
 

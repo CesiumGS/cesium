@@ -1,9 +1,6 @@
 #awCntr
 {
 	position: relative;
-
-	/* width: 500px;
-	height: 500px; */
 }
 
 #awCanvas
@@ -20,12 +17,95 @@
 #awToolbar
 {
 	position: absolute;
-	left: 5px;
+	right: 5px;
 	top: 5px;
 
 	display: inline-block;
 	z-index: 2;
+}
 
-	/* width: 80px;
-	height: 80px; */
+.awButtonContainer {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin: 1px;
+}
+
+.awButtonContainer:hover {
+    box-shadow: 0 0 4px #fff, 0 0 4px #fff;
+}
+
+
+.awButton {
+	display: inline-block;
+
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+	border-radius: 14%;
+    border: 1px solid #444;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+	cursor: pointer;
+
+    text-align: center;
+    vertical-align: baseline;
+    color: black;
+    background-color: white;
+}
+
+.awButton:hover {
+    background-color: #ccc;
+}
+
+.awButton[data-toggle=true] {
+	background-color: #e6d9c5;
+}
+
+.awButtonBar {
+    position: relative;
+    text-align: right;
+}
+
+.awCockpitNav {
+    position: relative;
+    
+    width: 82px;
+    height: 82px;
+
+    margin-top: 5px;
+}
+
+.awcLeft {
+    position: absolute;
+    top: 29px;
+    left: 0px;
+}
+
+.awcRight {
+    position: absolute;
+    top: 29px;
+    left: 58px;
+}
+
+.awcUp {
+    position: absolute;
+    top: 0px;
+    left: 29px;
+}
+
+.awcDown {
+    position: absolute;
+    top: 58px;
+    left: 29px;
+}
+
+.awcCenter {
+    position: absolute;
+    top: 29px;
+    left: 29px;
 }
