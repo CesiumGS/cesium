@@ -840,7 +840,7 @@ require({
         queryObject = ioQuery.queryToObject(window.location.search.substring(1));
     } else {
         queryObject.src = 'Hello World.html';
-        queryObject.subtab = 'Showcases';
+        queryObject.label = 'Showcases';
     }
 
     function loadDemoFromFile(index) {
@@ -902,7 +902,7 @@ require({
             if (typeof queryObject.src !== 'undefined') {
                 if (demo.name === window.decodeURIComponent(queryObject.src.replace('.html', ''))) {
                     loadFromGallery(demo);
-                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&subtab=' + queryObject.subtab);
+                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                     document.title = demo.name + ' - Cesium Sandcastle';
                 }
             }
@@ -919,9 +919,9 @@ require({
     }
 
     function setSubtab(tabName) {
-        currentTab = (typeof queryObject.subtab !== 'undefined') ? queryObject.subtab : tabName;
-        window.history.replaceState({}, 'name', '?src=' + queryObject.src + '&subtab=' + currentTab);
-        queryObject.subtab = undefined;
+        currentTab = (typeof queryObject.label !== 'undefined') ? queryObject.label : tabName;
+        window.history.replaceState({}, 'name', '?src=' + queryObject.src + '&label=' + currentTab);
+        queryObject.label = undefined;
     }
 
     function addFileToGallery(index) {
@@ -979,7 +979,7 @@ require({
                 loadFromGallery(demo);
                 var demoSrc = demo.name + '.html';
                 if (demoSrc !== window.location.search.substring(1)) {
-                    window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&subtab=' + currentTab);
+                    window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
                 }
                 document.title = demo.name + ' - Cesium Sandcastle';
             }
