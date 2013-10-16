@@ -279,7 +279,7 @@ defineSuite([
                     var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
                     expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-                    var expectedMtx = Matrix3.fromQuaternion(componentsData[i].icrfToFixedQuaternion);
+                    var expectedMtx = Matrix3.fromQuaternion(Quaternion.conjugate(componentsData[i].icrfToFixedQuaternion));
                     var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx);
                     var testDiff = new Matrix3();
                     for ( var k = 0; k < 9; k++) {

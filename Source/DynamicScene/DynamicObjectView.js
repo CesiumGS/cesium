@@ -225,7 +225,7 @@ define([
                 first2dUp.x = 0.0;
                 first2dUp.y = 0.0;
 
-                var theta = startTheta - endTheta;
+                var theta = endTheta - startTheta;
                 var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, update3DControllerQuaternion);
                 Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, update3DControllerMatrix3), offset, offset);
             }

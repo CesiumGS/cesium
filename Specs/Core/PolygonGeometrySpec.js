@@ -264,7 +264,9 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
+        var bs = BoundingSphere.fromPoints(positions);
+        expect(p.boundingSphere.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON9);
+        expect(p.boundingSphere.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON9);
     });
 
     it('computes positions extruded', function() {
