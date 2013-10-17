@@ -18,18 +18,6 @@ defineSuite([
         expect(property.getValue(time)).toBe(expected);
     });
 
-    it('works with clone function', function() {
-        var expected = {};
-        var cloneCalled = false;
-        var cloneFunction = function() {
-            cloneCalled = true;
-            return expected;
-        };
-        var property = new ConstantProperty(expected, cloneFunction);
-        expect(property.getValue(time)).toBe(expected);
-        expect(cloneCalled).toEqual(true);
-    });
-
     it('works with clonable objects', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
@@ -51,14 +39,47 @@ defineSuite([
 
     it('constructor throws with undefined value', function() {
         expect(function() {
-            return new ConstantProperty(undefined, function() {
-            });
+            return new ConstantProperty(undefined);
         }).toThrow();
     });
 
     it('constructor throws with undefined clone function on non-basic type', function() {
         expect(function() {
-            return new ConstantProperty({}, undefined);
+            return new ConstantProperty({
+                equals : function() {
+                    return true;
+                }
+            });
         }).toThrow();
+    });
+
+    it('constructor throws with undefined equals function on non-basic type', function() {
+        expect(function() {
+            return new ConstantProperty({
+                clone : function() {
+                    return {};
+                }
+            });
+        }).toThrow();
+    });
+
+    it('equals works for object types', function() {
+        var left = new ConstantProperty(new Cartesian3(1, 2, 3));
+        var right = new ConstantProperty(new Cartesian3(1, 2, 3));
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantProperty(new Cartesian3(1, 2, 4));
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works for simple types', function() {
+        var left = new ConstantProperty(1);
+        var right = new ConstantProperty(1);
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantProperty(2);
+        expect(left.equals(right)).toEqual(false);
     });
 });

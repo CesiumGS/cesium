@@ -6,6 +6,7 @@ defineSuite([
              'Core/defined',
              'Core/JulianDate',
              'Core/LinearApproximation',
+             'Core/LagrangePolynomialApproximation',
              'Core/ReferenceFrame'
      ], function(
              SampledPositionProperty,
@@ -14,6 +15,7 @@ defineSuite([
              defined,
              JulianDate,
              LinearApproximation,
+             LagrangePolynomialApproximation,
              ReferenceFrame) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -194,5 +196,59 @@ defineSuite([
         expect(function() {
             property.getValue(undefined);
         }).toThrow();
+    });
+
+    it('throws with no reference frame parameter', function() {
+        var property = new SampledPositionProperty();
+        var time = new JulianDate();
+        expect(function() {
+            property.getValueInReferenceFrame(time, undefined);
+        }).toThrow();
+    });
+
+    it('equals works when interpolators differ', function() {
+        var left = new SampledPositionProperty();
+        left.interpolationAlgorithm = LinearApproximation;
+
+        var right = new SampledPositionProperty();
+        right.interpolationAlgorithm = LinearApproximation;
+
+        expect(left.equals(right)).toEqual(true);
+        right.interpolationAlgorithm = LagrangePolynomialApproximation;
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works when interpolator degree differ', function() {
+        var left = new SampledPositionProperty();
+        left.interpolationAlgorithm = LagrangePolynomialApproximation;
+        left.interpolationDegree = 2;
+
+        var right = new SampledPositionProperty();
+        right.interpolationAlgorithm = LagrangePolynomialApproximation;
+        right.interpolationDegree = 2;
+
+        expect(left.equals(right)).toEqual(true);
+        right.interpolationDegree = 3;
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works when reference frames differ', function() {
+        var left = new SampledPositionProperty(ReferenceFrame.FIXED);
+        var right = new SampledPositionProperty(ReferenceFrame.INERTIAL);
+        expect(left.equals(right)).toEqual(false);
+    });
+
+    it('equals works when samples differ', function() {
+        var left = new SampledPositionProperty();
+        var right = new SampledPositionProperty();
+        expect(left.equals(right)).toEqual(true);
+
+        var time = new JulianDate();
+        var value = new Cartesian3(1, 2, 3);
+        left.addSample(time, value);
+        expect(left.equals(right)).toEqual(false);
+
+        right.addSample(time, value);
+        expect(left.equals(right)).toEqual(true);
     });
 });
