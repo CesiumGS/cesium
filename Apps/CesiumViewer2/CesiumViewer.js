@@ -1,12 +1,15 @@
 /*global define*/
 define([
+        'Core/Event',
         'Core/Cartesian3',
         'Core/Matrix4',
+        'Core/Cartographic',
         'Core/Transforms',
         'Core/Ellipsoid',
         'Scene/Model',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
+        'Scene/DebugAxesPrimitive',
         ///////////////////////////////////////////////////////////////////////
         'Core/defined',
         'DynamicScene/CzmlDataSource',
@@ -18,13 +21,16 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
+        Event,
         Cartesian3,
         Matrix4,
+        Cartographic,
         Transforms,
         Ellipsoid,
         Model,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
+        DebugAxesPrimitive,
         ///////////////////////////////////////////////////////////////////////
         defined,
         CzmlDataSource,
@@ -80,7 +86,9 @@ define([
     }
 
     function startup() {
-        var viewer = new Viewer('cesiumContainer');
+        var viewer = new Viewer('cesiumContainer', {
+            showRenderLoopErrors : false
+        });
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
@@ -158,23 +166,28 @@ define([
         }
 
         ///////////////////////////////////////////////////////////////////////
+        scene.getScreenSpaceCameraController().minimumZoomDistance = 1.0;
+        var ellipsoid = viewer.centralBody.getEllipsoid();
+
         //scene.getPrimitives().setCentralBody(undefined);
-        //scene.skyBox = undefined;
-        //scene.skyAtmosphere = undefined;
+        scene.skyBox = undefined;
+        scene.skyAtmosphere = undefined;
 
 //      var url = './Gallery/model/SuperMurdoch/SuperMurdoch.json';
 //      var url = './Gallery/model/rambler/Rambler.json';
 //      var url = './Gallery/model/wine/wine.json';
       var url = './Gallery/model/duck/duck.json';
 
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 0.0)));
+
         var model = scene.getPrimitives().add(Model.fromText({
             url : url,
-            modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 7000000.0)),
-            scale : 100000.0
-//            debugShowBoundingVolume : true
+            modelMatrix : modelMatrix,
+            scale : 10.0
+//          , debugShowBoundingVolume : true
         }));
-/*
-        model.onJsonLoad.addEventListener(function() {
+
+        model.onReadyToRender.addEventListener(function() {
             var center = model.worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
@@ -189,23 +202,36 @@ define([
 
             // Zoom in
             camera.controller.lookAt(
-                    new Cartesian3(model.worldBoundingSphere.radius, 0.0, 0.0),
-                    Cartesian3.ZERO,
-                    Cartesian3.UNIT_Z);
+                new Cartesian3(0.0, -model.worldBoundingSphere.radius * 0.25, model.worldBoundingSphere.radius * 2.0),
+                Cartesian3.ZERO,
+                Cartesian3.UNIT_Z);
         });
-*/
 
-//        scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
-
+        var prevPickedNode;
+        var prevPickedMesh;
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
-                var pickedObject = scene.pick(movement.endPosition);
-                if (defined(pickedObject)) {
-                    console.log("Node " + pickedObject.gltf.node.name + ", Mesh " + pickedObject.gltf.mesh.name);
+                var pick = scene.pick(movement.endPosition);
+                if (defined(pick) && (pick.primitive === model)) {
+                    if ((prevPickedNode !== pick.gltf.node) || (prevPickedMesh !== pick.gltf.mesh)) {
+                        prevPickedNode = pick.gltf.node;
+                        prevPickedMesh = pick.gltf.mesh;
+                        console.log(pick.gltf.node.name + ". mesh: " + pick.gltf.mesh.name);
+                    }
                 }
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
+
+//      scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
+
+/*
+        scene.getPrimitives().add(new DebugAxesPrimitive({
+            modelMatrix : modelMatrix,
+            scale : 100000.0,
+            width : 10.0
+        }));
+*/
     }
 });
