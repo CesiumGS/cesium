@@ -122,14 +122,11 @@ define([
         this._credit = new Credit('Google Imagery', GoogleEarthImageryProvider._logoData, 'http://www.google.com/enterprise/mapsearth/products/earthenterprise.html');
 
         /**
-         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
-         * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
-         * all others.  Changing this value after creating an {@link ImageryLayer} for this provider will have
-         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
+         * By default this is set to 1.9
          *
          * @type {Number}
          */
-        this.defaultGamma = 1.3;
+        this.defaultGamma = 1.9;
 
         this._tilingScheme = undefined;
 
