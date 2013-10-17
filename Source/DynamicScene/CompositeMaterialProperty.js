@@ -3,12 +3,14 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './Property'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        Property) {
     "use strict";
 
     /**
@@ -74,6 +76,20 @@ define([
             return innerProperty.getValue(time, result);
         }
         return undefined;
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof CompositeMaterialProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    CompositeMaterialProperty.prototype.equals = function(other) {
+        return this === other || //
+               (other instanceof CompositeMaterialProperty && //
+                this._intervals.equals(other._intervals, Property.equals));
     };
 
     return CompositeMaterialProperty;

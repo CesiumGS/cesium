@@ -71,6 +71,19 @@ defineSuite([
         expect(expected).toEqual(PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED));
     });
 
+    it('equals works', function() {
+        var left = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
+        var right = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
+
+        expect(left.equals(right)).toEqual(true);
+
+        right = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.FIXED);
+        expect(left.equals(right)).toEqual(false);
+
+        right = new ConstantPositionProperty(new Cartesian3(1, 2, 4), ReferenceFrame.INERTIAL);
+        expect(left.equals(right)).toEqual(false);
+    });
+
     it('constructor throws with undefined value', function() {
         expect(function() {
             return new ConstantPositionProperty(undefined);
@@ -81,6 +94,14 @@ defineSuite([
         var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
         expect(function() {
             property.getValue(undefined);
+        }).toThrow();
+    });
+
+    it('getValueInReferenceFrame throws with no referenceFrame parameter', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
+        var time = new JulianDate();
+        expect(function() {
+            property.getValueInReferenceFrame(time, undefined);
         }).toThrow();
     });
 });

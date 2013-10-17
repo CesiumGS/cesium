@@ -20,6 +20,8 @@ Beta Releases
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
    * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
+   * `Property` implementations are now required to implement a prototype `equals` function.
+   * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
@@ -51,6 +53,8 @@ Beta Releases
 * Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 * Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+* Added `FrameState.events`.
 
 ### b21 - 2013-10-01
 
