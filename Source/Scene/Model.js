@@ -400,8 +400,7 @@ define([
                 if (defined(node.rotation)) {
                     var axis = Cartesian3.fromArray(node.rotation, 0, scratchAxis);
                     var angle = node.rotation[3];
-                    // Negative angle to workaround https://github.com/AnalyticalGraphicsInc/cesium/issues/1221
-                    node.czmExtra.rotation = Quaternion.fromAxisAngle(axis, -angle);
+                    node.czmExtra.rotation = Quaternion.fromAxisAngle(axis, angle);
                 } else {
                     node.czmExtra.rotation = Quaternion.clone(defaultRotation);
                 }
@@ -1220,8 +1219,7 @@ define([
                     Cartesian3.fromArray(parameter.czmExtra.typedArray, 3 * ccc_count, animatingProperty);
                 } else if (parameter.type === 'FLOAT_VEC4') {
 // TODO: result param for upack
-                    // Negative angle to workaround https://github.com/AnalyticalGraphicsInc/cesium/issues/1221
-                    Quaternion.fromAxisAngle(Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count), -parameter.czmExtra.typedArray[(4 * ccc_count) + 3], animatingProperty);
+                    Quaternion.fromAxisAngle(Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count), parameter.czmExtra.typedArray[(4 * ccc_count) + 3], animatingProperty);
                 }
             }
 
