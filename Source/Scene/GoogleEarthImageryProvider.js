@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/loadText',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
@@ -16,6 +17,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         loadText,
         Cartesian2,
         DeveloperError,
@@ -78,10 +80,10 @@ define([
     var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.url === 'undefined') {
+        if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
-        if (typeof description.channel === 'undefined') {
+        if (!defined(description.channel)) {
             throw new DeveloperError('description.channel is required.');
         }
 
@@ -143,27 +145,27 @@ define([
             
             var message;
 
-            if(typeof layer === 'undefined') {
+            if(!defined(layer)) {
               message = 'Could not find layer with channel (id) of ' + that._channel + '.';
               metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
               throw new RuntimeError(message);
             }
 
-            if(typeof layer.version === 'undefined') {
+            if(!defined(layer.version)) {
               message = 'Could not find a version in channel (id) ' + that._channel + '.';
               metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
               throw new RuntimeError(message);
             }
             that._version = layer.version;
 
-            if(typeof data.projection !== 'undefined' && data.projection === 'flat') {
+            if(defined(data.projection) && data.projection === 'flat') {
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2,
                   extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
               });
             // Default to mercator projection when projection is undefined
-            } else if(typeof data.projection === 'undefined' || data.projection === 'mercator') {
+            } else if(!defined(data.projection) || data.projection === 'mercator') {
               that._tilingScheme = new WebMercatorTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2
@@ -178,7 +180,7 @@ define([
               .replace('{channel}', that._channel).replace('{version}', that._version);
 
             // Install the default tile discard policy if none has been supplied.
-            if (typeof that._tileDiscardPolicy === 'undefined') {
+            if (!defined(that._tileDiscardPolicy)) {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
                     missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
@@ -196,7 +198,7 @@ define([
         }
 
         function requestMetadata() {
-          var url = (typeof that._proxy === 'undefined') ? metadataUrl : that._proxy.getURL(metadataUrl);
+          var url = (!defined(that._proxy) ? metadataUrl : that._proxy.getURL(metadataUrl);
 
           var metadata = loadText(url);
           when(metadata, metadataSuccess, metadataFailure);
@@ -503,7 +505,7 @@ define([
         imageUrl = imageUrl.replace('{zoom}', (level + 1));
 
         var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             imageUrl = proxy.getURL(imageUrl);
         }
 
