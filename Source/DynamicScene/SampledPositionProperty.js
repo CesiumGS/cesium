@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/ReferenceFrame',
         './PositionProperty',
+        './Property',
         './SampledProperty'
        ], function(
         Cartesian3,
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         ReferenceFrame,
         PositionProperty,
+        Property,
         SampledProperty) {
     "use strict";
 
@@ -157,6 +159,20 @@ define([
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
         this._property.addSamplesPackedArray(data, epoch);
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof SampledPositionProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    SampledPositionProperty.prototype.equals = function(other) {
+        return this === other || //
+               (Property.equals(this._property, other._property) && //
+                this._referenceFrame === other._referenceFrame);
     };
 
     return SampledPositionProperty;

@@ -2,11 +2,13 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        './ConstantProperty'
+        './ConstantProperty',
+        './Property'
     ], function(
         Color,
         defined,
-        ConstantProperty) {
+        ConstantProperty,
+        Property) {
     "use strict";
 
     /**
@@ -64,6 +66,22 @@ define([
         result.outlineColor = defined(this.outlineColor) ? this.outlineColor.getValue(time, result.outlineColor) : undefined;
         result.outlineWidth = defined(this.outlineWidth) ? this.outlineWidth.getValue(time) : undefined;
         return result;
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof PolylineOutlineMaterialProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    PolylineOutlineMaterialProperty.prototype.equals = function(other) {
+        return this === other || //
+               (other instanceof PolylineOutlineMaterialProperty && //
+                Property.equals(this.color, other.color) && //
+                Property.equals(this.outlineColor, other.outlineColor) && //
+                Property.equals(this.outlineWidth, other.outlineWidth));
     };
 
     return PolylineOutlineMaterialProperty;
