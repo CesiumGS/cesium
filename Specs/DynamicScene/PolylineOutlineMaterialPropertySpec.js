@@ -80,4 +80,28 @@ defineSuite([
         expect(result.color).toEqual(Color.RED);
         expect(result.outlineColor).toEqual(Color.BLUE);
     });
+
+    it('equals works', function() {
+        var left = new PolylineOutlineMaterialProperty();
+        left.color = new ConstantProperty(Color.WHITE);
+        left.outlineColor = new ConstantProperty(Color.BLACK);
+        left.outlineWidth = new ConstantProperty(5);
+
+        var right = new PolylineOutlineMaterialProperty();
+        right.color = new ConstantProperty(Color.WHITE);
+        right.outlineColor = new ConstantProperty(Color.BLACK);
+        right.outlineWidth = new ConstantProperty(5);
+        expect(left.equals(right)).toEqual(true);
+
+        right.color = new ConstantProperty(Color.RED);
+        expect(left.equals(right)).toEqual(false);
+
+        right.color = left.color;
+        right.outlineColor = new ConstantProperty(Color.BLUE);
+        expect(left.equals(right)).toEqual(false);
+
+        right.outlineColor = left.outlineColor;
+        right.outlineWidth = new ConstantProperty(6);
+        expect(left.equals(right)).toEqual(false);
+    });
 });
