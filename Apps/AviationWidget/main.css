@@ -139,3 +139,23 @@
     top: 29px;
     left: 29px;
 }
+
+.awcCenter span {
+    background: white url(images/crosshair.png) no-repeat center;
+}
+
+.awcLeft span {
+    background: white url(images/arrow_left.png) no-repeat center;
+}
+
+.awcRight span {
+    background: white url(images/arrow_right.png) no-repeat center;
+}
+
+.awcUp span {
+    background: white url(images/arrow_up.png) no-repeat center;
+}
+
+.awcDown span {
+    background: white url(images/arrow_down.png) no-repeat center;
+}
