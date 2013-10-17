@@ -53,6 +53,7 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* Added `GoogleEarthImageryProvider`.
 
 ### b21 - 2013-10-01
 
