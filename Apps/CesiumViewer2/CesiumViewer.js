@@ -170,10 +170,11 @@ define([
         var model = scene.getPrimitives().add(Model.fromText({
             url : url,
             modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 7000000.0)),
-            scale : 100.0
+            scale : 100000.0
 //            debugShowBoundingVolume : true
         }));
-        model.onComplete.addEventListener(function() {
+/*
+        model.onJsonLoad.addEventListener(function() {
             var center = model.worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
@@ -192,6 +193,7 @@ define([
                     Cartesian3.ZERO,
                     Cartesian3.UNIT_Z);
         });
+*/
 
 //        scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
 
@@ -200,7 +202,7 @@ define([
             function (movement) {
                 var pickedObject = scene.pick(movement.endPosition);
                 if (defined(pickedObject)) {
-                    console.log("Node " + pickedObject.node.name + ", Mesh " + pickedObject.mesh.name);
+                    console.log("Node " + pickedObject.gltf.node.name + ", Mesh " + pickedObject.gltf.mesh.name);
                 }
             },
             ScreenSpaceEventType.MOUSE_MOVE
