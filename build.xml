@@ -118,10 +118,10 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.8" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
 	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
-	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.5/almond.js" />
+	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.6/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
@@ -498,13 +498,13 @@
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
 			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.6" value="." />
+			<replacefilter token="../ThirdParty/requirejs-2.1.8" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 
 		<!-- rewrite the paths in the HTML -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
-			<replacefilter token="../../ThirdParty/requirejs-2.1.6" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.8" value="." />
 			<include name="index.html" />
 		</replace>
 

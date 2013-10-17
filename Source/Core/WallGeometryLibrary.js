@@ -94,7 +94,7 @@ define([
                 cleanedTopHeights[i-1] = c1.height;
             }
 
-            c0 = c1.clone(c0);
+            Cartographic.clone(c1, c0);
         }
 
         return {

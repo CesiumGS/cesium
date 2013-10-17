@@ -60,28 +60,29 @@ define([
         return epoch.addSeconds(date);
     }
 
+    var timesSpliceArgs = [];
+    var valuesSpliceArgs = [];
+
     var mergeNewSamples = function(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
         var timesInsertionPoint;
         var valuesInsertionPoint;
-        var timesSpliceArgs;
-        var valuesSpliceArgs;
         var currentTime;
         var nextTime;
 
         while (newDataIndex < newData.length) {
             currentTime = convertDate(newData[newDataIndex], epoch);
             timesInsertionPoint = binarySearch(times, currentTime, JulianDate.compare);
+            var timesSpliceArgsCount = 0;
+            var valuesSpliceArgsCount = 0;
 
             if (timesInsertionPoint < 0) {
                 //Doesn't exist, insert as many additional values as we can.
                 timesInsertionPoint = ~timesInsertionPoint;
-                timesSpliceArgs = [];
 
                 valuesInsertionPoint = timesInsertionPoint * packedLength;
-                valuesSpliceArgs = [];
                 prevItem = undefined;
                 nextTime = times[timesInsertionPoint];
                 while (newDataIndex < newData.length) {
@@ -89,17 +90,22 @@ define([
                     if ((defined(prevItem) && JulianDate.compare(prevItem, currentTime) >= 0) || (defined(nextTime) && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
-                    timesSpliceArgs.push(currentTime);
+                    timesSpliceArgs[timesSpliceArgsCount++] = currentTime;
                     newDataIndex = newDataIndex + 1;
                     for (i = 0; i < packedLength; i++) {
-                        valuesSpliceArgs.push(newData[newDataIndex]);
+                        valuesSpliceArgs[valuesSpliceArgsCount++] = newData[newDataIndex];
                         newDataIndex = newDataIndex + 1;
                     }
                     prevItem = currentTime;
                 }
 
-                arrayInsert(values, valuesInsertionPoint, valuesSpliceArgs);
-                arrayInsert(times, timesInsertionPoint, timesSpliceArgs);
+                if (timesSpliceArgsCount > 0) {
+                    valuesSpliceArgs.length = valuesSpliceArgsCount;
+                    arrayInsert(values, valuesInsertionPoint, valuesSpliceArgs);
+
+                    timesSpliceArgs.length = timesSpliceArgsCount;
+                    arrayInsert(times, timesInsertionPoint, timesSpliceArgs);
+                }
             } else {
                 //Found an exact match
                 for (i = 0; i < packedLength; i++) {
@@ -399,6 +405,50 @@ define([
         }
         mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
         this._updateTableLength = true;
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof SampledProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    SampledProperty.prototype.equals = function(other) {
+        if (this === other) {
+            return true;
+        }
+        if (!defined(other)) {
+            return false;
+        }
+
+        var times = this._times;
+        var otherTimes = other._times;
+        var length = times.length;
+
+        if (length !== otherTimes.length) {
+            return false;
+        }
+
+        var i;
+        for (i = 0; i < length; i++) {
+            if (!JulianDate.equals(times[i], otherTimes[i])) {
+                return false;
+            }
+        }
+
+        var values = this._values;
+        var otherValues = other._values;
+        for (i = 0; i < length; i++) {
+            if (values[i] !== otherValues[i]) {
+                return false;
+            }
+        }
+
+        return this._type === other._type && //
+               this._interpolationDegree === other._interpolationDegree && //
+               this._interpolationAlgorithm === other._interpolationAlgorithm;
     };
 
     //Exposed for testing.

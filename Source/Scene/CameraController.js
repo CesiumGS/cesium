@@ -16,6 +16,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Core/Transforms',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -35,6 +36,7 @@ define([
         Matrix4,
         Quaternion,
         Ray,
+        Transforms,
         SceneMode,
         Tween) {
     "use strict";
@@ -362,7 +364,8 @@ define([
         }
 
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, lookScratchQuaternion), lookScratchMatrix);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, lookScratchQuaternion);
+        var rotation = Matrix3.fromQuaternion(quaternion, lookScratchMatrix);
 
         var direction = this._camera.direction;
         var up = this._camera.up;
@@ -415,7 +418,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = transform.multiply(oldTransform);
+            camera.transform = Matrix4.multiply(transform, oldTransform);
 
             var invTransform = camera.inverseTransform;
             Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
@@ -481,7 +484,8 @@ define([
         var camera = this._camera;
 
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, rotateScratchQuaternion), rotateScratchMatrix);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
+        var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
 
         var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, camera.position, camera.position);
@@ -755,12 +759,20 @@ define([
         return Math.atan2(camera.right.y, camera.right.x);
     }
 
-    var scratchHeadingCartesian4 = new Cartesian4();
+    var scratchHeadingMatrix4 = new Matrix4();
+    var scratchHeadingMatrix3 = new Matrix3();
+    var scratchHeadingCartesian3 = new Cartesian3();
 
     function getHeading3D(controller) {
         var camera = controller._camera;
-        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
-        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+
+        var ellipsoid = controller._projection.getEllipsoid();
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
+        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
+        Matrix3.transpose(transform, transform);
+
+        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
+        return Math.atan2(right.y, right.x);
     }
 
     function setHeading2D(controller, angle) {
@@ -987,7 +999,7 @@ define([
         var west = extent.west;
 
         var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
-        transform.setColumn(3, Cartesian4.UNIT_W);
+        Matrix4.setColumn(transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
@@ -1369,7 +1381,7 @@ define([
         var updateCV = function(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(pos));
+            camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, pos));
         };
 
         return {
@@ -1390,14 +1402,14 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Cartesian3.fromCartesian4(camera.inverseTransform.multiplyByVector(Cartesian4.UNIT_X));
+        var normal = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, Cartesian4.UNIT_X));
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = camera.transform.multiplyByVector(center);
+        var centerWC = Matrix4.multiplyByVector(camera.transform, center);
 
         var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = camera.transform.multiplyByVector(cameraPosition);
+        var positionWC = Matrix4.multiplyByVector(camera.transform, cameraPosition);
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;

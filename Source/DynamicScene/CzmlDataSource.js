@@ -12,6 +12,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -35,6 +36,7 @@ define([
         './DynamicBillboard',
         './DynamicClock',
         './ColorMaterialProperty',
+        './PolylineOutlineMaterialProperty',
         './DynamicCone',
         './DynamicLabel',
         './DynamicDirectionsProperty',
@@ -43,6 +45,7 @@ define([
         './GridMaterialProperty',
         './ImageMaterialProperty',
         './DynamicModel',
+        './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPath',
         './DynamicPoint',
@@ -70,6 +73,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         HermitePolynomialApproximation,
         Iso8601,
         JulianDate,
@@ -93,6 +97,7 @@ define([
         DynamicBillboard,
         DynamicClock,
         ColorMaterialProperty,
+        PolylineOutlineMaterialProperty,
         DynamicCone,
         DynamicLabel,
         DynamicDirectionsProperty,
@@ -101,6 +106,7 @@ define([
         GridMaterialProperty,
         ImageMaterialProperty,
         DynamicModel,
+        DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
         DynamicPoint,
@@ -278,12 +284,16 @@ define([
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
             return unwrapImageInterval(czmlInterval, sourceUri);
+        case JulianDate:
+            return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
             return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
         case Number:
-            return defaultValue(czmlInterval['number'], czmlInterval);
+            return defaultValue(czmlInterval.number, czmlInterval);
         case String:
-            return defaultValue(czmlInterval['string'], czmlInterval);
+            return defaultValue(czmlInterval.string, czmlInterval);
+        case Array:
+            return czmlInterval.array;
         case Quaternion:
             return czmlInterval.unitQuaternion;
         case Uri:
@@ -327,7 +337,7 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = defaultValue(type.packedLength, 1);
         var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-        var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+        var isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
@@ -708,6 +718,10 @@ define([
         }
     }
 
+    function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -1033,11 +1047,39 @@ define([
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri);
-        processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri);
-        processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri);
-        processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
+        //Since CZML does not support PolylineOutlineMaterial, we map it's properties into one.
+        var materialToProcess = polyline.material;
+        if (defined(interval)) {
+            var materialInterval;
+            var composite = materialToProcess;
+            if (!(composite instanceof CompositeMaterialProperty)) {
+                composite = new CompositeMaterialProperty();
+                polyline.material = composite;
+                if (defined(materialToProcess)) {
+                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
+                    materialInterval.data = materialToProcess;
+                    composite.intervals.addInterval(materialInterval);
+                }
+            }
+            materialInterval = composite.intervals.findInterval(interval.start, interval.stop, interval.isStartIncluded, interval.isStopIncluded);
+            if (defined(materialInterval)) {
+                materialToProcess = materialInterval.data;
+            } else {
+                materialToProcess = new PolylineOutlineMaterialProperty();
+                materialInterval = interval.clone();
+                materialInterval.data = materialToProcess;
+                composite.intervals.addInterval(materialInterval);
+            }
+        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
+            materialToProcess = new PolylineOutlineMaterialProperty();
+            polyline.material = materialToProcess;
+        }
+
         processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri);
+        processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'color', polylineData.color, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'outlineColor', polylineData.outlineColor, interval, sourceUri);
+        processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1095,7 +1137,7 @@ define([
         processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri);
     }
 
-    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri) {
+    function processCzmlPacket(packet, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource) {
         var objectId = packet.id;
         if (!defined(objectId)) {
             objectId = createGuid();
@@ -1104,20 +1146,31 @@ define([
         if (packet['delete'] === true) {
             dynamicObjectCollection.removeById(objectId);
         } else {
-            var object = dynamicObjectCollection.getOrCreateObject(objectId);
-            for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-                updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri);
+            var dynamicObject;
+            if (objectId === 'document') {
+                dynamicObject = dataSource._document;
+            } else {
+                dynamicObject = dynamicObjectCollection.getOrCreateObject(objectId);
+            }
+
+            var parentId = packet.parent;
+            if (defined(parentId)) {
+                dynamicObject.parent = dynamicObjectCollection.getOrCreateObject(parentId);
+            }
+
+            for (var i = updaterFunctions.length - 1; i > -1; i--) {
+                updaterFunctions[i](dynamicObject, packet, dynamicObjectCollection, sourceUri);
             }
         }
     }
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri);
+        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
-        var documentObject = dynamicObjectCollection.getById('document');
+        var documentObject = dataSource._document;
         if (defined(documentObject) && defined(documentObject.clock)) {
             clock = new DynamicClock();
             clock.startTime = documentObject.clock.startTime;
@@ -1137,6 +1190,18 @@ define([
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
+
+        var name;
+        if (defined(documentObject) && defined(documentObject.name)) {
+            name = documentObject.name;
+        }
+
+        if (!defined(name) && defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        dataSource._name = name;
+
         return clock;
     }
 
@@ -1144,13 +1209,17 @@ define([
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
      * @constructor
+     *
+     * @param {String} [name] An optional name for the data source.  This value will be overwritten if a loaded document contains a name.
      */
-    var CzmlDataSource = function() {
+    var CzmlDataSource = function(name) {
+        this._name = name;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this._document = new DynamicObject();
     };
 
     /**
@@ -1159,23 +1228,34 @@ define([
      * @type Array
      */
     CzmlDataSource.updaters = [processClock,//
-                               processBillboard, //
-                               processEllipse, //
-                               processEllipsoid, //
-                               processCone, //
-                               processLabel, //
-                               processModel, //
-                               processPath, //
-                               processPoint, //
-                               processPolygon, //
-                               processPolyline, //
-                               processPyramid, //
-                               processVector, //
-                               processPosition, //
-                               processViewFrom, //
-                               processOrientation, //
-                               processVertexPositions, //
-                               processAvailability];
+    processBillboard, //
+    processEllipse, //
+    processEllipsoid, //
+    processCone, //
+    processLabel, //
+    processModel, //
+    processName, //
+    processPath, //
+    processPoint, //
+    processPolygon, //
+    processPolyline, //
+    processPyramid, //
+    processVector, //
+    processPosition, //
+    processViewFrom, //
+    processOrientation, //
+    processVertexPositions, //
+    processAvailability];
+
+    /**
+     * Gets the name of this data source.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    CzmlDataSource.prototype.getName = function() {
+        return this._name;
+    };
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
@@ -1260,6 +1340,7 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
+        this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
@@ -1353,15 +1434,15 @@ define([
      */
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
-    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
+    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {
-                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri);
+                processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
             }
         } else {
-            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri);
+            processCzmlPacket(czml, dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
         }
     };
 
