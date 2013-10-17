@@ -45,7 +45,7 @@
             var tourKml = options.routeURL;
 
             if (typeof tourKml !== 'undefined') {
-                that._tourDataSource = new Cesium.KmlDataSource();
+                that._tourDataSource = new Cesium.KmlDataSource(cesiumTerrainProvider);
                 that._tourDataSource.loadUrl(tourKml).then(function() {
                     that.viewer.dataSources.add(that._tourDataSource);
                 });
@@ -53,7 +53,7 @@
             // Cockpit KML
             var cockpitKml = options.cockpitURL;
             if (typeof cockpitKml !== 'undefined') {
-                that._cockpitDataSource = new Cesium.KmlDataSource();
+                that._cockpitDataSource = new Cesium.KmlDataSource(cesiumTerrainProvider);
                 that._cockpitDataSource.loadUrl(cockpitKml).then(function() {
                     that.viewer.dataSources.add(that._cockpitDataSource);
 
