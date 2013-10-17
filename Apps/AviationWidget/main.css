@@ -36,21 +36,51 @@
     box-shadow: 0 0 4px #fff, 0 0 4px #fff;
 }
 
+.awBigButtonContainer {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    vertical-align: middle;
+    margin: 1px;
+}
+
+.awBigButtonContainer:hover {
+    box-shadow: 0 0 4px #fff, 0 0 4px #fff;
+}
+
+.awRouteBtn {
+    background: url(images/route_btn.png) no-repeat center;
+}
+
+.awRouteBtn[data-toggle=false] {
+    background: url(images/route_btn_off.png) no-repeat center;
+}
+
+.awCockpitBtn {
+    background: url(images/cockpit_btn.png) no-repeat center;
+}
+
+.awCockpitBtn[data-toggle=false] {
+    background: url(images/cockpit_btn_off.png) no-repeat center;
+}
+
+
+
 
 .awButton {
-	display: inline-block;
+    display: inline-block;
 
     position: relative;
     width: 100%;
     height: 100%;
 
-	border-radius: 14%;
+    border-radius: 14%;
     border: 1px solid #444;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 
-	cursor: pointer;
+    cursor: pointer;
 
     text-align: center;
     vertical-align: baseline;
@@ -63,7 +93,7 @@
 }
 
 .awButton[data-toggle=true] {
-	background-color: #e6d9c5;
+    background-color: #e6d9c5;
 }
 
 .awButtonBar {
