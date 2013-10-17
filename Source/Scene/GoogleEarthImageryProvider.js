@@ -198,7 +198,7 @@ define([
         }
 
         function requestMetadata() {
-          var url = (!defined(that._proxy) ? metadataUrl : that._proxy.getURL(metadataUrl);
+          var url = (!defined(that._proxy)) ? metadataUrl : that._proxy.getURL(metadataUrl);
 
           var metadata = loadText(url);
           when(metadata, metadataSuccess, metadataFailure);
