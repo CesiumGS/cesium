@@ -37,12 +37,38 @@ define([
     /**
      * Provides tiled imagery using the Google Earth Imagery API.
      *
+     * Notes: This imagery provider does not work with the public Google Earth servers. It works with the
+     *        Google Earth Enterprise Server.
+     *
+     *        By default the Google Earth Enterprise server does not set the
+     *        <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a> headers. You can either
+     *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
+     *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
+     *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
+     *
      * @alias GoogleEarthImageryProvider
      * @constructor
      *
      * @param {String} description.url The url of the Google Earth server hosting the imagery.
-     * @param {String} [description.path] The path of the Google Earth server hosting the imagery 
      * @param {Number} description.channel The channel (id) to be used when requesting data from the server.
+     *        The channel number can be found by looking at the json file located at:
+     *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
+     *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
+     *        is associated with a "ImageryMaps" requestType. There may be more than one id available.
+     *        Example:
+     *        {
+     *          layers: [
+     *            {
+     *              id: 1002,
+     *              requestType: "ImageryMaps"
+     *            },
+     *            {
+     *              id: 1007,
+     *              requestType: "VectorMapsRaster"
+     *            }
+     *          ]
+     *        }
+     * @param {String} [description.path="/default_map"] The path of the Google Earth server hosting the imagery.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests
@@ -142,7 +168,7 @@ define([
                 break;
               }
             }
-            
+
             var message;
 
             if(!defined(layer)) {
@@ -309,7 +335,7 @@ define([
      * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link GoogleEarthImageryProvider#isReady} returns true.
      *
-     * @memberof GoogleEarthImageryProvider 
+     * @memberof GoogleEarthImageryProvider
      *
      * @returns {Number} The minimum level.
      *

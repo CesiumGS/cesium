@@ -360,7 +360,7 @@ defineSuite([
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
         });
     });
-    
+
     it('Projection is WebMercatorTilingScheme when server projection is mercator', function() {
         loadWithXhr.load = function(url, responseType, headers, deferred) {
             return deferred.resolve(JSON.stringify({
@@ -435,7 +435,7 @@ defineSuite([
         loadWithXhr.load = function(url, responseType, headers, deferred) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_channel.json', responseType, headers, deferred);
         };
-        
+
         var provider = new GoogleEarthImageryProvider({
             url: 'http://invalid.localhost',
             channel: 1235
@@ -461,7 +461,7 @@ defineSuite([
         loadWithXhr.load = function(url, responseType, headers, deferred) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_version.json', responseType, headers, deferred);
         };
-        
+
         var provider = new GoogleEarthImageryProvider({
             url: 'http://invalid.localhost',
             channel: 1234
@@ -487,7 +487,7 @@ defineSuite([
         loadWithXhr.load = function(url, responseType, headers, deferred) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_projection.json', responseType, headers, deferred);
         };
-        
+
         var provider = new GoogleEarthImageryProvider({
             url: 'http://invalid.localhost',
             channel: 1234
