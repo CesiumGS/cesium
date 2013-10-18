@@ -63,6 +63,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
+#ifdef EYE_DISTANCE_SCALING || EYE_DISTANCE_TRANSLUCENCY
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -74,6 +75,7 @@ void main()
     {
         lengthSq = dot(positionEC.xyz, positionEC.xyz);
     }
+#endif
 
 #ifdef EYE_DISTANCE_SCALING
     scale *= getNearFarScalar(scaleByDistance, lengthSq);

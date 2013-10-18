@@ -160,7 +160,7 @@ define([
 
     /**
      * An immutable vertex format with position and color attributes.
-     * This is compatible with {@link PointColorAppearance}.
+     * This is compatible with {@link PointAppearance}.
      *
      * @memberof VertexFormat
      *

@@ -43,8 +43,10 @@ define([
         /**
          * DOC_TBA
          */
-        this.vertexFormat = VertexFormat.POSITION_ONLY;
+        this.vertexFormat = VertexFormat.POSITION_AND_COLOR;
     };
+
+    PointAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_COLOR;
 
     /**
      * DOC_TBA
