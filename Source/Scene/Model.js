@@ -1174,15 +1174,15 @@ define([
     var ccc_count = 0;
 
     function raiseAnimationEvents(scheduledAnimation) {
-        if (defined(scheduledAnimation.onStart)) {
+        if (defined(scheduledAnimation.start)) {
             if (ccc_count === 0) {
-                scheduledAnimation.onStart.raiseEvent();
+                scheduledAnimation.start.raiseEvent();
             }
         }
 
-        if (defined(scheduledAnimation.onStop)) {
+        if (defined(scheduledAnimation.stop)) {
             if (ccc_count === scheduledAnimation.animation.count - 1) {
-                scheduledAnimation.onStop.raiseEvent();
+                scheduledAnimation.stop.raiseEvent();
             }
         }
     }
@@ -1309,8 +1309,8 @@ define([
      * DOC_TBA
      *
      * @param {String} options.name DOC_TBA
-     * @param {Event} [options.onStart] DOC_TBA
-     * @param {Event} [options.onStop] DOC_TBA
+     * @param {Event} [options.start] DOC_TBA
+     * @param {Event} [options.stop] DOC_TBA
      *
      * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#jsonLoad} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
@@ -1333,8 +1333,8 @@ define([
 // TODO: data structure for all animations.  Should be able to remove them, etc.
         this._animation = {
             animation : animation,
-            onStart : options.onStart,
-            onStop : options.onStop
+            start : options.start,
+            stop : options.stop
         };
     };
 
