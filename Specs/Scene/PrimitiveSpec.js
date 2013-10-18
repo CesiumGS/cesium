@@ -24,7 +24,9 @@ defineSuite([
          'Specs/pick',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState'
+         'Specs/createFrameState',
+         'Specs/createScene',
+         'Specs/destroyScene'
      ], function(
          Primitive,
          ExtentGeometry,
@@ -50,7 +52,9 @@ defineSuite([
          pick,
          createContext,
          destroyContext,
-         createFrameState) {
+         createFrameState,
+         createScene,
+         destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -121,7 +125,12 @@ defineSuite([
         expect(primitive.appearance).not.toBeDefined();
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
+        expect(primitive.vertexCacheOptimize).toEqual(true);
+        expect(primitive.releaseGeometryInstances).toEqual(true);
+        expect(primitive.allow3DOnly).toEqual(false);
+        expect(primitive.allowPicking).toEqual(true);
         expect(primitive.asynchronous).toEqual(true);
+        expect(primitive.debugShowBoundingVolume).toEqual(false);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
@@ -356,6 +365,26 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('renders bounding volume with debugShowBoundingVolume', function() {
+        var scene = createScene();
+        scene.getPrimitives().add(new Primitive({
+            geometryInstances : extentInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false,
+            debugShowBoundingVolume : true
+        }));
+        scene.getCamera().controller.viewExtent(extent1);
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+        expect(pixels[3]).toEqual(255);
+
+        destroyScene();
+    });
+
     it('transforms to world coordinates', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
@@ -534,6 +563,24 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
+    it('does not pick when allowPicking is false', function() {
+        var primitive = new Primitive({
+            geometryInstances : [extentInstance1],
+            appearance : new PerInstanceColorAppearance(),
+            allow3DOnly : true,
+            allowPicking : false,
+            asynchronous : false
+        });
+
+        frameState.camera.controller.viewExtent(extent1);
+        us.update(context, frameState);
+
+        var pickObject = pick(context, frameState, primitive);
+        expect(pickObject).not.toBeDefined();
+
+        primitive = primitive && primitive.destroy();
+    });
+
     it('update throws when geometry primitive types are different', function() {
         var primitive = new Primitive({
             geometryInstances : [
@@ -695,5 +742,4 @@ defineSuite([
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
     });
-
 });

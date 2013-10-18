@@ -64,6 +64,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
@@ -132,8 +133,6 @@ define([
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
          *
-         * @default Matrix4.IDENTITY
-         *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
          *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
@@ -186,6 +185,18 @@ define([
          */
         this.id = options.id;
         this._id = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
          * @private
@@ -345,6 +356,7 @@ define([
             }
 
             colorCommand.boundingVolume = this._boundingSphere;
+            colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
             colorCommand.modelMatrix = this._computedModelMatrix;
 
             ellipsoidCommandLists.colorList.push(colorCommand);

@@ -45,6 +45,7 @@ define([
      * @param {Material} [options.material=undefined] The surface appearance of the primitive.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @example
      * var extentPrimitive = new ExtentPrimitive({
@@ -173,6 +174,18 @@ define([
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
 
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
         this._primitive = undefined;
     };
 
@@ -239,8 +252,10 @@ define([
             });
         }
 
-        this._primitive.appearance.material = this.material;
-        this._primitive.update(context, frameState, commandList);
+        var primitive = this._primitive;
+        primitive.appearance.material = this.material;
+        primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        primitive.update(context, frameState, commandList);
     };
 
     /**
