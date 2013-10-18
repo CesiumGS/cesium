@@ -88,18 +88,6 @@ define([
          * @default false
          */
         this.tangent = defaultValue(options.tangent, false);
-
-        /**
-         * When <code>true</code>, the vertex has an RGBA color attribute.
-         * <p>
-         * 8-bit unsigned byte.  4 components per attribute.
-         * </p>
-         *
-         * @type Boolean
-         *
-         * @default false
-         */
-        this.color = defaultValue(options.color, false);
     };
 
     /**
@@ -159,22 +147,7 @@ define([
     }));
 
     /**
-     * An immutable vertex format with position and color attributes.
-     * This is compatible with {@link PointAppearance}.
-     *
-     * @memberof VertexFormat
-     *
-     * @see VertexFormat#position
-     * @see VertexFormat#color
-     */
-    VertexFormat.POSITION_AND_COLOR = freezeObject(new VertexFormat({
-        position : true,
-        color : true
-    }));
-
-    /**
      * An immutable vertex format with all well-known attributes: position, normal, st, binormal, and tangent.
-     * This does not include {@link VertexFormat#color}.
      *
      * @memberof VertexFormat
      *
