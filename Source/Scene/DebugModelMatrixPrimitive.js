@@ -152,7 +152,8 @@ define([
                     pickPrimitive : this
                 }),
                 appearance : new PolylineColorAppearance(),
-                asynchronous : false
+                asynchronous : false,
+                allow3DOnly : Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY)  // Workaround projecting (0, 0, 0)
             });
         }
 
