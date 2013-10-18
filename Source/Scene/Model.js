@@ -222,12 +222,12 @@ define([
         /**
          * DOC_TBA
          */
-        this.onJsonLoad = new Event();
+        this.jsonLoad = new Event();
 
         /**
          * DOC_TBA
          */
-        this.onReadyToRender = new Event();
+        this.readyToRender = new Event();
 
 // TODO: will change with animation
 // TODO: only load external files if within bounding sphere
@@ -278,7 +278,7 @@ define([
         loadText(url, options.headers).then(function(data) {
             model.gltf = JSON.parse(data);
             model.basePath = basePath;
-            model.onJsonLoad.raiseEvent();
+            model.jsonLoad.raiseEvent();
         });
 
         return model;
@@ -1297,7 +1297,7 @@ define([
 
         if (justLoaded) {
             // Call after modelMatrix update.
-            frameState.events.push(this.onReadyToRender);
+            frameState.events.push(this.readyToRender);
         }
 
         updatePickIds(this, context);
@@ -1312,7 +1312,7 @@ define([
      * @param {Event} [options.onStart] DOC_TBA
      * @param {Event} [options.onStop] DOC_TBA
      *
-     * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#onJsonLoad} event.
+     * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#jsonLoad} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
      */
     Model.prototype.scheduleAnimation = function(options) {
@@ -1320,7 +1320,7 @@ define([
 // TODO: options should take start time, etc.
 
         if (!defined(this.gltf)) {
-            throw new DeveloperError('The gltf property is not defined.  Wait for the onJsonLoad event.');
+            throw new DeveloperError('The gltf property is not defined.  Wait for the jsonLoad event.');
         }
 
         var animation = this.gltf.animations[options.name];

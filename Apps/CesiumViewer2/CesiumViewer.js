@@ -187,7 +187,7 @@ define([
 //          , debugShowBoundingVolume : true
         }));
 
-        model.onReadyToRender.addEventListener(function() {
+        model.readyToRender.addEventListener(function() {
             var center = model.worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
