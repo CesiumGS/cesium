@@ -920,7 +920,6 @@ require({
 
     function setSubtab(tabName) {
         currentTab = (typeof queryObject.label !== 'undefined') ? queryObject.label : tabName;
-        window.history.replaceState({}, 'name', '?src=' + queryObject.src + '&label=' + currentTab);
         queryObject.label = undefined;
     }
 
