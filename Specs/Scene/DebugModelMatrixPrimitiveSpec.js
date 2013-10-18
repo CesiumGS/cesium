@@ -34,6 +34,10 @@ defineSuite([
         scene.initializeFrame();
     });
 
+    afterEach(function() {
+        scene.getPrimitives().removeAll();
+    });
+
     it('gets the default properties', function() {
         var p = new DebugModelMatrixPrimitive();
         expect(p.length).toEqual(10000000.0);
@@ -69,8 +73,6 @@ defineSuite([
         p.length = 100.0;
         scene.render();
         expect(scene.getContext().readPixels()).not.toEqual([0, 0, 0, 255]);
-
-        scene.getPrimitives().removeAll();
     });
 
     it('does not render when show is false', function() {
@@ -79,7 +81,6 @@ defineSuite([
         }));
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
-        scene.getPrimitives().removeAll();
     });
 
     it('is picked', function() {
@@ -90,8 +91,6 @@ defineSuite([
         var pick = scene.pick(new Cartesian2(0, 0));
         expect(pick.primitive).toEqual(p);
         expect(pick.id).toEqual('id');
-
-        scene.getPrimitives().removeAll();
     });
 
     it('isDestroyed', function() {
