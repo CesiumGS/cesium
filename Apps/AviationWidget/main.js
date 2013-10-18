@@ -25,6 +25,8 @@
          * Initialize widget
          */
         this.init = function() {
+            Cesium.BingMapsApi.defaultKey = 'AhwnIBdTyPRiHY7c6jq1U_0IxoMUUL3iQWJOfGwfpROIoNeBEtdT71zFMg2f2J39';
+
             that.viewer = new Cesium.Viewer(canvasId, _viewerOpts);
             var scene = that.viewer.scene;
 
