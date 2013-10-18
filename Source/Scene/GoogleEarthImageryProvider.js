@@ -69,16 +69,11 @@ define([
      *          ]
      *        }
      * @param {String} [description.path="/default_map"] The path of the Google Earth server hosting the imagery.
+     * @param {Number} [description.maximumLevel=23] The maximum level-of-detail supported by the Google Earth
+     *        Enterprise server.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Google Earth server.
-     *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for
-     *        this parameter.
+     *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
+     *        a {@link NeverTileDiscardPolicy} for this parameter.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -122,9 +117,12 @@ define([
         this._credit = new Credit('Google Imagery', GoogleEarthImageryProvider._logoData, 'http://www.google.com/enterprise/mapsearth/products/earthenterprise.html');
 
         /**
-         * By default this is set to 1.9
+         * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
+         * By default, this is set to 1.9.  Changing this value after creating an {@link ImageryLayer} for this provider will have
+         * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
+         * @default 1.9
          */
         this.defaultGamma = 1.9;
 
@@ -135,7 +133,7 @@ define([
 
         this._tileWidth = 256;
         this._tileHeight = 256;
-        this._maximumLevel = 23;
+        this._maximumLevel = defaultValue(description.maximumLevel, 23);
         this._imageUrlTemplate = this._url + this._path + '/query?request={request}&channel={channel}&version={version}&x={x}&y={y}&z={zoom}';
 
         this._errorEvent = new Event();
@@ -202,15 +200,6 @@ define([
             that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType)
               .replace('{channel}', that._channel).replace('{version}', that._version);
 
-            // Install the default tile discard policy if none has been supplied.
-            if (!defined(that._tileDiscardPolicy)) {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                    disableCheckIfAllPixelsAreTransparent : true
-                });
-            }
-
             that._ready = true;
             TileProviderError.handleSuccess(metadataError);
         }
@@ -270,7 +259,7 @@ define([
      *
      * @memberof GoogleEarthImageryProvider
      *
-     * @returns {Number} The url.
+     * @returns {Number} The channel.
      */
     GoogleEarthImageryProvider.prototype.getChannel = function() {
         return this._channel;

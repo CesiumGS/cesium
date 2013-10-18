@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/GoogleEarthImageryProvider',
+         'Core/defined',
          'Core/DefaultProxy',
          'Core/FeatureDetection',
          'Core/loadImage',
          'Core/loadWithXhr',
          'Core/Extent',
-         'Scene/DiscardMissingTileImagePolicy',
          'Scene/Imagery',
          'Scene/ImageryLayer',
          'Scene/ImageryProvider',
@@ -17,12 +17,12 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          GoogleEarthImageryProvider,
+         defined,
          DefaultProxy,
          FeatureDetection,
          loadImage,
          loadWithXhr,
          Extent,
-         DiscardMissingTileImagePolicy,
          Imagery,
          ImageryLayer,
          ImageryProvider,
@@ -94,12 +94,12 @@ defineSuite([
             expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getVersion()).toEqual(version);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.getTileDiscardPolicy()).toBeUndefined();
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
         });
 
         waitsFor(function() {
-            return typeof provider.getCredit() !== 'undefined';
+            return defined(provider.getCredit());
         }, 'logo to become ready');
 
         runs(function() {
@@ -127,7 +127,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -231,7 +231,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -294,7 +294,7 @@ defineSuite([
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
-        loadWithXhr.createImage = function(url, responseType, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
             // Succeed after 2 tries
             if (tries === 2) {
                 // valid URL
