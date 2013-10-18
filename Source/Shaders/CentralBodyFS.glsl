@@ -150,6 +150,8 @@ void main()
 
 #ifdef ENABLE_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float cameraDist = length(czm_view[3]);
+    diffuseIntensity = mix(1.0, diffuseIntensity, clamp((cameraDist - 7500000.0) / (9000000.0 - 7500000.0), 0.0, 1.0));
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     gl_FragColor = color;
