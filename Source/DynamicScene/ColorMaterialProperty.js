@@ -2,11 +2,13 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        './ConstantProperty'
+        './ConstantProperty',
+        './Property'
     ], function(
         Color,
         defined,
-        ConstantProperty) {
+        ConstantProperty,
+        Property) {
     "use strict";
 
     /**
@@ -50,6 +52,20 @@ define([
         }
         result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
         return result;
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof ColorMaterialProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    ColorMaterialProperty.prototype.equals = function(other) {
+        return this === other || //
+               (other instanceof ColorMaterialProperty && //
+                Property.equals(this.color, other.color));
     };
 
     return ColorMaterialProperty;

@@ -407,6 +407,50 @@ define([
         this._updateTableLength = true;
     };
 
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof SampledProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    SampledProperty.prototype.equals = function(other) {
+        if (this === other) {
+            return true;
+        }
+        if (!defined(other)) {
+            return false;
+        }
+
+        var times = this._times;
+        var otherTimes = other._times;
+        var length = times.length;
+
+        if (length !== otherTimes.length) {
+            return false;
+        }
+
+        var i;
+        for (i = 0; i < length; i++) {
+            if (!JulianDate.equals(times[i], otherTimes[i])) {
+                return false;
+            }
+        }
+
+        var values = this._values;
+        var otherValues = other._values;
+        for (i = 0; i < length; i++) {
+            if (values[i] !== otherValues[i]) {
+                return false;
+            }
+        }
+
+        return this._type === other._type && //
+               this._interpolationDegree === other._interpolationDegree && //
+               this._interpolationAlgorithm === other._interpolationAlgorithm;
+    };
+
     //Exposed for testing.
     SampledProperty._mergeNewSamples = mergeNewSamples;
 

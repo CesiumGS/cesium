@@ -381,6 +381,21 @@ define([
         return this._animations;
     };
 
+    var scratchOccluderBoundingSphere = new BoundingSphere();
+
+    function getOccluder(scene) {
+        // TODO: The occluder is the top-level central body. When we add
+        //       support for multiple central bodies, this should be the closest one.
+        var cb = scene._primitives.getCentralBody();
+        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
+            var ellipsoid = cb.getEllipsoid();
+            scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
+            return new Occluder(scratchOccluderBoundingSphere, scene._camera.positionWC);
+        }
+
+        return undefined;
+    }
+
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
@@ -398,16 +413,8 @@ define([
         frameState.time = time;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
-        frameState.occluder = undefined;
-
-        // TODO: The occluder is the top-level central body. When we add
-        //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.positionWC);
-            frameState.occluder = occluder;
-        }
+        frameState.occluder = getOccluder(scene);
+        frameState.events.length = 0;
 
         clearPasses(frameState.passes);
     }
@@ -645,7 +652,7 @@ define([
             }
 
             var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
-            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(Cartesian3.fromArray(m, 12)), command.boundingVolume.radius);
+            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(m, command.boundingVolume.radius);
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
@@ -786,6 +793,16 @@ define([
         }
     }
 
+    function executeEvents(frameState) {
+        // Events are queued up during primitive update and executed here in case
+        // the callback modifies scene state that should remain constant over the frame.
+        var events = frameState.events;
+        var length = events.length;
+        for (var i = 0; i < length; ++i) {
+            events[i].raiseEvent();
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -833,6 +850,7 @@ define([
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
         context.endFrame();
+        executeEvents(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -961,6 +979,7 @@ define([
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
+        executeEvents(frameState);
         return object;
     };
 

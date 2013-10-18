@@ -106,6 +106,18 @@ define([
         * @type {CreditDisplay}
         */
         this.creditDisplay = creditDisplay;
+
+        /**
+         * An array of {@link Event} instances to raise at the end of the frame.
+         * This allows queueing up events in <code>update</code> functions and
+         * firing them at a time when the subscribers are free to change the
+         * scene state, e.g., manipulate the camera, instead of firing events
+         * directly in <code>update</code> functions.
+         *
+         * @type {Array}
+         * @default []
+         */
+        this.events = [];
     };
 
     return FrameState;
