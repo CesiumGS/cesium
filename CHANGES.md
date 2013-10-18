@@ -56,7 +56,6 @@ Beta Releases
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
-* Added `PointGeometry`, `PointAppearance`, and `PointColorAppearance` for drawing massive amounts of points.
 * Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and 'PolylineCollection'.
 * Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
 
