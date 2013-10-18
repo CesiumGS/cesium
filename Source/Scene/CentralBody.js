@@ -222,6 +222,24 @@ define([
         this.enableLighting = false;
         this._enableLighting = false;
 
+        /**
+         * The distance where everything becomes lit. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 7500000.0
+         */
+        this.lightingFadeOutDistance = 7500000.0;
+
+        /**
+         * The distance where lighting resumes. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 9000000.0
+         */
+        this.lightingFadeInDistance = 9000000.0;
+
         this._lastOceanNormalMapUrl = undefined;
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -236,6 +254,12 @@ define([
             },
             u_oceanNormalMap : function() {
                 return that._oceanNormalMap;
+            },
+            u_lightingFadeOutDistance : function() {
+                return that.lightingFadeOutDistance;
+            },
+            u_lightingFadeInDistance : function() {
+                return that.lightingFadeInDistance;
             }
         };
     };

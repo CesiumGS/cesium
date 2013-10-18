@@ -41,6 +41,11 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
+#ifdef ENABLE_LIGHTING
+uniform float u_lightingFadeOutDistance;
+uniform float u_lightingFadeInDistance;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
@@ -151,7 +156,8 @@ void main()
 #ifdef ENABLE_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     float cameraDist = length(czm_view[3]);
-    diffuseIntensity = mix(1.0, diffuseIntensity, clamp((cameraDist - 7500000.0) / (9000000.0 - 7500000.0), 0.0, 1.0));
+    float t = clamp((cameraDist - u_lightingFadeOutDistance) / (u_lightingFadeInDistance - u_lightingFadeOutDistance), 0.0, 1.0);
+    diffuseIntensity = mix(1.0, diffuseIntensity, t);
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     gl_FragColor = color;
