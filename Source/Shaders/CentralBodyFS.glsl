@@ -123,8 +123,10 @@ void main()
 
     vec4 color = vec4(startDayColor, 1.0);
     
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_LIGHTING)
     vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
+#endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
@@ -145,9 +147,13 @@ void main()
         color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, startDayColor, mask);
     }
 #endif
-    
+
+#ifdef ENABLE_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) + 0.2, 0.0, 1.0);
-    gl_FragColor = vec4(color.rgb * diffuseIntensity, 1.0);
+    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
+#else
+    gl_FragColor = color;
+#endif
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN

@@ -213,6 +213,15 @@ define([
          */
         this.tileCacheSize = 100;
 
+        /**
+         * Enable lighting the globe with the sun as a light source.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.enableLighting = false;
+        this._enableLighting = false;
+
         this._lastOceanNormalMapUrl = undefined;
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
@@ -619,6 +628,7 @@ define([
         var projectionChanged = this._projection !== projection;
         var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
+        var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._surfaceShaderSet) ||
             !defined(this._northPoleCommand.shaderProgram) ||
@@ -626,6 +636,7 @@ define([
             modeChanged ||
             projectionChanged ||
             hasWaterMaskChanged ||
+            hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
@@ -662,7 +673,10 @@ define([
             }
 
             this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
-                defines : [hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''],
+                defines : [
+                    (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
+                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                ],
                 sources : [CentralBodyVS, getPositionMode, get2DYPositionFraction]
             });
 
@@ -671,7 +685,8 @@ define([
             this._surfaceShaderSet.baseFragmentShaderString = createShaderSource({
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
-                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : '')
+                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
+                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
                 ],
                 sources : [CentralBodyFS]
             });
