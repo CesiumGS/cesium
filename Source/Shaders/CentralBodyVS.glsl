@@ -84,11 +84,9 @@ void main()
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
 
     gl_Position = getPosition(position3DWC);
-    
-#ifdef SHOW_REFLECTIVE_OCEAN
+
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
-#endif
 
     v_textureCoordinates = textureCoordinates;
 }

@@ -122,6 +122,9 @@ void main()
 #endif
 
     vec4 color = vec4(startDayColor, 1.0);
+    
+    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+    vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
 
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
@@ -132,10 +135,8 @@ void main()
 
     if (mask > 0.0)
     {
-        vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-        vec3 normalEC = normalize(czm_normal3D * normalMC);                                           // normalized surface normal in eye coordiantes
         mat3 enuToEye = czm_eastNorthUpToEyeCoordinates(v_positionMC, normalEC);
-
+        
         vec2 ellipsoidTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC);
         vec2 ellipsoidFlippedTextureCoordinates = czm_ellipsoidWgs84TextureCoordinates(normalMC.zyx);
 
@@ -145,7 +146,8 @@ void main()
     }
 #endif
     
-    gl_FragColor = color;
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) + 0.2, 0.0, 1.0);
+    gl_FragColor = vec4(color.rgb * diffuseIntensity, 1.0);
 }
 
 #ifdef SHOW_REFLECTIVE_OCEAN
