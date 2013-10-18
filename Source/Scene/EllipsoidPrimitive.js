@@ -133,8 +133,6 @@ define([
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
          *
-         * @default Matrix4.IDENTITY
-         *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
          *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
