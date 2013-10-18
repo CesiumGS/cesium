@@ -63,7 +63,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-#ifdef EYE_DISTANCE_SCALING || EYE_DISTANCE_TRANSLUCENCY
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
