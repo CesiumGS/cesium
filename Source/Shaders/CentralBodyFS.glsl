@@ -149,7 +149,7 @@ void main()
 #endif
 
 #ifdef ENABLE_LIGHTING
-    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) + 0.2, 0.0, 1.0);
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     gl_FragColor = color;
