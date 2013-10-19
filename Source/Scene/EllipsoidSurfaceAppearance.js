@@ -162,7 +162,7 @@ define([
          *
          * @default true
          */
-        this.closed = !aboveGround;
+        this.closed = false;
 
         /**
          * When <code>true</code>, the geometry is expected to be on the ellipsoid's

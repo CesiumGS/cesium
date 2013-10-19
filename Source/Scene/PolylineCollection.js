@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
@@ -27,6 +28,7 @@ define([
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS'
     ], function(
+        defaultValue,
         defined,
         DeveloperError,
         Color,
@@ -95,6 +97,9 @@ define([
      * @alias PolylineCollection
      * @constructor
      *
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each polyline from model to world coordinates.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     *
      * @performance For best performance, prefer a few collections, each with many polylines, to
      * many collections with only a few polylines each.  Organize collections so that polylines
      * with the same update frequency are in the same collection, i.e., polylines that do not
@@ -127,7 +132,9 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
-    var PolylineCollection = function() {
+    var PolylineCollection = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -141,8 +148,20 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._rs = undefined;
 
@@ -458,14 +477,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(this, context, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, context, frameState, colorList, modelMatrix, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(this, context, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, context, frameState, pickList, modelMatrix, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -476,13 +495,16 @@ define([
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
-        var length = vertexArrays.length;
-
+    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass) {
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
 
+        var vertexArrays = polylineCollection._vertexArrays;
+        var renderState = polylineCollection._rs;
+        var debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
+
+        var length = vertexArrays.length;
         for ( var m = 0; m < length; ++m) {
             var va = vertexArrays[m];
             var buckets = va.buckets;
@@ -522,6 +544,7 @@ define([
                             command.shaderProgram = sp;
                             command.vertexArray = va.va;
                             command.renderState = renderState;
+                            command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                             command.uniformMap = currentMaterial._uniforms;
                             command.count = count;
@@ -585,6 +608,7 @@ define([
                     command.shaderProgram = sp;
                     command.vertexArray = va.va;
                     command.renderState = renderState;
+                    command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                     command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
