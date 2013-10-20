@@ -132,6 +132,26 @@ defineSuite([
         expect(Cartesian3.getMinimumByComponent(first, second, result)).toEqual(result);
     });
 
+    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian3(2.0, 0.0, 0.0);
+        var second = new Cartesian3(1.0, 0.0, 0.0);
+        var result = new Cartesian3(1.0, 0.0, 0.0);
+        expect(Cartesian3.getMinimumByComponent(first, second, first)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian3.getMinimumByComponent(first, second, first)).toEqual(result);
+    });
+
+    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian3(2.0, 0.0, 0.0);
+        var second = new Cartesian3(1.0, 0.0, 0.0);
+        var result = new Cartesian3(1.0, 0.0, 0.0);
+        expect(Cartesian3.getMinimumByComponent(first, second, second)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian3.getMinimumByComponent(first, second, second)).toEqual(result);
+    });
+
     it('getMinimumByComponent throws without first', function() {
         expect(function() {
             Cartesian3.getMinimumByComponent();
@@ -144,7 +164,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s X is greater', function() {
+    it('getMinimumByComponent works when first\'s or second\'s X is lesser', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
@@ -154,7 +174,7 @@ defineSuite([
         expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s Y is greater', function() {
+    it('getMinimumByComponent works when first\'s or second\'s Y is lesser', function() {
         var first = new Cartesian3(0.0, 2.0, 0.0);
         var second = new Cartesian3(0.0, 1.0, 0.0);
         var result = new Cartesian3(0.0, 1.0, 0.0);
@@ -164,7 +184,7 @@ defineSuite([
         expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
     });
 
-    it('getMinimumByComponent works when first\'s or second\'s Z is greater', function() {
+    it('getMinimumByComponent works when first\'s or second\'s Z is lesser', function() {
         var first = new Cartesian3(0.0, 0.0, 2.0);
         var second = new Cartesian3(0.0, 0.0, 1.0);
         var result = new Cartesian3(0.0, 0.0, 1.0);
@@ -186,6 +206,26 @@ defineSuite([
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
         expect(Cartesian3.getMaximumByComponent(first, second, result)).toEqual(result);
+    });
+
+    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian3(2.0, 0.0, 0.0);
+        var second = new Cartesian3(1.0, 0.0, 0.0);
+        var result = new Cartesian3(2.0, 0.0, 0.0);
+        expect(Cartesian3.getMaximumByComponent(first, second, first)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian3.getMaximumByComponent(first, second, first)).toEqual(result);
+    });
+
+    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian3(2.0, 0.0, 0.0);
+        var second = new Cartesian3(1.0, 0.0, 0.0);
+        var result = new Cartesian3(2.0, 0.0, 0.0);
+        expect(Cartesian3.getMaximumByComponent(first, second, second)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian3.getMaximumByComponent(first, second, second)).toEqual(result);
     });
 
     it('getMaximumByComponent throws without first', function() {
