@@ -25,7 +25,7 @@ defineSuite([
                      new Cartesian3(0, 0, 1),
                      new Cartesian3(1, 0, 1),
                      new Cartesian3(0, 1, 1),
-                     new Cartesian3(1, 1, 1),
+                     new Cartesian3(1, 1, 1)
                  ];
 
     //Rotated cube
@@ -37,7 +37,7 @@ defineSuite([
                       new Cartesian3(1, 1, 1),
                       new Cartesian3(0, 0, 1),
                       new Cartesian3(-1, 1, 1),
-                      new Cartesian3(0, 2, 1),
+                      new Cartesian3(0, 2, 1)
                   ];
     //Half circle
     var positions3 = [
@@ -49,7 +49,7 @@ defineSuite([
                       new Cartesian3(-0.5, 0.866, 0),
                       new Cartesian3(-0.25, 0.968, 0),
                       new Cartesian3(-0.75, 0.661, 0),
-                      new Cartesian3(-1, 0, 0),
+                      new Cartesian3(-1, 0, 0)
                   ]; //TODO
     //Rotated cube + 1 point
     var positions4 = [
@@ -62,7 +62,7 @@ defineSuite([
                       new Cartesian3(-0.207, 1.354, 0.354),
                       new Cartesian3(0.293, 1.208, 1.208),
                       //+1
-                      new Cartesian3(5, 0, 0),
+                      new Cartesian3(5, 0, 0)
                   ]; //TODO
 
     it('fromPoints constructs empty box with undefined positions', function() {
@@ -100,7 +100,7 @@ defineSuite([
     });
 
     it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {
-        var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle, 0.0);
+        var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle(), 0.0);
         var result = new ObjectOrientedBoundingBox();
         expect(result).toEqual(box);//TODO
     });

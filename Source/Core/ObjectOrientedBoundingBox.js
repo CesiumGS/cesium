@@ -1,5 +1,5 @@
 /*global define*/
-define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './Intersect', './Matrix3', './BoundingRectangle', ], function(defaultValue, defined, DeveloperError, Cartesian3, Intersect, Matrix3, BoundingRectangle) {
+define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './Intersect', './Matrix3', './BoundingRectangle'], function(defaultValue, defined, DeveloperError, Cartesian3, Intersect, Matrix3, BoundingRectangle) {
     "use strict";
 
     /**
@@ -68,7 +68,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1);
 
         var length = positions.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             Cartesian3.add(meanPoint, positions[i], meanPoint);
         }
         Cartesian3.multiplyByScalar(meanPoint, 1.0 / length, meanPoint);
@@ -86,9 +86,10 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         var meanPointYY = meanPoint.y * meanPoint.y;
         var meanPointYZ = meanPoint.y * meanPoint.z;
         var meanPointZZ = meanPoint.z * meanPoint.z;
+        var p;
 
-        for ( var i = 0; i < length; i++) {
-            var p = positions[i];
+        for (i = 0; i < length; i++) {
+            p = positions[i];
             exx += p.x * p.x - meanPointXX;
             exy += p.x * p.y - meanPointXY;
             exz += p.x * p.z - meanPointXZ;
@@ -114,14 +115,14 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
 
         result.transformMatrix = Matrix3.clone([r.x, u.x, f.x, r.y, u.y, f.y, r.z, u.z, f.z], Matrix3.clone(Matrix3.IDENTITY, result.transformMatrix));
 
-        var p = positions[0];
+        p = positions[0];
         var tempPoint = Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, scratchCartesian4);
         var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
         var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
 
-        for ( var i = 1; i < length; i++) {
+        for (i = 1; i < length; i++) {
             p = positions[i];
-            Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, tempPoint)
+            Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }

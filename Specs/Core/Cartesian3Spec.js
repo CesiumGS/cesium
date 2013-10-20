@@ -160,7 +160,7 @@ defineSuite([
 
     it('getMinimumByComponent throws without second', function() {
         expect(function() {
-            Cartesian3.getMinimumByComponent(new Cartesian());
+            Cartesian3.getMinimumByComponent(new Cartesian3());
         }).toThrow();
     });
 
@@ -236,7 +236,7 @@ defineSuite([
 
     it('getMaximumByComponent throws without second', function() {
         expect(function() {
-            Cartesian3.getMaximumByComponent(new Cartesian());
+            Cartesian3.getMaximumByComponent(new Cartesian3());
         }).toThrow();
     });
 
