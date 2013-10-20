@@ -114,7 +114,7 @@ defineSuite([
 
     it('clone without a result parameter', function() {
         var box = new ObjectOrientedBoundingBox();
-        var result = box.clone();
+        var result = ObjectOrientedBoundingBox.clone(box);
         expect(box).toNotBe(result);
         expect(box).toEqual(result);
     });
@@ -122,7 +122,7 @@ defineSuite([
     it('clone with a result parameter', function() {
         var box = new ObjectOrientedBoundingBox();
         var result = new ObjectOrientedBoundingBox();
-        var returnedResult = box.clone(result);
+        var returnedResult = ObjectOrientedBoundingBox.clone(box, result);
         expect(result).toBe(returnedResult);
         expect(box).toNotBe(result);
         expect(box).toEqual(result);

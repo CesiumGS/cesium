@@ -34,9 +34,18 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         this.extent = Cartesian3.clone(defaultValue(extent, Cartesian3.ZERO));
     };
 
-    var scratchMeanPoint = new Cartesian3();
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
+    var scratchCartesian5 = new Cartesian3();
+    var scratchCartesian6 = new Cartesian3();
+    var scratchCovarianceResult = new Matrix3();
+    var scratchEigenResult = new Matrix3();
     /**
-     * Computes an instance of an ObjectOrientedBoundingBox of the given positions. The box is determined //TODO
+     * Computes an instance of an ObjectOrientedBoundingBox of the given positions. The box is determined using the covariance matrix.
+     * First we build the covariance matrix, then we compute the center, rotation and the minimal edge lengths of the OBB.
+     * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {Array} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
@@ -56,7 +65,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
             return result;
         }
 
-        var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchMeanPoint);
+        var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1);
 
         var length = positions.length;
         for ( var i = 0; i < length; i++) {
@@ -88,44 +97,53 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
             ezz += p.z * p.z - meanPointZZ;
         }
 
-        var covarianceMatrix = new Matrix3(exx, exy, exz, exy, eyy, eyz, exz, eyz, ezz);
+        var covarianceMatrix = Matrix3.clone([exx, exy, exz, exy, eyy, eyz, exz, eyz, ezz], Matrix3.clone(Matrix3.IDENTITY, scratchCovarianceResult));
 
-        var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix);
+        var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix, scratchEigenResult);
         var unitaryMatrix = eigenDecomposition.unitary;
 
         //eigenvectors of covMatrix
-        var v1 = Matrix3.getColumn(unitaryMatrix, 0, v1);
-        var v2 = Matrix3.getColumn(unitaryMatrix, 1, v2);
-        var v3 = Matrix3.getColumn(unitaryMatrix, 2, v3);
+        var v1 = Matrix3.getColumn(unitaryMatrix, 0, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1));
+        var v2 = Matrix3.getColumn(unitaryMatrix, 1, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian2));
+        var v3 = Matrix3.getColumn(unitaryMatrix, 2, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3));
 
         //normalized eigenvectors
-        var r = Cartesian3.normalize(v1, r);
-        var u = Cartesian3.normalize(v2, u);
-        var f = Cartesian3.normalize(v3, f);
+        var r = Cartesian3.normalize(v1, v1);
+        var u = Cartesian3.normalize(v2, v2);
+        var f = Cartesian3.normalize(v3, v3);
 
-        result.transformMatrix = new Matrix3(r.x, u.x, f.x, r.y, u.y, f.y, r.z, u.z, f.z);
+        result.transformMatrix = Matrix3.clone([r.x, u.x, f.x, r.y, u.y, f.y, r.z, u.z, f.z], Matrix3.clone(Matrix3.IDENTITY, result.transformMatrix));
 
         var p = positions[0];
-        var tempPoint = new Cartesian3(Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p));
-        var maxPoint = tempPoint;
-        var minPoint = tempPoint;
+        var tempPoint = Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, scratchCartesian4);
+        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
+        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
 
         for ( var i = 1; i < length; i++) {
             p = positions[i];
-            tempPoint = new Cartesian3(Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p));
-            minPoint = Cartesian3.getMinimumByComponent(minPoint, tempPoint);
-            maxPoint = Cartesian3.getMaximumByComponent(maxPoint, tempPoint);
+            Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, tempPoint)
+            Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
+            Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
 
-        var center = new Cartesian3((minPoint.x + maxPoint.x) * 0.5, (minPoint.y + maxPoint.y) * 0.5, (minPoint.z + maxPoint.z) * 0.5);
+        var center = scratchCartesian4;
+        Cartesian3.fromArray([(minPoint.x + maxPoint.x) * 0.5, (minPoint.y + maxPoint.y) * 0.5, (minPoint.z + maxPoint.z) * 0.5], 0, center);
 
-        result.transformedPosition = new Cartesian3(Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 0), center), Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 1), center), Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 2), center))
+        result.transformedPosition.x = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 0), center);
+        result.transformedPosition.y = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 1), center);
+        result.transformedPosition.z = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 2), center);
 
-        result.extent = new Cartesian3((maxPoint.x - minPoint.x) * 0.5, (maxPoint.y - minPoint.y) * 0.5, (maxPoint.z - minPoint.z) * 0.5);
+        Cartesian3.fromArray([(maxPoint.x - minPoint.x) * 0.5, (maxPoint.y - minPoint.y) * 0.5, (maxPoint.z - minPoint.z) * 0.5], 0, result.extent);
 
         return result;
     };
 
+    var scratchTransformColumn1 = new Cartesian3();
+    var scratchTransformColumn2 = new Cartesian3();
+    var scratchTransformColumn3 = new Cartesian3();
+    var scratchAddCartesian1 = new Cartesian3();
+    var scratchAddCartesian2 = new Cartesian3();
+    var scratchAddCartesian3 = new Cartesian3();
     /**
      * Get the describing points of the ObjectOrientedBoundingBox.
      * @memberof ObjectOrientedBoundingBox
@@ -133,42 +151,98 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      * @param {ObjectOrientedBoundingBox} box The bounding box.
      * @param {Cartesian3} [result] The object onto which to store the resulting points.
      * @return {Cartesian3} The object onto which to store the resulting points.
+     *
+     * @exception {DeveloperError} box is required.
      */
     ObjectOrientedBoundingBox.getDescribingPoints = function(box, result) {
         if (!defined(box)) {
-            return undefined;
+            throw new DeveloperError('box is required');
         }
 
         if (!defined(result)) {
-            var result = [];
+            result = [];
         }
 
-        var r = Matrix3.getColumn(box.transformMatrix, 0, r);
-        var u = Matrix3.getColumn(box.transformMatrix, 1, u);
-        var f = Matrix3.getColumn(box.transformMatrix, 2, f);
+        var r = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 0, r), scratchTransformColumn1);
+        var u = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 1, u), scratchTransformColumn2);
+        var f = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 2, f), scratchTransformColumn3);
 
-        var point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (-1))), Cartesian3.multiplyByScalar(u, box.extent.y * (-1))), Cartesian3.multiplyByScalar(f, box.extent.z * (-1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (1))), Cartesian3.multiplyByScalar(u, box.extent.y * (-1))), Cartesian3.multiplyByScalar(f, box.extent.z * (-1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (1))), Cartesian3.multiplyByScalar(u, box.extent.y * (-1))), Cartesian3.multiplyByScalar(f, box.extent.z * (1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (-1))), Cartesian3.multiplyByScalar(u, box.extent.y * (-1))), Cartesian3.multiplyByScalar(f, box.extent.z * (1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (-1))), Cartesian3.multiplyByScalar(u, box.extent.y * (1))), Cartesian3.multiplyByScalar(f, box.extent.z * (-1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (1))), Cartesian3.multiplyByScalar(u, box.extent.y * (1))), Cartesian3.multiplyByScalar(f, box.extent.z * (-1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (1))), Cartesian3.multiplyByScalar(u, box.extent.y * (1))), Cartesian3.multiplyByScalar(f, box.extent.z * (1)));
-        result.push(point);
-        point = Cartesian3.add(Cartesian3.add(Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (-1))), Cartesian3.multiplyByScalar(u, box.extent.y * (1))), Cartesian3.multiplyByScalar(f, box.extent.z * (1)));
-        result.push(point);
+        function multiplyAndAdd(sign1, sign2, sign3) {
+            // we are doing: result = {Cartesian} +/- {Cartesian3} +/- {Cartesian3} +/- {Cartesian3}
+            var tempPoint1 = Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.extent.x * (sign1)), scratchAddCartesian1);
+            var tempPoint2 = Cartesian3.add(tempPoint1, Cartesian3.multiplyByScalar(u, box.extent.y * (sign2)), scratchAddCartesian2);
+            return Cartesian3.add(tempPoint2, Cartesian3.multiplyByScalar(f, box.extent.z * (sign3)), scratchAddCartesian3);
+        }
+
+        //POINT 0
+        var point = multiplyAndAdd(-1, -1, -1);
+        var resultPoint = result[0];
+        if (!defined(resultPoint)) {
+            resultPoint = result[0] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 1
+        point = multiplyAndAdd(1, -1, -1);
+        resultPoint = result[1];
+        if (!defined(resultPoint)) {
+            resultPoint = result[1] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 2
+        point = multiplyAndAdd(1, -1, 1);
+        resultPoint = result[2];
+        if (!defined(resultPoint)) {
+            resultPoint = result[2] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 3
+        point = multiplyAndAdd(-1, -1, 1);
+        resultPoint = result[3];
+        if (!defined(resultPoint)) {
+            resultPoint = result[3] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 4
+        point = multiplyAndAdd(-1, 1, -1);
+        resultPoint = result[4];
+        if (!defined(resultPoint)) {
+            resultPoint = result[4] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 5
+        point = multiplyAndAdd(1, 1, -1);
+        resultPoint = result[5];
+        if (!defined(resultPoint)) {
+            resultPoint = result[5] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 6
+        point = multiplyAndAdd(1, 1, 1);
+        resultPoint = result[6];
+        if (!defined(resultPoint)) {
+            resultPoint = result[6] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
+
+        //POINT 7
+        point = multiplyAndAdd(-1, 1, 1);
+        resultPoint = result[7];
+        if (!defined(resultPoint)) {
+            resultPoint = result[7] = new Cartesian3();
+        }
+        Cartesian3.clone(point, resultPoint);
 
         return result;
     };
 
     /**
-     * Duplicates a ObjectOrientedBoundingBox instance. //TODO
+     * Duplicates a ObjectOrientedBoundingBox instance.
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} box The bounding box to duplicate.
@@ -181,12 +255,12 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         }
 
         if (!defined(result)) {
-            var result = new ObjectOrientedBoundingBox();
+            return new ObjectOrientedBoundingBox(box.transformMatrix, box.transformedPosition, box.extent);
         }
 
-        result.transformMatrix = box.transformMatrix;
-        result.transformedPosition = box.transformedPosition;
-        result.extent = box.extent;
+        result.transformMatrix = Matrix3.clone(box.transformMatrix, result.transformMatrix);
+        result.transformedPosition = Cartesian3.clone(box.transformedPosition, result.transformedPosition);
+        result.extent = Cartesian3.clone(box.extent, result.extent);
 
         return result;
     };
@@ -204,34 +278,6 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         return (left === right) || ((defined(left)) && (defined(right)) && Cartesian3.equals(left.transformedPosition, right.transformedPosition) && Matrix3.equals(left.transformMatrix, right.transformMatrix) && Cartesian3.equals(left.extent, right.extent));
     };
 
-    var intersectScratch = new Cartesian3();
-    /**
-     * Determines which side of a plane a box is located. //TODO
-     * @memberof ObjectOrientedBoundingBox
-     *
-     * @param {ObjectOrientedBoundingBox} box The bounding box to test.
-     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
-     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
-     *                           of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
-     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
-     *                     if the box intersects the plane.
-     *
-     * @exception {DeveloperError} box is required.
-     * @exception {DeveloperError} plane is required.
-     */
-    ObjectOrientedBoundingBox.intersect = function(box, plane) {
-        if (!defined(box)) {
-            throw new DeveloperError('box is required.');
-        }
-
-        if (!defined(plane)) {
-            throw new DeveloperError('plane is required.');
-        }
-
-        return undefined;
-    };
-
     /**
      * Duplicates this ObjectOrientedBoundingBox instance.
      * @memberof ObjectOrientedBoundingBox
@@ -241,23 +287,6 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      */
     ObjectOrientedBoundingBox.prototype.clone = function(result) {
         return ObjectOrientedBoundingBox.clone(this, result);
-    };
-
-    /**
-     * Determines which side of a plane this box is located.
-     * @memberof ObjectOrientedBoundingBox
-     *
-     * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
-     *                           where the coefficients a, b, c, and d are the components x, y, z, and w
-     *                           of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
-     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
-     *                     if the box intersects the plane.
-     *
-     * @exception {DeveloperError} plane is required.
-     */
-    ObjectOrientedBoundingBox.prototype.intersect = function(plane) {
-        return ObjectOrientedBoundingBox.intersect(this, plane);
     };
 
     /**
