@@ -1,14 +1,5 @@
 /*global define*/
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject) {
+define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], function(defaultValue, defined, DeveloperError, freezeObject) {
     "use strict";
 
     /**
@@ -263,20 +254,19 @@ define([
         if (!defined(second)) {
             throw new DeveloperError('second cartesian is missing');
         }
-        if (!defined(result)) {
-            result = Cartesian3.clone(first);
-        }
 
-        if (first.x > second.x) {
-            result.x = second.x;
+        var minimum = Cartesian3.clone(second, result);
+
+        if (first.x < second.x) {
+            minimum.x = first.x;
         }
-        if (first.y > second.y) {
-            result.y = second.y;
+        if (first.y < second.y) {
+            minimum.y = first.y;
         }
-        if (first.z > second.z) {
-            result.z = second.z;
+        if (first.z < second.z) {
+            minimum.z = first.z;
         }
-        return result;
+        return minimum;
     };
 
     /**
@@ -290,7 +280,7 @@ define([
      * @exception {DeveloperError} first cartesian is missing.
      * @exception {DeveloperError} second cartesian is missing.
      */
-    Cartesian3.getMaximumByComponent =  function(first, second, result) {
+    Cartesian3.getMaximumByComponent = function(first, second, result) {
         if (!defined(first)) {
             throw new DeveloperError('first cartesian is missing');
         }
@@ -298,20 +288,18 @@ define([
             throw new DeveloperError('second cartesian is missing');
         }
 
-        if (!defined(result)) {
-            result = Cartesian3.clone(first);
-        }
+        var maximum = Cartesian3.clone(first, result);
 
         if (first.x < second.x) {
-            result.x = second.x;
+            maximum.x = second.x;
         }
         if (first.y < second.y) {
-            result.y = second.y;
+            maximum.y = second.y;
         }
         if (first.z < second.z) {
-            result.z = second.z;
+            maximum.z = second.z;
         }
-        return result;
+        return maximum;
     };
 
     /**
@@ -518,7 +506,7 @@ define([
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (!defined(result)) {
-            return new Cartesian3(cartesian.x * scalar,  cartesian.y * scalar,  cartesian.z * scalar);
+            return new Cartesian3(cartesian.x * scalar, cartesian.y * scalar, cartesian.z * scalar);
         }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
@@ -703,12 +691,7 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left.x === right.x) &&
-                (left.y === right.y) &&
-                (left.z === right.z));
+        return (left === right) || ((defined(left)) && (defined(right)) && (left.x === right.x) && (left.y === right.y) && (left.z === right.z));
     };
 
     /**
@@ -728,12 +711,7 @@ define([
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (Math.abs(left.x - right.x) <= epsilon) &&
-                (Math.abs(left.y - right.y) <= epsilon) &&
-                (Math.abs(left.z - right.z) <= epsilon));
+        return (left === right) || ((defined(left)) && (defined(right)) && (Math.abs(left.x - right.x) <= epsilon) && (Math.abs(left.y - right.y) <= epsilon) && (Math.abs(left.z - right.z) <= epsilon));
     };
 
     /**
