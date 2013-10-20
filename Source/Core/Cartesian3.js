@@ -242,6 +242,7 @@ define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], fu
      *
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
+     * @param {Cartesian3} [result] The object into which to store the result.
      * @returns {Number} A cartesian with the minimum components.
      *
      * @exception {DeveloperError} first cartesian is missing.
@@ -275,6 +276,7 @@ define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], fu
      *
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
+     * @param {Cartesian3} [result] The object into which to store the result.
      * @returns {Number} A cartesian with the maximum components.
      *
      * @exception {DeveloperError} first cartesian is missing.
