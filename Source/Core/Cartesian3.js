@@ -255,19 +255,15 @@ define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], fu
         if (!defined(second)) {
             throw new DeveloperError('second cartesian is missing');
         }
+        if (!defined(result)) {
+            result = Cartesian3.clone(Cartesian3.ZERO);
+        }
 
-        var minimum = Cartesian3.clone(second, result);
+        result.x = Math.min(first.x, second.x);
+        result.y = Math.min(first.y, second.y);
+        result.z = Math.min(first.z, second.z);
 
-        if (first.x < second.x) {
-            minimum.x = first.x;
-        }
-        if (first.y < second.y) {
-            minimum.y = first.y;
-        }
-        if (first.z < second.z) {
-            minimum.z = first.z;
-        }
-        return minimum;
+        return result;
     };
 
     /**
@@ -290,18 +286,14 @@ define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], fu
             throw new DeveloperError('second cartesian is missing');
         }
 
-        var maximum = Cartesian3.clone(first, result);
+        if (!defined(result)) {
+            result = Cartesian3.clone(Cartesian3.ZERO);
+        }
 
-        if (first.x < second.x) {
-            maximum.x = second.x;
-        }
-        if (first.y < second.y) {
-            maximum.y = second.y;
-        }
-        if (first.z < second.z) {
-            maximum.z = second.z;
-        }
-        return maximum;
+        result.x = Math.max(first.x, second.x);
+        result.y = Math.max(first.y, second.y);
+        result.z = Math.max(first.z, second.z);
+        return result;
     };
 
     /**
