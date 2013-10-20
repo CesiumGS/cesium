@@ -1,5 +1,5 @@
 /*global define*/
-define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './Intersect', './Matrix3', ], function(defaultValue, defined, DeveloperError, Cartesian3, Intersect, Matrix3) {
+define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './Intersect', './Matrix3', './BoundingRectangle', ], function(defaultValue, defined, DeveloperError, Cartesian3, Intersect, Matrix3, BoundingRectangle) {
     "use strict";
 
     /**
@@ -135,6 +135,35 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
 
         Cartesian3.fromArray([(maxPoint.x - minPoint.x) * 0.5, (maxPoint.y - minPoint.y) * 0.5, (maxPoint.z - minPoint.z) * 0.5], 0, result.extent);
 
+        return result;
+    };
+
+    /**
+     * Computes an ObjectOrientedBoundingBox from a BoundingRectangle.
+     * @memberof ObjectOrientedBoundingBox
+     *
+     * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
+     * @param {Float} rotation The rotation of the bounding box.
+     * @return {ObjectOrientedBoundingBox} A new 2D ObjectOrientedBoundingBox instance if one was not provided.
+     *
+     * @exception {DeveloperError} boundingRectangle is missing.
+     * @exception {DeveloperError} rotation is missing.
+     *
+     * @example
+     * // Compute an object oriented bounding box enclosing two points.
+     * var box = ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
+     */
+    ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
+        if (!defined(boundingRectangle)) {
+            throw new DeveloperError('boundingRectangle is missing');
+        }
+        if (!defined(rotation)) {
+            throw new DeveloperError('rotation is missing');
+        }
+        if (!defined(result)) {
+            result = new ObjectOrientedBoundingBox();
+        }
+        //TODO
         return result;
     };
 

@@ -4,13 +4,15 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Matrix3',
-         'Core/Intersect'
+         'Core/Intersect',
+         'Core/BoundingRectangle'
      ], function(
          ObjectOrientedBoundingBox,
          Cartesian3,
          Cartesian4,
          Matrix3,
-         Intersect) {
+         Intersect,
+         BoundingRectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -87,10 +89,26 @@ defineSuite([
         expect(box.transformMatrix).toEqual(transformMatrix);
     });
 
+    it('fromBoundingRectangle throws without values', function() {
+        var boundingRectangle = new BoundingRectangle();
+        expect(function() {
+            ObjectOrientedBoundingBox.fromBoundingRectangle();
+        }).toThrow();
+        expect(function() {
+            ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle);
+        }).toThrow();
+    });
+
+    it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {
+        var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle, 0.0);
+        var result = new ObjectOrientedBoundingBox();
+        expect(result).toEqual(box);//TODO
+    });
+
     it('getDescribingPoints computes the correct values', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(positions1);
         var boxPoints = ObjectOrientedBoundingBox.getDescribingPoints(box);
-        var test = 3;
+
         expect(boxPoints[0]).toEqual(new Cartesian3(0, 0, 0));
         expect(boxPoints[1]).toEqual(new Cartesian3(1, 0, 0));
         expect(boxPoints[2]).toEqual(new Cartesian3(1, 0, 1));
