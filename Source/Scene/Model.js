@@ -912,7 +912,7 @@ define([
     }
 
     function createCommand(model, node, context) {
-        var extraMeshesCommands = node.czm.meshesCommands;
+        var czmMeshesCommands = node.czm.meshesCommands;
 
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
@@ -941,8 +941,8 @@ define([
             // The glTF node hierarchy is a DAG so a node can have more than one
             // parent, so a node may already have commands.  If so, append more
             // since they will have a different model matrix.
-            extraMeshesCommands[name] = defaultValue(extraMeshesCommands[name], []);
-            var meshesCommands = extraMeshesCommands[name];
+            czmMeshesCommands[name] = defaultValue(czmMeshesCommands[name], []);
+            var meshesCommands = czmMeshesCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
@@ -1078,8 +1078,8 @@ define([
             return Matrix4.fromColumnMajorArray(node.matrix, result);
         }
 
-        var extra = node.czm;
-        return Matrix4.fromTranslationQuaternionRotationScale(extra.translation, extra.rotation, extra.scale, result);
+        var czm = node.czm;
+        return Matrix4.fromTranslationQuaternionRotationScale(czm.translation, czm.rotation, czm.scale, result);
     }
 
     // To reduce allocations in update()
@@ -1201,8 +1201,8 @@ define([
 
                 var target = channel.target;
                 // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
-                var nodeCzmExtra = nodes[target.id].czm;
-                var animatingProperty = nodeCzmExtra[target.path];
+                var czmNode = nodes[target.id].czm;
+                var animatingProperty = czmNode[target.path];
 
                 var sampler = samplers[channel.sampler];
                 var parameter = parameters[sampler.output];
@@ -1350,7 +1350,7 @@ define([
         return false;
     };
 
-    function destroyCzmExtra(property, resourceName) {
+    function destroyCzm(property, resourceName) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
                 var czm = property[name].czm;
@@ -1382,10 +1382,10 @@ define([
      */
     Model.prototype.destroy = function() {
         var gltf = this.gltf;
-        destroyCzmExtra(gltf.bufferViews, 'webglBuffer');
-        destroyCzmExtra(gltf.programs, 'program');
-        destroyCzmExtra(gltf.programs, 'pickProgram');
-        destroyCzmExtra(gltf.textures, 'texture');
+        destroyCzm(gltf.bufferViews, 'webglBuffer');
+        destroyCzm(gltf.programs, 'program');
+        destroyCzm(gltf.programs, 'pickProgram');
+        destroyCzm(gltf.textures, 'texture');
 
         var meshes = gltf.meshes;
         var name;
