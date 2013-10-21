@@ -222,6 +222,8 @@ define([
 
         this._commandLists = new CommandLists();
         this._pickIds = [];
+
+        this._scheduledAnimations = [];
     };
 
     /**
@@ -1150,45 +1152,51 @@ define([
 
     var axisAnimateScratch = new Cartesian3();
 
-    function animate(model) {
-        var scheduledAnimation = model._animation;
-        if (defined(scheduledAnimation)) {
-            var animation = scheduledAnimation.animation;
+    function animate(model, scheduledAnimation) {
+        raiseAnimationEvents(scheduledAnimation);
 
-            raiseAnimationEvents(scheduledAnimation);
+        var nodes = model.gltf.nodes;
+        var animation = scheduledAnimation.animation;
+        var parameters = animation.parameters;
+        var samplers = animation.samplers;
+        var channels = animation.channels;
+        var length = channels.length;
 
-            var nodes = model.gltf.nodes;
-            var parameters = animation.parameters;
-            var samplers = animation.samplers;
-            var channels = animation.channels;
-            var length = channels.length;
+        for (var i = 0; i < length; ++i) {
+            var channel = channels[i];
 
-            for (var i = 0; i < length; ++i) {
-                var channel = channels[i];
+            var target = channel.target;
+            // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
+            var czmNode = nodes[target.id].czm;
+            var animatingProperty = czmNode[target.path];
 
-                var target = channel.target;
-                // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
-                var czmNode = nodes[target.id].czm;
-                var animatingProperty = czmNode[target.path];
+            var sampler = samplers[channel.sampler];
+            var parameter = parameters[sampler.output];
+            // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
 
-                var sampler = samplers[channel.sampler];
-                var parameter = parameters[sampler.output];
-                // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
+            // TODO: interpolate key frames
+            parameter.czm.values[ccc_count].clone(animatingProperty);
+        }
+    }
 
-                // TODO: interpolate key frames
-                parameter.czm.values[ccc_count].clone(animatingProperty);
-            }
+    function updateAnimations(model) {
+        var scheduledAnimation = model._scheduledAnimations;
+        var length = scheduledAnimation.length;
 
-            if (frameCount++ % 4 === 0) {
-                if (ccc_count++ === animation.count - 1) {
-                    ccc_count = 0;
+        for (var i = 0; i < length; ++i) {
+            animate(model, scheduledAnimation[i]);
+
+            // TODO: drive with real time
+            if (i === 0) {
+                if (frameCount++ % 4 === 0) {
+                    if (ccc_count++ === scheduledAnimation[i].animation.count - 1) {
+                        ccc_count = 0;
+                    }
                 }
             }
-
-            return true;
         }
 
-        return false;
+        return (length > 0);
     }
 
     function updatePickIds(model, context) {
@@ -1240,7 +1248,7 @@ define([
         // Update modelMatrix throughout the tree as needed
         if (this._state === ModelState.LOADED) {
 // TODO: fine-grained partial hiearchy updates for animation
-            var animated = animate(this);
+            var animated = updateAnimations(this);
 
             if (animated || !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
@@ -1285,13 +1293,12 @@ define([
             throw new DeveloperError('options.name is required and must be a valid animation name.');
         }
 
-
-// TODO: data structure for all animations.  Should be able to remove them, etc.
-        this._animation = {
+// TODO: Should be able to remove animations, etc.
+        this._scheduledAnimations.push({
             animation : animation,
             start : options.start,
             stop : options.stop
-        };
+        });
     };
 
     /**
