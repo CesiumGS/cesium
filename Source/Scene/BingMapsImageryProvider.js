@@ -63,6 +63,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
