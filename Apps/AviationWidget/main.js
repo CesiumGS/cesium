@@ -72,7 +72,8 @@
             // -- add toolbar -- //
             _toolbar = document.createElement('div');
             _toolbar.setAttribute('class', 'awToolbar');
-            that.viewer._element.parentElement.insertBefore(_toolbar, that.viewer._element.nextSibling);
+            // that.viewer._element.parentElement.insertBefore(_toolbar, that.viewer._element.nextSibling);
+            that.viewer._element.appendChild(_toolbar);
             var _btnBar = document.createElement('div'),
                 _ckpit = document.createElement('div');
 
