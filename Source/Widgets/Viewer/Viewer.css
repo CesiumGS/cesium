@@ -58,7 +58,7 @@
 .cesium-viewer-toolbar {
 	display: block;
 	position: absolute;
-	top: 44px;
+	top: 5px;
 	right: 5px;
 }
 
@@ -87,10 +87,8 @@
 }
 
 .cesium-viewer-geocoderContainer {
-    display: block;
-    position: absolute;
-    top: 5px;
-    right: 5px;
+    position: relative;
+    display: inline-block;
     margin: 1px;
     height: 32px;
 }

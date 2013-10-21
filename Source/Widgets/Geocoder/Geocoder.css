@@ -4,16 +4,27 @@
     color: white;
     display: inline-block;
     vertical-align: middle;
-    width: 250px;
+    width: 50px;
     padding-left: 4px;
     padding-right: 32px;
     height: 32px;
     padding-top: 0px;
     padding-bottom: 0px;
+    opacity: 0.55;
+    -webkit-transition: width ease-in-out 0.25s, opacity ease-in-out 0.25s;
+    -moz-transition: width ease-in-out 0.25s, opacity ease-in-out 0.25s;
+    transition: width ease-in-out 0.25s, opacity ease-in-out 0.25s;
 }
 
 .cesium-viewer-geocoderContainer:hover .cesium-geocoder-input {
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    width: 250px;
+    opacity: 1;
+}
+
+.cesium-viewer-geocoderContainer .cesium-geocoder-input:focus {
+    width: 250px;
+    opacity: 1;
 }
 
 .cesium-geocoder-goButton {

@@ -221,6 +221,19 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
 
+        //Geocoder
+        var geocoder;
+        if (!defined(options.geocoder) || options.geocoder !== false) {
+            var geocoderContainer = document.createElement('div');
+            geocoderContainer.className = 'cesium-viewer-geocoderContainer';
+            toolbar.appendChild(geocoderContainer);
+            geocoder = new Geocoder({
+                container : geocoderContainer,
+                scene : cesiumWidget.scene,
+                ellipsoid : cesiumWidget.centralBody.getEllipsoid()
+            });
+        }
+
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
@@ -299,19 +312,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             fullScreenEnabledCallback(fullscreenButton.viewModel.isFullscreenEnabled);
         } else if (defined(timeline)) {
             timeline.container.style.right = 0;
-        }
-
-        //Geocoder
-        var geocoder;
-        if (!defined(options.geocoder) || options.geocoder !== false) {
-            var geocoderContainer = document.createElement('div');
-            geocoderContainer.className = 'cesium-viewer-geocoderContainer';
-            viewerContainer.appendChild(geocoderContainer);
-            geocoder = new Geocoder({
-                container : geocoderContainer,
-                scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget.centralBody.getEllipsoid()
-            });
         }
 
         var eventHelper = new EventHelper();
