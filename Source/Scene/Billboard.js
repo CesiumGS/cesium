@@ -53,6 +53,7 @@ define([
      * and add new billboards instead of modifying each one.
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+     * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -62,33 +63,39 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
-    var Billboard = function(description, billboardCollection) {
-        description = defaultValue(description, EMPTY_OBJECT);
+    var Billboard = function(options, billboardCollection) {
+        options = defaultValue(options, EMPTY_OBJECT);
 
-        if (defined(description.scaleByDistance) && description.scaleByDistance.far <= description.scaleByDistance.near) {
+        if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
             throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
         }
+        if (defined(options.translucencyByDistance) &&
+                options.translucencyByDistance.far <= options.translucencyByDistance.near) {
+            throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
 
-        this._show = defaultValue(description.show, true);
+        this._show = defaultValue(options.show, true);
 
-        this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
+        this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
-        this._pixelOffset = Cartesian2.clone(defaultValue(description.pixelOffset, Cartesian2.ZERO));
-        this._eyeOffset = Cartesian3.clone(defaultValue(description.eyeOffset, Cartesian3.ZERO));
-        this._verticalOrigin = defaultValue(description.verticalOrigin, VerticalOrigin.CENTER);
-        this._horizontalOrigin = defaultValue(description.horizontalOrigin, HorizontalOrigin.CENTER);
-        this._scale = defaultValue(description.scale, 1.0);
-        this._imageIndex = defaultValue(description.imageIndex, -1);
-        this._color = Color.clone(defaultValue(description.color, Color.WHITE));
-        this._rotation = defaultValue(description.rotation, 0.0);
-        this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
-        this._width = description.width;
-        this._height = description.height;
-        this._scaleByDistance = description.scaleByDistance;
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
+        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
+        this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
+        this._scale = defaultValue(options.scale, 1.0);
+        this._imageIndex = defaultValue(options.imageIndex, -1);
+        this._color = Color.clone(defaultValue(options.color, Color.WHITE));
+        this._rotation = defaultValue(options.rotation, 0.0);
+        this._alignedAxis = Cartesian3.clone(defaultValue(options.alignedAxis, Cartesian3.ZERO));
+        this._width = options.width;
+        this._height = options.height;
+        this._scaleByDistance = options.scaleByDistance;
+        this._translucencyByDistance = options.translucencyByDistance;
+        this._id = options.id;
 
         this._pickId = undefined;
-        this._pickIdThis = description._pickIdThis;
+        this._pickIdThis = options._pickIdThis;
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
@@ -106,7 +113,8 @@ define([
     var ROTATION_INDEX = Billboard.ROTATION_INDEX = 9;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
-    Billboard.NUMBER_OF_PROPERTIES = 12;
+    var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
+    Billboard.NUMBER_OF_PROPERTIES = 13;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -119,7 +127,8 @@ define([
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
-                primitive : defaultValue(this._pickIdThis, this)
+                primitive : defaultValue(this._pickIdThis, this),
+                id : this._id
             });
         }
 
@@ -330,6 +339,59 @@ define([
 
         makeDirty(this, SCALE_BY_DISTANCE_INDEX);
         this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
+    };
+
+    /**
+     * Returns the near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @returns {NearFarScalar} The near/far translucency values based on camera distance to the billboard
+     *
+     * @see Billboard#setTranslucencyByDistance
+     */
+    Billboard.prototype.getTranslucencyByDistance = function() {
+        return this._translucencyByDistance;
+    };
+
+    /**
+     * Sets near and far translucency properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's translucency will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the billboard's translucency remains clamped to the nearest bound.  If undefined,
+     * translucencyByDistance will be disabled.
+     *
+     * @memberof Billboard
+     *
+     * @param {NearFarScalar} translucency The configuration of near and far distances and their respective translucency values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Billboard#getTranslucencyByDistance
+     *
+     * @example
+     * // Example 1.
+     * // Set a billboard's translucency to 1.0 when the
+     * // camera is 1500 meters from the billboard and disappear as
+     * // the camera distance approaches 8.0e6 meters.
+     * b.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     *
+     * // Example 2.
+     * // disable translucency by distance
+     * b.setTranslucencyByDistance(undefined);
+     */
+    Billboard.prototype.setTranslucencyByDistance = function(translucency) {
+        if (NearFarScalar.equals(this._translucencyByDistance, translucency)) {
+            return;
+        }
+
+        if (translucency.far <= translucency.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
+        this._translucencyByDistance = NearFarScalar.clone(translucency, this._translucencyByDistance);
     };
 
     /**
@@ -788,6 +850,17 @@ define([
         }
     };
 
+    /**
+     * Returns the user-defined object returned when the billboard is picked.
+     *
+     * @memberof Billboard
+     *
+     * @returns {Object} The user-defined object returned when the billboard is picked.
+     */
+    Billboard.prototype.getId = function() {
+        return this._id;
+    };
+
     var tempCartesian4 = new Cartesian4();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -888,7 +961,9 @@ define([
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
-               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance);
+               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
+               NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               this._id === other._id;
     };
 
     Billboard.prototype._destroy = function() {

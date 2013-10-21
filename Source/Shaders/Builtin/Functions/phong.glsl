@@ -41,3 +41,16 @@ vec4 czm_phong(vec3 toEye, czm_material material)
 
     return vec4(color, material.alpha);
 }
+
+vec4 czm_private_phong(vec3 toEye, czm_material material)
+{
+    float diffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
+    float specular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material);
+
+    vec3 ambient = vec3(0.0);
+    vec3 color = ambient + material.emission;
+    color += material.diffuse * diffuse;
+    color += material.specular * specular;
+
+    return vec4(color, material.alpha);
+}

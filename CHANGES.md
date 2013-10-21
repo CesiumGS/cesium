@@ -5,13 +5,44 @@ Beta Releases
 -------------
 
 ### b22 - 2013-11-01
+
 * Breaking changes:
    * The following prototype functions were removed:
       * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
       * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
 
       Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
+   * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead. 
+* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+* Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
+* Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
+* Added `options` argument to the `EllipsoidPrimitive` constructor.
+* Added a user-defined `id` to all primitives for use with picking.  For example:
+
+            primitives.add(new Polygon({
+                id : {
+                    // User-defined object returned by Scene.pick
+                },
+                // ...
+            }));
+            // ...
+            var p = scene.pick(/* ... */);
+            if (defined(p) && defined(p.id)) {
+               // Use properties and functions in p.id
+            }
+* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
+* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
+* Added `Shapes.compute2DCircle`.
+* Added `Matrix3.getEigenDecomposition`.
+* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`. 
+* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
+* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
+* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
+* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
+* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
 
 ### b21 - 2013-10-01
 
@@ -83,7 +114,6 @@ Beta Releases
   becomes
 
         return primitives.add(new Primitive(/* ... */));
-* Added `DynamicObject.name` property, which is a non-unique, user-readable name for the object.
 
 ### b20 - 2013-09-03
 

@@ -19,7 +19,7 @@ defineSuite([
     var validTime = JulianDate.fromIso8601('2012');
     var invalidTime = JulianDate.fromIso8601('2014');
 
-    var testPropertyLink = 'testObject.property';
+    var testObjectLink = 'testObject.property';
     function createTestObject(dynamicObjectCollection, methodName) {
         var testObject = dynamicObjectCollection.getOrCreateObject('testObject');
         testObject.availability = TimeInterval.fromIso8601('2012/2013');
@@ -44,6 +44,12 @@ defineSuite([
         }).toThrow();
     });
 
+    it('constructor throws if missing targetPropertyName parameter', function() {
+        expect(function() {
+            return new ReferenceProperty(new DynamicObjectCollection(), 'object', undefined);
+        }).toThrow();
+    });
+
     it('fromString throws if missing dynamicObjectCollection parameter', function() {
         expect(function() {
             return ReferenceProperty.fromString(undefined, 'object.property');
@@ -56,27 +62,25 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromString throws if invalid string parameter', function() {
+        expect(function() {
+            return ReferenceProperty.fromString(new DynamicObjectCollection(), 'a.b.c');
+        }).toThrow();
+    });
+
     it('getValue returned undefined for unresolved property', function() {
         var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
-    it('Resolves target property', function() {
+    it('Resolves getValue property on collection', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         createTestObject(dynamicObjectCollection, 'getValue');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testPropertyLink);
+        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
         expect(property.getValue(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
         expect(result.expectedTime).toEqual(validTime);
         expect(property.getValue(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves target object', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var dynamicObject = new DynamicObject('myId');
-        dynamicObjectCollection.add(dynamicObject);
-        var property = new ReferenceProperty(dynamicObjectCollection, 'myId');
-        expect(property.getValue()).toBe(dynamicObject);
     });
 });
