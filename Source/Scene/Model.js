@@ -1177,17 +1177,18 @@ define([
         for (var i = 0; i < length; ++i) {
             var scheduledAnimation = scheduledAnimations[i];
             var animation = scheduledAnimation.animation;
+            var timeParameter = animation.parameters.TIME;
+            var times = timeParameter.czm.values;
 
-            // TODO: compute these once?
-            // TODO: separate runtime and user objects?
-            scheduledAnimation.startTime = defaultValue(scheduledAnimation.startTime, sceneTime);
+            if (!defined(scheduledAnimation._startTime)) {
+                scheduledAnimation._startTime = defaultValue(scheduledAnimation.startTime, sceneTime).addSeconds(times[0]);
+            }
+
             if (!defined(scheduledAnimation._duration)) {
-                var timeParameter = animation.parameters.TIME;
-                var times = timeParameter.czm.values;
                 scheduledAnimation._duration = times[timeParameter.count - 1] *  (1.0 / scheduledAnimation.speedup);
             }
 
-            var startTime = scheduledAnimation.startTime;
+            var startTime = scheduledAnimation._startTime;
             var duration = scheduledAnimation._duration;
 
             // [0.0, 1.0] normalized local animation time
@@ -1313,10 +1314,10 @@ define([
      *
      * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#jsonLoad} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
+     * @exception {DeveloperError} options.speedup must be greater than zero.
      */
     Model.prototype.scheduleAnimation = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-// TODO: options should take start time, etc.
 
         if (!defined(this.gltf)) {
             throw new DeveloperError('The gltf property is not defined.  Wait for the jsonLoad event.');
@@ -1328,7 +1329,9 @@ define([
             throw new DeveloperError('options.name is required and must be a valid animation name.');
         }
 
-        // TODO: options.speedup >= 0.0 ?
+        if (defined(options.speedup) && (options.speedup <= 0.0)) {
+            throw new DeveloperError('options.speedup must be greater than zero.');
+        }
 
 // TODO: Should be able to remove animations, etc.
         this._scheduledAnimations.push({
@@ -1342,6 +1345,7 @@ define([
             stop      : options.stop,
 
             _state         : AnimationState.STOPPED,
+            _startTime     : undefined,
             _duration      : undefined,
             _previousIndex : undefined
         });
