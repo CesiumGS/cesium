@@ -227,9 +227,9 @@ define([
          * when <code>enableLighting</code> is <code>true</code>.
          *
          * @type {Number}
-         * @default 7500000.0
+         * @default 6500000.0
          */
-        this.lightingFadeOutDistance = 7500000.0;
+        this.lightingFadeOutDistance = 6500000.0;
 
         /**
          * The distance where lighting resumes. This only takes effect
