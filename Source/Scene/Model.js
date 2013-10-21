@@ -674,7 +674,6 @@ define([
                                      vertexBuffer           : bufferViews[a.bufferView].czmExtra.webglBuffer,
                                      componentsPerAttribute : type.componentsPerAttribute,
                                      componentDatatype      : type.componentDatatype,
-// TODO: is normalize part of glTF attribute?
                                      normalize              : false,
                                      offsetInBytes          : a.byteOffset,
                                      strideInBytes          : a.byteStride
@@ -886,11 +885,6 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var instanceParam = instanceParameters[i];
                     var parameterValue = parameterValues[instanceParam.parameter];
-
-// TODO: This works around https://github.com/KhronosGroup/glTF/issues/121
-                    if (!defined(parameters[instanceParam.parameter])) {
-                        continue;
-                    }
 
                     parameterValue.func = gltfUniformFunctions[parameters[instanceParam.parameter].type](instanceParam.value, model, context);
                 }
@@ -1187,6 +1181,8 @@ define([
         }
     }
 
+    var axisAnimateScratch = new Cartesian3();
+
     function animate(model) {
         var scheduledAnimation = model._animation;
         if (defined(scheduledAnimation)) {
@@ -1204,22 +1200,22 @@ define([
                 var channel = channels[i];
 
                 var target = channel.target;
-// TODO: assuming only animating nodes
+                // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
                 var nodeCzmExtra = nodes[target.id].czmExtra;
                 var animatingProperty = nodeCzmExtra[target.path];
 
                 var sampler = samplers[channel.sampler];
                 var parameter = parameters[sampler.output];
 
-                if (parameter.type === 'FLOAT') {
-// TODO
-                } else if (parameter.type === 'FLOAT_VEC2') {
-// TODO
-                } else if (parameter.type === 'FLOAT_VEC3') {
-                    Cartesian3.fromArray(parameter.czmExtra.typedArray, 3 * ccc_count, animatingProperty);
+                if (parameter.type === 'FLOAT_VEC3') {
+                    animatingProperty = Cartesian3.fromArray(parameter.czmExtra.typedArray, 3 * ccc_count, animatingProperty);
                 } else if (parameter.type === 'FLOAT_VEC4') {
-// TODO: result param for upack
-                    Quaternion.fromAxisAngle(Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count), parameter.czmExtra.typedArray[(4 * ccc_count) + 3], animatingProperty);
+                    animatingProperty = Quaternion.fromAxisAngle(
+                        Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count, axisAnimateScratch),
+                        parameter.czmExtra.typedArray[(4 * ccc_count) + 3],
+                        animatingProperty);
+                } else {
+                    // TODO: Handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
                 }
             }
 
