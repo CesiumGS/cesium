@@ -70,14 +70,33 @@
 
 
             // -- add toolbar -- //
-            _toolbar = document.getElementById('awToolbar');
+            _toolbar = document.createElement('div');
+            _toolbar.setAttribute('class', 'awToolbar');
+            that.viewer._element.parentElement.insertBefore(_toolbar, that.viewer._element.nextSibling);
+            var _btnBar = document.createElement('div'),
+                _ckpit = document.createElement('div');
 
+            _btnBar.setAttribute('class', 'awButtonBar');
+            _toolbar.appendChild(_btnBar);
+
+            _ckpit.setAttribute('class', 'awCockpitNav');
+            _toolbar.appendChild(_ckpit);
 
             var _it, _obj;
 
             // add toggle checkbox for 3D route visualization
             if (that._tourDataSource) {
-                _it = document.getElementById('awToggleRouteBtn');
+                // _it = document.getElementById('awToggleRouteBtn');
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awBigButtonContainer');
+                _btnBar.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('id', 'awToggleRouteBtn');
+                _it.setAttribute('class', 'awButton awRouteBtn');
+                _it.setAttribute('data-toggle', 'true');
+                _obj.appendChild(_it);
+
                 _it.onclick = function(ev) {
                     var coll = that._tourDataSource.getDynamicObjectCollection().getObjects();
                     var i;
@@ -96,32 +115,75 @@
                         }
                     }
                 };
-            } else {
-                _it = document.getElementById('awToggleRouteBtn');
-                _it.style.display = 'none';
             }
 
             // add toggle checkbox for Cockpit animation
+            var _obj2, _left, _right, _up, _down;
             if (that._cockpitDataSource) {
                 // ** FREE LOOK SECTION ** //
                 var _freeLook =  new Cesium.FreeLook();
                 scene.freeLook = _freeLook;
 
-                document.getElementsByClassName('awcLeft')[0].onclick = function(ev) {
-                    _freeLook.lookLeft();
-                };
-                document.getElementsByClassName('awcRight')[0].onclick = function(ev) {
-                    _freeLook.lookRight();
-                };
-                document.getElementsByClassName('awcUp')[0].onclick = function(ev) {
-                    _freeLook.lookUp();
-                };
-                document.getElementsByClassName('awcDown')[0].onclick = function(ev) {
-                    _freeLook.lookDown();
-                };
-                document.getElementsByClassName('awcCenter')[0].onclick = function(ev) {
-                    _freeLook.reset();
-                };
+                // left button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awButtonContainer awcLeft');
+                _ckpit.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('class', 'awButton');
+                _obj.appendChild(_it);
+                _it.onclick = function(ev) { _freeLook.lookLeft(); };
+
+                // right button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awButtonContainer awcRight');
+                _ckpit.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('class', 'awButton');
+                _obj.appendChild(_it);
+                _it.onclick = function(ev) { _freeLook.lookRight(); };
+
+                // up button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awButtonContainer awcUp');
+                _ckpit.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('class', 'awButton');
+                _obj.appendChild(_it);
+                _it.onclick = function(ev) { _freeLook.lookUp(); };
+
+                // down button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awButtonContainer awcDown');
+                _ckpit.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('class', 'awButton');
+                _obj.appendChild(_it);
+                _it.onclick = function(ev) { _freeLook.lookDown(); };
+
+                // center button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awButtonContainer awcCenter');
+                _ckpit.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('class', 'awButton awcCenterBtn');
+                _obj.appendChild(_it);
+                _it.onclick = function(ev) { _freeLook.reset(); };
+
+                // toggle cockpit button
+                _obj = document.createElement('div');
+                _obj.setAttribute('class', 'awBigButtonContainer');
+                _btnBar.appendChild(_obj);
+
+                _it = document.createElement('span');
+                _it.setAttribute('id', 'awToggleCockpitBtn');
+                _it.setAttribute('class', 'awButton awCockpitBtn');
+                _it.setAttribute('data-toggle', 'true');
+                _obj.appendChild(_it);
 
                 _it = document.getElementById('awToggleCockpitBtn');
                 _it.onclick = function(ev) {
@@ -132,9 +194,9 @@
                     ev.target.dataset.toggle = flag.toString();
 
                     if (flag) {
-                        document.getElementsByClassName('awCockpitNav')[0].style.display = '';
+                        _ckpit.style.display = '';
                     } else {
-                        document.getElementsByClassName('awCockpitNav')[0].style.display = 'none';
+                        _ckpit.style.display = 'none';
                     }
 
                     for (i=0; i<coll.length; i++) {
@@ -143,11 +205,6 @@
                         }
                     }
                 };
-            } else {
-                _it = document.getElementById('awToggleCockpitBtn');
-                _it.style.display = 'none';
-                _it = document.getElementsByClassName('awCockpitNav')[0];
-                _it.style.display = 'none';
             }
         };
 

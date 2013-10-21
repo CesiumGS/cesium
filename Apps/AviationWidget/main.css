@@ -1,20 +1,14 @@
-#awCntr
-{
-	position: relative;
-}
-
 #awCanvas
 {
-	position: absolute;
+	position: relative;
 	top: 0px;
 	left: 0;
 
 	width: 500px;
 	height: 500px;
-	border: 1px solid gray;
 }
 
-#awToolbar
+.awToolbar
 {
 	position: absolute;
 	right: 5px;
