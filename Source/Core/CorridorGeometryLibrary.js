@@ -6,6 +6,7 @@ define([
         './CornerType',
         './EllipsoidTangentPlane',
         './PolylinePipeline',
+        './PolylineVolumeGeometryLibrary',
         './Matrix3',
         './Quaternion',
         './Math'
@@ -16,6 +17,7 @@ define([
         CornerType,
         EllipsoidTangentPlane,
         PolylinePipeline,
+        PolylineVolumeGeometryLibrary,
         Matrix3,
         Quaternion,
         CesiumMath) {
@@ -44,24 +46,9 @@ define([
     var cartesian9 = new Cartesian3();
     var cartesian10 = new Cartesian3();
 
-    var originScratch = new Cartesian3();
-    var nextScratch = new Cartesian3();
-    var prevScratch = new Cartesian3();
-    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
-        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
-        var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
-        var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
-
-        prev = Cartesian2.subtract(prev, origin, prev);
-        next = Cartesian2.subtract(next, origin, next);
-
-        return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    }
-
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
-    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
+    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
         var angle = Cartesian3.angleBetween(Cartesian3.subtract(startPoint, cornerPoint, scratch1), Cartesian3.subtract(endPoint, cornerPoint, scratch2));
         var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
@@ -74,9 +61,9 @@ define([
 
         var m;
         if (leftIsOutside) {
-            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion), rotMatrix);
-        } else {
             m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(Cartesian3.negate(cornerPoint, scratch1), angle / granularity, quaterion), rotMatrix);
+        } else {
+            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion), rotMatrix);
         }
 
         var index = 0;
@@ -100,7 +87,7 @@ define([
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
         cornerPoint = Cartesian3.multiplyByScalar(Cartesian3.add(startPoint, endPoint, cornerPoint), 0.5, cornerPoint);
-        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         var length = calculatedPositions.length - 1;
         var rightEdge = calculatedPositions[length - 1];
@@ -108,12 +95,12 @@ define([
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
         cornerPoint = Cartesian3.multiplyByScalar(Cartesian3.add(startPoint, endPoint, cornerPoint), 0.5, cornerPoint);
-        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         return [firstEndCap, lastEndCap];
     }
 
-    function computeMiteredCorner (position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
+    function computeMiteredCorner (position, leftCornerDirection, lastPoint, leftIsOutside) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
@@ -168,14 +155,22 @@ define([
         }
     };
 
+    function scaleToSurface(positions, ellipsoid) {
+        for(var i = 0; i < positions.length; i++) {
+            positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
+        }
+        return positions;
+    }
+
     /**
      * @private
      */
     CorridorGeometryLibrary.computePositions = function (params) {
         var granularity = params.granularity;
         var positions = params.positions;
-        var width = params.width / 2;
         var ellipsoid = params.ellipsoid;
+        positions = scaleToSurface(positions, ellipsoid);
+        var width = params.width / 2;
         var cornerType = params.cornerType;
         var saveAttributes = params.saveAttributes;
         var normal = cartesian1;
@@ -219,7 +214,7 @@ define([
                 cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
                 cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
-                var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
+                var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
@@ -238,9 +233,9 @@ define([
                     leftPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width * 2, leftPos), leftPos);
                     previousPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width, previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside)});
                     } else {
-                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({leftPositions : computeMiteredCorner(position, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside)});
                     }
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
@@ -259,9 +254,9 @@ define([
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width * 2, rightPos), rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width, previousPos), previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside)});
                     } else {
-                        corners.push({rightPositions : computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({rightPositions : computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside)});
                     }
                 }
                 backward = Cartesian3.negate(forward, backward);

@@ -16,6 +16,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Ray',
+        '../Core/Transforms',
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
@@ -35,6 +36,7 @@ define([
         Matrix4,
         Quaternion,
         Ray,
+        Transforms,
         SceneMode,
         Tween) {
     "use strict";
@@ -362,7 +364,8 @@ define([
         }
 
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, lookScratchQuaternion), lookScratchMatrix);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, lookScratchQuaternion);
+        var rotation = Matrix3.fromQuaternion(quaternion, lookScratchMatrix);
 
         var direction = this._camera.direction;
         var up = this._camera.up;
@@ -481,7 +484,8 @@ define([
         var camera = this._camera;
 
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, turnAngle, rotateScratchQuaternion), rotateScratchMatrix);
+        var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
+        var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
 
         var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, camera.position, camera.position);
@@ -755,12 +759,20 @@ define([
         return Math.atan2(camera.right.y, camera.right.x);
     }
 
-    var scratchHeadingCartesian4 = new Cartesian4();
+    var scratchHeadingMatrix4 = new Matrix4();
+    var scratchHeadingMatrix3 = new Matrix3();
+    var scratchHeadingCartesian3 = new Cartesian3();
 
     function getHeading3D(controller) {
         var camera = controller._camera;
-        var z = Matrix4.multiplyByVector(camera.viewMatrix, Cartesian4.UNIT_Z, scratchHeadingCartesian4);
-        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+
+        var ellipsoid = controller._projection.getEllipsoid();
+        var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
+        var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
+        Matrix3.transpose(transform, transform);
+
+        var right = Matrix3.multiplyByVector(transform, camera.right, scratchHeadingCartesian3);
+        return Math.atan2(right.y, right.x);
     }
 
     function setHeading2D(controller, angle) {

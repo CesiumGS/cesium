@@ -46,16 +46,20 @@ define([
     var carto1 = new Cartographic();
     var carto2 = new Cartographic();
     var cartesian = new Cartesian3();
+    var scaleFirst = new Cartesian3();
+    var scaleLast = new Cartesian3();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
     //and this prevents duplication of end point.
     function generateCartesianArc(p1, p2, granularity, ellipsoid) {
-        var separationAngle = Cartesian3.angleBetween(p1, p2);
+        var first = ellipsoid.scaleToGeodeticSurface(p1, scaleFirst);
+        var last = ellipsoid.scaleToGeodeticSurface(p2, scaleLast);
+        var separationAngle = Cartesian3.angleBetween(first, last);
         var numPoints = Math.ceil(separationAngle/granularity);
         var result = new Array(numPoints*3);
-        var start = ellipsoid.cartesianToCartographic(p1, carto1);
-        var end = ellipsoid.cartesianToCartographic(p2, carto2);
+        var start = ellipsoid.cartesianToCartographic(first, carto1);
+        var end = ellipsoid.cartesianToCartographic(last, carto2);
 
         ellipsoidGeodesic.setEndPoints(start, end);
         var surfaceDistanceBetweenPoints = ellipsoidGeodesic.getSurfaceDistance() / (numPoints);

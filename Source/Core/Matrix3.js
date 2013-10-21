@@ -4,13 +4,15 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './freezeObject'
+        './freezeObject',
+        './Math'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        freezeObject) {
+        freezeObject,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -154,15 +156,15 @@ define([
         var w2 = quaternion.w * quaternion.w;
 
         var m00 = x2 - y2 - z2 + w2;
-        var m01 = 2.0 * (xy + zw);
-        var m02 = 2.0 * (xz - yw);
+        var m01 = 2.0 * (xy - zw);
+        var m02 = 2.0 * (xz + yw);
 
-        var m10 = 2.0 * (xy - zw);
+        var m10 = 2.0 * (xy + zw);
         var m11 = -x2 + y2 - z2 + w2;
-        var m12 = 2.0 * (yz + xw);
+        var m12 = 2.0 * (yz - xw);
 
-        var m20 = 2.0 * (xz + yw);
-        var m21 = 2.0 * (yz - xw);
+        var m20 = 2.0 * (xz - yw);
+        var m21 = 2.0 * (yz + xw);
         var m22 = -x2 - y2 + z2 + w2;
 
         if (!defined(result)) {
@@ -786,6 +788,161 @@ define([
         result[6] = column2Row0;
         result[7] = column2Row1;
         result[8] = column2Row2;
+        return result;
+    };
+
+    function computeFrobeniusNorm(matrix) {
+        var norm = 0.0;
+        for (var i = 0; i < 9; ++i) {
+            var temp = matrix[i];
+            norm += temp * temp;
+        }
+
+        return Math.sqrt(norm);
+    }
+
+    var rowVal = [1, 0, 0];
+    var colVal = [2, 2, 1];
+
+    function offDiagonalFrobeniusNorm(matrix) {
+        // Computes the "off-diagonal" Frobenius norm.
+        // Assumes matrix is symmetric.
+
+        var norm = 0.0;
+        for (var i = 0; i < 3; ++i) {
+            var temp = matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])];
+            norm += 2.0 * temp * temp;
+        }
+
+        return Math.sqrt(norm);
+    }
+
+    function shurDecomposition(matrix, result) {
+        // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
+        // section 8.4.2 The 2by2 Symmetric Schur Decomposition.
+        //
+        // The routine takes a matrix, which is assumed to be symmetric, and
+        // finds the largest off-diagonal term, and then creates
+        // a matrix (result) which can be used to help reduce it
+
+        var tolerance = CesiumMath.EPSILON15;
+
+        var maxDiagonal = 0.0;
+        var rotAxis = 1;
+
+        // find pivot (rotAxis) based on max diagonal of matrix
+        for (var i = 0; i < 3; ++i) {
+            var temp = Math.abs(matrix[Matrix3.getElementIndex(colVal[i], rowVal[i])]);
+            if (temp > maxDiagonal) {
+                rotAxis = i;
+                maxDiagonal = temp;
+            }
+        }
+
+        var c = 1.0;
+        var s = 0.0;
+
+        var p = rowVal[rotAxis];
+        var q = colVal[rotAxis];
+
+        if (Math.abs(matrix[Matrix3.getElementIndex(q, p)]) > tolerance) {
+            var qq = matrix[Matrix3.getElementIndex(q, q)];
+            var pp = matrix[Matrix3.getElementIndex(p, p)];
+            var qp = matrix[Matrix3.getElementIndex(q, p)];
+
+            var tau = (qq - pp) / 2.0 / qp;
+            var t;
+
+            if (tau < 0.0) {
+                t = -1.0 / (-tau + Math.sqrt(1.0 + tau * tau));
+            } else {
+                t = 1.0 / (tau + Math.sqrt(1.0 + tau * tau));
+            }
+
+            c = 1.0 / Math.sqrt(1.0 + t * t);
+            s = t * c;
+        }
+
+        result = Matrix3.clone(Matrix3.IDENTITY, result);
+
+        result[Matrix3.getElementIndex(p, p)] = result[Matrix3.getElementIndex(q, q)] = c;
+        result[Matrix3.getElementIndex(q, p)] = s;
+        result[Matrix3.getElementIndex(p, q)] = -s;
+
+        return result;
+    }
+
+    var jMatrix = new Matrix3();
+    var jMatrixTranspose = new Matrix3();
+
+    /**
+     * Computes the eigenvectors and eigenvalues of a symmetric matrix.
+     * <p>
+     * Returns a diagonal matrix and unitary matrix such that:
+     * <code>matrix = unitary matrix * diagonal matrix * transpose(unitary matrix)</code>
+     * </p>
+     * <p>
+     * The values along the diagonal of the diagonal matrix are the eigenvalues. The columns
+     * of the unitary matrix are the corresponding eigenvectors.
+     * </p>
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
+     * @param {Object} [result] An object with unitary and diagonal properties which are matrices onto which to store the result.
+     * @returns {Object} An object with unitary and diagonal properties which are the unitary and diagonal matrices, respectively.
+     *
+     * @example
+     * var a = //... symetric matrix
+     * var result = {
+     *     unitary : new Matrix3(),
+     *     diagonal : new Matrix3()
+     * };
+     * Matrix3.getEigenDecomposition(a, result);
+     *
+     * var unitaryTranspose = Matrix3.transpose(result.unitary);
+     * var b = Matrix.multiply(result.unitary, result.diagonal);
+     * Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
+     *
+     * var lambda = Matrix3.getColumn(result.diagonal, 0).x;  // first eigenvalue
+     * var v = Matrix3.getColumn(result.unitary, 0);          // first eigenvector
+     * var c = Cartesian3.multiplyByScalar(v, lambda);        // equal to Matrix3.multiplyByVector(a, v)
+     */
+    Matrix3.getEigenDecomposition = function(matrix, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required.');
+        }
+
+        // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
+        // section 8.4.3 The Classical Jacobi Algorithm
+
+        var tolerance = CesiumMath.EPSILON20;
+        var maxSweeps = 10;
+
+        var count = 0;
+        var sweep = 0;
+
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var unitaryMatrix = result.unitary = Matrix3.clone(Matrix3.IDENTITY, result.unitary);
+        var diagMatrix = result.diagonal = Matrix3.clone(matrix, result.diagonal);
+
+        var epsilon = tolerance * computeFrobeniusNorm(diagMatrix);
+
+        while (sweep < maxSweeps && offDiagonalFrobeniusNorm(diagMatrix) > epsilon) {
+            shurDecomposition(diagMatrix, jMatrix);
+            Matrix3.transpose(jMatrix, jMatrixTranspose);
+            Matrix3.multiply(diagMatrix, jMatrix, diagMatrix);
+            Matrix3.multiply(jMatrixTranspose, diagMatrix, diagMatrix);
+            Matrix3.multiply(unitaryMatrix, jMatrix, unitaryMatrix);
+
+            if (++count > 2) {
+                ++sweep;
+                count = 0;
+            }
+        }
+
         return result;
     };
 
