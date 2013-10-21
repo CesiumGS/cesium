@@ -20,6 +20,9 @@ Beta Releases
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
    * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
+   * All SVG files were deleted from `Widgets/Images` and replaced by a new `SvgPath` class.
+   * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button depend on `CesiumWidget.css` now for global Cesium button styles.
+   * The toolbar widgets expect their `container` to be the toolbar itself now, no need for separate containers for each widget on the bar.
    * `Property` implementations are now required to implement a prototype `equals` function.
    * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
@@ -56,6 +59,7 @@ Beta Releases
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
 * Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
+* The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
 * Added `GoogleEarthImageryProvider`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
 * Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.

@@ -38,5 +38,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ognjen Bubalo](https://github.com/ognjenb)
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
+* [David Hite](https://github.com/dav3hit3)
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.
