@@ -55,6 +55,7 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* Added `GoogleEarthImageryProvider`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
 * Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
 * Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
