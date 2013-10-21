@@ -1,5 +1,5 @@
 /**
- * @license r.js 2.1.8 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license r.js 2.1.9 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -20,7 +20,7 @@ var requirejs, require, define, xpcUtil;
 (function (console, args, readFileFunc) {
     var fileName, env, fs, vm, path, exec, rhinoContext, dir, nodeRequire,
         nodeDefine, exists, reqMain, loadedOptimizedLib, existsForNode, Cc, Ci,
-        version = '2.1.8',
+        version = '2.1.9',
         jsSuffixRegExp = /\.js$/,
         commandOption = '',
         useLibLoaded = {},
@@ -136,6 +136,7 @@ var requirejs, require, define, xpcUtil;
         }
 
         xpcUtil = {
+            isWindows: ('@mozilla.org/windows-registry-key;1' in Cc),
             cwd: function () {
                 return FileUtils.getFile("CurWorkD", []).path;
             },
@@ -169,10 +170,15 @@ var requirejs, require, define, xpcUtil;
             },
 
             xpfile: function (path) {
+                var fullPath;
                 try {
-                    return new FileUtils.File(xpcUtil.normalize(path));
+                    fullPath = xpcUtil.normalize(path);
+                    if (xpcUtil.isWindows) {
+                        fullPath = fullPath.replace(/\//g, '\\');
+                    }
+                    return new FileUtils.File(fullPath);
                 } catch (e) {
-                    throw new Error(path + ' failed: ' + e);
+                    throw new Error((fullPath || path) + ' failed: ' + e);
                 }
             },
 
@@ -232,7 +238,7 @@ var requirejs, require, define, xpcUtil;
     }
 
     /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.8 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.9 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -245,7 +251,7 @@ var requirejs, require, define, xpcUtil;
 (function (global) {
     var req, s, head, baseElement, dataMain, src,
         interactiveScript, currentlyAddingScript, mainScript, subPath,
-        version = '2.1.8',
+        version = '2.1.9',
         commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg,
         cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
         jsSuffixRegExp = /\.js$/,
@@ -255,7 +261,7 @@ var requirejs, require, define, xpcUtil;
         hasOwn = op.hasOwnProperty,
         ap = Array.prototype,
         apsp = ap.splice,
-        isBrowser = !!(typeof window !== 'undefined' && navigator && window.document),
+        isBrowser = !!(typeof window !== 'undefined' && typeof navigator !== 'undefined' && window.document),
         isWebWorker = !isBrowser && typeof importScripts !== 'undefined',
         //PS3 indicates loaded and complete, but need to wait for complete
         //specifically. Sequence is 'loading', 'loaded', execution,
@@ -606,7 +612,6 @@ var requirejs, require, define, xpcUtil;
         function hasPathFallback(id) {
             var pathConfig = getOwn(config.paths, id);
             if (pathConfig && isArray(pathConfig) && pathConfig.length > 1) {
-                removeScript(id);
                 //Pop off the first array value, since it failed, and
                 //retry
                 pathConfig.shift();
@@ -1697,6 +1702,8 @@ var requirejs, require, define, xpcUtil;
                         var map = makeModuleMap(id, relMap, true),
                             mod = getOwn(registry, id);
 
+                        removeScript(id);
+
                         delete defined[id];
                         delete urlFetched[map.url];
                         delete undefEvents[id];
@@ -1842,7 +1849,7 @@ var requirejs, require, define, xpcUtil;
 
                     //Join the path parts together, then figure out if baseUrl is needed.
                     url = syms.join('/');
-                    url += (ext || (/\?/.test(url) || skipExt ? '' : '.js'));
+                    url += (ext || (/^data\:|\?/.test(url) || skipExt ? '' : '.js'));
                     url = (url.charAt(0) === '/' || url.match(/^[\w\+\.\-]+:/) ? '' : config.baseUrl) + url;
                 }
 
@@ -2151,7 +2158,7 @@ var requirejs, require, define, xpcUtil;
     }
 
     //Look for a data-main script attribute, which could also adjust the baseUrl.
-    if (isBrowser) {
+    if (isBrowser && !cfg.skipDataMain) {
         //Figure out baseUrl. Get it from the script tag with require.js in it.
         eachReverse(scripts(), function (script) {
             //Set the 'head' where we can append children by
@@ -2384,10 +2391,16 @@ var requirejs, require, define, xpcUtil;
         fn();
     }
 
+    function makeError(message, moduleName) {
+        var err = new Error(message);
+        err.requireModules = [moduleName];
+        return err;
+    }
+
     //Supply an implementation that allows synchronous get of a module.
     req.get = function (context, moduleName, relModuleMap, localRequire) {
         if (moduleName === "require" || moduleName === "exports" || moduleName === "module") {
-            req.onError(new Error("Explicit require of " + moduleName + " is not allowed."));
+            context.onError(makeError("Explicit require of " + moduleName + " is not allowed.", moduleName));
         }
 
         var ret, oldTick,
@@ -2470,8 +2483,9 @@ var requirejs, require, define, xpcUtil;
                                 moduleName + '" failed with error: ' + e);
                 err.originalError = e;
                 err.moduleName = moduleName;
+                err.requireModules = [moduleName];
                 err.fileName = url;
-                return req.onError(err);
+                return context.onError(err);
             }
         } else {
             def(moduleName, function () {
@@ -2500,7 +2514,8 @@ var requirejs, require, define, xpcUtil;
                                      'with error: ' + e);
                     err.originalError = e;
                     err.moduleName = originalName;
-                    return req.onError(err);
+                    err.requireModules = [moduleName];
+                    return context.onError(err);
                 }
             });
         }
@@ -2657,8 +2672,8 @@ define('lang', function () {
         _mixin: function(dest, source, override){
             var name;
             for (name in source) {
-                if(source.hasOwnProperty(name)
-                    && (override || !dest.hasOwnProperty(name))) {
+                if(source.hasOwnProperty(name) &&
+                    (override || !dest.hasOwnProperty(name))) {
                     dest[name] = source[name];
                 }
             }
@@ -2684,6 +2699,42 @@ define('lang', function () {
                 lang._mixin(dest, parameters[i], override);
             }
             return dest; // Object
+        },
+
+
+        /**
+         * Does a type of deep copy. Do not give it anything fancy, best
+         * for basic object copies of objects that also work well as
+         * JSON-serialized things, or has properties pointing to functions.
+         * For non-array/object values, just returns the same object.
+         * @param  {Object} obj      copy properties from this object
+         * @param  {Object} [result] optional result object to use
+         * @return {Object}
+         */
+        deeplikeCopy: function (obj) {
+            var type, result;
+
+            if (lang.isArray(obj)) {
+                result = [];
+                obj.forEach(function(value) {
+                    result.push(lang.deeplikeCopy(value));
+                });
+                return result;
+            }
+
+            type = typeof obj;
+            if (obj === null || obj === undefined || type === 'boolean' ||
+                type === 'string' || type === 'number' || lang.isFunction(obj) ||
+                lang.isRegExp(obj)) {
+                return obj;
+            }
+
+            //Anything else is an object, hopefully.
+            result = {};
+            lang.eachProp(obj, function(value, key) {
+                result[key] = lang.deeplikeCopy(value);
+            });
+            return result;
         },
 
         delegate: (function () {
@@ -5383,19 +5434,19 @@ parseStatement: true, parseSourceElement: true */
         while (index < length) {
             ch = source[index++];
             str += ch;
-            if (classMarker) {
+            if (ch === '\\') {
+                ch = source[index++];
+                // ECMA-262 7.8.5
+                if (isLineTerminator(ch)) {
+                    throwError({}, Messages.UnterminatedRegExp);
+                }
+                str += ch;
+            } else if (classMarker) {
                 if (ch === ']') {
                     classMarker = false;
                 }
             } else {
-                if (ch === '\\') {
-                    ch = source[index++];
-                    // ECMA-262 7.8.5
-                    if (isLineTerminator(ch)) {
-                        throwError({}, Messages.UnterminatedRegExp);
-                    }
-                    str += ch;
-                } else if (ch === '/') {
+                if (ch === '/') {
                     terminated = true;
                     break;
                 } else if (ch === '[') {
@@ -6127,9 +6178,8 @@ parseStatement: true, parseSourceElement: true */
             if (strict && expr.type === Syntax.Identifier && isRestrictedWord(expr.name)) {
                 throwErrorTolerant({}, Messages.StrictLHSPostfix);
             }
-
             if (!isLeftHandSide(expr)) {
-                throwError({}, Messages.InvalidLHSInAssignment);
+                throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
             }
 
             expr = {
@@ -6162,7 +6212,7 @@ parseStatement: true, parseSourceElement: true */
             }
 
             if (!isLeftHandSide(expr)) {
-                throwError({}, Messages.InvalidLHSInAssignment);
+                throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
             }
 
             expr = {
@@ -6411,7 +6461,7 @@ parseStatement: true, parseSourceElement: true */
         if (matchAssign()) {
             // LeftHandSideExpression
             if (!isLeftHandSide(expr)) {
-                throwError({}, Messages.InvalidLHSInAssignment);
+                throwErrorTolerant({}, Messages.InvalidLHSInAssignment);
             }
 
             // 11.13.1
@@ -6729,7 +6779,7 @@ parseStatement: true, parseSourceElement: true */
                 if (matchKeyword('in')) {
                     // LeftHandSideExpression
                     if (!isLeftHandSide(init)) {
-                        throwError({}, Messages.InvalidLHSInForIn);
+                        throwErrorTolerant({}, Messages.InvalidLHSInForIn);
                     }
 
                     lex();
@@ -7008,15 +7058,16 @@ parseStatement: true, parseSourceElement: true */
 
         expect('{');
 
+        cases = [];
+
         if (match('}')) {
             lex();
             return {
                 type: Syntax.SwitchStatement,
-                discriminant: discriminant
+                discriminant: discriminant,
+                cases: cases
             };
         }
-
-        cases = [];
 
         oldInSwitch = state.inSwitch;
         state.inSwitch = true;
@@ -8294,7 +8345,7 @@ parseStatement: true, parseSourceElement: true */
     }
 
     // Sync with package.json.
-    exports.version = '1.0.3';
+    exports.version = '1.0.4';
 
     exports.parse = parse;
 
@@ -13176,10 +13227,10 @@ define('source-map/array-set', function (require, exports, module) {
   /**
    * Static method for creating ArraySet instances from an existing array.
    */
-  ArraySet.fromArray = function ArraySet_fromArray(aArray) {
+  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
     var set = new ArraySet();
     for (var i = 0, len = aArray.length; i < len; i++) {
-      set.add(aArray[i]);
+      set.add(aArray[i], aAllowDuplicates);
     }
     return set;
   };
@@ -13189,14 +13240,15 @@ define('source-map/array-set', function (require, exports, module) {
    *
    * @param String aStr
    */
-  ArraySet.prototype.add = function ArraySet_add(aStr) {
-    if (this.has(aStr)) {
-      // Already a member; nothing to do.
-      return;
-    }
+  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+    var isDuplicate = this.has(aStr);
     var idx = this._array.length;
-    this._array.push(aStr);
-    this._set[util.toSetString(aStr)] = idx;
+    if (!isDuplicate || aAllowDuplicates) {
+      this._array.push(aStr);
+    }
+    if (!isDuplicate) {
+      this._set[util.toSetString(aStr)] = idx;
+    }
   };
 
   /**
@@ -13457,7 +13509,7 @@ define('source-map/binary-search', function (require, exports, module) {
     //      element which is less than the one we are searching for, so we
     //      return null.
     var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-    var cmp = aCompare(aNeedle, aHaystack[mid]);
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
     if (cmp === 0) {
       // Found the element we are looking for.
       return aHaystack[mid];
@@ -13562,14 +13614,18 @@ define('source-map/source-map-consumer', function (require, exports, module) {
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file');
+    var file = util.getArg(sourceMap, 'file', null);
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
-    this._names = ArraySet.fromArray(names);
-    this._sources = ArraySet.fromArray(sources);
+    // Pass `true` below to allow duplicate names and sources. While source maps
+    // are intended to be compressed and deduplicated, the TypeScript compiler
+    // sometimes generates source maps with duplicates in them. See Github issue
+    // #72 and bugzil.la/889492.
+    this._names = ArraySet.fromArray(names, true);
+    this._sources = ArraySet.fromArray(sources, true);
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
     this.file = file;
@@ -13601,6 +13657,32 @@ define('source-map/source-map-consumer', function (require, exports, module) {
     this._originalMappings = [];
     this._parseMappings(mappings, sourceRoot);
   }
+
+  /**
+   * Create a SourceMapConsumer from a SourceMapGenerator.
+   *
+   * @param SourceMapGenerator aSourceMap
+   *        The source map that will be consumed.
+   * @returns SourceMapConsumer
+   */
+  SourceMapConsumer.fromSourceMap =
+    function SourceMapConsumer_fromSourceMap(aSourceMap) {
+      var smc = Object.create(SourceMapConsumer.prototype);
+
+      smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
+      smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
+      smc.sourceRoot = aSourceMap._sourceRoot;
+      smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(),
+                                                              smc.sourceRoot);
+      smc.file = aSourceMap._file;
+
+      smc._generatedMappings = aSourceMap._mappings.slice()
+        .sort(util.compareByGeneratedPositions);
+      smc._originalMappings = aSourceMap._mappings.slice()
+        .sort(util.compareByOriginalPositions);
+
+      return smc;
+    };
 
   /**
    * The version of the source mapping spec that we are consuming.
@@ -13697,37 +13779,7 @@ define('source-map/source-map-consumer', function (require, exports, module) {
         }
       }
 
-      this._originalMappings.sort(this._compareOriginalPositions);
-    };
-
-  /**
-   * Comparator between two mappings where the original positions are compared.
-   */
-  SourceMapConsumer.prototype._compareOriginalPositions =
-    function SourceMapConsumer_compareOriginalPositions(mappingA, mappingB) {
-      if (mappingA.source > mappingB.source) {
-        return 1;
-      }
-      else if (mappingA.source < mappingB.source) {
-        return -1;
-      }
-      else {
-        var cmp = mappingA.originalLine - mappingB.originalLine;
-        return cmp === 0
-          ? mappingA.originalColumn - mappingB.originalColumn
-          : cmp;
-      }
-    };
-
-  /**
-   * Comparator between two mappings where the generated positions are compared.
-   */
-  SourceMapConsumer.prototype._compareGeneratedPositions =
-    function SourceMapConsumer_compareGeneratedPositions(mappingA, mappingB) {
-      var cmp = mappingA.generatedLine - mappingB.generatedLine;
-      return cmp === 0
-        ? mappingA.generatedColumn - mappingB.generatedColumn
-        : cmp;
+      this._originalMappings.sort(util.compareByOriginalPositions);
     };
 
   /**
@@ -13780,7 +13832,7 @@ define('source-map/source-map-consumer', function (require, exports, module) {
                                       this._generatedMappings,
                                       "generatedLine",
                                       "generatedColumn",
-                                      this._compareGeneratedPositions);
+                                      util.compareByGeneratedPositions);
 
       if (mapping) {
         var source = util.getArg(mapping, 'source', null);
@@ -13874,7 +13926,7 @@ define('source-map/source-map-consumer', function (require, exports, module) {
                                       this._originalMappings,
                                       "originalLine",
                                       "originalColumn",
-                                      this._compareOriginalPositions);
+                                      util.compareByOriginalPositions);
 
       if (mapping) {
         return {
@@ -14052,8 +14104,10 @@ define('source-map/source-map-generator', function (require, exports, module) {
       }
 
       this._mappings.push({
-        generated: generated,
-        original: original,
+        generatedLine: generated.line,
+        generatedColumn: generated.column,
+        originalLine: original != null && original.line,
+        originalColumn: original != null && original.column,
         source: source,
         name: name
       });
@@ -14114,11 +14168,11 @@ define('source-map/source-map-generator', function (require, exports, module) {
 
       // Find mappings for the "aSourceFile"
       this._mappings.forEach(function (mapping) {
-        if (mapping.source === aSourceFile && mapping.original) {
+        if (mapping.source === aSourceFile && mapping.originalLine) {
           // Check if it can be mapped by the source map, then update the mapping.
           var original = aSourceMapConsumer.originalPositionFor({
-            line: mapping.original.line,
-            column: mapping.original.column
+            line: mapping.originalLine,
+            column: mapping.originalColumn
           });
           if (original.source !== null) {
             // Copy mapping
@@ -14127,8 +14181,8 @@ define('source-map/source-map-generator', function (require, exports, module) {
             } else {
               mapping.source = original.source;
             }
-            mapping.original.line = original.line;
-            mapping.original.column = original.column;
+            mapping.originalLine = original.line;
+            mapping.originalColumn = original.column;
             if (original.name !== null && mapping.name !== null) {
               // Only use the identifier name if it's an identifier
               // in both SourceMaps
@@ -14192,27 +14246,14 @@ define('source-map/source-map-generator', function (require, exports, module) {
         return;
       }
       else {
-        throw new Error('Invalid mapping.');
+        throw new Error('Invalid mapping: ' + JSON.stringify({
+          generated: aGenerated,
+          source: aSource,
+          orginal: aOriginal,
+          name: aName
+        }));
       }
     };
-
-  function cmpLocation(loc1, loc2) {
-    var cmp = (loc1 && loc1.line) - (loc2 && loc2.line);
-    return cmp ? cmp : (loc1 && loc1.column) - (loc2 && loc2.column);
-  }
-
-  function strcmp(str1, str2) {
-    str1 = str1 || '';
-    str2 = str2 || '';
-    return (str1 > str2) - (str1 < str2);
-  }
-
-  function cmpMapping(mappingA, mappingB) {
-    return cmpLocation(mappingA.generated, mappingB.generated) ||
-      cmpLocation(mappingA.original, mappingB.original) ||
-      strcmp(mappingA.source, mappingB.source) ||
-      strcmp(mappingA.name, mappingB.name);
-  }
 
   /**
    * Serialize the accumulated mappings in to the stream of base 64 VLQs
@@ -14234,44 +14275,44 @@ define('source-map/source-map-generator', function (require, exports, module) {
       // via the ';' separators) will be all messed up. Note: it might be more
       // performant to maintain the sorting as we insert them, rather than as we
       // serialize them, but the big O is the same either way.
-      this._mappings.sort(cmpMapping);
+      this._mappings.sort(util.compareByGeneratedPositions);
 
       for (var i = 0, len = this._mappings.length; i < len; i++) {
         mapping = this._mappings[i];
 
-        if (mapping.generated.line !== previousGeneratedLine) {
+        if (mapping.generatedLine !== previousGeneratedLine) {
           previousGeneratedColumn = 0;
-          while (mapping.generated.line !== previousGeneratedLine) {
+          while (mapping.generatedLine !== previousGeneratedLine) {
             result += ';';
             previousGeneratedLine++;
           }
         }
         else {
           if (i > 0) {
-            if (!cmpMapping(mapping, this._mappings[i - 1])) {
+            if (!util.compareByGeneratedPositions(mapping, this._mappings[i - 1])) {
               continue;
             }
             result += ',';
           }
         }
 
-        result += base64VLQ.encode(mapping.generated.column
+        result += base64VLQ.encode(mapping.generatedColumn
                                    - previousGeneratedColumn);
-        previousGeneratedColumn = mapping.generated.column;
+        previousGeneratedColumn = mapping.generatedColumn;
 
-        if (mapping.source && mapping.original) {
+        if (mapping.source) {
           result += base64VLQ.encode(this._sources.indexOf(mapping.source)
                                      - previousSource);
           previousSource = this._sources.indexOf(mapping.source);
 
           // lines are stored 0-based in SourceMap spec version 3
-          result += base64VLQ.encode(mapping.original.line - 1
+          result += base64VLQ.encode(mapping.originalLine - 1
                                      - previousOriginalLine);
-          previousOriginalLine = mapping.original.line - 1;
+          previousOriginalLine = mapping.originalLine - 1;
 
-          result += base64VLQ.encode(mapping.original.column
+          result += base64VLQ.encode(mapping.originalColumn
                                      - previousOriginalColumn);
-          previousOriginalColumn = mapping.original.column;
+          previousOriginalColumn = mapping.originalColumn;
 
           if (mapping.name) {
             result += base64VLQ.encode(this._names.indexOf(mapping.name)
@@ -14282,6 +14323,23 @@ define('source-map/source-map-generator', function (require, exports, module) {
       }
 
       return result;
+    };
+
+  SourceMapGenerator.prototype._generateSourcesContent =
+    function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
+      return aSources.map(function (source) {
+        if (!this._sourcesContents) {
+          return null;
+        }
+        if (aSourceRoot) {
+          source = util.relative(aSourceRoot, source);
+        }
+        var key = util.toSetString(source);
+        return Object.prototype.hasOwnProperty.call(this._sourcesContents,
+                                                    key)
+          ? this._sourcesContents[key]
+          : null;
+      }, this);
     };
 
   /**
@@ -14300,16 +14358,9 @@ define('source-map/source-map-generator', function (require, exports, module) {
         map.sourceRoot = this._sourceRoot;
       }
       if (this._sourcesContents) {
-        map.sourcesContent = map.sources.map(function (source) {
-          if (map.sourceRoot) {
-            source = util.relative(map.sourceRoot, source);
-          }
-          return Object.prototype.hasOwnProperty.call(
-            this._sourcesContents, util.toSetString(source))
-            ? this._sourcesContents[util.toSetString(source)]
-            : null;
-        }, this);
+        map.sourcesContent = this._generateSourcesContent(map.sources, map.sourceRoot);
       }
+
       return map;
     };
 
@@ -14449,7 +14500,7 @@ define('source-map/source-node', function (require, exports, module) {
       return node;
 
       function addMappingWithCode(mapping, code) {
-        if (mapping.source === undefined) {
+        if (mapping === null || mapping.source === undefined) {
           node.add(code);
         } else {
           node.add(new SourceNode(mapping.originalLine,
@@ -14517,7 +14568,9 @@ define('source-map/source-node', function (require, exports, module) {
    * @param aFn The traversal function.
    */
   SourceNode.prototype.walk = function SourceNode_walk(aFn) {
-    this.children.forEach(function (chunk) {
+    var chunk;
+    for (var i = 0, len = this.children.length; i < len; i++) {
+      chunk = this.children[i];
       if (chunk instanceof SourceNode) {
         chunk.walk(aFn);
       }
@@ -14529,7 +14582,7 @@ define('source-map/source-node', function (require, exports, module) {
                        name: this.name });
         }
       }
-    }, this);
+    }
   };
 
   /**
@@ -14595,14 +14648,16 @@ define('source-map/source-node', function (require, exports, module) {
    */
   SourceNode.prototype.walkSourceContents =
     function SourceNode_walkSourceContents(aFn) {
-      this.children.forEach(function (chunk) {
-        if (chunk instanceof SourceNode) {
-          chunk.walkSourceContents(aFn);
+      for (var i = 0, len = this.children.length; i < len; i++) {
+        if (this.children[i] instanceof SourceNode) {
+          this.children[i].walkSourceContents(aFn);
         }
-      }, this);
-      Object.keys(this.sourceContents).forEach(function (sourceFileKey) {
-        aFn(util.fromSetString(sourceFileKey), this.sourceContents[sourceFileKey]);
-      }, this);
+      }
+
+      var sources = Object.keys(this.sourceContents);
+      for (var i = 0, len = sources.length; i < len; i++) {
+        aFn(util.fromSetString(sources[i]), this.sourceContents[sources[i]]);
+      }
     };
 
   /**
@@ -14629,23 +14684,36 @@ define('source-map/source-node', function (require, exports, module) {
     };
     var map = new SourceMapGenerator(aArgs);
     var sourceMappingActive = false;
+    var lastOriginalSource = null;
+    var lastOriginalLine = null;
+    var lastOriginalColumn = null;
+    var lastOriginalName = null;
     this.walk(function (chunk, original) {
       generated.code += chunk;
       if (original.source !== null
           && original.line !== null
           && original.column !== null) {
-        map.addMapping({
-          source: original.source,
-          original: {
-            line: original.line,
-            column: original.column
-          },
-          generated: {
-            line: generated.line,
-            column: generated.column
-          },
-          name: original.name
-        });
+        if(lastOriginalSource !== original.source
+           || lastOriginalLine !== original.line
+           || lastOriginalColumn !== original.column
+           || lastOriginalName !== original.name) {
+          map.addMapping({
+            source: original.source,
+            original: {
+              line: original.line,
+              column: original.column
+            },
+            generated: {
+              line: generated.line,
+              column: generated.column
+            },
+            name: original.name
+          });
+        }
+        lastOriginalSource = original.source;
+        lastOriginalLine = original.line;
+        lastOriginalColumn = original.column;
+        lastOriginalName = original.name;
         sourceMappingActive = true;
       } else if (sourceMappingActive) {
         map.addMapping({
@@ -14654,6 +14722,7 @@ define('source-map/source-node', function (require, exports, module) {
             column: generated.column
           }
         });
+        lastOriginalSource = null;
         sourceMappingActive = false;
       }
       chunk.split('').forEach(function (ch) {
@@ -14706,6 +14775,7 @@ define('source-map/util', function (require, exports, module) {
   exports.getArg = getArg;
 
   var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
+  var dataUrlRegexp = /^data:.+\,.+/;
 
   function urlParse(aUrl) {
     var match = aUrl.match(urlRegexp);
@@ -14743,7 +14813,7 @@ define('source-map/util', function (require, exports, module) {
   function join(aRoot, aPath) {
     var url;
 
-    if (aPath.match(urlRegexp)) {
+    if (aPath.match(urlRegexp) || aPath.match(dataUrlRegexp)) {
       return aPath;
     }
 
@@ -14788,6 +14858,93 @@ define('source-map/util', function (require, exports, module) {
       : aPath;
   }
   exports.relative = relative;
+
+  function strcmp(aStr1, aStr2) {
+    var s1 = aStr1 || "";
+    var s2 = aStr2 || "";
+    return (s1 > s2) - (s1 < s2);
+  }
+
+  /**
+   * Comparator between two mappings where the original positions are compared.
+   *
+   * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+   * mappings with the same original source/line/column, but different generated
+   * line and column the same. Useful when searching for a mapping with a
+   * stubbed out mapping.
+   */
+  function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
+    var cmp;
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp || onlyCompareOriginal) {
+      return cmp;
+    }
+
+    cmp = strcmp(mappingA.name, mappingB.name);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    return mappingA.generatedColumn - mappingB.generatedColumn;
+  };
+  exports.compareByOriginalPositions = compareByOriginalPositions;
+
+  /**
+   * Comparator between two mappings where the generated positions are
+   * compared.
+   *
+   * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+   * mappings with the same generated line and column, but different
+   * source/name/original line and column the same. Useful when searching for a
+   * mapping with a stubbed out mapping.
+   */
+  function compareByGeneratedPositions(mappingA, mappingB, onlyCompareGenerated) {
+    var cmp;
+
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp || onlyCompareGenerated) {
+      return cmp;
+    }
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp) {
+      return cmp;
+    }
+
+    return strcmp(mappingA.name, mappingB.name);
+  };
+  exports.compareByGeneratedPositions = compareByGeneratedPositions;
 
 });
 define('source-map', function (require, exports, module) {
@@ -15821,6 +15978,9 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 if (x instanceof type) return x;
             }
         },
+        has_directive: function(type) {
+            return this.find_parent(AST_Scope).has_directive(type);
+        },
         in_boolean_context: function() {
             var stack = this.stack;
             var i = stack.length, self = stack[--i];
@@ -15974,7 +16134,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             S.tokpos = S.pos;
         }
         function token(type, value, is_comment) {
-            S.regex_allowed = type == "operator" && !UNARY_POSTFIX[value] || type == "keyword" && KEYWORDS_BEFORE_EXPRESSION(value) || type == "punc" && PUNC_BEFORE_EXPRESSION(value);
+            S.regex_allowed = type == "operator" && !UNARY_POSTFIX(value) || type == "keyword" && KEYWORDS_BEFORE_EXPRESSION(value) || type == "punc" && PUNC_BEFORE_EXPRESSION(value);
             var ret = {
                 type: type,
                 value: value,
@@ -16060,7 +16220,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 return "\f";
 
               case 48:
-                return "\0";
+                return "\x00";
 
               case 120:
                 return String.fromCharCode(hex_bytes(2));
@@ -17145,6 +17305,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             self.definitions = do_list(self.definitions, tw);
         });
         _(AST_VarDef, function(self, tw) {
+            self.name = self.name.transform(tw);
             if (self.value) self.value = self.value.transform(tw);
         });
         _(AST_Lambda, function(self, tw) {
@@ -17596,14 +17757,13 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             inline_script: false,
             width: 80,
             max_line_len: 32e3,
-            ie_proof: true,
             beautify: false,
             source_map: null,
             bracketize: false,
             semicolons: true,
             comments: false,
             preserve_line: false,
-            negate_iife: !(options && options.beautify)
+            screw_ie8: false
         }, true);
         var indentation = 0;
         var current_col = 0;
@@ -17655,8 +17815,8 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                     ++sq;
                     return "'";
 
-                  case "\0":
-                    return "\\0";
+                  case "\x00":
+                    return "\\x00";
                 }
                 return s;
             });
@@ -17888,20 +18048,16 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
         }
         AST_Node.DEFMETHOD("print", function(stream, force_parens) {
             var self = this, generator = self._codegen;
-            stream.push_node(self);
-            var needs_parens = self.needs_parens(stream);
-            var fc = self instanceof AST_Function && stream.option("negate_iife");
-            if (force_parens || needs_parens && !fc) {
-                stream.with_parens(function() {
-                    self.add_comments(stream);
-                    self.add_source_map(stream);
-                    generator(self, stream);
-                });
-            } else {
+            function doit() {
                 self.add_comments(stream);
-                if (needs_parens && fc) stream.print("!");
                 self.add_source_map(stream);
                 generator(self, stream);
+            }
+            stream.push_node(self);
+            if (force_parens || self.needs_parens(stream)) {
+                stream.with_parens(doit);
+            } else {
+                doit();
             }
             stream.pop_node();
         });
@@ -18198,7 +18354,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 return;
             }
             if (!self.body) return output.force_semicolon();
-            if (self.body instanceof AST_Do && output.option("ie_proof")) {
+            if (self.body instanceof AST_Do && !output.option("screw_ie8")) {
                 make_block(self.body, output);
                 return;
             }
@@ -18417,6 +18573,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 a.forEach(function(exp, i) {
                     if (i) output.comma();
                     exp.print(output);
+                    if (i === len - 1 && exp instanceof AST_Hole) output.comma();
                 });
                 if (len > 0) output.space();
             });
@@ -18440,10 +18597,10 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 output.print_string(key + "");
             } else if ((typeof key == "number" || !output.option("beautify") && +key + "" == key) && parseFloat(key) >= 0) {
                 output.print(make_num(key));
-            } else if (!is_identifier(key)) {
-                output.print_string(key);
-            } else {
+            } else if (RESERVED_WORDS(key) ? output.option("screw_ie8") : is_identifier_string(key)) {
                 output.print_name(key);
+            } else {
+                output.print_string(key);
             }
             output.colon();
             self.value.print(output);
@@ -18605,6 +18762,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             join_vars: !false_by_default,
             cascade: !false_by_default,
             side_effects: !false_by_default,
+            negate_iife: !false_by_default,
             screw_ie8: false,
             warnings: true,
             global_defs: {}
@@ -18730,6 +18888,9 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                     statements = join_consecutive_vars(statements, compressor);
                 }
             } while (CHANGED);
+            if (compressor.option("negate_iife")) {
+                negate_iifes(statements, compressor);
+            }
             return statements;
             function eliminate_spurious_blocks(statements) {
                 var seen_dirs = [];
@@ -18970,6 +19131,35 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                     return a;
                 }, []);
             }
+            function negate_iifes(statements, compressor) {
+                statements.forEach(function(stat) {
+                    if (stat instanceof AST_SimpleStatement) {
+                        stat.body = function transform(thing) {
+                            return thing.transform(new TreeTransformer(function(node) {
+                                if (node instanceof AST_Call && node.expression instanceof AST_Function) {
+                                    return make_node(AST_UnaryPrefix, node, {
+                                        operator: "!",
+                                        expression: node
+                                    });
+                                } else if (node instanceof AST_Call) {
+                                    node.expression = transform(node.expression);
+                                } else if (node instanceof AST_Seq) {
+                                    node.car = transform(node.car);
+                                } else if (node instanceof AST_Conditional) {
+                                    var expr = transform(node.condition);
+                                    if (expr !== node.condition) {
+                                        node.condition = expr;
+                                        var tmp = node.consequent;
+                                        node.consequent = node.alternative;
+                                        node.alternative = tmp;
+                                    }
+                                }
+                                return node;
+                            }));
+                        }(stat.body);
+                    }
+                });
+            }
         }
         function extract_declarations_from_unreachable_code(compressor, stat, target) {
             compressor.warn("Dropping unreachable code [{file}:{line},{col}]", stat.start);
@@ -19065,7 +19255,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                 throw new Error(string_template("Cannot evaluate a statement [{file}:{line},{col}]", this.start));
             });
             def(AST_Function, function() {
-                return [ this ];
+                throw def;
             });
             function ev(node) {
                 return node._eval();
@@ -19444,7 +19634,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
                     });
                 }
                 var tt = new TreeTransformer(function before(node, descend, in_list) {
-                    if (node instanceof AST_Lambda) {
+                    if (node instanceof AST_Lambda && !(node instanceof AST_Accessor)) {
                         for (var a = node.argnames, i = a.length; --i >= 0; ) {
                             var sym = a[i];
                             if (sym.unreferenced()) {
@@ -20182,14 +20372,14 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
         });
         var commutativeOperators = makePredicate("== === != !== * & | ^");
         OPT(AST_Binary, function(self, compressor) {
-            function reverse(op, force) {
+            var reverse = compressor.has_directive("use asm") ? noop : function(op, force) {
                 if (force || !(self.left.has_side_effects() || self.right.has_side_effects())) {
                     if (op) self.operator = op;
                     var tmp = self.left;
                     self.left = self.right;
                     self.right = tmp;
                 }
-            }
+            };
             if (commutativeOperators(self.operator)) {
                 if (self.right instanceof AST_Constant && !(self.left instanceof AST_Constant)) {
                     reverse(null, true);
@@ -20393,7 +20583,7 @@ define('uglifyjs2', ['exports', 'source-map', 'logger', 'env!env/file'], functio
             var prop = self.property;
             if (prop instanceof AST_String && compressor.option("properties")) {
                 prop = prop.getValue();
-                if (compressor.option("screw_ie8") && RESERVED_WORDS(prop) || !RESERVED_WORDS(prop) && is_identifier_string(prop)) {
+                if (RESERVED_WORDS(prop) ? compressor.option("screw_ie8") : is_identifier_string(prop)) {
                     return make_node(AST_Dot, self, {
                         expression: self.expression,
                         property: prop
@@ -20832,6 +21022,8 @@ exports.minify = function(files, options, name) {
     if (typeof files == "string")
         files = [ files ];
 
+    UglifyJS.base54.reset();
+
     // 1. parse
     var toplevel = null;
     files.forEach(function(file){
@@ -20861,17 +21053,18 @@ exports.minify = function(files, options, name) {
     }
 
     // 4. output
-    var map = null;
-    var inMap = null;
-    if (options.inSourceMap) {
+    var inMap = options.inSourceMap;
+    var output = {};
+    if (typeof options.inSourceMap == "string") {
         inMap = rjsFile.readFile(options.inSourceMap, "utf8");
     }
-    if (options.outSourceMap) map = UglifyJS.SourceMap({
-        file: options.outSourceMap,
-        orig: inMap,
-        root: options.sourceRoot
-    });
-    var output = { source_map: map };
+    if (options.outSourceMap) {
+        output.source_map = UglifyJS.SourceMap({
+            file: options.outSourceMap,
+            orig: inMap,
+            root: options.sourceRoot
+        });
+    }
     if (options.output) {
         UglifyJS.merge(output, options.output);
     }
@@ -20879,7 +21072,7 @@ exports.minify = function(files, options, name) {
     toplevel.print(stream);
     return {
         code : stream + "",
-        map  : map + ""
+        map  : output.source_map + ""
     };
 };
 
@@ -21758,18 +21951,25 @@ define('parse', ['./esprimaAdapter', 'lang'], function (esprima, lang) {
      * @returns {String} a JS source string.
      */
     parse.nodeToString = function (contents, node) {
-        var loc = node.loc,
+        var extracted,
+            loc = node.loc,
             lines = contents.split('\n'),
             firstLine = loc.start.line > 1 ?
                         lines.slice(0, loc.start.line - 1).join('\n') + '\n' :
                         '',
             preamble = firstLine +
-                       lines[loc.start.line - 1].substring(0, loc.start.column),
+                       lines[loc.start.line - 1].substring(0, loc.start.column);
+
+        if (loc.start.line === loc.end.line) {
+            extracted = lines[loc.start.line - 1].substring(loc.start.column,
+                                                            loc.end.column);
+        } else {
             extracted =  lines[loc.start.line - 1].substring(loc.start.column) +
                      '\n' +
                      lines.slice(loc.start.line, loc.end.line - 1).join('\n') +
                      '\n' +
                      lines[loc.end.line - 1].substring(0, loc.end.column);
+        }
 
         return {
             value: extracted,
@@ -22307,10 +22507,10 @@ define('pragma', ['parse', 'logger'], function (parse, logger) {
         hasRegExp: /has\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
         configRegExp: /(^|[^\.])(requirejs|require)(\.config)\s*\(/g,
         nsWrapRegExp: /\/\*requirejs namespace: true \*\//,
-        apiDefRegExp: /var requirejs, require, define;/,
+        apiDefRegExp: /var requirejs,\s*require,\s*define;/,
         defineCheckRegExp: /typeof\s+define\s*===\s*["']function["']\s*&&\s*define\s*\.\s*amd/g,
         defineStringCheckRegExp: /typeof\s+define\s*===\s*["']function["']\s*&&\s*define\s*\[\s*["']amd["']\s*\]/g,
-        defineTypeFirstCheckRegExp: /\s*["']function["']\s*===\s*typeof\s+define\s*&&\s*define\s*\.\s*amd/g,
+        defineTypeFirstCheckRegExp: /\s*["']function["']\s*==(=?)\s*typeof\s+define\s*&&\s*define\s*\.\s*amd/g,
         defineJQueryRegExp: /typeof\s+define\s*===\s*["']function["']\s*&&\s*define\s*\.\s*amd\s*&&\s*define\s*\.\s*amd\s*\.\s*jQuery/g,
         defineHasRegExp: /typeof\s+define\s*==(=)?\s*['"]function['"]\s*&&\s*typeof\s+define\.amd\s*==(=)?\s*['"]object['"]\s*&&\s*define\.amd/g,
         defineTernaryRegExp: /typeof\s+define\s*===\s*['"]function["']\s*&&\s*define\s*\.\s*amd\s*\?\s*define/,
@@ -22642,14 +22842,15 @@ define('rhino/optimize', ['logger', 'env!env/file'], function (logger, file) {
             config = config || {};
             var result, mappings, optimized, compressed, baseName, writer,
                 outBaseName, outFileNameMap, outFileNameMapContent,
+                srcOutFileName, concatNameMap,
                 jscomp = Packages.com.google.javascript.jscomp,
                 flags = Packages.com.google.common.flags,
-                //Fake extern
-                externSourceFile = closurefromCode("fakeextern.js", " "),
                 //Set up source input
                 jsSourceFile = closurefromCode(String(fileName), String(fileContents)),
+                sourceListArray = new java.util.ArrayList(),
                 options, option, FLAG_compilation_level, compiler,
-                Compiler = Packages.com.google.javascript.jscomp.Compiler;
+                Compiler = Packages.com.google.javascript.jscomp.Compiler,
+                CommandLineRunner = Packages.com.google.javascript.jscomp.CommandLineRunner;
 
             logger.trace("Minifying file: " + fileName);
 
@@ -22672,7 +22873,7 @@ define('rhino/optimize', ['logger', 'env!env/file'], function (logger, file) {
             if (config.generateSourceMaps) {
                 mappings = new java.util.ArrayList();
 
-                mappings.add(new com.google.javascript.jscomp.SourceMap.LocationMapping(fileName, baseName + ".src"));
+                mappings.add(new com.google.javascript.jscomp.SourceMap.LocationMapping(fileName, baseName + ".src.js"));
                 options.setSourceMapLocationMappings(mappings);
                 options.setSourceMapOutputPath(fileName + ".map");
             }
@@ -22681,16 +22882,33 @@ define('rhino/optimize', ['logger', 'env!env/file'], function (logger, file) {
             Compiler.setLoggingLevel(Packages.java.util.logging.Level[config.loggingLevel || 'WARNING']);
             compiler = new Compiler();
 
-            result = compiler.compile(externSourceFile, jsSourceFile, options);
+            //fill the sourceArrrayList; we need the ArrayList because the only overload of compile
+            //accepting the getDefaultExterns return value (a List) also wants the sources as a List
+            sourceListArray.add(jsSourceFile);
+
+            result = compiler.compile(CommandLineRunner.getDefaultExterns(), sourceListArray, options);
             if (result.success) {
                 optimized = String(compiler.toSource());
 
                 if (config.generateSourceMaps && result.sourceMap && outFileName) {
                     outBaseName = (new java.io.File(outFileName)).getName();
 
-                    file.saveUtf8File(outFileName + ".src", fileContents);
-
+                    srcOutFileName = outFileName + ".src.js";
                     outFileNameMap = outFileName + ".map";
+
+                    //If previous .map file exists, move it to the ".src.js"
+                    //location. Need to update the sourceMappingURL part in the
+                    //src.js file too.
+                    if (file.exists(outFileNameMap)) {
+                        concatNameMap = outFileNameMap.replace(/\.map$/, '.src.js.map');
+                        file.saveFile(concatNameMap, file.readFile(outFileNameMap));
+                        file.saveFile(srcOutFileName,
+                                      fileContents.replace(/\/\# sourceMappingURL=(.+).map/,
+                                                           '/# sourceMappingURL=$1.src.js.map'));
+                    } else {
+                        file.saveUtf8File(srcOutFileName, fileContents);
+                    }
+
                     writer = getFileWriter(outFileNameMap, "utf-8");
                     result.sourceMap.appendTo(writer, outFileName);
                     writer.close();
@@ -22764,6 +22982,41 @@ function (lang,   logger,   envOptimize,        file,           parse,
         return url;
     }
 
+    function fixCssUrlPaths(fileName, path, contents, cssPrefix) {
+        return contents.replace(cssUrlRegExp, function (fullMatch, urlMatch) {
+            var colonIndex, parts, i,
+                fixedUrlMatch = cleanCssUrlQuotes(urlMatch);
+
+            fixedUrlMatch = fixedUrlMatch.replace(lang.backSlashRegExp, "/");
+
+            //Only do the work for relative URLs. Skip things that start with / or have
+            //a protocol.
+            colonIndex = fixedUrlMatch.indexOf(":");
+            if (fixedUrlMatch.charAt(0) !== "/" && (colonIndex === -1 || colonIndex > fixedUrlMatch.indexOf("/"))) {
+                //It is a relative URL, tack on the cssPrefix and path prefix
+                urlMatch = cssPrefix + path + fixedUrlMatch;
+
+            } else {
+                logger.trace(fileName + "\n  URL not a relative URL, skipping: " + urlMatch);
+            }
+
+            //Collapse .. and .
+            parts = urlMatch.split("/");
+            for (i = parts.length - 1; i > 0; i--) {
+                if (parts[i] === ".") {
+                    parts.splice(i, 1);
+                } else if (parts[i] === "..") {
+                    if (i !== 0 && parts[i - 1] !== "..") {
+                        parts.splice(i - 1, 2);
+                        i -= 1;
+                    }
+                }
+            }
+
+            return "url(" + parts.join("/") + ")";
+        });
+    }
+
     /**
      * Inlines nested stylesheets that have @import calls in them.
      * @param {String} fileName the file name
@@ -22772,7 +23025,7 @@ function (lang,   logger,   envOptimize,        file,           parse,
      * @param {String} cssPrefix string to be prefixed before relative URLs
      * @param {Object} included an object used to track the files already imported
      */
-    function flattenCss(fileName, fileContents, cssImportIgnore, cssPrefix, included) {
+    function flattenCss(fileName, fileContents, cssImportIgnore, cssPrefix, included, topLevel) {
         //Find the last slash in the name.
         fileName = fileName.replace(lang.backSlashRegExp, "/");
         var endIndex = fileName.lastIndexOf("/"),
@@ -22783,7 +23036,7 @@ function (lang,   logger,   envOptimize,        file,           parse,
             importList = [],
             skippedList = [];
 
-        //First make a pass by removing an commented out @import calls.
+        //First make a pass by removing any commented out @import calls.
         fileContents = fileContents.replace(cssCommentImportRegExp, '');
 
         //Make sure we have a delimited ignore list to make matching faster
@@ -22813,8 +23066,8 @@ function (lang,   logger,   envOptimize,        file,           parse,
                 //If it is not a relative path, then the readFile below will fail,
                 //and we will just skip that import.
                 var fullImportFileName = importFileName.charAt(0) === "/" ? importFileName : filePath + importFileName,
-                    importContents = file.readFile(fullImportFileName), i,
-                    importEndIndex, importPath, fixedUrlMatch, colonIndex, parts, flat;
+                    importContents = file.readFile(fullImportFileName),
+                    importEndIndex, importPath, flat;
 
                 //Skip the file if it has already been included.
                 if (included[fullImportFileName]) {
@@ -22844,36 +23097,7 @@ function (lang,   logger,   envOptimize,        file,           parse,
                 importPath = importPath.replace(/^\.\//, '');
 
                 //Modify URL paths to match the path represented by this file.
-                importContents = importContents.replace(cssUrlRegExp, function (fullMatch, urlMatch) {
-                    fixedUrlMatch = cleanCssUrlQuotes(urlMatch);
-                    fixedUrlMatch = fixedUrlMatch.replace(lang.backSlashRegExp, "/");
-
-                    //Only do the work for relative URLs. Skip things that start with / or have
-                    //a protocol.
-                    colonIndex = fixedUrlMatch.indexOf(":");
-                    if (fixedUrlMatch.charAt(0) !== "/" && (colonIndex === -1 || colonIndex > fixedUrlMatch.indexOf("/"))) {
-                        //It is a relative URL, tack on the cssPrefix and path prefix
-                        urlMatch = cssPrefix + importPath + fixedUrlMatch;
-
-                    } else {
-                        logger.trace(importFileName + "\n  URL not a relative URL, skipping: " + urlMatch);
-                    }
-
-                    //Collapse .. and .
-                    parts = urlMatch.split("/");
-                    for (i = parts.length - 1; i > 0; i--) {
-                        if (parts[i] === ".") {
-                            parts.splice(i, 1);
-                        } else if (parts[i] === "..") {
-                            if (i !== 0 && parts[i - 1] !== "..") {
-                                parts.splice(i - 1, 2);
-                                i -= 1;
-                            }
-                        }
-                    }
-
-                    return "url(" + parts.join("/") + ")";
-                });
+                importContents = fixCssUrlPaths(importFileName, importPath, importContents, cssPrefix);
 
                 importList.push(fullImportFileName);
                 return importContents;
@@ -22882,6 +23106,11 @@ function (lang,   logger,   envOptimize,        file,           parse,
                 return fullMatch;
             }
         });
+
+        if (cssPrefix && topLevel) {
+            //Modify URL paths to match the path represented by this file.
+            fileContents = fixCssUrlPaths(fileName, '', fileContents, cssPrefix);
+        }
 
         return {
             importList : importList,
@@ -22992,7 +23221,7 @@ function (lang,   logger,   envOptimize,        file,           parse,
 
             //Read in the file. Make sure we have a JS string.
             var originalFileContents = file.readFile(fileName),
-                flat = flattenCss(fileName, originalFileContents, config.cssImportIgnore, config.cssPrefix, {}),
+                flat = flattenCss(fileName, originalFileContents, config.cssImportIgnore, config.cssPrefix, {}, true),
                 //Do not use the flattened CSS if there was one that was skipped.
                 fileContents = flat.skippedList.length ? originalFileContents : flat.fileContents,
                 startIndex, endIndex, buildText, comment;
@@ -23029,7 +23258,7 @@ function (lang,   logger,   envOptimize,        file,           parse,
                 }
                 //Get rid of newlines.
                 if (config.optimizeCss.indexOf(".keepLines") === -1) {
-                    fileContents = fileContents.replace(/[\r\n]/g, "");
+                    fileContents = fileContents.replace(/[\r\n]/g, " ");
                     fileContents = fileContents.replace(/\s+/g, " ");
                     fileContents = fileContents.replace(/\{\s/g, "{");
                     fileContents = fileContents.replace(/\s\}/g, "}");
@@ -23787,7 +24016,8 @@ define('build', function (require) {
         hasProp = lang.hasProp,
         getOwn = lang.getOwn,
         falseProp = lang.falseProp,
-        endsWithSemiColonRegExp = /;\s*$/;
+        endsWithSemiColonRegExp = /;\s*$/,
+        resourceIsModuleIdRegExp = /^[\w\/\\\.]+$/;
 
     prim.nextTick = function (fn) {
         fn();
@@ -23838,8 +24068,8 @@ define('build', function (require) {
      * the style of omitting semicolons and rely on ASI. Add a semicolon in
      * those cases.
      */
-    function addSemiColon(text) {
-        if (endsWithSemiColonRegExp.test(text)) {
+    function addSemiColon(text, config) {
+        if (config.skipSemiColonInsertion || endsWithSemiColonRegExp.test(text)) {
             return text;
         } else {
             return text + ";";
@@ -23916,6 +24146,8 @@ define('build', function (require) {
 
             return build._run(cmdConfig);
         }).then(null, function (e) {
+            var err;
+
             errorMsg = e.toString();
             errorTree = e.moduleTree;
             stackMatch = stackRegExp.exec(errorMsg);
@@ -23956,7 +24188,9 @@ define('build', function (require) {
                 }
             }
 
-            throw new Error(errorMsg);
+            err = new Error(errorMsg);
+            err.originalError = e;
+            throw err;
         });
     };
 
@@ -24113,6 +24347,8 @@ define('build', function (require) {
             if (config.optimizeCss && config.optimizeCss !== "none" && config.dir) {
                 buildFileContents += optimize.css(config.dir, config);
             }
+        }).then(function() {
+            baseConfig = lang.deeplikeCopy(require.s.contexts._.config);
         }).then(function () {
             var actions = [];
 
@@ -24121,10 +24357,10 @@ define('build', function (require) {
                     return function () {
                         //Save off buildPath to module index in a hash for quicker
                         //lookup later.
-                        config._buildPathToModuleIndex[module._buildPath] = i;
+                        config._buildPathToModuleIndex[file.normalize(module._buildPath)] = i;
 
                         //Call require to calculate dependencies.
-                        return build.traceDependencies(module, config)
+                        return build.traceDependencies(module, config, baseConfig)
                             .then(function (layer) {
                                 module.layer = layer;
                             });
@@ -24152,7 +24388,7 @@ define('build', function (require) {
                                     if (found) {
                                         module.excludeLayers[i] = found;
                                     } else {
-                                        return build.traceDependencies({name: exclude}, config)
+                                        return build.traceDependencies({name: exclude}, config, baseConfig)
                                             .then(function (layer) {
                                                 module.excludeLayers[i] = { layer: layer };
                                             });
@@ -24233,11 +24469,18 @@ define('build', function (require) {
                         //And finally, if removeCombined is specified, remove
                         //any of the files that were used in this layer.
                         //Be sure not to remove other build layers.
-                        if (config.removeCombined) {
+                        if (config.removeCombined && !config.out) {
                             module.layer.buildFilePaths.forEach(function (path) {
-                                if (file.exists(path) && !modules.some(function (mod) {
+                                var isLayer = modules.some(function (mod) {
                                         return mod._buildPath === path;
-                                    })) {
+                                    }),
+                                    relPath = build.makeRelativeFilePath(config.dir, path);
+
+                                if (file.exists(path) &&
+                                    // not a build layer target
+                                    !isLayer &&
+                                    // not outside the build directory
+                                    relPath.indexOf('..') !== 0) {
                                     file.deleteFile(path);
                                 }
                             });
@@ -24689,6 +24932,26 @@ define('build', function (require) {
         }
     }
 
+    function normalizeWrapConfig(config, absFilePath) {
+        //Get any wrap text.
+        try {
+            if (config.wrap) {
+                if (config.wrap === true) {
+                    //Use default values.
+                    config.wrap = {
+                        start: '(function () {',
+                        end: '}());'
+                    };
+                } else {
+                    flattenWrapFile(config.wrap, 'start', absFilePath);
+                    flattenWrapFile(config.wrap, 'end', absFilePath);
+                }
+            }
+        } catch (wrapError) {
+            throw new Error('Malformed wrap config: ' + wrapError.toString());
+        }
+    }
+
     /**
      * Creates a config object for an optimization build.
      * It will also read the build profile if it is available, to create
@@ -24966,26 +25229,15 @@ define('build', function (require) {
                         mod.stubModules._byName[id] = true;
                     });
                 }
+
+                //Allow wrap config in overrides, but normalize it.
+                if (mod.override) {
+                    normalizeWrapConfig(mod.override, absFilePath);
+                }
             });
         }
 
-        //Get any wrap text.
-        try {
-            if (config.wrap) {
-                if (config.wrap === true) {
-                    //Use default values.
-                    config.wrap = {
-                        start: '(function () {',
-                        end: '}());'
-                    };
-                } else {
-                    flattenWrapFile(config.wrap, 'start', absFilePath);
-                    flattenWrapFile(config.wrap, 'end', absFilePath);
-                }
-            }
-        } catch (wrapError) {
-            throw new Error('Malformed wrap config: ' + wrapError.toString());
-        }
+        normalizeWrapConfig(config, absFilePath);
 
         //Do final input verification
         if (config.context) {
@@ -25063,13 +25315,14 @@ define('build', function (require) {
      * given module.
      *
      * @param {Object} module the module object from the build config info.
-     * @param {Object} the build config object.
+     * @param {Object} config the build config object.
+     * @param {Object} [baseLoaderConfig] the base loader config to use for env resets.
      *
      * @returns {Object} layer information about what paths and modules should
      * be in the flattened module.
      */
-    build.traceDependencies = function (module, config) {
-        var include, override, layer, context, baseConfig, oldContext,
+    build.traceDependencies = function (module, config, baseLoaderConfig) {
+        var include, override, layer, context, oldContext,
             rawTextByIds,
             syncChecks = {
                 rhino: true,
@@ -25084,17 +25337,16 @@ define('build', function (require) {
 
         //Grab the reset layer and context after the reset, but keep the
         //old config to reuse in the new context.
-        baseConfig = oldContext.config;
         layer = require._layer;
         context = layer.context;
 
         //Put back basic config, use a fresh object for it.
-        //WARNING: probably not robust for paths and packages/packagePaths,
-        //since those property's objects can be modified. But for basic
-        //config clone it works out.
-        require(lang.mixin({}, baseConfig, true));
+        if (baseLoaderConfig) {
+            require(lang.deeplikeCopy(baseLoaderConfig));
+        }
 
-        logger.trace("\nTracing dependencies for: " + (module.name || module.out));
+        logger.trace("\nTracing dependencies for: " + (module.name ||
+                     (typeof module.out === 'function' ? 'FUNCTION' : module.out)));
         include = module.name && !module.create ? [module.name] : [];
         if (module.include) {
             include = include.concat(module.include);
@@ -25102,8 +25354,11 @@ define('build', function (require) {
 
         //If there are overrides to basic config, set that up now.;
         if (module.override) {
-            override = lang.mixin({}, baseConfig, true);
-            lang.mixin(override, module.override, true);
+            if (baseLoaderConfig) {
+                override = build.createOverrideConfig(baseLoaderConfig, module.override);
+            } else {
+                override = lang.deeplikeCopy(module.override);
+            }
             require(override);
         }
 
@@ -25147,10 +25402,17 @@ define('build', function (require) {
         //Figure out module layer dependencies by calling require to do the work.
         require(include, includeFinished, deferred.reject);
 
+        // If a sync env, then with the "two IDs to same anon module path"
+        // issue, the require never completes, need to check for errors
+        // here.
+        if (syncChecks[env.get()]) {
+            build.checkForErrors(context);
+        }
+
         return deferred.promise.then(function () {
             //Reset config
-            if (module.override) {
-                require(baseConfig);
+            if (module.override && baseLoaderConfig) {
+                require(lang.deeplikeCopy(baseLoaderConfig));
             }
 
             build.checkForErrors(context);
@@ -25162,7 +25424,7 @@ define('build', function (require) {
     build.checkForErrors = function (context) {
         //Check to see if it all loaded. If not, then throw, and give
         //a message on what is left.
-        var id, prop, mod, errUrl, idParts, pluginId,
+        var id, prop, mod, idParts, pluginId,
             errMessage = '',
             failedPluginMap = {},
             failedPluginIds = [],
@@ -25170,28 +25432,37 @@ define('build', function (require) {
             errUrlMap = {},
             errUrlConflicts = {},
             hasErrUrl = false,
+            hasUndefined = false,
+            defined = context.defined,
             registry = context.registry;
+
+        function populateErrUrlMap(id, errUrl, skipNew) {
+            if (!skipNew) {
+                errIds.push(id);
+            }
+
+            if (errUrlMap[errUrl]) {
+                hasErrUrl = true;
+                //This error module has the same URL as another
+                //error module, could be misconfiguration.
+                if (!errUrlConflicts[errUrl]) {
+                    errUrlConflicts[errUrl] = [];
+                    //Store the original module that had the same URL.
+                    errUrlConflicts[errUrl].push(errUrlMap[errUrl]);
+                }
+                errUrlConflicts[errUrl].push(id);
+            } else if (!skipNew) {
+                errUrlMap[errUrl] = id;
+            }
+        }
 
         for (id in registry) {
             if (hasProp(registry, id) && id.indexOf('_@r') !== 0) {
+                hasUndefined = true;
                 mod = getOwn(registry, id);
-                if (id.indexOf('_unnormalized') === -1 && mod && mod.enabled) {
-                    errIds.push(id);
-                    errUrl = mod.map.url;
 
-                    if (errUrlMap[errUrl]) {
-                        hasErrUrl = true;
-                        //This error module has the same URL as another
-                        //error module, could be misconfiguration.
-                        if (!errUrlConflicts[errUrl]) {
-                            errUrlConflicts[errUrl] = [];
-                            //Store the original module that had the same URL.
-                            errUrlConflicts[errUrl].push(errUrlMap[errUrl]);
-                        }
-                        errUrlConflicts[errUrl].push(id);
-                    } else {
-                        errUrlMap[errUrl] = id;
-                    }
+                if (id.indexOf('_unnormalized') === -1 && mod && mod.enabled) {
+                    populateErrUrlMap(id, mod.map.url);
                 }
 
                 //Look for plugins that did not call load()
@@ -25200,6 +25471,16 @@ define('build', function (require) {
                 if (idParts.length > 1 && falseProp(failedPluginMap, pluginId)) {
                     failedPluginIds.push(pluginId);
                     failedPluginMap[pluginId] = true;
+                }
+            }
+        }
+
+        // If have some modules that are not defined/stuck in the registry,
+        // then check defined modules for URL overlap.
+        if (hasUndefined) {
+            for (id in defined) {
+                if (hasProp(defined, id) && id.indexOf('!') === -1) {
+                    populateErrUrlMap(id, require.toUrl(id) + '.js', true);
                 }
             }
         }
@@ -25227,14 +25508,13 @@ define('build', function (require) {
             }
             throw new Error(errMessage);
         }
-
     };
 
     build.createOverrideConfig = function (config, override) {
-        var cfg = {};
+        var cfg = lang.deeplikeCopy(config),
+            oride = lang.deeplikeCopy(override);
 
-        lang.mixin(cfg, config, true);
-        lang.eachProp(override, function (value, prop) {
+        lang.eachProp(oride, function (value, prop) {
             if (hasProp(build.objProps, prop)) {
                 //An object property, merge keys. Start a new object
                 //so that source object in config does not get modified.
@@ -25245,6 +25525,7 @@ define('build', function (require) {
                 cfg[prop] = override[prop];
             }
         });
+
         return cfg;
     };
 
@@ -25343,7 +25624,7 @@ define('build', function (require) {
 
                             if (builder.write) {
                                 writeApi = function (input) {
-                                    singleContents += "\n" + addSemiColon(input);
+                                    singleContents += "\n" + addSemiColon(input, config);
                                     if (config.onBuildWrite) {
                                         singleContents = config.onBuildWrite(moduleName, path, singleContents);
                                     }
@@ -25352,7 +25633,7 @@ define('build', function (require) {
                                     singleContents += "\n" +
                                         addSemiColon(build.toTransport(namespace, moduleName, path, input, layer, {
                                             useSourceUrl: layer.context.config.useSourceUrl
-                                        }));
+                                        }), config);
                                     if (config.onBuildWrite) {
                                         singleContents = config.onBuildWrite(moduleName, path, singleContents);
                                     }
@@ -25403,7 +25684,7 @@ define('build', function (require) {
                                 });
 
                                 if (packageConfig && !hasPackageName) {
-                                    currContents = addSemiColon(currContents) + '\n';
+                                    currContents = addSemiColon(currContents, config) + '\n';
                                     currContents += namespaceWithDot + "define('" +
                                                     packageConfig.name + "', ['" + moduleName +
                                                     "'], function (main) { return main; });\n";
@@ -25415,11 +25696,12 @@ define('build', function (require) {
 
                                 //Semicolon is for files that are not well formed when
                                 //concatenated with other content.
-                                singleContents += "\n" + addSemiColon(currContents);
+                                singleContents += "\n" + addSemiColon(currContents, config);
                             });
                         }
                     }).then(function () {
-                        var sourceMapPath, sourceMapLineNumber,
+                        var refPath, pluginId, resourcePath,
+                            sourceMapPath, sourceMapLineNumber,
                             shortPath = path.replace(config.dir, "");
 
                         module.onCompleteData.included.push(shortPath);
@@ -25444,7 +25726,26 @@ define('build', function (require) {
 
                         //Add to the source map
                         if (sourceMapGenerator) {
-                            sourceMapPath = build.makeRelativeFilePath(module._buildPath, path);
+                            refPath = config.out ? config.baseUrl : module._buildPath;
+                            parts = path.split('!');
+                            if (parts.length === 1) {
+                                //Not a plugin resource, fix the path
+                                sourceMapPath = build.makeRelativeFilePath(refPath, path);
+                            } else {
+                                //Plugin resource. If it looks like just a plugin
+                                //followed by a module ID, pull off the plugin
+                                //and put it at the end of the name, otherwise
+                                //just leave it alone.
+                                pluginId = parts.shift();
+                                resourcePath = parts.join('!');
+                                if (resourceIsModuleIdRegExp.test(resourcePath)) {
+                                    sourceMapPath = build.makeRelativeFilePath(refPath, require.toUrl(resourcePath)) +
+                                                    '!' + pluginId;
+                                } else {
+                                    sourceMapPath = path;
+                                }
+                            }
+
                             sourceMapLineNumber = fileContents.split('\n').length - 1;
                             lineCount = singleContents.split('\n').length;
                             for (var i = 1; i <= lineCount; i += 1) {
@@ -25464,7 +25765,7 @@ define('build', function (require) {
                             //Store the content of the original in the source
                             //map since other transforms later like minification
                             //can mess up translating back to the original
-                            //source
+                            //source.
                             sourceMapGenerator.setSourceContent(sourceMapPath, singleContents);
                         }
 
@@ -25482,7 +25783,7 @@ define('build', function (require) {
                             path = module._buildPath;
                         }
                         builder.onLayerEnd(function (input) {
-                            fileContents += "\n" + addSemiColon(input);
+                            fileContents += "\n" + addSemiColon(input, config);
                         }, {
                             name: module.name,
                             path: path
@@ -25564,7 +25865,8 @@ define('build', function (require) {
             dir = dir.split('/');
             dir.pop();
             dir = dir.join('/');
-            exec("require({baseUrl: '" + dir + "'});");
+            //Make sure dir is JS-escaped, since it will be part of a JS string.
+            exec("require({baseUrl: '" + dir.replace(/[\\"']/g, '\\$&') + "'});");
         }
     }
 
@@ -25714,7 +26016,7 @@ function (args, quit, logger, build) {
     } else if (commandOption === 'v') {
         console.log('r.js: ' + version +
                     ', RequireJS: ' + this.requirejsVars.require.version +
-                    ', UglifyJS2: 2.3.6, UglifyJS: 1.3.4');
+                    ', UglifyJS2: 2.4.0, UglifyJS: 1.3.4');
     } else if (commandOption === 'convert') {
         loadLib();
 
