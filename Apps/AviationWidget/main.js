@@ -57,14 +57,14 @@
             if (typeof cockpitKml !== 'undefined') {
                 that._cockpitDataSource = new Cesium.KmlDataSource(cesiumTerrainProvider);
                 that._cockpitDataSource.loadUrl(cockpitKml).then(function() {
-                    that.viewer.dataSources.add(that._cockpitDataSource);
-
-                    // stretch timeline according to flight data
-                    (function(){
+                    that._cockpitDataSource.getChangedEvent().addEventListener(function(ev) {
+                        // stretch timeline according to flight data
                         var dataSourceClock = that._cockpitDataSource.getClock();
                         var timeline = that.viewer.timeline;
                         timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
-                    })();
+                    });
+
+                    that.viewer.dataSources.add(that._cockpitDataSource);
                 });
             }
 
