@@ -382,7 +382,7 @@ define([
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
-                node.czmExtra = {
+                node.czm = {
                     meshesCommands : {},
                     transformToRoot : new Matrix4(),
                     translation : undefined,
@@ -392,23 +392,23 @@ define([
 
                 // TRS converted to Cesium types
                 if (defined(node.translation)) {
-                    node.czmExtra.translation = Cartesian3.fromArray(node.translation);
+                    node.czm.translation = Cartesian3.fromArray(node.translation);
                 } else {
-                    node.czmExtra.translation = Cartesian3.clone(defaultTranslation);
+                    node.czm.translation = Cartesian3.clone(defaultTranslation);
                 }
 
                 if (defined(node.rotation)) {
                     var axis = Cartesian3.fromArray(node.rotation, 0, scratchAxis);
                     var angle = node.rotation[3];
-                    node.czmExtra.rotation = Quaternion.fromAxisAngle(axis, angle);
+                    node.czm.rotation = Quaternion.fromAxisAngle(axis, angle);
                 } else {
-                    node.czmExtra.rotation = Quaternion.clone(defaultRotation);
+                    node.czm.rotation = Quaternion.clone(defaultRotation);
                 }
 
                 if (defined(node.scale)) {
-                    node.czmExtra.scale = Cartesian3.fromArray(node.scale);
+                    node.czm.scale = Cartesian3.fromArray(node.scale);
                 } else {
-                    node.czmExtra.scale = Cartesian3.clone(defaultScale);
+                    node.czm.scale = Cartesian3.clone(defaultScale);
                 }
             }
         }
@@ -441,7 +441,7 @@ define([
         while (loadResources.bufferViewsToCreate.length > 0) {
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
-            bufferView.czmExtra = {
+            bufferView.czm = {
                 webglBuffer : undefined
             };
 
@@ -450,7 +450,7 @@ define([
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
                 vertexBuffer.setVertexArrayDestroyable(false);
-                bufferView.czmExtra.webglBuffer = vertexBuffer;
+                bufferView.czm.webglBuffer = vertexBuffer;
             }
 
             // bufferViews referencing animations are ignored here and handled in createAnimations.
@@ -465,11 +465,11 @@ define([
                 var instance = indices[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if (!defined(bufferView.czmExtra.webglBuffer)) {
+                if (!defined(bufferView.czm.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
                     indexBuffer.setVertexArrayDestroyable(false);
-                    bufferView.czmExtra.webglBuffer = indexBuffer;
+                    bufferView.czm.webglBuffer = indexBuffer;
                     // In theory, several glTF indices with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -502,7 +502,7 @@ define([
                 pickColorQualifier : 'uniform'
             });
 
-            program.czmExtra = {
+            program.czm = {
                 program : context.getShaderCache().getShaderProgram(vs, fs),
                 pickProgram : context.getShaderCache().getShaderProgram(vs, pickFS)
             };
@@ -521,7 +521,7 @@ define([
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    sampler.czmExtra = {
+                    sampler.czm = {
                         sampler : context.createSampler({
                             wrapS : TextureWrap[sampler.wrapS],
                             wrapT : TextureWrap[sampler.wrapT],
@@ -544,7 +544,7 @@ define([
                     }
 
                     // Can't mipmap, REPEAT, or MIRRORED_REPEAT NPOT texture.
-                    sampler.czmExtra.samplerWithoutMipmaps = context.createSampler({
+                    sampler.czm.samplerWithoutMipmaps = context.createSampler({
                         wrapS : TextureWrap.CLAMP,
                         wrapT : TextureWrap.CLAMP,
                         minificationFilter : TextureMinificationFilter[minFilter],
@@ -566,7 +566,7 @@ define([
 
 // TODO: consider target, format, and internalFormat
             var texture = textures[textureToCreate.name];
-            texture.czmExtra = {
+            texture.czm = {
                 texture : context.createTexture2D({
                     source : textureToCreate.image,
                     flipY : false
@@ -592,7 +592,7 @@ define([
         var instanceProgram = pass.instanceProgram;
         var program = programs[instanceProgram.program];
         var attributes = instanceProgram.attributes;
-        var attributeLocations = program.czmExtra.program.getVertexAttributes();
+        var attributeLocations = program.czm.program.getVertexAttributes();
 
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
@@ -629,7 +629,7 @@ define([
                          var parameter = parameters[name];
                          var bufferView = bufferViews[parameter.bufferView];
 
-                         parameter.czmExtra = {
+                         parameter.czm = {
                              typedArray : gltfTypes[parameter.type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + parameter.byteOffset, parameter.count)
                          };
                      }
@@ -671,7 +671,7 @@ define([
                                  var type = gltfTypes[a.type];
                                  attrs.push({
                                      index                  : semanticToAttributeLocations[name],
-                                     vertexBuffer           : bufferViews[a.bufferView].czmExtra.webglBuffer,
+                                     vertexBuffer           : bufferViews[a.bufferView].czm.webglBuffer,
                                      componentsPerAttribute : type.componentsPerAttribute,
                                      componentDatatype      : type.componentDatatype,
                                      normalize              : false,
@@ -682,9 +682,9 @@ define([
                          }
 
                          var i = indices[primitive.indices];
-                         var indexBuffer = bufferViews[i.bufferView].czmExtra.webglBuffer;
+                         var indexBuffer = bufferViews[i.bufferView].czm.webglBuffer;
 
-                         primitive.czmExtra = {
+                         primitive.czm = {
                              vertexArray : context.createVertexArray(attrs, indexBuffer)
                          };
                      }
@@ -706,7 +706,7 @@ define([
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
 
-                    states.czmExtra = {
+                    states.czm = {
                         renderState : context.createRenderState({
                             cull : {
                                 enabled : states.cullFaceEnable
@@ -817,13 +817,13 @@ define([
          },
          SAMPLER_2D : function(value, model, context) {
              var texture = model.gltf.textures[value];
-             var tx = texture.czmExtra.texture;
+             var tx = texture.czm.texture;
              var sampler = model.gltf.samplers[texture.sampler];
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
              var dimensions = tx.getDimensions();
              if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
-                 tx.setSampler(sampler.czmExtra.samplerWithoutMipmaps);
+                 tx.setSampler(sampler.czm.samplerWithoutMipmaps);
              } else {
 // End workaround
                  if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
@@ -832,7 +832,7 @@ define([
                      (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
                      tx.generateMipmap();
                  }
-                 tx.setSampler(sampler.czmExtra.sampler);
+                 tx.setSampler(sampler.czm.sampler);
              }
 
              return function() {
@@ -898,7 +898,7 @@ define([
                     }
                 }
 
-                instanceTechnique.czmExtra = {
+                instanceTechnique.czm = {
                     uniformMap : uniformMap
                 };
             }
@@ -912,7 +912,7 @@ define([
     }
 
     function createCommand(model, node, context) {
-        var extraMeshesCommands = node.czmExtra.meshesCommands;
+        var extraMeshesCommands = node.czm.meshesCommands;
 
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
@@ -960,11 +960,11 @@ define([
                 }
 
                 var primitiveType = PrimitiveType[primitive.primitive];
-                var vertexArray = primitive.czmExtra.vertexArray;
+                var vertexArray = primitive.czm.vertexArray;
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
-                var uniformMap = instanceTechnique.czmExtra.uniformMap;
-                var rs = pass.states.czmExtra.renderState;
+                var uniformMap = instanceTechnique.czm.uniformMap;
+                var rs = pass.states.czm.renderState;
                 var owner = {
                     primitive : model,
                     id : model.id,
@@ -982,7 +982,7 @@ define([
                 command.vertexArray = vertexArray;
                 command.count = count;
                 command.offset = offset;
-                command.shaderProgram = programs[instanceProgram.program].czmExtra.program;
+                command.shaderProgram = programs[instanceProgram.program].czm.program;
                 command.uniformMap = uniformMap;
                 command.renderState = rs;
                 command.owner = owner;
@@ -1004,7 +1004,7 @@ define([
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
                 pickCommand.offset = offset;
-                pickCommand.shaderProgram = programs[instanceProgram.program].czmExtra.pickProgram;
+                pickCommand.shaderProgram = programs[instanceProgram.program].czm.pickProgram;
                 pickCommand.uniformMap = pickUniformMap;
                 pickCommand.renderState = rs;
                 pickCommand.owner = owner;
@@ -1078,7 +1078,7 @@ define([
             return Matrix4.fromColumnMajorArray(node.matrix, result);
         }
 
-        var extra = node.czmExtra;
+        var extra = node.czm;
         return Matrix4.fromTranslationQuaternionRotationScale(extra.translation, extra.rotation, extra.scale, result);
     }
 
@@ -1104,15 +1104,15 @@ define([
         for (var i = 0; i < length; ++i) {
             var n = nodes[sceneNodes[i]];
 
-            getNodeMatrix(n, n.czmExtra.transformToRoot);
+            getNodeMatrix(n, n.czm.transformToRoot);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
                 n = nodeStack.pop();
-                var transformToRoot = n.czmExtra.transformToRoot;
+                var transformToRoot = n.czm.transformToRoot;
 
 //TODO: handle camera and light nodes
-                var meshCommands = n.czmExtra.meshesCommands;
+                var meshCommands = n.czm.meshesCommands;
                 var name;
                 for (name in meshCommands) {
                     if (meshCommands.hasOwnProperty(name)) {
@@ -1139,8 +1139,8 @@ define([
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = nodes[children[k]];
 
-                    var childMatrix = getNodeMatrix(child, child.czmExtra.transformToRoot);
-                    Matrix4.multiply(transformToRoot, childMatrix, child.czmExtra.transformToRoot);
+                    var childMatrix = getNodeMatrix(child, child.czm.transformToRoot);
+                    Matrix4.multiply(transformToRoot, childMatrix, child.czm.transformToRoot);
                     nodeStack.push(child);
                 }
             }
@@ -1201,18 +1201,18 @@ define([
 
                 var target = channel.target;
                 // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
-                var nodeCzmExtra = nodes[target.id].czmExtra;
+                var nodeCzmExtra = nodes[target.id].czm;
                 var animatingProperty = nodeCzmExtra[target.path];
 
                 var sampler = samplers[channel.sampler];
                 var parameter = parameters[sampler.output];
 
                 if (parameter.type === 'FLOAT_VEC3') {
-                    animatingProperty = Cartesian3.fromArray(parameter.czmExtra.typedArray, 3 * ccc_count, animatingProperty);
+                    animatingProperty = Cartesian3.fromArray(parameter.czm.typedArray, 3 * ccc_count, animatingProperty);
                 } else if (parameter.type === 'FLOAT_VEC4') {
                     animatingProperty = Quaternion.fromAxisAngle(
-                        Cartesian3.fromArray(parameter.czmExtra.typedArray, 4 * ccc_count, axisAnimateScratch),
-                        parameter.czmExtra.typedArray[(4 * ccc_count) + 3],
+                        Cartesian3.fromArray(parameter.czm.typedArray, 4 * ccc_count, axisAnimateScratch),
+                        parameter.czm.typedArray[(4 * ccc_count) + 3],
                         animatingProperty);
                 } else {
                     // TODO: Handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
@@ -1353,9 +1353,9 @@ define([
     function destroyCzmExtra(property, resourceName) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                var czmExtra = property[name].czmExtra;
-                if (defined(czmExtra) && defined(czmExtra[resourceName])) {
-                    czmExtra[resourceName] = czmExtra[resourceName].destroy();
+                var czm = property[name].czm;
+                if (defined(czm) && defined(czm[resourceName])) {
+                    czm[resourceName] = czm[resourceName].destroy();
                 }
             }
         }
@@ -1396,9 +1396,9 @@ define([
 
                 for (name in primitives) {
                     if (primitives.hasOwnProperty(name)) {
-                        var czmExtra = primitives[name].czmExtra;
-                        if (defined(czmExtra) && defined(czmExtra.vertexArray)) {
-                            czmExtra.vertexArray = czmExtra.vertexArray.destroy();
+                        var czm = primitives[name].czm;
+                        if (defined(czm) && defined(czm.vertexArray)) {
+                            czm.vertexArray = czm.vertexArray.destroy();
                         }
                     }
                 }
