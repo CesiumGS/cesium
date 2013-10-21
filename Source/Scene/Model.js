@@ -30,6 +30,8 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CommandLists',
         '../Renderer/createShaderSource',
+        './ModelTypes',
+        './ModelCache',
         './SceneMode'
     ], function(
         combine,
@@ -62,6 +64,8 @@ define([
         DrawCommand,
         CommandLists,
         createShaderSource,
+        ModelTypes,
+        ModelCache,
         SceneMode) {
     "use strict";
 
@@ -109,38 +113,6 @@ define([
 
     LoadResources.prototype.finishedTextureCreation = function() {
         return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
-    };
-
-    var gltfTypes = {
-        FLOAT : {
-            componentsPerAttribute : 1,
-            componentDatatype : ComponentDatatype.FLOAT,
-            createArrayBufferView : function(buffer, byteOffset, length) {
-                return new Float32Array(buffer, byteOffset, length);
-            }
-        },
-        FLOAT_VEC2 : {
-            componentsPerAttribute : 2,
-            componentDatatype : ComponentDatatype.FLOAT,
-            createArrayBufferView : function(buffer, byteOffset, length) {
-                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-            }
-        },
-        FLOAT_VEC3 : {
-            componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT,
-            createArrayBufferView : function(buffer, byteOffset, length) {
-                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-            }
-        },
-        FLOAT_VEC4 : {
-            componentsPerAttribute : 4,
-            componentDatatype : ComponentDatatype.FLOAT,
-            createArrayBufferView : function(buffer, byteOffset, length) {
-                return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
-            }
-        }
-// TODO: add other types
     };
 
 // TODO: what data should we pass to all events?
@@ -613,10 +585,7 @@ define([
              return;
          }
 
-         var buffers = loadResources.buffers;
-         var gltf = model.gltf;
-         var animations = gltf.animations;
-         var bufferViews = gltf.bufferViews;
+         var animations = model.gltf.animations;
          var name;
 
          for (name in animations) {
@@ -627,10 +596,8 @@ define([
                  for (name in parameters) {
                      if (parameters.hasOwnProperty(name)) {
                          var parameter = parameters[name];
-                         var bufferView = bufferViews[parameter.bufferView];
-
                          parameter.czm = {
-                             typedArray : gltfTypes[parameter.type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + parameter.byteOffset, parameter.count)
+                             values : ModelCache.getAnimationParameterValues(model, parameter)
                          };
                      }
                  }
@@ -668,7 +635,7 @@ define([
                              if (semantics.hasOwnProperty(name)) {
                                  var a = attributes[semantics[name]];
 
-                                 var type = gltfTypes[a.type];
+                                 var type = ModelTypes[a.type];
                                  attrs.push({
                                      index                  : semanticToAttributeLocations[name],
                                      vertexBuffer           : bufferViews[a.bufferView].czm.webglBuffer,
@@ -1206,17 +1173,10 @@ define([
 
                 var sampler = samplers[channel.sampler];
                 var parameter = parameters[sampler.output];
+                // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
 
-                if (parameter.type === 'FLOAT_VEC3') {
-                    animatingProperty = Cartesian3.fromArray(parameter.czm.typedArray, 3 * ccc_count, animatingProperty);
-                } else if (parameter.type === 'FLOAT_VEC4') {
-                    animatingProperty = Quaternion.fromAxisAngle(
-                        Cartesian3.fromArray(parameter.czm.typedArray, 4 * ccc_count, axisAnimateScratch),
-                        parameter.czm.typedArray[(4 * ccc_count) + 3],
-                        animatingProperty);
-                } else {
-                    // TODO: Handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
-                }
+                // TODO: interpolate key frames
+                parameter.czm.values[ccc_count].clone(animatingProperty);
             }
 
             if (frameCount++ % 4 === 0) {
