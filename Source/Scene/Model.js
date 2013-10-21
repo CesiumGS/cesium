@@ -1136,24 +1136,30 @@ define([
     var frameCount = 0;
     var ccc_count = 0;
 
-    function raiseAnimationEvents(scheduledAnimation) {
+    function raiseAnimationEvents(frameState, scheduledAnimation) {
+        var events = frameState.events;
+
         if (defined(scheduledAnimation.start)) {
             if (ccc_count === 0) {
-                scheduledAnimation.start.raiseEvent();
+                events.push(scheduledAnimation.start);
             }
+        }
+
+        if (defined(scheduledAnimation.update)) {
+            events.push(scheduledAnimation.update);
         }
 
         if (defined(scheduledAnimation.stop)) {
             if (ccc_count === scheduledAnimation.animation.count - 1) {
-                scheduledAnimation.stop.raiseEvent();
+                events.push(scheduledAnimation.stop);
             }
         }
     }
 
     var axisAnimateScratch = new Cartesian3();
 
-    function animate(model, scheduledAnimation) {
-        raiseAnimationEvents(scheduledAnimation);
+    function animate(model, frameState, scheduledAnimation) {
+        raiseAnimationEvents(frameState, scheduledAnimation);
 
         var nodes = model.gltf.nodes;
         var animation = scheduledAnimation.animation;
@@ -1179,12 +1185,12 @@ define([
         }
     }
 
-    function updateAnimations(model) {
+    function updateAnimations(model, frameState) {
         var scheduledAnimation = model._scheduledAnimations;
         var length = scheduledAnimation.length;
 
         for (var i = 0; i < length; ++i) {
-            animate(model, scheduledAnimation[i]);
+            animate(model, frameState, scheduledAnimation[i]);
 
             // TODO: drive with real time
             if (i === 0) {
@@ -1248,7 +1254,7 @@ define([
         // Update modelMatrix throughout the tree as needed
         if (this._state === ModelState.LOADED) {
 // TODO: fine-grained partial hiearchy updates for animation
-            var animated = updateAnimations(this);
+            var animated = updateAnimations(this, frameState);
 
             if (animated || !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
@@ -1296,8 +1302,12 @@ define([
 // TODO: Should be able to remove animations, etc.
         this._scheduledAnimations.push({
             animation : animation,
+            startTime : options.startTime, // when undefined, start next frame
+// TODO: loop or remove after play
+// TODO: scale
             start : options.start,
-            stop : options.stop
+            stop : options.stop,
+            update : options.update
         });
     };
 
