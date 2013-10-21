@@ -1,10 +1,12 @@
+@import url(../CesiumWidget/CesiumWidget.css);
+
 .cesium-geocoder-input {
     border: solid 1px #888;
     background-color: rgba(40, 40, 40, 0.7);
     color: white;
     display: inline-block;
     vertical-align: middle;
-    width: 50px;
+    width: 0;
     padding-left: 4px;
     padding-right: 32px;
     height: 32px;
@@ -17,12 +19,14 @@
 }
 
 .cesium-viewer-geocoderContainer:hover .cesium-geocoder-input {
-    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
     width: 250px;
     opacity: 1;
 }
 
-.cesium-viewer-geocoderContainer .cesium-geocoder-input:focus {
+.cesium-viewer-geocoderContainer .cesium-geocoder-input:focus,
+.cesium-viewer-geocoderContainer .cesium-geocoder-input-wide {
     width: 250px;
     opacity: 1;
 }
@@ -30,20 +34,13 @@
 .cesium-geocoder-goButton {
     display: inline-block;
     position: absolute;
-    background-image: url(../Images/search.svg);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-position: 0 3px;
     cursor: pointer;
     width: 32px;
-    top: 0;
-    right: 0;
+    top: 1px;
+    right: 1px;
     height: 32px;
     vertical-align: middle;
-}
-
-.cesium-geocoder-stopButton {
-    background-image: url(../Images/stop.svg);
+    fill: #edffff;
 }
 
 .cesium-geocoder-goButton:hover {

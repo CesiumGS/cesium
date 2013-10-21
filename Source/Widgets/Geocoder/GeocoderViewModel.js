@@ -78,6 +78,19 @@ define([
         });
 
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
+
+        /**
+         * Gets a value indicating whether a search is currently in progress.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.isSearchInProgress = false;
+        knockout.defineProperty(this, 'isSearchInProgress', {
+            get : function() {
+                return that._isSearchInProgress;
+            }
+        });
     };
 
     defineProperties(GeocoderViewModel.prototype, {
@@ -95,14 +108,6 @@ define([
                 return this._searchText;
             },
             set : function(value) { this._searchText = value; }
-        },
-
-        /**
-         * Gets or sets a value indicating whether a search is current in progress.
-         */
-        isSearchInProgress : {
-            get : function() { return this._isSearchInProgress; },
-            set : function(value) { this._isSearchInProgress = value; }
         },
 
         /**
@@ -163,7 +168,7 @@ define([
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
-        viewModel.isSearchInProgress = true;
+        viewModel._isSearchInProgress = true;
 
         var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
@@ -178,7 +183,7 @@ define([
             if (geocodeInProgress.cancel) {
                 return;
             }
-            viewModel.isSearchInProgress = false;
+            viewModel._isSearchInProgress = false;
 
             if (result.resourceSets.length === 0) {
                 viewModel.searchText = viewModel._searchText + ' (not found)';
@@ -230,13 +235,13 @@ define([
                 return;
             }
 
-            viewModel.isSearchInProgress = false;
+            viewModel._isSearchInProgress = false;
             viewModel.searchText = viewModel._searchText + ' (error)';
         });
     }
 
     function cancelGeocode(viewModel) {
-        viewModel.isSearchInProgress = false;
+        viewModel._isSearchInProgress = false;
         if (defined(viewModel._geocodeInProgress)) {
             viewModel._geocodeInProgress.cancel = true;
             viewModel._geocodeInProgress = undefined;
