@@ -245,6 +245,7 @@ define([
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._showingPrettyOcean = false;
         this._hasWaterMask = false;
+        this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
 
@@ -255,11 +256,8 @@ define([
             u_oceanNormalMap : function() {
                 return that._oceanNormalMap;
             },
-            u_lightingFadeOutDistance : function() {
-                return that.lightingFadeOutDistance;
-            },
-            u_lightingFadeInDistance : function() {
-                return that.lightingFadeInDistance;
+            u_lightingFadeDistance : function() {
+                return that._lightingFadeDistance;
             }
         };
     };
@@ -759,6 +757,9 @@ define([
             } else {
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
+
+            this._lightingFadeDistance.x = this.lightingFadeOutDistance;
+            this._lightingFadeDistance.y = this.lightingFadeInDistance;
 
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.setTerrainProvider(this.terrainProvider);
