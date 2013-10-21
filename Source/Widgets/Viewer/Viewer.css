@@ -2,8 +2,8 @@
 @import url(../BaseLayerPicker/BaseLayerPicker.css);
 @import url(../CesiumWidget/CesiumWidget.css);
 @import url(../FullscreenButton/FullscreenButton.css);
-@import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
+@import url(../SvgPath/SvgPath.css);
 @import url(../Timeline/Timeline.css);
 
 .cesium-viewer {
@@ -59,28 +59,4 @@
 	position: absolute;
 	top: 5px;
 	right: 5px;
-}
-
-.cesium-viewer-homeButtonContainer {
-    display: inline-block;
-    width: 32px;
-    height: 32px;
-    vertical-align: middle;
-    margin: 1px;
-}
-
-.cesium-viewer-sceneModePickerContainer {
-    display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	margin: 1px;
-}
-
-.cesium-viewer-baseLayerPickerContainer {
-	display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	margin: 1px;
 }

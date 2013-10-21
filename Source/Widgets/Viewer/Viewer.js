@@ -222,33 +222,24 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            var homeButtonContainer = document.createElement('div');
-            homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
-            toolbar.appendChild(homeButtonContainer);
-            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
         }
 
         //SceneModePicker
         var sceneModePicker;
         if (!defined(options.sceneModePicker) || options.sceneModePicker !== false) {
-            var sceneModePickerContainer = document.createElement('div');
-            sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
-            toolbar.appendChild(sceneModePickerContainer);
-            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.sceneTransitioner);
+            sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.sceneTransitioner);
         }
 
         //BaseLayerPicker
         var baseLayerPicker;
         if (createBaseLayerPicker) {
-            var baseLayerPickerContainer = document.createElement('div');
-            baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
-            toolbar.appendChild(baseLayerPickerContainer);
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
+            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
             baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
 
             //Grab the dropdown for resize code.
-            var elements = baseLayerPickerContainer.getElementsByClassName('cesium-baseLayerPicker-dropDown');
+            var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');
             this._baseLayerPickerDropDown = elements[0];
         }
 
