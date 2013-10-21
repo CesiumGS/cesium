@@ -22,6 +22,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Math',
         '../Core/Event',
+        '../Core/JulianDate',
         '../Renderer/TextureWrap',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
@@ -56,6 +57,7 @@ define([
         PrimitiveType,
         CesiumMath,
         Event,
+        JulianDate,
         TextureWrap,
         TextureMinificationFilter,
         TextureMagnificationFilter,
@@ -1133,34 +1135,12 @@ define([
         model.worldBoundingSphere.radius = radius;
     }
 
-    var frameCount = 0;
-    var ccc_count = 0;
+    var AnimationState = {
+        STOPPED : new Enumeration(0, 'STOPPED'),
+        ANIMATING : new Enumeration(1, 'ANIMATING')
+    };
 
-    function raiseAnimationEvents(frameState, scheduledAnimation) {
-        var events = frameState.events;
-
-        if (defined(scheduledAnimation.start)) {
-            if (ccc_count === 0) {
-                events.push(scheduledAnimation.start);
-            }
-        }
-
-        if (defined(scheduledAnimation.update)) {
-            events.push(scheduledAnimation.update);
-        }
-
-        if (defined(scheduledAnimation.stop)) {
-            if (ccc_count === scheduledAnimation.animation.count - 1) {
-                events.push(scheduledAnimation.stop);
-            }
-        }
-    }
-
-    var axisAnimateScratch = new Cartesian3();
-
-    function animate(model, frameState, scheduledAnimation) {
-        raiseAnimationEvents(frameState, scheduledAnimation);
-
+    function animateChannels(model, scheduledAnimation, index) {
         var nodes = model.gltf.nodes;
         var animation = scheduledAnimation.animation;
         var parameters = animation.parameters;
@@ -1180,29 +1160,74 @@ define([
             var parameter = parameters[sampler.output];
             // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
 
+            // TODO: get index from TIME
             // TODO: interpolate key frames
-            parameter.czm.values[ccc_count].clone(animatingProperty);
+            parameter.czm.values[index].clone(animatingProperty);
         }
     }
 
     function updateAnimations(model, frameState) {
-        var scheduledAnimation = model._scheduledAnimations;
-        var length = scheduledAnimation.length;
+        var animationOccured = false;
+        var sceneTime = frameState.time;
+        var events = frameState.events;
+
+        var scheduledAnimations = model._scheduledAnimations;
+        var length = scheduledAnimations.length;
 
         for (var i = 0; i < length; ++i) {
-            animate(model, frameState, scheduledAnimation[i]);
+            var scheduledAnimation = scheduledAnimations[i];
+            var animation = scheduledAnimation.animation;
 
-            // TODO: drive with real time
-            if (i === 0) {
-                if (frameCount++ % 4 === 0) {
-                    if (ccc_count++ === scheduledAnimation[i].animation.count - 1) {
-                        ccc_count = 0;
+            // TODO: compute these once?
+            // TODO: separate runtime and user objects?
+            scheduledAnimation.startTime = defaultValue(scheduledAnimation.startTime, sceneTime);
+            if (!defined(scheduledAnimation._duration)) {
+                var timeParameter = animation.parameters.TIME;
+                var times = timeParameter.czm.values;
+                scheduledAnimation._duration = times[timeParameter.count - 1] *  (1.0 / scheduledAnimation.speedup);
+            }
+
+            var startTime = scheduledAnimation.startTime;
+            var duration = scheduledAnimation._duration;
+
+            // [0.0, 1.0] normalized local animation time
+            var delta = startTime.getSecondsDifference(sceneTime) / duration;
+
+            if (delta >= 0.0 && ((delta <= 1.0) || scheduledAnimation.loop)) {
+                // STOPPED -> ANIMATING state transition
+                if (scheduledAnimation._state === AnimationState.STOPPED) {
+                    scheduledAnimation._state = AnimationState.ANIMATING;
+                    if (defined(scheduledAnimation.start)) {
+                        events.push(scheduledAnimation.start);
+                    }
+                }
+
+                delta = delta - Math.floor(delta);                // Trunicate to [0.0, 1.0] for looping animations
+                var index = Math.floor(delta * animation.count);  // [0, count - 1] index into parameters
+
+                if (scheduledAnimation._previousIndex !== index) {
+                    scheduledAnimation._previousIndex = index;
+
+                    animateChannels(model, scheduledAnimation, index);
+
+                    if (defined(scheduledAnimation.update)) {
+                        events.push(scheduledAnimation.update);
+                    }
+
+                    animationOccured = true;
+                }
+            } else {
+                // ANIMATING -> STOPPED state transition
+                if (scheduledAnimation._state === AnimationState.ANIMATING) {
+                    scheduledAnimation._state = AnimationState.STOPPED;
+                    if (defined(scheduledAnimation.stop)) {
+                        events.push(scheduledAnimation.stop);
                     }
                 }
             }
         }
 
-        return (length > 0);
+        return animationOccured;
     }
 
     function updatePickIds(model, context) {
@@ -1279,7 +1304,11 @@ define([
      * DOC_TBA
      *
      * @param {String} options.name DOC_TBA
+     * @param {JulianDate} [options.startTime] DOC_TBA
+     * @param {Number} [options.scale=1.0] DOC_TBA
+     * @param {Boolean} [options.loop=false] DOC_TBA
      * @param {Event} [options.start] DOC_TBA
+     * @param {Event} [options.update] DOC_TBA
      * @param {Event} [options.stop] DOC_TBA
      *
      * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#jsonLoad} event.
@@ -1299,16 +1328,25 @@ define([
             throw new DeveloperError('options.name is required and must be a valid animation name.');
         }
 
+        // TODO: options.speedup >= 0.0 ?
+
 // TODO: Should be able to remove animations, etc.
         this._scheduledAnimations.push({
             animation : animation,
             startTime : options.startTime, // when undefined, start next frame
-// TODO: loop or remove after play
-// TODO: scale
-            start : options.start,
-            stop : options.stop,
-            update : options.update
+            speedup   : defaultValue(options.speedup, 1.0),
+            loop      : defaultValue(options.loop, false),
+// TODO: remove after play
+            start     : options.start,
+            update    : options.update,
+            stop      : options.stop,
+
+            _state         : AnimationState.STOPPED,
+            _duration      : undefined,
+            _previousIndex : undefined
         });
+
+        // TODO: return object with stop(), pause(), etc.
     };
 
     /**
