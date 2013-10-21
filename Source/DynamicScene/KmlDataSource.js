@@ -35,7 +35,7 @@ define(['../Core/createGuid',
         './DynamicBillboard',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        '../ThirdParty/zip/zip'
+        '../ThirdParty/zip'
     ], function(
         createGuid,
         defined,
