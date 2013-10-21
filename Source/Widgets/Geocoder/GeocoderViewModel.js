@@ -213,7 +213,7 @@ define([
                 direction = Cartesian3.negate(viewModel._ellipsoid.geodeticSurfaceNormal(position));
             } else {
                 up = Cartesian3.UNIT_Y;
-                direction = Cartesian3.negate(Cartesian3.UNIT_Z.negate());
+                direction = Cartesian3.negate(Cartesian3.UNIT_Z);
             }
 
             var description = {
