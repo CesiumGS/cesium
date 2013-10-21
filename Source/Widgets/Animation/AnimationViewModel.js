@@ -101,7 +101,7 @@ define([
      * @alias AnimationViewModel
      * @constructor
      *
-     * @param {ClockViewModel} [clockViewModel] The ClockViewModel instance to use.
+     * @param {ClockViewModel} clockViewModel The ClockViewModel instance to use.
      *
      * @exception {DeveloperError} clockViewModel is required.
      *
