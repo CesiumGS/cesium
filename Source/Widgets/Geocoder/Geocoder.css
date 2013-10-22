@@ -1,5 +1,3 @@
-@import url(../CesiumWidget/CesiumWidget.css);
-
 .cesium-geocoder-input {
     border: solid 1px #888;
     background-color: rgba(40, 40, 40, 0.7);
