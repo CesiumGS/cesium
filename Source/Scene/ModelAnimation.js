@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        './ModelAnimationWrap',
         './ModelAnimationState'
     ], function(
         defaultValue,
+        ModelAnimationWrap,
         ModelAnimationState) {
     "use strict";
 
@@ -36,6 +38,16 @@ define([
         /**
          * DOC_TBA
          *
+         * @type {JulianDate}
+         * @default undefined
+         *
+         * @readonly
+         */
+        this.stopTime = options.stopTime; // when undefined, play until end of animation depending on wrap
+
+        /**
+         * DOC_TBA
+         *
          * @type {Number}
          * @default 1.0
          *
@@ -46,12 +58,12 @@ define([
         /**
          * DOC_TBA
          *
-         * @type {Boolean}
-         * @default false
+         * @type {ModelAnimationRepea}
+         * @default {@link ModelAnimationWrap.CLAMP}
          *
          * @readonly
          */
-        this.loop = defaultValue(options.loop, false);
+        this.wrap = defaultValue(options.wrap, ModelAnimationWrap.CLAMP);
 
         /**
          * DOC_TBA

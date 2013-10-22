@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/Event',
+        './ModelAnimationWrap',
         './ModelAnimationState',
         './ModelAnimation'
     ], function(
@@ -15,6 +16,7 @@ define([
         DeveloperError,
         Enumeration,
         Event,
+        ModelAnimationWrap,
         ModelAnimationState,
         ModelAnimation) {
     "use strict";
@@ -61,8 +63,9 @@ define([
      *
      * @param {String} options.name DOC_TBA
      * @param {JulianDate} [options.startTime] DOC_TBA
+     * @param {JulianDate} [options.stopTime] DOC_TBA
      * @param {Number} [options.scale=1.0] DOC_TBA
-     * @param {Boolean} [options.loop=false] DOC_TBA
+     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] DOC_TBA
      * @param {Event} [options.start] DOC_TBA
      * @param {Event} [options.update] DOC_TBA
      * @param {Event} [options.stop] DOC_TBA
@@ -213,12 +216,23 @@ define([
 
             var startTime = scheduledAnimation._startTime;
             var duration = scheduledAnimation._duration;
+            var stopTime = scheduledAnimation.stopTime;
 
             // [0.0, 1.0] normalized local animation time
             var delta = startTime.getSecondsDifference(sceneTime) / duration;
 
-            if (delta >= 0.0 && ((delta <= 1.0) || scheduledAnimation.loop)) {
-                // STOPPED -> ANIMATING state transition
+            // Play animation if
+            // * we are after the start time, and
+            // * before the end of the animation's duration or the animation is being repeated, and
+            // * we did not reach a user-provided stop time.
+            var play = delta >= 0.0 &&
+                       ((delta <= 1.0) ||
+                        ((scheduledAnimation.wrap === ModelAnimationWrap.REPEAT) ||
+                         (scheduledAnimation.wrap === ModelAnimationWrap.MIRRORED_REPEAT))) &&
+                       (!defined(stopTime) || sceneTime.lessThanOrEquals(stopTime));
+
+            if (play) {
+                // STOPPED -> ANIMATING state transition?
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (defined(scheduledAnimation.start)) {
@@ -228,7 +242,16 @@ define([
                     }
                 }
 
-                delta = delta - Math.floor(delta);                // Trunicate to [0.0, 1.0] for looping animations
+                // Trunicate to [0.0, 1.0] for repeating animations
+                if (scheduledAnimation.wrap === ModelAnimationWrap.REPEAT) {
+                    delta = delta - Math.floor(delta);
+                } else if (scheduledAnimation.wrap === ModelAnimationWrap.MIRRORED_REPEAT) {
+                    var floor = Math.floor(delta);
+                    var fract = delta - floor;
+                    // When even use (1.0 - fract) to mirror repeat
+                    delta = (floor % 2 === 1.0) ? (1.0 - fract) : fract;
+                }
+
                 var index = Math.floor(delta * animation.count);  // [0, count - 1] index into parameters
 
                 if (scheduledAnimation._previousIndex !== index) {
@@ -245,18 +268,18 @@ define([
                     animationOccured = true;
                 }
             } else {
-                // ANIMATING -> STOPPED state transition
-                if (scheduledAnimation._state === ModelAnimationState.ANIMATING) {
+                // ANIMATING -> STOPPED state transition?
+                if ((delta >= 0.0) && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
                         events.push({
                             event : scheduledAnimation.stop
                         });
                     }
-                }
 
-                if (scheduledAnimation.removeOnStop) {
-                    animationsToRemove.push(scheduledAnimation);
+                    if (scheduledAnimation.removeOnStop) {
+                        animationsToRemove.push(scheduledAnimation);
+                    }
                 }
             }
         }
