@@ -31,6 +31,7 @@ span.cesium-sceneModePicker-wrapper {
     -moz-transition: left 2s;
     transition: left 2s;
     top: 0;
+    left: 0;
 }
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-dropDown-icon {
@@ -43,10 +44,6 @@ span.cesium-sceneModePicker-wrapper {
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-buttonColumbusView,
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D {
     margin: 0 0 3px 0;
-}
-
-.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon3D {
-    left: 0;
 }
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon2D {
@@ -65,16 +62,8 @@ span.cesium-sceneModePicker-wrapper {
     left: -100%;
 }
 
-.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-iconColumbusView {
-    left: 0;
-}
-
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D .cesium-sceneModePicker-icon3D {
     left: -100%;
-}
-
-.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D .cesium-sceneModePicker-icon2D {
-    left: 0;
 }
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D .cesium-sceneModePicker-iconColumbusView {
