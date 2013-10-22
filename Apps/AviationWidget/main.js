@@ -40,6 +40,20 @@
 
             centralBody.terrainProvider = cesiumTerrainProvider;
 
+            // hook on fullscreen change event
+            var _canvas = document.getElementById(canvasId);
+            document.addEventListener(Cesium.Fullscreen.getFullscreenChangeEventName(), function(ev) {
+                var flag = Cesium.Fullscreen.isFullscreen();
+
+                if (flag) {
+                    _canvas.classList.remove('awCanvas-block');
+                    _canvas.classList.add('awCanvas-fullscreen');
+                } else {
+                    _canvas.classList.remove('awCanvas-fullscreen');
+                    _canvas.classList.add('awCanvas-block');
+                }
+            });
+
             // -- Load KMLs -- //
             var i;
 
