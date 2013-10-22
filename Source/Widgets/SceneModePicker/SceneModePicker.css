@@ -1,6 +1,6 @@
 @import url(../CesiumWidget/CesiumWidget.css);
 
-.cesium-sceneModePicker-wrapper {
+span.cesium-sceneModePicker-wrapper {
     display: inline-block;
     position: relative;
     margin: 0;
@@ -31,6 +31,12 @@
     -moz-transition: left 2s;
     transition: left 2s;
     top: 0;
+}
+
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-dropDown-icon {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 3px 0;
 }
 
 .cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D,
