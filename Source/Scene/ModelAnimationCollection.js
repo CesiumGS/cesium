@@ -65,6 +65,7 @@ define([
      * @param {JulianDate} [options.startTime] DOC_TBA
      * @param {JulianDate} [options.stopTime] DOC_TBA
      * @param {Number} [options.scale=1.0] DOC_TBA
+     * @param {Boolean} [options.reverse=false] DOC_TBA
      * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] DOC_TBA
      * @param {Event} [options.start] DOC_TBA
      * @param {Event} [options.update] DOC_TBA
@@ -252,7 +253,11 @@ define([
                     delta = (floor % 2 === 1.0) ? (1.0 - fract) : fract;
                 }
 
-                var index = Math.floor(delta * animation.count);  // [0, count - 1] index into parameters
+                if (scheduledAnimation.reverse) {
+                    delta = 1.0 - delta;
+                }
+
+                var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
 
                 if (scheduledAnimation._previousIndex !== index) {
                     scheduledAnimation._previousIndex = index;

@@ -43,7 +43,7 @@ define([
          *
          * @readonly
          */
-        this.stopTime = options.stopTime; // when undefined, play until end of animation depending on wrap
+        this.stopTime = options.stopTime; // when defined, play until end of animation depending on wrap
 
         /**
          * DOC_TBA
@@ -54,6 +54,16 @@ define([
          * @readonly
          */
         this.speedup = defaultValue(options.speedup, 1.0);
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Boolean}
+         * @default false
+         *
+         * @readonly
+         */
+        this.reverse = defaultValue(options.reverse, false);
 
         /**
          * DOC_TBA
