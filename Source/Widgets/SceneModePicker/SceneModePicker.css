@@ -1,6 +1,6 @@
 @import url(../CesiumWidget/CesiumWidget.css);
 
-.cesium-sceneModePicker-wrapper {
+span.cesium-sceneModePicker-wrapper {
     display: inline-block;
     position: relative;
     margin: 0 3px;
@@ -22,7 +22,7 @@
     -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
-.cesium-sceneModePicker-none {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-none {
     display: none;
 }
 
@@ -31,51 +31,46 @@
     -moz-transition: left 2s;
     transition: left 2s;
     top: 0;
+    left: 0;
 }
 
-.cesium-sceneModePicker-button3D,
-.cesium-sceneModePicker-buttonColumbusView,
-.cesium-sceneModePicker-button2D {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-dropDown-icon {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 3px 0;
+}
+
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D,
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-buttonColumbusView,
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D {
     margin: 0 0 3px 0;
 }
 
-.cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon3D {
-    left: 0;
-}
-
-.cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon2D {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D .cesium-sceneModePicker-icon2D {
     left: 100%;
 }
 
-.cesium-sceneModePicker-button3D .cesium-sceneModePicker-iconColumbusView {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button3D .cesium-sceneModePicker-iconColumbusView {
     left: 200%;
 }
 
-.cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-icon3D {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-icon3D {
     left: -200%;
 }
 
-.cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-icon2D {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-icon2D {
     left: -100%;
 }
 
-.cesium-sceneModePicker-buttonColumbusView .cesium-sceneModePicker-iconColumbusView {
-    left: 0;
-}
-
-.cesium-sceneModePicker-button2D .cesium-sceneModePicker-icon3D {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D .cesium-sceneModePicker-icon3D {
     left: -100%;
 }
 
-.cesium-sceneModePicker-button2D .cesium-sceneModePicker-icon2D {
-    left: 0;
-}
-
-.cesium-sceneModePicker-button2D .cesium-sceneModePicker-iconColumbusView {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-button2D .cesium-sceneModePicker-iconColumbusView {
     left: 100%;
 }
 
-.cesium-sceneModePicker-selected {
+.cesium-sceneModePicker-wrapper .cesium-sceneModePicker-selected {
     border-color: #2e2;
     box-shadow: 0 0 8px #fff, 0 0 8px #fff;
 }
