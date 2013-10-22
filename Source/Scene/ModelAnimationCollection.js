@@ -222,7 +222,9 @@ define([
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (defined(scheduledAnimation.start)) {
-                        events.push(scheduledAnimation.start);
+                        events.push({
+                            event : scheduledAnimation.start
+                        });
                     }
                 }
 
@@ -235,7 +237,9 @@ define([
                     animateChannels(model, scheduledAnimation, index);
 
                     if (defined(scheduledAnimation.update)) {
-                        events.push(scheduledAnimation.update);
+                        events.push({
+                            event : scheduledAnimation.update
+                        });
                     }
 
                     animationOccured = true;
@@ -245,7 +249,9 @@ define([
                 if (scheduledAnimation._state === ModelAnimationState.ANIMATING) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
-                        events.push(scheduledAnimation.stop);
+                        events.push({
+                            event : scheduledAnimation.stop
+                        });
                     }
                 }
 
@@ -260,7 +266,10 @@ define([
         for (var j = 0; j < length; ++j) {
             var animationToRemove = animationsToRemove[j];
             scheduledAnimations.splice(scheduledAnimations.indexOf(animationToRemove), 1);
-            this.animationRemoved.raiseEvent(animationToRemove);
+            events.push({
+                event : this.animationRemoved,
+                eventArguments : [animationToRemove]
+            });
         }
         animationsToRemove.length = 0;
 

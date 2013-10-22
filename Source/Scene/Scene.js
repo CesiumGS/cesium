@@ -799,7 +799,8 @@ define([
         var events = frameState.events;
         var length = events.length;
         for (var i = 0; i < length; ++i) {
-            events[i].raiseEvent();
+            var event = events[i].event;
+            event.raiseEvent.apply(event, events[i].eventArguments);
         }
     }
 

@@ -1204,7 +1204,9 @@ define([
 
         if (justLoaded) {
             // Call after modelMatrix update.
-            frameState.events.push(this.readyToRender);
+            frameState.events.push({
+                event : this.readyToRender
+            });
         }
 
         updatePickIds(this, context);
