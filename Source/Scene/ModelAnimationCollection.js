@@ -3,18 +3,17 @@ define([
         '../Core/defined',
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/Enumeration'
+        '../Core/Enumeration',
+        './ModelAnimationState',
+        './ModelAnimation'
     ], function(
         defined,
         defaultValue,
         DeveloperError,
-        Enumeration) {
+        Enumeration,
+        ModelAnimationState,
+        ModelAnimation) {
     "use strict";
-
-    var AnimationState = {
-        STOPPED : new Enumeration(0, 'STOPPED'),
-        ANIMATING : new Enumeration(1, 'ANIMATING')
-    };
 
     /**
      * DOC_TBA
@@ -61,29 +60,14 @@ define([
             throw new DeveloperError('options.speedup must be greater than zero.');
         }
 
-// TODO: Should be able to remove animations, etc.
-        this._scheduledAnimations.push({
-            animation : animation,
-            startTime : options.startTime, // when undefined, start next frame
-            speedup   : defaultValue(options.speedup, 1.0),
-            loop      : defaultValue(options.loop, false),
-// TODO: remove after play
-            start     : options.start,
-            update    : options.update,
-            stop      : options.stop,
-
-            _state         : AnimationState.STOPPED,
-            _startTime     : undefined,
-            _duration      : undefined,
-            _previousIndex : undefined
-        });
-
-        // TODO: return object with stop(), pause(), etc.
+        var scheduledAnimation = new ModelAnimation(options, animation);
+        this._scheduledAnimations.push(scheduledAnimation);
+        return scheduledAnimation;
     };
 
     function animateChannels(model, scheduledAnimation, index) {
         var nodes = model.gltf.nodes;
-        var animation = scheduledAnimation.animation;
+        var animation = scheduledAnimation._animation;
         var parameters = animation.parameters;
         var samplers = animation.samplers;
         var channels = animation.channels;
@@ -121,7 +105,7 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var scheduledAnimation = scheduledAnimations[i];
-            var animation = scheduledAnimation.animation;
+            var animation = scheduledAnimation._animation;
             var timeParameter = animation.parameters.TIME;
             var times = timeParameter.czm.values;
 
@@ -141,8 +125,8 @@ define([
 
             if (delta >= 0.0 && ((delta <= 1.0) || scheduledAnimation.loop)) {
                 // STOPPED -> ANIMATING state transition
-                if (scheduledAnimation._state === AnimationState.STOPPED) {
-                    scheduledAnimation._state = AnimationState.ANIMATING;
+                if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
+                    scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (defined(scheduledAnimation.start)) {
                         events.push(scheduledAnimation.start);
                     }
@@ -164,8 +148,8 @@ define([
                 }
             } else {
                 // ANIMATING -> STOPPED state transition
-                if (scheduledAnimation._state === AnimationState.ANIMATING) {
-                    scheduledAnimation._state = AnimationState.STOPPED;
+                if (scheduledAnimation._state === ModelAnimationState.ANIMATING) {
+                    scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
                         events.push(scheduledAnimation.stop);
                     }
