@@ -88,6 +88,12 @@ define([
              */
             color : false,
             /**
+             * <code>true</code> if the primitive should update for a translucent pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            translucent : false,
+            /**
              * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
              * @type {Boolean}
              * @default false

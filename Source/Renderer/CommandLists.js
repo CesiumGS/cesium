@@ -10,11 +10,18 @@ define(function() {
      */
     var CommandLists = function() {
         /**
-         * The command list for a color pass.
+         * The command list for a opaque color pass.
          * @type {Array}
          * @default []
          */
         this.colorList = [];
+
+        /**
+         * The command list for a translucent color pass.
+         * @type {Array}
+         * @default []
+         */
+        this.translucentList = [];
 
         /**
          * The command list for a pick pass.
@@ -32,11 +39,15 @@ define(function() {
     };
 
     CommandLists.prototype.empty = function() {
-        return this.colorList.length === 0 && this.pickList.length === 0 && this.overlayList.length === 0;
+        return this.colorList.length === 0 &&
+               this.translucentList.length === 0 &&
+               this.pickList.length === 0 &&
+               this.overlayList.length === 0;
     };
 
     CommandLists.prototype.removeAll = function() {
         this.colorList.length = 0;
+        this.translucentList.length = 0;
         this.pickList.length = 0;
         this.overlayList.length = 0;
     };
