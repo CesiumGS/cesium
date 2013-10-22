@@ -118,7 +118,7 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.8" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.9" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
 	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.6/almond.js" />
@@ -153,8 +153,7 @@
 		<include name="**/*.js" />
 		<exclude name="*.js" />
 		<exclude name="Workers/**" />
-		<exclude name="ThirdParty/zip/**" />
-		<include name="ThirdParty/zip/zip.js" />
+		<exclude name="ThirdParty/Workers/**" />
 		<exclude name="**/*.profile.js" />
 	</fileset>
 
@@ -300,10 +299,9 @@
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check"
-			unless="no.combineCesiumWorkers.create">
-		<!-- create cesiumWorkerBootstrapper -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
+		<!-- create minified, non-layer worker files, e.g. for cesiumWorkerBootstrapper -->
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -311,9 +309,14 @@
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
-		</exec>
+			<srcfile prefix="include=" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/*" />
+			<fileset dir="${sourceDirectory}">
+				<include name="Workers/cesiumWorkerBootstrapper.js" />
+				<include name="ThirdParty/Workers/*.js" />
+			</fileset>
+		</apply>
 
 		<!-- create each combined worker layer -->
 		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
@@ -500,13 +503,13 @@
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
 			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.8" value="." />
+			<replacefilter token="../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 
 		<!-- rewrite the paths in the HTML -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
-			<replacefilter token="../../ThirdParty/requirejs-2.1.8" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="index.html" />
 		</replace>
 

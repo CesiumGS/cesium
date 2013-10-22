@@ -46,7 +46,7 @@ define(['../Core/createGuid',
         './processGxTour',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        '../ThirdParty/zip/zip'
+        '../ThirdParty/zip'
     ], function(
         createGuid,
         defined,

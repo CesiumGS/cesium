@@ -46,7 +46,8 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=undefined] The surface appearance of the primitive.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
-     * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @exception {DeveloperError} Either options.positions or options.polygonHierarchy can be provided, but not both.
      * @exception {DeveloperError} When options.positions is provided, at least three positions are required.
@@ -176,6 +177,18 @@ define([
          * @default true
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._positions = undefined;
         this._polygonHierarchy = undefined;
@@ -371,8 +384,10 @@ define([
             });
         }
 
-        this._primitive.appearance.material = this.material;
-        this._primitive.update(context, frameState, commandList);
+        var primitive = this._primitive;
+        primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        primitive.appearance.material = this.material;
+        primitive.update(context, frameState, commandList);
     };
 
     /**

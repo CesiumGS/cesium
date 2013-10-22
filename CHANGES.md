@@ -20,6 +20,9 @@ Beta Releases
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
    * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
+   * All SVG files were deleted from `Widgets/Images` and replaced by a new `SvgPath` class.
+   * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button depend on `CesiumWidget.css` now for global Cesium button styles.
+   * The toolbar widgets expect their `container` to be the toolbar itself now, no need for separate containers for each widget on the bar.
    * `Property` implementations are now required to implement a prototype `equals` function.
    * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
@@ -46,7 +49,7 @@ Beta Releases
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
-* Upgraded RequireJS to version 2.1.8, and Almond to 0.2.6.
+* Upgraded RequireJS to version 2.1.9, and Almond to 0.2.6.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
 * Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
@@ -55,6 +58,11 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
+* Added `GoogleEarthImageryProvider`.
+* Added `Primitive.allowPicking` to save memory when picking is not needed.
+* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
+* Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
 
 ### b21 - 2013-10-01
 
