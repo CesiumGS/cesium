@@ -3,7 +3,7 @@
 span.cesium-sceneModePicker-wrapper {
     display: inline-block;
     position: relative;
-    margin: 0;
+    margin: 0 3px;
 }
 
 .cesium-sceneModePicker-visible {

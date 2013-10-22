@@ -67,6 +67,5 @@
 .cesium-viewer-geocoderContainer {
     position: relative;
     display: inline-block;
-    margin: 1px;
-    height: 32px;
+    margin: 0 3px;
 }
