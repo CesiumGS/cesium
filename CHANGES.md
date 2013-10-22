@@ -49,7 +49,7 @@ Beta Releases
 * Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
 * Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
 * Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
-* Upgraded RequireJS to version 2.1.8, and Almond to 0.2.6.
+* Upgraded RequireJS to version 2.1.9, and Almond to 0.2.6.
 * Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
 * Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
 * Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
@@ -58,6 +58,7 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
 * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
 * Added `GoogleEarthImageryProvider`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
