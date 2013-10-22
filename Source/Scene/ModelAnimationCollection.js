@@ -1,16 +1,20 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Enumeration',
+        '../Core/Event',
         './ModelAnimationState',
         './ModelAnimation'
     ], function(
         defined,
+        defineProperties,
         defaultValue,
         DeveloperError,
         Enumeration,
+        Event,
         ModelAnimationState,
         ModelAnimation) {
     "use strict";
@@ -22,9 +26,35 @@ define([
      * @constructor
      */
     var ModelAnimationCollection = function(model) {
+        /**
+         * DOC_TBA
+         */
+        this.animationAdded = new Event();
+
+        /**
+         * DOC_TBA
+         */
+        this.animationRemoved = new Event();
+
         this._model = model;
         this._scheduledAnimations = [];
     };
+
+    defineProperties(ModelAnimationCollection.prototype, {
+        /**
+         * DOC_TBA
+         *
+         * @memberof ModelAnimationCollection
+         * @type {Number}
+         *
+         * @readonly
+         */
+        length : {
+            get : function () {
+                return this._scheduledAnimations.length;
+            }
+        }
+    });
 
     /**
      * DOC_TBA
@@ -62,7 +92,69 @@ define([
 
         var scheduledAnimation = new ModelAnimation(options, animation);
         this._scheduledAnimations.push(scheduledAnimation);
+        this.animationAdded.raiseEvent(scheduledAnimation);
         return scheduledAnimation;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof ModelAnimationCollection
+     */
+    ModelAnimationCollection.prototype.remove = function(animation) {
+        if (defined(animation)) {
+            var animations = this._scheduledAnimations;
+            var i = animations.indexOf(animation);
+            if (i !== -1) {
+                animations.splice(i, 1);
+                this.animationRemoved.raiseEvent(animation);
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof ModelAnimationCollection
+     */
+    ModelAnimationCollection.prototype.removeAll = function() {
+        var animations = this._scheduledAnimations;
+        var length = animations.length;
+
+        this._scheduledAnimations = [];
+
+        for (var i = 0; i < length; ++i) {
+            this.animationRemoved.raiseEvent(animations[i]);
+        }
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof ModelAnimationCollection
+     */
+    ModelAnimationCollection.prototype.contains = function(animation) {
+        if (defined(animation)) {
+            return (this._scheduledAnimations.indexOf(animation) !== -1);
+        }
+
+        return false;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof ModelAnimationCollection
+     */
+    ModelAnimationCollection.prototype.get = function(index) {
+        if (!defined(index)) {
+            throw new DeveloperError('index is required.');
+        }
+
+        return this._scheduledAnimations[index];
     };
 
     function animateChannels(model, scheduledAnimation, index) {
@@ -90,6 +182,8 @@ define([
             parameter.czm.values[index].clone(animatingProperty);
         }
     }
+
+    var animationsToRemove = [];
 
     /**
      * @private
@@ -154,8 +248,21 @@ define([
                         events.push(scheduledAnimation.stop);
                     }
                 }
+
+                if (scheduledAnimation.removeOnStop) {
+                    animationsToRemove.push(scheduledAnimation);
+                }
             }
         }
+
+        // Remove animations that stopped
+        length = animationsToRemove.length;
+        for (var j = 0; j < length; ++j) {
+            var animationToRemove = animationsToRemove[j];
+            scheduledAnimations.splice(scheduledAnimations.indexOf(animationToRemove), 1);
+            this.animationRemoved.raiseEvent(animationToRemove);
+        }
+        animationsToRemove.length = 0;
 
         return animationOccured;
     };

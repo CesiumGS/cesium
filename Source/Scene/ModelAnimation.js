@@ -56,6 +56,14 @@ define([
         /**
          * DOC_TBA
          *
+         * @type {Boolean}
+         * @default false
+         */
+        this.removeOnStop = defaultValue(options.removeOnStop, false);
+
+        /**
+         * DOC_TBA
+         *
          * @type {Event}
          * @default undefined
          */
