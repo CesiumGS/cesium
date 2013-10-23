@@ -79,22 +79,6 @@ define([
 
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
 
-        this._isFocused = knockout.observable(false);
-        /**
-         * Gets or sets a value indicating whether widget has focus.  This property is observable.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        knockout.defineProperty(this, 'isFocused', {
-            get : function() {
-                return this._isFocused();
-            },
-            set : function(value) {
-                this._isFocused(value);
-            }
-        });
-
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
          *

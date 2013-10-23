@@ -61,7 +61,7 @@ define([
         textBox.type = 'text';
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
-        textBox.setAttribute('data-bind', 'hasFocus: _isFocused, value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+        textBox.setAttribute('data-bind', 'value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
         form.appendChild(textBox);
 
         var goButton = document.createElement('span');
@@ -81,14 +81,24 @@ define([
             that._svgPath.path = isSearchInProgress ? stopSearchPath : startSearchPath;
         });
 
-        this._onFocusChange = function(e) {
-            if (!form.contains(e.target)) {
-                that._viewModel.isFocused = false;
+        this._onInputBegin = function(e) {
+            if (!container.contains(e.target)) {
+                textBox.blur();
             }
         };
 
-        document.addEventListener('mousedown', this._onFocusChange, true);
-        document.addEventListener('touchstart', this._onFocusChange, true);
+        this._onInputEnd = function(e) {
+            if (container.contains(e.target)) {
+                textBox.focus();
+            }
+        };
+
+        //We subscribe to both begin and end events in order to give the text box
+        //focus no matter where on the widget is clicked.
+        document.addEventListener('mousedown', this._onInputBegin, true);
+        document.addEventListener('mouseup', this._onInputEnd, true);
+        document.addEventListener('touchstart', this._onInputBegin, true);
+        document.addEventListener('touchend', this._onInputEnd, true);
     };
 
     defineProperties(Geocoder.prototype, {
@@ -131,8 +141,10 @@ define([
      * @memberof Geocoder
      */
     Geocoder.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._onFocusChange, true);
-        document.removeEventListener('touchstart', this._onFocusChange, true);
+        document.removeEventListener('mousedown', this._onInputBegin, true);
+        document.removeEventListener('mouseup', this._onInputEnd, true);
+        document.removeEventListener('touchstart', this._onInputBegin, true);
+        document.removeEventListener('touchend', this._onInputEnd, true);
         this._subscription.dispose();
 
         var container = this._container;
