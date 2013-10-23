@@ -85,6 +85,7 @@ define([
          * @type {Boolean}
          * @default false
          */
+        this.isSearchInProgress = undefined;
         knockout.defineProperty(this, 'isSearchInProgress', {
             get : function() {
                 return this._isSearchInProgress;
@@ -97,6 +98,7 @@ define([
          *
          * @type {String}
          */
+        this.searchText = undefined;
         knockout.defineProperty(this, 'searchText', {
             get : function() {
                 if (this.isSearchInProgress) {
@@ -118,7 +120,9 @@ define([
          * @memberof GeocoderViewModel.prototype
          *
          * @type {Number}
+         * @default 1500
          */
+        this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {
             get : function() {
                 return this._flightDuration;
