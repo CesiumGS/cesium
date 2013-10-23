@@ -64,6 +64,7 @@ Beta Releases
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
 * Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
 * Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
+* Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer` widget.
 
 ### b21 - 2013-10-01
 
