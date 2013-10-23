@@ -943,8 +943,8 @@ define([
         }
 
         var pass = frameState.passes;
-        this._commandLists.colorList = (pass.color && !twoPasses) ? colorCommands : EMPTY_ARRAY;
-        this._commandLists.translucentList = (pass.translucent && twoPasses) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.colorList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.translucentList = (pass.translucent && translucent) ? colorCommands : EMPTY_ARRAY;
         this._commandLists.pickList = (pass.pick) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);

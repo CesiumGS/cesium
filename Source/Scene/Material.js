@@ -583,7 +583,6 @@ define([
 
     function initializeMaterial(description, result) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        result.translucent = defaultValue(description, true);
         result._strict = defaultValue(description.strict, false);
         result._count = defaultValue(description.count, 0);
         result._template = clone(defaultValue(description.fabric, defaultValue.EMPTY_OBJECT));
@@ -602,10 +601,14 @@ define([
         if (defined(cachedMaterial)) {
             var template = clone(cachedMaterial.fabric, true);
             result._template = combine([result._template, template]);
+            result.translucent = cachedMaterial.translucent;
         }
 
         // Make sure the template has no obvious errors. More error checking happens later.
         checkForTemplateErrors(result);
+
+        var translucent = defaultValue(result.translucent, true);
+        result.translucent = defaultValue(description.translucent, translucent);
 
         // If the material has a new type, add it to the cache.
         if (!defined(cachedMaterial)) {
