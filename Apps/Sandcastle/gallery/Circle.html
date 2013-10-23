@@ -64,7 +64,8 @@ require(['Cesium'], function(Cesium) {
         center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-85.0, 40.0)),
         radius : 400000.0,
         height : 400000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    });
     var blueCircleInstance = new Cesium.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
@@ -84,7 +85,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances: blueCircleInstance,
         appearance: new Cesium.PerInstanceColorAppearance({
             closed: true,
-            translucent : false,
+            translucent : false
         })
     }));
     
