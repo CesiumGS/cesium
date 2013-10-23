@@ -378,6 +378,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the Geocoder.
+         * @memberof Viewer.prototype
+         * @type {Geocoder}
+         */
+        geocoder : {
+            get : function() {
+                return this._geocoder;
+            }
+        },
+
+        /**
          * Gets the HomeButton.
          * @memberof Viewer.prototype
          * @type {HomeButton}
