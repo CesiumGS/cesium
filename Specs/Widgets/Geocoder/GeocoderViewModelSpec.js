@@ -1,18 +1,69 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/Geocoder/GeocoderViewModel',
+         'Core/Ellipsoid',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          GeocoderViewModel,
+         Ellipsoid,
          createScene,
          destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('moves camera when search command invoked', function() {
-        var scene = createScene();
+    var scene;
+    beforeEach(function() {
+        scene = createScene();
+    });
 
+    afterEach(function() {
+        destroyScene(scene);
+    });
+
+    it('constructor sets expected properties', function() {
+        var ellipsoid = new Ellipsoid();
+        var flightDuration = 1234;
+        var url = 'bing.invalid/';
+        var key = 'testKey';
+
+        var viewModel = new GeocoderViewModel({
+            scene : scene,
+            ellipsoid : ellipsoid,
+            flightDuration : flightDuration,
+            url : url,
+            key : key
+        });
+
+        expect(viewModel.scene).toBe(scene);
+        expect(viewModel.ellipsoid).toBe(ellipsoid);
+        expect(viewModel.flightDuration).toBe(flightDuration);
+        expect(viewModel.url).toBe(url);
+        expect(viewModel.key).toBe(key);
+    });
+
+    it('can get and set flight duration', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene
+        });
+        viewModel.flightDuration = 324;
+        expect(viewModel.flightDuration).toEqual(324);
+
+        expect(function() {
+            viewModel.flightDuration = -123;
+        }).toThrow();
+    });
+
+    it('can get and set focus', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene
+        });
+        expect(viewModel.isFocused).toEqual(false);
+        viewModel.isFocused = true;
+        expect(viewModel.isFocused).toEqual(true);
+    });
+
+    it('moves camera when search command invoked', function() {
         var viewModel = new GeocoderViewModel({
             scene : scene
         });
@@ -25,13 +76,13 @@ defineSuite([
         waitsFor(function() {
             scene.getAnimations().update();
             var newCameraPosition = scene.getCamera().position;
-            return cameraPosition.x !== newCameraPosition.x ||
-                   cameraPosition.y !== newCameraPosition.y ||
-                   cameraPosition.z !== newCameraPosition.z;
+            return cameraPosition.x !== newCameraPosition.x || cameraPosition.y !== newCameraPosition.y || cameraPosition.z !== newCameraPosition.z;
         });
+    });
 
-        runs(function() {
-            destroyScene(scene);
-        });
+    it('constructor throws without scene', function() {
+        expect(function() {
+            return new GeocoderViewModel();
+        }).toThrow();
     });
 }, 'WebGL');

@@ -91,7 +91,7 @@ define([
                 return this._isFocused();
             },
             set : function(value) {
-                this._isFocused(false);
+                this._isFocused(value);
             }
         });
 
@@ -146,6 +146,30 @@ define([
     };
 
     defineProperties(GeocoderViewModel.prototype, {
+        /**
+         * Gets the Bing maps url.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {String}
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
+
+        /**
+         * Gets the Bing maps key.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {String}
+         */
+        key : {
+            get : function() {
+                return this._key;
+            }
+        },
+
         /**
          * Gets the scene to control.
          * @memberof GeocoderViewModel.prototype
