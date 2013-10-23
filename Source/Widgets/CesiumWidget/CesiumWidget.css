@@ -72,21 +72,13 @@
     cursor: default;
 }
 
-.cesium-widget-small-icon {
+.cesium-widget-toolbar-icon {
     box-sizing: border-box;
     width: 32px;
     height: 32px;
     padding: 0;
     vertical-align: middle;
     z-index: 0;  /* Workaround for rounded raster image corners in Chrome */
-}
-
-.cesium-widget-vertical-icon {
-    box-sizing: border-box;
-    width: 32px;
-    height: 32px;
-    padding: 0;
-    margin: 3px 0;
 }
 
 .cesium-widget-errorPanel {

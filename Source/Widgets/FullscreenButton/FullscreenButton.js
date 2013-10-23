@@ -48,7 +48,7 @@ define([
 
         this._element = document.createElement('button');
         this._element.type = 'button';
-        this._element.className = 'cesium-widget-button cesium-widget-small-icon cesium-fullscreenButton';
+        this._element.className = 'cesium-widget-button cesium-fullscreenButton';
         this._element.setAttribute('data-bind', '\
 attr: { title: tooltip },\
 click: command,\
