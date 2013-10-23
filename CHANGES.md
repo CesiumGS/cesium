@@ -7,6 +7,7 @@ Beta Releases
 ### TODO
 
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
+* Added `FrameState.previousTime`.
 
 ### b22 - 2013-11-01
 
