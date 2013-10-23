@@ -80,36 +80,64 @@ define([
         knockout.track(this, ['_searchText', '_isSearchInProgress']);
 
         /**
+         * Gets or sets a value indicating whether widget has focus.  This property is observable.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.isFocused = knockout.observable(false);
+
+        /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
          *
          * @type {Boolean}
          * @default false
          */
-        this.isSearchInProgress = false;
         knockout.defineProperty(this, 'isSearchInProgress', {
             get : function() {
-                return that._isSearchInProgress;
+                return this._isSearchInProgress;
             }
         });
-    };
 
-    defineProperties(GeocoderViewModel.prototype, {
         /**
          * Gets or sets the text to search for.
          * @memberof GeocoderViewModel.prototype
          *
          * @type {String}
          */
-        searchText : {
+        knockout.defineProperty(this, 'searchText', {
             get : function() {
                 if (this.isSearchInProgress) {
                     return 'Searching...';
                 }
                 return this._searchText;
             },
-            set : function(value) { this._searchText = value; }
-        },
+            set : function(value) {
+                this._searchText = value;
+            }
+        });
 
+        /**
+         * Gets or sets the the duration of the camera flight in milliseconds.
+         * A value of zero causes the camera to instantly switch to the geocoding location.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Number}
+         */
+        knockout.defineProperty(this, 'flightDuration', {
+            get : function() {
+                return this._flightDuration;
+            },
+            set : function(value) {
+                if (value < 0) {
+                    throw new DeveloperError('value must be positive.');
+                }
+                this._flightDuration = value;
+            }
+        });
+    };
+
+    defineProperties(GeocoderViewModel.prototype, {
         /**
          * Gets the scene to control.
          * @memberof GeocoderViewModel.prototype
@@ -143,25 +171,6 @@ define([
         search : {
             get : function() {
                 return this._searchCommand;
-            }
-        },
-
-        /**
-         * Gets or sets the the duration of the camera flight in milliseconds.
-         * A value of zero causes the camera to instantly switch to the geocoding location.
-         * @memberof GeocoderViewModel.prototype
-         *
-         * @type {Number}
-         */
-        flightDuration : {
-            get : function() {
-                return this._flightDuration;
-            },
-            set : function(value) {
-                if (value < 0) {
-                    throw new DeveloperError('value must be positive.');
-                }
-                this._flightDuration = value;
             }
         }
     });
@@ -212,7 +221,8 @@ define([
                 return;
             }
 
-            var up, direction;
+            var up;
+            var direction;
             if (viewModel._scene.mode === SceneMode.SCENE3D) {
                 up = Cartesian3.UNIT_Z;
                 direction = Cartesian3.negate(viewModel._ellipsoid.geodeticSurfaceNormal(position));

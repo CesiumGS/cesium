@@ -54,36 +54,41 @@ define([
         }
 
         var container = getElement(description.container);
-
-        this._container = container;
-
-        this._viewModel = new GeocoderViewModel(description);
-
         var form = document.createElement('form');
         form.setAttribute('data-bind', 'submit: search');
-        this._form = form;
 
         var textBox = document.createElement('input');
         textBox.type = 'text';
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
-        textBox.setAttribute('data-bind', 'value: searchText, css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+        textBox.setAttribute('data-bind', 'hasFocus: isFocused, value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
         form.appendChild(textBox);
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocoder-goButton';
         form.appendChild(goButton);
 
-        this._svgPath = new SvgPath(goButton, 32, 32, startSearchPath);
-
         container.appendChild(form);
 
+        this._container = container;
+        this._viewModel = new GeocoderViewModel(description);
+        this._form = form;
+        this._svgPath = new SvgPath(goButton, 32, 32, startSearchPath);
         knockout.applyBindings(this._viewModel, this._container);
 
         var that = this;
-        this._subscription = knockout.getObservable(this._viewModel, 'isSearchInProgress').subscribe(function (isSearchInProgress) {
+        this._subscription = knockout.getObservable(this._viewModel, 'isSearchInProgress').subscribe(function(isSearchInProgress) {
             that._svgPath.path = isSearchInProgress ? stopSearchPath : startSearchPath;
         });
+
+        this._onFocusChange = function(e) {
+            if (!form.contains(e.target)) {
+                that._viewModel.isFocused(false);
+            }
+        };
+
+        document.addEventListener('mousedown', this._onFocusChange, true);
+        document.addEventListener('touchstart', this._onFocusChange, true);
     };
 
     defineProperties(Geocoder.prototype, {
@@ -126,7 +131,10 @@ define([
      * @memberof Geocoder
      */
     Geocoder.prototype.destroy = function() {
+        document.removeEventListener('mousedown', this._onFocusChange, true);
+        document.removeEventListener('touchstart', this._onFocusChange, true);
         this._subscription.dispose();
+
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._form);
