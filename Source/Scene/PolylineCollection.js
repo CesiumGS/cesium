@@ -163,10 +163,12 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
-        this._rs = undefined;
+        this._opaqueRS = undefined;
+        this._translucentRS = undefined;
 
         this._commandLists = new CommandLists();
         this._colorCommands = [];
+        this._translucentList = [];
         this._pickCommands = [];
 
         this._polylinesUpdated = false;
@@ -463,8 +465,17 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
-        if ((!defined(this._rs)) || (this._rs.depthTest.enabled !== useDepthTest)) {
-            this._rs = context.createRenderState({
+        if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
+            this._opaqueRS = context.createRenderState({
+                depthMask : useDepthTest,
+                depthTest : {
+                    enabled : useDepthTest
+                }
+            });
+        }
+
+        if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
+            this._translucentRS = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
                 depthTest : {
@@ -477,14 +488,22 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(this, context, frameState, colorList, modelMatrix, true);
+            createCommandLists(this, context, frameState, colorList, modelMatrix, true, false);
+        }
+
+        if (pass.translucent) {
+            var translucentList = this._translucentList;
+            commandLists.translucentList = translucentList;
+
+            createCommandLists(this, context, frameState, translucentList, modelMatrix, true, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false);
+            createCommandLists(this, context, frameState, pickList, modelMatrix, false, false);
+            createCommandLists(this, context, frameState, pickList, modelMatrix, false, true);
         }
 
         if (!this._commandLists.empty()) {
@@ -495,13 +514,12 @@ define([
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass) {
+    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass, translucentPass) {
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
 
         var vertexArrays = polylineCollection._vertexArrays;
-        var renderState = polylineCollection._rs;
         var debugShowBoundingVolume = polylineCollection.debugShowBoundingVolume;
 
         var length = vertexArrays.length;
@@ -527,7 +545,7 @@ define([
                     var polyline = polylines[s];
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
-                        if (defined(currentId) && count > 0) {
+                        if (defined(currentId) && count > 0 && !(currentMaterial.translucent ^ translucentPass)) {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
                                 command.owner = polylineCollection;
@@ -543,7 +561,7 @@ define([
                             command.primitiveType = PrimitiveType.TRIANGLES;
                             command.shaderProgram = sp;
                             command.vertexArray = va.va;
-                            command.renderState = renderState;
+                            command.renderState = currentMaterial.translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                             command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                             command.uniformMap = currentMaterial._uniforms;
@@ -591,7 +609,7 @@ define([
                     }
                 }
 
-                if (defined(currentId) && count > 0) {
+                if (defined(currentId) && count > 0 && !(currentMaterial.translucent ^ translucentPass)) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
                         command.owner = polylineCollection;
@@ -607,7 +625,7 @@ define([
                     command.primitiveType = PrimitiveType.TRIANGLES;
                     command.shaderProgram = sp;
                     command.vertexArray = va.va;
-                    command.renderState = renderState;
+                    command.renderState = currentMaterial.translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                     command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                     command.uniformMap = currentMaterial._uniforms;
