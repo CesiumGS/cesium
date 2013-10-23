@@ -411,7 +411,6 @@ define([
     function createBuffers(model, context) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained bufferView-to-buffer dependencies
         if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
@@ -464,7 +463,6 @@ define([
     function createPrograms(model, context) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained program-to-shader dependencies
         if (loadResources.pendingShaderLoads !== 0) {
             return;
         }
@@ -591,7 +589,6 @@ define([
     function createAnimations(model) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained buffer-view-to-webgl-or-animation-buffer dependencies
          if (!loadResources.finishedPendingLoads()) {
              return;
          }
@@ -619,7 +616,6 @@ define([
     function createVertexArrays(model, context) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained mesh-to-buffer-views dependencies
          if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
              return;
          }
@@ -822,7 +818,6 @@ define([
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained texture dependencies
         if (!loadResources.finishedTextureCreation()) {
             return;
         }
@@ -999,7 +994,6 @@ define([
     function createCommands(model, context) {
         var loadResources = model._loadResources;
 
-// TODO: more fine-grained dependencies
         if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
             return;
         }
@@ -1163,7 +1157,6 @@ define([
     Model.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D)) {
-// TODO: models in 2D and Columbus view
             return;
         }
 
@@ -1188,11 +1181,10 @@ define([
             }
         }
 
-        // Update modelMatrix throughout the tree as needed
         if (this._state === ModelState.LOADED) {
-// TODO: fine-grained partial hiearchy updates for animation
             var animated = this.animations.update(frameState);
 
+            // Update modelMatrix throughout the tree as needed
             if (animated || !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
@@ -1203,7 +1195,7 @@ define([
         }
 
         if (justLoaded) {
-            // Call after modelMatrix update.
+            // Called after modelMatrix update.
             frameState.events.push({
                 event : this.readyToRender
             });

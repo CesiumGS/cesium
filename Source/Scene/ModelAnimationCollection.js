@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/Event',
+        '../Core/JulianDate',
         './ModelAnimationWrap',
         './ModelAnimationState',
         './ModelAnimation'
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         Enumeration,
         Event,
+        JulianDate,
         ModelAnimationWrap,
         ModelAnimationState,
         ModelAnimation) {
@@ -161,7 +163,7 @@ define([
         return this._scheduledAnimations[index];
     };
 
-    function animateChannels(model, scheduledAnimation, index) {
+    function animateChannels(model, scheduledAnimation, delta) {
         var nodes = model.gltf.nodes;
         var animation = scheduledAnimation._animation;
         var parameters = animation.parameters;
@@ -182,6 +184,8 @@ define([
             // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
 
             // TODO: get index from TIME
+            var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
+
             // TODO: interpolate key frames
             parameter.czm.values[index].clone(animatingProperty);
         }
@@ -193,6 +197,11 @@ define([
      * @private
      */
     ModelAnimationCollection.prototype.update = function(frameState) {
+        if (JulianDate.equals(frameState.time, frameState.previousTime)) {
+            // Animations are currently time-dependent so do not animate when paused or picking
+            return;
+        }
+
         var animationOccured = false;
         var sceneTime = frameState.time;
         var events = frameState.events;
@@ -221,12 +230,13 @@ define([
 
             // [0.0, 1.0] normalized local animation time
             var delta = startTime.getSecondsDifference(sceneTime) / duration;
+            var pastStartTime = (delta >= 0.0);
 
             // Play animation if
             // * we are after the start time, and
             // * before the end of the animation's duration or the animation is being repeated, and
             // * we did not reach a user-provided stop time.
-            var play = delta >= 0.0 &&
+            var play = pastStartTime &&
                        ((delta <= 1.0) ||
                         ((scheduledAnimation.wrap === ModelAnimationWrap.REPEAT) ||
                          (scheduledAnimation.wrap === ModelAnimationWrap.MIRRORED_REPEAT))) &&
@@ -257,24 +267,17 @@ define([
                     delta = 1.0 - delta;
                 }
 
-                var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
+                animateChannels(model, scheduledAnimation, delta);
 
-                if (scheduledAnimation._previousIndex !== index) {
-                    scheduledAnimation._previousIndex = index;
-
-                    animateChannels(model, scheduledAnimation, index);
-
-                    if (defined(scheduledAnimation.update)) {
-                        events.push({
-                            event : scheduledAnimation.update
-                        });
-                    }
-
-                    animationOccured = true;
+                if (defined(scheduledAnimation.update)) {
+                    events.push({
+                        event : scheduledAnimation.update
+                    });
                 }
+                animationOccured = true;
             } else {
                 // ANIMATING -> STOPPED state transition?
-                if ((delta >= 0.0) && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
+                if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
                         events.push({

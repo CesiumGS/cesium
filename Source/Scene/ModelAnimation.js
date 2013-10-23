@@ -111,7 +111,6 @@ define([
         this._animation = animation;
         this._startTime = undefined;
         this._duration = undefined;
-        this._previousIndex = undefined;
     };
 
     return ModelAnimation;
