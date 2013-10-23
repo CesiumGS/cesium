@@ -97,7 +97,7 @@ define([
 
         var rot = CesiumMath.zeroToTwoPi(alphaDeltaW.rotation);
         var quat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, rot, quatScratch);
-        var rotMtx = Matrix3.fromQuaternion(quat, rotMtxScratch);
+        var rotMtx = Matrix3.fromQuaternion(Quaternion.conjugate(quat, quat), rotMtxScratch);
 
         var cbi2cbf = Matrix3.multiply(rotMtx, precMtx, precMtx);
         return cbi2cbf;

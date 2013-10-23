@@ -78,4 +78,26 @@ defineSuite([
         expect(result.image).toEqual('http://test.invalid/image.png');
         expect(result.repeat).toEqual(new Cartesian2(2, 3));
     });
+
+    it('equals works', function() {
+        var left = new ImageMaterialProperty();
+        left.image = new ConstantProperty('http://test.invalid/image.png');
+        left.repeat = new ConstantProperty(new Cartesian2(2, 3));
+
+        var right = new ImageMaterialProperty();
+        right.image = new ConstantProperty('http://test.invalid/image.png');
+        right.repeat = new ConstantProperty(new Cartesian2(2, 3));
+
+        expect(left.equals(right)).toEqual(true);
+
+        right.image = new ConstantProperty('http://test.invalid/image2.png');
+        expect(left.equals(right)).toEqual(false);
+
+        right.image = left.image;
+        right.repeat = new ConstantProperty(new Cartesian2(3, 2));
+        expect(left.equals(right)).toEqual(false);
+
+        right.repeat = left.repeat;
+        expect(left.equals(right)).toEqual(true);
+    });
 });
