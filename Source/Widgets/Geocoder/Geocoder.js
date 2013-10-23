@@ -66,6 +66,7 @@ define([
 
         var goButton = document.createElement('span');
         goButton.className = 'cesium-geocoder-goButton';
+        goButton.setAttribute('data-bind', 'click: search');
         form.appendChild(goButton);
 
         container.appendChild(form);

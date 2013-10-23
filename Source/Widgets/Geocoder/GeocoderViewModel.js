@@ -200,6 +200,12 @@ define([
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
+
+        if (/^\s*$/.test(query)) {
+            //whitespace string
+            return;
+        }
+
         viewModel._isSearchInProgress = true;
 
         var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
