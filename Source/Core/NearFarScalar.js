@@ -165,5 +165,18 @@ define([
         return NearFarScalar.clone(this, result);
     };
 
+    /**
+     * Compares this instance to the provided NearFarScalar and returns <code>true</code> if they are equal,
+     * <code>false</code> otherwise.
+     * @memberof NearFarScalar
+     *
+     * @param {NearFarScalar} [right] The right hand side NearFarScalar.
+     *
+     * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
+     */
+    NearFarScalar.prototype.equals = function(right) {
+        return NearFarScalar.equals(this, right);
+    };
+
     return NearFarScalar;
 });

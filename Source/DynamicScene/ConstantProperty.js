@@ -11,14 +11,6 @@ define([
         Enumeration) {
     "use strict";
 
-    function prototypeClone(value, result) {
-        return value.clone(result);
-    }
-
-    function noClone(value, result) {
-        return value;
-    }
-
     /**
      * A {@link Property} whose value never changes.
      *
@@ -26,7 +18,6 @@ define([
      * @constructor
      *
      * @param {Object|Number|String} value The property value.
-     * @param {Function} [clone=value.clone] A function which takes the value and a result parameter and clones it.
      * This parameter is only required if the value is not a number or string and does not have a clone function.
      *
      * @exception {DeveloperError} value is required.
@@ -37,34 +28,24 @@ define([
      * @example
      * //Create a constant value from a Cartesian2 instance.
      * var constantProperty = new ConstantProperty(new Cartesian2(10, 12));
-     *
-     * @example
-     * //Create a ConstantPropety from a user-defined object.
-     * var myObject = {
-     *     value : 6
-     * };
-     * function cloneMyObject(value, result) {
-     *     return {
-     *         value : value.value
-     *     };
-     * }
-     * var constantProperty = new ConstantProperty(myObject, cloneMyObject);
      */
-    var ConstantProperty = function(value, clone) {
+    var ConstantProperty = function(value) {
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
-        if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
-            if (typeof value.clone !== 'function' && typeof clone !== 'function') {
+        var simple = typeof value !== 'object' || Array.isArray(value) || value instanceof Enumeration;
+        if (!simple) {
+            if (typeof value.clone !== 'function') {
                 throw new DeveloperError('clone is a required function.');
             }
-
-            clone = defaultValue(clone, prototypeClone);
+            if (typeof value.equals !== 'function') {
+                throw new DeveloperError('equals is a required function.');
+            }
         }
 
         this._value = value;
-        this._clone = defaultValue(clone, noClone);
+        this._simple = simple;
     };
 
     /**
@@ -76,7 +57,25 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantProperty.prototype.getValue = function(time, result) {
-        return this._clone(this._value, result);
+        if (this._simple) {
+            return this._value;
+        }
+        return this._value.clone(result);
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof ConstantProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    ConstantProperty.prototype.equals = function(other) {
+        return this === other || //
+               (other instanceof ConstantProperty && //
+                ((this._simple && (this._value === other._value)) || //
+                (!this._simple && this._value.equals(other._value))));
     };
 
     return ConstantProperty;

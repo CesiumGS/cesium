@@ -3,7 +3,7 @@ require({
     baseUrl : '../../Source',
     paths : {
         CesiumViewer : '../Apps/CesiumViewer',
-        domReady : '../ThirdParty/requirejs-2.1.6/domReady'
+        domReady : '../ThirdParty/requirejs-2.1.9/domReady'
     }
 }, ['CesiumViewer/CesiumViewer'], function() {
 });

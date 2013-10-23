@@ -1,7 +1,7 @@
 /*global define*/
 define([
         '../Core/Clock',
-        '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/EventHelper',
@@ -9,7 +9,7 @@ define([
         '../ThirdParty/knockout'
     ], function(
         Clock,
-        defaultValue,
+        defined,
         defineProperties,
         destroyObject,
         EventHelper,
@@ -27,7 +27,9 @@ define([
      * @see Clock
      */
     var ClockViewModel = function(clock) {
-        clock = defaultValue(clock, new Clock());
+        if (!defined(clock)) {
+            clock = new Clock();
+        }
         this._clock = clock;
 
         this._eventHelper = new EventHelper();

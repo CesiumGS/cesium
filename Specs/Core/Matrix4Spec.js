@@ -4,12 +4,14 @@ defineSuite([
              'Core/Matrix3',
              'Core/Cartesian3',
              'Core/Cartesian4',
+             'Core/Quaternion',
              'Core/Math'
             ], function(
               Matrix4,
               Matrix3,
               Cartesian3,
               Cartesian4,
+              Quaternion,
               CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -119,6 +121,37 @@ defineSuite([
         var returnedResult = Matrix4.fromTranslation(new Cartesian3(10.0, 11.0, 12.0));
         expect(returnedResult).toNotBe(expected);
         expect(returnedResult).toEqual(expected);
+    });
+
+    it('fromTranslationQuaternionRotationScale works without a result parameter', function() {
+        var expected = new Matrix4(
+            7.0,  0.0, 0.0, 1.0,
+            0.0,  0.0, 9.0, 2.0,
+            0.0, -8.0, 0.0, 3.0,
+            0.0,  0.0, 0.0, 1.0);
+        var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
+            new Cartesian3(1.0, 2.0, 3.0),                                            // translation
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
+            new Cartesian3(7.0, 8.0, 9.0));                                           // scale
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('fromTranslationQuaternionRotationScale works with a result parameter', function() {
+        var expected = new Matrix4(
+                7.0,  0.0, 0.0, 1.0,
+                0.0,  0.0, 9.0, 2.0,
+                0.0, -8.0, 0.0, 3.0,
+                0.0,  0.0, 0.0, 1.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromTranslationQuaternionRotationScale(
+            new Cartesian3(1.0, 2.0, 3.0),                                            // translation
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
+            new Cartesian3(7.0, 8.0, 9.0),                                            // scale
+            result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toNotBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
     it('fromTranslation works with a result parameter', function() {
@@ -576,6 +609,33 @@ defineSuite([
         expect(m).toEqual(expected);
     });
 
+    it('multiplyByScale works without a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale));
+        var result = Matrix4.multiplyByScale(m, scale);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByScale works with a result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = new Cartesian3(1.0, 1.0, 1.0);
+        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale));
+        var result = new Matrix4();
+        var returnedResult = Matrix4.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByScale works with "this" result parameter', function() {
+        var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale));
+        var returnedResult = Matrix4.multiplyByScale(m, scale, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
     it('multiplyByVector works without a result parameter', function() {
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Cartesian4(17, 18, 19, 20);
@@ -949,6 +1009,24 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromTranslationQuaternionRotationScale throws without translation parameter', function() {
+        expect(function() {
+            Matrix4.fromTranslationQuaternionRotationScale(undefined, new Quaternion(), new Cartesian3());
+        }).toThrow();
+    });
+
+    it('fromTranslationQuaternionRotationScale throws without rotation parameter', function() {
+        expect(function() {
+            Matrix4.fromTranslationQuaternionRotationScale(new Matrix3(), undefined, new Cartesian3());
+        }).toThrow();
+    });
+
+    it('fromTranslationQuaternionRotationScale throws without scale parameter', function() {
+        expect(function() {
+            Matrix4.fromTranslationQuaternionRotationScale(new Matrix3(), new Quaternion(), undefined);
+        }).toThrow();
+    });
+
     it('fromTranslation throws without translation parameter', function() {
         expect(function() {
             Matrix4.fromTranslation(undefined);
@@ -1276,6 +1354,19 @@ defineSuite([
         var m = new Matrix4();
         expect(function() {
             Matrix4.multiplyByUniformScale(m, undefined);
+        }).toThrow();
+    });
+
+    it('static multiplyByScale throws with no matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByScale(undefined, new Cartesian3());
+        }).toThrow();
+    });
+
+    it('static multiplyByScale throws with no scale parameter', function() {
+        var m = new Matrix4();
+        expect(function() {
+            Matrix4.multiplyByScale(m, undefined);
         }).toThrow();
     });
 
