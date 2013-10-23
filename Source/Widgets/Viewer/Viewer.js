@@ -721,6 +721,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         this._eventHelper.removeAll();
 
+        if (defined(this._geocoder)) {
+            this._geocoder = this._geocoder.destroy();
+        }
+
         if (defined(this._homeButton)) {
             this._homeButton = this._homeButton.destroy();
         }
