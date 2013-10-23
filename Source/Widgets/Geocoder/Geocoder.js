@@ -61,7 +61,7 @@ define([
         textBox.type = 'text';
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
-        textBox.setAttribute('data-bind', 'hasFocus: isFocused, value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+        textBox.setAttribute('data-bind', 'hasFocus: _isFocused, value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
         form.appendChild(textBox);
 
         var goButton = document.createElement('span');
@@ -83,7 +83,7 @@ define([
 
         this._onFocusChange = function(e) {
             if (!form.contains(e.target)) {
-                that._viewModel.isFocused(false);
+                that._viewModel.isFocused = false;
             }
         };
 
