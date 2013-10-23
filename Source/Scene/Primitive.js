@@ -298,6 +298,8 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
+        this._translucent = undefined;
+
         this.state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
@@ -754,15 +756,23 @@ define([
             createSP = true;
         }
 
+        var translucent = this._appearance.isTranslucent();
+        if (this._translucent !== translucent) {
+            this._translucent = translucent;
+            createRS = true;
+        }
+
         if (defined(this._material)) {
             this._material.update(context);
         }
 
-        var twoPasses = appearance.closed && appearance.translucent;
+        var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
+            var renderState = appearance.getRenderState();
+
             if (twoPasses) {
-                var rs = clone(appearance.renderState, false);
+                var rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -772,7 +782,7 @@ define([
                 rs.cull.face = CullFace.FRONT;
                 this._backFaceRS = context.createRenderState(rs);
             } else {
-                this._frontFaceRS = context.createRenderState(appearance.renderState);
+                this._frontFaceRS = context.createRenderState(renderState);
                 this._backFaceRS = this._frontFaceRS;
             }
 
@@ -781,7 +791,7 @@ define([
                 this._pickRS = this._backFaceRS;
             } else {
                 // Still occlude if not pickable.
-                var pickRS = clone(appearance.renderState, false);
+                var pickRS = clone(renderState, false);
                 pickRS.colorMask = {
                     red : false,
                     green : false,
