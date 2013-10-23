@@ -57,6 +57,8 @@ define([
         when) {
     "use strict";
 
+    var EMPTY_ARRAY = [];
+
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
      * as shown in example 1 below, or from an array of instances, even if the geometry is from different
@@ -324,6 +326,14 @@ define([
         this._pickIds = [];
 
         this._commandLists = new CommandLists();
+
+        this._colorCommands = this._commandLists.colorList;
+        this._pickCommands = this._commandLists.pickList;
+
+        this._commandLists.colorList = EMPTY_ARRAY;
+        this._commandLists.translucentList = EMPTY_ARRAY;
+        this._commandLists.pickList = EMPTY_ARRAY;
+        this._commandLists.overlayList = EMPTY_ARRAY;
     };
 
     function cloneAttribute(attribute) {
@@ -526,8 +536,6 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        var colorCommands = this._commandLists.colorList;
-        var pickCommands = this._commandLists.pickList;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -803,6 +811,9 @@ define([
             validateShaderMatching(this._pickSP, attributeIndices);
         }
 
+        var colorCommands = this._colorCommands;
+        var pickCommands = this._pickCommands;
+
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
@@ -920,6 +931,11 @@ define([
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
             }
         }
+
+        var pass = frameState.passes;
+        this._commandLists.colorList = (pass.color && !twoPasses) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.translucentList = (pass.translucent && twoPasses) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.pickList = (pass.pick) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);
     };

@@ -522,11 +522,11 @@ define([
         cullingVolume = scratchCullingVolume;
 
         var length = commandLists.length;
-        for (var i = 0; i < length; ++i) {
-            var listNameLength = listNames.length;
-            for (var j = 0; j < listNameLength; ++j) {
-                var listName = listNames[j];
-                var commandList = commandLists[i][listName];
+        var listNameLength = listNames.length;
+        for (var i = 0; i < listNameLength; ++i) {
+            var listName = listNames[i];
+            for (var j = 0; j < length; ++j) {
+                var commandList = commandLists[j][listName];
                 var commandListLength = commandList.length;
                 for (var k = 0; k < commandListLength; ++k) {
                     var command = commandList[k];
