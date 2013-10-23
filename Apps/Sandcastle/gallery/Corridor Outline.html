@@ -101,9 +101,17 @@ require(['Cesium'], function(Cesium) {
     
     // Add instances to primitives
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [redCorridor, blueCorridor],
+        geometryInstances : blueCorridor,
         appearance : new Cesium.PerInstanceColorAppearance({
             closed : true
+        })
+    }));
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : redCorridor,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
         })
     }));
     

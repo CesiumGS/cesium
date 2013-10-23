@@ -80,6 +80,14 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: blueCircleInstance,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            closed: true,
+            translucent : false,
+        })
+    }));
+    
     Sandcastle.finishedLoading();
 });
 </script>
