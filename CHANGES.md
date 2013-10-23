@@ -62,6 +62,7 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
 * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
 * Added `GoogleEarthImageryProvider`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
