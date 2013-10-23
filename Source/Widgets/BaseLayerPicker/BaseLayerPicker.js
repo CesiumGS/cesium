@@ -116,7 +116,7 @@ define([
 
         var element = this._element = document.createElement('button');
         this._element.type = 'button';
-        this._element.className = 'cesium-widget-button cesium-widget-small-icon';
+        this._element.className = 'cesium-widget-button cesium-widget-toolbar-icon';
         this._element.setAttribute('data-bind', 'attr: { title: selectedName }, click: toggleDropDown');
         container.appendChild(this._element);
 

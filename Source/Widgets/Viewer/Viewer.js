@@ -19,6 +19,7 @@ define([
         '../CesiumWidget/CesiumWidget',
         '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
+        '../Geocoder/Geocoder',
         '../getElement',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
@@ -44,6 +45,7 @@ define([
         CesiumWidget,
         ClockViewModel,
         FullscreenButton,
+        Geocoder,
         getElement,
         HomeButton,
         SceneModePicker,
@@ -100,6 +102,7 @@ define([
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+     * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
@@ -219,6 +222,19 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
 
+        //Geocoder
+        var geocoder;
+        if (!defined(options.geocoder) || options.geocoder !== false) {
+            var geocoderContainer = document.createElement('div');
+            geocoderContainer.className = 'cesium-viewer-geocoderContainer';
+            toolbar.appendChild(geocoderContainer);
+            geocoder = new Geocoder({
+                container : geocoderContainer,
+                scene : cesiumWidget.scene,
+                ellipsoid : cesiumWidget.centralBody.getEllipsoid()
+            });
+        }
+
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
@@ -326,6 +342,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
+        this._geocoder = geocoder;
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
@@ -358,6 +375,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         cesiumWidget : {
             get : function() {
                 return this._cesiumWidget;
+            }
+        },
+
+        /**
+         * Gets the Geocoder.
+         * @memberof Viewer.prototype
+         * @type {Geocoder}
+         */
+        geocoder : {
+            get : function() {
+                return this._geocoder;
             }
         },
 
@@ -693,6 +721,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._element.removeChild(this._toolbar);
 
         this._eventHelper.removeAll();
+
+        if (defined(this._geocoder)) {
+            this._geocoder = this._geocoder.destroy();
+        }
 
         if (defined(this._homeButton)) {
             this._homeButton = this._homeButton.destroy();
