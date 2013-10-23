@@ -141,7 +141,7 @@ defineSuite([
         polygon.material = new ColorMaterialProperty();
 
         var ellipse = testObject.ellipse = new DynamicEllipse();
-        ellipse.bearing = new ConstantProperty(0);
+        ellipse.rotation = new ConstantProperty(0);
         ellipse.semiMajorAxis = new ConstantProperty(1000);
         ellipse.semiMinorAxis = new ConstantProperty(1000);
         visualizer.update(new JulianDate());

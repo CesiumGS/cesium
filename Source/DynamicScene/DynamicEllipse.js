@@ -29,11 +29,11 @@ define(['../Core/Cartesian3',
     var DynamicEllipse = function() {
         this._semiMajorAxis = undefined;
         this._semiMinorAxis = undefined;
-        this._bearing = undefined;
+        this._rotation = undefined;
         this._lastPosition = undefined;
         this._lastSemiMajorAxis = undefined;
         this._lastSemiMinorAxis = undefined;
-        this._lastBearing = undefined;
+        this._lastRotation = undefined;
         this._cachedVertexPositions = undefined;
         this._propertyChanged = new Event();
     };
@@ -65,11 +65,11 @@ define(['../Core/Cartesian3',
         semiMinorAxis : createDynamicPropertyDescriptor('semiMinorAxis', '_semiMinorAxis'),
 
         /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
+         * Gets or sets the numeric {@link Property} specifying the ellipse's rotation.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        bearing : createDynamicPropertyDescriptor('bearing', '_bearing')
+        rotation : createDynamicPropertyDescriptor('rotation', '_rotation')
     });
 
     /**
@@ -83,7 +83,7 @@ define(['../Core/Cartesian3',
         if (!defined(result)) {
             result = new DynamicEllipse();
         }
-        result.bearing = this.bearing;
+        result.rotation = this.rotation;
         result.semiMajorAxis = this.semiMajorAxis;
         result.semiMinorAxis = this.semiMinorAxis;
         return result;
@@ -101,7 +101,7 @@ define(['../Core/Cartesian3',
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
-        this.bearing = defaultValue(this.bearing, source.bearing);
+        this.rotation = defaultValue(this.rotation, source.rotation);
         this.semiMajorAxis = defaultValue(this.semiMajorAxis, source.semiMajorAxis);
         this.semiMinorAxis = defaultValue(this.semiMinorAxis, source.semiMinorAxis);
     };
@@ -127,10 +127,10 @@ define(['../Core/Cartesian3',
         var semiMajorAxis = semiMajorAxisProperty.getValue(time);
         var semiMinorAxis = semiMinorAxisProperty.getValue(time);
 
-        var bearing = 0.0;
-        var bearingProperty = this._bearing;
-        if (defined(bearingProperty)) {
-            bearing = bearingProperty.getValue(time);
+        var rotation = 0.0;
+        var rotationProperty = this._rotation;
+        if (defined(rotationProperty)) {
+            rotation = rotationProperty.getValue(time);
         }
 
         if (!defined(semiMajorAxis) || //
@@ -143,16 +143,16 @@ define(['../Core/Cartesian3',
         var lastPosition = this._lastPosition;
         var lastSemiMajorAxis = this._lastSemiMajorAxis;
         var lastSemiMinorAxis = this._lastSemiMinorAxis;
-        var lastBearing = this._lastBearing;
-        if (bearing !== lastBearing || //
+        var lastRotation = this._lastRotation;
+        if (rotation !== lastRotation || //
             lastSemiMajorAxis !== semiMajorAxis || //
             lastSemiMinorAxis !== semiMinorAxis || //
             !Cartesian3.equals(lastPosition, position)) {
 
             //CZML_TODO The surface reference should come from CZML and not be hard-coded to Ellipsoid.WGS84.
-            this._cachedVertexPositions = Shapes.computeEllipseBoundary(Ellipsoid.WGS84, position, semiMajorAxis, semiMinorAxis, bearing);
+            this._cachedVertexPositions = Shapes.computeEllipseBoundary(Ellipsoid.WGS84, position, semiMajorAxis, semiMinorAxis, rotation);
             this._lastPosition = Cartesian3.clone(position, this._lastPosition);
-            this._lastBearing = bearing;
+            this._lastRotation = rotation;
             this._lastSemiMajorAxis = semiMajorAxis;
             this._lastSemiMinorAxis = semiMinorAxis;
         }
