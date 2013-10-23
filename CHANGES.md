@@ -58,11 +58,13 @@ Beta Releases
 * Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
 * Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
 * Added `FrameState.events`.
+* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
 * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
 * Added `GoogleEarthImageryProvider`.
 * Added `Primitive.allowPicking` to save memory when picking is not needed.
 * Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
 * Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
+* Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer` widget.
 
 ### b21 - 2013-10-01
 
