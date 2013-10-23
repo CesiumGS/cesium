@@ -105,6 +105,9 @@ define([
                 return this._searchText;
             },
             set : function(value) {
+                if (typeof value !== 'string') {
+                    throw new DeveloperError('value must be a valid string.');
+                }
                 this._searchText = value;
             }
         });

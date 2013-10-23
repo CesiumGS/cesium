@@ -54,13 +54,13 @@ defineSuite([
         }).toThrow();
     });
 
-    it('can get and set focus', function() {
+    it('throws is searchText is not a string', function() {
         var viewModel = new GeocoderViewModel({
             scene : scene
         });
-        expect(viewModel.isFocused).toEqual(false);
-        viewModel.isFocused = true;
-        expect(viewModel.isFocused).toEqual(true);
+        expect(function() {
+            viewModel.searchText = undefined;
+        }).toThrow();
     });
 
     it('moves camera when search command invoked', function() {
