@@ -18,11 +18,9 @@
 .cesium-viewer-geocoderContainer:hover .cesium-geocoder-input {
     border-color: #aef;
     box-shadow: 0 0 8px #fff;
-    padding-left: 4px;
-    width: 250px;
-    opacity: 1;
 }
 
+.cesium-viewer-geocoderContainer:hover .cesium-geocoder-input,
 .cesium-viewer-geocoderContainer .cesium-geocoder-input:focus,
 .cesium-viewer-geocoderContainer .cesium-geocoder-input-wide {
     padding-left: 4px;
