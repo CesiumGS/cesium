@@ -206,7 +206,6 @@ define([
         this._onlySunLighting = false;
 
         this._owner = options._owner;
-        this._executeInClosestFrustum = defaultValue(options._executeInClosestFrustum, true);
 
         this._sp = undefined;
         this._rs = undefined;
@@ -363,7 +362,7 @@ define([
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
             colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
-            colorCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+            colorCommand.executeInClosestFrustum = translucent;
             colorCommand.owner = defaultValue(this._owner, this);
         }
 
@@ -375,11 +374,11 @@ define([
             colorCommand.modelMatrix = this._computedModelMatrix;
         }
 
-        if (passes.color) {
+        if (passes.color && !translucent) {
             ellipsoidCommandLists.colorList.push(colorCommand);
         }
 
-        if (passes.translucent) {
+        if (passes.translucent && translucent) {
             ellipsoidCommandLists.translucentList.push(colorCommand);
         }
 
@@ -413,7 +412,7 @@ define([
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
-                pickCommand.executeInClosestFrustum = this._executeInClosestFrustum;
+                pickCommand.executeInClosestFrustum = translucent;
                 pickCommand.owner = defaultValue(this._owner, this);
             }
 
