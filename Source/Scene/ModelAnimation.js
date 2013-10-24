@@ -38,12 +38,30 @@ define([
         /**
          * DOC_TBA
          *
+         * @type {Number}
+         * @default undefined
+         *
+         * @readonly
+         */
+        this.startOffset = defaultValue(options.startOffset, 0.0); // in seconds
+
+        /**
+         * DOC_TBA
+         *
          * @type {JulianDate}
          * @default undefined
          *
          * @readonly
          */
         this.stopTime = options.stopTime; // when defined, play until end of animation depending on wrap
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.removeOnStop = defaultValue(options.removeOnStop, false);
 
         /**
          * DOC_TBA
@@ -74,14 +92,6 @@ define([
          * @readonly
          */
         this.wrap = defaultValue(options.wrap, ModelAnimationWrap.CLAMP);
-
-        /**
-         * DOC_TBA
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.removeOnStop = defaultValue(options.removeOnStop, false);
 
         /**
          * DOC_TBA

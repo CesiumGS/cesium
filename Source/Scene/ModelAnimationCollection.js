@@ -65,7 +65,9 @@ define([
      *
      * @param {String} options.name DOC_TBA
      * @param {JulianDate} [options.startTime] DOC_TBA
+     * @param {Number} [options.startOffset] DOC_TBA
      * @param {JulianDate} [options.stopTime] DOC_TBA
+     * @param {Boolean} [options.removeOnStop=false] DOC_TBA
      * @param {Number} [options.scale=1.0] DOC_TBA
      * @param {Boolean} [options.reverse=false] DOC_TBA
      * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] DOC_TBA
@@ -198,7 +200,7 @@ define([
      */
     ModelAnimationCollection.prototype.update = function(frameState) {
         if (JulianDate.equals(frameState.time, frameState.previousTime)) {
-            // Animations are currently time-dependent so do not animate when paused or picking
+            // Animations are currently only time-dependent so do not animate when paused or picking
             return;
         }
 
@@ -213,14 +215,14 @@ define([
         for (var i = 0; i < length; ++i) {
             var scheduledAnimation = scheduledAnimations[i];
             var animation = scheduledAnimation._animation;
-            var timeParameter = animation.parameters.TIME;
-            var times = timeParameter.czm.values;
 
             if (!defined(scheduledAnimation._startTime)) {
-                scheduledAnimation._startTime = defaultValue(scheduledAnimation.startTime, sceneTime).addSeconds(times[0]);
+                scheduledAnimation._startTime = defaultValue(scheduledAnimation.startTime, sceneTime).addSeconds(scheduledAnimation.startOffset);
             }
 
             if (!defined(scheduledAnimation._duration)) {
+                var timeParameter = animation.parameters.TIME;
+                var times = timeParameter.czm.values;
                 scheduledAnimation._duration = times[timeParameter.count - 1] *  (1.0 / scheduledAnimation.speedup);
             }
 
