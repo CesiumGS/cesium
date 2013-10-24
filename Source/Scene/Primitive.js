@@ -84,7 +84,7 @@ define([
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -236,7 +236,7 @@ define([
          *
          * @readonly
          */
-        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
+        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
 
         /**
          * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
