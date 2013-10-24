@@ -25,7 +25,8 @@ defineSuite([
          'Scene/Polygon',
          'Scene/PolylineCollection',
          'Scene/SceneMode',
-         'Scene/OrthographicFrustum'
+         'Scene/OrthographicFrustum',
+         'Scene/Material'
      ], 'Scene/PrimitiveCulling', function(
          CompositePrimitive,
          createContext,
@@ -52,7 +53,8 @@ defineSuite([
          Polygon,
          PolylineCollection,
          SceneMode,
-         OrthographicFrustum) {
+         OrthographicFrustum,
+         Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -287,6 +289,7 @@ defineSuite([
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
                              ]);
         polygon.asynchronous = false;
+        polygon.material.translucent = false;
         return polygon;
     }
 
@@ -404,11 +407,17 @@ defineSuite([
     });
 
     function createPolylines() {
+        var material = Material.fromType('Color');
+        material.translucent = false;
+
         var polylines = new PolylineCollection();
-        polylines.add({positions:Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-            new Cartographic.fromDegrees(-75.10, 39.57),
-            new Cartographic.fromDegrees(-80.12, 25.46)
-        ])});
+        polylines.add({
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                new Cartographic.fromDegrees(-75.10, 39.57),
+                new Cartographic.fromDegrees(-80.12, 25.46)
+            ]),
+            material : material
+        });
         return polylines;
     }
 

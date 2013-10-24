@@ -18,6 +18,7 @@ defineSuite([
          'Core/Extent',
          'Core/Math',
          'Renderer/ClearCommand',
+         'Scene/Material',
          'Scene/SceneMode'
      ], function(
          ExtentPrimitive,
@@ -38,6 +39,7 @@ defineSuite([
          Extent,
          CesiumMath,
          ClearCommand,
+         Material,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -69,10 +71,14 @@ defineSuite([
     function createExtent(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        var material = Material.fromType('Color');
+        material.translucent = false;
+
         var e = new ExtentPrimitive({
             ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            material : material,
             id : options.id,
             asynchronous : false,
             debugShowBoundingVolume : options.debugShowBoundingVolume
