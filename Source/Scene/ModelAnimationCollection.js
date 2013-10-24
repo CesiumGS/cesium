@@ -173,6 +173,9 @@ define([
         var channels = animation.channels;
         var length = channels.length;
 
+        // TODO: get index from TIME
+        var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
+
         for (var i = 0; i < length; ++i) {
             var channel = channels[i];
 
@@ -184,9 +187,6 @@ define([
             var sampler = samplers[channel.sampler];
             var parameter = parameters[sampler.output];
             // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
-
-            // TODO: get index from TIME
-            var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
 
             // TODO: interpolate key frames
             parameter.czm.values[index].clone(animatingProperty);

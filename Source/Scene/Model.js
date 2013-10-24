@@ -137,6 +137,8 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @readonly
          */
         this.basePath = defaultValue(options.basePath, '');
 
@@ -215,15 +217,11 @@ define([
 
         /**
          * DOC_TBA
-         *
-         * @readonly
          */
         this.animations = new ModelAnimationCollection(this);
 
         /**
          * DOC_TBA
-         *
-         * @readonly
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
