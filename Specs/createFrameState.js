@@ -40,6 +40,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         frameState.passes.color = true;
+        frameState.passes.translucent = true;
         frameState.passes.overlay = true;
         frameState.passes.pick = false;
 
