@@ -184,6 +184,7 @@ define([
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;
+        this._translucent = undefined;
 
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
@@ -374,55 +375,87 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
+        var translucent = this.material.translucent;
+
         // Initial render state creation
-        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (!defined(this._frontFaceColorCommand.renderState))) {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) ||
+                (!defined(this._frontFaceColorCommand.renderState)) ||
+                (this._translucent !== translucent)) {
+
             this._showThroughEllipsoid = this.showThroughEllipsoid;
+            this._translucent = translucent;
 
-            var rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                }
-            });
+            var rs;
 
-            this._frontFaceColorCommand.renderState = rs;
+            if (translucent) {
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND,
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    }
+                });
 
-            rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                }
-            });
+                this._frontFaceColorCommand.renderState = rs;
 
-            this._backFaceColorCommand.renderState = rs;
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND,
+                    cull : {
+                        enabled : true,
+                        face : CullFace.FRONT
+                    }
+                });
 
-            rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND
-            });
-            this._pickCommand.renderState = rs;
+                this._backFaceColorCommand.renderState = rs;
+
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND
+                });
+                this._pickCommand.renderState = rs;
+            } else {
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : true
+                    },
+                    depthMask : true
+                });
+                this._frontFaceColorCommand.renderState = rs;
+
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : true
+                    },
+                    depthMask : true
+                });
+                this._pickCommand.renderState = rs;
+            }
         }
 
         // Recreate vertex buffer when directions change
@@ -454,7 +487,7 @@ define([
         this._material = this.material;
         this._material.update(context);
 
-        if (pass.color) {
+        if (pass.color || pass.translucent) {
             var frontFaceColorCommand = this._frontFaceColorCommand;
             var backFaceColorCommand = this._backFaceColorCommand;
 
@@ -472,9 +505,15 @@ define([
                     return -1.0;
                 };
             }
+        }
 
-            this._commandLists.colorList.push(backFaceColorCommand);
-            this._commandLists.colorList.push(frontFaceColorCommand);
+        if (pass.color && !translucent) {
+            this._commandLists.colorList.push(this._frontFaceColorCommand);
+        }
+
+        if (pass.translucent && translucent) {
+            this._commandLists.translucentList.push(this._backFaceColorCommand);
+            this._commandLists.translucentList.push(this._frontFaceColorCommand);
         }
 
         if (pass.pick) {
