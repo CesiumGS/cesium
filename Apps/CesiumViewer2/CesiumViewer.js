@@ -179,6 +179,9 @@ define([
         //
         // Examples
         //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/SuperMurdoch/SuperMurdoch.json
+        //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/rambler/Rambler.json
+        //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/wine/wine.json
+        //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/duck/duck.json
 
         scene.getScreenSpaceCameraController().minimumZoomDistance = 1.0;
         var ellipsoid = viewer.centralBody.getEllipsoid();
@@ -187,12 +190,6 @@ define([
         scene.skyBox = undefined;
         scene.skyAtmosphere = undefined;
         viewer.timeline.zoomTo(new JulianDate(), (new JulianDate()).addSeconds(30.0));
-
-//      var url = './Gallery/model/rambler/Rambler.json';
-//      var url = './Gallery/model/wine/wine.json';
-//      var url = './Gallery/model/duck/duck.json';
-//      var url = './Gallery/model/minebot/mine_bot.json';
-        var url = './Gallery/model/minebot_anim/mine_bot_anim.json';
 
         var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 1000.0)));
 
