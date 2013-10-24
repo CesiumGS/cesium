@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/defaultValue',
         'Core/Event',
         'Core/Cartesian3',
         'Core/Matrix4',
@@ -7,9 +8,11 @@ define([
         'Core/Transforms',
         'Core/Ellipsoid',
         'Scene/Model',
+        'Scene/ModelAnimationWrap',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
-        'Scene/DebugAxesPrimitive',
+        'Scene/DebugModelMatrixPrimitive',
+        'Core/JulianDate',
         ///////////////////////////////////////////////////////////////////////
         'Core/defined',
         'DynamicScene/CzmlDataSource',
@@ -21,6 +24,7 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
+        defaultValue,
         Event,
         Cartesian3,
         Matrix4,
@@ -28,9 +32,11 @@ define([
         Transforms,
         Ellipsoid,
         Model,
+        ModelAnimationWrap,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        DebugAxesPrimitive,
+        DebugModelMatrixPrimitive,
+        JulianDate,
         ///////////////////////////////////////////////////////////////////////
         defined,
         CzmlDataSource,
@@ -166,27 +172,81 @@ define([
         }
 
         ///////////////////////////////////////////////////////////////////////
+
+        // Query parameters
+        //  model={string}
+        //  animate={true|false}
+        //
+        // Examples
+        //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/SuperMurdoch/SuperMurdoch.json
+
         scene.getScreenSpaceCameraController().minimumZoomDistance = 1.0;
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         //scene.getPrimitives().setCentralBody(undefined);
         scene.skyBox = undefined;
         scene.skyAtmosphere = undefined;
+        viewer.timeline.zoomTo(new JulianDate(), (new JulianDate()).addSeconds(30.0));
 
-//      var url = './Gallery/model/SuperMurdoch/SuperMurdoch.json';
 //      var url = './Gallery/model/rambler/Rambler.json';
 //      var url = './Gallery/model/wine/wine.json';
-      var url = './Gallery/model/duck/duck.json';
+//      var url = './Gallery/model/duck/duck.json';
+//      var url = './Gallery/model/minebot/mine_bot.json';
+        var url = './Gallery/model/minebot_anim/mine_bot_anim.json';
 
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 0.0)));
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 1000.0)));
 
         var model = scene.getPrimitives().add(Model.fromText({
-            url : url,
+            url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
             modelMatrix : modelMatrix,
             scale : 10.0
-//          , debugShowBoundingVolume : true
+            //, debugShowBoundingVolume : true
         }));
 
+        var animationStart = new Event();
+        animationStart.addEventListener(function() {
+            console.log('start animation');
+        });
+
+        var animationStop = new Event();
+        animationStop.addEventListener(function() {
+            console.log('stop animation');
+        });
+
+        var animationUpdate = new Event();
+        animationUpdate.addEventListener(function() {
+            console.log('update animation');
+        });
+
+        model.animations.animationAdded.addEventListener(function(animation) {
+            console.log('Added ' + animation.name);
+        });
+        model.animations.animationRemoved.addEventListener(function(animation) {
+            console.log('Removed ' + animation.name);
+        });
+
+        model.jsonLoad.addEventListener(function() {
+            if (endUserOptions.animate) {
+                var animations = model.gltf.animations;
+                for (var name in animations) {
+                    if (animations.hasOwnProperty(name)) {
+                        model.animations.add({
+                            name : name,
+                            // startTime : (new JulianDate()).addSeconds(3),
+                            // startOffset : 3.0,
+                            // stopTime : (new JulianDate()).addSeconds(4),
+                            // removeOnStop : true,
+                            // speedup : 0.5,
+                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
+                            // reverse : true,
+                            start : animationStart,
+                            stop : animationStop
+                            // , update : animationUpdate
+                        });
+                    }
+                }
+            }
+        });
         model.readyToRender.addEventListener(function() {
             var center = model.worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
@@ -227,7 +287,7 @@ define([
 //      scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
 
 /*
-        scene.getPrimitives().add(new DebugAxesPrimitive({
+        scene.getPrimitives().add(new DebugModelMatrixPrimitive({
             modelMatrix : modelMatrix,
             scale : 100000.0,
             width : 10.0
