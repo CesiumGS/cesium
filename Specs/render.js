@@ -64,7 +64,7 @@ define([
         commandLists = defaultValue(commandLists, []);
         primitive.update(context, frameState, commandLists);
 
-        var commandsExecuted = executeList(context, frameState, commandLists, 'colorList');
+        var commandsExecuted = executeList(context, frameState, commandLists, 'opaqueList');
         commandsExecuted += executeList(context, frameState, commandLists, 'translucentList');
         commandsExecuted += executeOverlayCommands(context, commandLists);
 

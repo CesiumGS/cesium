@@ -80,7 +80,7 @@ defineSuite([
         expect(a.glslDatatype).toEqual('vec3');
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(false, false));
         expect(a.translucent).toEqual(false);
-        expect(a.closed).toequal(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('default construct with st attribute name', function() {
@@ -100,7 +100,7 @@ defineSuite([
         expect(a.glslDatatype).toEqual('vec2');
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(false, false));
         expect(a.translucent).toEqual(false);
-        expect(a.closed).toequal(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('debug appearance with float attribute name', function() {
@@ -121,7 +121,7 @@ defineSuite([
         expect(a.glslDatatype).toEqual('float');
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(false, false));
         expect(a.translucent).toEqual(false);
-        expect(a.closed).toequal(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('debug appearance with vec3 attribute name', function() {
@@ -142,7 +142,7 @@ defineSuite([
         expect(a.glslDatatype).toEqual('vec3');
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(false, false));
         expect(a.translucent).toEqual(false);
-        expect(a.closed).toequal(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('debug appearance with vec4 attribute name', function() {
@@ -163,7 +163,7 @@ defineSuite([
         expect(a.glslDatatype).toEqual('vec4');
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(false, false));
         expect(a.translucent).toEqual(false);
-        expect(a.closed).toequal(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('debug appearance throws with invalid glsl datatype', function() {

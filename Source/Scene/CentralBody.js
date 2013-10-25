@@ -738,7 +738,7 @@ define([
         commandLists.removeAll();
 
         if (pass.color) {
-            var colorCommandList = commandLists.colorList;
+            var colorCommandList = commandLists.opaqueList;
 
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {

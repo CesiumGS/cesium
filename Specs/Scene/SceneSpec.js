@@ -99,7 +99,7 @@ defineSuite([
 
                 if (defined(options.command)) {
                     var commandLists = new CommandLists();
-                    commandLists.colorList.push(options.command);
+                    commandLists.opaqueList.push(options.command);
                     commandList.push(commandLists);
                 }
 

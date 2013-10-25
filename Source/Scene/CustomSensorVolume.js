@@ -487,7 +487,7 @@ define([
         this._material = this.material;
         this._material.update(context);
 
-        if (pass.color || pass.translucent) {
+        if (pass.color) {
             var frontFaceColorCommand = this._frontFaceColorCommand;
             var backFaceColorCommand = this._backFaceColorCommand;
 
@@ -505,15 +505,13 @@ define([
                     return -1.0;
                 };
             }
-        }
 
-        if (pass.color && !translucent) {
-            this._commandLists.colorList.push(this._frontFaceColorCommand);
-        }
-
-        if (pass.translucent && translucent) {
-            this._commandLists.translucentList.push(this._backFaceColorCommand);
-            this._commandLists.translucentList.push(this._frontFaceColorCommand);
+            if (translucent) {
+                this._commandLists.translucentList.push(this._backFaceColorCommand);
+                this._commandLists.translucentList.push(this._frontFaceColorCommand);
+            } else {
+                this._commandLists.opaqueList.push(this._frontFaceColorCommand);
+            }
         }
 
         if (pass.pick) {

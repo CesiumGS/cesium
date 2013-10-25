@@ -14,7 +14,7 @@ define(function() {
          * @type {Array}
          * @default []
          */
-        this.colorList = [];
+        this.opaqueList = [];
 
         /**
          * The command list for a translucent color pass.
@@ -39,14 +39,14 @@ define(function() {
     };
 
     CommandLists.prototype.empty = function() {
-        return this.colorList.length === 0 &&
+        return this.opaqueList.length === 0 &&
                this.translucentList.length === 0 &&
                this.pickList.length === 0 &&
                this.overlayList.length === 0;
     };
 
     CommandLists.prototype.removeAll = function() {
-        this.colorList.length = 0;
+        this.opaqueList.length = 0;
         this.translucentList.length = 0;
         this.pickList.length = 0;
         this.overlayList.length = 0;

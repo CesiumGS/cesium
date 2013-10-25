@@ -398,7 +398,6 @@ define([
 
     function clearPasses(passes) {
         passes.color = false;
-        passes.translucent = false;
         passes.pick = false;
         passes.overlay = false;
     }
@@ -661,7 +660,7 @@ define([
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
-            commandList[0].colorList[0].execute(context, passState);
+            commandList[0].opaqueList[0].execute(context, passState);
         }
     }
 
@@ -824,7 +823,7 @@ define([
         this._screenSpaceCameraController.update(this.mode);
     };
 
-    var renderListNames = ['colorList', 'translucentList'];
+    var renderListNames = ['opaqueList', 'translucentList'];
 
     /**
      * DOC_TBA
@@ -841,7 +840,6 @@ define([
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);
         frameState.passes.color = true;
-        frameState.passes.translucent = true;
         frameState.passes.overlay = true;
         frameState.creditDisplay.beginFrame();
 

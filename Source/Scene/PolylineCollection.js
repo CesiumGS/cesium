@@ -462,7 +462,7 @@ define([
         var pass = frameState.passes;
         var useDepthTest = (frameState.morphTime !== 0.0);
         var commandLists = this._commandLists;
-        commandLists.colorList = emptyArray;
+        commandLists.opaqueList = emptyArray;
         commandLists.translucentList = emptyArray;
         commandLists.pickList = emptyArray;
 
@@ -486,16 +486,12 @@ define([
         }
 
         if (pass.color) {
-            var colorList = this._colorCommands;
-            commandLists.colorList = colorList;
+            var opaqueList = this._colorCommands;
+            commandLists.opaqueList = opaqueList;
+            createCommandLists(this, context, frameState, opaqueList, modelMatrix, true, false);
 
-            createCommandLists(this, context, frameState, colorList, modelMatrix, true, false);
-        }
-
-        if (pass.translucent) {
             var translucentList = this._translucentList;
             commandLists.translucentList = translucentList;
-
             createCommandLists(this, context, frameState, translucentList, modelMatrix, true, true);
         }
 

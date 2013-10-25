@@ -1213,11 +1213,11 @@ define([
         var command;
         var j;
         var commandLists = this._commandLists;
-        commandLists.colorList = emptyArray;
+        commandLists.opaqueList = emptyArray;
         commandLists.pickList = emptyArray;
         if (pass.color) {
             var colorList = this._colorCommands;
-            commandLists.colorList = colorList;
+            commandLists.opaqueList = colorList;
 
             if (!defined(this._rs)) {
                 this._rs = context.createRenderState({

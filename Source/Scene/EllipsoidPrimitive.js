@@ -368,18 +368,16 @@ define([
 
         var passes = frameState.passes;
 
-        if (passes.color || passes.translucent) {
+        if (passes.color) {
             colorCommand.boundingVolume = this._boundingSphere;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
             colorCommand.modelMatrix = this._computedModelMatrix;
-        }
 
-        if (passes.color && !translucent) {
-            ellipsoidCommandLists.colorList.push(colorCommand);
-        }
-
-        if (passes.translucent && translucent) {
-            ellipsoidCommandLists.translucentList.push(colorCommand);
+            if (translucent) {
+                ellipsoidCommandLists.translucentList.push(colorCommand);
+            } else {
+                ellipsoidCommandLists.opaqueList.push(colorCommand);
+            }
         }
 
         if (passes.pick) {
