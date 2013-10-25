@@ -6,6 +6,7 @@ define([
         '../../Core/DeveloperError',
         '../SvgPath/SvgPath',
         '../getElement',
+        '../subscribeAndEvaluate',
         './GeocoderViewModel',
         '../../ThirdParty/knockout'
     ], function(
@@ -15,6 +16,7 @@ define([
         DeveloperError,
         SvgPath,
         getElement,
+        subscribeAndEvaluate,
         GeocoderViewModel,
         knockout) {
     "use strict";
@@ -78,7 +80,7 @@ define([
         knockout.applyBindings(this._viewModel, this._container);
 
         var that = this;
-        this._subscription = knockout.getObservable(this._viewModel, 'isSearchInProgress').subscribe(function(isSearchInProgress) {
+        this._subscription = subscribeAndEvaluate(this._viewModel, 'isSearchInProgress', function(isSearchInProgress) {
             that._svgPath.path = isSearchInProgress ? stopSearchPath : startSearchPath;
         });
 

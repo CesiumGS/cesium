@@ -7,6 +7,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Color',
         '../getElement',
+        '../subscribeAndEvaluate',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         Color,
         getElement,
+        subscribeAndEvaluate,
         knockout) {
     "use strict";
 
@@ -37,11 +39,6 @@ define([
 
     function getElementColor(element) {
         return Color.fromCssColorString(window.getComputedStyle(element).getPropertyValue('color'));
-    }
-
-    function subscribeAndEvaluate(owner, observablePropertyName, callback, target) {
-        callback.call(target, owner[observablePropertyName]);
-        return knockout.getObservable(owner, observablePropertyName).subscribe(callback, target);
     }
 
     //Dynamically builds an SVG element from a JSON object.
