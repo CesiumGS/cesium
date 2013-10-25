@@ -481,7 +481,7 @@ define([
         if (this._zoomDetector.currentScale !== 1) {
             zoomFactor = this._zoomDetector.currentScale;
         }
-        if (window.devicePixelRatio !== 1) {
+        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
             zoomFactor = window.devicePixelRatio;
         }
 
