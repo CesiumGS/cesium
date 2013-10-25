@@ -33,6 +33,7 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicLabel',
         './DynamicBillboard',
+        './PolylineOutlineMaterialProperty',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         '../ThirdParty/zip'
@@ -71,6 +72,7 @@ define(['../Core/createGuid',
         DynamicPolygon,
         DynamicLabel,
         DynamicBillboard,
+        PolylineOutlineMaterialProperty,
         Uri,
         when,
         zip) {
@@ -367,7 +369,7 @@ define(['../Core/createGuid',
     function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
-
+            var material;
             if (node.nodeName === 'IconStyle') {
                 //Map style to billboard properties
                 //TODO heading, hotSpot
@@ -429,10 +431,12 @@ define(['../Core/createGuid',
                     throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
-                polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
-                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
-                polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
-                polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
+                material = new PolylineOutlineMaterialProperty();
+                material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
+                material.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
+                material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
+                material.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
+                polyline.material = material;
                 dynamicObject.polyline = polyline;
             } else if (node.nodeName === 'PolyStyle') {
                 //Map style to polygon properties
@@ -440,7 +444,7 @@ define(['../Core/createGuid',
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
                 var polygonColor = getColorValue(node, 'color');
                 polygonColor = defined(polygonColor) ? polygonColor : new Color(1, 1, 1, 1);
-                var material = new ColorMaterialProperty();
+                material = new ColorMaterialProperty();
                 material.color = new ConstantProperty(polygonColor);
                 dynamicObject.polygon.material = material;
             }
@@ -472,6 +476,13 @@ define(['../Core/createGuid',
             targetObject.label = undefined;
             targetObject.path = undefined;
             targetObject.point = undefined;
+            if (defined(targetObject.polyline)) {
+                targetObject.polygon.outline = defined(targetObject.polyline.show) ? targetObject.polyline.show : new ConstantProperty(true);
+                if (defined(targetObject.polyline.material)) {
+                    targetObject.polygon.outlineColor = targetObject.polyline.material.color;
+                }
+            }
+            targetObject.polyline = undefined;
             break;
         case 'gx:Track':
             targetObject.polygon = undefined;
