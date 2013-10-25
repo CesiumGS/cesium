@@ -84,7 +84,7 @@ define([
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -236,7 +236,7 @@ define([
          *
          * @readonly
          */
-        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
+        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
 
         /**
          * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
@@ -296,7 +296,7 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
-        this.state = PrimitiveState.READY;
+        this._state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
         this._vaAttributes = undefined;
@@ -545,12 +545,12 @@ define([
 
         var that = this;
 
-        if (this.state !== PrimitiveState.COMPLETE && this.state !== PrimitiveState.COMBINED) {
+        if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
 
             if (this.asynchronous) {
-                if (this.state === PrimitiveState.FAILED) {
+                if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
-                } else if (this.state === PrimitiveState.READY) {
+                } else if (this._state === PrimitiveState.READY) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
@@ -574,16 +574,16 @@ define([
                         }
                     }
 
-                    this.state = PrimitiveState.CREATING;
+                    this._state = PrimitiveState.CREATING;
 
                     when.all(promises, function(results) {
                         that._geometries = results;
-                        that.state = PrimitiveState.CREATED;
+                        that._state = PrimitiveState.CREATED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
-                } else if (this.state === PrimitiveState.CREATED) {
+                } else if (this._state === PrimitiveState.CREATED) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
@@ -612,7 +612,7 @@ define([
                         modelMatrix : this.modelMatrix
                     }, transferableObjects);
 
-                    this.state = PrimitiveState.COMBINING;
+                    this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
                         PrimitivePipeline.receiveGeometries(result.geometries);
@@ -623,10 +623,10 @@ define([
                         that._vaAttributes = result.vaAttributes;
                         that._perInstanceAttributeIndices = result.vaAttributeIndices;
                         Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                        that.state = PrimitiveState.COMBINED;
+                        that._state = PrimitiveState.COMBINED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
                 }
             } else {
@@ -677,13 +677,13 @@ define([
                 this._perInstanceAttributeIndices = result.vaAttributeIndices;
                 Matrix4.clone(result.modelMatrix, this.modelMatrix);
 
-                this.state = PrimitiveState.COMBINED;
+                this._state = PrimitiveState.COMBINED;
             }
         }
 
         var attributeIndices = this._attributeIndices;
 
-        if (this.state === PrimitiveState.COMBINED) {
+        if (this._state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
             var vaAttributes = this._vaAttributes;
 
@@ -723,10 +723,10 @@ define([
 
             this._geomtries = undefined;
             this._createdGeometries = undefined;
-            this.state = PrimitiveState.COMPLETE;
+            this._state = PrimitiveState.COMPLETE;
         }
 
-        if (this.state !== PrimitiveState.COMPLETE) {
+        if (this._state !== PrimitiveState.COMPLETE) {
             return;
         }
 
