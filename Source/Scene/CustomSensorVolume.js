@@ -407,9 +407,6 @@ define([
 
                 rs = context.createRenderState({
                     depthTest : {
-                        // This would be better served by depth testing with a depth buffer that does not
-                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                        // so we can selectively depth test.
                         enabled : !this.showThroughEllipsoid
                     },
                     depthMask : false,
@@ -424,9 +421,6 @@ define([
 
                 rs = context.createRenderState({
                     depthTest : {
-                        // This would be better served by depth testing with a depth buffer that does not
-                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                        // so we can selectively depth test.
                         enabled : !this.showThroughEllipsoid
                     },
                     depthMask : false,
@@ -436,9 +430,6 @@ define([
             } else {
                 rs = context.createRenderState({
                     depthTest : {
-                        // This would be better served by depth testing with a depth buffer that does not
-                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                        // so we can selectively depth test.
                         enabled : true
                     },
                     depthMask : true
@@ -447,9 +438,6 @@ define([
 
                 rs = context.createRenderState({
                     depthTest : {
-                        // This would be better served by depth testing with a depth buffer that does not
-                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                        // so we can selectively depth test.
                         enabled : true
                     },
                     depthMask : true

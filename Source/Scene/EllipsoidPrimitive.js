@@ -281,37 +281,22 @@ define([
         if (!defined(this._rs) || translucencyChanged) {
             this._translucent = translucent;
 
-            if (translucent) {
-                this._rs = context.createRenderState({
-                    // Cull front faces - not back faces - so the ellipsoid doesn't
-                    // disappear if the viewer enters the bounding box.
-                    cull : {
-                        enabled : true,
-                        face : CullFace.FRONT
-                    },
-                    depthTest : {
-                        enabled : true
-                    },
-                    depthMask : false,
-                    blending : BlendingState.ALPHA_BLEND
-                });
-            } else {
-                this._rs = context.createRenderState({
-                    // Cull front faces - not back faces - so the ellipsoid doesn't
-                    // disappear if the viewer enters the bounding box.
-                    cull : {
-                        enabled : true,
-                        face : CullFace.FRONT
-                    },
-                    depthTest : {
-                        enabled : true
-                    },
-                    // Do not write depth since the depth for the bounding box is
-                    // wrong; it is not the true depth of the ray casted ellipsoid.
-                    // Only write depth when EXT_frag_depth is supported.
-                    depthMask : context.getFragmentDepth()
-                });
-            }
+            this._rs = context.createRenderState({
+                // Cull front faces - not back faces - so the ellipsoid doesn't
+                // disappear if the viewer enters the bounding box.
+                cull : {
+                    enabled : true,
+                    face : CullFace.FRONT
+                },
+                depthTest : {
+                    enabled : true
+                },
+                // Do not write depth since the depth for the bounding box is
+                // wrong; it is not the true depth of the ray casted ellipsoid.
+                // Only write depth when EXT_frag_depth is supported.
+                depthMask : !translucent && context.getFragmentDepth(),
+                blending : translucent ? BlendingState.ALPHA_BLEND : undefined
+            });
         }
 
         if (!defined(this._va)) {

@@ -395,7 +395,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.translucent = undefined;
+        this.translucent = true;
 
         this._strict = undefined;
         this._template = undefined;
@@ -1376,18 +1376,8 @@ define([
         fabric : {
             type : Material.WaterType,
             uniforms : {
-                baseWaterColor : {
-                    red : 0.2,
-                    green : 0.3,
-                    blue : 0.6,
-                    alpha : 1.0
-                },
-                blendColor : {
-                    red : 0.0,
-                    green : 1.0,
-                    blue : 0.699,
-                    alpha : 1.0
-                },
+                baseWaterColor : new Color(0.2, 0.3, 0.6, 1.0),
+                blendColor : new Color(0.0, 1.0, 0.699, 1.0),
                 specularMap : Material.DefaultImageId,
                 normalMap : Material.DefaultImageId,
                 frequency : 10.0,

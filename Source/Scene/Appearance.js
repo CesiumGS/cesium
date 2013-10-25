@@ -136,7 +136,6 @@ define([
             rs.blending = BlendingState.ALPHA_BLEND;
         } else {
             rs.depthMask = true;
-            rs.blending = undefined;
         }
         return rs;
     };
