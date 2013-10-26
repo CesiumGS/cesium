@@ -402,7 +402,11 @@ define([
             pickCommand.boundingVolume = this._boundingSphere;
             pickCommand.modelMatrix = this._computedModelMatrix;
 
-            ellipsoidCommandLists.pickList.push(pickCommand);
+            if (translucent) {
+                ellipsoidCommandLists.pickList.translucentList.push(pickCommand);
+            } else {
+                ellipsoidCommandLists.pickList.opaqueList.push(pickCommand);
+            }
         }
 
         commandList.push(ellipsoidCommandLists);

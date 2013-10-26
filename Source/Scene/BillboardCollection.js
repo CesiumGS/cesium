@@ -1214,7 +1214,8 @@ define([
         var j;
         var commandLists = this._commandLists;
         commandLists.opaqueList = emptyArray;
-        commandLists.pickList = emptyArray;
+        commandLists.pickList.opaqueList = emptyArray;
+
         if (pass.color) {
             var colorList = this._colorCommands;
             commandLists.opaqueList = colorList;
@@ -1269,9 +1270,10 @@ define([
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
             }
         }
+
         if (picking) {
             var pickList = this._pickCommands;
-            commandLists.pickList = pickList;
+            commandLists.pickList.opaqueList = pickList;
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||

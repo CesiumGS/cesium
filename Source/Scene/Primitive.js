@@ -334,7 +334,8 @@ define([
 
         this._commandLists.opaqueList = EMPTY_ARRAY;
         this._commandLists.translucentList = EMPTY_ARRAY;
-        this._commandLists.pickList = EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = EMPTY_ARRAY;
         this._commandLists.overlayList = EMPTY_ARRAY;
     };
 
@@ -945,7 +946,8 @@ define([
         var pass = frameState.passes;
         this._commandLists.opaqueList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
         this._commandLists.translucentList = (pass.color && translucent) ? colorCommands : EMPTY_ARRAY;
-        this._commandLists.pickList = (pass.pick) ? pickCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = (pass.pick && !translucent) ? pickCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = (pass.pick && translucent) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);
     };

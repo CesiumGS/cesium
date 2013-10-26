@@ -169,7 +169,8 @@ define([
         this._commandLists = new CommandLists();
         this._colorCommands = [];
         this._translucentList = [];
-        this._pickCommands = [];
+        this._pickOpaqueCommands = [];
+        this._pickTranslucentCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -464,7 +465,8 @@ define([
         var commandLists = this._commandLists;
         commandLists.opaqueList = emptyArray;
         commandLists.translucentList = emptyArray;
-        commandLists.pickList = emptyArray;
+        commandLists.pickList.opaqueList = emptyArray;
+        commandLists.pickList.translucentList = emptyArray;
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
             this._opaqueRS = context.createRenderState({
@@ -496,11 +498,14 @@ define([
         }
 
         if (pass.pick) {
-            var pickList = this._pickCommands;
-            commandLists.pickList = pickList;
+            var pickList = this._pickOpaqueCommands;
+            commandLists.pickList.opaqueList = pickList;
+            createCommandLists(this, context, frameState, pickList, modelMatrix, false, false);
 
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, false, 0);
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, true, pickList.length);
+            var size = pickList.length;
+            pickList = this._pickTranslucentCommands;
+            commandLists.pickList.translucentList = pickList;
+            createCommandLists(this, context, frameState, pickList, modelMatrix, false, true);
         }
 
         if (!this._commandLists.empty()) {
@@ -511,9 +516,9 @@ define([
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass, translucentPass, startIndex) {
+    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass, translucentPass) {
         var commandsLength = commands.length;
-        var commandIndex = defaultValue(startIndex, 0);
+        var commandIndex = 0;
         var cloneBoundingSphere = true;
 
         var vertexArrays = polylineCollection._vertexArrays;

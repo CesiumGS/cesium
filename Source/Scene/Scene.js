@@ -483,7 +483,7 @@ define([
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
-    function createPotentiallyVisibleSet(scene, listNames) {
+    function createPotentiallyVisibleSet(scene, listNames, pick) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -525,7 +525,7 @@ define([
         for (var i = 0; i < listNameLength; ++i) {
             var listName = listNames[i];
             for (var j = 0; j < length; ++j) {
-                var commandList = commandLists[j][listName];
+                var commandList = !pick ? commandLists[j][listName] : commandLists[j].pickList[listName];
                 var commandListLength = commandList.length;
                 for (var k = 0; k < commandListLength; ++k) {
                     var command = commandList[k];
@@ -574,7 +574,7 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
-            createPotentiallyVisibleSet(scene, listNames);
+            createPotentiallyVisibleSet(scene, listNames, pick);
         }
     }
 
@@ -938,7 +938,6 @@ define([
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
-    var pickNames = ['pickList'];
 
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
@@ -978,7 +977,7 @@ define([
 
         this._commandList.length = 0;
         updatePrimitives(this);
-        createPotentiallyVisibleSet(this, pickNames);
+        createPotentiallyVisibleSet(this, renderListNames, true);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);

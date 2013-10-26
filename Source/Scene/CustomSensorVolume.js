@@ -532,7 +532,11 @@ define([
                 }], false, false);
             }
 
-            this._commandLists.pickList.push(pickCommand);
+            if (translucent) {
+                this._commandLists.pickList.translucentList.push(pickCommand);
+            } else {
+                this._commandLists.pickList.opaqueList.push(pickCommand);
+            }
         }
 
         if (!this._commandLists.empty()) {
