@@ -1495,7 +1495,7 @@ defineSuite([
 
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].translucentList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
@@ -1524,7 +1524,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].translucentList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.getPositions();
@@ -1589,8 +1589,8 @@ defineSuite([
         var commandList = [];
         polylines.update(context, frameState, commandList);
 
-        expect(commandList[0].translucentList[0].boundingVolume).toEqual(one._boundingVolume);
-        expect(commandList[0].translucentList[1].boundingVolume).toEqual(two._boundingVolume);
+        expect(commandList[0].opaqueList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(commandList[0].opaqueList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {

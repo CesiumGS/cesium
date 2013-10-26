@@ -543,7 +543,7 @@ define([
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
                         if (defined(currentId) && count > 0) {
-                            if (!(currentMaterial.translucent ^ translucentPass)) {
+                            if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
                                 if (commandIndex >= commandsLength) {
                                     command = new DrawCommand();
                                     command.owner = polylineCollection;
@@ -559,7 +559,7 @@ define([
                                 command.primitiveType = PrimitiveType.TRIANGLES;
                                 command.shaderProgram = sp;
                                 command.vertexArray = va.va;
-                                command.renderState = currentMaterial.translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                                command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                                 command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                                 command.uniformMap = currentMaterial._uniforms;
@@ -609,7 +609,7 @@ define([
                 }
 
                 if (defined(currentId) && count > 0) {
-                    if (!(currentMaterial.translucent ^ translucentPass)) {
+                    if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
                         if (commandIndex >= commandsLength) {
                             command = new DrawCommand();
                             command.owner = polylineCollection;
@@ -625,7 +625,7 @@ define([
                         command.primitiveType = PrimitiveType.TRIANGLES;
                         command.shaderProgram = sp;
                         command.vertexArray = va.va;
-                        command.renderState = currentMaterial.translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                        command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                         command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
 
                         command.uniformMap = currentMaterial._uniforms;

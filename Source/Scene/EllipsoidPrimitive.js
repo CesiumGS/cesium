@@ -275,7 +275,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
-        var translucent = this.material.translucent;
+        var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
 
         if (!defined(this._rs) || translucencyChanged) {

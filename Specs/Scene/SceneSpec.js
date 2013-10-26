@@ -194,7 +194,6 @@ defineSuite([
             asynchronous : false
         });
         extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-        extentPrimitive1.material.translucent = false;
 
         var extentPrimitive2 = new ExtentPrimitive({
             extent : extent,
@@ -202,7 +201,6 @@ defineSuite([
             asynchronous : false
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
-        extentPrimitive2.material.translucent = true;
 
         var scene = createScene();
         var primitives = scene.getPrimitives();
@@ -239,14 +237,12 @@ defineSuite([
             asynchronous : false
         });
         extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
-        extentPrimitive1.material.translucent = false;
 
         var extentPrimitive2 = new ExtentPrimitive({
             extent : extent,
             asynchronous : false
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
-        extentPrimitive2.material.translucent = true;
 
         var scene = createScene();
         var primitives = scene.getPrimitives();

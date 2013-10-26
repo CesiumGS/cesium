@@ -164,7 +164,7 @@ define([
     PolylineMaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     /**
-     * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#translucent}.
+     * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
      * @memberof PolylineMaterialAppearance
      *

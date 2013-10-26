@@ -109,14 +109,14 @@ define([
     };
 
     /**
-     * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#translucent}.
+     * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#isTranslucent}.
      *
      * @memberof Appearance
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     Appearance.prototype.isTranslucent = function() {
-        return (defined(this.material) && this.material.translucent) || (!defined(this.material) && this.translucent);
+        return (defined(this.material) && this.material.isTranslucent()) || (!defined(this.material) && this.translucent);
     };
 
     /**

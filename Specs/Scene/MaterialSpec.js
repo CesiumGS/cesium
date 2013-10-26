@@ -260,7 +260,7 @@ defineSuite([
                 type : 'Color'
             }
         });
-        expect(material.translucent).toEqual(true);
+        expect(material.isTranslucent()).toEqual(true);
 
         material = new Material({
             translucent : false,
@@ -269,7 +269,7 @@ defineSuite([
                 type : 'Color'
             }
         });
-        expect(material.translucent).toEqual(false);
+        expect(material.isTranslucent()).toEqual(false);
     });
 
     it('creates a new material type and builds off of it', function() {

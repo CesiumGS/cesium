@@ -375,7 +375,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
-        var translucent = this.material.translucent;
+        var translucent = this.material.isTranslucent();
 
         // Initial render state creation
         if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) ||
