@@ -64,6 +64,13 @@ defineSuite([
                       //+1
                       new Cartesian3(5, 0, 0)
                   ]; //TODO
+    //Axis aligned rectangle
+    var positions5 = [
+                     new Cartesian3(0, 0, 0),
+                     new Cartesian3(2, 0, 0),
+                     new Cartesian3(0, 2, 0),
+                     new Cartesian3(2, 2, 0),
+                 ]; //TODO
 
     it('fromPoints constructs empty box with undefined positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(undefined);
@@ -102,7 +109,32 @@ defineSuite([
     it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {
         var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle(), 0.0);
         var result = new ObjectOrientedBoundingBox();
-        expect(result).toEqual(box);//TODO
+        expect(result).toEqual(box);
+    });
+
+    it('fromBoundingRectangle computes the correct values', function() {
+        var scratchRound = new Cartesian3();
+        function roundcomponents(cartesian) {
+            scratchRound.x = Math.round(cartesian.x*10) / 10;
+            scratchRound.y = Math.round(cartesian.y*10) / 10;
+            scratchRound.z = Math.round(cartesian.z*10) / 10;
+            return scratchRound;
+        }
+        var boundingRectangle = new BoundingRectangle();
+        boundingRectangle.width=3.0;
+        boundingRectangle.height=2.0;
+        boundingRectangle.y=1;
+        var box = ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 1.57);
+        var boxPoints = ObjectOrientedBoundingBox.getDescribingPoints(box);
+
+        expect(roundcomponents(boxPoints[0])).toEqual(new Cartesian3(1, -0.5, 0));
+        expect(roundcomponents(boxPoints[1])).toEqual(new Cartesian3(1, 2.5, 0));
+        expect(roundcomponents(boxPoints[2])).toEqual(new Cartesian3(1, 2.5, 0));
+        expect(roundcomponents(boxPoints[3])).toEqual(new Cartesian3(1, -0.5, 0));
+        expect(roundcomponents(boxPoints[4])).toEqual(new Cartesian3(-1, -0.5, 0));
+        expect(roundcomponents(boxPoints[5])).toEqual(new Cartesian3(-1, 2.5, 0));
+        expect(roundcomponents(boxPoints[6])).toEqual(new Cartesian3(-1, 2.5, 0));
+        expect(roundcomponents(boxPoints[7])).toEqual(new Cartesian3(-1, -0.5, 0));
     });
 
     it('getDescribingPoints computes the correct values', function() {

@@ -164,7 +164,19 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
         }
-        //TODO
+
+        result.extent = Cartesian3.clone(Cartesian3.ZERO, result.extent);
+        result.extent.x = boundingRectangle.width/2;
+        result.extent.y = boundingRectangle.height/2;
+        result.extent.z = 0.0;
+
+        result.transformedPosition = Cartesian3.clone(Cartesian3.ZERO, result.transformedPosition);
+        result.transformedPosition.x = boundingRectangle.x;
+        result.transformedPosition.y = boundingRectangle.y;
+        result.transformedPosition.z = 0.0;
+
+        result.transformMatrix = Matrix3.fromRotationZ(rotation);
+
         return result;
     };
 
