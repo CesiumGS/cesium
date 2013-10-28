@@ -810,8 +810,11 @@ defineSuite([
         var p = scene.getPrimitives().add(new PolylineCollection({
             debugShowBoundingVolume : true
         }));
+        var material = Material.fromType('Color');
+        material.uniforms.color = new Color(1.0, 1.0, 1.0, 0.0);
         p.add({
-            positions : [Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z)]
+            positions : [Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z)],
+            material : material
         });
 
         var camera = scene.getCamera();
@@ -821,11 +824,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene();
     });
