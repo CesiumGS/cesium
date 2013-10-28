@@ -779,6 +779,40 @@ define([
     };
 
     /**
+     * Computes the logarithm of a unit quaternion.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} quaternion The unit quaternion.
+     * @param {Cartesian3} result The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The modified result parameter or a new cartesian instance if one was not provided.
+     *
+     * @exception {DeveloperError} quaternion is required.
+     */
+    Quaternion.log = function(quaternion, result) {
+        if (!defined(quaternion)) {
+            throw new DeveloperError('quaternion is required.');
+        }
+
+        var theta = Math.acos(CesiumMath.clamp(quaternion.w, -1.0, 1.0));
+        var thetaOverSinTheta = 0.0;
+
+        if (theta !== 0.0) {
+            thetaOverSinTheta = theta / Math.sin(theta);
+        }
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        result.x = quaternion.x * thetaOverSinTheta;
+        result.y = quaternion.y * thetaOverSinTheta;
+        result.z = quaternion.z * thetaOverSinTheta;
+
+        return result;
+    };
+
+    /**
      * Compares the provided quaternions componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Quaternion

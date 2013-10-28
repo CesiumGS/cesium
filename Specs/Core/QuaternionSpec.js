@@ -534,6 +534,28 @@ defineSuite([
         expect(Quaternion.slerp(start, end, 0.5)).toEqual(expected);
     });
 
+    it('log works without a result parameter', function() {
+        var axis = Cartesian3.normalize(new Cartesian3(1.0, -1.0, 1.0));
+        var angle = CesiumMath.PI_OVER_FOUR;
+        var quat = Quaternion.fromAxisAngle(axis, angle);
+
+        var log = Quaternion.log(quat);
+        var expected = Cartesian3.multiplyByScalar(axis, angle * 0.5);
+        expect(log).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('log works with a result parameter', function() {
+        var axis = Cartesian3.normalize(new Cartesian3(1.0, -1.0, 1.0));
+        var angle = CesiumMath.PI_OVER_FOUR;
+        var quat = Quaternion.fromAxisAngle(axis, angle);
+
+        var result = new Cartesian3();
+        var log = Quaternion.log(quat, result);
+        var expected = Cartesian3.multiplyByScalar(axis, angle * 0.5);
+        expect(log).toBe(result);
+        expect(log).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
@@ -751,6 +773,12 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 6.0, 7.0);
         expect(function() {
             Quaternion.slerp(start, end, undefined);
+        }).toThrow();
+    });
+
+    it('static log throws with no quaternion parameter', function() {
+        expect(function() {
+            Quaternion.log();
         }).toThrow();
     });
 
