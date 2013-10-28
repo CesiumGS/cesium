@@ -56,14 +56,10 @@ define([
         if (defined(firstTangent)) {
             this._ti = Cartesian3.clone(firstTangent);
         } else {
-            var controlPoint0 = Cartesian3.clone(controlPoints[0].point);
-            var controlPoint1 = Cartesian3.clone(controlPoints[1].point);
-            var controlPoint2 = Cartesian3.clone(controlPoints[2].point);
-
             var ti = this._ti = new Cartesian3();
-            Cartesian3.multiplyByScalar(controlPoint1, 2.0, ti);
-            Cartesian3.subtract(ti, controlPoint2, ti);
-            Cartesian3.subtract(ti, controlPoint0, ti);
+            Cartesian3.multiplyByScalar(controlPoints[1].point, 2.0, ti);
+            Cartesian3.subtract(ti, controlPoints[2].point, ti);
+            Cartesian3.subtract(ti, controlPoints[0].point, ti);
             Cartesian3.multiplyByScalar(ti, 0.5, ti);
         }
 
@@ -71,15 +67,10 @@ define([
             this._to = Cartesian3.clone(lastTangent);
         } else {
             var n = controlPoints.length - 1;
-
-            var controlPointn0 = Cartesian3.clone(controlPoints[n].point);
-            var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
-            var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
-
             var to = this._to = new Cartesian3();
-            Cartesian3.multiplyByScalar(controlPointn1, 2.0, to);
-            Cartesian3.subtract(controlPointn0, to, to);
-            Cartesian3.add(to, controlPointn2, to);
+            Cartesian3.multiplyByScalar(controlPoints[n - 1].point, 2.0, to);
+            Cartesian3.subtract(controlPoints[n].point, to, to);
+            Cartesian3.add(to, controlPoints[n - 2].point, to);
             Cartesian3.multiplyByScalar(to, 0.5, to);
         }
     };
@@ -159,19 +150,24 @@ define([
         return catmullRomSpline._lastTimeIndex;
     }
 
+    var scratchTimeVec = new Cartesian3();
+    var scratchTemp0 = new Cartesian3();
+    var scratchTemp1 = new Cartesian3();
+
     /**
      * Evaluates the curve at a given time.
      *
      * @memberof CatmullRomSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
+     * @param {Cartesian3} result The object onto which to store the result.
      *
      * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[a<sub>0</sub>, a<sub>n</sub>]</code>,
      * where <code>a<sub>0</sub></code> and <code>a<sub>n</sub></code> are the time properties of first and
      * last elements in the array given during construction, respectively.
      *
-     * @returns {Cartesian3} The point on the curve at the given <code>time</code>.
+     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
@@ -187,7 +183,7 @@ define([
      * // some position above Los Angeles
      * var position = spline.evaluate(5.0);
      */
-    CatmullRomSpline.prototype.evaluate = function(time) {
+    CatmullRomSpline.prototype.evaluate = function(time, result) {
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
@@ -199,7 +195,9 @@ define([
         var i = findIndex(this, time);
         var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
 
-        var timeVec = new Cartesian3(0.0, u * u, u);
+        var timeVec = scratchTimeVec;
+        timeVec.z = u;
+        timeVec.y = u * u;
         timeVec.x = timeVec.y * u;
 
         var p0, p1, p2, p3, coefs;
@@ -207,27 +205,41 @@ define([
             p0 = this._points[0].point;
             p1 = this._points[1].point;
             p2 = this._ti;
-            p3 = Cartesian3.multiplyByScalar(Cartesian3.subtract(this._points[2].point, p0), 0.5);
-            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec);
+
+            p3 = Cartesian3.subtract(this._points[2].point, p0, scratchTemp0);
+            Cartesian3.multiplyByScalar(p3, 0.5, p3);
+
+            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
-            p2 = Cartesian3.multiplyByScalar(Cartesian3.subtract(p1, this._points[i - 1].point), 0.5);
             p3 = this._to;
-            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec);
+
+            p2 = Cartesian3.subtract(p1, this._points[i - 1].point, scratchTemp0);
+            Cartesian3.multiplyByScalar(p2, 0.5, p2);
+
+            coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
         } else {
             p0 = this._points[i - 1].point;
             p1 = this._points[i].point;
             p2 = this._points[i + 1].point;
             p3 = this._points[i + 2].point;
-            coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec);
+            coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
         }
-        p0 = Cartesian3.multiplyByScalar(p0, coefs.x);
-        p1 = Cartesian3.multiplyByScalar(p1, coefs.y);
-        p2 = Cartesian3.multiplyByScalar(p2, coefs.z);
-        p3 = Cartesian3.multiplyByScalar(p3, coefs.w);
 
-        return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        Cartesian3.multiplyByScalar(p0, coefs.x, result);
+        Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
+        Cartesian3.add(result, scratchTemp1, result);
+        Cartesian3.multiplyByScalar(p2, coefs.z, scratchTemp1);
+        Cartesian3.add(result, scratchTemp1, result);
+        Cartesian3.multiplyByScalar(p3, coefs.w, scratchTemp1);
+        Cartesian3.add(result, scratchTemp1, result);
+
+        return result;
     };
 
     return CatmullRomSpline;
