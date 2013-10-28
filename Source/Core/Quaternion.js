@@ -779,13 +779,12 @@ define([
     };
 
     /**
-     * Computes the logarithm of a unit quaternion.
+     * The logarithmic quaternion function.
      * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The unit quaternion.
-     * @param {Cartesian3} result The object onto which to store the result.
-     *
-     * @returns {Cartesian3} The modified result parameter or a new cartesian instance if one was not provided.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -808,6 +807,42 @@ define([
         result.x = quaternion.x * thetaOverSinTheta;
         result.y = quaternion.y * thetaOverSinTheta;
         result.z = quaternion.z * thetaOverSinTheta;
+
+        return result;
+    };
+
+    var expScratch = new Cartesian3();
+
+    /**
+     * The exponential quaternion function.
+     * @memberof Quaternion
+     *
+     * @param {Cartesian3} cartesian The cartesian.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Quaternion.exp = function(cartesian, result) {
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        var theta = Cartesian3.magnitude(cartesian);
+        var sinThetaOverTheta = 0.0;
+
+        if (theta !== 0.0) {
+            sinThetaOverTheta = Math.sin(theta) / theta;
+        }
+
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
+
+        result.x = cartesian.x * sinThetaOverTheta;
+        result.y = cartesian.y * sinThetaOverTheta;
+        result.z = cartesian.z * sinThetaOverTheta;
+        result.w = Math.cos(theta);
 
         return result;
     };

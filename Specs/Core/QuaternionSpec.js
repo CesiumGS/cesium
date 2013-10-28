@@ -556,6 +556,28 @@ defineSuite([
         expect(log).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('exp works without a result parameter', function() {
+        var axis = Cartesian3.normalize(new Cartesian3(1.0, -1.0, 1.0));
+        var angle = CesiumMath.PI_OVER_FOUR;
+        var cartesian = Cartesian3.multiplyByScalar(axis, angle * 0.5);
+
+        var exp = Quaternion.exp(cartesian);
+        var expected = Quaternion.fromAxisAngle(axis, angle);
+        expect(exp).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
+    it('exp works with a result parameter', function() {
+        var axis = Cartesian3.normalize(new Cartesian3(1.0, -1.0, 1.0));
+        var angle = CesiumMath.PI_OVER_FOUR;
+        var cartesian = Cartesian3.multiplyByScalar(axis, angle * 0.5);
+
+        var result = new Quaternion();
+        var exp = Quaternion.exp(cartesian, result);
+        var expected = Quaternion.fromAxisAngle(axis, angle);
+        expect(exp).toBe(result);
+        expect(exp).toEqualEpsilon(expected, CesiumMath.EPSILON15);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
@@ -779,6 +801,12 @@ defineSuite([
     it('static log throws with no quaternion parameter', function() {
         expect(function() {
             Quaternion.log();
+        }).toThrow();
+    });
+
+    it('static exp throws with no cartesian parameter', function() {
+        expect(function() {
+            Quaternion.exp();
         }).toThrow();
     });
 
