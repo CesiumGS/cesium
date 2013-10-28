@@ -156,4 +156,12 @@ defineSuite([
             expect(hs.evaluate(i)).toEqualEpsilon(interpolate(i), CesiumMath.EPSILON3);
         }
     });
+
+    it('evaluate with result parameter', function() {
+        var hs = new HermiteSpline(points);
+        var result = new Cartesian3();
+        var point = hs.evaluate(points[0].time, result);
+        expect(point).toBe(result);
+        expect(result).toEqual(points[0].point);
+    });
 });
