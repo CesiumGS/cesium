@@ -64,15 +64,11 @@ defineSuite([
 
         var start = Cartesian3.multiplyByScalar(Cartesian3.subtract(Cartesian3.subtract(Cartesian3.multiplyByScalar(controlPoint1, 2.0), controlPoint2), controlPoint0), 0.5);
 
-        var n = points.length - 1;
+        var controlPointn0 = Cartesian3.clone(points[points.length - 1].point);
+        var controlPointn1 = Cartesian3.clone(points[points.length - 2].point);
+        var controlPointn2 = Cartesian3.clone(points[points.length - 3].point);
 
-        var controlPointn0 = Cartesian3.clone(points[n].point);
-        var controlPointn1 = Cartesian3.clone(points[n - 1].point);
-        var controlPointn2 = Cartesian3.clone(points[n - 2].point);
-
-        
         var end = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.subtract(controlPointn0, Cartesian3.multiplyByScalar(controlPointn1, 2.0)), controlPointn2), 0.5);
-
 
         var crs = new CatmullRomSpline(points);
 
@@ -115,5 +111,14 @@ defineSuite([
         for ( var j = points[0].time; j <= points[points.length - 1].time; j = j + granularity) {
             expect(hs.evaluate(j)).toEqualEpsilon(crs.evaluate(j), CesiumMath.EPSILON4);
         }
+    });
+
+    it('evaluate with result parameter', function() {
+        var crs = new CatmullRomSpline(points);
+        var result = new Cartesian3();
+
+        var point = crs.evaluate(points[0].time, result);
+        expect(point).toBe(result);
+        expect(result).toEqual(points[0].point);
     });
 });
