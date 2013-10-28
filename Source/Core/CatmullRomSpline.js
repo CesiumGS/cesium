@@ -5,6 +5,7 @@ define([
         './DeveloperError',
         './Matrix4',
         './Cartesian3',
+        './Cartesian4',
         './HermiteSpline'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         DeveloperError,
         Matrix4,
         Cartesian3,
+        Cartesian4,
         HermiteSpline) {
     "use strict";
 
@@ -150,7 +152,7 @@ define([
         return catmullRomSpline._lastTimeIndex;
     }
 
-    var scratchTimeVec = new Cartesian3();
+    var scratchTimeVec = new Cartesian4();
     var scratchTemp0 = new Cartesian3();
     var scratchTemp1 = new Cartesian3();
 
