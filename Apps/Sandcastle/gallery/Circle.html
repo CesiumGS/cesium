@@ -63,8 +63,9 @@ require(['Cesium'], function(Cesium) {
     circleGeometry = new Cesium.CircleGeometry({
         center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-85.0, 40.0)),
         radius : 400000.0,
-        height : 400000.0,
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT    });
+        height : 150000.0,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    });
     var blueCircleInstance = new Cesium.GeometryInstance({
         geometry : circleGeometry,
         attributes : {
@@ -74,9 +75,17 @@ require(['Cesium'], function(Cesium) {
     
     // Add instances to primitives 
     primitives.add(new Cesium.Primitive({
-        geometryInstances: [redCircleInstance, blueCircleInstance, greenCircleInstance],
+        geometryInstances: [redCircleInstance, greenCircleInstance],
         appearance: new Cesium.PerInstanceColorAppearance({
             closed: true
+        })
+    }));
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: blueCircleInstance,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            closed: true,
+            translucent : false
         })
     }));
     

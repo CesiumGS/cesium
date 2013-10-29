@@ -810,8 +810,11 @@ defineSuite([
         var p = scene.getPrimitives().add(new PolylineCollection({
             debugShowBoundingVolume : true
         }));
+        var material = Material.fromType('Color');
+        material.uniforms.color = new Color(1.0, 1.0, 1.0, 0.0);
         p.add({
-            positions : [Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z)]
+            positions : [Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z)],
+            material : material
         });
 
         var camera = scene.getCamera();
@@ -821,11 +824,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
+        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene();
     });
@@ -1495,7 +1494,7 @@ defineSuite([
 
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
@@ -1524,7 +1523,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.getPositions();
@@ -1589,8 +1588,8 @@ defineSuite([
         var commandList = [];
         polylines.update(context, frameState, commandList);
 
-        expect(commandList[0].colorList[0].boundingVolume).toEqual(one._boundingVolume);
-        expect(commandList[0].colorList[1].boundingVolume).toEqual(two._boundingVolume);
+        expect(commandList[0].opaqueList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(commandList[0].opaqueList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {
