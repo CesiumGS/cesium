@@ -534,6 +534,17 @@ defineSuite([
         expect(Quaternion.slerp(start, end, 0.5)).toEqual(expected);
     });
 
+    it('slerp uses lerp when dot product is close to 1 and a result parameter', function() {
+        var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
+        var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
+        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
+
+        var result = new Quaternion();
+        var actual = Quaternion.slerp(start, end, 0.0, result);
+        expect(actual).toBe(result);
+        expect(result).toEqual(start);
+    });
+
     it('log works without a result parameter', function() {
         var axis = Cartesian3.normalize(new Cartesian3(1.0, -1.0, 1.0));
         var angle = CesiumMath.PI_OVER_FOUR;
