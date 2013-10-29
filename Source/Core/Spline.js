@@ -1,0 +1,117 @@
+/*global define*/
+define([
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/DeveloperError'
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError) {
+    "use strict";
+
+    /**
+     * Creates a curve parameterized and evaluated by time. This type describes an interface
+     * and is not intended to be instantiated directly.
+     *
+     * @alias Spline
+     * @constructor
+     *
+     * @see CatmullRomSpline
+     * @see HermiteSpline
+     */
+    var Spline = function() {
+        /**
+         * An array of {@link Cartesian3} control points.
+         * @type {Array}
+         * @default undefined
+         */
+        this.points = undefined;
+
+        /**
+         * An array of times for the control points.
+         * @type {Array}
+         * @default undefined
+         */
+        this.times = undefined;
+
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Evaluates the curve at a given time.
+     * @memberof Spline
+     *
+     * @param {Number} time The time at which to evaluate the curve.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+     *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+     *                             in the array <code>times</code>.
+     */
+    Spline.prototype.evaluate = function(time, result) {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
+     * Finds an index <code>i</code> in <code>times</code> such that the parameter
+     * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
+     * @memberof Spline
+     *
+     * @param {Number} time The time.
+     * @returns {Number} The index for the element at the start of the interval.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+     *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+     *                             in the array <code>times</code>.
+     */
+    Spline.prototype.findTimeInterval = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+
+        var times = this.times;
+        var length = times.length;
+
+        if (time < times[0] || time > times[length - 1]) {
+            throw new DeveloperError('time is out of range.');
+        }
+
+        // Take advantage of temporal coherence by checking current, next and previous intervals
+        // for containment of time.
+        var i = defaultValue(this._lastTimeIndex, 0);
+
+        if (time >= times[i]) {
+            if (i + 1 < length && time < times[i + 1]) {
+                return i;
+            } else if (i + 2 < length && time < times[i + 2]) {
+                this._lastTimeIndex = i + 1;
+                return this._lastTimeIndex;
+            }
+        } else if (i - 1 >= 0 && time >= times[i - 1]) {
+            this._lastTimeIndex = i - 1;
+            return this._lastTimeIndex;
+        }
+
+        // The above failed so do a linear search. For the use cases so far, the
+        // length of the list is less than 10. In the future, if there is a bottle neck,
+        // it might be here.
+        for (i = 0; i < length - 1; ++i) {
+            if (time >= times[i] && time < times[i + 1]) {
+                break;
+            }
+        }
+
+        if (i === length - 1) {
+            i = length - 2;
+        }
+
+        this._lastTimeIndex = i;
+        return this._lastTimeIndex;
+    };
+
+    return Spline;
+});

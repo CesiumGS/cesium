@@ -6,6 +6,7 @@ define([
         './Matrix4',
         './Cartesian3',
         './Cartesian4',
+        './Spline',
         './HermiteSpline'
     ], function(
         defaultValue,
@@ -14,8 +15,12 @@ define([
         Matrix4,
         Cartesian3,
         Cartesian4,
+        Spline,
         HermiteSpline) {
     "use strict";
+
+    var firstTangentScratch = new Cartesian3();
+    var lastTangentScratch = new Cartesian3();
 
     /**
      * A Catmull-Rom spline is a cubic spline where the tangent at control points,
@@ -25,56 +30,99 @@ define([
      * @alias CatmullRomSpline
      * @constructor
      *
-     * @param {Array} controlPoints The array of control points. Each element of the array should be an object with <code>point</code> and <code>time</code> properties.
-     * @param {Cartesian3} firstTangent The tangent of the curve at the first control point.
-     * If the tangent is not given, it will be estimated.
-     * @param {Cartesian3} lastTangent The tangent of the curve at the last control point.
-     * If the tangent is not given, it will be estimated.
+     * @param {Array} options.points The array of control points.
+     * @param {Array} options.times The array of control point times.
+     * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
+     *                     If the tangent is not given, it will be estimated.
+     * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
+     *                     If the tangent is not given, it will be estimated.
      *
-     * @exception {DeveloperError} controlPoints is required.
-     * @exception {DeveloperError} controlPoints must be an array of at least length 3.
+     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points.length must be greater than or equal to 3.
+     * @exception {DeveloperError} times is required.
+     * @exception {DeveloperError} times.length must be equal to points.length.
      *
      * @see HermiteSpline
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var controlPoints = [
-     *     {point: new Cartesian3(1235398.0, -4810983.0, 4146266.0), time: 0.0},
-     *     {point: new Cartesian3(1372574.0, -5345182.0, 4606657.0), time: 1.5},
-     *     {point: new Cartesian3(-757983.0, -5542796.0, 4514323.0), time: 3.0},
-     *     {point: new Cartesian3(-2821260.0, -5248423.0, 4021290.0), time: 4.5},
-     *     {point: new Cartesian3(-2539788.0, -4724797.0, 3620093.0), time: 6.0}
-     * ];
-     * var spline = new CatmullRomSpline(controlPoints);
+     * var spline = new CatmullRomSpline({
+     *     points : [
+     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     ],
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
+     * });
      */
-    var CatmullRomSpline = function(controlPoints, firstTangent, lastTangent) {
-        if (!defined(controlPoints) || !(controlPoints instanceof Array) || controlPoints.length < 3) {
-            throw new DeveloperError('controlPoints is required and must be an array of objects with point and time properties, with a length of at least 3.');
+    var CatmullRomSpline = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var points = options.points;
+        var times = options.times;
+        var firstTangent = options.firstTangent;
+        var lastTangent = options.lastTangent;
+
+        if (!defined(points)) {
+            throw new DeveloperError('points is required.');
         }
 
-        this._points = controlPoints;
+        if (points.length < 3) {
+            throw new DeveloperError('points.length must be greater than or equal to 3.');
+        }
+
+        if (!defined(times)) {
+            throw new DeveloperError('times is required.');
+        }
+
+        if (times.length !== points.length) {
+            throw new DeveloperError('times.length must be equal to points.length.');
+        }
+
+        if (!defined(firstTangent)) {
+            firstTangent = firstTangentScratch;
+            Cartesian3.multiplyByScalar(points[1], 2.0, firstTangent);
+            Cartesian3.subtract(firstTangent, points[2], firstTangent);
+            Cartesian3.subtract(firstTangent, points[0], firstTangent);
+            Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
+        }
+
+        if (!defined(lastTangent)) {
+            var n = points.length - 1;
+            lastTangent = lastTangentScratch;
+            Cartesian3.multiplyByScalar(points[n - 1], 2.0, lastTangent);
+            Cartesian3.subtract(points[n], lastTangent, lastTangent);
+            Cartesian3.add(lastTangent, points[n - 2], lastTangent);
+            Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
+        }
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         * @type {Array}
+         */
+        this.points = points;
+
+        /**
+         * An array of times for the control points.
+         * @type {Array}
+         */
+        this.times = times;
+
+        /**
+         * The tangent at the first control point.
+         * @type {Cartesian3}
+         */
+        this.firstTangent = Cartesian3.clone(firstTangent);
+
+        /**
+         * The tangent at the last control point.
+         * @type {Cartesian3}
+         */
+        this.lastTangent = Cartesian3.clone(lastTangent);
+
         this._lastTimeIndex = 0;
-
-        if (defined(firstTangent)) {
-            this._ti = Cartesian3.clone(firstTangent);
-        } else {
-            var ti = this._ti = new Cartesian3();
-            Cartesian3.multiplyByScalar(controlPoints[1].point, 2.0, ti);
-            Cartesian3.subtract(ti, controlPoints[2].point, ti);
-            Cartesian3.subtract(ti, controlPoints[0].point, ti);
-            Cartesian3.multiplyByScalar(ti, 0.5, ti);
-        }
-
-        if (defined(lastTangent)) {
-            this._to = Cartesian3.clone(lastTangent);
-        } else {
-            var n = controlPoints.length - 1;
-            var to = this._to = new Cartesian3();
-            Cartesian3.multiplyByScalar(controlPoints[n - 1].point, 2.0, to);
-            Cartesian3.subtract(controlPoints[n].point, to, to);
-            Cartesian3.add(to, controlPoints[n - 2].point, to);
-            Cartesian3.multiplyByScalar(to, 0.5, to);
-        }
     };
 
     CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
@@ -84,73 +132,19 @@ define([
              0.5, -0.5,  0.0,  0.0);
 
     /**
-     * Returns the array of control points.
-     *
-     * @memberof CatmullRomSpline
-     * @returns {Array} The array of control points.
-     */
-    CatmullRomSpline.prototype.getControlPoints = function() {
-        return this._points;
-    };
-
-    /**
-     * Returns the tangent of the first control point.
-     *
+     * Finds an index <code>i</code> in <code>times</code> such that the parameter
+     * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
      * @memberof CatmullRomSpline
      *
-     * @returns {Cartesian3} The tangent of the first control point.
+     * @param {Number} time The time.
+     * @returns {Number} The index for the element at the start of the interval.
      *
-     * @see CatmullRomSpline#getEndTangent
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+     *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+     *                             in the array <code>times</code>.
      */
-    CatmullRomSpline.prototype.getStartTangent = function() {
-        return this._ti;
-    };
-
-    /**
-     * Returns the tangent of the last control point.
-     *
-     * @memberof CatmullRomSpline
-     *
-     * @returns {Cartesian3} The tangent of the last control point.
-     *
-     * @see CatmullRomSpline#getStartTangent
-     */
-    CatmullRomSpline.prototype.getEndTangent = function() {
-        return this._to;
-    };
-
-    function findIndex(catmullRomSpline, time) {
-        // Take advantage of temporal coherence by checking current, next and previous intervals
-        // for containment of time.
-        var i = defaultValue(catmullRomSpline._lastTimeIndex, 0);
-        if (time >= catmullRomSpline._points[i].time) {
-            if (i + 1 < catmullRomSpline._points.length && time < catmullRomSpline._points[i + 1].time) {
-                return i;
-            } else if (i + 2 < catmullRomSpline._points.length && time < catmullRomSpline._points[i + 2].time) {
-                catmullRomSpline._lastTimeIndex = i + 1;
-                return catmullRomSpline._lastTimeIndex;
-            }
-        } else if (i - 1 >= 0 && time >= catmullRomSpline._points[i - 1].time) {
-            catmullRomSpline._lastTimeIndex = i - 1;
-            return catmullRomSpline._lastTimeIndex;
-        }
-
-        // The above failed so do a linear search. For the use cases so far, the
-        // length of the list is less than 10. In the future, if there is a bottle neck,
-        // it might be here.
-        for (i = 0; i < catmullRomSpline._points.length - 1; ++i) {
-            if (time >= catmullRomSpline._points[i].time && time < catmullRomSpline._points[i + 1].time) {
-                break;
-            }
-        }
-
-        if (i === catmullRomSpline._points.length - 1) {
-            i = catmullRomSpline._points.length - 2;
-        }
-
-        catmullRomSpline._lastTimeIndex = i;
-        return catmullRomSpline._lastTimeIndex;
-    }
+    CatmullRomSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 
     var scratchTimeVec = new Cartesian4();
     var scratchTemp0 = new Cartesian3();
@@ -158,44 +152,39 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     *
      * @memberof CatmullRomSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
-     * @param {Cartesian3} result The object onto which to store the result.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} time must be in the range <code>[a<sub>0</sub>, a<sub>n</sub>]</code>,
-     * where <code>a<sub>0</sub></code> and <code>a<sub>n</sub></code> are the time properties of first and
-     * last elements in the array given during construction, respectively.
-     *
-     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+     * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
+     *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
+     *                             in the array <code>times</code>.
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var controlPoints = [
-     *     {point: new Cartesian3(1235398.0, -4810983.0, 4146266.0), time: 0.0},
-     *     {point: new Cartesian3(1372574.0, -5345182.0, 4606657.0), time: 1.5},
-     *     {point: new Cartesian3(-757983.0, -5542796.0, 4514323.0), time: 3.0},
-     *     {point: new Cartesian3(-2821260.0, -5248423.0, 4021290.0), time: 4.5},
-     *     {point: new Cartesian3(-2539788.0, -4724797.0, 3620093.0), time: 6.0}
-     * ];
-     * var spline = new CatmullRomSpline(controlPoints);
+     * var spline = new CatmullRomSpline({
+     *     points : [
+     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     ],
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
+     * });
      *
      * // some position above Los Angeles
      * var position = spline.evaluate(5.0);
      */
     CatmullRomSpline.prototype.evaluate = function(time, result) {
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        var points = this.points;
+        var times = this.times;
 
-        if (time < this._points[0].time || time > this._points[this._points.length - 1].time) {
-            throw new DeveloperError('time is out of range.');
-        }
-
-        var i = findIndex(this, time);
-        var u = (time - this._points[i].time) / (this._points[i + 1].time - this._points[i].time);
+        var i = this.findTimeInterval(time);
+        var u = (time - times[i]) / (times[i + 1] - times[i]);
 
         var timeVec = scratchTimeVec;
         timeVec.z = u;
@@ -204,28 +193,28 @@ define([
 
         var p0, p1, p2, p3, coefs;
         if (i === 0) {
-            p0 = this._points[0].point;
-            p1 = this._points[1].point;
-            p2 = this._ti;
+            p0 = points[0];
+            p1 = points[1];
+            p2 = this.firstTangent;
 
-            p3 = Cartesian3.subtract(this._points[2].point, p0, scratchTemp0);
+            p3 = Cartesian3.subtract(points[2], p0, scratchTemp0);
             Cartesian3.multiplyByScalar(p3, 0.5, p3);
 
             coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
-        } else if (i === this._points.length - 2) {
-            p0 = this._points[i].point;
-            p1 = this._points[i + 1].point;
-            p3 = this._to;
+        } else if (i === points.length - 2) {
+            p0 = points[i];
+            p1 = points[i + 1];
+            p3 = this.lastTangent;
 
-            p2 = Cartesian3.subtract(p1, this._points[i - 1].point, scratchTemp0);
+            p2 = Cartesian3.subtract(p1, points[i - 1], scratchTemp0);
             Cartesian3.multiplyByScalar(p2, 0.5, p2);
 
             coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
         } else {
-            p0 = this._points[i - 1].point;
-            p1 = this._points[i].point;
-            p2 = this._points[i + 1].point;
-            p3 = this._points[i + 2].point;
+            p0 = points[i - 1];
+            p1 = points[i];
+            p2 = points[i + 1];
+            p3 = points[i + 2];
             coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
         }
 
