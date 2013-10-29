@@ -165,7 +165,7 @@ define([
                 throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
             }
 
-            rotation = rotation || 0.0;
+            rotation = defaultValue(rotation, 0.0);
             granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
 
             if (granularity <= 0.0) {
