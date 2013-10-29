@@ -131,7 +131,7 @@ define([
         this.times = times;
 
         /**
-         * An array of tangents at each control point.
+         * An array of {@link Cartesian3} tangents at each control point.
          * @type {Array}
          */
         this.tangents = tangents;
