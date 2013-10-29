@@ -578,6 +578,43 @@ defineSuite([
         expect(exp).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
 
+    it('squad and innerQuadrangle work without a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+        var q4 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+        expect(Quaternion.squad(q1, q2, s1, s2, 0.0)).toEqualEpsilon(q1, CesiumMath.EPSILON15);
+        expect(Quaternion.squad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(q2, CesiumMath.EPSILON15);
+
+        var s3 = Quaternion.innerQuadrangle(q2, q3, q4);
+        expect(Quaternion.squad(q2, q3, s2, s3, 0.0)).toEqualEpsilon(q2, CesiumMath.EPSILON15);
+        expect(Quaternion.squad(q2, q3, s2, s3, 1.0)).toEqualEpsilon(q3, CesiumMath.EPSILON15);
+
+        expect(Quaternion.squad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(Quaternion.squad(q2, q3, s2, s3, 0.0), CesiumMath.EPSILON15);
+    });
+
+    it('squad and innerQuadrangle work with a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+
+        var s1Result = new Quaternion();
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2, s1Result);
+        expect(s1).toBe(s1Result);
+
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+
+        var squadResult = new Quaternion();
+        var squad = Quaternion.squad(q1, q2, s1, s2, 0.0, squadResult);
+        expect(squad).toBe(squadResult);
+        expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON15);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
@@ -807,6 +844,54 @@ defineSuite([
     it('static exp throws with no cartesian parameter', function() {
         expect(function() {
             Quaternion.exp();
+        }).toThrow();
+    });
+
+    it('static innerQuadrangle throws without q0 parameter', function() {
+        expect(function() {
+            Quaternion.innerQuadrangle();
+        }).toThrow();
+    });
+
+    it('static innerQuadrangle throws without q1 parameter', function() {
+        expect(function() {
+            Quaternion.innerQuadrangle(new Quaternion());
+        }).toThrow();
+    });
+
+    it('static innerQuadrangle throws without q2 parameter', function() {
+        expect(function() {
+            Quaternion.innerQuadrangle(new Quaternion(), new Quaternion());
+        }).toThrow();
+    });
+
+    it('static squad throws without q0 parameter', function() {
+        expect(function() {
+            Quaternion.squad();
+        }).toThrow();
+    });
+
+    it('static squad throws without q1 parameter', function() {
+        expect(function() {
+            Quaternion.squad(new Quaternion());
+        }).toThrow();
+    });
+
+    it('static squad throws without s0 parameter', function() {
+        expect(function() {
+            Quaternion.squad(new Quaternion(), new Quaternion());
+        }).toThrow();
+    });
+
+    it('static squad throws without s1 parameter', function() {
+        expect(function() {
+            Quaternion.squad(new Quaternion(), new Quaternion(), new Quaternion());
+        }).toThrow();
+    });
+
+    it('static squad throws without t parameter', function() {
+        expect(function() {
+            Quaternion.squad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion());
         }).toThrow();
     });
 
