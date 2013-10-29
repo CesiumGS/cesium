@@ -125,7 +125,7 @@ defineSuite([
         expect(primitive.appearance).not.toBeDefined();
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
-        expect(primitive.vertexCacheOptimize).toEqual(true);
+        expect(primitive.vertexCacheOptimize).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.allowPicking).toEqual(true);
@@ -278,7 +278,7 @@ defineSuite([
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
-        expect(commands[0].colorList.length).toEqual(2);
+        expect(commands[0].translucentList.length).toEqual(2);
 
         primitive = primitive && primitive.destroy();
     });

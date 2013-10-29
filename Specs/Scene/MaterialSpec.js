@@ -252,6 +252,26 @@ defineSuite([
         expect(material.type).toEqual('Color');
     });
 
+    it('creates opaque/translucent materials', function() {
+        var material = new Material({
+            translucent : true,
+            strict : true,
+            fabric : {
+                type : 'Color'
+            }
+        });
+        expect(material.isTranslucent()).toEqual(true);
+
+        material = new Material({
+            translucent : false,
+            strict : true,
+            fabric : {
+                type : 'Color'
+            }
+        });
+        expect(material.isTranslucent()).toEqual(false);
+    });
+
     it('creates a new material type and builds off of it', function() {
         var material1 = new Material({
             strict : true,

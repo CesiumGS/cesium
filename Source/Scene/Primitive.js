@@ -57,6 +57,8 @@ define([
         when) {
     "use strict";
 
+    var EMPTY_ARRAY = [];
+
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
      * as shown in example 1 below, or from an array of instances, even if the geometry is from different
@@ -84,7 +86,7 @@ define([
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -236,7 +238,7 @@ define([
          *
          * @readonly
          */
-        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
+        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
 
         /**
          * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
@@ -296,7 +298,9 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
-        this.state = PrimitiveState.READY;
+        this._translucent = undefined;
+
+        this._state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
         this._vaAttributes = undefined;
@@ -324,6 +328,15 @@ define([
         this._pickIds = [];
 
         this._commandLists = new CommandLists();
+
+        this._colorCommands = this._commandLists.opaqueList;
+        this._pickCommands = this._commandLists.pickList;
+
+        this._commandLists.opaqueList = EMPTY_ARRAY;
+        this._commandLists.translucentList = EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = EMPTY_ARRAY;
+        this._commandLists.overlayList = EMPTY_ARRAY;
     };
 
     function cloneAttribute(attribute) {
@@ -526,8 +539,6 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        var colorCommands = this._commandLists.colorList;
-        var pickCommands = this._commandLists.pickList;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -545,12 +556,12 @@ define([
 
         var that = this;
 
-        if (this.state !== PrimitiveState.COMPLETE && this.state !== PrimitiveState.COMBINED) {
+        if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
 
             if (this.asynchronous) {
-                if (this.state === PrimitiveState.FAILED) {
+                if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
-                } else if (this.state === PrimitiveState.READY) {
+                } else if (this._state === PrimitiveState.READY) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
@@ -574,16 +585,16 @@ define([
                         }
                     }
 
-                    this.state = PrimitiveState.CREATING;
+                    this._state = PrimitiveState.CREATING;
 
                     when.all(promises, function(results) {
                         that._geometries = results;
-                        that.state = PrimitiveState.CREATED;
+                        that._state = PrimitiveState.CREATED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
-                } else if (this.state === PrimitiveState.CREATED) {
+                } else if (this._state === PrimitiveState.CREATED) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
@@ -612,7 +623,7 @@ define([
                         modelMatrix : this.modelMatrix
                     }, transferableObjects);
 
-                    this.state = PrimitiveState.COMBINING;
+                    this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
                         PrimitivePipeline.receiveGeometries(result.geometries);
@@ -623,10 +634,10 @@ define([
                         that._vaAttributes = result.vaAttributes;
                         that._perInstanceAttributeIndices = result.vaAttributeIndices;
                         Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                        that.state = PrimitiveState.COMBINED;
+                        that._state = PrimitiveState.COMBINED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
                 }
             } else {
@@ -677,13 +688,13 @@ define([
                 this._perInstanceAttributeIndices = result.vaAttributeIndices;
                 Matrix4.clone(result.modelMatrix, this.modelMatrix);
 
-                this.state = PrimitiveState.COMBINED;
+                this._state = PrimitiveState.COMBINED;
             }
         }
 
         var attributeIndices = this._attributeIndices;
 
-        if (this.state === PrimitiveState.COMBINED) {
+        if (this._state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
             var vaAttributes = this._vaAttributes;
 
@@ -723,10 +734,10 @@ define([
 
             this._geomtries = undefined;
             this._createdGeometries = undefined;
-            this.state = PrimitiveState.COMPLETE;
+            this._state = PrimitiveState.COMPLETE;
         }
 
-        if (this.state !== PrimitiveState.COMPLETE) {
+        if (this._state !== PrimitiveState.COMPLETE) {
             return;
         }
 
@@ -746,15 +757,23 @@ define([
             createSP = true;
         }
 
+        var translucent = this._appearance.isTranslucent();
+        if (this._translucent !== translucent) {
+            this._translucent = translucent;
+            createRS = true;
+        }
+
         if (defined(this._material)) {
             this._material.update(context);
         }
 
-        var twoPasses = appearance.closed && appearance.translucent;
+        var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
+            var renderState = appearance.getRenderState();
+
             if (twoPasses) {
-                var rs = clone(appearance.renderState, false);
+                var rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -764,7 +783,7 @@ define([
                 rs.cull.face = CullFace.FRONT;
                 this._backFaceRS = context.createRenderState(rs);
             } else {
-                this._frontFaceRS = context.createRenderState(appearance.renderState);
+                this._frontFaceRS = context.createRenderState(renderState);
                 this._backFaceRS = this._frontFaceRS;
             }
 
@@ -773,7 +792,7 @@ define([
                 this._pickRS = this._backFaceRS;
             } else {
                 // Still occlude if not pickable.
-                var pickRS = clone(appearance.renderState, false);
+                var pickRS = clone(renderState, false);
                 pickRS.colorMask = {
                     red : false,
                     green : false,
@@ -802,6 +821,9 @@ define([
 
             validateShaderMatching(this._pickSP, attributeIndices);
         }
+
+        var colorCommands = this._colorCommands;
+        var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
@@ -920,6 +942,12 @@ define([
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
             }
         }
+
+        var pass = frameState.passes;
+        this._commandLists.opaqueList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.translucentList = (pass.color && translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = (pass.pick && !translucent) ? pickCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = (pass.pick && translucent) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);
     };

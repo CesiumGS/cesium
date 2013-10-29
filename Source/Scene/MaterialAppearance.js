@@ -195,6 +195,26 @@ define([
     MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     /**
+     * Determines if the geometry is translucent based on {@link MaterialAppearance#translucent} and {@link Material#isTranslucent}.
+     *
+     * @memberof MaterialAppearance
+     *
+     * @returns {Boolean} <code>true</code> if the appearance is translucent.
+     */
+    MaterialAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
+
+    /**
+     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
+     * it can contain a subset of render state properties identical to <code>renderState</code>
+     * passed to {@link Context#createRenderState}.
+     *
+     * @memberof MaterialAppearance
+     *
+     * @returns {Object} The render state.
+     */
+    MaterialAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
+
+    /**
      * Determines the type of {@link Material} that is supported by a
      * {@link MaterialAppearance} instance.  This is a trade-off between
      * flexibility (a wide array of materials) and memory/performance

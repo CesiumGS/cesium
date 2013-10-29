@@ -477,12 +477,17 @@ define([
             return;
         }
 
-        var zoomFactor = 1;
-        if (this._zoomDetector.currentScale !== 1) {
-            zoomFactor = this._zoomDetector.currentScale;
-        }
-        if (window.devicePixelRatio !== 1) {
+        var zoomFactor;
+        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
+            // prefer devicePixelRatio if available.
             zoomFactor = window.devicePixelRatio;
+        } else if (this._zoomDetector.currentScale !== 1) {
+            // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
+            // our SVG's currentScale property does.
+            zoomFactor = this._zoomDetector.currentScale;
+        } else {
+            // otherwise we don't know.
+            zoomFactor = 1;
         }
 
         this._canvasWidth = width;
