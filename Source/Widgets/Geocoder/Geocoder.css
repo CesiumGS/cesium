@@ -9,6 +9,7 @@
     height: 32px;
     padding-top: 0px;
     padding-bottom: 0px;
+    -moz-box-sizing: border-box;
     box-sizing: border-box;
     -webkit-transition: width ease-in-out 0.25s;
     -moz-transition: width ease-in-out 0.25s;
