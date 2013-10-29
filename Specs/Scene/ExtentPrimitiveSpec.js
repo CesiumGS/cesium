@@ -77,6 +77,7 @@ defineSuite([
             asynchronous : false,
             debugShowBoundingVolume : options.debugShowBoundingVolume
         });
+        e.material.uniforms.color.alpha = 1.0;
 
         return e;
     }
@@ -186,7 +187,7 @@ defineSuite([
         extent = createExtent();
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
     });
 
@@ -197,7 +198,7 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
@@ -211,7 +212,7 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);

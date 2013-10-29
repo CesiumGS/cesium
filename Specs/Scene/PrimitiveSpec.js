@@ -278,7 +278,7 @@ defineSuite([
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(1);
-        expect(commands[0].colorList.length).toEqual(2);
+        expect(commands[0].translucentList.length).toEqual(2);
 
         primitive = primitive && primitive.destroy();
     });
