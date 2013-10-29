@@ -188,15 +188,35 @@ define([
     EllipsoidSurfaceAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
 
     /**
-     * Procedurally creates the full GLSL fragment shader source.  For {@link PerInstanceColorAppearance},
-     * this is derived from {@link PerInstanceColorAppearance#fragmentShaderSource}, {@link PerInstanceColorAppearance#flat},
-     * and {@link PerInstanceColorAppearance#faceForward}.
+     * Procedurally creates the full GLSL fragment shader source.  For {@link EllipsoidSurfaceAppearance},
+     * this is derived from {@link EllipsoidSurfaceAppearance#fragmentShaderSource}, {@link EllipsoidSurfaceAppearance#flat},
+     * and {@link EllipsoidSurfaceAppearance#faceForward}.
      *
      * @memberof EllipsoidSurfaceAppearance
      *
      * @returns String The full GLSL fragment shader source.
      */
     EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
+
+    /**
+     * Determines if the geometry is translucent based on {@link EllipsoidSurfaceAppearance#translucent} and {@link Material#isTranslucent}.
+     *
+     * @memberof EllipsoidSurfaceAppearance
+     *
+     * @returns {Boolean} <code>true</code> if the appearance is translucent.
+     */
+    EllipsoidSurfaceAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
+
+    /**
+     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
+     * it can contain a subset of render state properties identical to <code>renderState</code>
+     * passed to {@link Context#createRenderState}.
+     *
+     * @memberof EllipsoidSurfaceAppearance
+     *
+     * @returns {Object} The render state.
+     */
+    EllipsoidSurfaceAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
 
     return EllipsoidSurfaceAppearance;
 });

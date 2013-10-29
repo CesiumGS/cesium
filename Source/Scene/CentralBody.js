@@ -738,7 +738,7 @@ define([
         commandLists.removeAll();
 
         if (pass.color) {
-            var colorCommandList = commandLists.colorList;
+            var colorCommandList = commandLists.opaqueList;
 
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
@@ -787,7 +787,7 @@ define([
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandLists.pickList.push(this._depthCommand);
+            commandLists.pickList.opaqueList.push(this._depthCommand);
         }
 
         if (!commandLists.empty()) {
