@@ -23,7 +23,7 @@ define([
      * @param {Array} options.times The array of control point times.
      *
      * @exception {DeveloperError} points is required.
-     * @exception {DeveloperError} points.length must be greater than or equal to 3.
+     * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
      */
@@ -37,8 +37,8 @@ define([
             throw new DeveloperError('points is required.');
         }
 
-        if (points.length < 3) {
-            throw new DeveloperError('points.length must be greater than or equal to 3.');
+        if (points.length < 2) {
+            throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
 
         if (!defined(times)) {
@@ -103,7 +103,7 @@ define([
             result = new Cartesian3();
         }
 
-        return Cartesian3.lerp(points[i], points[i + 1], u);
+        return Cartesian3.lerp(points[i], points[i + 1], u, result);
     };
 
     return LinearSpline;
