@@ -265,8 +265,6 @@ define([
         this._defaultCubeMap = undefined;
 
         this._us = us;
-        this._currentFramebuffer = undefined;
-        this._currentSp = undefined;
         this._currentRenderState = rs;
         this._maxFrameTextureUnitIndex = 0;
 
@@ -1938,9 +1936,9 @@ define([
         return s;
     };
 
-    Context.prototype._validateFramebuffer = function(framebuffer) {
-        if (this._validateFB) {
-            var gl = this._gl;
+    function validateFramebuffer(context, framebuffer) {
+        if (context._validateFB) {
+            var gl = context._gl;
             var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 
             if (status !== gl.FRAMEBUFFER_COMPLETE) {
@@ -1964,7 +1962,7 @@ define([
                 throw new DeveloperError(message);
             }
         }
-    };
+    }
 
     function applyRenderState(context, renderState, passState) {
         var previousState = context._currentRenderState;
@@ -2032,7 +2030,7 @@ define([
 
         if (defined(framebuffer)) {
             framebuffer._bind();
-            this._validateFramebuffer(framebuffer);
+            validateFramebuffer(this, framebuffer);
         }
 
         gl.clear(bitmask);
@@ -2042,56 +2040,44 @@ define([
         }
     };
 
-    function beginDraw(context, command, passState) {
-        if (!defined(command)) {
-            throw new DeveloperError('command is required.');
-        }
+    function beginDraw(context, framebuffer, drawCommand, passState) {
+        var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
-        if (!defined(command.shaderProgram)) {
-            throw new DeveloperError('command.shaderProgram is required.');
-        }
-
-        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
-        var sp = command.shaderProgram;
-        var rs = (defined(command.renderState)) ? command.renderState : context._defaultRenderState;
-
-        if ((defined(framebuffer)) && rs.depthTest) {
+        if (defined(framebuffer) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
-                throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
+                throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
 
         ///////////////////////////////////////////////////////////////////////
 
-        applyRenderState(context, rs, passState);
-
         if (defined(framebuffer)) {
             framebuffer._bind();
-            context._validateFramebuffer(framebuffer);
+            validateFramebuffer(context, framebuffer);
         }
-        sp._bind();
 
-        context._currentFramebuffer = framebuffer;
-        context._currentSp = sp;
+        var sp = drawCommand.shaderProgram;
+        sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
+
+        applyRenderState(context, rs, passState);
     }
 
-    function continueDraw(context, command) {
-        var primitiveType = command.primitiveType;
+    function continueDraw(context, drawCommand) {
+        var primitiveType = drawCommand.primitiveType;
         if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError('command.primitiveType is required and must be valid.');
+            throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
 
-        if (!defined(command.vertexArray)) {
-            throw new DeveloperError('command.vertexArray is required.');
+        if (!defined(drawCommand.vertexArray)) {
+            throw new DeveloperError('drawCommand.vertexArray is required.');
         }
 
-        var va = command.vertexArray;
+        var va = drawCommand.vertexArray;
         var indexBuffer = va.getIndexBuffer();
 
-        var offset = command.offset;
-        var count = command.count;
+        var offset = drawCommand.offset;
+        var count = drawCommand.count;
         var hasIndexBuffer = defined(indexBuffer);
 
         if (hasIndexBuffer) {
@@ -2103,12 +2089,12 @@ define([
         }
 
         if (offset < 0) {
-            throw new DeveloperError('command.offset must be omitted or greater than or equal to zero.');
+            throw new DeveloperError('drawCommand.offset must be omitted or greater than or equal to zero.');
         }
 
         if (count > 0) {
-            context._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
-            context._currentSp._setUniforms(command.uniformMap, context._us, context._validateSP);
+            context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
+            drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
             va._bind();
 
@@ -2122,30 +2108,11 @@ define([
         }
     }
 
-    function endDraw(context) {
-        if (defined(context._currentFramebuffer)) {
-            context._currentFramebuffer._unBind();
-            context._currentFramebuffer = undefined;
+    function endDraw(framebuffer) {
+        if (defined(framebuffer)) {
+            framebuffer._unBind();
         }
-        context._currentSp = undefined;
     }
-
-    /**
-     * @private
-     */
-    Context.prototype.endFrame = function() {
-        var gl = this._gl;
-        gl.useProgram(null);
-
-        var length = this._maxFrameTextureUnitIndex;
-        this._maxFrameTextureUnitIndex = 0;
-
-        for (var i = 0; i < length; ++i) {
-            gl.activeTexture(gl.TEXTURE0 + i);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-        }
-    };
 
     /**
      * Executes the specified draw command.
@@ -2192,10 +2159,38 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
+        if (!defined(drawCommand)) {
+            throw new DeveloperError('drawCommand is required.');
+        }
+
+        if (!defined(drawCommand.shaderProgram)) {
+            throw new DeveloperError('drawCommand.shaderProgram is required.');
+        }
+
         passState = defaultValue(passState, this._defaultPassState);
-        beginDraw(this, drawCommand, passState);
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(drawCommand.framebuffer, passState.framebuffer);
+
+        beginDraw(this, framebuffer, drawCommand, passState);
         continueDraw(this, drawCommand);
-        endDraw(this);
+        endDraw(framebuffer);
+    };
+
+    /**
+     * @private
+     */
+    Context.prototype.endFrame = function() {
+        var gl = this._gl;
+        gl.useProgram(null);
+
+        var length = this._maxFrameTextureUnitIndex;
+        this._maxFrameTextureUnitIndex = 0;
+
+        for (var i = 0; i < length; ++i) {
+            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        }
     };
 
     /**
@@ -2228,7 +2223,7 @@ define([
 
         if (framebuffer) {
             framebuffer._bind();
-            this._validateFramebuffer(framebuffer);
+            validateFramebuffer(this, framebuffer);
         }
 
         gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
