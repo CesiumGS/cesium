@@ -290,7 +290,7 @@ define([
 
         this._needleEle.style.left = xPos.toString() + 'px';
 
-        var tics = '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
+        var tics = '';
 
         var minimumDuration = 0.01;
         var maximumDuration = 31536000000.0; // ~1000 years
@@ -473,8 +473,9 @@ define([
             this._mainTicSpan = -1;
         }
 
+        tics += '<span class="cesium-timeline-icon16" style="left:' + scrubX + 'px;bottom:0;background-position: 0px 0px;"></span>';
         timeBar.innerHTML = tics;
-        this._scrubElement = timeBar.childNodes[0];
+        this._scrubElement = timeBar.lastChild;
 
         // Clear track canvas.
         this._context.clearRect(0, 0, this._trackListEle.width, this._trackListEle.height);
