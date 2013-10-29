@@ -2042,6 +2042,111 @@ define([
         }
     };
 
+    function beginDraw(context, command, passState) {
+        if (!defined(command)) {
+            throw new DeveloperError('command is required.');
+        }
+
+        if (!defined(command.shaderProgram)) {
+            throw new DeveloperError('command.shaderProgram is required.');
+        }
+
+        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
+        var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
+        var sp = command.shaderProgram;
+        var rs = (defined(command.renderState)) ? command.renderState : context._defaultRenderState;
+
+        if ((defined(framebuffer)) && rs.depthTest) {
+            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
+                throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
+            }
+        }
+
+        ///////////////////////////////////////////////////////////////////////
+
+        applyRenderState(context, rs, passState);
+
+        if (defined(framebuffer)) {
+            framebuffer._bind();
+            context._validateFramebuffer(framebuffer);
+        }
+        sp._bind();
+
+        context._currentFramebuffer = framebuffer;
+        context._currentSp = sp;
+        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
+    }
+
+    function continueDraw(context, command) {
+        var primitiveType = command.primitiveType;
+        if (!PrimitiveType.validate(primitiveType)) {
+            throw new DeveloperError('command.primitiveType is required and must be valid.');
+        }
+
+        if (!defined(command.vertexArray)) {
+            throw new DeveloperError('command.vertexArray is required.');
+        }
+
+        var va = command.vertexArray;
+        var indexBuffer = va.getIndexBuffer();
+
+        var offset = command.offset;
+        var count = command.count;
+        var hasIndexBuffer = defined(indexBuffer);
+
+        if (hasIndexBuffer) {
+            offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
+            count = count || indexBuffer.getNumberOfIndices();
+        } else {
+            offset = offset || 0; // in vertices
+            count = count || va._getNumberOfVertices();
+        }
+
+        if (offset < 0) {
+            throw new DeveloperError('command.offset must be omitted or greater than or equal to zero.');
+        }
+
+        if (count > 0) {
+            context._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
+            context._currentSp._setUniforms(command.uniformMap, context._us, context._validateSP);
+
+            va._bind();
+
+            if (hasIndexBuffer) {
+                context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
+            } else {
+                context._gl.drawArrays(primitiveType.value, offset, count);
+            }
+
+            va._unBind();
+        }
+    }
+
+    function endDraw(context) {
+        if (defined(context._currentFramebuffer)) {
+            context._currentFramebuffer._unBind();
+            context._currentFramebuffer = undefined;
+        }
+        context._currentSp = undefined;
+    }
+
+    /**
+     * @private
+     */
+    Context.prototype.endFrame = function() {
+        var gl = this._gl;
+        gl.useProgram(null);
+
+        var length = this._maxFrameTextureUnitIndex;
+        this._maxFrameTextureUnitIndex = 0;
+
+        for (var i = 0; i < length; ++i) {
+            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        }
+    };
+
     /**
      * Executes the specified draw command.
      *
@@ -2088,138 +2193,9 @@ define([
      */
     Context.prototype.draw = function(drawCommand, passState) {
         passState = defaultValue(passState, this._defaultPassState);
-        this.beginDraw(drawCommand, passState);
-        this.continueDraw(drawCommand);
-        this.endDraw();
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     */
-    Context.prototype.beginDraw = function(command, passState) {
-        if (!defined(command)) {
-            throw new DeveloperError('command is required.');
-        }
-
-        if (!defined(command.shaderProgram)) {
-            throw new DeveloperError('command.shaderProgram is required.');
-        }
-
-        // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
-        var sp = command.shaderProgram;
-        var rs = (defined(command.renderState)) ? command.renderState : this._defaultRenderState;
-
-        if ((defined(framebuffer)) && rs.depthTest) {
-            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
-                throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
-            }
-        }
-
-        ///////////////////////////////////////////////////////////////////////
-
-        applyRenderState(this, rs, passState);
-
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            this._validateFramebuffer(framebuffer);
-        }
-        sp._bind();
-
-        this._currentFramebuffer = framebuffer;
-        this._currentSp = sp;
-        this._maxFrameTextureUnitIndex = Math.max(this._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     */
-    Context.prototype.continueDraw = function(command) {
-        var sp = this._currentSp;
-        if (!defined(sp)) {
-            throw new DeveloperError('beginDraw must be called before continueDraw.');
-        }
-
-        if (!defined(command)) {
-            throw new DeveloperError('command is required.');
-        }
-
-        var primitiveType = command.primitiveType;
-        if (!PrimitiveType.validate(primitiveType)) {
-            throw new DeveloperError('command.primitiveType is required and must be valid.');
-        }
-
-        if (!defined(command.vertexArray)) {
-            throw new DeveloperError('command.vertexArray is required.');
-        }
-
-        var va = command.vertexArray;
-        var indexBuffer = va.getIndexBuffer();
-
-        var offset = command.offset;
-        var count = command.count;
-        var hasIndexBuffer = defined(indexBuffer);
-
-        if (hasIndexBuffer) {
-            offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
-            count = count || indexBuffer.getNumberOfIndices();
-        } else {
-            offset = offset || 0; // in vertices
-            count = count || va._getNumberOfVertices();
-        }
-
-        if (offset < 0) {
-            throw new DeveloperError('command.offset must be omitted or greater than or equal to zero.');
-        }
-
-        if (count > 0) {
-            this._us.setModel(defaultValue(command.modelMatrix, Matrix4.IDENTITY));
-            sp._setUniforms(command.uniformMap, this._us, this._validateSP);
-
-            va._bind();
-
-            if (hasIndexBuffer) {
-                this._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
-            } else {
-                this._gl.drawArrays(primitiveType.value, offset, count);
-            }
-
-            va._unBind();
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     */
-    Context.prototype.endDraw = function() {
-        if (defined(this._currentFramebuffer)) {
-            this._currentFramebuffer._unBind();
-            this._currentFramebuffer = undefined;
-        }
-        this._currentSp = undefined;
-    };
-
-    /**
-     * @private
-     */
-    Context.prototype.endFrame = function() {
-        var gl = this._gl;
-        gl.useProgram(null);
-
-        var length = this._maxFrameTextureUnitIndex;
-        this._maxFrameTextureUnitIndex = 0;
-
-        for (var i = 0; i < length; ++i) {
-            gl.activeTexture(gl.TEXTURE0 + i);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-            gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
-        }
+        beginDraw(this, drawCommand, passState);
+        continueDraw(this, drawCommand);
+        endDraw(this);
     };
 
     /**

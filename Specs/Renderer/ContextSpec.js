@@ -303,12 +303,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('continueDraw throws without arguments', function() {
-        expect(function() {
-            context.continueDraw();
-        }).toThrow();
-    });
-
     it('isDestroyed', function() {
         var c = createContext();
         expect(c.isDestroyed()).toEqual(false);
