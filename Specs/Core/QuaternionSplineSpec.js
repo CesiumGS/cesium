@@ -1,10 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/LinearSpline',
-         'Core/Cartesian3'
+         'Core/QuaternionSpline',
+         'Core/Cartesian3',
+         'Core/Math',
+         'Core/Quaternion'
      ], function(
-         LinearSpline,
-         Cartesian3) {
+         QuaternionSpline,
+         Cartesian3,
+         CesiumMath,
+         Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -13,31 +17,31 @@ defineSuite([
 
     beforeEach(function() {
         points = [
-            new Cartesian3(-1.0, -1.0, 0.0),
-            new Cartesian3(-0.5, -0.125, 0.0),
-            new Cartesian3(0.5, 0.125, 0.0),
-            new Cartesian3(1.0, 1.0, 0.0)
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR)
         ];
         times = [0.0, 1.0, 2.0, 3.0];
     });
 
     it('constructor throws without points', function() {
         expect(function() {
-            return new LinearSpline();
+            return new QuaternionSpline();
         }).toThrow();
     });
 
     it('constructor throws when control points length is less than 2', function() {
         expect(function() {
-            return new LinearSpline({
-                points : [Cartesian3.ZERO]
+            return new QuaternionSpline({
+                points : [Quaternion.ZERO]
             });
         }).toThrow();
     });
 
     it('constructor throws without times', function() {
         expect(function() {
-            return new LinearSpline({
+            return new QuaternionSpline({
                 points : points
             });
         }).toThrow();
@@ -45,7 +49,7 @@ defineSuite([
 
     it('constructor throws when times.length is not equal to points.length', function() {
         expect(function() {
-            return new LinearSpline({
+            return new QuaternionSpline({
                 points : points,
                 times : [0.0, 1.0]
             });
@@ -53,48 +57,50 @@ defineSuite([
     });
 
     it('evaluate throws without time', function() {
-        var ls = new LinearSpline({
+        var qs = new QuaternionSpline({
             points : points,
             times : times
         });
 
         expect(function() {
-            ls.evaluate();
+            qs.evaluate();
         }).toThrow();
     });
 
     it('evaluate throws when time is out of range', function() {
-        var ls = new LinearSpline({
+        var qs = new QuaternionSpline({
             points : points,
             times : times
         });
 
         expect(function() {
-            ls.evaluate(times[0] - 1.0);
+            qs.evaluate(times[0] - 1.0);
         }).toThrow();
     });
 
     it('evaluate without result parameter', function() {
-        var ls = new LinearSpline({
+        var qs = new QuaternionSpline({
             points : points,
             times : times
         });
 
-        expect(ls.evaluate(times[0])).toEqual(points[0]);
+        expect(qs.evaluate(times[0])).toEqual(points[0]);
 
-        var time = (times[1] + times[0]) * 0.5;
-        var t = (time - times[0]) / (times[1] - times[0]);
-        expect(ls.evaluate(time)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+        var time = (times[2] + times[1]) * 0.5;
+        var t = (time - times[1]) / (times[2] - times[1]);
+
+        var quads = qs.innerQuadrangles;
+        expect(qs.evaluate(time)).toEqual(Quaternion.squad(points[1], points[2], quads[1], quads[2], t));
     });
 
     it('evaluate with result parameter', function() {
-        var ls = new LinearSpline({
+        var qs = new QuaternionSpline({
             points : points,
             times : times
         });
-        var result = new Cartesian3();
+        var result = new Quaternion();
 
-        var point = ls.evaluate(times[0], result);
+        var point = qs.evaluate(times[0], result);
         expect(point).toBe(result);
         expect(result).toEqual(points[0]);
     });
