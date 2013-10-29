@@ -2084,8 +2084,8 @@ define([
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
             count = count || indexBuffer.getNumberOfIndices();
         } else {
-            offset = offset || 0; // in vertices
-            count = count || va._getNumberOfVertices();
+            offset = defaultValue(offset, 0); // in vertices
+            count = defaultValue(count, va.numberOfVertices);
         }
 
         if (offset < 0) {
