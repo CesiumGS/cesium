@@ -41,6 +41,7 @@
     color: #fff;  /* For text buttons */
     fill: #fff;   /* For SVG buttons */
     border-color: #ea4;
+    outline: none;
 }
 
 .cesium-widget-button:hover {
