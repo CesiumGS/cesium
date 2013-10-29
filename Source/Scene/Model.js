@@ -885,8 +885,9 @@ define([
     function createCommand(model, node, context) {
         var czmMeshesCommands = node.czm.meshesCommands;
 
-        var colorCommands = model._commandLists.colorList;
-        var pickCommands = model._commandLists.pickList;
+        // TODO: Add translucentList when this is resolved: https://github.com/KhronosGroup/glTF/issues/105
+        var colorCommands = model._commandLists.opaqueList;
+        var pickCommands = model._commandLists.pickList.opaqueList;
         var pickIds = model._pickIds;
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
