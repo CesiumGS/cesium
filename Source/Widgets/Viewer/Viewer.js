@@ -21,6 +21,7 @@ define([
         '../FullscreenButton/FullscreenButton',
         '../Geocoder/Geocoder',
         '../getElement',
+        '../subscribeAndEvaluate',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
         '../Timeline/Timeline',
@@ -47,6 +48,7 @@ define([
         FullscreenButton,
         Geocoder,
         getElement,
+        subscribeAndEvaluate,
         HomeButton,
         SceneModePicker,
         Timeline,
@@ -289,19 +291,13 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
             //Subscribe to fullscreenButton.viewModel.isFullscreenEnabled so
             //that we can hide/show the button as well as size the timeline.
-            var fullScreenEnabledCallback = function(value) {
-                if (value) {
-                    fullscreenContainer.style.display = 'block';
-                } else {
-                    fullscreenContainer.style.display = 'none';
-                }
+            this._fullscreenSubscription = subscribeAndEvaluate(fullscreenButton.viewModel, 'isFullscreenEnabled', function(isFullscreenEnabled) {
+                fullscreenContainer.style.display = isFullscreenEnabled ? 'block' : 'none';
                 if (defined(timeline)) {
                     timeline.container.style.right = fullscreenContainer.clientWidth + 'px';
                     timeline.resize();
                 }
-            };
-            this._fullscreenSubscription = knockout.getObservable(fullscreenButton.viewModel, 'isFullscreenEnabled').subscribe(fullScreenEnabledCallback);
-            fullScreenEnabledCallback(fullscreenButton.viewModel.isFullscreenEnabled);
+            });
         } else if (defined(timeline)) {
             timeline.container.style.right = 0;
         }

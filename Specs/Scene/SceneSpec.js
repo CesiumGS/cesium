@@ -6,6 +6,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/BoundingSphere',
          'Core/Event',
+         'Core/Extent',
          'Renderer/DrawCommand',
          'Renderer/CommandLists',
          'Renderer/Context',
@@ -13,6 +14,7 @@ defineSuite([
          'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/CompositePrimitive',
+         'Scene/ExtentPrimitive',
          'Scene/FrameState',
          'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
@@ -24,6 +26,7 @@ defineSuite([
          Cartesian3,
          BoundingSphere,
          Event,
+         Extent,
          DrawCommand,
          CommandLists,
          Context,
@@ -31,6 +34,7 @@ defineSuite([
          AnimationCollection,
          Camera,
          CompositePrimitive,
+         ExtentPrimitive,
          FrameState,
          ScreenSpaceCameraController,
          createScene,
@@ -95,7 +99,7 @@ defineSuite([
 
                 if (defined(options.command)) {
                     var commandLists = new CommandLists();
-                    commandLists.colorList.push(options.command);
+                    commandLists.opaqueList.push(options.command);
                     commandList.push(commandLists);
                 }
 
@@ -178,6 +182,90 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+
+        destroyScene(scene);
+    });
+
+    it('opaque/translucent render order (1)', function() {
+        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var extentPrimitive1 = new ExtentPrimitive({
+            extent : extent,
+            asynchronous : false
+        });
+        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var extentPrimitive2 = new ExtentPrimitive({
+            extent : extent,
+            height : 1000.0,
+            asynchronous : false
+        });
+        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+
+        var scene = createScene();
+        var primitives = scene.getPrimitives();
+        primitives.add(extentPrimitive1);
+        primitives.add(extentPrimitive2);
+
+        scene.getCamera().controller.viewExtent(extent);
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).not.toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        primitives.raiseToTop(extentPrimitive1);
+
+        scene.initializeFrame();
+        scene.render();
+        pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).not.toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        destroyScene(scene);
+    });
+
+    it('opaque/translucent render order (2)', function() {
+        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var extentPrimitive1 = new ExtentPrimitive({
+            extent : extent,
+            height : 1000.0,
+            asynchronous : false
+        });
+        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var extentPrimitive2 = new ExtentPrimitive({
+            extent : extent,
+            asynchronous : false
+        });
+        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+
+        var scene = createScene();
+        var primitives = scene.getPrimitives();
+        primitives.add(extentPrimitive1);
+        primitives.add(extentPrimitive2);
+
+        scene.getCamera().controller.viewExtent(extent);
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        primitives.raiseToTop(extentPrimitive1);
+
+        scene.initializeFrame();
+        scene.render();
+        pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
 
         destroyScene(scene);
     });

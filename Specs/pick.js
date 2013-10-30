@@ -13,6 +13,18 @@ define([
         FrameState) {
     "use strict";
 
+    function executeList(context, passState, commandLists, listName) {
+        var length = commandLists.length;
+        for (var i = 0; i < length; ++i) {
+            var commandList = commandLists[i].pickList[listName];
+            var commandListLength = commandList.length;
+            for (var j = 0; j < commandListLength; ++j) {
+                var command = commandList[j];
+                command.execute(context, passState);
+            }
+        }
+    }
+
     function pick(context, frameState, primitives, x, y) {
         var rectangle = new BoundingRectangle(x, y, 1, 1);
         var pickFramebuffer = context.createPickFramebuffer();
@@ -31,15 +43,8 @@ define([
         clear.stencil = 1.0;
         clear.execute(context, passState);
 
-        var length = commandLists.length;
-        for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].pickList;
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                var command = commandList[j];
-                command.execute(context, passState);
-            }
-        }
+        executeList(context, passState, commandLists, 'opaqueList');
+        executeList(context, passState, commandLists, 'translucentList');
 
         frameState.passes = oldPasses;
 
