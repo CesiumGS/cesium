@@ -23,6 +23,8 @@ Beta Releases
    * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
    * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
    * Replaced `SkyBox.getSources` with `SkyBox.sources`.
+   * The `bearing` property of `DynamicEllipse` is now called `rotation`.
+   * CZML `ellipse.bearing` property is now `ellipse.rotation`
 * Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom to that location.  It is enabled by default in applications that use the `Viewer` widget.
 * Added `GoogleEarthImageryProvider`.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.

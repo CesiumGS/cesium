@@ -102,7 +102,7 @@ define([
      *       center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       bearing : CesiumMath.PI_OVER_FOUR
+     *       rotation : CesiumMath.PI_OVER_FOUR
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });

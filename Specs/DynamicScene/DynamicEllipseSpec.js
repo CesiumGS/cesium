@@ -14,46 +14,46 @@ defineSuite([
         var source = new DynamicEllipse();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
-        source.bearing = new ConstantProperty(3);
+        source.rotation = new ConstantProperty(3);
 
         var target = new DynamicEllipse();
         target.merge(source);
         expect(target.semiMajorAxis).toBe(source.semiMajorAxis);
         expect(target.semiMinorAxis).toBe(source.semiMinorAxis);
-        expect(target.bearing).toBe(source.bearing);
+        expect(target.rotation).toBe(source.rotation);
     });
 
     it('merge does not assign assigned properties', function() {
         var source = new DynamicEllipse();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
-        source.bearing = new ConstantProperty(3);
+        source.rotation = new ConstantProperty(3);
 
         var semiMajorAxis = new ConstantProperty(1);
         var semiMinorAxis = new ConstantProperty(2);
-        var bearing = new ConstantProperty(3);
+        var rotation = new ConstantProperty(3);
 
         var target = new DynamicEllipse();
         target.semiMajorAxis = semiMajorAxis;
         target.semiMinorAxis = semiMinorAxis;
-        target.bearing = bearing;
+        target.rotation = rotation;
 
         target.merge(source);
         expect(target.semiMajorAxis).toBe(semiMajorAxis);
         expect(target.semiMinorAxis).toBe(semiMinorAxis);
-        expect(target.bearing).toBe(bearing);
+        expect(target.rotation).toBe(rotation);
     });
 
     it('clone works', function() {
         var source = new DynamicEllipse();
         source.semiMajorAxis = new ConstantProperty(1);
         source.semiMinorAxis = new ConstantProperty(2);
-        source.bearing = new ConstantProperty(3);
+        source.rotation = new ConstantProperty(3);
 
         var result = source.clone();
         expect(result.semiMajorAxis).toBe(source.semiMajorAxis);
         expect(result.semiMinorAxis).toBe(source.semiMinorAxis);
-        expect(result.bearing).toBe(source.bearing);
+        expect(result.rotation).toBe(source.rotation);
     });
 
     it('merge throws if source undefined', function() {

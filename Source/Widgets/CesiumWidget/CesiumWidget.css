@@ -74,6 +74,7 @@
 }
 
 .cesium-widget-toolbar-icon {
+    -moz-box-sizing: border-box;
     box-sizing: border-box;
     width: 32px;
     height: 32px;

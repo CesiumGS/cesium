@@ -64,6 +64,7 @@ option:disabled {
     border: none;
     width: 100%;
     height: 50%;
+    -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
 
