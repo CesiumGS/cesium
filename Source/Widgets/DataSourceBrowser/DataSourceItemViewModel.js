@@ -34,6 +34,11 @@ define([
 
         knockout.track(this, ['name', 'children', 'expanded']);
 
+        this.displayName = undefined;
+        knockout.defineProperty(this, 'displayName', function() {
+            return that.name.replace(/\//g, '/\u200b');
+        });
+
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
             return that.children.length > 0;

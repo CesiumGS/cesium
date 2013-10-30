@@ -61,7 +61,7 @@
 
 .cesium-dataSourceBrowser-dataSourcesContainer {
     position: absolute;
-    top: 5px;
+    top: 0;
     left: -380px;
     opacity: 0;
     visibility: hidden;
@@ -101,13 +101,13 @@
     color: #edffff;
     font-weight: bold;
     margin: 0 0 2px 0;
-    padding: 6px 6px 6px 110px;
+    padding: 8px 6px 6px 110px;
     letter-spacing: 1px;
 }
 
 .cesium-dataSourceBrowser-dataSourcesContainerHide {
     position: absolute;
-    top: 1px;
+    top: 3px;
     right: 1px;
     font-size: 18px;
     border: 1px solid transparent;
@@ -117,7 +117,7 @@
 
 .cesium-dataSourceBrowser-addDataSourceButton {
     position: absolute;
-    top: 1px;
+    top: 3px;
     right: 45px;
     border: 1px solid transparent;
     background-color: transparent;
@@ -239,25 +239,23 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     margin-right: 40px;
 }
 
-.cesium-dataSourceBrowser-layerButton {
+.cesium-dataSourceBrowser .cesium-dataSourceBrowser-layerButton {
     display: block;
     position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 32px;
+    top: 0;
+    left: 0;
+    width: 38px;
     height: 32px;
-    background-image: url(../Images/layers.svg);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    border-radius: 14%;
-    cursor: pointer;
+    text-align: right;
+    font-size: 22px;
+    padding: 1px 12px;
+    margin: 0;
+    border-radius: 0;
+    border-top: none;
+    border-left: none;
 }
 
-.cesium-dataSourceBrowser-layerButton:hover {
-    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
-}
-
-.cesium-dataSourceBrowser-layerButton-hidden {
+.cesium-dataSourceBrowser .cesium-dataSourceBrowser-layerButton-hidden {
     display: none;
 }
 

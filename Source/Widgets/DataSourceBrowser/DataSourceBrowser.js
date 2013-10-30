@@ -41,7 +41,8 @@ define([
 
         // The layer button reveals the dataSourceBrowser panel.
         var layerButton = document.createElement('div');
-        layerButton.className = 'cesium-dataSourceBrowser-layerButton';
+        layerButton.className = 'cesium-dataSourceBrowser-layerButton cesium-widget-button cesium-widget-toolbar-icon';
+        layerButton.innerHTML = '&raquo;';
         layerButton.setAttribute('data-bind', 'click: toggleVisibility,\
 css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         element.appendChild(layerButton);
@@ -59,12 +60,12 @@ data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut },
     data-bind="click: toggleExpanded, css: { \
     \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <span data-bind="html: expandIndicator"></span>\
-    <span data-bind="text: name"></span></span>\
+    <span data-bind="text: displayName"></span></span>\
 <ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item" \
-    data-bind="text: name, click: select, css: { \
+    data-bind="text: displayName, click: select, css: { \
     \'cesium-dataSourceBrowser-item-selected\': isSelected }"></span>\
 <!-- /ko -->';
         element.appendChild(templateElement);
@@ -102,7 +103,7 @@ click: addDataSourceCommand');
         // This is the container for the complete list of data sources.
         var dataSourcesContainerBody = document.createElement('div');
         dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
-        dataSourcesContainerBody.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(45) }');
+        dataSourcesContainerBody.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
         dataSourcesContainer.appendChild(dataSourcesContainerBody);
 
         // Info message, if there are no data sources.
@@ -143,7 +144,7 @@ valueUpdate: \'afterkeydown\'');
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <span data-bind="html: expandIndicator"></span>\
-    <span data-bind="text: name"></span>\
+    <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
         <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
             data-bind="visible: !isSoleSource || !clockTracking, \
@@ -164,7 +165,7 @@ valueUpdate: \'afterkeydown\'');
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
                       \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
-    <span data-bind="text: name"></span>\
+    <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
         <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
             data-bind="visible: !isSoleSource || !clockTracking, \
