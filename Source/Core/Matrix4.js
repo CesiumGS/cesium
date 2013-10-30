@@ -263,9 +263,29 @@ define([
             result = new Matrix4();
         }
 
+        var scaleX = scale.x;
+        var scaleY = scale.y;
+        var scaleZ = scale.z;
         scratchTrsRotation = Matrix3.fromQuaternion(rotation, scratchTrsRotation);
-        result = Matrix4.fromRotationTranslation(scratchTrsRotation, translation, result);
-        return Matrix4.multiplyByScale(result, scale, result);
+
+        result[0]  = scratchTrsRotation[0] * scaleX;
+        result[1]  = scratchTrsRotation[1] * scaleX;
+        result[2]  = scratchTrsRotation[2] * scaleX;
+        result[3]  = 0.0;
+        result[4]  = scratchTrsRotation[3] * scaleY;
+        result[5]  = scratchTrsRotation[4] * scaleY;
+        result[6]  = scratchTrsRotation[5] * scaleY;
+        result[7]  = 0.0;
+        result[8]  = scratchTrsRotation[6] * scaleZ;
+        result[9]  = scratchTrsRotation[7] * scaleZ;
+        result[10] = scratchTrsRotation[8] * scaleZ;
+        result[11] = 0.0;
+        result[12] = translation.x;
+        result[13] = translation.y;
+        result[14] = translation.z;
+        result[15] = 1.0;
+
+        return result;
     };
 
     /**
