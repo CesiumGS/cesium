@@ -2081,10 +2081,9 @@ define([
         var hasIndexBuffer = defined(indexBuffer);
 
         if (hasIndexBuffer) {
-            offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
-            count = count || indexBuffer.getNumberOfIndices();
+            offset = offset * indexBuffer.getBytesPerIndex(); // offset in vertices to offset in bytes
+            count = defaultValue(count, indexBuffer.getNumberOfIndices());
         } else {
-            offset = defaultValue(offset, 0); // in vertices
             count = defaultValue(count, va.numberOfVertices);
         }
 
@@ -2092,20 +2091,22 @@ define([
             throw new DeveloperError('drawCommand.offset must be omitted or greater than or equal to zero.');
         }
 
-        if (count > 0) {
-            context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
-            drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
-
-            va._bind();
-
-            if (hasIndexBuffer) {
-                context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
-            } else {
-                context._gl.drawArrays(primitiveType.value, offset, count);
-            }
-
-            va._unBind();
+        if (count < 0) {
+            throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
         }
+
+        context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
+        drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
+
+        va._bind();
+
+        if (hasIndexBuffer) {
+            context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
+        } else {
+            context._gl.drawArrays(primitiveType.value, offset, count);
+        }
+
+        va._unBind();
     }
 
     function endDraw(framebuffer) {
@@ -2129,6 +2130,7 @@ define([
      * @exception {DeveloperError} drawCommand.shaderProgram is required.
      * @exception {DeveloperError} drawCommand.vertexArray is required.
      * @exception {DeveloperError} drawCommand.offset must be omitted or greater than or equal to zero.
+     * @exception {DeveloperError} drawCommand.count must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
      * @exception {DeveloperError} Framebuffer is not complete.
      *
