@@ -2065,26 +2065,16 @@ define([
 
     function continueDraw(context, drawCommand) {
         var primitiveType = drawCommand.primitiveType;
+        var va = drawCommand.vertexArray;
+        var offset = drawCommand.offset;
+        var count = drawCommand.count;
+
         if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
 
-        if (!defined(drawCommand.vertexArray)) {
+        if (!defined(va)) {
             throw new DeveloperError('drawCommand.vertexArray is required.');
-        }
-
-        var va = drawCommand.vertexArray;
-        var indexBuffer = va.getIndexBuffer();
-
-        var offset = drawCommand.offset;
-        var count = drawCommand.count;
-        var hasIndexBuffer = defined(indexBuffer);
-
-        if (hasIndexBuffer) {
-            offset = offset * indexBuffer.getBytesPerIndex(); // offset in vertices to offset in bytes
-            count = defaultValue(count, indexBuffer.getNumberOfIndices());
-        } else {
-            count = defaultValue(count, va.numberOfVertices);
         }
 
         if (offset < 0) {
@@ -2098,15 +2088,22 @@ define([
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
         drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
-        va._bind();
+        var indexBuffer = va.getIndexBuffer();
 
-        if (hasIndexBuffer) {
+        if (defined(indexBuffer)) {
+            offset = offset * indexBuffer.getBytesPerIndex(); // offset in vertices to offset in bytes
+            count = defaultValue(count, indexBuffer.getNumberOfIndices());
+
+            va._bind();
             context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
+            va._unBind();
         } else {
-            context._gl.drawArrays(primitiveType.value, offset, count);
-        }
+            count = defaultValue(count, va.numberOfVertices);
 
-        va._unBind();
+            va._bind();
+            context._gl.drawArrays(primitiveType.value, offset, count);
+            va._unBind();
+        }
     }
 
     function endDraw(framebuffer) {
