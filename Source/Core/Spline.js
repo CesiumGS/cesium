@@ -99,9 +99,18 @@ define([
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
-        for (i = 0; i < length - 1; ++i) {
-            if (time >= times[i] && time < times[i + 1]) {
-                break;
+
+        if (time > times[this._lastTimeIndex]) {
+            for (i = this._lastTimeIndex; i < length - 1; ++i) {
+                if (time >= times[i] && time < times[i + 1]) {
+                    break;
+                }
+            }
+        } else {
+            for (i = this._lastTimeIndex - 1; i >= 0; --i) {
+                if (time >= times[i] && time < times[i + 1]) {
+                    break;
+                }
             }
         }
 
