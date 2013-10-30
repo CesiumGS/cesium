@@ -85,7 +85,7 @@ define(function() {
          *
          * @default undefined
          */
-        this.offset = undefined;
+        this.offset = 0;
 
         /**
          * The shader program to apply.
