@@ -731,7 +731,7 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 10,
                 semiMinorAxis : 20,
-                bearing : 1.0
+                rotation : 1.0
             }
         };
 
@@ -742,7 +742,7 @@ defineSuite([
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
         expect(dynamicObject.ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.bearing.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.bearing);
+        expect(dynamicObject.ellipse.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.rotation);
     });
 
     it('CZML adds data for constrained ellipse.', function() {
@@ -751,7 +751,7 @@ defineSuite([
                 interval : '2000-01-01/2001-01-01',
                 semiMajorAxis : 10,
                 semiMinorAxis : 20,
-                bearing : 1.0
+                rotation : 1.0
             }
         };
 
@@ -765,11 +765,11 @@ defineSuite([
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
         expect(dynamicObject.ellipse.semiMinorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.bearing.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.bearing);
+        expect(dynamicObject.ellipse.rotation.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.rotation);
 
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.ellipse.semiMinorAxis.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipse.bearing.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.ellipse.rotation.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite ellipsoid.', function() {
