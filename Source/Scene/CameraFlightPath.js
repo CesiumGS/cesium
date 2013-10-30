@@ -241,7 +241,7 @@ define([
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time, camera.position);
+            camera.position = path.evaluate(time);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
@@ -365,7 +365,7 @@ define([
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time, camera.position);
+            camera.position = path.evaluate(time);
             var zoom = camera.position.z;
             camera.position.z = height;
 
