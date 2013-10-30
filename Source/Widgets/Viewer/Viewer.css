@@ -65,10 +65,6 @@
 	overflow: hidden;
 }
 
-.cesium-viewer-dataSourceBrowserContainer {
-    z-index: 100;
-}
-
 .cesium-viewer-toolbar {
 	display: block;
 	position: absolute;
