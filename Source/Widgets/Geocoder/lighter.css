@@ -2,7 +2,6 @@
     border: solid 1px #759dc0;
     background-color: rgba(240, 240, 240, 0.9);
     color: black;
-    opacity: 1;
 }
 
 .cesium-lighter .cesium-viewer-geocoderContainer:hover .cesium-geocoder-input {

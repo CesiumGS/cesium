@@ -7,28 +7,53 @@ Beta Releases
 ### b22 - 2013-11-01
 
 * Breaking changes:
-   * The following prototype functions were removed:
-      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
-      * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
-
-      Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
-   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
-   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
-   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
+  * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
+  * The following prototype functions were removed
+    * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`.
+    * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`. For example, code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
    * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
-   * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
+   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
    * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
    * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
    * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
    * All SVG files were deleted from `Widgets/Images` and replaced by a new `SvgPath` class.
-   * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button depend on `CesiumWidget.css` now for global Cesium button styles.
+   * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button now depend on `CesiumWidget.css` for global Cesium button styles.
    * The toolbar widgets expect their `container` to be the toolbar itself now, no need for separate containers for each widget on the bar.
    * `Property` implementations are now required to implement a prototype `equals` function.
    * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
-* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
+   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
+   * The `bearing` property of `DynamicEllipse` is now called `rotation`.
+   * CZML `ellipse.bearing` property is now `ellipse.rotation`
+* Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom to that location.  It is enabled by default in applications that use the `Viewer` widget.
+* Added `GoogleEarthImageryProvider`.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
+* Added `Material.translucent` property. Set this property or `Appearance.translucent` for correct rendering order. Translucent geometries are rendered after opaque geometries.
+* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
+* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
+* Added `Shapes.compute2DCircle`.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
+* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
+* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
+* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
+* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
+* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
+* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
+* The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
+* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+* Added `Matrix3.getEigenDecomposition`.
+* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
+* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
+* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
+* Added `FrameState.events`.
+* Added `Primitive.allowPicking` to save memory when picking is not needed.
+* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
+* Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
+* Upgraded Knockout from version 2.3.0 to 3.0.0.
+* Upgraded RequireJS to version 2.1.9, and Almond to 0.2.6.
 * Added a user-defined `id` to all primitives for use with picking.  For example:
 
             primitives.add(new Polygon({
@@ -42,29 +67,6 @@ Beta Releases
             if (defined(p) && defined(p.id)) {
                // Use properties and functions in p.id
             }
-* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
-* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
-* Added `Shapes.compute2DCircle`.
-* Added `Matrix3.getEigenDecomposition`.
-* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
-* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
-* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
-* Upgraded RequireJS to version 2.1.9, and Almond to 0.2.6.
-* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
-* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
-* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
-* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
-* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
-* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
-* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
-* Added `FrameState.events`.
-* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
-* The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
-* Added `GoogleEarthImageryProvider`.
-* Added `Primitive.allowPicking` to save memory when picking is not needed.
-* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
-* Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
-* Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom the camera to that location.  It is enabled by default in applications that use the `Viewer` widget.
 
 ### b21 - 2013-10-01
 

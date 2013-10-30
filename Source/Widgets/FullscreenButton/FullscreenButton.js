@@ -6,6 +6,7 @@ define([
         '../../Core/destroyObject',
         '../SvgPath/SvgPath',
         '../getElement',
+        '../subscribeAndEvaluate',
         './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
@@ -15,6 +16,7 @@ define([
         destroyObject,
         SvgPath,
         getElement,
+        subscribeAndEvaluate,
         FullscreenButtonViewModel,
         knockout) {
     "use strict";
@@ -59,7 +61,7 @@ enable: isFullscreenEnabled');
         knockout.applyBindings(this._viewModel, this._element);
 
         var that = this;
-        this._subscription = knockout.getObservable(this._viewModel, 'isFullscreen').subscribe(function (isFullscreen) {
+        this._subscription = subscribeAndEvaluate(this._viewModel, 'isFullscreen', function(isFullscreen) {
             that._svgPath.path = isFullscreen ? exitFullScreenPath : enterFullScreenPath;
         });
     };

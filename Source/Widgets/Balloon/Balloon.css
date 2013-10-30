@@ -29,7 +29,6 @@
     background-color: #fff;
     color: #000;
     border-radius: 5px;
-    z-index: 1;
     border: 1px solid #ccc;
     padding: 5px;
     min-height: 28px;
@@ -44,7 +43,6 @@
 .cesium-balloon-arrow-container {
     position: absolute;
     overflow: hidden;
-    z-index: 2;
     visibility: hidden;
 }
 

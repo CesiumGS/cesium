@@ -55,9 +55,6 @@ defineSuite([
     });
 
     beforeEach(function() {
-        polygon = new Polygon();
-        polygon.asynchronous = false;
-
         us = context.getUniformState();
         us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
@@ -71,6 +68,8 @@ defineSuite([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var material = Material.fromType('Color');
+        material.translucent = false;
 
         return new Polygon({
             ellipsoid : ellipsoid,
@@ -81,6 +80,7 @@ defineSuite([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
             ],
+            material : material,
             id : options.id,
             asynchronous : false,
             debugShowBoundingVolume : options.debugShowBoundingVolume
@@ -147,10 +147,12 @@ defineSuite([
     });
 
     it('gets default show', function() {
+        polygon = createPolygon();
         expect(polygon.show).toEqual(true);
     });
 
     it('sets positions', function() {
+        polygon = new Polygon();
         var positions = [
             new Cartesian3(1.0, 2.0, 3.0),
             new Cartesian3(4.0, 5.0, 6.0),
@@ -164,6 +166,8 @@ defineSuite([
     });
 
     it('setPositions throws with less than three positions', function() {
+        polygon = new Polygon();
+
         expect(function() {
             polygon.setPositions([new Cartesian3()]);
         }).toThrow();
@@ -195,6 +199,7 @@ defineSuite([
                 }]
         };
 
+        polygon = createPolygon();
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(polygon.getPositions()).not.toBeDefined();
     });
@@ -225,6 +230,7 @@ defineSuite([
                 }]
         };
 
+        polygon = createPolygon();
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(polygon.getPositions()).not.toBeDefined();
     });
@@ -235,6 +241,7 @@ defineSuite([
                     new Cartographic()
                 ])
         };
+        polygon = createPolygon();
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(function() {
             render(context, frameState, polygon);
@@ -242,6 +249,7 @@ defineSuite([
     });
 
     it('gets the default color', function() {
+        polygon = new Polygon();
         expect(polygon.material.uniforms.color).toEqual({
             red : 1.0,
             green : 1.0,
@@ -251,10 +259,12 @@ defineSuite([
     });
 
     it('has a default ellipsoid', function() {
+        polygon = new Polygon();
         expect(polygon.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('gets the default granularity', function() {
+        polygon = new Polygon();
         expect(polygon.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
     });
 
@@ -392,7 +402,7 @@ defineSuite([
         polygon = createPolygon();
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
@@ -411,12 +421,13 @@ defineSuite([
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
         polygon.asynchronous = false;
+        polygon.material.translucent = false;
 
         var mode = frameState.mode;
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
