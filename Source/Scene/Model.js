@@ -594,16 +594,34 @@ define([
          var animations = model.gltf.animations;
          var name;
 
-         for (name in animations) {
-             if (animations.hasOwnProperty(name)) {
-                 var animation = animations[name];
+         for (var animationName in animations) {
+             if (animations.hasOwnProperty(animationName)) {
+                 var animation = animations[animationName];
                  var parameters = animation.parameters;
+                 var samplers = animation.samplers;
 
                  for (name in parameters) {
                      if (parameters.hasOwnProperty(name)) {
                          var parameter = parameters[name];
                          parameter.czm = {
                              values : ModelCache.getAnimationParameterValues(model, parameter)
+                         };
+                     }
+                 }
+
+                 var timeParameter = animation.parameters.TIME;
+                 var times = timeParameter.czm.values;
+
+                 animation.czm = {
+                     startTime : times[0],
+                     stopTime : times[timeParameter.count - 1]
+                 };
+
+                 for (name in samplers) {
+                     if (samplers.hasOwnProperty(name)) {
+                         var sampler = samplers[name];
+                         sampler.czm = {
+                             spline : ModelCache.getAnimationSpline(model, animationName, animation, name, sampler)
                          };
                      }
                  }

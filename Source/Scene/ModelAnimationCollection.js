@@ -4,6 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/defaultValue',
         '../Core/DeveloperError',
+        '../Core/Math',
         '../Core/Enumeration',
         '../Core/Event',
         '../Core/JulianDate',
@@ -15,6 +16,7 @@ define([
         defineProperties,
         defaultValue,
         DeveloperError,
+        CesiumMath,
         Enumeration,
         Event,
         JulianDate,
@@ -165,7 +167,7 @@ define([
         return this._scheduledAnimations[index];
     };
 
-    function animateChannels(model, scheduledAnimation, delta) {
+    function animateChannels(model, scheduledAnimation, localAnimationTime) {
         var nodes = model.gltf.nodes;
         var animation = scheduledAnimation._animation;
         var parameters = animation.parameters;
@@ -173,8 +175,7 @@ define([
         var channels = animation.channels;
         var length = channels.length;
 
-        // TODO: get index from TIME
-        var index = Math.floor(delta * (animation.count - 1));  // [0, count - 1] index into parameters
+        console.log(localAnimationTime);
 
         for (var i = 0; i < length; ++i) {
             var channel = channels[i];
@@ -182,14 +183,9 @@ define([
             var target = channel.target;
             // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
             var czmNode = nodes[target.id].czm;
-            var animatingProperty = czmNode[target.path];
+            var spline = samplers[channel.sampler].czm.spline;
 
-            var sampler = samplers[channel.sampler];
-            var parameter = parameters[sampler.output];
-            // TODO: Ignoring sampler.interpolation for now: https://github.com/KhronosGroup/glTF/issues/156
-
-            // TODO: interpolate key frames
-            parameter.czm.values[index].clone(animatingProperty);
+            czmNode[target.path] = spline.evaluate(localAnimationTime, czmNode[target.path]);
         }
     }
 
@@ -221,9 +217,7 @@ define([
             }
 
             if (!defined(scheduledAnimation._duration)) {
-                var timeParameter = animation.parameters.TIME;
-                var times = timeParameter.czm.values;
-                scheduledAnimation._duration = times[timeParameter.count - 1] *  (1.0 / scheduledAnimation.speedup);
+                scheduledAnimation._duration = animation.czm.stopTime * (1.0 / scheduledAnimation.speedup);
             }
 
             var startTime = scheduledAnimation._startTime;
@@ -269,7 +263,11 @@ define([
                     delta = 1.0 - delta;
                 }
 
-                animateChannels(model, scheduledAnimation, delta);
+                var localAnimationTime = delta * duration * scheduledAnimation.speedup;
+                // Clamp in case float-point roundoff goes outside the animation's first or last keyframe
+                localAnimationTime = CesiumMath.clamp(localAnimationTime, animation.czm.startTime, animation.czm.stopTime);
+
+                animateChannels(model, scheduledAnimation, localAnimationTime);
 
                 if (defined(scheduledAnimation.update)) {
                     events.push({

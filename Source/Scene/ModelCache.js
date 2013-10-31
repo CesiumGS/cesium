@@ -3,11 +3,15 @@ define([
         '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Quaternion',
+        '../Core/LinearSpline',
+        '../Core/QuaternionSpline',
         './ModelTypes'
     ], function(
         defined,
         Cartesian3,
         Quaternion,
+        LinearSpline,
+        QuaternionSpline,
         ModelTypes) {
     "use strict";
 
@@ -69,14 +73,53 @@ define([
                     var byteOffset = 4 * i;
                     values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
                 }
-            } else {
-                // TODO: Handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
             }
+            // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
 
             cachedAnimationParameters[key] = values;
         }
 
         return values;
+    };
+
+    var cachedAnimationSplines = {
+    };
+
+    function getAnimationSplineKey(model, animationName, samplerName) {
+        return model.basePath + ':' + animationName + ':' + samplerName;
+    }
+
+    ModelCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler) {
+        var key = getAnimationSplineKey(model, animationName, samplerName);
+        var spline = cachedAnimationSplines[key];
+
+        if (!defined(spline)) {
+            var input = animation.parameters[sampler.input];
+            var output = animation.parameters[sampler.output];
+
+            var times = input.czm.values;
+            var controlPoints = output.czm.values;
+
+            if (sampler.interpolation === 'LINEAR') {
+                if (output.type === 'FLOAT_VEC3') {
+                    spline = new LinearSpline({
+                        times : times,
+                        points : controlPoints
+                    });
+                } else if (output.type === 'FLOAT_VEC4') {
+                    spline = new QuaternionSpline({
+                        times : times,
+                        points : controlPoints
+                    });
+                }
+                // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
+            }
+            // TODO: else support all interpolators.  https://github.com/KhronosGroup/glTF/issues/156
+
+            cachedAnimationSplines[key] = spline;
+        }
+
+        return spline;
     };
 
     return ModelCache;
