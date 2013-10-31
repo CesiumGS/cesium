@@ -659,5 +659,6 @@ define([
         return this.createAnimation(scene, createAnimationDescription);
     };
 
+
     return CameraFlightPath;
 });

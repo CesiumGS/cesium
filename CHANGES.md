@@ -25,6 +25,12 @@ Beta Releases
    * The toolbar widgets expect their `container` to be the toolbar itself now, no need for separate containers for each widget on the bar.
    * `Property` implementations are now required to implement a prototype `equals` function.
    * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
+* Added initial gx:Tour tag support to KML data source
+   * New `DynamicWall` object to represent extruded KML line strings
+   * `WallVisualizer` visualizer.
+   * Dedicated `GxTourVisualizer` visualizer that handles camera flight animation.
+   * AviationWidget demo page included.
+   * Currently only one gx:Tour element is supported.
 * Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
