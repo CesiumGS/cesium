@@ -885,9 +885,11 @@ define([
     function createCommand(model, node, context) {
         var czmMeshesCommands = node.czm.meshesCommands;
 
-        // TODO: Add translucentList when this is resolved: https://github.com/KhronosGroup/glTF/issues/105
-        var colorCommands = model._commandLists.opaqueList;
-        var pickCommands = model._commandLists.pickList.opaqueList;
+        var opaqueColorCommands = model._commandLists.opaqueList;
+        var translucentColorCommands = model._commandLists.translucentList;
+        var opaquePickCommands = model._commandLists.pickList.opaqueList;
+        var translucentPickCommands = model._commandLists.pickList.translucentList;
+
         var pickIds = model._pickIds;
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
@@ -936,6 +938,7 @@ define([
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
                 var uniformMap = instanceTechnique.czm.uniformMap;
+                var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
                 var rs = pass.states.czm.renderState;
                 var owner = {
                     primitive : model,
@@ -959,7 +962,11 @@ define([
                 command.renderState = rs;
                 command.owner = owner;
                 command.debugShowBoundingVolume = debugShowBoundingVolume;
-                colorCommands.push(command);
+                if (isTranslucent) {
+                    translucentColorCommands.push(command);
+                } else {
+                    opaqueColorCommands.push(command);
+                }
 
                 var pickId = context.createPickId(owner);
                 pickIds.push(pickId);
@@ -980,7 +987,11 @@ define([
                 pickCommand.uniformMap = pickUniformMap;
                 pickCommand.renderState = rs;
                 pickCommand.owner = owner;
-                pickCommands.push(pickCommand);
+                if (isTranslucent) {
+                    translucentPickCommands.push(pickCommand);
+                } else {
+                    opaquePickCommands.push(pickCommand);
+                }
 
                 meshesCommands.push({
                     command : command,
@@ -1166,7 +1177,6 @@ define([
         }
 
         var justLoaded = false;
-        var commandLists = this._commandLists;
 
         if (this._state === ModelState.LOADING) {
             // Incrementally create WebGL resources as buffers/shaders/textures are downloaded
@@ -1202,7 +1212,7 @@ define([
 
         updatePickIds(this, context);
 
-        commandList.push(commandLists);
+        commandList.push(this._commandLists);
     };
 
     /**
