@@ -104,7 +104,10 @@ defineSuite([
                 }
 
                 if (defined(options.event)) {
-                    frameState.events.push(options.event);
+                    frameState.events.push({
+                        event : options.event,
+                        eventArguments : options.eventArguments
+                    });
                 }
             },
             destroy : function() {
@@ -119,12 +122,13 @@ defineSuite([
 
         var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive({
-            event : event
+            event : event,
+            eventArguments : ['argument']
         }));
 
         scene.initializeFrame();
         scene.render();
-        expect(spyListener).toHaveBeenCalled();
+        expect(spyListener).toHaveBeenCalledWith('argument');
 
         destroyScene(scene);
     });
