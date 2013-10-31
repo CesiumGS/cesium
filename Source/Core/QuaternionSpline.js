@@ -27,6 +27,39 @@ define([
         return quads;
     }
 
+    function createEvaluateFunction(spline) {
+        var points = spline.points;
+        var quads = spline.innerQuadrangles;
+        var times = spline.times;
+
+        // use slerp interpolation for 2 points
+        if (points.length < 3) {
+            var t0 = times[0];
+            var invSpan = 1.0 / (times[1] - t0);
+
+            var q0 = points[0];
+            var q1 = points[1];
+
+            return function(time, result) {
+                var u = (time - t0) * invSpan;
+                return Quaternion.slerp(q0, q1, u, result);
+            };
+        }
+
+        // use quad interpolation for more than 3 points
+        return function(time, result) {
+            var i = spline.findTimeInterval(time);
+            var u = (time - times[i]) / (times[i + 1] - times[i]);
+
+            var q0 = points[i];
+            var q1 = points[i + 1];
+            var s0 = quads[i];
+            var s1 = quads[i + 1];
+
+            return Quaternion.squad(q0, q1, s0, s1, u, result);
+        };
+    }
+
     /**
      * A spline that uses spherical quadrangle (squad) interpolation to create a quaternion curve.
      * The generated curve is in the class C<sup>1</sup>.
@@ -42,7 +75,7 @@ define([
      *                     If the inner quadrangle is not given, it will be estimated.
      *
      * @exception {DeveloperError} points is required.
-     * @exception {DeveloperError} points.length must be greater than or equal to 3.
+     * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
      */
@@ -58,8 +91,8 @@ define([
             throw new DeveloperError('points is required.');
         }
 
-        if (points.length < 3) {
-            throw new DeveloperError('points.length must be greater than or equal to 3.');
+        if (points.length < 2) {
+            throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
 
         if (!defined(times)) {
@@ -93,6 +126,7 @@ define([
          */
         this.innerQuadrangles = innerQuadrangles;
 
+        this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
 
@@ -125,23 +159,7 @@ define([
      *                             in the array <code>times</code>.
      */
     QuaternionSpline.prototype.evaluate = function(time, result) {
-        var points = this.points;
-        var quads = this.innerQuadrangles;
-        var times = this.times;
-
-        var i = this.findTimeInterval(time);
-        var u = (time - times[i]) / (times[i + 1] - times[i]);
-
-        if (!defined(result)) {
-            result = new Quaternion();
-        }
-
-        var q0 = points[i];
-        var q1 = points[i + 1];
-        var s0 = quads[i];
-        var s1 = quads[i + 1];
-
-        return Quaternion.squad(q0, q1, s0, s1, u, result);
+        return this._evaluateFunction(time, result);
     };
 
     return QuaternionSpline;

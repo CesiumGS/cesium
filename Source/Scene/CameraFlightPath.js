@@ -85,56 +85,6 @@ define([
         return Math.max(dx, dy);
     }
 
-    function createOrientationSpline(points, times) {
-        if (points.length > 2) {
-            return new QuaternionSpline({
-                points : points,
-                times : times
-            });
-        }
-
-        // only two points, use linear interpolation
-        var p = points[0];
-        var q = points[1];
-        var s = times[0];
-        var t = times[1];
-
-        return {
-            points : points,
-            times : times,
-            evaluate : function(time, result) {
-                time = CesiumMath.clamp(time, s, t);
-                var u = (time - s) / (t - s);
-                return Quaternion.slerp(p, q, u, result);
-            }
-        };
-    }
-
-    function createPathSpline(points, times) {
-        if (points.length > 2) {
-            return new HermiteSpline({
-                points : points,
-                times : times
-            });
-        }
-
-        // only two points, use linear interpolation
-        var p = points[0];
-        var q = points[1];
-        var s = times[0];
-        var t = times[1];
-
-        return {
-            points : points,
-            times : times,
-            evaluate : function(time, result) {
-                time = CesiumMath.clamp(time, s, t);
-                var u = (time - s) / (t - s);
-                return Cartesian3.lerp(p, q, u, result);
-            }
-        };
-    }
-
     function createPath3D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.getMaximumRadius();
@@ -193,7 +143,10 @@ define([
             times[k] = k * scalar;
         }
 
-        return createPathSpline(points, times);
+        return new HermiteSpline({
+            points : points,
+            times : times
+        });
     }
 
     var direction3D = new Cartesian3();
@@ -226,7 +179,10 @@ define([
             orientations[length] = createQuaternion(direction3D, up3D, quat3D);
         }
 
-        return createOrientationSpline(orientations, path.times);
+        return new QuaternionSpline({
+            points : orientations,
+            times : path.times
+        });
     }
 
     function createUpdate3D(frameState, destination, duration, direction, up) {
@@ -300,7 +256,10 @@ define([
             times[k] = k * scalar;
         }
 
-        return createPathSpline(points, times);
+        return new HermiteSpline({
+            points : points,
+            times : times
+        });
     }
 
     var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
@@ -324,7 +283,10 @@ define([
             orientations[length] = quat;
         }
 
-        return createOrientationSpline(orientations, path.times);
+        return new QuaternionSpline({
+            points : orientations,
+            times : path.times
+        });
     }
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
