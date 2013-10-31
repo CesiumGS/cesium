@@ -149,4 +149,33 @@ defineSuite([
         expect(point).toBe(result);
         expect(result).toEqual(points[0]);
     });
+
+    it('spline with 2 control points defaults to lerp', function() {
+        points = points.slice(0, 2);
+        times = times.slice(0, 2);
+
+        var crs = new CatmullRomSpline({
+            points : points,
+            times : times
+        });
+
+        var t = (times[0] + times[1]) * 0.5;
+        expect(crs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+    });
+
+    it('spline with 2 control points defaults to lerp and result parameter', function() {
+        points = points.slice(0, 2);
+        times = times.slice(0, 2);
+
+        var crs = new CatmullRomSpline({
+            points : points,
+            times : times
+        });
+
+        var t = (times[0] + times[1]) * 0.5;
+        var result = new Cartesian3();
+        var actual = crs.evaluate(t, result);
+        expect(actual).toBe(result);
+        expect(actual).toEqual(Cartesian3.lerp(points[0], points[1], t));
+    });
 });
