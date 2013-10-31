@@ -329,7 +329,9 @@ require({
                 }
             }
         }
-        if (!JSHINT(code, sandcastleJsHintOptions)) {
+        // make a copy of the options, JSHint modifies the object it's given
+        var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
+        if (!JSHINT(code, options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
