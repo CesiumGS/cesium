@@ -170,12 +170,9 @@ define([
     function animateChannels(model, scheduledAnimation, localAnimationTime) {
         var nodes = model.gltf.nodes;
         var animation = scheduledAnimation._animation;
-        var parameters = animation.parameters;
         var samplers = animation.samplers;
         var channels = animation.channels;
         var length = channels.length;
-
-        console.log(localAnimationTime);
 
         for (var i = 0; i < length; ++i) {
             var channel = channels[i];
