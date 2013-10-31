@@ -9,8 +9,8 @@ define([
         '../Core/HermiteSpline',
         '../Core/Math',
         '../Core/Matrix3',
-        '../Core/OrientationInterpolator',
         '../Core/Quaternion',
+        '../Core/QuaternionSpline',
         '../Scene/PerspectiveFrustum',
         '../Scene/PerspectiveOffCenterFrustum',
         '../Scene/SceneMode',
@@ -25,8 +25,8 @@ define([
         HermiteSpline,
         CesiumMath,
         Matrix3,
-        OrientationInterpolator,
         Quaternion,
+        QuaternionSpline,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode,
@@ -85,24 +85,52 @@ define([
         return Math.max(dx, dy);
     }
 
-    function createSpline(points) {
+    function createOrientationSpline(points, times) {
         if (points.length > 2) {
-            return new HermiteSpline(points);
+            return new QuaternionSpline({
+                points : points,
+                times : times
+            });
         }
 
         // only two points, use linear interpolation
         var p = points[0];
         var q = points[1];
+        var s = times[0];
+        var t = times[1];
 
         return {
-            getControlPoints : function() {
-                return points;
-            },
-
+            points : points,
+            times : times,
             evaluate : function(time, result) {
-                time = CesiumMath.clamp(time, p.time, q.time);
-                var t = (time - p.time) / (q.time - p.time);
-                return Cartesian3.lerp(p.point, q.point, t, result);
+                time = CesiumMath.clamp(time, s, t);
+                var u = (time - s) / (t - s);
+                return Quaternion.slerp(p, q, u, result);
+            }
+        };
+    }
+
+    function createPathSpline(points, times) {
+        if (points.length > 2) {
+            return new HermiteSpline({
+                points : points,
+                times : times
+            });
+        }
+
+        // only two points, use linear interpolation
+        var p = points[0];
+        var q = points[1];
+        var s = times[0];
+        var t = times[1];
+
+        return {
+            points : points,
+            times : times,
+            evaluate : function(time, result) {
+                time = CesiumMath.clamp(time, s, t);
+                var u = (time - s) / (t - s);
+                return Cartesian3.lerp(p, q, u, result);
             }
         };
     }
@@ -136,28 +164,12 @@ define([
         var axis, angle, rotation, middle;
         if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
             middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
+            points = [ start, middle, end ];
         } else if (Cartesian3.magnitude(start) > maxStartAlt && dot > 0) {
             middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
+            points = [ start, middle, end ];
         } else {
-            points = [{
-                point : start
-            }];
+            points = [ start ];
 
             angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
             axis = Cartesian3.cross(aboveEnd, afterStart);
@@ -169,50 +181,52 @@ define([
             var startCondition = angle - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, i));
-                points.push({
-                    point : Matrix3.multiplyByVector(rotation, aboveEnd)
-                });
+                points.push(Matrix3.multiplyByVector(rotation, aboveEnd));
             }
 
-            points.push({
-                point : end
-            });
+            points.push(end);
         }
 
+        var times = new Array(points.length);
         var scalar = duration / (points.length - 1);
         for ( var k = 0; k < points.length; ++k) {
-            points[k].time = k * scalar;
+            times[k] = k * scalar;
         }
 
-        return createSpline(points);
+        return createPathSpline(points, times);
     }
+
     var direction3D = new Cartesian3();
     var right3D = new Cartesian3();
     var up3D = new Cartesian3();
     var quat3D = new Quaternion();
-    function createOrientations3D(camera, points, endDirection, endUp) {
-        points[0].orientation = createQuaternion(camera.direction, camera.up);
+
+    function createOrientations3D(camera, path, endDirection, endUp) {
+        var points = path.points;
+        var orientations = new Array(points.length);
+        orientations[0] = createQuaternion(camera.direction, camera.up);
+
         var point;
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.negate(point, direction3D), direction3D);
             Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
             Cartesian3.cross(right3D, direction3D, up3D);
-            point.orientation = createQuaternion(direction3D, up3D, quat3D);
+            orientations[i] = createQuaternion(direction3D, up3D, quat3D);
         }
 
         point = points[length];
         if (defined(endDirection) && defined(endUp)) {
-            point.orientation = createQuaternion(endDirection, endUp);
+            orientations[length] = createQuaternion(endDirection, endUp);
         } else {
-            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.negate(point, direction3D), direction3D);
             Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
             Cartesian3.cross(right3D, direction3D, up3D);
-            point.orientation = createQuaternion(direction3D, up3D, quat3D);
+            orientations[length] = createQuaternion(direction3D, up3D, quat3D);
         }
 
-        return new OrientationInterpolator(points);
+        return createOrientationSpline(orientations, path.times);
     }
 
     function createUpdate3D(frameState, destination, duration, direction, up) {
@@ -220,14 +234,14 @@ define([
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
         var path = createPath3D(camera, ellipsoid, camera.position, destination, duration);
-        var orientations = createOrientations3D(camera, path.getControlPoints(), direction, up);
+        var orientations = createOrientations3D(camera, path, direction, up);
 
         var update = function(value) {
             var time = value.time;
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time, camera.position);
+            camera.position = path.evaluate(time);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
@@ -260,28 +274,12 @@ define([
         var middle;
         if (end.z > maxStartAlt) {
             middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
+            points = [ start, middle, end ];
         } else if (start.z > maxStartAlt) {
             middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
-
-            points = [{
-                point : start
-            }, {
-                point : middle
-            }, {
-                point : end
-            }];
+            points = [ start, middle, end ];
         } else {
-            points = [{
-                point : start
-            }];
+            points = [ start ];
 
             var v = Cartesian3.subtract(afterStart, aboveEnd);
             var distance = Cartesian3.magnitude(v);
@@ -290,45 +288,43 @@ define([
             var increment = incrementPercentage * distance;
             var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                points.push({
-                    point : Cartesian3.add(Cartesian3.multiplyByScalar(v, i), aboveEnd)
-                });
+                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i), aboveEnd));
             }
 
-            points.push({
-                point : end
-            });
+            points.push(end);
         }
 
+        var times = new Array(points.length);
         var scalar = duration / (points.length - 1);
         for ( var k = 0; k < points.length; ++k) {
-            points[k].time = k * scalar;
+            times[k] = k * scalar;
         }
 
-        return createSpline(points);
+        return createPathSpline(points, times);
     }
 
     var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
     var right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y));
     var up2D = Cartesian3.cross(right2D, direction2D);
     var quat = createQuaternion(direction2D, up2D);
-    function createOrientations2D(camera, points, endDirection, endUp) {
-        points[0].orientation = createQuaternion(camera.direction, camera.up);
-        var point;
+
+    function createOrientations2D(camera, path, endDirection, endUp) {
+        var points = path.points;
+        var orientations = new Array(points.length);
+        orientations[0] = createQuaternion(camera.direction, camera.up);
+
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
-            point = points[i];
-            point.orientation = quat;
+            orientations[i] = quat;
         }
 
-        point = points[length];
         if (defined(endDirection) && defined(endUp)) {
-            point.orientation = createQuaternion(endDirection, endUp);
+            orientations[length] = createQuaternion(endDirection, endUp);
         } else {
-            point.orientation = quat;
+            orientations[length] = quat;
         }
 
-        return new OrientationInterpolator(points);
+        return createOrientationSpline(orientations, path.times);
     }
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
@@ -336,7 +332,7 @@ define([
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
         var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
-        var orientations = createOrientations2D(camera, path.getControlPoints(), direction, up);
+        var orientations = createOrientations2D(camera, path, direction, up);
 
         var update = function(value) {
             var time = value.time;
@@ -360,8 +356,7 @@ define([
         start.z = camera.frustum.right - camera.frustum.left;
 
         var path = createPath2D(camera, ellipsoid, start, destination, duration);
-        var points = path.getControlPoints();
-        var orientations = createOrientations2D(camera, points, Cartesian3.negate(Cartesian3.UNIT_Z), up);
+        var orientations = createOrientations2D(camera, path, Cartesian3.negate(Cartesian3.UNIT_Z), up);
 
         var height = camera.position.z;
 
@@ -370,7 +365,7 @@ define([
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time, camera.position);
+            camera.position = path.evaluate(time);
             var zoom = camera.position.z;
             camera.position.z = height;
 
