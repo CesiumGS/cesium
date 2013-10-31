@@ -715,7 +715,6 @@ define([
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
-
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         }
