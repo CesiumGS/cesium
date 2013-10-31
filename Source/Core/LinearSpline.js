@@ -19,13 +19,25 @@ define([
      * @alias LinearSpline
      * @constructor
      *
-     * @param {Array} options.points The array of control points.
      * @param {Array} options.times The array of control point times.
+     * @param {Array} options.points The array of control points.
      *
      * @exception {DeveloperError} points is required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
+     *
+     * @example
+     * var spline = new LinearSpline({
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
+     *     points : [
+     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     ]
+     * });
      */
     var LinearSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -50,16 +62,18 @@ define([
         }
 
         /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         */
-        this.points = points;
-
-        /**
          * An array of times for the control points.
          * @type {Array}
+         * @readonly
          */
         this.times = times;
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         * @type {Array}
+         * @readonly
+         */
+        this.points = points;
 
         this._lastTimeIndex = 0;
     };

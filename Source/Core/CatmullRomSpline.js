@@ -30,8 +30,8 @@ define([
      * @alias CatmullRomSpline
      * @constructor
      *
-     * @param {Array} options.points The array of control points.
      * @param {Array} options.times The array of control point times.
+     * @param {Array} options.points The array of control points.
      * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
      *                     If the tangent is not given, it will be estimated.
      * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
@@ -47,14 +47,14 @@ define([
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
      * var spline = new CatmullRomSpline({
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
      *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
      *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
      *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ],
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
+     *     ]
      * });
      */
     var CatmullRomSpline = function(options) {
@@ -99,26 +99,30 @@ define([
         }
 
         /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         */
-        this.points = points;
-
-        /**
          * An array of times for the control points.
          * @type {Array}
+         * @readonly
          */
         this.times = times;
 
         /**
+         * An array of {@link Cartesian3} control points.
+         * @type {Array}
+         * @readonly
+         */
+        this.points = points;
+
+        /**
          * The tangent at the first control point.
          * @type {Cartesian3}
+         * @readonly
          */
         this.firstTangent = Cartesian3.clone(firstTangent);
 
         /**
          * The tangent at the last control point.
          * @type {Cartesian3}
+         * @readonly
          */
         this.lastTangent = Cartesian3.clone(lastTangent);
 
@@ -166,14 +170,14 @@ define([
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
      * var spline = new CatmullRomSpline({
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
      *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
      *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
      *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ],
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
+     *     ]
      * });
      *
      * // some position above Los Angeles

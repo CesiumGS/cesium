@@ -858,45 +858,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static innerQuadrangle throws without q0 parameter', function() {
+    it('static innerQuadrangle throws without q0, q1, or q2 parameter', function() {
         expect(function() {
             Quaternion.innerQuadrangle();
         }).toThrow();
     });
 
-    it('static innerQuadrangle throws without q1 parameter', function() {
-        expect(function() {
-            Quaternion.innerQuadrangle(new Quaternion());
-        }).toThrow();
-    });
-
-    it('static innerQuadrangle throws without q2 parameter', function() {
-        expect(function() {
-            Quaternion.innerQuadrangle(new Quaternion(), new Quaternion());
-        }).toThrow();
-    });
-
-    it('static squad throws without q0 parameter', function() {
+    it('static squad throws without q0, q1, s0, or s1 parameter', function() {
         expect(function() {
             Quaternion.squad();
-        }).toThrow();
-    });
-
-    it('static squad throws without q1 parameter', function() {
-        expect(function() {
-            Quaternion.squad(new Quaternion());
-        }).toThrow();
-    });
-
-    it('static squad throws without s0 parameter', function() {
-        expect(function() {
-            Quaternion.squad(new Quaternion(), new Quaternion());
-        }).toThrow();
-    });
-
-    it('static squad throws without s1 parameter', function() {
-        expect(function() {
-            Quaternion.squad(new Quaternion(), new Quaternion(), new Quaternion());
         }).toThrow();
     });
 

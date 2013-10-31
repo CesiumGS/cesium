@@ -13,14 +13,29 @@ define([
         Quaternion) {
     "use strict";
 
+    function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {
+        var length = points.length;
+        var quads = new Array(length);
+
+        quads[0] = defined(firstInnerQuadrangle) ? firstInnerQuadrangle : points[0];
+        quads[length - 1] = defined(lastInnerQuadrangle) ? lastInnerQuadrangle : points[length - 1];
+
+        for (var i = 1; i < length - 1; ++i) {
+            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1]);
+        }
+
+        return quads;
+    }
+
     /**
      * A spline that uses spherical quadrangle (squad) interpolation to create a quaternion curve.
+     * The generated curve is in the class C<sup>1</sup>.
      *
      * @alias QuaternionSpline
      * @constructor
      *
-     * @param {Array} options.points The array of control points.
      * @param {Array} options.times The array of control point times.
+     * @param {Array} options.points The array of control points.
      * @param {Quaternion} [options.firstInnerQuadrangle] The inner quadrangle of the curve at the first control point.
      *                     If the inner quadrangle is not given, it will be estimated.
      * @param {Quaternion} [options.lastInnerQuadrangle] The inner quadrangle of the curve at the last control point.
@@ -58,39 +73,28 @@ define([
         var innerQuadrangles = computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle);
 
         /**
-         * An array of {@link Quaternion} control points.
-         * @type {Array}
-         */
-        this.points = points;
-
-        /**
          * An array of times for the control points.
          * @type {Array}
+         * @readonly
          */
         this.times = times;
 
         /**
+         * An array of {@link Quaternion} control points.
+         * @type {Array}
+         * @readonly
+         */
+        this.points = points;
+
+        /**
          * An array of {@link Quaternion} inner qradrangles for the control points.
          * @type {Array}
+         * @readonly
          */
         this.innerQuadrangles = innerQuadrangles;
 
         this._lastTimeIndex = 0;
     };
-
-    function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {
-        var length = points.length;
-        var quads = new Array(length);
-
-        quads[0] = defined(firstInnerQuadrangle) ? firstInnerQuadrangle : points[0];
-        quads[length - 1] = defined(lastInnerQuadrangle) ? lastInnerQuadrangle : points[length - 1];
-
-        for (var i = 1; i < length - 1; ++i) {
-            quads[i] = Quaternion.innerQuadrangle(points[i - 1], points[i], points[i + 1]);
-        }
-
-        return quads;
-    }
 
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter

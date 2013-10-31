@@ -19,132 +19,6 @@ define([
         TridiagonalSystemSolver) {
     "use strict";
 
-    /**
-     * A Hermite spline is a cubic interpolating spline. Positions, tangents, and times must be defined
-     * for each control point. If no tangents are specified by the control points, the end and interior
-     * tangents are generated, creating a natural cubic spline. If the only tangents specified are at
-     * the end control points, the interior tangents will be generated as well, creating a clamped cubic
-     * spline. Otherwise, it is assumed that each control point defines a tangent at that point.
-     *
-     * Natural and clamped cubic splines are in the class C<sup>2</sup>.
-     *
-     * @alias HermiteSpline
-     * @constructor
-     *
-     * @param {Array} options.points The array of control points.
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} [options.tangents] The array of tangents at each control point.
-     * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
-     *                     If the tangent is not given, it will be estimated.
-     * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
-     *                     If the tangent is not given, it will be estimated.
-     *
-     * @exception {DeveloperError} points is required.
-     * @exception {DeveloperError} points.length must be greater than or equal to 3.
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} times.length must be equal to points.length.
-     *
-     * @see CatmullRomSpline
-     *
-     * @example
-     * // Example 1.
-     * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new HermiteSpline({
-     *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ],
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
-     * });
-     *
-     * // Example 2.
-     * // Create a Catmull-Rom spline above the earth from Philadelphia to Los Angeles.
-     * var points : [
-     *     new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *     new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *     new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *     new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *     new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     * ],
-     * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
-     *
-     * // Add tangents
-     * var tangents = new Array(points.length);
-     * tangents[0] = new Cartesian3(1125196, -161816, 270551);
-     * for (var i = 1; i < tangents.length - 1; ++i) {
-     *     tangents[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(controlPoints[i + 1].point, controlPoints[i - 1].point), 0.5);
-     * }
-     * tangents[tangents.length - 1] = new Cartesian3(1165345, 112641, 47281);
-     *
-     * var spline = new HermiteSpline({
-     *     points : points,
-     *     tangents : tangents,
-     *     times : times
-     * });
-     */
-    var HermiteSpline = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var points = options.points;
-        var times = options.times;
-        var tangents = options.tangents;
-        var firstTangent = options.firstTangent;
-        var lastTangent = options.lastTangent;
-
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
-        }
-
-        if (points.length < 3) {
-            throw new DeveloperError('points.length must be greater than or equal to 3.');
-        }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
-        if (times.length !== points.length) {
-            throw new DeveloperError('times.length must be equal to points.length.');
-        }
-
-        if (!defined(tangents)) {
-            if (defined(firstTangent) && defined(lastTangent)) {
-                tangents = generateClamped(points, firstTangent, lastTangent);
-            } else {
-                tangents = generateNatural(points);
-            }
-        }
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         */
-        this.points = points;
-
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} tangents at each control point.
-         * @type {Array}
-         */
-        this.tangents = tangents;
-
-        this._lastTimeIndex = 0;
-    };
-
-    HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
-             2.0, -3.0,  0.0,  1.0,
-            -2.0,  3.0,  0.0,  0.0,
-             1.0, -2.0,  1.0,  0.0,
-             1.0, -1.0,  0.0,  0.0);
-
     var scratchLower = [];
     var scratchDiagonal = [];
     var scratchUpper = [];
@@ -247,6 +121,135 @@ define([
     }
 
     /**
+     * A Hermite spline is a cubic interpolating spline. Positions, tangents, and times must be defined
+     * for each control point. If no tangents are specified by the control points, the end and interior
+     * tangents are generated, creating a natural cubic spline. If the only tangents specified are at
+     * the end control points, the interior tangents will be generated as well, creating a clamped cubic
+     * spline. Otherwise, it is assumed that each control point defines a tangent at that point.
+     *
+     * Natural and clamped cubic splines are in the class C<sup>2</sup>.
+     *
+     * @alias HermiteSpline
+     * @constructor
+     *
+     * @param {Array} options.times The array of control point times.
+     * @param {Array} options.points The array of control points.
+     * @param {Array} [options.tangents] The array of tangents at each control point.
+     * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
+     *                     If the tangent is not given, it will be estimated.
+     * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
+     *                     If the tangent is not given, it will be estimated.
+     *
+     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points.length must be greater than or equal to 3.
+     * @exception {DeveloperError} times is required.
+     * @exception {DeveloperError} times.length must be equal to points.length.
+     *
+     * @see CatmullRomSpline
+     *
+     * @example
+     * // Example 1.
+     * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
+     * var spline = new HermiteSpline({
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
+     *     points : [
+     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     ]
+     * });
+     *
+     * // Example 2.
+     * // Create a Catmull-Rom spline above the earth from Philadelphia to Los Angeles.
+     * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
+     * var points : [
+     *     new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *     new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *     new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *     new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *     new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     * ];
+     *
+     * // Add tangents
+     * var tangents = new Array(points.length);
+     * tangents[0] = new Cartesian3(1125196, -161816, 270551);
+     * for (var i = 1; i < tangents.length - 1; ++i) {
+     *     tangents[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(controlPoints[i + 1].point, controlPoints[i - 1].point), 0.5);
+     * }
+     * tangents[tangents.length - 1] = new Cartesian3(1165345, 112641, 47281);
+     *
+     * var spline = new HermiteSpline({
+     *     times : times,
+     *     points : points,
+     *     tangents : tangents
+     * });
+     */
+    var HermiteSpline = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var points = options.points;
+        var times = options.times;
+        var tangents = options.tangents;
+        var firstTangent = options.firstTangent;
+        var lastTangent = options.lastTangent;
+
+        if (!defined(points)) {
+            throw new DeveloperError('points is required.');
+        }
+
+        if (points.length < 3) {
+            throw new DeveloperError('points.length must be greater than or equal to 3.');
+        }
+
+        if (!defined(times)) {
+            throw new DeveloperError('times is required.');
+        }
+
+        if (times.length !== points.length) {
+            throw new DeveloperError('times.length must be equal to points.length.');
+        }
+
+        if (!defined(tangents)) {
+            if (defined(firstTangent) && defined(lastTangent)) {
+                tangents = generateClamped(points, firstTangent, lastTangent);
+            } else {
+                tangents = generateNatural(points);
+            }
+        }
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         * @type {Array}
+         * @readonly
+         */
+        this.points = points;
+
+        /**
+         * An array of times for the control points.
+         * @type {Array}
+         * @readonly
+         */
+        this.times = times;
+
+        /**
+         * An array of {@link Cartesian3} tangents at each control point.
+         * @type {Array}
+         * @readonly
+         */
+        this.tangents = tangents;
+
+        this._lastTimeIndex = 0;
+    };
+
+    HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
+             2.0, -3.0,  0.0,  1.0,
+            -2.0,  3.0,  0.0,  0.0,
+             1.0, -2.0,  1.0,  0.0,
+             1.0, -1.0,  0.0,  0.0);
+
+    /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
      * @memberof HermiteSpline
@@ -280,14 +283,14 @@ define([
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
      * var spline = new HermiteSpline({
+     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
      *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
      *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
      *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ],
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ]
+     *     ]
      * });
      *
      * // some position above Los Angeles

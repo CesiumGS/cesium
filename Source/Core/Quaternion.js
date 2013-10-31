@@ -783,8 +783,8 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The unit quaternion.
-     * @param {Quaternion} [result] The object onto which to store the result.
-     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new instance if one was not provided.
      *
      * @exception {DeveloperError} quaternion is required.
      */
@@ -804,11 +804,7 @@ define([
             result = new Cartesian3();
         }
 
-        result.x = quaternion.x * thetaOverSinTheta;
-        result.y = quaternion.y * thetaOverSinTheta;
-        result.z = quaternion.z * thetaOverSinTheta;
-
-        return result;
+        return Cartesian3.multiplyByScalar(quaternion, thetaOverSinTheta, result);
     };
 
     var expScratch = new Cartesian3();
@@ -863,23 +859,13 @@ define([
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
      *
-     * @exception {DeveloperError} q0 is required.
-     * @exception {DeveloperError} q1 is required.
-     * @exception {DeveloperError} q2 is required.
+     * @exception {DeveloperError} q0, q1, and q2 are required.
      *
      * @see Quaternion#squad
      */
     Quaternion.innerQuadrangle = function(q0, q1, q2, result) {
-        if (!defined(q0)) {
-            throw new DeveloperError('q0 is required.');
-        }
-
-        if (!defined(q1)) {
-            throw new DeveloperError('q1 is required.');
-        }
-
-        if (!defined(q2)) {
-            throw new DeveloperError('q2 is required.');
+        if (!defined(q0) || !defined(q1) || !defined(q2)) {
+            throw new DeveloperError('q0, q1, and q2 are required.');
         }
 
         var qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
@@ -909,10 +895,7 @@ define([
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
      *
-     * @exception {DeveloperError} q0 is required.
-     * @exception {DeveloperError} q1 is required.
-     * @exception {DeveloperError} s0 is required.
-     * @exception {DeveloperError} s1 is required.
+     * @exception {DeveloperError} q0, q1, s0, and s1 are required.
      * @exception {DeveloperError} t is required and must be a number.
      *
      * @see Quaternion#innerQuadrangle
@@ -928,20 +911,8 @@ define([
      * var q = Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
-        if (!defined(q0)) {
-            throw new DeveloperError('q0 is required.');
-        }
-
-        if (!defined(q1)) {
-            throw new DeveloperError('q1 is required.');
-        }
-
-        if (!defined(s0)) {
-            throw new DeveloperError('s0 is required.');
-        }
-
-        if (!defined(s1)) {
-            throw new DeveloperError('s1 is required.');
+        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
+            throw new DeveloperError('q0, q1, s0, and s1 are required.');
         }
 
         if (typeof t !== 'number') {

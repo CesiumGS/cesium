@@ -21,18 +21,18 @@ define([
      */
     var Spline = function() {
         /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @default undefined
-         */
-        this.points = undefined;
-
-        /**
          * An array of times for the control points.
          * @type {Array}
          * @default undefined
          */
         this.times = undefined;
+
+        /**
+         * An array of control points.
+         * @type {Array}
+         * @default undefined
+         */
+        this.points = undefined;
 
         throw new DeveloperError('This type should not be instantiated directly.');
     };
@@ -42,9 +42,9 @@ define([
      * @memberof Spline
      *
      * @param {Number} time The time at which to evaluate the curve.
-     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
      *
-     * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
+     * @returns {Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
