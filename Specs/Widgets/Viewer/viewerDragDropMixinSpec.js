@@ -429,4 +429,4 @@ defineSuite([
             viewer.dropTarget = undefined;
         }).toThrow();
     });
-});
+}, 'WebGL');
