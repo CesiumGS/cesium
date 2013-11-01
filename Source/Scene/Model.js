@@ -597,6 +597,7 @@ define([
          for (var animationName in animations) {
              if (animations.hasOwnProperty(animationName)) {
                  var animation = animations[animationName];
+                 var channels = animation.channels;
                  var parameters = animation.parameters;
                  var samplers = animation.samplers;
 
@@ -609,14 +610,6 @@ define([
                      }
                  }
 
-                 var timeParameter = animation.parameters.TIME;
-                 var times = timeParameter.czm.values;
-
-                 animation.czm = {
-                     startTime : times[0],
-                     stopTime : times[timeParameter.count - 1]
-                 };
-
                  for (name in samplers) {
                      if (samplers.hasOwnProperty(name)) {
                          var sampler = samplers[name];
@@ -625,6 +618,26 @@ define([
                          };
                      }
                  }
+
+                 // Find start and stop time for the entire animation
+                 var startTime = Number.MAX_VALUE;
+                 var stopTime = -Number.MAX_VALUE;
+
+                 for (name in channels) {
+                     if (channels.hasOwnProperty(name)) {
+                         var channel = channels[name];
+                         var timeParameter = parameters[samplers[channel.sampler].input];
+                         var times = timeParameter.czm.values;
+
+                         startTime = Math.min(startTime, times[0]);
+                         stopTime = Math.max(stopTime, times[timeParameter.count - 1]);
+                     }
+                 }
+
+                 animation.czm = {
+                     startTime : startTime,
+                     stopTime : stopTime
+                 };
              }
          }
     }
