@@ -898,11 +898,11 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Subdivides positions and raises points to the surface of the ellipsoid
          *
-         * @param {DOC_TBA} positions DOC_TBA
-         * @param {DOC_TBA} indices DOC_TBA
-         * @param {Number} [granularity] DOC_TBA
+         * @param {Cartesian3} positions Positions of the polygon.
+         * @param {Array} indices Index data that determines the triangles in the polygon.
+         * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
          *
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} indices is required.
@@ -1069,17 +1069,20 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
-         * @exception {DeveloperError} ellipsoid is required.
+         * Raises positions to a height
+         * @param {Geometry} geometry
+         * @param {Number} height The desired height to add to the positions of the geometry
+         * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie
+         * @param {Boolean} [scaleToSurface = true] True if the positions need to be scaled to the surface before the height is added
          */
-        scaleToGeodeticHeight : function(geometry, height, ellipsoid) {
+        scaleToGeodeticHeight : function(geometry, height, ellipsoid, scaleToSurface) {
             ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
             var n = scaleToGeodeticHeightN;
             var p = scaleToGeodeticHeightP;
 
             height = defaultValue(height, 0.0);
+            scaleToSurface = defaultValue(scaleToSurface, true);
 
             if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
                 var positions = geometry.attributes.position.values;
@@ -1088,8 +1091,12 @@ define([
                 for ( var i = 0; i < length; i += 3) {
                     Cartesian3.fromArray(positions, i, p);
 
-                    ellipsoid.scaleToGeodeticSurface(p, p);
-                    ellipsoid.geodeticSurfaceNormal(p, n);
+                    if (scaleToSurface) {
+                        n = ellipsoid.geodeticSurfaceNormal(p, n);
+                    } else {
+                        n = Cartesian3.clone(p, n);
+                    }
+
                     Cartesian3.multiplyByScalar(n, height, n);
                     Cartesian3.add(p, n, p);
 

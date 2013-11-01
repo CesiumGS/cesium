@@ -57,16 +57,18 @@ define([
 
     var scaleToGeodeticHeightN1 = new Cartesian3();
     var scaleToGeodeticHeightN2 = new Cartesian3();
-    var scaleToGeodeticHeightP = new Cartesian3();
+    var scaleToGeodeticHeightP1 = new Cartesian3();
+    var scaleToGeodeticHeightP2 = new Cartesian3();
     /**
      * @private
      */
-    PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function(geometry, maxHeight, minHeight, ellipsoid) {
+    PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function(geometry, maxHeight, minHeight, ellipsoid, perPositionHeight) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var n1 = scaleToGeodeticHeightN1;
         var n2 = scaleToGeodeticHeightN2;
-        var p = scaleToGeodeticHeightP;
+        var p = scaleToGeodeticHeightP1;
+        var p2 = scaleToGeodeticHeightP2;
 
         if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
             var positions = geometry.attributes.position.values;
@@ -75,20 +77,23 @@ define([
             for ( var i = 0; i < length; i += 3) {
                 Cartesian3.fromArray(positions, i, p);
 
-                ellipsoid.scaleToGeodeticSurface(p, p);
                 ellipsoid.geodeticSurfaceNormal(p, n1);
+                p2 = ellipsoid.scaleToGeodeticSurface(p, p2);
+                n2 = Cartesian3.multiplyByScalar(n1, minHeight, n2);
+                n2 = Cartesian3.add(p2, n2, n2);
+                positions[i + length] = n2.x;
+                positions[i + 1 + length] = n2.y;
+                positions[i + 2 + length] = n2.z;
 
-                Cartesian3.multiplyByScalar(n1, maxHeight, n2);
-                Cartesian3.add(p, n2, n2);
+                if (perPositionHeight) {
+                    p2 = Cartesian3.clone(p, p2);
+                }
+                n2 = Cartesian3.multiplyByScalar(n1, maxHeight, n2);
+                n2 = Cartesian3.add(p2, n2, n2);
                 positions[i] = n2.x;
                 positions[i + 1] = n2.y;
                 positions[i + 2] = n2.z;
 
-                Cartesian3.multiplyByScalar(n1, minHeight, n2);
-                Cartesian3.add(p, n2, n2);
-                positions[i + length] = n2.x;
-                positions[i + 1 + length] = n2.y;
-                positions[i + 2 + length] = n2.z;
             }
         }
         return geometry;
