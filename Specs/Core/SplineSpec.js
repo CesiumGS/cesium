@@ -61,12 +61,12 @@ defineSuite([
         expect(spline.findTimeInterval(times[1])).toEqual(1);
 
         // jump backward
-        expect(spline.findTimeInterval(times[0])).toEqual(0);
+        expect(spline.findTimeInterval(times[0], 1)).toEqual(0);
 
         // jump far forward
-        expect(spline.findTimeInterval(times[times.length - 2])).toEqual(times.length - 2);
+        expect(spline.findTimeInterval(times[times.length - 2], 0)).toEqual(times.length - 2);
 
         // jump far back
-        expect(spline.findTimeInterval(times[0])).toEqual(0);
+        expect(spline.findTimeInterval(times[0], times.length - 1)).toEqual(0);
     });
 });

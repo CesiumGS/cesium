@@ -143,7 +143,7 @@ define([
         var tangents = spline.tangents;
 
         return function(time, result) {
-            var i = spline.findTimeInterval(time);
+            var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
             var u = (time - times[i]) / (times[i + 1] - times[i]);
 
             var timeVec = scratchTimeVec;
