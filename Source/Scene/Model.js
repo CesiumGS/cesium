@@ -816,13 +816,15 @@ define([
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedTextureCreation()) {
+        if (!loadResources.finishedTextureCreation() || !loadResources.finishedProgramCreation()) {
             return;
         }
 
         var name;
-        var materials = model.gltf.materials;
-        var techniques = model.gltf.techniques;
+        var gltf = model.gltf;
+        var materials = gltf.materials;
+        var techniques = gltf.techniques;
+        var programs = gltf.programs;
 
         for (name in materials) {
             if (materials.hasOwnProperty(name)) {
@@ -835,6 +837,8 @@ define([
                 var uniforms = instanceProgram.uniforms;
 
                 var parameterValues = {};
+
+// TODO: handle parameter.source, e.g., light
 
                 // Uniform parameters for this pass
                 for (name in uniforms) {
@@ -856,16 +860,21 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var instanceParam = instanceParameters[i];
                     var parameterValue = parameterValues[instanceParam.parameter];
-
                     parameterValue.func = gltfUniformFunctions[parameters[instanceParam.parameter].type](instanceParam.value, model, context);
                 }
+
+                var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
 
                 // Create uniform map
                 var uniformMap = {};
                 for (name in parameterValues) {
                     if (parameterValues.hasOwnProperty(name)) {
                         var pv = parameterValues[name];
-                        uniformMap[pv.uniformName] = pv.func;
+
+                        // Only add active uniforms
+                        if (defined(activeUniforms[pv.uniformName])) {
+                            uniformMap[pv.uniformName] = pv.func;
+                        }
                     }
                 }
 
