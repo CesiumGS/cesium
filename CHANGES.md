@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b23 - 2013-12-01
+### b23 - 2013-12-02
 
 * Breaking changes:
   * Changed the `CatmulRomSpline` and `HermiteSpline` constructors from taking an array of structures to a structure of arrays. For example, code that looked like:
