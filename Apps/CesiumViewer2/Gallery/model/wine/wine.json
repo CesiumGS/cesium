@@ -655,11 +655,6 @@
             "byteLength": 329004,
             "path": "wine.bin",
             "type": "arraybuffer"
-        },
-        "winecompression": {
-            "byteLength": 0,
-            "path": "winecompression.bin",
-            "type": "text"
         }
     },
     "cameras": {

@@ -12,7 +12,8 @@ varying vec2 v_texcoord0;
 void main(void) {
 vec4 pos = u_worldViewMatrix * vec4(a_position,1.0);
 v_normal = normalize(u_normalMatrix * a_normal);
-v_light0Direction = normalize(mat3(u_light0Transform) * vec3(0.,0.,1.));
+//v_light0Direction = normalize(mat3(u_light0Transform) * vec3(0.,0.,1.));
+v_light0Direction = vec3(1.0, 0.0, 0.0);
 v_texcoord0 = a_texcoord0;
 gl_Position = u_projectionMatrix * pos;
 }

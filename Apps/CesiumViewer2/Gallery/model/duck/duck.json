@@ -78,11 +78,6 @@
             "byteLength": 102040,
             "path": "duck.bin",
             "type": "arraybuffer"
-        },
-        "duckcompression": {
-            "byteLength": 0,
-            "path": "duckcompression.bin",
-            "type": "text"
         }
     },
     "cameras": {

@@ -24577,11 +24577,6 @@
             "byteLength": 11541972,
             "path": "Rambler.bin",
             "type": "arraybuffer"
-        },
-        "Ramblercompression": {
-            "byteLength": 0,
-            "path": "Ramblercompression.bin",
-            "type": "text"
         }
     },
     "indices": {

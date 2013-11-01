@@ -8155,11 +8155,6 @@
             "byteLength": 472680,
             "path": "SuperMurdoch.bin",
             "type": "arraybuffer"
-        },
-        "SuperMurdochcompression": {
-            "byteLength": 0,
-            "path": "SuperMurdochcompression.bin",
-            "type": "text"
         }
     },
     "indices": {
