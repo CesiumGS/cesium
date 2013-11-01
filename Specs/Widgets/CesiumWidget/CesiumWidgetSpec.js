@@ -230,4 +230,4 @@ defineSuite([
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
-});
+}, 'WebGL');

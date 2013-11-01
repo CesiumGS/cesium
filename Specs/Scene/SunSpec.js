@@ -162,4 +162,4 @@ defineSuite([
         sun.destroy();
         expect(sun.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');
