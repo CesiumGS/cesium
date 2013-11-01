@@ -1,11 +1,11 @@
 {
     "animations": {},
     "asset": {
-        "generator": "collada2gltf 0.1.0"
+        "generator": "collada2gltf@da4029e4fb0b7b7036551e2548de1afc50965caf"
     },
     "attributes": {
-        "attribute_22": {
-            "bufferView": "bufferView_28",
+        "attribute_23": {
+            "bufferView": "bufferView_29",
             "byteOffset": 0,
             "byteStride": 12,
             "count": 2399,
@@ -19,10 +19,10 @@
                 9.92937,
                 -61.3282
             ],
-            "type": "FLOAT_VEC3"
+            "type": 35665
         },
-        "attribute_24": {
-            "bufferView": "bufferView_28",
+        "attribute_25": {
+            "bufferView": "bufferView_29",
             "byteOffset": 28788,
             "byteStride": 12,
             "count": 2399,
@@ -36,10 +36,10 @@
                 -1,
                 -0.999832
             ],
-            "type": "FLOAT_VEC3"
+            "type": 35665
         },
-        "attribute_26": {
-            "bufferView": "bufferView_28",
+        "attribute_27": {
+            "bufferView": "bufferView_29",
             "byteOffset": 57576,
             "byteStride": 8,
             "count": 2399,
@@ -51,27 +51,38 @@
                 0.026409,
                 0.019963
             ],
-            "type": "FLOAT_VEC2"
+            "type": 35664
         }
     },
     "bufferViews": {
-        "bufferView_28": {
-            "buffer": "duck.bin",
+        "bufferView_29": {
+            "buffer": "duck",
             "byteLength": 76768,
             "byteOffset": 0,
             "target": "ARRAY_BUFFER"
         },
-        "bufferView_29": {
-            "buffer": "duck.bin",
+        "bufferView_30": {
+            "buffer": "duck",
             "byteLength": 25272,
             "byteOffset": 76768,
             "target": "ELEMENT_ARRAY_BUFFER"
+        },
+        "bufferView_31": {
+            "buffer": "duck",
+            "byteLength": 0,
+            "byteOffset": 102040
         }
     },
     "buffers": {
-        "duck.bin": {
+        "duck": {
             "byteLength": 102040,
-            "path": "duck.bin"
+            "path": "duck.bin",
+            "type": "arraybuffer"
+        },
+        "duckcompression": {
+            "byteLength": 0,
+            "path": "duckcompression.bin",
+            "type": "text"
         }
     },
     "cameras": {
@@ -89,11 +100,11 @@
         }
     },
     "indices": {
-        "indices_20": {
-            "bufferView": "bufferView_29",
+        "indices_21": {
+            "bufferView": "bufferView_30",
             "byteOffset": 0,
             "count": 12636,
-            "type": "UNSIGNED_SHORT"
+            "type": 5123
         }
     },
     "lights": {
@@ -110,55 +121,31 @@
         }
     },
     "materials": {
-        "material.0": {
+        "blinn3-fx": {
             "instanceTechnique": {
                 "technique": "technique1",
-                "values": [
-                    {
-                        "parameter": "ambient",
-                        "value": [
-                            0,
-                            0,
-                            0,
-                            1
-                        ]
-                    },
-                    {
-                        "parameter": "diffuse",
-                        "value": "texture_image_0"
-                    },
-                    {
-                        "parameter": "emission",
-                        "value": [
-                            0,
-                            0,
-                            0,
-                            1
-                        ]
-                    },
-                    {
-                        "parameter": "reflective",
-                        "value": [
-                            0,
-                            0,
-                            0,
-                            1
-                        ]
-                    },
-                    {
-                        "parameter": "shininess",
-                        "value": 38.4
-                    },
-                    {
-                        "parameter": "specular",
-                        "value": [
-                            0,
-                            0,
-                            0,
-                            1
-                        ]
-                    }
-                ]
+                "values": {
+                    "ambient": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "diffuse": "texture_image_0",
+                    "emission": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ],
+                    "shininess": 38.4,
+                    "specular": [
+                        0,
+                        0,
+                        0,
+                        1
+                    ]
+                }
             },
             "name": "blinn3"
         }
@@ -168,13 +155,13 @@
             "name": "LOD3spShape",
             "primitives": [
                 {
-                    "indices": "indices_20",
-                    "material": "material.0",
+                    "indices": "indices_21",
+                    "material": "blinn3-fx",
                     "primitive": "TRIANGLES",
                     "semantics": {
-                        "NORMAL": "attribute_24",
-                        "POSITION": "attribute_22",
-                        "TEXCOORD_0": "attribute_26"
+                        "NORMAL": "attribute_25",
+                        "POSITION": "attribute_23",
+                        "TEXCOORD_0": "attribute_27"
                     }
                 }
             ]
@@ -255,7 +242,7 @@
             "name": "directionalLight1"
         }
     },
-    "profile": "WebGL 1.0",
+    "profile": "WebGL 1.0.2",
     "programs": {
         "program_0": {
             "fragmentShader": "duck0FS",
@@ -264,10 +251,10 @@
     },
     "samplers": {
         "sampler_0": {
-            "magFilter": "LINEAR",
-            "minFilter": "LINEAR_MIPMAP_LINEAR",
-            "wrapS": "REPEAT",
-            "wrapT": "REPEAT"
+            "magFilter": 9729,
+            "minFilter": 9987,
+            "wrapS": 10497,
+            "wrapT": 10497
         }
     },
     "scene": "defaultScene",
@@ -293,16 +280,16 @@
         "technique1": {
             "parameters": {
                 "ambient": {
-                    "type": "FLOAT_VEC4"
+                    "type": 35666
                 },
                 "diffuse": {
-                    "type": "SAMPLER_2D"
+                    "type": 35678
                 },
                 "emission": {
-                    "type": "FLOAT_VEC4"
+                    "type": 35666
                 },
                 "light0Color": {
-                    "type": "FLOAT_VEC3",
+                    "type": 35665,
                     "value": [
                         1,
                         1,
@@ -311,40 +298,37 @@
                 },
                 "light0Transform": {
                     "source": "directionalLight1",
-                    "type": "FLOAT_MAT4"
+                    "type": 35676
                 },
                 "normal": {
                     "semantic": "NORMAL",
-                    "type": "FLOAT_VEC3"
+                    "type": 35665
                 },
                 "normalMatrix": {
                     "semantic": "WORLDVIEWINVERSETRANSPOSE",
-                    "type": "FLOAT_MAT3"
+                    "type": 35675
                 },
                 "position": {
                     "semantic": "POSITION",
-                    "type": "FLOAT_VEC3"
+                    "type": 35665
                 },
                 "projectionMatrix": {
                     "semantic": "PROJECTION",
-                    "type": "FLOAT_MAT4"
-                },
-                "reflective": {
-                    "type": "FLOAT_VEC4"
+                    "type": 35676
                 },
                 "shininess": {
-                    "type": "FLOAT"
+                    "type": 5126
                 },
                 "specular": {
-                    "type": "FLOAT_VEC4"
+                    "type": 35666
                 },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
-                    "type": "FLOAT_VEC2"
+                    "type": 35664
                 },
                 "worldViewMatrix": {
                     "semantic": "WORLDVIEW",
-                    "type": "FLOAT_MAT4"
+                    "type": 35676
                 }
             },
             "pass": "defaultPass",
@@ -364,7 +348,6 @@
                                 "light0Transform",
                                 "normalMatrix",
                                 "projectionMatrix",
-                                "reflective",
                                 "shininess",
                                 "specular",
                                 "worldViewMatrix"
@@ -390,17 +373,16 @@
                             "u_light0Transform": "light0Transform",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
-                            "u_reflective": "reflective",
                             "u_shininess": "shininess",
                             "u_specular": "specular",
                             "u_worldViewMatrix": "worldViewMatrix"
                         }
                     },
                     "states": {
-                        "blendEnable": false,
-                        "cullFaceEnable": true,
-                        "depthMask": true,
-                        "depthTestEnable": true
+                        "blendEnable": 0,
+                        "cullFaceEnable": 1,
+                        "depthMask": 1,
+                        "depthTestEnable": 1
                     }
                 }
             }
@@ -408,11 +390,11 @@
     },
     "textures": {
         "texture_image_0": {
-            "format": "RGBA",
-            "internalFormat": "RGBA",
+            "format": 6408,
+            "internalFormat": 6408,
             "sampler": "sampler_0",
             "source": "image_0",
-            "target": "TEXTURE_2D"
+            "target": 3553
         }
     }
 }
