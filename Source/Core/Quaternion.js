@@ -768,7 +768,7 @@ define([
         // dot > 0, as the dot product approaches 1, the angle between the
         // quaternions vanishes. use linear interpolation.
         if (1.0 - dot < CesiumMath.EPSILON6) {
-            return Quaternion.lerp(start, r, t);
+            return Quaternion.lerp(start, r, t, result);
         }
 
         var theta = Math.acos(dot);
@@ -776,6 +776,152 @@ define([
         slerpScaledR = Quaternion.multiplyByScalar(r, Math.sin(t * theta), slerpScaledR);
         result = Quaternion.add(slerpScaledP, slerpScaledR, result);
         return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
+    };
+
+    /**
+     * The logarithmic quaternion function.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} quaternion The unit quaternion.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} quaternion is required.
+     */
+    Quaternion.log = function(quaternion, result) {
+        if (!defined(quaternion)) {
+            throw new DeveloperError('quaternion is required.');
+        }
+
+        var theta = Math.acos(CesiumMath.clamp(quaternion.w, -1.0, 1.0));
+        var thetaOverSinTheta = 0.0;
+
+        if (theta !== 0.0) {
+            thetaOverSinTheta = theta / Math.sin(theta);
+        }
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        return Cartesian3.multiplyByScalar(quaternion, thetaOverSinTheta, result);
+    };
+
+    var expScratch = new Cartesian3();
+
+    /**
+     * The exponential quaternion function.
+     * @memberof Quaternion
+     *
+     * @param {Cartesian3} cartesian The cartesian.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Quaternion.exp = function(cartesian, result) {
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        var theta = Cartesian3.magnitude(cartesian);
+        var sinThetaOverTheta = 0.0;
+
+        if (theta !== 0.0) {
+            sinThetaOverTheta = Math.sin(theta) / theta;
+        }
+
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
+
+        result.x = cartesian.x * sinThetaOverTheta;
+        result.y = cartesian.y * sinThetaOverTheta;
+        result.z = cartesian.z * sinThetaOverTheta;
+        result.w = Math.cos(theta);
+
+        return result;
+    };
+
+    var squadScratchCartesian0 = new Cartesian3();
+    var squadScratchCartesian1 = new Cartesian3();
+    var squadScratchQuaternion0 = new Quaternion();
+    var squadScratchQuaternion1 = new Quaternion();
+
+    /**
+     * Computes an inner quadrangle point.
+     * <p>This will compute quaternions that ensure a squad curve is C<sup>1</sup>.</p>
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} q0 The first quaternion.
+     * @param {Quaternion} q1 The second quaternion.
+     * @param {Quaternion} q2 The third quaternion.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} q0, q1, and q2 are required.
+     *
+     * @see Quaternion#squad
+     */
+    Quaternion.innerQuadrangle = function(q0, q1, q2, result) {
+        if (!defined(q0) || !defined(q1) || !defined(q2)) {
+            throw new DeveloperError('q0, q1, and q2 are required.');
+        }
+
+        var qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
+        Quaternion.multiply(qInv, q2, squadScratchQuaternion1);
+        var cart0 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian0);
+
+        Quaternion.multiply(qInv, q0, squadScratchQuaternion1);
+        var cart1 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian1);
+
+        Cartesian3.add(cart0, cart1, cart0);
+        Cartesian3.multiplyByScalar(cart0, 0.25, cart0);
+        Cartesian3.negate(cart0, cart0);
+        Quaternion.exp(cart0, squadScratchQuaternion0);
+
+        return Quaternion.multiply(q1, squadScratchQuaternion0, result);
+    };
+
+    /**
+     * Computes the spherical quadrangle interpolation between quaternions.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} q0 The first quaternion.
+     * @param {Quaternion} q1 The second quaternion.
+     * @param {Quaternion} s0 The first inner quadrangle.
+     * @param {Quaternion} s1 The second inner quadrangle.
+     * @param {Number} t The time in [0,1] used to interpolate.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} q0, q1, s0, and s1 are required.
+     * @exception {DeveloperError} t is required and must be a number.
+     *
+     * @see Quaternion#innerQuadrangle
+     *
+     * @example
+     * // 1. compute the squad interpolation between two quaternions on a curve
+     * var s0 = Quaternion.innerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
+     * var s1 = Quaternion.innerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
+     * var q = Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
+     *
+     * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
+     * var s1 = Quaternion.innerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
+     * var q = Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
+     */
+    Quaternion.squad = function(q0, q1, s0, s1, t, result) {
+        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
+            throw new DeveloperError('q0, q1, s0, and s1 are required.');
+        }
+
+        if (typeof t !== 'number') {
+            throw new DeveloperError('t is required and must be a number.');
+        }
+
+        var slerp0 = Quaternion.slerp(q0, q1, t, squadScratchQuaternion0);
+        var slerp1 = Quaternion.slerp(s0, s1, t, squadScratchQuaternion1);
+        return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
     };
 
     /**
