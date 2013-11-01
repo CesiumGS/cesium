@@ -876,16 +876,27 @@ define([
                     if (uniforms.hasOwnProperty(name)) {
                         var parameterName = uniforms[name];
                         var parameter = parameters[parameterName];
+
+                        var func;
+
+                        if (defined(parameter.semantic)) {
+                            // Map glTF semantic to Cesium automatic uniform
+// TODO: account for parameter.type with semantic
+                            func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                        } else if (defined(parameter.value)) {
+                            // Default technique value that may be overridden by a material
+                            func = gltfUniformFunctions[parameter.type](parameter.value, model, context);
+                        }
+                        // else will be defined by the technique
+
                         parameterValues[parameterName] = {
                             uniformName : name,
-// TODO: account for parameter.type with semantic
-                            func : defined(parameter.semantic) ? gltfSemanticUniforms[parameter.semantic](context.getUniformState()) : undefined
+                            func : func
                         };
                     }
                 }
 
                 // Parameter overrides by the instance technique
-// TODO: this overrides semantics?  What should the glTF spec say?
                 var instanceParameters = instanceTechnique.values;
                 var length = instanceParameters.length;
                 for (var i = 0; i < length; ++i) {
