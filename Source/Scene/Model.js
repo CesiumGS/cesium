@@ -431,9 +431,7 @@ define([
                 webglBuffer : undefined
             };
 
-
-// TODO: remove workaround: https://github.com/KhronosGroup/glTF/issues/170
-            if (bufferView.target === 'ARRAY_BUFFER' /* ModelConstants.ARRAY_BUFFER */) {
+            if (bufferView.target === ModelConstants.ARRAY_BUFFER) {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
