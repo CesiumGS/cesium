@@ -11,76 +11,67 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var points;
+    var times;
+
     beforeEach(function() {
-        points = [{
-            point : new Cartesian3(-1.0, -1.0, 0.0),
-            time : 0.0
-        }, {
-            point : new Cartesian3(-0.5, -0.125, 0.0),
-            time : 1.0
-        }, {
-            point : new Cartesian3(0.5, 0.125, 0.0),
-            time : 2.0
-        }, {
-            point : new Cartesian3(1.0, 1.0, 0.0),
-            time : 3.0
-        }];
+        points = [
+            new Cartesian3(-1.0, -1.0, 0.0),
+            new Cartesian3(-0.5, -0.125, 0.0),
+            new Cartesian3(0.5, 0.125, 0.0),
+            new Cartesian3(1.0, 1.0, 0.0)
+        ];
+        times = [0.0, 1.0, 2.0, 3.0];
     });
 
-    it('constructor throws an exception with invalid control points', function() {
+    it('constructor throws without points', function() {
         expect(function() {
             return new HermiteSpline();
         }).toThrow();
+    });
 
+    it('constructor throws when control points length is less than 3', function() {
         expect(function() {
-            return new HermiteSpline(1.0);
-        }).toThrow();
-
-        expect(function() {
-            return new HermiteSpline([1.0, 2.0, 3.0]);
+            return new HermiteSpline({
+                points : [Cartesian3.ZERO]
+            });
         }).toThrow();
     });
 
-    it('get control points', function() {
-        var hs = new HermiteSpline(points);
-        expect(hs.getControlPoints()).toEqual(points);
+    it('constructor throws without times', function() {
+        expect(function() {
+            return new HermiteSpline({
+                points : points
+            });
+        }).toThrow();
+    });
+
+    it('constructor throws when times.length is not equal to points.length', function() {
+        expect(function() {
+            return new HermiteSpline({
+                points : points,
+                times : [0.0, 1.0]
+            });
+        }).toThrow();
     });
 
     it('evaluate fails with undefined time', function() {
-        var hs = new HermiteSpline(points);
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
         expect(function() {
             hs.evaluate();
         }).toThrow();
     });
 
     it('evaluate fails with time out of range', function() {
-        var hs = new HermiteSpline(points);
-
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
         expect(function() {
-            hs.evaluate(points[0].time - 1.0);
+            hs.evaluate(times[0] - 1.0);
         }).toThrow();
-
-        expect(function() {
-            hs.evaluate(points[points.length - 1].time + 1.0);
-        }).toThrow();
-    });
-
-    it('evaluate can jump around in time', function() {
-        var hs = new HermiteSpline(points);
-
-        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
-
-        // jump forward
-        expect(hs.evaluate(points[1].time)).toEqual(points[1].point);
-
-        // jump backward
-        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
-
-        // jump far forward
-        expect(hs.evaluate(points[points.length - 2].time)).toEqual(points[points.length - 2].point);
-
-        // jump far back
-        expect(hs.evaluate(points[0].time)).toEqual(points[0].point);
     });
 
     // returns a function for a hermite curve between points p and q
@@ -102,25 +93,49 @@ defineSuite([
     };
 
     it('natural cubic spline', function() {
-        points = [{
-            point : new Cartesian3(1.0, 0.0, 0.0),
-            time : 0.0
-        }, {
-            point : new Cartesian3(0.0, 1.0, CesiumMath.PI_OVER_TWO),
-            time : 1.0
-        }, {
-            point : new Cartesian3(-1.0, 0.0, Math.PI),
-            time : 2.0
-        }, {
-            point : new Cartesian3(0.0, -1.0, CesiumMath.THREE_PI_OVER_TWO),
-            time : 3.0
-        }];
+        points = [
+            new Cartesian3(1.0, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, CesiumMath.PI_OVER_TWO),
+            new Cartesian3(-1.0, 0.0, Math.PI),
+            new Cartesian3(0.0, -1.0, CesiumMath.THREE_PI_OVER_TWO)
+        ];
 
         var p0Tangent = new Cartesian3(-0.87, 1.53, 1.57);
         var p1Tangent = new Cartesian3(-1.27, -0.07, 1.57);
 
+        var interpolate = createHermiteBasis(points[0], p0Tangent, points[1], p1Tangent);
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
+
+        var granularity = 0.1;
+        for ( var i = times[0]; i < times[1]; i = i + granularity) {
+            expect(hs.evaluate(i)).toEqualEpsilon(interpolate(i), CesiumMath.EPSILON3);
+        }
+    });
+
+    it('clamped cubic spline', function() {
+        points = [
+            new Cartesian3(1.0, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, CesiumMath.PI_OVER_TWO),
+            new Cartesian3(-1.0, 0.0, Math.PI),
+            new Cartesian3(0.0, -1.0, CesiumMath.THREE_PI_OVER_TWO)
+        ];
+
+        var firstTangent = new Cartesian3(0.0, 1.0, 0.0);
+        var lastTangent = new Cartesian3(1.0, 0.0, 0.0);
+
+        var p0Tangent = firstTangent;
+        var p1Tangent = new Cartesian3(-1.53, 0.13, 1.88);
+
         var interpolate = createHermiteBasis(points[0].point, p0Tangent, points[1].point, p1Tangent);
-        var hs = new HermiteSpline(points);
+        var hs = new HermiteSpline({
+            points : points,
+            times : times,
+            firstTangent : firstTangent,
+            lastTangent : lastTangent
+        });
 
         var granularity = 0.1;
         for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
@@ -128,32 +143,43 @@ defineSuite([
         }
     });
 
-    it('clamped cubic spline', function() {
-        points = [{
-            point : new Cartesian3(1.0, 0.0, 0.0),
-            time : 0.0,
-            tangent : new Cartesian3(0.0, 1.0, 0.0)
-        }, {
-            point : new Cartesian3(0.0, 1.0, CesiumMath.PI_OVER_TWO),
-            time : 1.0
-        }, {
-            point : new Cartesian3(-1.0, 0.0, Math.PI),
-            time : 2.0
-        }, {
-            point : new Cartesian3(0.0, -1.0, CesiumMath.THREE_PI_OVER_TWO),
-            time : 3.0,
-            tangent : new Cartesian3(1.0, 0.0, 0.0)
-        }];
+    it('evaluate with result parameter', function() {
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
+        var result = new Cartesian3();
+        var point = hs.evaluate(times[0], result);
+        expect(point).toBe(result);
+        expect(result).toEqual(points[0]);
+    });
 
-        var p0Tangent = new Cartesian3(0.0, 1.0, 0.0);
-        var p1Tangent = new Cartesian3(-1.53, 0.13, 1.88);
+    it('spline with 2 control points defaults to lerp', function() {
+        points = points.slice(0, 2);
+        times = times.slice(0, 2);
 
-        var interpolate = createHermiteBasis(points[0].point, p0Tangent, points[1].point, p1Tangent);
-        var hs = new HermiteSpline(points);
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
 
-        var granularity = 0.1;
-        for ( var i = points[0].time; i < points[1].time; i = i + granularity) {
-            expect(hs.evaluate(i)).toEqualEpsilon(interpolate(i), CesiumMath.EPSILON3);
-        }
+        var t = (times[0] + times[1]) * 0.5;
+        expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+    });
+
+    it('spline with 2 control points defaults to lerp and result parameter', function() {
+        points = points.slice(0, 2);
+        times = times.slice(0, 2);
+
+        var hs = new HermiteSpline({
+            points : points,
+            times : times
+        });
+
+        var t = (times[0] + times[1]) * 0.5;
+        var result = new Cartesian3();
+        var actual = hs.evaluate(t, result);
+        expect(actual).toBe(result);
+        expect(actual).toEqual(Cartesian3.lerp(points[0], points[1], t));
     });
 });
