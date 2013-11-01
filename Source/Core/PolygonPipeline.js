@@ -1092,10 +1092,10 @@ define([
                     Cartesian3.fromArray(positions, i, p);
 
                     if (scaleToSurface) {
-                        n = ellipsoid.geodeticSurfaceNormal(p, n);
-                    } else {
-                        n = Cartesian3.clone(p, n);
+                        p = ellipsoid.scaleToGeodeticSurface(p, p);
                     }
+
+                    n = ellipsoid.geodeticSurfaceNormal(p, n);
 
                     Cartesian3.multiplyByScalar(n, height, n);
                     Cartesian3.add(p, n, p);
