@@ -103,12 +103,12 @@ define([
             var controlPoints = output.czm.values;
 
             if (sampler.interpolation === 'LINEAR') {
-                if (output.type === 'FLOAT_VEC3') {
+                if (output.type === ModelConstants.FLOAT_VEC3) {
                     spline = new LinearSpline({
                         times : times,
                         points : controlPoints
                     });
-                } else if (output.type === 'FLOAT_VEC4') {
+                } else if (output.type === ModelConstants.FLOAT_VEC4) {
                     spline = new QuaternionSpline({
                         times : times,
                         points : controlPoints
