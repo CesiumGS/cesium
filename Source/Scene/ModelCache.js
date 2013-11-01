@@ -3,11 +3,13 @@ define([
         '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Quaternion',
+        './ModelConstants',
         './ModelTypes'
     ], function(
         defined,
         Cartesian3,
         Quaternion,
+        ModelConstants,
         ModelTypes) {
     "use strict";
 
@@ -55,15 +57,15 @@ define([
             var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + parameter.byteOffset, parameter.count);
             var i;
 
-            if (type === 'FLOAT') {
+            if (type === ModelConstants.FLOAT) {
                 values = typedArray;
             }
-            else if (type === 'FLOAT_VEC3') {
+            else if (type === ModelConstants.FLOAT_VEC3) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if (type === 'FLOAT_VEC4') {
+            } else if (type === ModelConstants.FLOAT_VEC4) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;

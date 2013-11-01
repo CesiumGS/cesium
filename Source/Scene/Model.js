@@ -18,7 +18,6 @@ define([
         '../Core/Matrix4',
         '../Core/BoundingSphere',
         '../Core/IndexDatatype',
-        '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
         '../Core/Math',
         '../Core/Event',
@@ -31,6 +30,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CommandLists',
         '../Renderer/createShaderSource',
+        './ModelConstants',
         './ModelTypes',
         './ModelCache',
         './ModelAnimationCollection',
@@ -54,7 +54,6 @@ define([
         Matrix4,
         BoundingSphere,
         IndexDatatype,
-        ComponentDatatype,
         PrimitiveType,
         CesiumMath,
         Event,
@@ -67,6 +66,7 @@ define([
         DrawCommand,
         CommandLists,
         createShaderSource,
+        ModelConstants,
         ModelTypes,
         ModelCache,
         ModelAnimationCollection,
@@ -406,6 +406,12 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var gltfIndexDatatype = {
+    };
+    gltfIndexDatatype[ModelConstants.UNSIGNED_BYTE] = IndexDatatype.UNSIGNED_BYTE;
+    gltfIndexDatatype[ModelConstants.UNSIGNED_SHORT] = IndexDatatype.UNSIGNED_SHORT;
+    gltfIndexDatatype[ModelConstants.UNSIGNED_INT] = IndexDatatype.UNSIGNED_INT;
+
     function createBuffers(model, context) {
         var loadResources = model._loadResources;
 
@@ -425,7 +431,9 @@ define([
                 webglBuffer : undefined
             };
 
-            if (bufferView.target === 'ARRAY_BUFFER') {
+
+// TODO: remove workaround: https://github.com/KhronosGroup/glTF/issues/170
+            if (bufferView.target === 'ARRAY_BUFFER' /* ModelConstants.ARRAY_BUFFER */) {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
@@ -447,7 +455,7 @@ define([
 
                 if (!defined(bufferView.czm.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
+                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, gltfIndexDatatype[instance.type]);
                     indexBuffer.setVertexArrayDestroyable(false);
                     bufferView.czm.webglBuffer = indexBuffer;
                     // In theory, several glTF indices with different types could
@@ -489,6 +497,26 @@ define([
         }
     }
 
+    var gltfTextureWrap = {
+    };
+    gltfTextureWrap[ModelConstants.CLAMP_TO_EDGE] = TextureWrap.CLAMP_TO_EDGE;
+    gltfTextureWrap[ModelConstants.REPEAT] = TextureWrap.REPEAT;
+    gltfTextureWrap[ModelConstants.MIRRORED_REPEAT] = TextureWrap.MIRRORED_REPEAT;
+
+    var gltfTextureMinificationFilter = {
+    };
+    gltfTextureMinificationFilter[ModelConstants.NEAREST] = TextureMinificationFilter.NEAREST;
+    gltfTextureMinificationFilter[ModelConstants.LINEAR] = TextureMinificationFilter.LINEAR;
+    gltfTextureMinificationFilter[ModelConstants.NEAREST_MIPMAP_NEAREST] = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
+    gltfTextureMinificationFilter[ModelConstants.LINEAR_MIPMAP_NEAREST] = TextureMinificationFilter.LINEAR_MIPMAP_NEAREST;
+    gltfTextureMinificationFilter[ModelConstants.NEAREST_MIPMAP_LINEAR] = TextureMinificationFilter.NEAREST_MIPMAP_LINEAR;
+    gltfTextureMinificationFilter[ModelConstants.LINEAR_MIPMAP_LINEAR] = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+
+    var gltfTextureMagnificationFilter = {
+    };
+    gltfTextureMagnificationFilter[ModelConstants.NEAREST] = TextureMagnificationFilter.NEAREST;
+    gltfTextureMagnificationFilter[ModelConstants.LINEAR] = TextureMagnificationFilter.LINEAR;
+
     function createSamplers(model, context) {
         var loadResources = model._loadResources;
 
@@ -502,22 +530,22 @@ define([
 
                     sampler.czm = {
                         sampler : context.createSampler({
-                            wrapS : TextureWrap[sampler.wrapS],
-                            wrapT : TextureWrap[sampler.wrapT],
-                            minificationFilter : TextureMinificationFilter[sampler.minFilter],
-                            magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
+                            wrapS : gltfTextureWrap[sampler.wrapS],
+                            wrapT : gltfTextureWrap[sampler.wrapT],
+                            minificationFilter : gltfTextureMinificationFilter[sampler.minFilter],
+                            magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
                         })
                     };
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
                     var minFilter;
 
-                    if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
-                        (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR')) {
-                        minFilter = 'NEAREST';
-                    } else if ((sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
-                               (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
-                        minFilter = 'LINEAR';
+                    if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
+                        (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR)) {
+                        minFilter = ModelConstants.NEAREST;
+                    } else if ((sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
+                               (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
+                        minFilter = ModelConstants.LINEAR;
                     } else {
                         minFilter = sampler.minFilter;
                     }
@@ -526,8 +554,8 @@ define([
                     sampler.czm.samplerWithoutMipmaps = context.createSampler({
                         wrapS : TextureWrap.CLAMP,
                         wrapT : TextureWrap.CLAMP,
-                        minificationFilter : TextureMinificationFilter[minFilter],
-                        magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
+                        minificationFilter : gltfTextureMinificationFilter[minFilter],
+                        magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
                     });
 // End workaround
                 }
@@ -681,13 +709,13 @@ define([
                     states.czm = {
                         renderState : context.createRenderState({
                             cull : {
-                                enabled : states.cullFaceEnable
+                                enabled : !!states.cullFaceEnable
                             },
                             depthTest : {
-                                enabled : states.depthTestEnable
+                                enabled : !!states.depthTestEnable
                             },
-                            depthMask : states.depthMask,
-                            blending : states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                            depthMask : !!states.depthMask,
+                            blending : !!states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
                         })
                     };
                 }
@@ -761,57 +789,58 @@ define([
 
     var gltfUniformFunctions = {
 // TODO: All types
-         FLOAT : function(value, model, context) {
-             return function() {
-                 return value;
-             };
-         },
-         FLOAT_VEC2 : function(value, model, context) {
-             var v = Cartesian2.fromArray(value);
+    };
 
-             return function() {
-                 return v;
-             };
-         },
-         FLOAT_VEC3 : function(value, model, context) {
-             var v = Cartesian3.fromArray(value);
+    gltfUniformFunctions[ModelConstants.FLOAT] = function(value, model, context) {
+         return function() {
+             return value;
+         };
+     };
+     gltfUniformFunctions[ModelConstants.FLOAT_VEC2] = function(value, model, context) {
+         var v = Cartesian2.fromArray(value);
 
-             return function() {
-                 return v;
-             };
-         },
-         FLOAT_VEC4 : function(value, model, context) {
-             var v = Cartesian4.fromArray(value);
+         return function() {
+             return v;
+         };
+     };
+     gltfUniformFunctions[ModelConstants.FLOAT_VEC3] = function(value, model, context) {
+         var v = Cartesian3.fromArray(value);
 
-             return function() {
-                 return v;
-             };
-         },
-         SAMPLER_2D : function(value, model, context) {
-             var texture = model.gltf.textures[value];
-             var tx = texture.czm.texture;
-             var sampler = model.gltf.samplers[texture.sampler];
+         return function() {
+             return v;
+         };
+     };
+     gltfUniformFunctions[ModelConstants.FLOAT_VEC4] = function(value, model, context) {
+         var v = Cartesian4.fromArray(value);
+
+         return function() {
+             return v;
+         };
+     };
+     gltfUniformFunctions[ModelConstants.SAMPLER_2D] = function(value, model, context) {
+         var texture = model.gltf.textures[value];
+         var tx = texture.czm.texture;
+         var sampler = model.gltf.samplers[texture.sampler];
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
-             var dimensions = tx.getDimensions();
-             if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
-                 tx.setSampler(sampler.czm.samplerWithoutMipmaps);
-             } else {
+         var dimensions = tx.getDimensions();
+         if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
+             tx.setSampler(sampler.czm.samplerWithoutMipmaps);
+         } else {
 // End workaround
-                 if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
-                     (sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
-                     (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
-                     (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
-                     tx.generateMipmap();
-                 }
-                 tx.setSampler(sampler.czm.sampler);
+             if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
+                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
+                 (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
+                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
+                 tx.generateMipmap();
              }
-
-             return function() {
-                 return tx;
-             };
+             tx.setSampler(sampler.czm.sampler);
          }
-    };
+
+         return function() {
+             return tx;
+         };
+     };
 
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
@@ -830,11 +859,13 @@ define([
             if (materials.hasOwnProperty(name)) {
                 var material = materials[name];
                 var instanceTechnique = material.instanceTechnique;
+                var instanceParameters = instanceTechnique.values;
                 var technique = techniques[instanceTechnique.technique];
                 var parameters = technique.parameters;
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
+                var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
 
                 var parameterValues = {};
 
@@ -843,49 +874,39 @@ define([
                 // Uniform parameters for this pass
                 for (name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
-                        var parameterName = uniforms[name];
-                        var parameter = parameters[parameterName];
+                        // Only add active uniforms
+                        if (defined(activeUniforms[name])) {
+                            var parameterName = uniforms[name];
+                            var parameter = parameters[parameterName];
 
-                        var func;
+                            var func;
 
-                        if (defined(parameter.semantic)) {
-                            // Map glTF semantic to Cesium automatic uniform
+                            if (defined(instanceParameters[parameterName])) {
+                                // Parameter overrides by the instance technique
+                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model, context);
+                            } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
-                            func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
-                        } else if (defined(parameter.value)) {
-                            // Default technique value that may be overridden by a material
-                            func = gltfUniformFunctions[parameter.type](parameter.value, model, context);
-                        }
-                        // else will be defined by the technique
+                                // Map glTF semantic to Cesium automatic uniform
+                                func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                            } else if (defined(parameter.value)) {
+                                // Default technique value that may be overridden by a material
+                                func = gltfUniformFunctions[parameter.type](parameter.value, model, context);
+                            }
 
-                        parameterValues[parameterName] = {
-                            uniformName : name,
-                            func : func
-                        };
+                            parameterValues[parameterName] = {
+                                uniformName : name,
+                                func : func
+                            };
+                        }
                     }
                 }
-
-                // Parameter overrides by the instance technique
-                var instanceParameters = instanceTechnique.values;
-                var length = instanceParameters.length;
-                for (var i = 0; i < length; ++i) {
-                    var instanceParam = instanceParameters[i];
-                    var parameterValue = parameterValues[instanceParam.parameter];
-                    parameterValue.func = gltfUniformFunctions[parameters[instanceParam.parameter].type](instanceParam.value, model, context);
-                }
-
-                var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
 
                 // Create uniform map
                 var uniformMap = {};
                 for (name in parameterValues) {
                     if (parameterValues.hasOwnProperty(name)) {
                         var pv = parameterValues[name];
-
-                        // Only add active uniforms
-                        if (defined(activeUniforms[pv.uniformName])) {
-                            uniformMap[pv.uniformName] = pv.func;
-                        }
+                        uniformMap[pv.uniformName] = pv.func;
                     }
                 }
 
@@ -901,6 +922,16 @@ define([
             return color;
         };
     }
+
+    var gltfPrimitiveType = {
+    };
+    gltfPrimitiveType[ModelConstants.POINTS] = PrimitiveType.POINTS;
+    gltfPrimitiveType[ModelConstants.LINES] = PrimitiveType.LINES;
+    gltfPrimitiveType[ModelConstants.LINE_LOOP] = PrimitiveType.LINE_LOOP;
+    gltfPrimitiveType[ModelConstants.LINE_STRIP] = PrimitiveType.LINE_STRIP;
+    gltfPrimitiveType[ModelConstants.TRIANGLES] = PrimitiveType.TRIANGLES;
+    gltfPrimitiveType[ModelConstants.TRIANGLE_STRIP] = PrimitiveType.TRIANGLE_STRIP;
+    gltfPrimitiveType[ModelConstants.TRIANGLE_FAN] = PrimitiveType.TRIANGLE_FAN;
 
     function createCommand(model, node, context) {
         var czmMeshesCommands = node.czm.meshesCommands;
@@ -953,10 +984,12 @@ define([
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
+                // TODO: Remove workaround: https://github.com/KhronosGroup/glTF/issues/170
+                // var primitiveType = gltfPrimitiveType[primitive.primitive];
                 var primitiveType = PrimitiveType[primitive.primitive];
                 var vertexArray = primitive.czm.vertexArray;
                 var count = ix.count;
-                var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
+                var offset = (ix.byteOffset / gltfIndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
                 var uniformMap = instanceTechnique.czm.uniformMap;
                 var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
                 var rs = pass.states.czm.renderState;
