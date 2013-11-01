@@ -12,7 +12,7 @@ defineSuite([
         var list = new CommandLists();
         expect(list.empty()).toEqual(true);
 
-        list.colorList.push(new DrawCommand());
+        list.opaqueList.push(new DrawCommand());
         expect(list.empty()).toEqual(false);
     });
 
@@ -20,7 +20,7 @@ defineSuite([
         var list = new CommandLists();
         expect(list.empty()).toEqual(true);
 
-        list.colorList.push(new DrawCommand());
+        list.opaqueList.push(new DrawCommand());
         expect(list.empty()).toEqual(false);
 
         list.removeAll();

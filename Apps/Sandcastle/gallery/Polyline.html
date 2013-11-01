@@ -8,7 +8,7 @@
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -64,7 +64,7 @@ require(['Cesium'], function(Cesium) {
             geometry : new Cesium.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
                 colors : colors
             })
         }),
@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
             geometry : new Cesium.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+                vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
                 colors : colors,
                 colorsPerVertex : true
             })

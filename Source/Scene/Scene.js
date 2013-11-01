@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -20,6 +21,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -44,6 +46,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        DeveloperError,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -59,6 +62,7 @@ define([
         GeometryInstance,
         GeometryPipeline,
         ColorGeometryInstanceAttribute,
+        ShowGeometryInstanceAttribute,
         Context,
         ClearCommand,
         PassState,
@@ -180,6 +184,14 @@ define([
         this._sunBloom = undefined;
 
         /**
+         * The {@link Moon}
+         *
+         * @type Moon
+         * @default undefined
+         */
+        this.moon = undefined;
+
+        /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
          * @type {Color}
@@ -187,7 +199,7 @@ define([
          *
          * @see Scene#skyBox
          */
-        this.backgroundColor = Color.BLACK.clone();
+        this.backgroundColor = Color.clone(Color.BLACK);
 
         /**
          * The current mode of the scene.
@@ -369,6 +381,21 @@ define([
         return this._animations;
     };
 
+    var scratchOccluderBoundingSphere = new BoundingSphere();
+
+    function getOccluder(scene) {
+        // TODO: The occluder is the top-level central body. When we add
+        //       support for multiple central bodies, this should be the closest one.
+        var cb = scene._primitives.getCentralBody();
+        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
+            var ellipsoid = cb.getEllipsoid();
+            scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
+            return new Occluder(scratchOccluderBoundingSphere, scene._camera.positionWC);
+        }
+
+        return undefined;
+    }
+
     function clearPasses(passes) {
         passes.color = false;
         passes.pick = false;
@@ -386,16 +413,8 @@ define([
         frameState.time = time;
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
-        frameState.occluder = undefined;
-
-        // TODO: The occluder is the top-level central body. When we add
-        //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.getEllipsoid();
-            var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.positionWC);
-            frameState.occluder = occluder;
-        }
+        frameState.occluder = getOccluder(scene);
+        frameState.events.length = 0;
 
         clearPasses(frameState.passes);
     }
@@ -464,7 +483,7 @@ define([
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
-    function createPotentiallyVisibleSet(scene, listName) {
+    function createPotentiallyVisibleSet(scene, listNames, pick) {
         var commandLists = scene._commandList;
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
@@ -496,40 +515,44 @@ define([
 
         // get user culling volume minus the far plane.
         var planes = scratchCullingVolume.planes;
-        for (var k = 0; k < 5; ++k) {
-            planes[k] = cullingVolume.planes[k];
+        for (var m = 0; m < 5; ++m) {
+            planes[m] = cullingVolume.planes[m];
         }
         cullingVolume = scratchCullingVolume;
 
         var length = commandLists.length;
-        for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i][listName];
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                var command = commandList[j];
-                var boundingVolume = command.boundingVolume;
-                if (defined(boundingVolume)) {
-                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
-                    if (command.cull &&
-                            ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
-                             (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV)))) {
-                        continue;
+        var listNameLength = listNames.length;
+        for (var i = 0; i < listNameLength; ++i) {
+            var listName = listNames[i];
+            for (var j = 0; j < length; ++j) {
+                var commandList = !pick ? commandLists[j][listName] : commandLists[j].pickList[listName];
+                var commandListLength = commandList.length;
+                for (var k = 0; k < commandListLength; ++k) {
+                    var command = commandList[k];
+                    var boundingVolume = command.boundingVolume;
+                    if (defined(boundingVolume)) {
+                        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+                        var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+                        if (command.cull &&
+                                ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
+                                 (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV)))) {
+                            continue;
+                        }
+
+                        distances = transformedBV.getPlaneDistances(position, direction, distances);
+                        near = Math.min(near, distances.start);
+                        far = Math.max(far, distances.stop);
+                    } else {
+                        // Clear commands don't need a bounding volume - just add the clear to all frustums.
+                        // If another command has no bounding volume, though, we need to use the camera's
+                        // worst-case near and far planes to avoid clipping something important.
+                        distances.start = camera.frustum.near;
+                        distances.stop = camera.frustum.far;
+                        undefBV = !(command instanceof ClearCommand);
                     }
 
-                    distances = transformedBV.getPlaneDistances(position, direction, distances);
-                    near = Math.min(near, distances.start);
-                    far = Math.max(far, distances.stop);
-                } else {
-                    // Clear commands don't need a bounding volume - just add the clear to all frustums.
-                    // If another command has no bounding volume, though, we need to use the camera's
-                    // worst-case near and far planes to avoid clipping something important.
-                    distances.start = camera.frustum.near;
-                    distances.stop = camera.frustum.far;
-                    undefBV = !(command instanceof ClearCommand);
+                    insertIntoBin(scene, command, distances);
                 }
-
-                insertIntoBin(scene, command, distances);
             }
         }
 
@@ -551,7 +574,7 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
-            createPotentiallyVisibleSet(scene, listName);
+            createPotentiallyVisibleSet(scene, listNames, pick);
         }
     }
 
@@ -633,15 +656,19 @@ define([
             }
 
             var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
-            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(Cartesian3.fromArray(m, 12)), command.boundingVolume.radius);
+            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(m, command.boundingVolume.radius);
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
-            commandList[0].colorList[0].execute(context, passState);
+            commandList[0].opaqueList[0].execute(context, passState);
         }
     }
 
-    function isSunVisible(command, frameState) {
+    function isVisible(command, frameState) {
+        if (!defined(command)) {
+            return;
+        }
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -652,11 +679,14 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
+        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+        var transformedBV = command.boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+                  ((cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) &&
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(transformedBV)))));
     }
 
     function executeCommands(scene, passState, clearColor) {
@@ -682,7 +712,8 @@ define([
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
-        var sunVisible = isSunVisible(sunCommand, frameState);
+        var sunVisible = isVisible(sunCommand, frameState);
+
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -754,6 +785,28 @@ define([
         }
     }
 
+    function updatePrimitives(scene) {
+        var context = scene._context;
+        var frameState = scene._frameState;
+        var commandList = scene._commandList;
+
+        scene._primitives.update(context, frameState, commandList);
+
+        if (defined(scene.moon)) {
+            scene.moon.update(context, frameState, commandList);
+        }
+    }
+
+    function executeEvents(frameState) {
+        // Events are queued up during primitive update and executed here in case
+        // the callback modifies scene state that should remain constant over the frame.
+        var events = frameState.events;
+        var length = events.length;
+        for (var i = 0; i < length; ++i) {
+            events[i].raiseEvent();
+        }
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
@@ -769,6 +822,8 @@ define([
         this._camera.controller.update(this.mode, this.scene2D);
         this._screenSpaceCameraController.update(this.mode);
     };
+
+    var renderListNames = ['opaqueList', 'translucentList'];
 
     /**
      * DOC_TBA
@@ -789,13 +844,11 @@ define([
         frameState.creditDisplay.beginFrame();
 
         var context = this._context;
-
         us.update(context, frameState);
 
         this._commandList.length = 0;
-        this._primitives.update(context, frameState, this._commandList);
-
-        createPotentiallyVisibleSet(this, 'colorList');
+        updatePrimitives(this);
+        createPotentiallyVisibleSet(this, renderListNames);
 
         var passState = this._passState;
 
@@ -803,6 +856,7 @@ define([
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
         context.endFrame();
+        executeEvents(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -886,12 +940,26 @@ define([
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
-     * DOC_TBA
+     * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
+     * at a particular window coordinate or undefined if nothing is at the location. Other properties may
+     * potentially be set depending on the type of primitive.
+     *
      * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     *
+     * @returns {Object} Object containing the picked primitive.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
      */
     Scene.prototype.pick = function(windowPosition) {
+        if(!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+
         var context = this._context;
-        var primitives = this._primitives;
+        var us = this.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
@@ -905,10 +973,11 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
-        var commandLists = this._commandList;
-        commandLists.length = 0;
-        primitives.update(context, frameState, commandLists);
-        createPotentiallyVisibleSet(this, 'pickList');
+        us.update(context, frameState);
+
+        this._commandList.length = 0;
+        updatePrimitives(this);
+        createPotentiallyVisibleSet(this, renderListNames, true);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
@@ -916,7 +985,73 @@ define([
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
+        executeEvents(frameState);
         return object;
+    };
+
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive. The primitives in the list are ordered by their visual order in the
+     * scene (front to back).
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     *
+     * @returns {Array} Array of objects, each containing 1 picked primitives.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
+     * @example
+     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     */
+    Scene.prototype.drillPick = function(windowPosition) {
+        // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
+        // we could update the primitive once, and then just execute their commands for each pass,
+        // and cull commands for picked primitives.  e.g., base on the command's owner.
+        if (!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+
+        var pickedObjects = [];
+
+        var pickedResult = this.pick(windowPosition);
+        while (defined(pickedResult) && defined(pickedResult.primitive)) {
+            var primitive = pickedResult.primitive;
+            pickedObjects.push(pickedResult);
+
+            // hide the picked primitive and call picking again to get the next primitive
+            if (defined(primitive.show)) {
+                primitive.show = false;
+            } else if (typeof primitive.setShow === 'function') {
+                primitive.setShow(false);
+            } else if (typeof primitive.getGeometryInstanceAttributes === 'function') {
+                var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
+                if (defined(attributes) && defined(attributes.show)) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(false);
+                }
+            }
+
+            pickedResult = this.pick(windowPosition);
+        }
+
+        // unhide the picked primitives
+        for (var i = 0; i < pickedObjects.length; ++i) {
+            var p = pickedObjects[i].primitive;
+            if (defined(p.show)) {
+                p.show = true;
+            } else if (typeof p.setShow === 'function') {
+                p.setShow(true);
+            } else if (typeof p.getGeometryInstanceAttributes === 'function') {
+                var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
+                if (defined(attr) && defined(attr.show)) {
+                    attr.show = ShowGeometryInstanceAttribute.toValue(true);
+                }
+            }
+        }
+
+        return pickedObjects;
     };
 
     /**

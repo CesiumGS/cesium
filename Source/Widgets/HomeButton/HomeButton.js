@@ -4,6 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../SvgPath/SvgPath',
         '../getElement',
         './HomeButtonViewModel',
         '../../ThirdParty/knockout'
@@ -12,6 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        SvgPath,
         getElement,
         HomeButtonViewModel,
         knockout) {
@@ -41,9 +43,11 @@ define([
         this._container = container;
         this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, flightDuration);
 
-        this._element = document.createElement('span');
-        this._element.className = 'cesium-homeButton';
+        this._element = document.createElement('button');
+        this._element.type = 'button';
+        this._element.className = 'cesium-widget-button cesium-widget-toolbar-icon cesium-home-button';
         this._element.setAttribute('data-bind', 'attr: { title: tooltip }, click: command');
+        this._svgPath = new SvgPath(this._element, 28, 28, 'M14,4l-10,8.75h20l-4.25-3.7188v-4.6562h-2.812v2.1875l-2.938-2.5625zm-7.0938,9.906v10.094h14.094v-10.094h-14.094zm2.1876,2.313h3.3122v4.25h-3.3122v-4.25zm5.8442,1.281h3.406v6.438h-3.406v-6.438z');
         container.appendChild(this._element);
 
         knockout.applyBindings(this._viewModel, this._element);
@@ -90,7 +94,7 @@ define([
      */
     HomeButton.prototype.destroy = function() {
         var container = this._container;
-        knockout.cleanNode(container);
+        knockout.cleanNode(this._element);
         container.removeChild(this._element);
         return destroyObject(this);
     };

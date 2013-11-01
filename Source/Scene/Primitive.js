@@ -57,6 +57,8 @@ define([
         when) {
     "use strict";
 
+    var EMPTY_ARRAY = [];
+
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
      * as shown in example 1 below, or from an array of instances, even if the geometry is from different
@@ -69,7 +71,7 @@ define([
      * </p>
      * <p>
      * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
+     * Instances can be individually picked; {@link Scene#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      * <p>
@@ -81,11 +83,15 @@ define([
      * @alias Primitive
      * @constructor
      *
-     * @param {Array|GeometryInstance} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
-     * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
+     * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
+     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -96,7 +102,7 @@ define([
      *       center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       bearing : CesiumMath.PI_OVER_FOUR
+     *       rotation : CesiumMath.PI_OVER_FOUR
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
@@ -194,18 +200,6 @@ define([
         this._material = undefined;
 
         /**
-         * Determines if the geometry instances will be created and batched on
-         * a web worker.
-         *
-         * @type Boolean
-         *
-         * @default true
-         *
-         * @private
-         */
-        this.asynchronous = defaultValue(options.asynchronous, true);
-
-        /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
          * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -223,7 +217,7 @@ define([
          *
          * @see czm_model
          */
-        this.modelMatrix = Matrix4.IDENTITY.clone();
+        this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
@@ -233,19 +227,87 @@ define([
          *
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
 
-        this.state = PrimitiveState.READY;
+        /**
+         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         *
+         * @readonly
+         */
+        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
+
+        /**
+         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         *
+         * @readonly
+         */
+        this.releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
+
+        /**
+         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         *
+         * @readonly
+         */
+        this.allow3DOnly = defaultValue(options.allow3DOnly, false);
+
+        /**
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         *
+         * @readonly
+         */
+        this.allowPicking = defaultValue(options.allowPicking, true);
+
+        /**
+         * Determines if the geometry instances will be created and batched on
+         * a web worker.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @private
+         */
+        this.asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+        this._debugShowBoundingVolume = false;
+
+        this._translucent = undefined;
+
+        this._state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
         this._vaAttributes = undefined;
         this._error = undefined;
 
-        this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
-        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
         this._perInstanceAttributeIndices = undefined;
@@ -261,10 +323,20 @@ define([
         this._backFaceRS = undefined;
         this._sp = undefined;
 
+        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
 
         this._commandLists = new CommandLists();
+
+        this._colorCommands = this._commandLists.opaqueList;
+        this._pickCommands = this._commandLists.pickList;
+
+        this._commandLists.opaqueList = EMPTY_ARRAY;
+        this._commandLists.translucentList = EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = EMPTY_ARRAY;
+        this._commandLists.overlayList = EMPTY_ARRAY;
     };
 
     function cloneAttribute(attribute) {
@@ -339,7 +411,7 @@ define([
             var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
             forwardDecl += functionName + ';\n';
 
-            if (!primitive._allow3DOnly) {
+            if (!primitive.allow3DOnly) {
                 attributes +=
                     'attribute vec3 ' + name + '2DHigh;\n' +
                     'attribute vec3 ' + name + '2DLow;\n';
@@ -461,14 +533,12 @@ define([
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
             (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
-            (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
+            (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
             (!frameState.passes.color && !frameState.passes.pick)) {
             return;
         }
 
         var projection = frameState.scene2D.projection;
-        var colorCommands = this._commandLists.colorList;
-        var pickCommands = this._commandLists.pickList;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -482,15 +552,16 @@ define([
         var instances;
         var clonedInstances;
         var geometries;
+        var allowPicking = this.allowPicking;
 
         var that = this;
 
-        if (this.state !== PrimitiveState.COMPLETE && this.state !== PrimitiveState.COMBINED) {
+        if (this._state !== PrimitiveState.COMPLETE && this._state !== PrimitiveState.COMBINED) {
 
             if (this.asynchronous) {
-                if (this.state === PrimitiveState.FAILED) {
+                if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
-                } else if (this.state === PrimitiveState.READY) {
+                } else if (this._state === PrimitiveState.READY) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
@@ -514,16 +585,16 @@ define([
                         }
                     }
 
-                    this.state = PrimitiveState.CREATING;
+                    this._state = PrimitiveState.CREATING;
 
                     when.all(promises, function(results) {
                         that._geometries = results;
-                        that.state = PrimitiveState.CREATED;
+                        that._state = PrimitiveState.CREATED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
-                } else if (this.state === PrimitiveState.CREATED) {
+                } else if (this._state === PrimitiveState.CREATED) {
                     instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
@@ -542,16 +613,17 @@ define([
                     promise = taskProcessor.scheduleTask({
                         task : 'combineGeometry',
                         instances : clonedInstances,
-                        pickIds : createPickIds(context, this, instances),
+                        pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.getEllipsoid(),
                         isGeographic : projection instanceof GeographicProjection,
                         elementIndexUintSupported : context.getElementIndexUint(),
-                        allow3DOnly : this._allow3DOnly,
-                        vertexCacheOptimize : this._vertexCacheOptimize,
+                        allow3DOnly : this.allow3DOnly,
+                        allowPicking : allowPicking,
+                        vertexCacheOptimize : this.vertexCacheOptimize,
                         modelMatrix : this.modelMatrix
                     }, transferableObjects);
 
-                    this.state = PrimitiveState.COMBINING;
+                    this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
                         PrimitivePipeline.receiveGeometries(result.geometries);
@@ -562,10 +634,10 @@ define([
                         that._vaAttributes = result.vaAttributes;
                         that._perInstanceAttributeIndices = result.vaAttributeIndices;
                         Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                        that.state = PrimitiveState.COMBINED;
+                        that._state = PrimitiveState.COMBINED;
                     }, function(error) {
                         that._error = error;
-                        that.state = PrimitiveState.FAILED;
+                        that._state = PrimitiveState.FAILED;
                     });
                 }
             } else {
@@ -600,12 +672,13 @@ define([
 
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
-                    pickIds : createPickIds(context, this, instances),
+                    pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                     ellipsoid : projection.getEllipsoid(),
                     projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
-                    allow3DOnly : this._allow3DOnly,
-                    vertexCacheOptimize : this._vertexCacheOptimize,
+                    allow3DOnly : this.allow3DOnly,
+                    allowPicking : allowPicking,
+                    vertexCacheOptimize : this.vertexCacheOptimize,
                     modelMatrix : this.modelMatrix
                 });
 
@@ -615,17 +688,18 @@ define([
                 this._perInstanceAttributeIndices = result.vaAttributeIndices;
                 Matrix4.clone(result.modelMatrix, this.modelMatrix);
 
-                this.state = PrimitiveState.COMBINED;
+                this._state = PrimitiveState.COMBINED;
             }
         }
 
-        if (this.state === PrimitiveState.COMBINED) {
+        var attributeIndices = this._attributeIndices;
+
+        if (this._state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
-            var attributeIndices = this._attributeIndices;
             var vaAttributes = this._vaAttributes;
 
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
-            if (!this._allow3DOnly && defined(this._boundingSphere)) {
+            if (!this.allow3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
@@ -654,16 +728,16 @@ define([
             this._va = va;
             this._primitiveType = geometries[0].primitiveType;
 
-            if (this._releaseGeometryInstances) {
+            if (this.releaseGeometryInstances) {
                 this.geometryInstances = undefined;
             }
 
             this._geomtries = undefined;
             this._createdGeometries = undefined;
-            this.state = PrimitiveState.COMPLETE;
+            this._state = PrimitiveState.COMPLETE;
         }
 
-        if (this.state !== PrimitiveState.COMPLETE) {
+        if (this._state !== PrimitiveState.COMPLETE) {
             return;
         }
 
@@ -683,13 +757,23 @@ define([
             createSP = true;
         }
 
+        var translucent = this._appearance.isTranslucent();
+        if (this._translucent !== translucent) {
+            this._translucent = translucent;
+            createRS = true;
+        }
+
         if (defined(this._material)) {
             this._material.update(context);
         }
 
+        var twoPasses = appearance.closed && translucent;
+
         if (createRS) {
-            if (appearance.closed && appearance.translucent) {
-                var rs = clone(appearance.renderState, false);
+            var renderState = appearance.getRenderState();
+
+            if (twoPasses) {
+                var rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -699,7 +783,23 @@ define([
                 rs.cull.face = CullFace.FRONT;
                 this._backFaceRS = context.createRenderState(rs);
             } else {
-                this._frontFaceRS = context.createRenderState(appearance.renderState);
+                this._frontFaceRS = context.createRenderState(renderState);
+                this._backFaceRS = this._frontFaceRS;
+            }
+
+            if (allowPicking) {
+                // Only need backface pass for picking when two-pass rendering is used.
+                this._pickRS = this._backFaceRS;
+            } else {
+                // Still occlude if not pickable.
+                var pickRS = clone(renderState, false);
+                pickRS.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                this._pickRS = context.createRenderState(pickRS);
             }
         }
 
@@ -708,30 +808,34 @@ define([
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
-            var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, this._attributeIndices);
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, attributeIndices);
+            validateShaderMatching(this._sp, attributeIndices);
 
-            validateShaderMatching(this._sp, this._attributeIndices);
-            validateShaderMatching(this._pickSP, this._attributeIndices);
+            if (allowPicking) {
+                var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
+                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeIndices);
+            } else {
+                this._pickSP = shaderCache.getShaderProgram(vs, fs, attributeIndices);
+            }
+
+            validateShaderMatching(this._pickSP, attributeIndices);
         }
+
+        var colorCommands = this._colorCommands;
+        var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
-            if (defined(this._backFaceRS)) {
-                colorCommands.length = this._va.length * 2;
-                pickCommands.length = this._va.length * 2;
-            } else {
-                colorCommands.length = this._va.length;
-                pickCommands.length = this._va.length;
-            }
+            colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
+            pickCommands.length = this._va.length;
 
             length = colorCommands.length;
             var vaIndex = 0;
+            var m = 0;
             for (i = 0; i < length; ++i) {
-                if (defined(this._backFaceRS)) {
+                if (twoPasses) {
                     colorCommand = colorCommands[i];
                     if (!defined(colorCommand)) {
                         colorCommand = colorCommands[i] = new DrawCommand();
@@ -742,17 +846,6 @@ define([
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
-
-                    pickCommand = pickCommands[i];
-                    if (!defined(pickCommand)) {
-                        pickCommand = pickCommands[i] = new DrawCommand();
-                    }
-                    pickCommand.owner = this;
-                    pickCommand.primitiveType = this._primitiveType;
-                    pickCommand.vertexArray = this._va[vaIndex];
-                    pickCommand.renderState = this._backFaceRS;
-                    pickCommand.shaderProgram = this._pickSP;
-                    pickCommand.uniformMap = uniforms;
 
                     ++i;
                 }
@@ -768,16 +861,17 @@ define([
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
-                pickCommand = pickCommands[i];
+                pickCommand = pickCommands[m];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[i] = new DrawCommand();
+                    pickCommand = pickCommands[m] = new DrawCommand();
                 }
                 pickCommand.owner = this;
                 pickCommand.primitiveType = this._primitiveType;
                 pickCommand.vertexArray = this._va[vaIndex];
-                pickCommand.renderState = this._frontFaceRS;
+                pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
+                ++m;
 
                 ++vaIndex;
             }
@@ -831,11 +925,29 @@ define([
         length = colorCommands.length;
         for (i = 0; i < length; ++i) {
             colorCommands[i].modelMatrix = this.modelMatrix;
-            pickCommands[i].modelMatrix = this.modelMatrix;
-
             colorCommands[i].boundingVolume = boundingSphere;
+        }
+
+        length = pickCommands.length;
+        for (i = 0; i < length; ++i) {
+            pickCommands[i].modelMatrix = this.modelMatrix;
             pickCommands[i].boundingVolume = boundingSphere;
         }
+
+        if (this._debugShowBoundingVolume !== this.debugShowBoundingVolume) {
+            this._debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+            length = colorCommands.length;
+            for (i = 0; i < length; ++i) {
+                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+            }
+        }
+
+        var pass = frameState.passes;
+        this._commandLists.opaqueList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.translucentList = (pass.color && translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = (pass.pick && !translucent) ? pickCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = (pass.pick && translucent) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);
     };

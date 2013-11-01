@@ -74,6 +74,7 @@ defineSuite([
         expect(a.faceForward).toEqual(false);
         expect(a.translucent).toEqual(true);
         expect(a.aboveGround).toEqual(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('renders', function() {

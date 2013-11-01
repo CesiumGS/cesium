@@ -45,7 +45,9 @@ define([
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=undefined] The surface appearance of the primitive.
-     * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
+     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @exception {DeveloperError} Either options.positions or options.polygonHierarchy can be provided, but not both.
      * @exception {DeveloperError} When options.positions is provided, at least three positions are required.
@@ -155,6 +157,18 @@ define([
         this.material = defaultValue(options.material, material);
 
         /**
+         * User-defined object returned when the polygon is picked.
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @see Scene#pick
+         */
+        this.id = options.id;
+        this._id = undefined;
+
+        /**
          * Determines if the geometry instances will be created and batched on
          * a web worker.
          *
@@ -163,6 +177,18 @@ define([
          * @default true
          */
         this.asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._positions = undefined;
         this._polygonHierarchy = undefined;
@@ -304,13 +330,15 @@ define([
             (this._ellipsoid !== this.ellipsoid) ||
             (this._granularity !== this.granularity) ||
             (this._height !== this.height) ||
-            (this._textureRotationAngle !== this.textureRotationAngle)) {
+            (this._textureRotationAngle !== this.textureRotationAngle) ||
+            (this._id !== this.id)) {
 
             this._createPrimitive = false;
             this._ellipsoid = this.ellipsoid;
             this._granularity = this.granularity;
             this._height = this.height;
             this._textureRotationAngle = this.textureRotationAngle;
+            this._id = this.id;
 
             this._primitive = this._primitive && this._primitive.destroy();
 
@@ -329,6 +357,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
+                    id : this.id,
                     pickPrimitive : this
                 });
             } else {
@@ -341,6 +370,7 @@ define([
                         ellipsoid : this.ellipsoid,
                         granularity : this.granularity
                     }),
+                    id : this.id,
                     pickPrimitive : this
                 });
             }
@@ -354,8 +384,10 @@ define([
             });
         }
 
-        this._primitive.appearance.material = this.material;
-        this._primitive.update(context, frameState, commandList);
+        var primitive = this._primitive;
+        primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+        primitive.appearance.material = this.material;
+        primitive.update(context, frameState, commandList);
     };
 
     /**

@@ -42,15 +42,28 @@ defineSuite([
         }).toThrow();
     });
 
-    it('creates and sends request, adding Accept header', function() {
-        loadJson("test", {
+    it('creates and sends request, adding Accept header when headers are provided', function() {
+        var headers = {
             'Cache-Control' : 'no-cache'
-        });
+        };
+        loadJson('test', headers);
 
-        expect(fakeXHR.open).toHaveBeenCalledWith('GET', "test", true);
+        expect(fakeXHR.open).toHaveBeenCalledWith('GET', 'test', true);
         expect(fakeXHR.setRequestHeader.callCount).toEqual(2);
         expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json,*/*;q=0.01');
         expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
+        expect(fakeXHR.send).toHaveBeenCalled();
+
+        // the headers object we passed in should not have been modified
+        expect(Object.keys(headers)).toEqual(['Cache-Control']);
+    });
+
+    it('creates and sends request, adding Accept header when headers are not provided', function() {
+        loadJson('test');
+
+        expect(fakeXHR.open).toHaveBeenCalledWith('GET', 'test', true);
+        expect(fakeXHR.setRequestHeader.callCount).toEqual(1);
+        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json,*/*;q=0.01');
         expect(fakeXHR.send).toHaveBeenCalled();
     });
 

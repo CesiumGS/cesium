@@ -18,6 +18,7 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Credit',
+        '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
@@ -44,6 +45,7 @@ define([
         BingMapsImageryProvider,
         CentralBody,
         Credit,
+        Moon,
         Scene,
         SceneMode,
         SceneTransitioner,
@@ -102,6 +104,7 @@ define([
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -123,6 +126,17 @@ define([
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : 'http://cesium.agi.com/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+     *     }),
+     *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
+     *     skyBox : new Cesium.SkyBox({
+     *         sources : {
+     *           positiveX : 'stars/TychoSkymapII.t3_08192x04096_80_px.jpg',
+     *           negativeX : 'stars/TychoSkymapII.t3_08192x04096_80_mx.jpg',
+     *           positiveY : 'stars/TychoSkymapII.t3_08192x04096_80_py.jpg',
+     *           negativeY : 'stars/TychoSkymapII.t3_08192x04096_80_my.jpg',
+     *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
+     *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
+     *         }
      *     })
      * });
      */
@@ -176,16 +190,24 @@ define([
             var centralBody = new CentralBody(ellipsoid);
             scene.getPrimitives().setCentralBody(centralBody);
 
-            scene.skyBox = new SkyBox({
-                positiveX : getDefaultSkyBoxUrl('px'),
-                negativeX : getDefaultSkyBoxUrl('mx'),
-                positiveY : getDefaultSkyBoxUrl('py'),
-                negativeY : getDefaultSkyBoxUrl('my'),
-                positiveZ : getDefaultSkyBoxUrl('pz'),
-                negativeZ : getDefaultSkyBoxUrl('mz')
-            });
+            var skyBox = options.skyBox;
+            if (!defined(skyBox)) {
+                skyBox = new SkyBox({
+                    sources : {
+                        positiveX : getDefaultSkyBoxUrl('px'),
+                        negativeX : getDefaultSkyBoxUrl('mx'),
+                        positiveY : getDefaultSkyBoxUrl('py'),
+                        negativeY : getDefaultSkyBoxUrl('my'),
+                        positiveZ : getDefaultSkyBoxUrl('pz'),
+                        negativeZ : getDefaultSkyBoxUrl('mz')
+                    }
+                });
+            }
+
+            scene.skyBox = skyBox;
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
             scene.sun = new Sun();
+            scene.moon = new Moon();
 
             //Set the base imagery layer
             var imageryProvider = options.imageryProvider;
@@ -460,12 +482,17 @@ define([
             return;
         }
 
-        var zoomFactor = 1;
-        if (this._zoomDetector.currentScale !== 1) {
-            zoomFactor = this._zoomDetector.currentScale;
-        }
-        if (window.devicePixelRatio !== 1) {
+        var zoomFactor;
+        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
+            // prefer devicePixelRatio if available.
             zoomFactor = window.devicePixelRatio;
+        } else if (this._zoomDetector.currentScale !== 1) {
+            // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
+            // our SVG's currentScale property does.
+            zoomFactor = this._zoomDetector.currentScale;
+        } else {
+            // otherwise we don't know.
+            zoomFactor = 1;
         }
 
         this._canvasWidth = width;

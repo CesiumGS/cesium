@@ -108,7 +108,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b21" />
+	<property name="version" value="b22" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -118,16 +118,16 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.9" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
 	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
-	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.5/almond.js" />
+	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.6/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.10/jshint.js" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
@@ -498,13 +498,13 @@
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
 			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.6" value="." />
+			<replacefilter token="../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 
 		<!-- rewrite the paths in the HTML -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
-			<replacefilter token="../../ThirdParty/requirejs-2.1.6" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="index.html" />
 		</replace>
 

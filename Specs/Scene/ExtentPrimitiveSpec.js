@@ -5,9 +5,12 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createCamera',
          'Specs/createFrameState',
+         'Specs/createScene',
+         'Specs/destroyScene',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
+         'Core/defaultValue',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -22,9 +25,12 @@ defineSuite([
          destroyContext,
          createCamera,
          createFrameState,
+         createScene,
+         destroyScene,
          frameState,
          pick,
          render,
+         defaultValue,
          BoundingSphere,
          Cartesian3,
          Cartographic,
@@ -60,38 +66,37 @@ defineSuite([
         us = undefined;
     });
 
-    function createExtent() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+    function createExtent(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var e = new ExtentPrimitive({
-            ellipsoid : ellipsoid,
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
             extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
-            asynchronous : false
+            id : options.id,
+            asynchronous : false,
+            debugShowBoundingVolume : options.debugShowBoundingVolume
         });
+        e.material.uniforms.color.alpha = 1.0;
 
         return e;
     }
 
-    it('gets default show', function() {
+    it('gets defaults', function() {
         expect(extent.show).toEqual(true);
-    });
-
-    it('gets the default color', function() {
+        expect(extent.ellipsoid).toEqual(Ellipsoid.WGS84);
+        expect(extent.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
+        expect(extent.height).toEqual(0.0);
+        expect(extent.rotation).toEqual(0.0);
+        expect(extent.textureRotationAngle).toEqual(0.0);
         expect(extent.material.uniforms.color).toEqual({
             red : 1.0,
             green : 1.0,
             blue : 0.0,
             alpha : 0.5
         });
-    });
-
-    it('has a default ellipsoid', function() {
-        expect(extent.ellipsoid).toEqual(Ellipsoid.WGS84);
-    });
-
-    it('gets the default granularity', function() {
-        expect(extent.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
+        expect(extent.asynchronous).toEqual(true);
+        expect(extent.debugShowBoundingVolume).toEqual(false);
     });
 
     it('renders', function() {
@@ -130,11 +135,36 @@ defineSuite([
         expect(render(context, frameState, extent)).toEqual(0);
     });
 
+    it('renders bounding volume with debugShowBoundingVolume', function() {
+        var scene = createScene();
+        scene.getPrimitives().add(createExtent({
+            debugShowBoundingVolume : true
+        }));
+
+        var camera = scene.getCamera();
+        camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.up = Cartesian3.UNIT_Z;
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.getContext().readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+        expect(pixels[3]).toEqual(255);
+
+        destroyScene();
+    });
+
     it('is picked', function() {
-        extent = createExtent();
+        extent = createExtent({
+            id : 'id'
+        });
 
         var pickedObject = pick(context, frameState, extent, 0, 0);
         expect(pickedObject.primitive).toEqual(extent);
+        expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {
@@ -157,7 +187,7 @@ defineSuite([
         extent = createExtent();
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
     });
 
@@ -168,7 +198,7 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
@@ -182,7 +212,7 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);

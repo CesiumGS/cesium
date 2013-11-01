@@ -8,7 +8,7 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -38,6 +38,9 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-120.0, 40.0),
             Cesium.Cartographic.fromDegrees(-110.0, 30.0)
         ]));
+        var colorMaterial = Cesium.Material.fromType('Color');
+        colorMaterial.uniforms.color = new Cesium.Color(1.0, 1.0, 1.0, 1.0);
+        polyline.setMaterial(colorMaterial);
 
         // Apply a polyline outline material
         var widePolyline = polylines.add();
