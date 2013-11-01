@@ -61,6 +61,7 @@ define([
      * @memberof Spline
      *
      * @param {Number} time The time.
+     * @param {Number} startIndex The index from which to start the search.
      * @returns {Number} The index for the element at the start of the interval.
      *
      * @exception {DeveloperError} time is required.
@@ -68,7 +69,7 @@ define([
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
      */
-    Spline.prototype.findTimeInterval = function(time) {
+    Spline.prototype.findTimeInterval = function(time, startIndex) {
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
@@ -82,32 +83,31 @@ define([
 
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.
-        var i = defaultValue(this._lastTimeIndex, 0);
+        startIndex = defaultValue(startIndex, 0);
 
-        if (time >= times[i]) {
-            if (i + 1 < length && time < times[i + 1]) {
-                return i;
-            } else if (i + 2 < length && time < times[i + 2]) {
-                this._lastTimeIndex = i + 1;
-                return this._lastTimeIndex;
+        if (time >= times[startIndex]) {
+            if (startIndex + 1 < length && time < times[startIndex + 1]) {
+                return startIndex;
+            } else if (startIndex + 2 < length && time < times[startIndex + 2]) {
+                return startIndex + 1;
             }
-        } else if (i - 1 >= 0 && time >= times[i - 1]) {
-            this._lastTimeIndex = i - 1;
-            return this._lastTimeIndex;
+        } else if (startIndex - 1 >= 0 && time >= times[startIndex - 1]) {
+            return startIndex - 1;
         }
 
         // The above failed so do a linear search. For the use cases so far, the
         // length of the list is less than 10. In the future, if there is a bottle neck,
         // it might be here.
 
-        if (time > times[this._lastTimeIndex]) {
-            for (i = this._lastTimeIndex; i < length - 1; ++i) {
+        var i;
+        if (time > times[startIndex]) {
+            for (i = startIndex; i < length - 1; ++i) {
                 if (time >= times[i] && time < times[i + 1]) {
                     break;
                 }
             }
         } else {
-            for (i = this._lastTimeIndex - 1; i >= 0; --i) {
+            for (i = startIndex - 1; i >= 0; --i) {
                 if (time >= times[i] && time < times[i + 1]) {
                     break;
                 }
@@ -118,8 +118,7 @@ define([
             i = length - 2;
         }
 
-        this._lastTimeIndex = i;
-        return this._lastTimeIndex;
+        return i;
     };
 
     return Spline;

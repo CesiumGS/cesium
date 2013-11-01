@@ -48,7 +48,7 @@ define([
 
         // use quad interpolation for more than 3 points
         return function(time, result) {
-            var i = spline.findTimeInterval(time);
+            var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
             var u = (time - times[i]) / (times[i + 1] - times[i]);
 
             var q0 = points[i];

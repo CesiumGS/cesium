@@ -110,7 +110,7 @@ define([
         var points = this.points;
         var times = this.times;
 
-        var i = this.findTimeInterval(time);
+        var i = this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
         var u = (time - times[i]) / (times[i + 1] - times[i]);
 
         if (!defined(result)) {
