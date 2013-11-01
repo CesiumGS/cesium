@@ -1906,10 +1906,10 @@ define([
      */
     Context.prototype.createSampler = function(sampler) {
         var s = {
-            wrapS : sampler.wrapS || TextureWrap.CLAMP_TO_EDGE,
-            wrapT : sampler.wrapT || TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : sampler.minificationFilter || TextureMinificationFilter.LINEAR,
-            magnificationFilter : sampler.magnificationFilter || TextureMagnificationFilter.LINEAR,
+            wrapS : defaultValue(sampler.wrapS, TextureWrap.CLAMP_TO_EDGE),
+            wrapT : defaultValue(sampler.wrapT, TextureWrap.CLAMP_TO_EDGE),
+            minificationFilter : defaultValue(sampler.minificationFilter, TextureMinificationFilter.LINEAR),
+            magnificationFilter : defaultValue(sampler.magnificationFilter, TextureMagnificationFilter.LINEAR),
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
