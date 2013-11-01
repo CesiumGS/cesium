@@ -96,11 +96,33 @@
             "type": "UNSIGNED_SHORT"
         }
     },
+    "lights": {
+        "directionalLightShape1-lib": {
+            "directional": {
+                "color": [
+                    1,
+                    1,
+                    1
+                ]
+            },
+            "id": "directionalLightShape1-lib",
+            "type": "directional"
+        }
+    },
     "materials": {
         "material.0": {
             "instanceTechnique": {
                 "technique": "technique1",
                 "values": [
+                    {
+                        "parameter": "ambient",
+                        "value": [
+                            0,
+                            0,
+                            0,
+                            1
+                        ]
+                    },
                     {
                         "parameter": "diffuse",
                         "value": "texture_image_0"
@@ -110,7 +132,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     },
                     {
@@ -118,7 +141,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     },
                     {
@@ -130,7 +154,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     }
                 ]
@@ -206,6 +231,9 @@
         },
         "directionalLight1": {
             "children": [],
+            "lights": [
+                "directionalLightShape1-lib"
+            ],
             "matrix": [
                 -0.954692,
                 0.218143,
@@ -264,11 +292,26 @@
     "techniques": {
         "technique1": {
             "parameters": {
+                "ambient": {
+                    "type": "FLOAT_VEC4"
+                },
                 "diffuse": {
                     "type": "SAMPLER_2D"
                 },
                 "emission": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
+                },
+                "light0Color": {
+                    "type": "FLOAT_VEC3",
+                    "value": [
+                        1,
+                        1,
+                        1
+                    ]
+                },
+                "light0Transform": {
+                    "source": "directionalLight1",
+                    "type": "FLOAT_MAT4"
                 },
                 "normal": {
                     "semantic": "NORMAL",
@@ -287,13 +330,13 @@
                     "type": "FLOAT_MAT4"
                 },
                 "reflective": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "shininess": {
                     "type": "FLOAT"
                 },
                 "specular": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
@@ -314,8 +357,11 @@
                             },
                             "lightingModel": "Blinn",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "emission",
+                                "light0Color",
+                                "light0Transform",
                                 "normalMatrix",
                                 "projectionMatrix",
                                 "reflective",
@@ -337,8 +383,11 @@
                         },
                         "program": "program_0",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_emission": "emission",
+                            "u_light0Color": "light0Color",
+                            "u_light0Transform": "light0Transform",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
                             "u_reflective": "reflective",

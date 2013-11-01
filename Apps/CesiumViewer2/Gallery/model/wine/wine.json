@@ -774,6 +774,15 @@
                 "technique": "technique1",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0.2,
+                            0.2,
+                            0.2,
+                            1
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": "texture_image_1"
                     },
@@ -782,7 +791,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     }
                 ]
@@ -794,11 +804,21 @@
                 "technique": "technique2",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0.2,
+                            0.2,
+                            0.2,
+                            1
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": [
                             0.564706,
                             0.972549,
-                            0.835294
+                            0.835294,
+                            0.14902
                         ]
                     },
                     {
@@ -806,7 +826,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     },
                     {
@@ -822,6 +843,15 @@
                 "technique": "technique1",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0.2,
+                            0.2,
+                            0.2,
+                            1
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": "texture_image_2"
                     },
@@ -830,7 +860,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     }
                 ]
@@ -842,8 +873,18 @@
                 "technique": "technique3",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0.2,
+                            0.2,
+                            0.2,
+                            1
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": [
+                            1,
                             1,
                             1,
                             1
@@ -854,7 +895,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     }
                 ]
@@ -866,6 +908,15 @@
                 "technique": "technique1",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0.2,
+                            0.2,
+                            0.2,
+                            1
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": "texture_image_0"
                     },
@@ -874,7 +925,8 @@
                         "value": [
                             0,
                             0,
-                            0
+                            0,
+                            1
                         ]
                     }
                 ]
@@ -11655,6 +11707,9 @@
     "techniques": {
         "technique1": {
             "parameters": {
+                "ambient": {
+                    "type": "FLOAT_VEC4"
+                },
                 "diffuse": {
                     "type": "SAMPLER_2D"
                 },
@@ -11675,7 +11730,7 @@
                     "type": "FLOAT_MAT4"
                 },
                 "reflective": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
@@ -11696,6 +11751,7 @@
                             },
                             "lightingModel": "Lambert",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
@@ -11716,6 +11772,7 @@
                         },
                         "program": "program_0",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
@@ -11734,8 +11791,11 @@
         },
         "technique2": {
             "parameters": {
+                "ambient": {
+                    "type": "FLOAT_VEC4"
+                },
                 "diffuse": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "normal": {
                     "semantic": "NORMAL",
@@ -11754,7 +11814,7 @@
                     "type": "FLOAT_MAT4"
                 },
                 "reflective": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "transparency": {
                     "type": "FLOAT"
@@ -11774,6 +11834,7 @@
                             },
                             "lightingModel": "Lambert",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
@@ -11791,6 +11852,7 @@
                         },
                         "program": "program_1",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
@@ -11815,8 +11877,11 @@
         },
         "technique3": {
             "parameters": {
+                "ambient": {
+                    "type": "FLOAT_VEC4"
+                },
                 "diffuse": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "normal": {
                     "semantic": "NORMAL",
@@ -11835,7 +11900,7 @@
                     "type": "FLOAT_MAT4"
                 },
                 "reflective": {
-                    "type": "FLOAT_VEC3"
+                    "type": "FLOAT_VEC4"
                 },
                 "worldViewMatrix": {
                     "semantic": "WORLDVIEW",
@@ -11852,6 +11917,7 @@
                             },
                             "lightingModel": "Lambert",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
@@ -11868,6 +11934,7 @@
                         },
                         "program": "program_2",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
