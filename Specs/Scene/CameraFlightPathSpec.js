@@ -747,4 +747,4 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-});
+},'WebGL');

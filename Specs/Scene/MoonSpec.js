@@ -100,4 +100,4 @@ defineSuite([
         moon.destroy();
         expect(moon.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');

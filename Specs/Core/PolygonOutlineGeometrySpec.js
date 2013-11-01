@@ -255,4 +255,4 @@ defineSuite([
         expect(p.indices.length).toEqual(2 * 12 * 2 + 12*2);
     });
 
-}, 'WebGL');
+});
