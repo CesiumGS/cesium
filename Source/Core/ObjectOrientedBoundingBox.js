@@ -307,6 +307,9 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         return result;
     };
 
+    var scratchIntersectMatrix1 = new Matrix3();
+    var scratchIntersectMatrix2 = new Matrix3();
+    var scratchTCartesian = new Cartesian3();
     /**
      * Checks if two ObjectOrientedBoundingBoxes intersect.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
@@ -319,8 +322,8 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
 
-        var leftTransformTransposed = Matrix3.transpose(left.transformMatrix);
-        var Bf = Matrix3.multiply(leftTransformTransposed, right.transformMatrix);
+        var leftTransformTransposed = Matrix3.transpose(left.transformMatrix, scratchIntersectMatrix1);
+        var Bf = Matrix3.multiply(leftTransformTransposed, right.transformMatrix, scratchIntersectMatrix2);
         Bf[0] = Math.abs(Bf[0]);
         Bf[1] = Math.abs(Bf[1]);
         Bf[2] = Math.abs(Bf[2]);
@@ -334,7 +337,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         var T = [];
         var a = [];
         var b = [];
-        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.transformedPosition, Cartesian3.negate(right.transformedPosition))), T, 0);
+        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.transformedPosition, Cartesian3.negate(right.transformedPosition, scratchTCartesian), scratchTCartesian), scratchIntersectMatrix1), T, 0);
         Cartesian3.pack(left.extent, a, 0);
         Cartesian3.pack(right.extent, b, 0);
 
