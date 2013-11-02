@@ -68,7 +68,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1);
 
         var length = positions.length;
-        for (var i = 0; i < length; i++) {
+        for ( var i = 0; i < length; i++) {
             Cartesian3.add(meanPoint, positions[i], meanPoint);
         }
         Cartesian3.multiplyByScalar(meanPoint, 1.0 / length, meanPoint);
@@ -166,8 +166,8 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         }
 
         result.extent = Cartesian3.clone(Cartesian3.ZERO, result.extent);
-        result.extent.x = boundingRectangle.width/2;
-        result.extent.y = boundingRectangle.height/2;
+        result.extent.x = boundingRectangle.width / 2;
+        result.extent.y = boundingRectangle.height / 2;
         result.extent.z = 0.0;
 
         result.transformedPosition = Cartesian3.clone(Cartesian3.ZERO, result.transformedPosition);
@@ -308,6 +308,113 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
     };
 
     /**
+     * Checks if two ObjectOrientedBoundingBoxes intersect.
+     * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
+     * <code>true</code> if they intersect, <code>false</code> otherwise.
+     * @memberof ObjectOrientedBoundingBox
+     *
+     * @param {ObjectOrientedBoundingBox} [left] The first ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} [right] The second ObjectOrientedBoundingBox.
+     * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
+     */
+    ObjectOrientedBoundingBox.intersect = function(left, right) {
+
+        var leftTransformTransposed = Matrix3.transpose(left.transformMatrix);
+        var Bf = Matrix3.multiply(leftTransformTransposed, right.transformMatrix);
+        Bf[0] = Math.abs(Bf[0]);
+        Bf[1] = Math.abs(Bf[1]);
+        Bf[2] = Math.abs(Bf[2]);
+        Bf[3] = Math.abs(Bf[3]);
+        Bf[4] = Math.abs(Bf[4]);
+        Bf[5] = Math.abs(Bf[5]);
+        Bf[6] = Math.abs(Bf[6]);
+        Bf[7] = Math.abs(Bf[7]);
+        Bf[8] = Math.abs(Bf[8]);
+
+        var T = [];
+        var a = [];
+        var b = [];
+        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.transformedPosition, Cartesian3.negate(right.transformedPosition))), T, 0);
+        Cartesian3.pack(left.extent, a, 0);
+        Cartesian3.pack(right.extent, b, 0);
+
+        function collide(B, T, a, b) {
+            function testCase1(x) {
+                if (Math.abs(T[x]) > (a[x] + b[0] * Bf[Matrix3.getElementIndex(0, x)] + b[1] * Bf[Matrix3.getElementIndex(1, x)] + b[2] * Bf[Matrix3.getElementIndex(2, x)])) {
+                    return 0;
+                }
+                return 1;
+            }
+
+            function testCase2(x) {
+                if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * Bf[Matrix3.getElementIndex(0, x)] + a[1] * Bf[1][x] + a[2] * Bf[Matrix3.getElementIndex(2, x)])) {
+                    return 0;
+                }
+                return 1;
+            }
+
+            function testCase3(i, j) {
+                if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * Bf[(i + 2) % 3][j] + a[(i + 2) % 3] * Bf[(i + 1) % 3][j] + b[(j + 1) % 3] * Bf[i][(j + 2) % 3] + b[(j + 2) % 3] * Bf[i][(j + 1) % 3])) {
+                    return 0;
+                }
+                return 1;
+            }
+
+            if (testCase1(0) === 0) {
+                return false;
+            }
+            if (testCase1(1) === 0) {
+                return false;
+            }
+            if (testCase1(2) === 0) {
+                return false;
+            }
+
+            if (testCase2(0) === 0) {
+                return false;
+            }
+            if (testCase2(1) === 0) {
+                return false;
+            }
+            if (testCase2(2) === 0) {
+                return false;
+            }
+
+            if (testCase3(0, 0) === 0) {
+                return false;
+            }
+            if (testCase3(1, 0) === 0) {
+                return false;
+            }
+            if (testCase3(2, 0) === 0) {
+                return false;
+            }
+            if (testCase3(0, 1) === 0) {
+                return false;
+            }
+            if (testCase3(1, 1) === 0) {
+                return false;
+            }
+            if (testCase3(2, 1) === 0) {
+                return false;
+            }
+            if (testCase3(0, 2) === 0) {
+                return false;
+            }
+            if (testCase3(1, 2) === 0) {
+                return false;
+            }
+            if (testCase3(2, 2) === 0) {
+                return false;
+            }
+
+            return true;
+        }
+
+        return collide(Bf, T, a, b);
+    };
+
+    /**
      * Compares the provided ObjectOrientedBoundingBox componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof ObjectOrientedBoundingBox
@@ -341,6 +448,17 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      */
     ObjectOrientedBoundingBox.prototype.equals = function(right) {
         return ObjectOrientedBoundingBox.equals(this, right);
+    };
+
+    /**
+     * Checks if this ObjectOrientedBoundingBox intersects the provided.
+     * @memberof ObjectOrientedBoundingBox
+     *
+     * @param {ObjectOrientedBoundingBox} [right] The right hand side ObjectOrientedBoundingBox.
+     * @return {Boolean} <code>true</code> if this ObjectOrientedBoundingBox intersects the one provided <code>false</code> otherwise.
+     */
+    ObjectOrientedBoundingBox.prototype.intersect = function(right) {
+        return ObjectOrientedBoundingBox.intersect(this, right);
     };
 
     return ObjectOrientedBoundingBox;
