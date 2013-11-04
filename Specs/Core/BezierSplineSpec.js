@@ -24,7 +24,7 @@ defineSuite([
         ];
         outControlPoints = [
             new Cartesian3(1.0, 1.0, 1.0),
-            new Cartesian3(-2.0, 1.0, -1.0)
+            new Cartesian3(4.0, 1.0, 3.0)
         ];
         inControlPoints = [
             new Cartesian3(2.0, -1.0, 1.0),

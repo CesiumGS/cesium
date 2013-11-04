@@ -141,7 +141,7 @@ define([
         timeVec.y = u * u;
         timeVec.x = timeVec.y * u;
 
-        var coefs = Matrix4.multiplyByPoint(BSpline.bezierCoefficientMatrix, timeVec, timeVec);
+        var coefs = Matrix4.multiplyByPoint(BSpline.bSplineCoefficientMatrix, timeVec, timeVec);
 
         var p0;
         var p1;
