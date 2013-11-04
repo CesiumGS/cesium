@@ -126,7 +126,7 @@ defineSuite([
         }
         tangents.push(crs.lastTangent);
 
-        var hs = new HermiteSpline({
+        var hs = HermiteSpline.createC1({
             points : points,
             tangents : tangents,
             times : times
