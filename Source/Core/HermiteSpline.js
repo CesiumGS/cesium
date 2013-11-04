@@ -247,7 +247,7 @@ define([
                 throw new DeveloperError('outTangents is required.');
             }
 
-            if (inTangents.length !== outTangents.length || inTangents.lenght !== points.length - 1) {
+            if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
                 throw new DeveloperError('inTangents and outTangents must have a length equal to points.length - 1.');
             }
         }
@@ -303,7 +303,7 @@ define([
      * @example
      * // Create a Catmull-Rom spline above the earth from Philadelphia to Los Angeles.
      * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
-     * var points : [
+     * var points = [
      *     new Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *     new Cartesian3(1372574.0, -5345182.0, 4606657.0),
      *     new Cartesian3(-757983.0, -5542796.0, 4514323.0),
@@ -326,6 +326,8 @@ define([
      * });
      */
     HermiteSpline.createC1 = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var times = options.times;
         var points = options.points;
         var tangents = options.tangents;
@@ -353,8 +355,8 @@ define([
         var inTangents;
         var outTangents;
         if (points.length > 2) {
-            inTangents = tangents.splice(0, tangents.length - 1);
-            outTangents = tangents.splice(1, tangents.length);
+            outTangents = tangents.slice(0, tangents.length - 1);
+            inTangents = tangents.slice(1, tangents.length);
         }
 
         return new HermiteSpline({
@@ -393,6 +395,8 @@ define([
      * });
      */
     HermiteSpline.createNaturalCubic = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var times = options.times;
         var points = options.points;
 
@@ -416,8 +420,8 @@ define([
         var outTangents;
         if (points.length > 2) {
             var tangents = generateNatural(points);
-            inTangents = tangents.splice(0, tangents.length - 1);
-            outTangents = tangents.splice(1, tangents.length);
+            outTangents = tangents.slice(0, tangents.length - 1);
+            inTangents = tangents.slice(1, tangents.length);
         }
 
         return new HermiteSpline({
@@ -462,6 +466,8 @@ define([
      * });
      */
     HermiteSpline.createClampedCubic = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var times = options.times;
         var points = options.points;
         var firstTangent = options.firstTangent;
@@ -495,8 +501,8 @@ define([
         var outTangents;
         if (points.length > 2) {
             var tangents = generateClamped(points, firstTangent, lastTangent);
-            inTangents = tangents.splice(0, tangents.length - 1);
-            outTangents = tangents.splice(1, tangents.length);
+            outTangents = tangents.slice(0, tangents.length - 1);
+            inTangents = tangents.slice(1, tangents.length);
         }
 
         return new HermiteSpline({
