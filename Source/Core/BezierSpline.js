@@ -44,9 +44,11 @@ define([
      * @exception {DeveloperError} times and points must have the same length.
      * @exception {DeveloperError} inControlPoints and outControlPoints must have length equal to points.length - 1.
      *
+     * @see BSpline
      * @see HermiteSpline
      * @see CatmullRomSpline
      * @see LinearSpline
+     * @see QuaternionSpline
      *
      * @example
      * var spline = new BezierSpline({
@@ -133,9 +135,6 @@ define([
         this._lastTimeIndex = 0;
     };
 
-    /**
-     * @private
-     */
     BezierSpline.bezierCoefficientMatrix = new Matrix4(
             -1.0,  3.0, -3.0, 1.0,
              3.0, -6.0,  3.0, 0.0,

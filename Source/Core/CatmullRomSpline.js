@@ -49,7 +49,12 @@ define([
             timeVec.y = u * u;
             timeVec.x = timeVec.y * u;
 
-            var p0, p1, p2, p3, coefs;
+            var p0;
+            var p1;
+            var p2;
+            var p3;
+            var coefs;
+
             if (i === 0) {
                 p0 = points[0];
                 p1 = points[1];
@@ -108,8 +113,11 @@ define([
      * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
+     * @see BSpline
+     * @see BezierSpline
      * @see HermiteSpline
      * @see LinearSpline
+     * @see QuaternionSpline
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles

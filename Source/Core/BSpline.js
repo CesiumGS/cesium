@@ -2,54 +2,56 @@
 define([
         './defaultValue',
         './defined',
+        './Cartesian3',
+        './Cartesian4',
         './DeveloperError',
-        './Spline',
-        './Cartesian3'
+        './Matrix4',
+        './Spline'
     ], function(
         defaultValue,
         defined,
+        Cartesian3,
+        Cartesian4,
         DeveloperError,
-        Spline,
-        Cartesian3) {
+        Matrix4,
+        Spline) {
     "use strict";
 
     /**
-     * A spline that uses piecewise linear interpolation to create a curve.
+     * Creates a Basis spline (or B-Spline) from the given control points and times.
      *
-     * @alias LinearSpline
+     * @alias BSpline
      * @constructor
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Array} options.times The times at each point.
+     * @param {Array} options.points The points.
      *
+     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} points is required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} times.length must be equal to points.length.
+     * @exception {DeveloperError} times and points must have the same length.
      *
-     * @see BSpline
      * @see BezierSpline
      * @see HermiteSpline
      * @see CatmullRomSpline
+     * @see LinearSpline
      * @see QuaternionSpline
      *
      * @example
-     * var spline = new LinearSpline({
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
-     *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ]
+     * var spline = new BSpline({
+     *     times : times,
+     *     points : positions
      * });
      */
-    var LinearSpline = function(options) {
+    var BSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var points = options.points;
         var times = options.times;
+        var points = options.points;
+
+        if (!defined(times)) {
+            throw new DeveloperError('times is required.');
+        }
 
         if (!defined(points)) {
             throw new DeveloperError('points is required.');
@@ -57,10 +59,6 @@ define([
 
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
         }
 
         if (times.length !== points.length) {
@@ -75,7 +73,7 @@ define([
         this.times = times;
 
         /**
-         * An array of {@link Cartesian3} control points.
+         * An array of {@link Cartesian3} points.
          * @type {Array}
          * @readonly
          */
@@ -84,10 +82,17 @@ define([
         this._lastTimeIndex = 0;
     };
 
+    BSpline.bSplineCoefficientMatrix = new Matrix4(
+            -1.0,  3.0, -3.0, 1.0,
+             3.0, -6.0,  0.0, 4.0,
+            -3.0,  3.0,  3.0, 1.0,
+             1.0,  0.0,  0.0, 0.0);
+    Matrix4.multiplyByScalar(BSpline.bSplineCoefficientMatrix, 1.0 / 6.0, BSpline.bSplineCoefficientMatrix);
+
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof QuaternionSpline
+     * @memberof BSpline
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -97,11 +102,15 @@ define([
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
      */
-    LinearSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+    BSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
+
+    var scratchTimeVec = new Cartesian4();
+    var scratchTemp0 = new Cartesian3();
+    var scratchTemp1 = new Cartesian3();
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof LinearSpline
+     * @memberof BSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -111,20 +120,63 @@ define([
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
+     *
+     * @example
+     * var spline = new BSpline({
+     *     times : times,
+     *     points : positions
+     * });
+     *
+     * var position = spline.evaluate(time);
      */
-    LinearSpline.prototype.evaluate = function(time, result) {
+    BSpline.prototype.evaluate = function(time, result) {
         var points = this.points;
         var times = this.times;
 
         var i = this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
         var u = (time - times[i]) / (times[i + 1] - times[i]);
 
-        if (!defined(result)) {
-            result = new Cartesian3();
+        var timeVec = scratchTimeVec;
+        timeVec.z = u;
+        timeVec.y = u * u;
+        timeVec.x = timeVec.y * u;
+
+        var coefs = Matrix4.multiplyByPoint(BSpline.bezierCoefficientMatrix, timeVec, timeVec);
+
+        var p0;
+        var p1;
+        var p2;
+        var p3;
+
+        if (i === 0) {
+            p1 = points[0];
+            p2 = points[1];
+            p3 = points[2];
+
+            p0 = Cartesian3.subtract(p1, p2, scratchTemp0);
+            Cartesian3.add(p0, p1, p0);
+        } else if (i === points.length - 2) {
+            p0 = points[i - 1];
+            p1 = points[i];
+            p2 = points[i + 1];
+
+            p3 = Cartesian3.subtract(p2, p1, scratchTemp0);
+            Cartesian3.add(p3, p2, p3);
+        } else {
+            p0 = points[i - 1];
+            p1 = points[i];
+            p2 = points[i + 1];
+            p3 = points[i + 2];
         }
 
-        return Cartesian3.lerp(points[i], points[i + 1], u, result);
+        result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
+        Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
+        Cartesian3.add(result, scratchTemp1, result);
+        Cartesian3.multiplyByScalar(p2, coefs.z, scratchTemp1);
+        Cartesian3.add(result, scratchTemp1, result);
+        Cartesian3.multiplyByScalar(p3, coefs.w, scratchTemp1);
+        return Cartesian3.add(result, scratchTemp1, result);
     };
 
-    return LinearSpline;
+    return BSpline;
 });

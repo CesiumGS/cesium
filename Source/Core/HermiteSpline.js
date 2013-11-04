@@ -145,8 +145,11 @@ define([
      * @exception {DeveloperError} outTangents is required.
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
      *
+     * @see BSpline
+     * @see BezierSpline
      * @see CatmullRomSpline
      * @see LinearSpline
+     * @see QuaternionSpline
      *
      * @example
      * // Create a G<sup>1</sup> continuous Hermite spline
@@ -471,9 +474,6 @@ define([
         });
     };
 
-    /**
-     * @private
-     */
     HermiteSpline.hermiteCoefficientMatrix = new Matrix4(
              2.0, -3.0,  0.0,  1.0,
             -2.0,  3.0,  0.0,  0.0,

@@ -78,6 +78,12 @@ define([
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
+     *
+     * @see BSpline
+     * @see BezierSpline
+     * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see LinearSpline
      */
     var QuaternionSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
