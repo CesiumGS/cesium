@@ -109,6 +109,7 @@ define([
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
      * @see HermiteSpline
+     * @see LinearSpline
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles

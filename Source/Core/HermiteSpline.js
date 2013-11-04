@@ -7,6 +7,7 @@ define([
         './Matrix4',
         './Cartesian4',
         './Spline',
+        './LinearSpline',
         './TridiagonalSystemSolver'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         Matrix4,
         Cartesian4,
         Spline,
+        LinearSpline,
         TridiagonalSystemSolver) {
     "use strict";
 
@@ -120,50 +122,6 @@ define([
         return TridiagonalSystemSolver.solve(l, d, u, r);
     }
 
-    var scratchTimeVec = new Cartesian4();
-    var scratchTemp = new Cartesian3();
-
-    function createEvaluateFunction(spline) {
-        var points = spline.points;
-        var times = spline.times;
-
-        if (points.length < 3) {
-            var t0 = times[0];
-            var invSpan = 1.0 / (times[1] - t0);
-
-            var p0 = points[0];
-            var p1 = points[1];
-
-            return function(time, result) {
-                var u = (time - t0) * invSpan;
-                return Cartesian3.lerp(p0, p1, u, result);
-            };
-        }
-
-        var inTangents = spline.inTangents;
-        var outTangents = spline.outTangents;
-
-        return function(time, result) {
-            var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
-            var u = (time - times[i]) / (times[i + 1] - times[i]);
-
-            var timeVec = scratchTimeVec;
-            timeVec.z = u;
-            timeVec.y = u * u;
-            timeVec.x = timeVec.y * u;
-
-            var coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
-
-            result = Cartesian3.multiplyByScalar(points[i], coefs.x, result);
-            Cartesian3.multiplyByScalar(points[i + 1], coefs.y, scratchTemp);
-            Cartesian3.add(result, scratchTemp, result);
-            Cartesian3.multiplyByScalar(outTangents[i], coefs.z, scratchTemp);
-            Cartesian3.add(result, scratchTemp, result);
-            Cartesian3.multiplyByScalar(inTangents[i], coefs.w, scratchTemp);
-            return Cartesian3.add(result, scratchTemp, result);
-        };
-    }
-
     /**
      * A Hermite spline is a cubic interpolating spline. Points, incoming tangents, outgoing tangents, and times
      * must be defined for each control point. The outgoing tangents are defined for points [0, n - 2] and the incoming
@@ -188,6 +146,7 @@ define([
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
      *
      * @see CatmullRomSpline
+     * @see LinearSpline
      *
      * @example
      * // Create a G<sup>1</sup> continuous Hermite spline
@@ -238,18 +197,16 @@ define([
             throw new DeveloperError('times.length must be equal to points.length.');
         }
 
-        if (points.length > 2) {
-            if (!defined(inTangents)) {
-                throw new DeveloperError('inTangents is required.');
-            }
+        if (!defined(inTangents)) {
+            throw new DeveloperError('inTangents is required.');
+        }
 
-            if (!defined(outTangents)) {
-                throw new DeveloperError('outTangents is required.');
-            }
+        if (!defined(outTangents)) {
+            throw new DeveloperError('outTangents is required.');
+        }
 
-            if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
-                throw new DeveloperError('inTangents and outTangents must have a length equal to points.length - 1.');
-            }
+        if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
+            throw new DeveloperError('inTangents and outTangents must have a length equal to points.length - 1.');
         }
 
         /**
@@ -280,7 +237,6 @@ define([
          */
         this.outTangents = outTangents;
 
-        this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
 
@@ -352,12 +308,8 @@ define([
             throw new DeveloperError('times, points and tangents must have the same length.');
         }
 
-        var inTangents;
-        var outTangents;
-        if (points.length > 2) {
-            outTangents = tangents.slice(0, tangents.length - 1);
-            inTangents = tangents.slice(1, tangents.length);
-        }
+        var outTangents = tangents.slice(0, tangents.length - 1);
+        var inTangents = tangents.slice(1, tangents.length);
 
         return new HermiteSpline({
             times : times,
@@ -374,7 +326,7 @@ define([
      *
      * @param {Array} options.times The array of control point times.
      * @param {Array} options.points The array of control points.
-     * @returns {HermiteSpline} A hermite spline.
+     * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points is required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
@@ -416,13 +368,16 @@ define([
             throw new DeveloperError('times.length must be equal to points.length.');
         }
 
-        var inTangents;
-        var outTangents;
-        if (points.length > 2) {
-            var tangents = generateNatural(points);
-            outTangents = tangents.slice(0, tangents.length - 1);
-            inTangents = tangents.slice(1, tangents.length);
+        if (points.length < 3) {
+            return new LinearSpline({
+                points : points,
+                times : times
+            });
         }
+
+        var tangents = generateNatural(points);
+        var outTangents = tangents.slice(0, tangents.length - 1);
+        var inTangents = tangents.slice(1, tangents.length);
 
         return new HermiteSpline({
             times : times,
@@ -441,7 +396,7 @@ define([
      * @param {Array} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
      * @para, {Cartesian3} options.lastTangent The incoming tangent of the last control point.
-     * @returns {HermiteSpline} A hermite spline.
+     * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points is required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
@@ -497,13 +452,16 @@ define([
             throw new DeveloperError('lastTangent is required.');
         }
 
-        var inTangents;
-        var outTangents;
-        if (points.length > 2) {
-            var tangents = generateClamped(points, firstTangent, lastTangent);
-            outTangents = tangents.slice(0, tangents.length - 1);
-            inTangents = tangents.slice(1, tangents.length);
+        if (points.length < 3) {
+            return new LinearSpline({
+                points : points,
+                times : times
+            });
         }
+
+        var tangents = generateClamped(points, firstTangent, lastTangent);
+        var outTangents = tangents.slice(0, tangents.length - 1);
+        var inTangents = tangents.slice(1, tangents.length);
 
         return new HermiteSpline({
             times : times,
@@ -537,6 +495,9 @@ define([
      */
     HermiteSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 
+    var scratchTimeVec = new Cartesian4();
+    var scratchTemp = new Cartesian3();
+
     /**
      * Evaluates the curve at a given time.
      * @memberof HermiteSpline
@@ -567,7 +528,28 @@ define([
      * var position = spline.evaluate(5.0);
      */
     HermiteSpline.prototype.evaluate = function(time, result) {
-        return this._evaluateFunction(time, result);
+        var points = this.points;
+        var times = this.times;
+        var inTangents = this.inTangents;
+        var outTangents = this.outTangents;
+
+        var i = this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
+        var u = (time - times[i]) / (times[i + 1] - times[i]);
+
+        var timeVec = scratchTimeVec;
+        timeVec.z = u;
+        timeVec.y = u * u;
+        timeVec.x = timeVec.y * u;
+
+        var coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+
+        result = Cartesian3.multiplyByScalar(points[i], coefs.x, result);
+        Cartesian3.multiplyByScalar(points[i + 1], coefs.y, scratchTemp);
+        Cartesian3.add(result, scratchTemp, result);
+        Cartesian3.multiplyByScalar(outTangents[i], coefs.z, scratchTemp);
+        Cartesian3.add(result, scratchTemp, result);
+        Cartesian3.multiplyByScalar(inTangents[i], coefs.w, scratchTemp);
+        return Cartesian3.add(result, scratchTemp, result);
     };
 
     return HermiteSpline;
