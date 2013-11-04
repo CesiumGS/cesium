@@ -20,7 +20,7 @@ Beta Releases
            
     should now look like:
     
-           var spline = new HermiteSpline({
+           var spline = HermiteSpline.createNaturalCubic({
                times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
                points : [
                    new Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -32,7 +32,7 @@ Beta Releases
            });
            
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
-* Added `LinearSpline` and `QuaternionSpline`.
+* Added `LinearSpline`, `QuaternionSpline`, `BezierSpline` and `BSpline`.
            
 ### b22 - 2013-11-01
 
