@@ -17,6 +17,74 @@ define([
         Spline) {
     "use strict";
 
+    var scratchTimeVec = new Cartesian4();
+    var scratchTemp0 = new Cartesian3();
+    var scratchTemp1 = new Cartesian3();
+
+    function createEvaluateFunction(spline) {
+        var points = spline.points;
+        var times = spline.times;
+
+        if (points.length < 3) {
+            var t0 = times[0];
+            var invSpan = 1.0 / (times[1] - t0);
+
+            var p0 = points[0];
+            var p1 = points[1];
+
+            return function(time, result) {
+                var u = (time - t0) * invSpan;
+                return Cartesian3.lerp(p0, p1, u, result);
+            };
+        }
+
+        return function(time, result) {
+            var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
+            var u = (time - times[i]) / (times[i + 1] - times[i]);
+
+            var timeVec = scratchTimeVec;
+            timeVec.z = u;
+            timeVec.y = u * u;
+            timeVec.x = timeVec.y * u;
+
+            var coefs = Matrix4.multiplyByPoint(BSpline.bSplineCoefficientMatrix, timeVec, timeVec);
+
+            var p0;
+            var p1;
+            var p2;
+            var p3;
+
+            if (i === 0) {
+                p1 = points[0];
+                p2 = points[1];
+                p3 = points[2];
+
+                p0 = Cartesian3.subtract(p1, p2, scratchTemp0);
+                Cartesian3.add(p0, p1, p0);
+            } else if (i === points.length - 2) {
+                p0 = points[i - 1];
+                p1 = points[i];
+                p2 = points[i + 1];
+
+                p3 = Cartesian3.subtract(p2, p1, scratchTemp0);
+                Cartesian3.add(p3, p2, p3);
+            } else {
+                p0 = points[i - 1];
+                p1 = points[i];
+                p2 = points[i + 1];
+                p3 = points[i + 2];
+            }
+
+            result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
+            Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
+            Cartesian3.add(result, scratchTemp1, result);
+            Cartesian3.multiplyByScalar(p2, coefs.z, scratchTemp1);
+            Cartesian3.add(result, scratchTemp1, result);
+            Cartesian3.multiplyByScalar(p3, coefs.w, scratchTemp1);
+            return Cartesian3.add(result, scratchTemp1, result);
+        };
+    }
+
     /**
      * Creates a Basis spline (or B-Spline) from the given control points and times.
      *
@@ -79,6 +147,7 @@ define([
          */
         this.points = points;
 
+        this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
 
@@ -104,10 +173,6 @@ define([
      */
     BSpline.prototype.findTimeInterval = Spline.prototype.findTimeInterval;
 
-    var scratchTimeVec = new Cartesian4();
-    var scratchTemp0 = new Cartesian3();
-    var scratchTemp1 = new Cartesian3();
-
     /**
      * Evaluates the curve at a given time.
      * @memberof BSpline
@@ -130,52 +195,7 @@ define([
      * var position = spline.evaluate(time);
      */
     BSpline.prototype.evaluate = function(time, result) {
-        var points = this.points;
-        var times = this.times;
-
-        var i = this._lastTimeIndex = this.findTimeInterval(time, this._lastTimeIndex);
-        var u = (time - times[i]) / (times[i + 1] - times[i]);
-
-        var timeVec = scratchTimeVec;
-        timeVec.z = u;
-        timeVec.y = u * u;
-        timeVec.x = timeVec.y * u;
-
-        var coefs = Matrix4.multiplyByPoint(BSpline.bSplineCoefficientMatrix, timeVec, timeVec);
-
-        var p0;
-        var p1;
-        var p2;
-        var p3;
-
-        if (i === 0) {
-            p1 = points[0];
-            p2 = points[1];
-            p3 = points[2];
-
-            p0 = Cartesian3.subtract(p1, p2, scratchTemp0);
-            Cartesian3.add(p0, p1, p0);
-        } else if (i === points.length - 2) {
-            p0 = points[i - 1];
-            p1 = points[i];
-            p2 = points[i + 1];
-
-            p3 = Cartesian3.subtract(p2, p1, scratchTemp0);
-            Cartesian3.add(p3, p2, p3);
-        } else {
-            p0 = points[i - 1];
-            p1 = points[i];
-            p2 = points[i + 1];
-            p3 = points[i + 2];
-        }
-
-        result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
-        Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
-        Cartesian3.add(result, scratchTemp1, result);
-        Cartesian3.multiplyByScalar(p2, coefs.z, scratchTemp1);
-        Cartesian3.add(result, scratchTemp1, result);
-        Cartesian3.multiplyByScalar(p3, coefs.w, scratchTemp1);
-        return Cartesian3.add(result, scratchTemp1, result);
+        return this._evaluateFunction(time, result);
     };
 
     return BSpline;

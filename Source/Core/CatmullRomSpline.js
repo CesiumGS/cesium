@@ -90,6 +90,7 @@ define([
             return Cartesian3.add(result, scratchTemp1, result);
         };
     }
+
     var firstTangentScratch = new Cartesian3();
     var lastTangentScratch = new Cartesian3();
 
