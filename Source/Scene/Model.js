@@ -364,8 +364,9 @@ define([
                 var node = nodes[name];
 
                 node.czm = {
-                    meshesCommands : {},
+                    meshesCommands : undefined,
                     transformToRoot : new Matrix4(),
+                    computedMatrix : undefined,
                     translation : undefined,
                     rotation : undefined,
                     scale : undefined
@@ -871,6 +872,15 @@ define([
          };
      };
 
+    function getUniformFunctionFromSource(gltf, source) {
+        var nodes = gltf.nodes;
+        var czm = nodes[source].czm;
+
+        return function() {
+            return czm.computedMatrix;
+        };
+    }
+
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
@@ -898,8 +908,6 @@ define([
 
                 var parameterValues = {};
 
-// TODO: handle parameter.source, e.g., light
-
                 // Uniform parameters for this pass
                 for (name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
@@ -917,6 +925,8 @@ define([
 // TODO: account for parameter.type with semantic
                                 // Map glTF semantic to Cesium automatic uniform
                                 func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                            } else if (defined(parameter.source)) {
+                                func = getUniformFunctionFromSource(gltf, parameter.source);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
                                 func = gltfUniformFunctions[parameter.type](parameter.value, model, context);
@@ -963,6 +973,7 @@ define([
     gltfPrimitiveType[ModelConstants.TRIANGLE_FAN] = PrimitiveType.TRIANGLE_FAN;
 
     function createCommand(model, node, context) {
+        node.czm.meshesCommands = defaultValue(node.czm.meshesCommands, {});
         var czmMeshesCommands = node.czm.meshesCommands;
 
         var opaqueColorCommands = model._commandLists.opaqueList;
@@ -1107,7 +1118,6 @@ define([
             while (stack.length > 0) {
                 var node = stack.pop();
 
-                // TODO: handle camera and light nodes
                 if (defined(node.meshes)) {
                     createCommand(model, node, context);
                 }
@@ -1160,6 +1170,7 @@ define([
         var length = sceneNodes.length;
 
         var nodeStack = scratchNodeStack;
+        var computedModelMatrix = model._computedModelMatrix;
 
         // Compute bounding sphere that includes all transformed nodes
         var spheres = scratchSpheres;
@@ -1174,28 +1185,34 @@ define([
             while (nodeStack.length > 0) {
                 n = nodeStack.pop();
                 var transformToRoot = n.czm.transformToRoot;
-
-//TODO: handle camera and light nodes
                 var meshCommands = n.czm.meshesCommands;
-                var name;
-                for (name in meshCommands) {
-                    if (meshCommands.hasOwnProperty(name)) {
-                        var meshCommand = meshCommands[name];
-                        var meshCommandLength = meshCommand.length;
-                        for (var j = 0 ; j < meshCommandLength; ++j) {
-                            var primitiveCommand = meshCommand[j];
-                            var command = primitiveCommand.command;
-                            var pickCommand = primitiveCommand.pickCommand;
 
-                            Matrix4.multiply(model._computedModelMatrix, transformToRoot, command.modelMatrix);
-                            Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+                if (defined(meshCommands)) {
+                    // Node has meshes.  Update their commands.
 
-                            var bs = new BoundingSphere();
-                            BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
-                            Cartesian3.add(bs.center, sphereCenter, sphereCenter);
-                            spheres.push(bs);
+                    var name;
+                    for (name in meshCommands) {
+                        if (meshCommands.hasOwnProperty(name)) {
+                            var meshCommand = meshCommands[name];
+                            var meshCommandLength = meshCommand.length;
+                            for (var j = 0 ; j < meshCommandLength; ++j) {
+                                var primitiveCommand = meshCommand[j];
+                                var command = primitiveCommand.command;
+                                var pickCommand = primitiveCommand.pickCommand;
+
+                                Matrix4.multiply(computedModelMatrix, transformToRoot, command.modelMatrix);
+                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+
+                                var bs = new BoundingSphere();
+                                BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
+                                Cartesian3.add(bs.center, sphereCenter, sphereCenter);
+                                spheres.push(bs);
+                            }
                         }
                     }
+                } else {
+                    // Node has a light or camera
+                    n.czm.computedMatrix = Matrix4.multiply(computedModelMatrix, transformToRoot, n.czm.computedMatrix);
                 }
 
                 var children = n.children;
