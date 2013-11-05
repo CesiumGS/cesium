@@ -5,21 +5,16 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
 
     //Axis aligned cube
     var positions1 = [new Cartesian3(0, 0, 0), new Cartesian3(1, 0, 0), new Cartesian3(0, 1, 0), new Cartesian3(1, 1, 0), new Cartesian3(0, 0, 1), new Cartesian3(1, 0, 1), new Cartesian3(0, 1, 1), new Cartesian3(1, 1, 1)];
-
     //Rotated cube
     var positions2 = [new Cartesian3(1, 1, 0), new Cartesian3(0, 0, 0), new Cartesian3(-1, 1, 0), new Cartesian3(0, 2, 0), new Cartesian3(1, 1, 1), new Cartesian3(0, 0, 1), new Cartesian3(-1, 1, 1), new Cartesian3(0, 2, 1)];
     //Half circle
-    var positions3 = [new Cartesian3(1, 0, 0), new Cartesian3(0.5, 0.866, 0), new Cartesian3(0.25, 0.968, 0), new Cartesian3(0.75, 0.661, 0), new Cartesian3(0, 1, 0), new Cartesian3(-0.5, 0.866, 0), new Cartesian3(-0.25, 0.968, 0), new Cartesian3(-0.75, 0.661, 0), new Cartesian3(-1, 0, 0)]; //TODO
-    //Rotated cube + 1 point
-    var positions4 = [new Cartesian3(0, 0, 0), new Cartesian3(0.5, -0.146, 0.854), new Cartesian3(0.5, 0.854, -0.146), new Cartesian3(1, 0.708, 0.708), new Cartesian3(-0.707, 0.5, 0.5), new Cartesian3(-0.207, 0.354, 1.354), new Cartesian3(-0.207, 1.354, 0.354), new Cartesian3(0.293, 1.208, 1.208),
-    //+1
-    new Cartesian3(5, 0, 0)]; //TODO
+    var positions3 = [new Cartesian3(1, 0, 0), new Cartesian3(0.5, 0.866, 0), new Cartesian3(0.25, 0.968, 0), new Cartesian3(0.75, 0.661, 0), new Cartesian3(0, 1, 0), new Cartesian3(-0.5, 0.866, 0), new Cartesian3(-0.25, 0.968, 0), new Cartesian3(-0.75, 0.661, 0), new Cartesian3(-1, 0, 0)];
     //Axis aligned rectangle
-    var positions5 = [new Cartesian3(0, 0, 0), new Cartesian3(2, 0, 0), new Cartesian3(0, 2, 0), new Cartesian3(2, 2, 0)]; //TODO
+    var positions4 = [new Cartesian3(0, 0, 0), new Cartesian3(2, 0, 0), new Cartesian3(0, 2, 0), new Cartesian3(2, 2, 0)];
     //Rotated box shifted to the right
-    var positions6 = [new Cartesian3(3, 1, 0), new Cartesian3(2, 0, 0), new Cartesian3(1, 1, 0), new Cartesian3(2, 2, 0), new Cartesian3(3, 1, 1), new Cartesian3(2, 0, 1), new Cartesian3(1, 1, 1), new Cartesian3(2, 2, 1)];
-    //Rotated box shifted to the right + 0.01
-    var positions7 = [new Cartesian3(3, 1, 0), new Cartesian3(2, 0, 0), new Cartesian3(1.01, 1, 0), new Cartesian3(2, 2, 0), new Cartesian3(3, 1, 1), new Cartesian3(2, 0, 1), new Cartesian3(1.01, 1, 1), new Cartesian3(2, 2, 1)];
+    var positions5 = [new Cartesian3(3, 1, 0), new Cartesian3(2, 0, 0), new Cartesian3(1, 1, 0), new Cartesian3(2, 2, 0), new Cartesian3(3, 1, 1), new Cartesian3(2, 0, 1), new Cartesian3(1, 1, 1), new Cartesian3(2, 2, 1)];
+    //Rotated box  to the right + 0.01
+    var positions6 = [new Cartesian3(3, 1, 0), new Cartesian3(2, 0, 0), new Cartesian3(1.01, 1, 0), new Cartesian3(2, 2, 0), new Cartesian3(3, 1, 1), new Cartesian3(2, 0, 1), new Cartesian3(1.01, 1, 1), new Cartesian3(2, 2, 1)];
 
     it('fromPoints constructs empty box with undefined positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(undefined);
@@ -109,12 +104,34 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
         expect(boxPoints[5]).toEqual(new Cartesian3(1, 2, 0));
         expect(boxPoints[6]).toEqual(new Cartesian3(1, 2, 1));
         expect(boxPoints[7]).toEqual(new Cartesian3(-1, 2, 1));
+
+        box = ObjectOrientedBoundingBox.fromPoints(positions3);
+        boxPoints = ObjectOrientedBoundingBox.getDescribingPoints(box);
+        expect(boxPoints[0]).toEqual(new Cartesian3(-1, 0, 0));
+        expect(boxPoints[1]).toEqual(new Cartesian3(1, 0, 0));
+        expect(boxPoints[2]).toEqual(new Cartesian3(1, 0, 0));
+        expect(boxPoints[3]).toEqual(new Cartesian3(-1, 0, 0));
+        expect(boxPoints[4]).toEqual(new Cartesian3(-1, 1, 0));
+        expect(boxPoints[5]).toEqual(new Cartesian3(1, 1, 0));
+        expect(boxPoints[6]).toEqual(new Cartesian3(1, 1, 0));
+        expect(boxPoints[7]).toEqual(new Cartesian3(-1, 1, 0));
+
+        box = ObjectOrientedBoundingBox.fromPoints(positions4);
+        boxPoints = ObjectOrientedBoundingBox.getDescribingPoints(box);
+        expect(boxPoints[0]).toEqual(new Cartesian3(0, 0, 0));
+        expect(boxPoints[1]).toEqual(new Cartesian3(2, 0, 0));
+        expect(boxPoints[2]).toEqual(new Cartesian3(2, 0, 0));
+        expect(boxPoints[3]).toEqual(new Cartesian3(0, 0, 0));
+        expect(boxPoints[4]).toEqual(new Cartesian3(0, 2, 0));
+        expect(boxPoints[5]).toEqual(new Cartesian3(2, 2, 0));
+        expect(boxPoints[6]).toEqual(new Cartesian3(2, 2, 0));
+        expect(boxPoints[7]).toEqual(new Cartesian3(0, 2, 0));
     });
 
     it('intersect works as espected', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions1);
-        var box2 = ObjectOrientedBoundingBox.fromPoints(positions6);
-        var box3 = ObjectOrientedBoundingBox.fromPoints(positions7);
+        var box2 = ObjectOrientedBoundingBox.fromPoints(positions5);
+        var box3 = ObjectOrientedBoundingBox.fromPoints(positions6);
         var box4 = ObjectOrientedBoundingBox.fromPoints([new Cartesian3(0, 0, 0.5)]);
         var box5 = ObjectOrientedBoundingBox.fromPoints([new Cartesian3(1, 0, 0.5)]);
         var box6 = ObjectOrientedBoundingBox.fromPoints([new Cartesian3(0, 1, 0.5)]);
