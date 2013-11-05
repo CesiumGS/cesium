@@ -114,7 +114,7 @@ define([
             var length = positions.length;
             var flattenedPositions = new Array(length * 3);
             var index = 0;
-            for (var i = 0; i < length; i++) {
+            for ( var i = 0; i < length; i++) {
                 var p = positions[i];
                 flattenedPositions[index++] = p.x;
                 flattenedPositions[index++] = p.y;
@@ -190,7 +190,7 @@ define([
                 length /= 2;
             }
 
-            for (var i = 0; i < length; i += 3) {
+            for ( var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
 
                 if (vertexFormat.st) {
@@ -198,7 +198,7 @@ define([
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
 
-                    if (bottom){
+                    if (bottom) {
                         textureCoordinates[textureCoordIndex + bottomOffset2] = st.x / boundingRectangle.width;
                         textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = st.y / boundingRectangle.height;
                     }
@@ -214,7 +214,7 @@ define([
                     var attrIndex2 = attrIndex + 2;
 
                     if (wall) {
-                        if (i+3 < length) {
+                        if (i + 3 < length) {
                             var p1 = Cartesian3.fromArray(flatPositions, i + 3, p1Scratch);
 
                             if (recomputeNormal) {
@@ -343,7 +343,7 @@ define([
         if (!perPositionHeight) {
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
-                p2 = positions[(i+1)%length];
+                p2 = positions[(i + 1) % length];
                 subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, granularity);
                 subdividedEdge.push(p2.x, p2.y, p2.z);
                 edgePositions = edgePositions.concat(subdividedEdge);
@@ -351,22 +351,22 @@ define([
         } else {
             for (i = 0; i < length; i++) {
                 p1 = positions[i];
-                p2 = positions[(i+1)%length];
+                p2 = positions[(i + 1) % length];
                 edgePositions.push(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
             }
         }
 
         edgePositions = edgePositions.concat(edgePositions);
         length = edgePositions.length;
-        var indices = IndexDatatype.createTypedArray(length/3, length - positions.length*6);
+        var indices = IndexDatatype.createTypedArray(length / 3, length - positions.length * 6);
         edgeIndex = 0;
         length /= 6;
 
-        for (i = 0 ; i < length; i++) {
+        for (i = 0; i < length; i++) {
             UL = i;
             UR = UL + 1;
-            p1 = Cartesian3.fromArray(edgePositions, UL*3, p1Scratch);
-            p2 = Cartesian3.fromArray(edgePositions, UR*3, p2Scratch);
+            p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
+            p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
             if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
                 continue;
             }
@@ -398,13 +398,13 @@ define([
         var edgePoints = topGeo.attributes.position.values;
         var indices = topGeo.indices;
         var topBottomPositions = edgePoints.concat(edgePoints);
-        var numPositions = topBottomPositions.length/3;
-        var newIndices = IndexDatatype.createTypedArray(numPositions, indices.length*2);
+        var numPositions = topBottomPositions.length / 3;
+        var newIndices = IndexDatatype.createTypedArray(numPositions, indices.length * 2);
         newIndices.set(indices);
         var ilength = indices.length;
         var i;
         var length = numPositions / 2;
-        for (i = 0 ; i < ilength; i += 3) {
+        for (i = 0; i < ilength; i += 3) {
             var i0 = newIndices[i] + length;
             var i1 = newIndices[i + 1] + length;
             var i2 = newIndices[i + 2] + length;
@@ -414,21 +414,21 @@ define([
             newIndices[i + 2 + ilength] = i0;
         }
         var topAndBottomGeo = new Geometry({
-            attributes: new GeometryAttributes({
-                position: new GeometryAttribute({
+            attributes : new GeometryAttributes({
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
                     values : topBottomPositions
                 })
             }),
-            indices: newIndices,
-            primitiveType: topGeo.primitiveType
+            indices : newIndices,
+            primitiveType : topGeo.primitiveType
         });
 
         var geos = {
-                topAndBottom: new GeometryInstance({
-                    geometry : topAndBottomGeo
-                })
+            topAndBottom : new GeometryInstance({
+                geometry : topAndBottomGeo
+            })
         };
 
         geos.walls = [];
@@ -439,7 +439,7 @@ define([
         }
         var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
-            geometry: wallGeo
+            geometry : wallGeo
         }));
 
         var holes = hierarchy.holes;
@@ -451,7 +451,7 @@ define([
             }
             wallGeo = computeWallIndices(hole, granularity);
             geos.walls.push(new GeometryInstance({
-                geometry: wallGeo
+                geometry : wallGeo
             }));
         }
 
@@ -590,7 +590,7 @@ define([
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @exception {DeveloperError} options.positions is required.
      *
@@ -677,8 +677,8 @@ define([
             if (numChildren === 0) {
                 // The outer polygon is a simple polygon with no nested inner polygon.
                 polygonHierarchy.push({
-                    outerRing: outerRing,
-                    holes: []
+                    outerRing : outerRing,
+                    holes : []
                 });
                 polygons.push(outerRing);
             } else {
@@ -697,20 +697,20 @@ define([
                         numGrandchildren = hole.holes.length;
                     }
 
-                    for (var j = 0; j < numGrandchildren; j++) {
+                    for ( var j = 0; j < numGrandchildren; j++) {
                         queue.enqueue(hole.holes[j]);
                     }
                 }
                 polygonHierarchy.push({
-                    outerRing: outerRing,
-                    holes: polygonHoles
+                    outerRing : outerRing,
+                    holes : polygonHoles
                 });
                 var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, polygonHoles);
                 polygons.push(combinedPolygon);
             }
         }
 
-        outerPositions =  polygons[0];
+        outerPositions = polygons[0];
         // The bounding volume is just around the boundary points, so there could be cases for
         // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
         // volume doesn't cover the polygon.
@@ -729,7 +729,7 @@ define([
                     geometries.push(topAndBottom);
 
                     walls = geometry.walls;
-                    for (var k = 0; k < walls.length; k++) {
+                    for ( var k = 0; k < walls.length; k++) {
                         var wall = walls[k];
                         wall.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                         wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
@@ -747,7 +747,6 @@ define([
                 }
             }
         }
-
 
         geometry = GeometryPipeline.combine(geometries);
 

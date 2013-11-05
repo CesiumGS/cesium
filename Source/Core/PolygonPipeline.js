@@ -898,10 +898,10 @@ define([
         },
 
         /**
-         * Subdivides positions and raises points to the surface of the ellipsoid
+         * Subdivides positions and raises points to the surface of the ellipsoid.
          *
-         * @param {Cartesian3} positions Positions of the polygon.
-         * @param {Array} indices Index data that determines the triangles in the polygon.
+         * @param {Array} positions An array of {@link Cartesian3} positions of the polygon.
+         * @param {Array} indices An array of indices that determines the triangles in the polygon.
          * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
          *
          * @exception {DeveloperError} positions is required.
@@ -1069,11 +1069,14 @@ define([
         },
 
         /**
-         * Raises positions to a height
-         * @param {Geometry} geometry
-         * @param {Number} height The desired height to add to the positions of the geometry
-         * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie
-         * @param {Boolean} [scaleToSurface = true] True if the positions need to be scaled to the surface before the height is added
+         * Scales each position of a geometry's position attribute to a height, in place.
+         *
+         * @param {Geometry} geometry The geometry whose positions are to be scaled.
+         * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
+         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+         * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
+         *
+         * @returns {Geometry} The same geometry whose positions where scaled.
          */
         scaleToGeodeticHeight : function(geometry, height, ellipsoid, scaleToSurface) {
             ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

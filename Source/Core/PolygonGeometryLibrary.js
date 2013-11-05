@@ -30,8 +30,8 @@ define([
     PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity) {
         var length = Cartesian3.distance(p0, p1);
         var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var n = angleBetween/granularity;
-        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
+        var n = angleBetween / granularity;
+        var countDivide = Math.ceil(Math.log(n) / Math.log(2));
         if (countDivide < 1) {
             countDivide = 0;
         }
@@ -44,8 +44,8 @@ define([
         positions[index++] = p0.x;
         positions[index++] = p0.y;
         positions[index++] = p0.z;
-        for (var i = 1; i < numVertices; i++) {
-            var p = getPointAtDistance(p0, p1, i*distanceBetweenVertices, length);
+        for ( var i = 1; i < numVertices; i++) {
+            var p = getPointAtDistance(p0, p1, i * distanceBetweenVertices, length);
             positions[index++] = p[0];
             positions[index++] = p[1];
             positions[index++] = p[2];
@@ -53,7 +53,6 @@ define([
 
         return positions;
     };
-
 
     var scaleToGeodeticHeightN1 = new Cartesian3();
     var scaleToGeodeticHeightN2 = new Cartesian3();
@@ -93,7 +92,6 @@ define([
                 positions[i] = n2.x;
                 positions[i + 1] = n2.y;
                 positions[i + 2] = n2.z;
-
             }
         }
         return geometry;
