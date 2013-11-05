@@ -128,6 +128,16 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
         expect(boxPoints[7]).toEqual(new Cartesian3(0, 2, 0));
     });
 
+    it('intersect throws without values', function() {
+        var objectOrientedBoundingBox = new ObjectOrientedBoundingBox();
+        expect(function() {
+            ObjectOrientedBoundingBox.intersect();
+        }).toThrow();
+        expect(function() {
+            ObjectOrientedBoundingBox.intersect(objectOrientedBoundingBox);
+        }).toThrow();
+    });
+
     it('intersect works as espected', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions1);
         var box2 = ObjectOrientedBoundingBox.fromPoints(positions5);

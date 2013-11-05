@@ -319,8 +319,17 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      * @param {ObjectOrientedBoundingBox} [left] The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} [right] The second ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
 
         var leftTransformTransposed = Matrix3.transpose(left.transformMatrix, scratchIntersectMatrix1);
         var Bf = Matrix3.multiply(leftTransformTransposed, right.transformMatrix, scratchIntersectMatrix2);
