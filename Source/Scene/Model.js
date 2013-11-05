@@ -15,6 +15,8 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Quaternion',
+        '../Core/Matrix2',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/BoundingSphere',
         '../Core/IndexDatatype',
@@ -51,6 +53,8 @@ define([
         Cartesian3,
         Cartesian4,
         Quaternion,
+        Matrix2,
+        Matrix3,
         Matrix4,
         BoundingSphere,
         IndexDatatype,
@@ -817,62 +821,108 @@ define([
         }
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    function getScalarUniformFunction(value, gltf, context) {
+        return function() {
+            return value;
+        };
+    }
+
+    function getVec2UniformFunction(value, gltf, context) {
+        var v = Cartesian2.fromArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
+    function getVec3UniformFunction(value, gltf, context) {
+        var v = Cartesian3.fromArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
+    function getVec4UniformFunction(value, gltf, context) {
+        var v = Cartesian4.fromArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
+    function getMat2UniformFunction(value, gltf, context) {
+        var v = Matrix2.fromColumnMajorArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
+    function getMat3UniformFunction(value, gltf, context) {
+        var v = Matrix3.fromColumnMajorArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
+    function getMat4UniformFunction(value, gltf, context) {
+        var v = Matrix4.fromColumnMajorArray(value);
+
+        return function() {
+            return v;
+        };
+    }
+
     var gltfUniformFunctions = {
-// TODO: All types
     };
 
-    gltfUniformFunctions[ModelConstants.FLOAT] = function(value, model, context) {
-         return function() {
-             return value;
-         };
-     };
-     gltfUniformFunctions[ModelConstants.FLOAT_VEC2] = function(value, model, context) {
-         var v = Cartesian2.fromArray(value);
-
-         return function() {
-             return v;
-         };
-     };
-     gltfUniformFunctions[ModelConstants.FLOAT_VEC3] = function(value, model, context) {
-         var v = Cartesian3.fromArray(value);
-
-         return function() {
-             return v;
-         };
-     };
-     gltfUniformFunctions[ModelConstants.FLOAT_VEC4] = function(value, model, context) {
-         var v = Cartesian4.fromArray(value);
-
-         return function() {
-             return v;
-         };
-     };
-     gltfUniformFunctions[ModelConstants.SAMPLER_2D] = function(value, model, context) {
-         var texture = model.gltf.textures[value];
-         var tx = texture.czm.texture;
-         var sampler = model.gltf.samplers[texture.sampler];
+    gltfUniformFunctions[ModelConstants.FLOAT] = getScalarUniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[ModelConstants.INT] = getScalarUniformFunction;
+    gltfUniformFunctions[ModelConstants.INT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[ModelConstants.INT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[ModelConstants.INT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[ModelConstants.BOOL] = getScalarUniformFunction;
+    gltfUniformFunctions[ModelConstants.BOOL_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[ModelConstants.BOOL_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[ModelConstants.BOOL_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_MAT2] = getMat2UniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_MAT3] = getMat3UniformFunction;
+    gltfUniformFunctions[ModelConstants.FLOAT_MAT4] = getMat4UniformFunction;
+    gltfUniformFunctions[ModelConstants.SAMPLER_2D] = function(value, gltf, context) {
+        var texture = gltf.textures[value];
+        var tx = texture.czm.texture;
+        var sampler = gltf.samplers[texture.sampler];
 
 // TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
-         var dimensions = tx.getDimensions();
-         if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
-             tx.setSampler(sampler.czm.samplerWithoutMipmaps);
-         } else {
+        var dimensions = tx.getDimensions();
+        if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
+            tx.setSampler(sampler.czm.samplerWithoutMipmaps);
+        } else {
 // End workaround
-             if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
-                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
-                 (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
-                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
-                 tx.generateMipmap();
-             }
-             tx.setSampler(sampler.czm.sampler);
-         }
+            if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
+                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
+                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
+                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
+                tx.generateMipmap();
+            }
+            tx.setSampler(sampler.czm.sampler);
+        }
 
-         return function() {
-             return tx;
-         };
-     };
+        return function() {
+            return tx;
+        };
+    };
 
-    function getUniformFunctionFromSource(gltf, source) {
+    // TODO: function for gltfUniformFunctions[ModelConstants.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
+
+    function getUniformFunctionFromSource(source, gltf) {
         var nodes = gltf.nodes;
         var czm = nodes[source].czm;
 
@@ -920,16 +970,16 @@ define([
 
                             if (defined(instanceParameters[parameterName])) {
                                 // Parameter overrides by the instance technique
-                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model, context);
+                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], gltf, context);
                             } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
                                 // Map glTF semantic to Cesium automatic uniform
                                 func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
                             } else if (defined(parameter.source)) {
-                                func = getUniformFunctionFromSource(gltf, parameter.source);
+                                func = getUniformFunctionFromSource(parameter.source, gltf);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
-                                func = gltfUniformFunctions[parameter.type](parameter.value, model, context);
+                                func = gltfUniformFunctions[parameter.type](parameter.value, gltf, context);
                             }
 
                             parameterValues[parameterName] = {
