@@ -86,7 +86,7 @@ define([
     }
 
     /**
-     * Creates a Basis spline (or B-Spline) from the given control points and times.
+     * Creates a uniform, cubic B-spline (or Basis spline) from the given control points and times.
      *
      * @alias BSpline
      * @constructor
