@@ -539,28 +539,6 @@ define([
                             magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
                         })
                     };
-
-// TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
-                    var minFilter;
-
-                    if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
-                        (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR)) {
-                        minFilter = ModelConstants.NEAREST;
-                    } else if ((sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
-                               (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
-                        minFilter = ModelConstants.LINEAR;
-                    } else {
-                        minFilter = sampler.minFilter;
-                    }
-
-                    // Can't mipmap, REPEAT, or MIRRORED_REPEAT NPOT texture.
-                    sampler.czm.samplerWithoutMipmaps = context.createSampler({
-                        wrapS : TextureWrap.CLAMP,
-                        wrapT : TextureWrap.CLAMP,
-                        minificationFilter : gltfTextureMinificationFilter[minFilter],
-                        magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
-                    });
-// End workaround
                 }
             }
         }
@@ -569,20 +547,53 @@ define([
     function createTextures(model, context) {
         var loadResources = model._loadResources;
         var textures = model.gltf.textures;
+        var samplers = model.gltf.samplers;
 
         // Create one texture per frame
         if (loadResources.texturesToCreate.length > 0) {
             var textureToCreate = loadResources.texturesToCreate.dequeue();
+            var texture = textures[textureToCreate.name];
+            var sampler = samplers[texture.sampler];
+
+            var mipmap =
+                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
+                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
+                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
+                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR);
+            var requiresNpot = mipmap ||
+                (sampler.wrapS === ModelConstants.REPEAT) ||
+                (sampler.wrapS === ModelConstants.MIRRORED_REPEAT) ||
+                (sampler.wrapT === ModelConstants.REPEAT) ||
+                (sampler.wrapT === ModelConstants.MIRRORED_REPEAT);
+
+            var source = textureToCreate.image;
+            var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
+
+            if (requiresNpot && npot) {
+                // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
+                var canvas = document.createElement('canvas');
+                canvas.width = CesiumMath.nextPowerOfTwo(source.width);
+                canvas.height = CesiumMath.nextPowerOfTwo(source.height);
+                var canvasContext = canvas.getContext('2d');
+                canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
+                source = canvas;
+            }
 
 // TODO: consider target, format, and internalFormat
-            var texture = textures[textureToCreate.name];
-            texture.czm = {
-                texture : context.createTexture2D({
-                    source : textureToCreate.image,
-                    flipY : false
-                })
-            };
 // TODO: texture cache
+            var tx = context.createTexture2D({
+                source : source,
+                flipY : false
+            });
+
+            if (mipmap) {
+                tx.generateMipmap();
+            }
+            tx.setSampler(sampler.czm.sampler);
+
+            texture.czm = {
+                texture : tx
+            };
         }
     }
 
@@ -823,13 +834,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getScalarUniformFunction(value, gltf, context) {
+    function getScalarUniformFunction(value, gltf) {
         return function() {
             return value;
         };
     }
 
-    function getVec2UniformFunction(value, gltf, context) {
+    function getVec2UniformFunction(value, gltf) {
         var v = Cartesian2.fromArray(value);
 
         return function() {
@@ -837,7 +848,7 @@ define([
         };
     }
 
-    function getVec3UniformFunction(value, gltf, context) {
+    function getVec3UniformFunction(value, gltf) {
         var v = Cartesian3.fromArray(value);
 
         return function() {
@@ -845,7 +856,7 @@ define([
         };
     }
 
-    function getVec4UniformFunction(value, gltf, context) {
+    function getVec4UniformFunction(value, gltf) {
         var v = Cartesian4.fromArray(value);
 
         return function() {
@@ -853,7 +864,7 @@ define([
         };
     }
 
-    function getMat2UniformFunction(value, gltf, context) {
+    function getMat2UniformFunction(value, gltf) {
         var v = Matrix2.fromColumnMajorArray(value);
 
         return function() {
@@ -861,7 +872,7 @@ define([
         };
     }
 
-    function getMat3UniformFunction(value, gltf, context) {
+    function getMat3UniformFunction(value, gltf) {
         var v = Matrix3.fromColumnMajorArray(value);
 
         return function() {
@@ -869,11 +880,20 @@ define([
         };
     }
 
-    function getMat4UniformFunction(value, gltf, context) {
+    function getMat4UniformFunction(value, gltf) {
         var v = Matrix4.fromColumnMajorArray(value);
 
         return function() {
             return v;
+        };
+    }
+
+    function getTextureUniformFunction(value, gltf) {
+        var texture = gltf.textures[value];
+        var tx = texture.czm.texture;
+
+        return function() {
+            return tx;
         };
     }
 
@@ -895,31 +915,7 @@ define([
     gltfUniformFunctions[ModelConstants.FLOAT_MAT2] = getMat2UniformFunction;
     gltfUniformFunctions[ModelConstants.FLOAT_MAT3] = getMat3UniformFunction;
     gltfUniformFunctions[ModelConstants.FLOAT_MAT4] = getMat4UniformFunction;
-    gltfUniformFunctions[ModelConstants.SAMPLER_2D] = function(value, gltf, context) {
-        var texture = gltf.textures[value];
-        var tx = texture.czm.texture;
-        var sampler = gltf.samplers[texture.sampler];
-
-// TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
-        var dimensions = tx.getDimensions();
-        if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
-            tx.setSampler(sampler.czm.samplerWithoutMipmaps);
-        } else {
-// End workaround
-            if ((sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
-                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
-                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
-                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR)) {
-                tx.generateMipmap();
-            }
-            tx.setSampler(sampler.czm.sampler);
-        }
-
-        return function() {
-            return tx;
-        };
-    };
-
+    gltfUniformFunctions[ModelConstants.SAMPLER_2D] = getTextureUniformFunction;
     // TODO: function for gltfUniformFunctions[ModelConstants.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
 
     function getUniformFunctionFromSource(source, gltf) {
@@ -970,7 +966,7 @@ define([
 
                             if (defined(instanceParameters[parameterName])) {
                                 // Parameter overrides by the instance technique
-                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], gltf, context);
+                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], gltf);
                             } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
                                 // Map glTF semantic to Cesium automatic uniform
@@ -979,7 +975,7 @@ define([
                                 func = getUniformFunctionFromSource(parameter.source, gltf);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
-                                func = gltfUniformFunctions[parameter.type](parameter.value, gltf, context);
+                                func = gltfUniformFunctions[parameter.type](parameter.value, gltf);
                             }
 
                             parameterValues[parameterName] = {
