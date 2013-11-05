@@ -351,4 +351,4 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-});
+}, 'WebGL');

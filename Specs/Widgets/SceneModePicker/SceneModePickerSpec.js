@@ -97,4 +97,4 @@ defineSuite([
         }).toThrow();
         destroyScene(scene);
     });
-});
+}, 'WebGL');
