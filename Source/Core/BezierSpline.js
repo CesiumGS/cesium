@@ -31,15 +31,13 @@ define([
      * @alias BezierSpline
      * @constructor
      *
-     * @param {Array} options.times The times at each point.
-     * @param {Array} options.points The points.
-     * @param {Array} options.inControlPoints The incoming control points.
-     * @param {Array} options.outControlPoints The outgoing control points.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points An array of {@link Cartesian3} points.
+     * @param {Array} options.inControlPoints An array of {@link Cartesian3} incoming control points.
+     * @param {Array} options.outControlPoints An array of {@link Cartesian3} outgoing control points.
      *
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} points is required.
-     * @exception {DeveloperError} inControlPoints is required.
-     * @exception {DeveloperError} outControlPoints is required.
+     * @exception {DeveloperError} times, points, inControlPoints, and outControlPoints are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times and points must have the same length.
      * @exception {DeveloperError} inControlPoints and outControlPoints must have length equal to points.length - 1.
@@ -67,6 +65,9 @@ define([
      *         new Cartesian3(6.0, -1.0, 2.0)
      *     ]
      * });
+     *
+     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var BezierSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -76,12 +77,8 @@ define([
         var inControlPoints = options.inControlPoints;
         var outControlPoints = options.outControlPoints;
 
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(times) || !defined(points) || !defined(inControlPoints) || !defined(outControlPoints)) {
+            throw new DeveloperError('times, points, inControlPoints, and outControlPoints are required.');
         }
 
         if (points.length < 2) {
@@ -90,14 +87,6 @@ define([
 
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
-        }
-
-        if (!defined(inControlPoints)) {
-            throw new DeveloperError('inControlPoints is required.');
-        }
-
-        if (!defined(outControlPoints)) {
-            throw new DeveloperError('outControlPoints is required.');
         }
 
         if (inControlPoints.length !== outControlPoints.length || inControlPoints.length !== points.length - 1) {
@@ -171,26 +160,6 @@ define([
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
-     *
-     * @example
-     * var spline = new BezierSpline({
-     *     times : [0.0, 1.0, 2.0],
-     *     points : [
-     *         new Cartesian3(0.0, 0.0, 0.0),
-     *         new Cartesian3(3.0, 0.0, 2.0),
-     *         new Cartesian3(7.0, 3.0, 3.0)
-     *     ],
-     *     outControlPoints : [
-     *         new Cartesian3(1.0, 1.0, 1.0),
-     *         new Cartesian3(-2.0, 1.0, -1.0)
-     *     ],
-     *     inControlPoints : [
-     *         new Cartesian3(2.0, -1.0, 1.0),
-     *         new Cartesian3(6.0, -1.0, 2.0)
-     *     ]
-     * });
-     *
-     * var position = spline.evaluate(time);
      */
     BezierSpline.prototype.evaluate = function(time, result) {
         var points = this.points;

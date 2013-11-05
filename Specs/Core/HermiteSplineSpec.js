@@ -23,7 +23,7 @@ defineSuite([
         times = [0.0, 1.0, 2.0, 3.0];
     });
 
-    it('constructor throws without points', function() {
+    it('constructor throws without points, times or tangents', function() {
         expect(function() {
             return new HermiteSpline();
         }).toThrow();
@@ -37,38 +37,11 @@ defineSuite([
         }).toThrow();
     });
 
-    it('constructor throws without times', function() {
-        expect(function() {
-            return new HermiteSpline({
-                points : points
-            });
-        }).toThrow();
-    });
-
     it('constructor throws when times.length is not equal to points.length', function() {
         expect(function() {
             return new HermiteSpline({
                 points : points,
                 times : [0.0, 1.0]
-            });
-        }).toThrow();
-    });
-
-    it('constructor throws without inTangents and points.length > 2', function() {
-        expect(function() {
-            return new HermiteSpline({
-                points : points,
-                times : times
-            });
-        }).toThrow();
-    });
-
-    it('constructor throws without outTangents and points.length > 2', function() {
-        expect(function() {
-            return new HermiteSpline({
-                points : points,
-                times : times,
-                inTangents : []
             });
         }).toThrow();
     });

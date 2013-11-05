@@ -132,17 +132,15 @@ define([
      * @alias HermiteSpline
      * @constructor
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
-     * @param {Array} options.inTangents The array of incoming tangents at each control point.
-     * @param {Array} options.outTangents The array of outgoing tangents at each control point.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points The array of {@link Cartesian3} control points.
+     * @param {Array} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
+     * @param {Array} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} times, points, inTangents, and outTangents are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
-     * @exception {DeveloperError} inTangents is required.
-     * @exception {DeveloperError} outTangents is required.
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
      *
      * @see BSpline
@@ -175,6 +173,9 @@ define([
      *         new Cartesian3(1165345, 112641, 47281)
      *     ]
      * });
+     *
+     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var HermiteSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -184,28 +185,16 @@ define([
         var inTangents = options.inTangents;
         var outTangents = options.outTangents;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(points) || !defined(times) || !defined(inTangents) || !defined(outTangents)) {
+            throw new DeveloperError('times, points, inTangents, and outTangents are required.');
         }
 
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
 
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
-        }
-
-        if (!defined(inTangents)) {
-            throw new DeveloperError('inTangents is required.');
-        }
-
-        if (!defined(outTangents)) {
-            throw new DeveloperError('outTangents is required.');
         }
 
         if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
@@ -253,10 +242,8 @@ define([
      * @param {Array} options.tangents The array of tangents at the control points.
      * @returns {HermiteSpline} A hermite spline.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points, times and tangents are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} tangents is required.
      * @exception {DeveloperError} times, points and tangents must have the same length.
      *
      * @example
@@ -291,20 +278,12 @@ define([
         var points = options.points;
         var tangents = options.tangents;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(points) || !defined(times) || !defined(tangents)) {
+            throw new DeveloperError('points, times and tangents are required.');
         }
 
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
-        if (!defined(tangents)) {
-            throw new DeveloperError('tagents is required.');
         }
 
         if (times.length !== points.length || times.length !== tangents.length) {
@@ -331,9 +310,8 @@ define([
      * @param {Array} options.points The array of control points.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points and times are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
      * @example
@@ -355,16 +333,12 @@ define([
         var times = options.times;
         var points = options.points;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(points) || !defined(times)) {
+            throw new DeveloperError('points and times are required.');
         }
 
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
         }
 
         if (times.length !== points.length) {
@@ -401,12 +375,9 @@ define([
      * @para, {Cartesian3} options.lastTangent The incoming tangent of the last control point.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
-     * @exception {DeveloperError} firstTangent is required.
-     * @exception {DeveloperError} lastTangent is required.
      *
      * @example
      * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
@@ -431,28 +402,16 @@ define([
         var firstTangent = options.firstTangent;
         var lastTangent = options.lastTangent;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(points) || !defined(times) || !defined(firstTangent) || !defined(lastTangent)) {
+            throw new DeveloperError('points, times, firstTangent and lastTangent are required.');
         }
 
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
 
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
-        }
-
-        if (!defined(firstTangent)) {
-            throw new DeveloperError('firstTangent is required.');
-        }
-
-        if (!defined(lastTangent)) {
-            throw new DeveloperError('lastTangent is required.');
         }
 
         if (points.length < 3) {
@@ -510,22 +469,6 @@ define([
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
-     *
-     * @example
-     * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = HermiteSpline.createNaturalCubic({
-     *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
-     *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
-     *     ]
-     * });
-     *
-     * // some position above Los Angeles
-     * var position = spline.evaluate(5.0);
      */
     HermiteSpline.prototype.evaluate = function(time, result) {
         var points = this.points;

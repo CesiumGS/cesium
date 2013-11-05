@@ -26,7 +26,7 @@ defineSuite([
         ];
     });
 
-    it('constructor throws without points', function() {
+    it('constructor throws without points or times', function() {
         expect(function() {
             return new BSpline();
         }).toThrow();
@@ -36,14 +36,6 @@ defineSuite([
         expect(function() {
             return new BSpline({
                 points : [Cartesian3.ZERO]
-            });
-        }).toThrow();
-    });
-
-    it('constructor throws without times', function() {
-        expect(function() {
-            return new BSpline({
-                points : points
             });
         }).toThrow();
     });

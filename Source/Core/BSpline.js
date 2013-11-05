@@ -91,11 +91,11 @@ define([
      * @alias BSpline
      * @constructor
      *
-     * @param {Array} options.times The times at each point.
-     * @param {Array} options.points The points.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points An array of {@link Cartesian3} points.
      *
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} times and points are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times and points must have the same length.
      *
@@ -110,6 +110,9 @@ define([
      *     times : times,
      *     points : positions
      * });
+     *
+     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var BSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -117,12 +120,8 @@ define([
         var times = options.times;
         var points = options.points;
 
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(times) || !defined(points)) {
+            throw new DeveloperError('times and points are required.');
         }
 
         if (points.length < 2) {
@@ -185,14 +184,6 @@ define([
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
-     *
-     * @example
-     * var spline = new BSpline({
-     *     times : times,
-     *     points : positions
-     * });
-     *
-     * var position = spline.evaluate(time);
      */
     BSpline.prototype.evaluate = function(time, result) {
         return this._evaluateFunction(time, result);
