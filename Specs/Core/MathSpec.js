@@ -140,6 +140,13 @@ defineSuite([
         expect(CesiumMath.isPowerOfTwo(12)).toEqual(false);
     });
 
+    it('nextPowerOfTwo finds next power of two', function() {
+        expect(CesiumMath.nextPowerOfTwo(0)).toEqual(0);
+        expect(CesiumMath.nextPowerOfTwo(257)).toEqual(512);
+        expect(CesiumMath.nextPowerOfTwo(512)).toEqual(512);
+        expect(CesiumMath.nextPowerOfTwo(1023)).toEqual(1024);
+    });
+
     it('factorial throws for non-numbers', function() {
         expect(function() {
             CesiumMath.factorial({});
@@ -185,4 +192,21 @@ defineSuite([
         }).toThrow();
     });
 
+    it('nextPowerOfTwo throws for non-numbers', function() {
+        expect(function() {
+            CesiumMath.nextPowerOfTwo({});
+        }).toThrow();
+    });
+
+    it('nextPowerOfTwo throws for negative numbers', function() {
+        expect(function() {
+            CesiumMath.nextPowerOfTwo(-1);
+        }).toThrow();
+    });
+
+    it('nextPowerOfTwo throws for undefined', function() {
+        expect(function() {
+            CesiumMath.nextPowerOfTwo();
+        }).toThrow();
+    });
 });
