@@ -265,7 +265,7 @@ define([
             throw new DeveloperError('second cartesian is missing');
         }
         if (!defined(result)) {
-            result = Cartesian3.clone(Cartesian3.ZERO);
+            result = new Cartesian3();
         }
 
         result.x = Math.min(first.x, second.x);
@@ -296,7 +296,7 @@ define([
         }
 
         if (!defined(result)) {
-            result = Cartesian3.clone(Cartesian3.ZERO);
+            result = new Cartesian3();
         }
 
         result.x = Math.max(first.x, second.x);
@@ -694,7 +694,12 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
-        return (left === right) || ((defined(left)) && (defined(right)) && (left.x === right.x) && (left.y === right.y) && (left.z === right.z));
+       return (left === right) ||
+              ((defined(left)) &&
+               (defined(right)) &&
+               (left.x === right.x) &&
+               (left.y === right.y) &&
+               (left.z === right.z));
     };
 
     /**
