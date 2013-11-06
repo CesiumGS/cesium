@@ -1,13 +1,30 @@
 /*global define*/
-define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './Intersect', './Matrix3', './BoundingRectangle'], function(defaultValue, defined, DeveloperError, Cartesian3, Intersect, Matrix3, BoundingRectangle) {
+define([
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './Cartesian3',
+        './Intersect',
+        './Matrix3',
+        './BoundingRectangle'
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError,
+        Cartesian3,
+        Intersect,
+        Matrix3,
+        BoundingRectangle) {
     "use strict";
 
     /**
      * Creates an instance of an ObjectOrientedBoundingBox.
+     * An ObjectOrientedBoundingBox model of an object or set of objects, is a closed volume (a cuboid), which completely contains the object or the set of objects.
+     * It is oriented, so it can provide an optimum fit, it can bound more tightly.
      * @alias ObjectOrientedBoundingBox
      * @constructor
      *
-     * @param {Cartesian3} [transformMatrix=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
+     * @param {Matrix3} [transformMatrix=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
      * @param {Cartesian3} [transformedPosition=Cartesian3.ZERO] The position of the box.
      * @param {Cartesian3} [extent=Cartesian3.ZERO] The scale of the box.
      *
@@ -46,9 +63,10 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
      * Computes an instance of an ObjectOrientedBoundingBox of the given positions. The box is determined using the covariance matrix.
      * First we build the covariance matrix, then we compute the center, rotation and the minimal edge lengths of the OBB.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
+     * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {Array} positions List of points that the bounding box will enclose.  Each point must have a <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {Array} positions List of {@link Cartesian3} points that the bounding box will enclose.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
      * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
@@ -62,6 +80,9 @@ define(['./defaultValue', './defined', './DeveloperError', './Cartesian3', './In
         }
 
         if (!defined(positions) || positions.length === 0) {
+            result.tranformMatrix = Matrix3.IDENTITY;
+            result.transformedPosition = Cartesian3.ZERO;
+            result.extent = Cartesian3.ZERO;
             return result;
         }
 
