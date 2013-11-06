@@ -1,5 +1,14 @@
 /*global define*/
-define(['./defaultValue', './defined', './DeveloperError', './freezeObject'], function(defaultValue, defined, DeveloperError, freezeObject) {
+define([
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './freezeObject'
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError,
+        freezeObject) {
     "use strict";
 
     /**
