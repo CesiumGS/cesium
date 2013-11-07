@@ -1,7 +1,7 @@
 {
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@da4029e4fb0b7b7036551e2548de1afc50965caf"
+        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
     },
     "attributes": {
         "attribute_100": {
@@ -8136,13 +8136,13 @@
             "buffer": "SuperMurdoch",
             "byteLength": 390864,
             "byteOffset": 0,
-            "target": "ARRAY_BUFFER"
+            "target": 34962
         },
         "bufferView_5086": {
             "buffer": "SuperMurdoch",
             "byteLength": 81816,
             "byteOffset": 390864,
-            "target": "ELEMENT_ARRAY_BUFFER"
+            "target": 34963
         },
         "bufferView_5087": {
             "buffer": "SuperMurdoch",
@@ -9866,13 +9866,13 @@
             "name": "ID100",
             "primitives": [
                 {
-                    "indices": "indices_296",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_300",
                         "POSITION": "attribute_298"
-                    }
+                    },
+                    "indices": "indices_296",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -9880,13 +9880,13 @@
             "name": "ID1003",
             "primitives": [
                 {
-                    "indices": "indices_3058",
-                    "material": "ID1005",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3062",
                         "POSITION": "attribute_3060"
-                    }
+                    },
+                    "indices": "indices_3058",
+                    "material": "ID1005",
+                    "primitive": 4
                 }
             ]
         },
@@ -9894,13 +9894,13 @@
             "name": "ID1011",
             "primitives": [
                 {
-                    "indices": "indices_3078",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3082",
                         "POSITION": "attribute_3080"
-                    }
+                    },
+                    "indices": "indices_3078",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -9908,13 +9908,13 @@
             "name": "ID1017",
             "primitives": [
                 {
-                    "indices": "indices_3098",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3102",
                         "POSITION": "attribute_3100"
-                    }
+                    },
+                    "indices": "indices_3098",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -9922,13 +9922,13 @@
             "name": "ID1023",
             "primitives": [
                 {
-                    "indices": "indices_3118",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3122",
                         "POSITION": "attribute_3120"
-                    }
+                    },
+                    "indices": "indices_3118",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -9936,13 +9936,13 @@
             "name": "ID1029",
             "primitives": [
                 {
-                    "indices": "indices_3138",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3142",
                         "POSITION": "attribute_3140"
-                    }
+                    },
+                    "indices": "indices_3138",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -9950,13 +9950,13 @@
             "name": "ID1035",
             "primitives": [
                 {
-                    "indices": "indices_3158",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3162",
                         "POSITION": "attribute_3160"
-                    }
+                    },
+                    "indices": "indices_3158",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -9964,13 +9964,13 @@
             "name": "ID1041",
             "primitives": [
                 {
-                    "indices": "indices_3178",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3182",
                         "POSITION": "attribute_3180"
-                    }
+                    },
+                    "indices": "indices_3178",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -9978,13 +9978,13 @@
             "name": "ID1047",
             "primitives": [
                 {
-                    "indices": "indices_3198",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3202",
                         "POSITION": "attribute_3200"
-                    }
+                    },
+                    "indices": "indices_3198",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -9992,13 +9992,13 @@
             "name": "ID1053",
             "primitives": [
                 {
-                    "indices": "indices_3218",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3222",
                         "POSITION": "attribute_3220"
-                    }
+                    },
+                    "indices": "indices_3218",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -10006,13 +10006,13 @@
             "name": "ID1059",
             "primitives": [
                 {
-                    "indices": "indices_3238",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3242",
                         "POSITION": "attribute_3240"
-                    }
+                    },
+                    "indices": "indices_3238",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10020,13 +10020,13 @@
             "name": "ID1065",
             "primitives": [
                 {
-                    "indices": "indices_3258",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3262",
                         "POSITION": "attribute_3260"
-                    }
+                    },
+                    "indices": "indices_3258",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10034,13 +10034,13 @@
             "name": "ID107",
             "primitives": [
                 {
-                    "indices": "indices_316",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_320",
                         "POSITION": "attribute_318"
-                    }
+                    },
+                    "indices": "indices_316",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10048,13 +10048,13 @@
             "name": "ID1071",
             "primitives": [
                 {
-                    "indices": "indices_3278",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3282",
                         "POSITION": "attribute_3280"
-                    }
+                    },
+                    "indices": "indices_3278",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10062,13 +10062,13 @@
             "name": "ID1077",
             "primitives": [
                 {
-                    "indices": "indices_3298",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3302",
                         "POSITION": "attribute_3300"
-                    }
+                    },
+                    "indices": "indices_3298",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10076,13 +10076,13 @@
             "name": "ID1083",
             "primitives": [
                 {
-                    "indices": "indices_3318",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3322",
                         "POSITION": "attribute_3320"
-                    }
+                    },
+                    "indices": "indices_3318",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10090,13 +10090,13 @@
             "name": "ID1089",
             "primitives": [
                 {
-                    "indices": "indices_3338",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3342",
                         "POSITION": "attribute_3340"
-                    }
+                    },
+                    "indices": "indices_3338",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10104,13 +10104,13 @@
             "name": "ID1095",
             "primitives": [
                 {
-                    "indices": "indices_3358",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3362",
                         "POSITION": "attribute_3360"
-                    }
+                    },
+                    "indices": "indices_3358",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -10118,13 +10118,13 @@
             "name": "ID11",
             "primitives": [
                 {
-                    "indices": "indices_36",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_40",
                         "POSITION": "attribute_38"
-                    }
+                    },
+                    "indices": "indices_36",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -10132,13 +10132,13 @@
             "name": "ID1101",
             "primitives": [
                 {
-                    "indices": "indices_3378",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3382",
                         "POSITION": "attribute_3380"
-                    }
+                    },
+                    "indices": "indices_3378",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -10146,13 +10146,13 @@
             "name": "ID1107",
             "primitives": [
                 {
-                    "indices": "indices_3398",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3402",
                         "POSITION": "attribute_3400"
-                    }
+                    },
+                    "indices": "indices_3398",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10160,13 +10160,13 @@
             "name": "ID1113",
             "primitives": [
                 {
-                    "indices": "indices_3418",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3422",
                         "POSITION": "attribute_3420"
-                    }
+                    },
+                    "indices": "indices_3418",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10174,13 +10174,13 @@
             "name": "ID1119",
             "primitives": [
                 {
-                    "indices": "indices_3438",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3442",
                         "POSITION": "attribute_3440"
-                    }
+                    },
+                    "indices": "indices_3438",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -10188,13 +10188,13 @@
             "name": "ID1125",
             "primitives": [
                 {
-                    "indices": "indices_3458",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3462",
                         "POSITION": "attribute_3460"
-                    }
+                    },
+                    "indices": "indices_3458",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10202,13 +10202,13 @@
             "name": "ID113",
             "primitives": [
                 {
-                    "indices": "indices_336",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_340",
                         "POSITION": "attribute_338"
-                    }
+                    },
+                    "indices": "indices_336",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10216,13 +10216,13 @@
             "name": "ID1131",
             "primitives": [
                 {
-                    "indices": "indices_3478",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3482",
                         "POSITION": "attribute_3480"
-                    }
+                    },
+                    "indices": "indices_3478",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -10230,13 +10230,13 @@
             "name": "ID1137",
             "primitives": [
                 {
-                    "indices": "indices_3498",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3502",
                         "POSITION": "attribute_3500"
-                    }
+                    },
+                    "indices": "indices_3498",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10244,13 +10244,13 @@
             "name": "ID1143",
             "primitives": [
                 {
-                    "indices": "indices_3518",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3522",
                         "POSITION": "attribute_3520"
-                    }
+                    },
+                    "indices": "indices_3518",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10258,13 +10258,13 @@
             "name": "ID1149",
             "primitives": [
                 {
-                    "indices": "indices_3538",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3542",
                         "POSITION": "attribute_3540"
-                    }
+                    },
+                    "indices": "indices_3538",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10272,13 +10272,13 @@
             "name": "ID1155",
             "primitives": [
                 {
-                    "indices": "indices_3558",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3562",
                         "POSITION": "attribute_3560"
-                    }
+                    },
+                    "indices": "indices_3558",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -10286,13 +10286,13 @@
             "name": "ID1161",
             "primitives": [
                 {
-                    "indices": "indices_3578",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3582",
                         "POSITION": "attribute_3580"
-                    }
+                    },
+                    "indices": "indices_3578",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10300,13 +10300,13 @@
             "name": "ID1167",
             "primitives": [
                 {
-                    "indices": "indices_3598",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3602",
                         "POSITION": "attribute_3600"
-                    }
+                    },
+                    "indices": "indices_3598",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10314,13 +10314,13 @@
             "name": "ID1173",
             "primitives": [
                 {
-                    "indices": "indices_3618",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3622",
                         "POSITION": "attribute_3620"
-                    }
+                    },
+                    "indices": "indices_3618",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -10328,13 +10328,13 @@
             "name": "ID1179",
             "primitives": [
                 {
-                    "indices": "indices_3638",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3642",
                         "POSITION": "attribute_3640"
-                    }
+                    },
+                    "indices": "indices_3638",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10342,13 +10342,13 @@
             "name": "ID1185",
             "primitives": [
                 {
-                    "indices": "indices_3658",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3662",
                         "POSITION": "attribute_3660"
-                    }
+                    },
+                    "indices": "indices_3658",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10356,13 +10356,13 @@
             "name": "ID119",
             "primitives": [
                 {
-                    "indices": "indices_356",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_360",
                         "POSITION": "attribute_358"
-                    }
+                    },
+                    "indices": "indices_356",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10370,13 +10370,13 @@
             "name": "ID1191",
             "primitives": [
                 {
-                    "indices": "indices_3678",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3682",
                         "POSITION": "attribute_3680"
-                    }
+                    },
+                    "indices": "indices_3678",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10384,13 +10384,13 @@
             "name": "ID1197",
             "primitives": [
                 {
-                    "indices": "indices_3698",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3702",
                         "POSITION": "attribute_3700"
-                    }
+                    },
+                    "indices": "indices_3698",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10398,13 +10398,13 @@
             "name": "ID1203",
             "primitives": [
                 {
-                    "indices": "indices_3718",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3722",
                         "POSITION": "attribute_3720"
-                    }
+                    },
+                    "indices": "indices_3718",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10412,13 +10412,13 @@
             "name": "ID1209",
             "primitives": [
                 {
-                    "indices": "indices_3738",
-                    "material": "ID707",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3742",
                         "POSITION": "attribute_3740"
-                    }
+                    },
+                    "indices": "indices_3738",
+                    "material": "ID707",
+                    "primitive": 4
                 }
             ]
         },
@@ -10426,13 +10426,13 @@
             "name": "ID1215",
             "primitives": [
                 {
-                    "indices": "indices_3758",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3762",
                         "POSITION": "attribute_3760"
-                    }
+                    },
+                    "indices": "indices_3758",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10440,13 +10440,13 @@
             "name": "ID1221",
             "primitives": [
                 {
-                    "indices": "indices_3778",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3782",
                         "POSITION": "attribute_3780"
-                    }
+                    },
+                    "indices": "indices_3778",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10454,13 +10454,13 @@
             "name": "ID1227",
             "primitives": [
                 {
-                    "indices": "indices_3798",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3802",
                         "POSITION": "attribute_3800"
-                    }
+                    },
+                    "indices": "indices_3798",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10468,13 +10468,13 @@
             "name": "ID1233",
             "primitives": [
                 {
-                    "indices": "indices_3818",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3822",
                         "POSITION": "attribute_3820"
-                    }
+                    },
+                    "indices": "indices_3818",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10482,13 +10482,13 @@
             "name": "ID1239",
             "primitives": [
                 {
-                    "indices": "indices_3838",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3842",
                         "POSITION": "attribute_3840"
-                    }
+                    },
+                    "indices": "indices_3838",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10496,13 +10496,13 @@
             "name": "ID1245",
             "primitives": [
                 {
-                    "indices": "indices_3858",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3862",
                         "POSITION": "attribute_3860"
-                    }
+                    },
+                    "indices": "indices_3858",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10510,13 +10510,13 @@
             "name": "ID1251",
             "primitives": [
                 {
-                    "indices": "indices_3878",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3882",
                         "POSITION": "attribute_3880"
-                    }
+                    },
+                    "indices": "indices_3878",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10524,13 +10524,13 @@
             "name": "ID1257",
             "primitives": [
                 {
-                    "indices": "indices_3898",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3902",
                         "POSITION": "attribute_3900"
-                    }
+                    },
+                    "indices": "indices_3898",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10538,13 +10538,13 @@
             "name": "ID126",
             "primitives": [
                 {
-                    "indices": "indices_376",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_380",
                         "POSITION": "attribute_378"
-                    }
+                    },
+                    "indices": "indices_376",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10552,13 +10552,13 @@
             "name": "ID1263",
             "primitives": [
                 {
-                    "indices": "indices_3918",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3922",
                         "POSITION": "attribute_3920"
-                    }
+                    },
+                    "indices": "indices_3918",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10566,13 +10566,13 @@
             "name": "ID1269",
             "primitives": [
                 {
-                    "indices": "indices_3938",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3942",
                         "POSITION": "attribute_3940"
-                    }
+                    },
+                    "indices": "indices_3938",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10580,13 +10580,13 @@
             "name": "ID1275",
             "primitives": [
                 {
-                    "indices": "indices_3958",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3962",
                         "POSITION": "attribute_3960"
-                    }
+                    },
+                    "indices": "indices_3958",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10594,13 +10594,13 @@
             "name": "ID1281",
             "primitives": [
                 {
-                    "indices": "indices_3978",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3982",
                         "POSITION": "attribute_3980"
-                    }
+                    },
+                    "indices": "indices_3978",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10608,13 +10608,13 @@
             "name": "ID1287",
             "primitives": [
                 {
-                    "indices": "indices_3998",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4002",
                         "POSITION": "attribute_4000"
-                    }
+                    },
+                    "indices": "indices_3998",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -10622,13 +10622,13 @@
             "name": "ID1293",
             "primitives": [
                 {
-                    "indices": "indices_4018",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4022",
                         "POSITION": "attribute_4020"
-                    }
+                    },
+                    "indices": "indices_4018",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10636,13 +10636,13 @@
             "name": "ID1299",
             "primitives": [
                 {
-                    "indices": "indices_4038",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4042",
                         "POSITION": "attribute_4040"
-                    }
+                    },
+                    "indices": "indices_4038",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10650,13 +10650,13 @@
             "name": "ID1305",
             "primitives": [
                 {
-                    "indices": "indices_4058",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4062",
                         "POSITION": "attribute_4060"
-                    }
+                    },
+                    "indices": "indices_4058",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10664,13 +10664,13 @@
             "name": "ID1311",
             "primitives": [
                 {
-                    "indices": "indices_4078",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4082",
                         "POSITION": "attribute_4080"
-                    }
+                    },
+                    "indices": "indices_4078",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10678,13 +10678,13 @@
             "name": "ID1317",
             "primitives": [
                 {
-                    "indices": "indices_4098",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4102",
                         "POSITION": "attribute_4100"
-                    }
+                    },
+                    "indices": "indices_4098",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10692,13 +10692,13 @@
             "name": "ID132",
             "primitives": [
                 {
-                    "indices": "indices_396",
-                    "material": "ID134",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_400",
                         "POSITION": "attribute_398"
-                    }
+                    },
+                    "indices": "indices_396",
+                    "material": "ID134",
+                    "primitive": 4
                 }
             ]
         },
@@ -10706,13 +10706,13 @@
             "name": "ID1323",
             "primitives": [
                 {
-                    "indices": "indices_4118",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4122",
                         "POSITION": "attribute_4120"
-                    }
+                    },
+                    "indices": "indices_4118",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10720,13 +10720,13 @@
             "name": "ID1329",
             "primitives": [
                 {
-                    "indices": "indices_4138",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4142",
                         "POSITION": "attribute_4140"
-                    }
+                    },
+                    "indices": "indices_4138",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -10734,13 +10734,13 @@
             "name": "ID1335",
             "primitives": [
                 {
-                    "indices": "indices_4158",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4162",
                         "POSITION": "attribute_4160"
-                    }
+                    },
+                    "indices": "indices_4158",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -10748,13 +10748,13 @@
             "name": "ID1341",
             "primitives": [
                 {
-                    "indices": "indices_4178",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4182",
                         "POSITION": "attribute_4180"
-                    }
+                    },
+                    "indices": "indices_4178",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10762,13 +10762,13 @@
             "name": "ID1347",
             "primitives": [
                 {
-                    "indices": "indices_4198",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4202",
                         "POSITION": "attribute_4200"
-                    }
+                    },
+                    "indices": "indices_4198",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -10776,13 +10776,13 @@
             "name": "ID1353",
             "primitives": [
                 {
-                    "indices": "indices_4218",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4222",
                         "POSITION": "attribute_4220"
-                    }
+                    },
+                    "indices": "indices_4218",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10790,13 +10790,13 @@
             "name": "ID1359",
             "primitives": [
                 {
-                    "indices": "indices_4238",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4242",
                         "POSITION": "attribute_4240"
-                    }
+                    },
+                    "indices": "indices_4238",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10804,13 +10804,13 @@
             "name": "ID1365",
             "primitives": [
                 {
-                    "indices": "indices_4258",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4262",
                         "POSITION": "attribute_4260"
-                    }
+                    },
+                    "indices": "indices_4258",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10818,13 +10818,13 @@
             "name": "ID1371",
             "primitives": [
                 {
-                    "indices": "indices_4278",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4282",
                         "POSITION": "attribute_4280"
-                    }
+                    },
+                    "indices": "indices_4278",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10832,13 +10832,13 @@
             "name": "ID1377",
             "primitives": [
                 {
-                    "indices": "indices_4298",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4302",
                         "POSITION": "attribute_4300"
-                    }
+                    },
+                    "indices": "indices_4298",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10846,13 +10846,13 @@
             "name": "ID1383",
             "primitives": [
                 {
-                    "indices": "indices_4318",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4322",
                         "POSITION": "attribute_4320"
-                    }
+                    },
+                    "indices": "indices_4318",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -10860,13 +10860,13 @@
             "name": "ID1389",
             "primitives": [
                 {
-                    "indices": "indices_4338",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4342",
                         "POSITION": "attribute_4340"
-                    }
+                    },
+                    "indices": "indices_4338",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -10874,13 +10874,13 @@
             "name": "ID1395",
             "primitives": [
                 {
-                    "indices": "indices_4358",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4362",
                         "POSITION": "attribute_4360"
-                    }
+                    },
+                    "indices": "indices_4358",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10888,13 +10888,13 @@
             "name": "ID140",
             "primitives": [
                 {
-                    "indices": "indices_416",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_420",
                         "POSITION": "attribute_418"
-                    }
+                    },
+                    "indices": "indices_416",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10902,13 +10902,13 @@
             "name": "ID1401",
             "primitives": [
                 {
-                    "indices": "indices_4378",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4382",
                         "POSITION": "attribute_4380"
-                    }
+                    },
+                    "indices": "indices_4378",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -10916,13 +10916,13 @@
             "name": "ID1407",
             "primitives": [
                 {
-                    "indices": "indices_4398",
-                    "material": "ID997",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4402",
                         "POSITION": "attribute_4400"
-                    }
+                    },
+                    "indices": "indices_4398",
+                    "material": "ID997",
+                    "primitive": 4
                 }
             ]
         },
@@ -10930,13 +10930,13 @@
             "name": "ID1413",
             "primitives": [
                 {
-                    "indices": "indices_4418",
-                    "material": "ID1005",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4422",
                         "POSITION": "attribute_4420"
-                    }
+                    },
+                    "indices": "indices_4418",
+                    "material": "ID1005",
+                    "primitive": 4
                 }
             ]
         },
@@ -10944,13 +10944,13 @@
             "name": "ID1419",
             "primitives": [
                 {
-                    "indices": "indices_4438",
-                    "material": "ID346",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4442",
                         "POSITION": "attribute_4440"
-                    }
+                    },
+                    "indices": "indices_4438",
+                    "material": "ID346",
+                    "primitive": 4
                 }
             ]
         },
@@ -10958,13 +10958,13 @@
             "name": "ID1425",
             "primitives": [
                 {
-                    "indices": "indices_4458",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4462",
                         "POSITION": "attribute_4460"
-                    }
+                    },
+                    "indices": "indices_4458",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -10972,13 +10972,13 @@
             "name": "ID1431",
             "primitives": [
                 {
-                    "indices": "indices_4478",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4482",
                         "POSITION": "attribute_4480"
-                    }
+                    },
+                    "indices": "indices_4478",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -10986,13 +10986,13 @@
             "name": "ID1437",
             "primitives": [
                 {
-                    "indices": "indices_4498",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4502",
                         "POSITION": "attribute_4500"
-                    }
+                    },
+                    "indices": "indices_4498",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -11000,13 +11000,13 @@
             "name": "ID1443",
             "primitives": [
                 {
-                    "indices": "indices_4518",
-                    "material": "ID591",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4522",
                         "POSITION": "attribute_4520"
-                    }
+                    },
+                    "indices": "indices_4518",
+                    "material": "ID591",
+                    "primitive": 4
                 }
             ]
         },
@@ -11014,13 +11014,13 @@
             "name": "ID1449",
             "primitives": [
                 {
-                    "indices": "indices_4538",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4542",
                         "POSITION": "attribute_4540"
-                    }
+                    },
+                    "indices": "indices_4538",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -11028,13 +11028,13 @@
             "name": "ID1455",
             "primitives": [
                 {
-                    "indices": "indices_4558",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4562",
                         "POSITION": "attribute_4560"
-                    }
+                    },
+                    "indices": "indices_4558",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -11042,13 +11042,13 @@
             "name": "ID1461",
             "primitives": [
                 {
-                    "indices": "indices_4578",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4582",
                         "POSITION": "attribute_4580"
-                    }
+                    },
+                    "indices": "indices_4578",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11056,13 +11056,13 @@
             "name": "ID1467",
             "primitives": [
                 {
-                    "indices": "indices_4598",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4602",
                         "POSITION": "attribute_4600"
-                    }
+                    },
+                    "indices": "indices_4598",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11070,13 +11070,13 @@
             "name": "ID1473",
             "primitives": [
                 {
-                    "indices": "indices_4618",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4622",
                         "POSITION": "attribute_4620"
-                    }
+                    },
+                    "indices": "indices_4618",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11084,13 +11084,13 @@
             "name": "ID1479",
             "primitives": [
                 {
-                    "indices": "indices_4638",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4642",
                         "POSITION": "attribute_4640"
-                    }
+                    },
+                    "indices": "indices_4638",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11098,13 +11098,13 @@
             "name": "ID148",
             "primitives": [
                 {
-                    "indices": "indices_436",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_440",
                         "POSITION": "attribute_438"
-                    }
+                    },
+                    "indices": "indices_436",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11112,13 +11112,13 @@
             "name": "ID1485",
             "primitives": [
                 {
-                    "indices": "indices_4658",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4662",
                         "POSITION": "attribute_4660"
-                    }
+                    },
+                    "indices": "indices_4658",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11126,13 +11126,13 @@
             "name": "ID1491",
             "primitives": [
                 {
-                    "indices": "indices_4678",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4682",
                         "POSITION": "attribute_4680"
-                    }
+                    },
+                    "indices": "indices_4678",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11140,13 +11140,13 @@
             "name": "ID1497",
             "primitives": [
                 {
-                    "indices": "indices_4698",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4702",
                         "POSITION": "attribute_4700"
-                    }
+                    },
+                    "indices": "indices_4698",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11154,13 +11154,13 @@
             "name": "ID1503",
             "primitives": [
                 {
-                    "indices": "indices_4718",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4722",
                         "POSITION": "attribute_4720"
-                    }
+                    },
+                    "indices": "indices_4718",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -11168,13 +11168,13 @@
             "name": "ID1509",
             "primitives": [
                 {
-                    "indices": "indices_4738",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4742",
                         "POSITION": "attribute_4740"
-                    }
+                    },
+                    "indices": "indices_4738",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -11182,13 +11182,13 @@
             "name": "ID1515",
             "primitives": [
                 {
-                    "indices": "indices_4758",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4762",
                         "POSITION": "attribute_4760"
-                    }
+                    },
+                    "indices": "indices_4758",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11196,13 +11196,13 @@
             "name": "ID1521",
             "primitives": [
                 {
-                    "indices": "indices_4778",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4782",
                         "POSITION": "attribute_4780"
-                    }
+                    },
+                    "indices": "indices_4778",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11210,13 +11210,13 @@
             "name": "ID1527",
             "primitives": [
                 {
-                    "indices": "indices_4798",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4802",
                         "POSITION": "attribute_4800"
-                    }
+                    },
+                    "indices": "indices_4798",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11224,13 +11224,13 @@
             "name": "ID1533",
             "primitives": [
                 {
-                    "indices": "indices_4818",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_4822",
                         "POSITION": "attribute_4820"
-                    }
+                    },
+                    "indices": "indices_4818",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11238,13 +11238,13 @@
             "name": "ID154",
             "primitives": [
                 {
-                    "indices": "indices_456",
-                    "material": "ID156",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_460",
                         "POSITION": "attribute_458"
-                    }
+                    },
+                    "indices": "indices_456",
+                    "material": "ID156",
+                    "primitive": 4
                 }
             ]
         },
@@ -11252,13 +11252,13 @@
             "name": "ID162",
             "primitives": [
                 {
-                    "indices": "indices_476",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_480",
                         "POSITION": "attribute_478"
-                    }
+                    },
+                    "indices": "indices_476",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11266,13 +11266,13 @@
             "name": "ID170",
             "primitives": [
                 {
-                    "indices": "indices_496",
-                    "material": "ID172",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_500",
                         "POSITION": "attribute_498"
-                    }
+                    },
+                    "indices": "indices_496",
+                    "material": "ID172",
+                    "primitive": 4
                 }
             ]
         },
@@ -11280,13 +11280,13 @@
             "name": "ID178",
             "primitives": [
                 {
-                    "indices": "indices_516",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_520",
                         "POSITION": "attribute_518"
-                    }
+                    },
+                    "indices": "indices_516",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -11294,13 +11294,13 @@
             "name": "ID184",
             "primitives": [
                 {
-                    "indices": "indices_536",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_540",
                         "POSITION": "attribute_538"
-                    }
+                    },
+                    "indices": "indices_536",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -11308,13 +11308,13 @@
             "name": "ID19",
             "primitives": [
                 {
-                    "indices": "indices_56",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_60",
                         "POSITION": "attribute_58"
-                    }
+                    },
+                    "indices": "indices_56",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -11322,13 +11322,13 @@
             "name": "ID190",
             "primitives": [
                 {
-                    "indices": "indices_556",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_560",
                         "POSITION": "attribute_558"
-                    }
+                    },
+                    "indices": "indices_556",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -11336,13 +11336,13 @@
             "name": "ID197",
             "primitives": [
                 {
-                    "indices": "indices_576",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_580",
                         "POSITION": "attribute_578"
-                    }
+                    },
+                    "indices": "indices_576",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11350,13 +11350,13 @@
             "name": "ID203",
             "primitives": [
                 {
-                    "indices": "indices_596",
-                    "material": "ID134",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_600",
                         "POSITION": "attribute_598"
-                    }
+                    },
+                    "indices": "indices_596",
+                    "material": "ID134",
+                    "primitive": 4
                 }
             ]
         },
@@ -11364,13 +11364,13 @@
             "name": "ID209",
             "primitives": [
                 {
-                    "indices": "indices_616",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_620",
                         "POSITION": "attribute_618"
-                    }
+                    },
+                    "indices": "indices_616",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -11378,13 +11378,13 @@
             "name": "ID215",
             "primitives": [
                 {
-                    "indices": "indices_636",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_640",
                         "POSITION": "attribute_638"
-                    }
+                    },
+                    "indices": "indices_636",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11392,13 +11392,13 @@
             "name": "ID221",
             "primitives": [
                 {
-                    "indices": "indices_656",
-                    "material": "ID156",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_660",
                         "POSITION": "attribute_658"
-                    }
+                    },
+                    "indices": "indices_656",
+                    "material": "ID156",
+                    "primitive": 4
                 }
             ]
         },
@@ -11406,13 +11406,13 @@
             "name": "ID227",
             "primitives": [
                 {
-                    "indices": "indices_676",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_680",
                         "POSITION": "attribute_678"
-                    }
+                    },
+                    "indices": "indices_676",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11420,13 +11420,13 @@
             "name": "ID233",
             "primitives": [
                 {
-                    "indices": "indices_696",
-                    "material": "ID172",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_700",
                         "POSITION": "attribute_698"
-                    }
+                    },
+                    "indices": "indices_696",
+                    "material": "ID172",
+                    "primitive": 4
                 }
             ]
         },
@@ -11434,13 +11434,13 @@
             "name": "ID239",
             "primitives": [
                 {
-                    "indices": "indices_716",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_720",
                         "POSITION": "attribute_718"
-                    }
+                    },
+                    "indices": "indices_716",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -11448,13 +11448,13 @@
             "name": "ID245",
             "primitives": [
                 {
-                    "indices": "indices_736",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_740",
                         "POSITION": "attribute_738"
-                    }
+                    },
+                    "indices": "indices_736",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -11462,13 +11462,13 @@
             "name": "ID251",
             "primitives": [
                 {
-                    "indices": "indices_756",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_760",
                         "POSITION": "attribute_758"
-                    }
+                    },
+                    "indices": "indices_756",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -11476,13 +11476,13 @@
             "name": "ID259",
             "primitives": [
                 {
-                    "indices": "indices_776",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_780",
                         "POSITION": "attribute_778"
-                    }
+                    },
+                    "indices": "indices_776",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11490,13 +11490,13 @@
             "name": "ID265",
             "primitives": [
                 {
-                    "indices": "indices_796",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_800",
                         "POSITION": "attribute_798"
-                    }
+                    },
+                    "indices": "indices_796",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11504,13 +11504,13 @@
             "name": "ID271",
             "primitives": [
                 {
-                    "indices": "indices_816",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_820",
                         "POSITION": "attribute_818"
-                    }
+                    },
+                    "indices": "indices_816",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11518,13 +11518,13 @@
             "name": "ID277",
             "primitives": [
                 {
-                    "indices": "indices_836",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_840",
                         "POSITION": "attribute_838"
-                    }
+                    },
+                    "indices": "indices_836",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11532,13 +11532,13 @@
             "name": "ID28",
             "primitives": [
                 {
-                    "indices": "indices_76",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_80",
                         "POSITION": "attribute_78"
-                    }
+                    },
+                    "indices": "indices_76",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -11546,13 +11546,13 @@
             "name": "ID283",
             "primitives": [
                 {
-                    "indices": "indices_856",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_860",
                         "POSITION": "attribute_858"
-                    }
+                    },
+                    "indices": "indices_856",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11560,13 +11560,13 @@
             "name": "ID289",
             "primitives": [
                 {
-                    "indices": "indices_876",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_880",
                         "POSITION": "attribute_878"
-                    }
+                    },
+                    "indices": "indices_876",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11574,13 +11574,13 @@
             "name": "ID296",
             "primitives": [
                 {
-                    "indices": "indices_896",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_900",
                         "POSITION": "attribute_898"
-                    }
+                    },
+                    "indices": "indices_896",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11588,13 +11588,13 @@
             "name": "ID3",
             "primitives": [
                 {
-                    "indices": "indices_16",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_20",
                         "POSITION": "attribute_18"
-                    }
+                    },
+                    "indices": "indices_16",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -11602,13 +11602,13 @@
             "name": "ID302",
             "primitives": [
                 {
-                    "indices": "indices_916",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_920",
                         "POSITION": "attribute_918"
-                    }
+                    },
+                    "indices": "indices_916",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -11616,13 +11616,13 @@
             "name": "ID310",
             "primitives": [
                 {
-                    "indices": "indices_936",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_940",
                         "POSITION": "attribute_938"
-                    }
+                    },
+                    "indices": "indices_936",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11630,13 +11630,13 @@
             "name": "ID316",
             "primitives": [
                 {
-                    "indices": "indices_956",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_960",
                         "POSITION": "attribute_958"
-                    }
+                    },
+                    "indices": "indices_956",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -11644,13 +11644,13 @@
             "name": "ID324",
             "primitives": [
                 {
-                    "indices": "indices_976",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_980",
                         "POSITION": "attribute_978"
-                    }
+                    },
+                    "indices": "indices_976",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11658,13 +11658,13 @@
             "name": "ID330",
             "primitives": [
                 {
-                    "indices": "indices_996",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1000",
                         "POSITION": "attribute_998"
-                    }
+                    },
+                    "indices": "indices_996",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -11672,13 +11672,13 @@
             "name": "ID336",
             "primitives": [
                 {
-                    "indices": "indices_1016",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1020",
                         "POSITION": "attribute_1018"
-                    }
+                    },
+                    "indices": "indices_1016",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -11686,13 +11686,13 @@
             "name": "ID34",
             "primitives": [
                 {
-                    "indices": "indices_96",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_100",
                         "POSITION": "attribute_98"
-                    }
+                    },
+                    "indices": "indices_96",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -11700,13 +11700,13 @@
             "name": "ID344",
             "primitives": [
                 {
-                    "indices": "indices_1036",
-                    "material": "ID346",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1040",
                         "POSITION": "attribute_1038"
-                    }
+                    },
+                    "indices": "indices_1036",
+                    "material": "ID346",
+                    "primitive": 4
                 }
             ]
         },
@@ -11714,13 +11714,13 @@
             "name": "ID352",
             "primitives": [
                 {
-                    "indices": "indices_1056",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1060",
                         "POSITION": "attribute_1058"
-                    }
+                    },
+                    "indices": "indices_1056",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11728,13 +11728,13 @@
             "name": "ID386",
             "primitives": [
                 {
-                    "indices": "indices_1082",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1086",
                         "POSITION": "attribute_1084"
-                    }
+                    },
+                    "indices": "indices_1082",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11742,13 +11742,13 @@
             "name": "ID392",
             "primitives": [
                 {
-                    "indices": "indices_1102",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1106",
                         "POSITION": "attribute_1104"
-                    }
+                    },
+                    "indices": "indices_1102",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11756,13 +11756,13 @@
             "name": "ID398",
             "primitives": [
                 {
-                    "indices": "indices_1122",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1126",
                         "POSITION": "attribute_1124"
-                    }
+                    },
+                    "indices": "indices_1122",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11770,13 +11770,13 @@
             "name": "ID40",
             "primitives": [
                 {
-                    "indices": "indices_116",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_120",
                         "POSITION": "attribute_118"
-                    }
+                    },
+                    "indices": "indices_116",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -11784,13 +11784,13 @@
             "name": "ID404",
             "primitives": [
                 {
-                    "indices": "indices_1142",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1146",
                         "POSITION": "attribute_1144"
-                    }
+                    },
+                    "indices": "indices_1142",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11798,13 +11798,13 @@
             "name": "ID410",
             "primitives": [
                 {
-                    "indices": "indices_1162",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1166",
                         "POSITION": "attribute_1164"
-                    }
+                    },
+                    "indices": "indices_1162",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11812,13 +11812,13 @@
             "name": "ID416",
             "primitives": [
                 {
-                    "indices": "indices_1182",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1186",
                         "POSITION": "attribute_1184"
-                    }
+                    },
+                    "indices": "indices_1182",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11826,13 +11826,13 @@
             "name": "ID423",
             "primitives": [
                 {
-                    "indices": "indices_1202",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1206",
                         "POSITION": "attribute_1204"
-                    }
+                    },
+                    "indices": "indices_1202",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11840,13 +11840,13 @@
             "name": "ID429",
             "primitives": [
                 {
-                    "indices": "indices_1222",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1226",
                         "POSITION": "attribute_1224"
-                    }
+                    },
+                    "indices": "indices_1222",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -11854,13 +11854,13 @@
             "name": "ID435",
             "primitives": [
                 {
-                    "indices": "indices_1242",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1246",
                         "POSITION": "attribute_1244"
-                    }
+                    },
+                    "indices": "indices_1242",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11868,13 +11868,13 @@
             "name": "ID441",
             "primitives": [
                 {
-                    "indices": "indices_1262",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1266",
                         "POSITION": "attribute_1264"
-                    }
+                    },
+                    "indices": "indices_1262",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -11882,13 +11882,13 @@
             "name": "ID447",
             "primitives": [
                 {
-                    "indices": "indices_1282",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1286",
                         "POSITION": "attribute_1284"
-                    }
+                    },
+                    "indices": "indices_1282",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11896,13 +11896,13 @@
             "name": "ID453",
             "primitives": [
                 {
-                    "indices": "indices_1302",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1306",
                         "POSITION": "attribute_1304"
-                    }
+                    },
+                    "indices": "indices_1302",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -11910,13 +11910,13 @@
             "name": "ID459",
             "primitives": [
                 {
-                    "indices": "indices_1322",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1326",
                         "POSITION": "attribute_1324"
-                    }
+                    },
+                    "indices": "indices_1322",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -11924,13 +11924,13 @@
             "name": "ID465",
             "primitives": [
                 {
-                    "indices": "indices_1342",
-                    "material": "ID346",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1346",
                         "POSITION": "attribute_1344"
-                    }
+                    },
+                    "indices": "indices_1342",
+                    "material": "ID346",
+                    "primitive": 4
                 }
             ]
         },
@@ -11938,13 +11938,13 @@
             "name": "ID47",
             "primitives": [
                 {
-                    "indices": "indices_136",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_140",
                         "POSITION": "attribute_138"
-                    }
+                    },
+                    "indices": "indices_136",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -11952,13 +11952,13 @@
             "name": "ID471",
             "primitives": [
                 {
-                    "indices": "indices_1362",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1366",
                         "POSITION": "attribute_1364"
-                    }
+                    },
+                    "indices": "indices_1362",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -11966,13 +11966,13 @@
             "name": "ID502",
             "primitives": [
                 {
-                    "indices": "indices_1388",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1392",
                         "POSITION": "attribute_1390"
-                    }
+                    },
+                    "indices": "indices_1388",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -11980,13 +11980,13 @@
             "name": "ID508",
             "primitives": [
                 {
-                    "indices": "indices_1408",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1412",
                         "POSITION": "attribute_1410"
-                    }
+                    },
+                    "indices": "indices_1408",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -11994,13 +11994,13 @@
             "name": "ID514",
             "primitives": [
                 {
-                    "indices": "indices_1428",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1432",
                         "POSITION": "attribute_1430"
-                    }
+                    },
+                    "indices": "indices_1428",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12008,13 +12008,13 @@
             "name": "ID520",
             "primitives": [
                 {
-                    "indices": "indices_1448",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1452",
                         "POSITION": "attribute_1450"
-                    }
+                    },
+                    "indices": "indices_1448",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12022,13 +12022,13 @@
             "name": "ID526",
             "primitives": [
                 {
-                    "indices": "indices_1468",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1472",
                         "POSITION": "attribute_1470"
-                    }
+                    },
+                    "indices": "indices_1468",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12036,13 +12036,13 @@
             "name": "ID53",
             "primitives": [
                 {
-                    "indices": "indices_156",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_160",
                         "POSITION": "attribute_158"
-                    }
+                    },
+                    "indices": "indices_156",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12050,13 +12050,13 @@
             "name": "ID534",
             "primitives": [
                 {
-                    "indices": "indices_1488",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1492",
                         "POSITION": "attribute_1490"
-                    }
+                    },
+                    "indices": "indices_1488",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12064,13 +12064,13 @@
             "name": "ID540",
             "primitives": [
                 {
-                    "indices": "indices_1508",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1512",
                         "POSITION": "attribute_1510"
-                    }
+                    },
+                    "indices": "indices_1508",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -12078,13 +12078,13 @@
             "name": "ID547",
             "primitives": [
                 {
-                    "indices": "indices_1528",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1532",
                         "POSITION": "attribute_1530"
-                    }
+                    },
+                    "indices": "indices_1528",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12092,13 +12092,13 @@
             "name": "ID553",
             "primitives": [
                 {
-                    "indices": "indices_1548",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1552",
                         "POSITION": "attribute_1550"
-                    }
+                    },
+                    "indices": "indices_1548",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -12106,13 +12106,13 @@
             "name": "ID559",
             "primitives": [
                 {
-                    "indices": "indices_1568",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1572",
                         "POSITION": "attribute_1570"
-                    }
+                    },
+                    "indices": "indices_1568",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12120,13 +12120,13 @@
             "name": "ID565",
             "primitives": [
                 {
-                    "indices": "indices_1588",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1592",
                         "POSITION": "attribute_1590"
-                    }
+                    },
+                    "indices": "indices_1588",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12134,13 +12134,13 @@
             "name": "ID571",
             "primitives": [
                 {
-                    "indices": "indices_1608",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1612",
                         "POSITION": "attribute_1610"
-                    }
+                    },
+                    "indices": "indices_1608",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12148,13 +12148,13 @@
             "name": "ID577",
             "primitives": [
                 {
-                    "indices": "indices_1628",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1632",
                         "POSITION": "attribute_1630"
-                    }
+                    },
+                    "indices": "indices_1628",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12162,13 +12162,13 @@
             "name": "ID583",
             "primitives": [
                 {
-                    "indices": "indices_1648",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1652",
                         "POSITION": "attribute_1650"
-                    }
+                    },
+                    "indices": "indices_1648",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -12176,13 +12176,13 @@
             "name": "ID589",
             "primitives": [
                 {
-                    "indices": "indices_1668",
-                    "material": "ID591",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1672",
                         "POSITION": "attribute_1670"
-                    }
+                    },
+                    "indices": "indices_1668",
+                    "material": "ID591",
+                    "primitive": 4
                 }
             ]
         },
@@ -12190,13 +12190,13 @@
             "name": "ID59",
             "primitives": [
                 {
-                    "indices": "indices_176",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_180",
                         "POSITION": "attribute_178"
-                    }
+                    },
+                    "indices": "indices_176",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -12204,13 +12204,13 @@
             "name": "ID597",
             "primitives": [
                 {
-                    "indices": "indices_1688",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1692",
                         "POSITION": "attribute_1690"
-                    }
+                    },
+                    "indices": "indices_1688",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -12218,13 +12218,13 @@
             "name": "ID603",
             "primitives": [
                 {
-                    "indices": "indices_1708",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1712",
                         "POSITION": "attribute_1710"
-                    }
+                    },
+                    "indices": "indices_1708",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12232,13 +12232,13 @@
             "name": "ID609",
             "primitives": [
                 {
-                    "indices": "indices_1728",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1732",
                         "POSITION": "attribute_1730"
-                    }
+                    },
+                    "indices": "indices_1728",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12246,13 +12246,13 @@
             "name": "ID615",
             "primitives": [
                 {
-                    "indices": "indices_1748",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1752",
                         "POSITION": "attribute_1750"
-                    }
+                    },
+                    "indices": "indices_1748",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -12260,13 +12260,13 @@
             "name": "ID621",
             "primitives": [
                 {
-                    "indices": "indices_1768",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1772",
                         "POSITION": "attribute_1770"
-                    }
+                    },
+                    "indices": "indices_1768",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12274,13 +12274,13 @@
             "name": "ID627",
             "primitives": [
                 {
-                    "indices": "indices_1788",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1792",
                         "POSITION": "attribute_1790"
-                    }
+                    },
+                    "indices": "indices_1788",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -12288,13 +12288,13 @@
             "name": "ID633",
             "primitives": [
                 {
-                    "indices": "indices_1808",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1812",
                         "POSITION": "attribute_1810"
-                    }
+                    },
+                    "indices": "indices_1808",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -12302,13 +12302,13 @@
             "name": "ID639",
             "primitives": [
                 {
-                    "indices": "indices_1828",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1832",
                         "POSITION": "attribute_1830"
-                    }
+                    },
+                    "indices": "indices_1828",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12316,13 +12316,13 @@
             "name": "ID645",
             "primitives": [
                 {
-                    "indices": "indices_1848",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1852",
                         "POSITION": "attribute_1850"
-                    }
+                    },
+                    "indices": "indices_1848",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12330,13 +12330,13 @@
             "name": "ID651",
             "primitives": [
                 {
-                    "indices": "indices_1868",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1872",
                         "POSITION": "attribute_1870"
-                    }
+                    },
+                    "indices": "indices_1868",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12344,22 +12344,22 @@
             "name": "ID657",
             "primitives": [
                 {
+                    "attributes": {
+                        "NORMAL": "attribute_1907",
+                        "POSITION": "attribute_1905"
+                    },
                     "indices": "indices_1900",
                     "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
-                        "NORMAL": "attribute_1907",
-                        "POSITION": "attribute_1905"
-                    }
+                    "primitive": 4
                 },
                 {
-                    "indices": "indices_1903",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1907",
                         "POSITION": "attribute_1905"
-                    }
+                    },
+                    "indices": "indices_1903",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12367,13 +12367,13 @@
             "name": "ID66",
             "primitives": [
                 {
-                    "indices": "indices_196",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_200",
                         "POSITION": "attribute_198"
-                    }
+                    },
+                    "indices": "indices_196",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -12381,13 +12381,13 @@
             "name": "ID663",
             "primitives": [
                 {
-                    "indices": "indices_1923",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1927",
                         "POSITION": "attribute_1925"
-                    }
+                    },
+                    "indices": "indices_1923",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -12395,13 +12395,13 @@
             "name": "ID669",
             "primitives": [
                 {
-                    "indices": "indices_1943",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1947",
                         "POSITION": "attribute_1945"
-                    }
+                    },
+                    "indices": "indices_1943",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12409,22 +12409,22 @@
             "name": "ID675",
             "primitives": [
                 {
+                    "attributes": {
+                        "NORMAL": "attribute_1982",
+                        "POSITION": "attribute_1980"
+                    },
                     "indices": "indices_1975",
                     "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
-                        "NORMAL": "attribute_1982",
-                        "POSITION": "attribute_1980"
-                    }
+                    "primitive": 4
                 },
                 {
-                    "indices": "indices_1978",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_1982",
                         "POSITION": "attribute_1980"
-                    }
+                    },
+                    "indices": "indices_1978",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12432,13 +12432,13 @@
             "name": "ID681",
             "primitives": [
                 {
-                    "indices": "indices_1998",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2002",
                         "POSITION": "attribute_2000"
-                    }
+                    },
+                    "indices": "indices_1998",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12446,13 +12446,13 @@
             "name": "ID687",
             "primitives": [
                 {
-                    "indices": "indices_2018",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2022",
                         "POSITION": "attribute_2020"
-                    }
+                    },
+                    "indices": "indices_2018",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12460,13 +12460,13 @@
             "name": "ID693",
             "primitives": [
                 {
-                    "indices": "indices_2038",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2042",
                         "POSITION": "attribute_2040"
-                    }
+                    },
+                    "indices": "indices_2038",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -12474,13 +12474,13 @@
             "name": "ID699",
             "primitives": [
                 {
-                    "indices": "indices_2058",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2062",
                         "POSITION": "attribute_2060"
-                    }
+                    },
+                    "indices": "indices_2058",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12488,13 +12488,13 @@
             "name": "ID705",
             "primitives": [
                 {
-                    "indices": "indices_2078",
-                    "material": "ID707",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2082",
                         "POSITION": "attribute_2080"
-                    }
+                    },
+                    "indices": "indices_2078",
+                    "material": "ID707",
+                    "primitive": 4
                 }
             ]
         },
@@ -12502,13 +12502,13 @@
             "name": "ID713",
             "primitives": [
                 {
-                    "indices": "indices_2098",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2102",
                         "POSITION": "attribute_2100"
-                    }
+                    },
+                    "indices": "indices_2098",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12516,13 +12516,13 @@
             "name": "ID719",
             "primitives": [
                 {
-                    "indices": "indices_2118",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2122",
                         "POSITION": "attribute_2120"
-                    }
+                    },
+                    "indices": "indices_2118",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12530,13 +12530,13 @@
             "name": "ID72",
             "primitives": [
                 {
-                    "indices": "indices_216",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_220",
                         "POSITION": "attribute_218"
-                    }
+                    },
+                    "indices": "indices_216",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12544,13 +12544,13 @@
             "name": "ID725",
             "primitives": [
                 {
-                    "indices": "indices_2138",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2142",
                         "POSITION": "attribute_2140"
-                    }
+                    },
+                    "indices": "indices_2138",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12558,13 +12558,13 @@
             "name": "ID731",
             "primitives": [
                 {
-                    "indices": "indices_2158",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2162",
                         "POSITION": "attribute_2160"
-                    }
+                    },
+                    "indices": "indices_2158",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12572,13 +12572,13 @@
             "name": "ID737",
             "primitives": [
                 {
-                    "indices": "indices_2178",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2182",
                         "POSITION": "attribute_2180"
-                    }
+                    },
+                    "indices": "indices_2178",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12586,13 +12586,13 @@
             "name": "ID743",
             "primitives": [
                 {
-                    "indices": "indices_2198",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2202",
                         "POSITION": "attribute_2200"
-                    }
+                    },
+                    "indices": "indices_2198",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12600,13 +12600,13 @@
             "name": "ID749",
             "primitives": [
                 {
-                    "indices": "indices_2218",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2222",
                         "POSITION": "attribute_2220"
-                    }
+                    },
+                    "indices": "indices_2218",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12614,13 +12614,13 @@
             "name": "ID755",
             "primitives": [
                 {
-                    "indices": "indices_2238",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2242",
                         "POSITION": "attribute_2240"
-                    }
+                    },
+                    "indices": "indices_2238",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12628,13 +12628,13 @@
             "name": "ID761",
             "primitives": [
                 {
-                    "indices": "indices_2258",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2262",
                         "POSITION": "attribute_2260"
-                    }
+                    },
+                    "indices": "indices_2258",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -12642,13 +12642,13 @@
             "name": "ID767",
             "primitives": [
                 {
-                    "indices": "indices_2278",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2282",
                         "POSITION": "attribute_2280"
-                    }
+                    },
+                    "indices": "indices_2278",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12656,13 +12656,13 @@
             "name": "ID773",
             "primitives": [
                 {
-                    "indices": "indices_2298",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2302",
                         "POSITION": "attribute_2300"
-                    }
+                    },
+                    "indices": "indices_2298",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12670,13 +12670,13 @@
             "name": "ID779",
             "primitives": [
                 {
-                    "indices": "indices_2318",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2322",
                         "POSITION": "attribute_2320"
-                    }
+                    },
+                    "indices": "indices_2318",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12684,13 +12684,13 @@
             "name": "ID78",
             "primitives": [
                 {
-                    "indices": "indices_236",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_240",
                         "POSITION": "attribute_238"
-                    }
+                    },
+                    "indices": "indices_236",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -12698,13 +12698,13 @@
             "name": "ID785",
             "primitives": [
                 {
-                    "indices": "indices_2338",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2342",
                         "POSITION": "attribute_2340"
-                    }
+                    },
+                    "indices": "indices_2338",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -12712,13 +12712,13 @@
             "name": "ID791",
             "primitives": [
                 {
-                    "indices": "indices_2358",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2362",
                         "POSITION": "attribute_2360"
-                    }
+                    },
+                    "indices": "indices_2358",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12726,13 +12726,13 @@
             "name": "ID797",
             "primitives": [
                 {
-                    "indices": "indices_2378",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2382",
                         "POSITION": "attribute_2380"
-                    }
+                    },
+                    "indices": "indices_2378",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -12740,13 +12740,13 @@
             "name": "ID803",
             "primitives": [
                 {
-                    "indices": "indices_2398",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2402",
                         "POSITION": "attribute_2400"
-                    }
+                    },
+                    "indices": "indices_2398",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -12754,13 +12754,13 @@
             "name": "ID809",
             "primitives": [
                 {
-                    "indices": "indices_2418",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2422",
                         "POSITION": "attribute_2420"
-                    }
+                    },
+                    "indices": "indices_2418",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12768,13 +12768,13 @@
             "name": "ID815",
             "primitives": [
                 {
-                    "indices": "indices_2438",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2442",
                         "POSITION": "attribute_2440"
-                    }
+                    },
+                    "indices": "indices_2438",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12782,13 +12782,13 @@
             "name": "ID821",
             "primitives": [
                 {
-                    "indices": "indices_2458",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2462",
                         "POSITION": "attribute_2460"
-                    }
+                    },
+                    "indices": "indices_2458",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -12796,13 +12796,13 @@
             "name": "ID827",
             "primitives": [
                 {
-                    "indices": "indices_2478",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2482",
                         "POSITION": "attribute_2480"
-                    }
+                    },
+                    "indices": "indices_2478",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12810,13 +12810,13 @@
             "name": "ID833",
             "primitives": [
                 {
-                    "indices": "indices_2498",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2502",
                         "POSITION": "attribute_2500"
-                    }
+                    },
+                    "indices": "indices_2498",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12824,13 +12824,13 @@
             "name": "ID839",
             "primitives": [
                 {
-                    "indices": "indices_2518",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2522",
                         "POSITION": "attribute_2520"
-                    }
+                    },
+                    "indices": "indices_2518",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12838,13 +12838,13 @@
             "name": "ID845",
             "primitives": [
                 {
-                    "indices": "indices_2538",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2542",
                         "POSITION": "attribute_2540"
-                    }
+                    },
+                    "indices": "indices_2538",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -12852,13 +12852,13 @@
             "name": "ID851",
             "primitives": [
                 {
-                    "indices": "indices_2558",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2562",
                         "POSITION": "attribute_2560"
-                    }
+                    },
+                    "indices": "indices_2558",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12866,13 +12866,13 @@
             "name": "ID857",
             "primitives": [
                 {
-                    "indices": "indices_2578",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2582",
                         "POSITION": "attribute_2580"
-                    }
+                    },
+                    "indices": "indices_2578",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -12880,13 +12880,13 @@
             "name": "ID86",
             "primitives": [
                 {
-                    "indices": "indices_256",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_260",
                         "POSITION": "attribute_258"
-                    }
+                    },
+                    "indices": "indices_256",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12894,13 +12894,13 @@
             "name": "ID863",
             "primitives": [
                 {
-                    "indices": "indices_2598",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2602",
                         "POSITION": "attribute_2600"
-                    }
+                    },
+                    "indices": "indices_2598",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -12908,13 +12908,13 @@
             "name": "ID869",
             "primitives": [
                 {
-                    "indices": "indices_2618",
-                    "material": "ID707",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2622",
                         "POSITION": "attribute_2620"
-                    }
+                    },
+                    "indices": "indices_2618",
+                    "material": "ID707",
+                    "primitive": 4
                 }
             ]
         },
@@ -12922,13 +12922,13 @@
             "name": "ID875",
             "primitives": [
                 {
-                    "indices": "indices_2638",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2642",
                         "POSITION": "attribute_2640"
-                    }
+                    },
+                    "indices": "indices_2638",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -12936,13 +12936,13 @@
             "name": "ID881",
             "primitives": [
                 {
-                    "indices": "indices_2658",
-                    "material": "ID346",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2662",
                         "POSITION": "attribute_2660"
-                    }
+                    },
+                    "indices": "indices_2658",
+                    "material": "ID346",
+                    "primitive": 4
                 }
             ]
         },
@@ -12950,13 +12950,13 @@
             "name": "ID887",
             "primitives": [
                 {
-                    "indices": "indices_2678",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2682",
                         "POSITION": "attribute_2680"
-                    }
+                    },
+                    "indices": "indices_2678",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -12964,13 +12964,13 @@
             "name": "ID893",
             "primitives": [
                 {
-                    "indices": "indices_2698",
-                    "material": "ID13",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2702",
                         "POSITION": "attribute_2700"
-                    }
+                    },
+                    "indices": "indices_2698",
+                    "material": "ID13",
+                    "primitive": 4
                 }
             ]
         },
@@ -12978,13 +12978,13 @@
             "name": "ID899",
             "primitives": [
                 {
-                    "indices": "indices_2718",
-                    "material": "ID528",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2722",
                         "POSITION": "attribute_2720"
-                    }
+                    },
+                    "indices": "indices_2718",
+                    "material": "ID528",
+                    "primitive": 4
                 }
             ]
         },
@@ -12992,13 +12992,13 @@
             "name": "ID905",
             "primitives": [
                 {
-                    "indices": "indices_2738",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2742",
                         "POSITION": "attribute_2740"
-                    }
+                    },
+                    "indices": "indices_2738",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -13006,13 +13006,13 @@
             "name": "ID911",
             "primitives": [
                 {
-                    "indices": "indices_2758",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2762",
                         "POSITION": "attribute_2760"
-                    }
+                    },
+                    "indices": "indices_2758",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -13020,13 +13020,13 @@
             "name": "ID917",
             "primitives": [
                 {
-                    "indices": "indices_2778",
-                    "material": "ID318",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2782",
                         "POSITION": "attribute_2780"
-                    }
+                    },
+                    "indices": "indices_2778",
+                    "material": "ID318",
+                    "primitive": 4
                 }
             ]
         },
@@ -13034,13 +13034,13 @@
             "name": "ID923",
             "primitives": [
                 {
-                    "indices": "indices_2798",
-                    "material": "ID304",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2802",
                         "POSITION": "attribute_2800"
-                    }
+                    },
+                    "indices": "indices_2798",
+                    "material": "ID304",
+                    "primitive": 4
                 }
             ]
         },
@@ -13048,13 +13048,13 @@
             "name": "ID929",
             "primitives": [
                 {
-                    "indices": "indices_2818",
-                    "material": "ID142",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2822",
                         "POSITION": "attribute_2820"
-                    }
+                    },
+                    "indices": "indices_2818",
+                    "material": "ID142",
+                    "primitive": 4
                 }
             ]
         },
@@ -13062,13 +13062,13 @@
             "name": "ID935",
             "primitives": [
                 {
-                    "indices": "indices_2838",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2842",
                         "POSITION": "attribute_2840"
-                    }
+                    },
+                    "indices": "indices_2838",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -13076,13 +13076,13 @@
             "name": "ID94",
             "primitives": [
                 {
-                    "indices": "indices_276",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_280",
                         "POSITION": "attribute_278"
-                    }
+                    },
+                    "indices": "indices_276",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -13090,13 +13090,13 @@
             "name": "ID941",
             "primitives": [
                 {
-                    "indices": "indices_2858",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2862",
                         "POSITION": "attribute_2860"
-                    }
+                    },
+                    "indices": "indices_2858",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -13104,13 +13104,13 @@
             "name": "ID947",
             "primitives": [
                 {
-                    "indices": "indices_2878",
-                    "material": "ID591",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2882",
                         "POSITION": "attribute_2880"
-                    }
+                    },
+                    "indices": "indices_2878",
+                    "material": "ID591",
+                    "primitive": 4
                 }
             ]
         },
@@ -13118,13 +13118,13 @@
             "name": "ID953",
             "primitives": [
                 {
-                    "indices": "indices_2898",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2902",
                         "POSITION": "attribute_2900"
-                    }
+                    },
+                    "indices": "indices_2898",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -13132,13 +13132,13 @@
             "name": "ID959",
             "primitives": [
                 {
-                    "indices": "indices_2918",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2922",
                         "POSITION": "attribute_2920"
-                    }
+                    },
+                    "indices": "indices_2918",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -13146,13 +13146,13 @@
             "name": "ID965",
             "primitives": [
                 {
-                    "indices": "indices_2938",
-                    "material": "ID338",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2942",
                         "POSITION": "attribute_2940"
-                    }
+                    },
+                    "indices": "indices_2938",
+                    "material": "ID338",
+                    "primitive": 4
                 }
             ]
         },
@@ -13160,13 +13160,13 @@
             "name": "ID971",
             "primitives": [
                 {
-                    "indices": "indices_2958",
-                    "material": "ID5",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2962",
                         "POSITION": "attribute_2960"
-                    }
+                    },
+                    "indices": "indices_2958",
+                    "material": "ID5",
+                    "primitive": 4
                 }
             ]
         },
@@ -13174,13 +13174,13 @@
             "name": "ID977",
             "primitives": [
                 {
-                    "indices": "indices_2978",
-                    "material": "ID164",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_2982",
                         "POSITION": "attribute_2980"
-                    }
+                    },
+                    "indices": "indices_2978",
+                    "material": "ID164",
+                    "primitive": 4
                 }
             ]
         },
@@ -13188,13 +13188,13 @@
             "name": "ID983",
             "primitives": [
                 {
-                    "indices": "indices_2998",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3002",
                         "POSITION": "attribute_3000"
-                    }
+                    },
+                    "indices": "indices_2998",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -13202,13 +13202,13 @@
             "name": "ID989",
             "primitives": [
                 {
-                    "indices": "indices_3018",
-                    "material": "ID87",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3022",
                         "POSITION": "attribute_3020"
-                    }
+                    },
+                    "indices": "indices_3018",
+                    "material": "ID87",
+                    "primitive": 4
                 }
             ]
         },
@@ -13216,13 +13216,13 @@
             "name": "ID995",
             "primitives": [
                 {
-                    "indices": "indices_3038",
-                    "material": "ID997",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_3042",
                         "POSITION": "attribute_3040"
-                    }
+                    },
+                    "indices": "indices_3038",
+                    "material": "ID997",
+                    "primitive": 4
                 }
             ]
         }
@@ -13955,12 +13955,16 @@
                 "diffuse": {
                     "type": 35666
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -13969,10 +13973,6 @@
                 },
                 "projectionMatrix": {
                     "semantic": "PROJECTION",
-                    "type": 35676
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
                     "type": 35676
                 }
             },
@@ -13987,9 +13987,9 @@
                             "lightingModel": "Lambert",
                             "parameters": [
                                 "diffuse",
+                                "modelViewMatrix",
                                 "normalMatrix",
-                                "projectionMatrix",
-                                "worldViewMatrix"
+                                "projectionMatrix"
                             ]
                         },
                         "type": "COLLADA-1.4.1/commonProfile"
@@ -14002,9 +14002,9 @@
                         "program": "program_0",
                         "uniforms": {
                             "u_diffuse": "diffuse",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_projectionMatrix": "projectionMatrix"
                         }
                     },
                     "states": {
@@ -14021,12 +14021,16 @@
                 "diffuse": {
                     "type": 35666
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -14039,10 +14043,6 @@
                 },
                 "transparency": {
                     "type": 5126
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
-                    "type": 35676
                 }
             },
             "pass": "defaultPass",
@@ -14056,10 +14056,10 @@
                             "lightingModel": "Lambert",
                             "parameters": [
                                 "diffuse",
+                                "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
-                                "transparency",
-                                "worldViewMatrix"
+                                "transparency"
                             ]
                         },
                         "type": "COLLADA-1.4.1/commonProfile"
@@ -14072,10 +14072,10 @@
                         "program": "program_1",
                         "uniforms": {
                             "u_diffuse": "diffuse",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
-                            "u_transparency": "transparency",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_transparency": "transparency"
                         }
                     },
                     "states": {

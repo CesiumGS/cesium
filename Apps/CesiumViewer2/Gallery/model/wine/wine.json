@@ -1,7 +1,7 @@
 {
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@da4029e4fb0b7b7036551e2548de1afc50965caf"
+        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
     },
     "attributes": {
         "attribute_120": {
@@ -636,13 +636,13 @@
             "buffer": "wine",
             "byteLength": 284064,
             "byteOffset": 0,
-            "target": "ARRAY_BUFFER"
+            "target": 34962
         },
         "bufferView_409": {
             "buffer": "wine",
             "byteLength": 44940,
             "byteOffset": 284064,
-            "target": "ELEMENT_ARRAY_BUFFER"
+            "target": 34963
         },
         "bufferView_410": {
             "buffer": "wine",
@@ -659,10 +659,12 @@
     },
     "cameras": {
         "camera_0": {
-            "projection": "perspective",
-            "yfov": 45,
-            "zfar": 3162.76,
-            "znear": 12.651
+            "perspective": {
+                "yfov": 45,
+                "zfar": 3162.76,
+                "znear": 12.651
+            },
+            "type": "perspective"
         }
     },
     "images": {
@@ -867,14 +869,14 @@
             "name": "geometry16",
             "primitives": [
                 {
-                    "indices": "indices_24",
-                    "material": "ID6",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_28",
                         "POSITION": "attribute_26",
                         "TEXCOORD_0": "attribute_30"
-                    }
+                    },
+                    "indices": "indices_24",
+                    "material": "ID6",
+                    "primitive": 4
                 }
             ]
         },
@@ -882,13 +884,13 @@
             "name": "geometry24",
             "primitives": [
                 {
-                    "indices": "indices_46",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_50",
                         "POSITION": "attribute_48"
-                    }
+                    },
+                    "indices": "indices_46",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -896,13 +898,13 @@
             "name": "geometry29",
             "primitives": [
                 {
-                    "indices": "indices_66",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_70",
                         "POSITION": "attribute_68"
-                    }
+                    },
+                    "indices": "indices_66",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -910,14 +912,14 @@
             "name": "geometry35",
             "primitives": [
                 {
-                    "indices": "indices_91",
-                    "material": "ID6",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_95",
                         "POSITION": "attribute_93",
                         "TEXCOORD_0": "attribute_97"
-                    }
+                    },
+                    "indices": "indices_91",
+                    "material": "ID6",
+                    "primitive": 4
                 }
             ]
         },
@@ -925,14 +927,14 @@
             "name": "geometry40",
             "primitives": [
                 {
-                    "indices": "indices_118",
-                    "material": "ID6",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_122",
                         "POSITION": "attribute_120",
                         "TEXCOORD_0": "attribute_124"
-                    }
+                    },
+                    "indices": "indices_118",
+                    "material": "ID6",
+                    "primitive": 4
                 }
             ]
         },
@@ -940,14 +942,14 @@
             "name": "geometry45",
             "primitives": [
                 {
-                    "indices": "indices_145",
-                    "material": "ID6",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_149",
                         "POSITION": "attribute_147",
                         "TEXCOORD_0": "attribute_151"
-                    }
+                    },
+                    "indices": "indices_145",
+                    "material": "ID6",
+                    "primitive": 4
                 }
             ]
         },
@@ -955,14 +957,14 @@
             "name": "geometry51",
             "primitives": [
                 {
-                    "indices": "indices_172",
-                    "material": "ID77",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_176",
                         "POSITION": "attribute_174",
                         "TEXCOORD_0": "attribute_178"
-                    }
+                    },
+                    "indices": "indices_172",
+                    "material": "ID77",
+                    "primitive": 4
                 }
             ]
         },
@@ -970,24 +972,24 @@
             "name": "geometry58",
             "primitives": [
                 {
+                    "attributes": {
+                        "NORMAL": "attribute_223",
+                        "POSITION": "attribute_221",
+                        "TEXCOORD_0": "attribute_225"
+                    },
                     "indices": "indices_216",
                     "material": "ID89",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
-                        "NORMAL": "attribute_223",
-                        "POSITION": "attribute_221",
-                        "TEXCOORD_0": "attribute_225"
-                    }
+                    "primitive": 4
                 },
                 {
-                    "indices": "indices_219",
-                    "material": "ID77",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_223",
                         "POSITION": "attribute_221",
                         "TEXCOORD_0": "attribute_225"
-                    }
+                    },
+                    "indices": "indices_219",
+                    "material": "ID77",
+                    "primitive": 4
                 }
             ]
         },
@@ -995,14 +997,14 @@
             "name": "geometry64",
             "primitives": [
                 {
-                    "indices": "indices_246",
-                    "material": "ID6",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_250",
                         "POSITION": "attribute_248",
                         "TEXCOORD_0": "attribute_252"
-                    }
+                    },
+                    "indices": "indices_246",
+                    "material": "ID6",
+                    "primitive": 4
                 }
             ]
         },
@@ -1010,13 +1012,13 @@
             "name": "geometry71",
             "primitives": [
                 {
-                    "indices": "indices_268",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_272",
                         "POSITION": "attribute_270"
-                    }
+                    },
+                    "indices": "indices_268",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -1024,14 +1026,14 @@
             "name": "geometry75",
             "primitives": [
                 {
-                    "indices": "indices_293",
-                    "material": "ID139",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_297",
                         "POSITION": "attribute_295",
                         "TEXCOORD_0": "attribute_299"
-                    }
+                    },
+                    "indices": "indices_293",
+                    "material": "ID139",
+                    "primitive": 4
                 }
             ]
         },
@@ -1039,13 +1041,13 @@
             "name": "geometry85",
             "primitives": [
                 {
-                    "indices": "indices_315",
-                    "material": "ID21",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_319",
                         "POSITION": "attribute_317"
-                    }
+                    },
+                    "indices": "indices_315",
+                    "material": "ID21",
+                    "primitive": 4
                 }
             ]
         },
@@ -1053,14 +1055,14 @@
             "name": "geometry89",
             "primitives": [
                 {
-                    "indices": "indices_340",
-                    "material": "ID77",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_344",
                         "POSITION": "attribute_342",
                         "TEXCOORD_0": "attribute_346"
-                    }
+                    },
+                    "indices": "indices_340",
+                    "material": "ID77",
+                    "primitive": 4
                 }
             ]
         },
@@ -1068,24 +1070,24 @@
             "name": "geometry98",
             "primitives": [
                 {
+                    "attributes": {
+                        "NORMAL": "attribute_391",
+                        "POSITION": "attribute_389",
+                        "TEXCOORD_0": "attribute_393"
+                    },
                     "indices": "indices_384",
                     "material": "ID89",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
-                        "NORMAL": "attribute_391",
-                        "POSITION": "attribute_389",
-                        "TEXCOORD_0": "attribute_393"
-                    }
+                    "primitive": 4
                 },
                 {
-                    "indices": "indices_387",
-                    "material": "ID77",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_391",
                         "POSITION": "attribute_389",
                         "TEXCOORD_0": "attribute_393"
-                    }
+                    },
+                    "indices": "indices_387",
+                    "material": "ID77",
+                    "primitive": 4
                 }
             ]
         }
@@ -11641,12 +11643,16 @@
                 "diffuse": {
                     "type": 35678
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -11660,10 +11666,6 @@
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": 35664
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
-                    "type": 35676
                 }
             },
             "pass": "defaultPass",
@@ -11678,9 +11680,9 @@
                             "parameters": [
                                 "ambient",
                                 "diffuse",
+                                "modelViewMatrix",
                                 "normalMatrix",
-                                "projectionMatrix",
-                                "worldViewMatrix"
+                                "projectionMatrix"
                             ],
                             "texcoordBindings": {
                                 "diffuse": "TEXCOORD_0"
@@ -11698,9 +11700,9 @@
                         "uniforms": {
                             "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_projectionMatrix": "projectionMatrix"
                         }
                     },
                     "states": {
@@ -11720,12 +11722,16 @@
                 "diffuse": {
                     "type": 35666
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -11738,10 +11744,6 @@
                 },
                 "transparency": {
                     "type": 5126
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
-                    "type": 35676
                 }
             },
             "pass": "defaultPass",
@@ -11756,10 +11758,10 @@
                             "parameters": [
                                 "ambient",
                                 "diffuse",
+                                "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
-                                "transparency",
-                                "worldViewMatrix"
+                                "transparency"
                             ]
                         },
                         "type": "COLLADA-1.4.1/commonProfile"
@@ -11773,10 +11775,10 @@
                         "uniforms": {
                             "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
-                            "u_transparency": "transparency",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_transparency": "transparency"
                         }
                     },
                     "states": {
@@ -11801,12 +11803,16 @@
                 "diffuse": {
                     "type": 35666
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -11815,10 +11821,6 @@
                 },
                 "projectionMatrix": {
                     "semantic": "PROJECTION",
-                    "type": 35676
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
                     "type": 35676
                 }
             },
@@ -11834,9 +11836,9 @@
                             "parameters": [
                                 "ambient",
                                 "diffuse",
+                                "modelViewMatrix",
                                 "normalMatrix",
-                                "projectionMatrix",
-                                "worldViewMatrix"
+                                "projectionMatrix"
                             ]
                         },
                         "type": "COLLADA-1.4.1/commonProfile"
@@ -11850,9 +11852,9 @@
                         "uniforms": {
                             "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_projectionMatrix": "projectionMatrix"
                         }
                     },
                     "states": {

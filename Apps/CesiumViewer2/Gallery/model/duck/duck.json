@@ -1,7 +1,7 @@
 {
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@da4029e4fb0b7b7036551e2548de1afc50965caf"
+        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
     },
     "attributes": {
         "attribute_23": {
@@ -59,13 +59,13 @@
             "buffer": "duck",
             "byteLength": 76768,
             "byteOffset": 0,
-            "target": "ARRAY_BUFFER"
+            "target": 34962
         },
         "bufferView_30": {
             "buffer": "duck",
             "byteLength": 25272,
             "byteOffset": 76768,
-            "target": "ELEMENT_ARRAY_BUFFER"
+            "target": 34963
         },
         "bufferView_31": {
             "buffer": "duck",
@@ -82,11 +82,13 @@
     },
     "cameras": {
         "camera_0": {
-            "aspect_ratio": 1.5,
-            "projection": "perspective",
-            "yfov": 37.8492,
-            "zfar": 10000,
-            "znear": 1
+            "perspective": {
+                "aspect_ratio": 1.5,
+                "yfov": 37.8492,
+                "zfar": 10000,
+                "znear": 1
+            },
+            "type": "perspective"
         }
     },
     "images": {
@@ -111,7 +113,6 @@
                     1
                 ]
             },
-            "id": "directionalLightShape1-lib",
             "type": "directional"
         }
     },
@@ -150,14 +151,14 @@
             "name": "LOD3spShape",
             "primitives": [
                 {
-                    "indices": "indices_21",
-                    "material": "blinn3-fx",
-                    "primitive": "TRIANGLES",
-                    "semantics": {
+                    "attributes": {
                         "NORMAL": "attribute_25",
                         "POSITION": "attribute_23",
                         "TEXCOORD_0": "attribute_27"
-                    }
+                    },
+                    "indices": "indices_21",
+                    "material": "blinn3-fx",
+                    "primitive": 4
                 }
             ]
         }
@@ -213,9 +214,7 @@
         },
         "directionalLight1": {
             "children": [],
-            "lights": [
-                "directionalLightShape1-lib"
-            ],
+            "light": "directionalLightShape1-lib",
             "matrix": [
                 -0.954692,
                 0.218143,
@@ -295,12 +294,16 @@
                     "source": "directionalLight1",
                     "type": 35676
                 },
+                "modelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": 35665
                 },
                 "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
                     "type": 35675
                 },
                 "position": {
@@ -320,10 +323,6 @@
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": 35664
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
-                    "type": 35676
                 }
             },
             "pass": "defaultPass",
@@ -341,11 +340,11 @@
                                 "emission",
                                 "light0Color",
                                 "light0Transform",
+                                "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
                                 "shininess",
-                                "specular",
-                                "worldViewMatrix"
+                                "specular"
                             ],
                             "texcoordBindings": {
                                 "diffuse": "TEXCOORD_0"
@@ -366,11 +365,11 @@
                             "u_emission": "emission",
                             "u_light0Color": "light0Color",
                             "u_light0Transform": "light0Transform",
+                            "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
                             "u_shininess": "shininess",
-                            "u_specular": "specular",
-                            "u_worldViewMatrix": "worldViewMatrix"
+                            "u_specular": "specular"
                         }
                     },
                     "states": {
