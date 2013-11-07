@@ -913,7 +913,7 @@ define([
             if (!this.allow3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphereCV = BoundingSphere.projectTo2D(this._boundingSphereWC, projection, this._boundingSphereCV);
                 this._boundingSphere2D = BoundingSphere.clone(this._boundingSphereCV, this._boundingSphere2D);
-                this._boundingSphere2D.x = 0.0;
+                this._boundingSphere2D.center.x = 0.0;
             }
         }
 
