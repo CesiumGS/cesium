@@ -38,8 +38,9 @@ Beta Releases
            
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
 * Added `LinearSpline` and `QuaternionSpline`.
+* Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
 * Added `Math.nextPowerOfTwo`.
-
+           
 ### b22 - 2013-11-01
 
 * Breaking changes:
