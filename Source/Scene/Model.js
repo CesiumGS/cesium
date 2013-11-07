@@ -708,10 +708,10 @@ define([
 
                          var semanticToAttributeLocations = getSemanticToAttributeLocations(model, primitive);
                          var attrs = [];
-                         var semantics = primitive.semantics;
-                         for (name in semantics) {
-                             if (semantics.hasOwnProperty(name)) {
-                                 var a = attributes[semantics[name]];
+                         var primitiveAttributes = primitive.attributes;
+                         for (name in primitiveAttributes) {
+                             if (primitiveAttributes.hasOwnProperty(name)) {
+                                 var a = attributes[primitiveAttributes[name]];
 
                                  var type = ModelTypes[a.type];
                                  attrs.push({
@@ -770,7 +770,7 @@ define([
 
     var gltfSemanticUniforms = {
 // TODO: All semantics
-        WORLD : function(uniformState) {
+        MODEL : function(uniformState) {
             return function() {
                 return uniformState.getModel();
             };
@@ -785,7 +785,7 @@ define([
                 return uniformState.getProjection();
             };
         },
-        WORLDVIEW : function(uniformState) {
+        MODELVIEW : function(uniformState) {
             return function() {
                 return uniformState.getModelView();
             };
@@ -795,12 +795,12 @@ define([
                 return uniformState.getViewProjection();
             };
         },
-        WORLDVIEWPROJECTION : function(uniformState) {
+        MODELVIEWPROJECTION : function(uniformState) {
             return function() {
                 return uniformState.getModelViewProjection();
             };
         },
-        WORLDINVERSE : function(uniformState) {
+        MODELINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseModel();
             };
@@ -815,7 +815,7 @@ define([
                 return uniformState.getInverseProjection();
             };
         },
-        WORLDVIEWINVERSE : function(uniformState) {
+        MODELVIEWINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseModelView();
             };
@@ -825,7 +825,7 @@ define([
                 return uniformState.getInverseViewProjection();
             };
         },
-        WORLDVIEWINVERSETRANSPOSE : function(uniformState) {
+        MODELVIEWINVERSETRANSPOSE : function(uniformState) {
             return function() {
                 return uniformState.getNormal();
             };
@@ -1064,15 +1064,13 @@ define([
                 var instanceProgram = pass.instanceProgram;
 
                 var boundingSphere;
-                var positionAttribute = primitive.semantics.POSITION;
+                var positionAttribute = primitive.attributes.POSITION;
                 if (defined(positionAttribute)) {
                     var a = attributes[positionAttribute];
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
-                // TODO: Remove workaround: https://github.com/KhronosGroup/glTF/issues/170
-                // var primitiveType = gltfPrimitiveType[primitive.primitive];
-                var primitiveType = PrimitiveType[primitive.primitive];
+                var primitiveType = gltfPrimitiveType[primitive.primitive];
                 var vertexArray = primitive.czm.vertexArray;
                 var count = ix.count;
                 var offset = (ix.byteOffset / gltfIndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
