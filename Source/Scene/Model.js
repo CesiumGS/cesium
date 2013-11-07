@@ -769,7 +769,7 @@ define([
     }
 
     var gltfSemanticUniforms = {
-// TODO: All semantics
+// TODO: All semantics from https://github.com/KhronosGroup/glTF/issues/83
         MODEL : function(uniformState) {
             return function() {
                 return uniformState.getModel();
