@@ -45,9 +45,11 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
         expect(function() {
             ObjectOrientedBoundingBox.fromBoundingRectangle();
         }).toThrow();
-        expect(function() {
-            ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle);
-        }).toThrow();
+    });
+
+    it('fromBoundingRectangle sets the transformation matrix to identity without rotation', function() {
+        var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle());
+        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
     });
 
     it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {

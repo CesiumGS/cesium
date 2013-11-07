@@ -163,19 +163,20 @@ define([
         }
 
         var center = scratchCartesian4;
-        Cartesian3.fromArray([(minPoint.x + maxPoint.x) * 0.5, (minPoint.y + maxPoint.y) * 0.5, (minPoint.z + maxPoint.z) * 0.5], 0, center);
+        Cartesian3.add(minPoint, maxPoint, center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
 
-        result.transformedPosition.x = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 0), center);
-        result.transformedPosition.y = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 1), center);
-        result.transformedPosition.z = Cartesian3.dot(Matrix3.getRow(result.transformMatrix, 2), center);
+        Matrix3.multiplyByVector(result.transformMatrix, center, result.transformedPosition);
 
-        Cartesian3.fromArray([(maxPoint.x - minPoint.x) * 0.5, (maxPoint.y - minPoint.y) * 0.5, (maxPoint.z - minPoint.z) * 0.5], 0, result.extent);
+        Cartesian3.add(maxPoint, Cartesian3.negate(minPoint, minPoint), center);
+        Cartesian3.multiplyByScalar(center, 0.5, result.extent);
 
         return result;
     };
 
     /**
      * Computes an ObjectOrientedBoundingBox from a BoundingRectangle.
+     * The BoundingRectangle is placed on the XY plane.
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
@@ -183,7 +184,6 @@ define([
      * @return {ObjectOrientedBoundingBox} A new 2D ObjectOrientedBoundingBox instance if one was not provided.
      *
      * @exception {DeveloperError} boundingRectangle is missing.
-     * @exception {DeveloperError} rotation is missing.
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
@@ -193,24 +193,20 @@ define([
         if (!defined(boundingRectangle)) {
             throw new DeveloperError('boundingRectangle is missing');
         }
-        if (!defined(rotation)) {
-            throw new DeveloperError('rotation is missing');
-        }
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
         }
+        if (defined(rotation)) {
+            result.transformMatrix = Matrix3.fromRotationZ(rotation);
+        }
 
-        result.extent = Cartesian3.clone(Cartesian3.ZERO, result.extent);
         result.extent.x = boundingRectangle.width / 2;
         result.extent.y = boundingRectangle.height / 2;
         result.extent.z = 0.0;
 
-        result.transformedPosition = Cartesian3.clone(Cartesian3.ZERO, result.transformedPosition);
         result.transformedPosition.x = boundingRectangle.x;
         result.transformedPosition.y = boundingRectangle.y;
         result.transformedPosition.z = 0.0;
-
-        result.transformMatrix = Matrix3.fromRotationZ(rotation);
 
         return result;
     };
