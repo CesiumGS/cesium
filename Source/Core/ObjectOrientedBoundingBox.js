@@ -58,7 +58,10 @@ define([
     var scratchCartesian5 = new Cartesian3();
     var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
-    var scratchEigenResult = new Matrix3();
+    var scratchEigenResult = {
+            unitary : new Matrix3(),
+            diagonal : new Matrix3()
+    };
     /**
      * Computes an instance of an ObjectOrientedBoundingBox of the given positions. The box is determined using the covariance matrix.
      * First we build the covariance matrix, then we compute the center, rotation and the minimal edge lengths of the OBB.
@@ -119,31 +122,42 @@ define([
             ezz += p.z * p.z - meanPointZZ;
         }
 
-        var covarianceMatrix = Matrix3.clone([exx, exy, exz, exy, eyy, eyz, exz, eyz, ezz], Matrix3.clone(Matrix3.IDENTITY, scratchCovarianceResult));
+        var covarianceMatrix = scratchCovarianceResult;
+        covarianceMatrix[0] = exx;
+        covarianceMatrix[1] = exy;
+        covarianceMatrix[2] = exz;
+        covarianceMatrix[3] = exy;
+        covarianceMatrix[4] = eyy;
+        covarianceMatrix[5] = eyz;
+        covarianceMatrix[6] = exz;
+        covarianceMatrix[7] = eyz;
+        covarianceMatrix[8] = ezz;
 
         var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix, scratchEigenResult);
         var unitaryMatrix = eigenDecomposition.unitary;
 
         //eigenvectors of covMatrix
-        var v1 = Matrix3.getColumn(unitaryMatrix, 0, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1));
-        var v2 = Matrix3.getColumn(unitaryMatrix, 1, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian2));
-        var v3 = Matrix3.getColumn(unitaryMatrix, 2, Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3));
+        var v1 = Matrix3.getColumn(unitaryMatrix, 0, scratchCartesian1);
+        var v2 = Matrix3.getColumn(unitaryMatrix, 1, scratchCartesian2);
+        var v3 = Matrix3.getColumn(unitaryMatrix, 2, scratchCartesian3);
 
         //normalized eigenvectors
         var r = Cartesian3.normalize(v1, v1);
         var u = Cartesian3.normalize(v2, v2);
         var f = Cartesian3.normalize(v3, v3);
 
-        result.transformMatrix = Matrix3.clone([r.x, u.x, f.x, r.y, u.y, f.y, r.z, u.z, f.z], Matrix3.clone(Matrix3.IDENTITY, result.transformMatrix));
+        Matrix3.setRow(result.transformMatrix, 0, r, result.transformMatrix);
+        Matrix3.setRow(result.transformMatrix, 1, u, result.transformMatrix);
+        Matrix3.setRow(result.transformMatrix, 2, f, result.transformMatrix);
 
         p = positions[0];
-        var tempPoint = Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, scratchCartesian4);
+        var tempPoint = Matrix3.multiplyByVector(result.transformMatrix, p, scratchCartesian4);
         var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
         var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
 
         for (i = 1; i < length; i++) {
             p = positions[i];
-            Cartesian3.fromArray([Cartesian3.dot(r, p), Cartesian3.dot(u, p), Cartesian3.dot(f, p)], 0, tempPoint);
+            var tempPoint = Matrix3.multiplyByVector(result.transformMatrix, p, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
