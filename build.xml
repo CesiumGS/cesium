@@ -227,19 +227,21 @@
 
 	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
 		<echo message="Source:"/>
-		<exec executable="perl">
+		<apply executable="perl" parallel="true">
 			<arg value="${clocPath}"/>
 			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
-			<arg value="Source/Core/"/>
-			<arg value="Source/DynamicScene/"/>
-			<arg value="Source/main.js"/>
-			<arg value="Source/Renderer/"/>
-			<arg value="Source/Scene/"/>
-			<arg value="Source/Shaders/*.glsl"/>
-			<arg value="Source/Shaders/*/*.glsl"/>
-			<arg value="Source/Widgets/"/>
-			<arg value="Source/Workers/"/>
-		</exec>
+			<arg value="Source/Core/" />
+			<arg value="Source/DynamicScene/" />
+			<arg value="Source/Renderer/" />
+			<arg value="Source/Scene/" />
+			<arg value="Source/Widgets/" />
+			<arg value="Source/Workers/" />
+			<fileset id="clocFileSet" dir="Source/">
+				<include name="Shaders/*.glsl" />
+				<include name="Shaders/**/*.glsl" />
+				<include name="main.js"/>
+			</fileset>
+		</apply>
 		<echo message="${line.separator}Specs:"/>
 		<exec executable="perl">
 			<arg value="${clocPath}"/>
