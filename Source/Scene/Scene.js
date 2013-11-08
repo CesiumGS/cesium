@@ -532,15 +532,13 @@ define([
                     var command = commandList[k];
                     var boundingVolume = command.boundingVolume;
                     if (defined(boundingVolume)) {
-                        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                        var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
                         if (command.cull &&
-                                ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
-                                 (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV)))) {
+                                ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
+                                 (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
                             continue;
                         }
 
-                        distances = transformedBV.getPlaneDistances(position, direction, distances);
+                        distances = boundingVolume.getPlaneDistances(position, direction, distances);
                         near = Math.min(near, distances.start);
                         far = Math.max(far, distances.stop);
                     } else {
@@ -680,14 +678,13 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-        var transformedBV = command.boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+        var boundingVolume = command.boundingVolume;
 
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(transformedBV)))));
+                  ((cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
     function executeCommands(scene, passState, clearColor) {
