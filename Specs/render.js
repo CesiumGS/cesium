@@ -44,10 +44,8 @@ define([
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
-                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    var transformedBV = boundingVolume.transform(modelMatrix);
-                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV))) {
+                    if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                            (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
                         continue;
                     }
                 }

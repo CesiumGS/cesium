@@ -677,14 +677,13 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-        var transformedBV = command.boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
+        var boundingVolume = command.boundingVolume;
 
         return ((defined(command)) &&
                  ((!defined(command.boundingVolume)) ||
                   !command.cull ||
-                  ((cullingVolume.getVisibility(transformedBV) !== Intersect.OUTSIDE) &&
-                   (!defined(occluder) || occluder.isBoundingSphereVisible(transformedBV)))));
+                  ((cullingVolume.getVisibility(boundingVolume) !== Intersect.OUTSIDE) &&
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
     function executeCommands(scene, passState, clearColor) {
