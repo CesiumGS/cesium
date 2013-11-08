@@ -1088,8 +1088,8 @@ define([
                 };
 
                 var command = new DrawCommand();
-                command.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
-                command.modelMatrix = new Matrix4();                           // computed in update()
+                command.boundingVolume = new BoundingSphere(); // updated in update()
+                command.modelMatrix = new Matrix4();           // computed in update()
                 command.primitiveType = primitiveType;
                 command.vertexArray = vertexArray;
                 command.count = count;
@@ -1114,8 +1114,8 @@ define([
                     }], false, false);
 
                 var pickCommand = new DrawCommand();
-                pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
-                pickCommand.modelMatrix = new Matrix4();                           // computed in update()
+                pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
+                pickCommand.modelMatrix = new Matrix4();           // computed in update()
                 pickCommand.primitiveType = primitiveType;
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
@@ -1132,7 +1132,8 @@ define([
 
                 meshesCommands.push({
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    boundingSphere : boundingSphere
                 });
             }
         }
@@ -1247,10 +1248,11 @@ define([
                                 Matrix4.multiply(computedModelMatrix, transformToRoot, command.modelMatrix);
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
 
-                                var bs = new BoundingSphere();
-                                BoundingSphere.transform(command.boundingVolume, command.modelMatrix, bs);
-                                Cartesian3.add(bs.center, sphereCenter, sphereCenter);
-                                spheres.push(bs);
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+
+                                Cartesian3.add(command.boundingVolume.center, sphereCenter, sphereCenter);
+                                spheres.push(command.boundingVolume);
                             }
                         }
                     }
