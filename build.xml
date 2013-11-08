@@ -128,8 +128,8 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.10/jshint.js" />
-	<property name="clocPath" location="${thirdPartyDirectory}/cloc-1.60/cloc-1.60.pl" />
-	<property name="clocDefinitionsPath" location="${thirdPartyDirectory}/cloc-1.60/cloc_definitions" />
+	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
+	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
