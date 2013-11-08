@@ -597,7 +597,7 @@ define([
         }
     }
 
-    function getSemanticToAttributeLocations(model, primitive) {
+    function getAttributeLocations(model, primitive) {
 // TODO: this could be done per material, not per mesh, if we don't change glTF
         var gltf = model.gltf;
         var programs = gltf.programs;
@@ -605,7 +605,7 @@ define([
         var materials = gltf.materials;
 
         // Retrieve the compiled shader program to assign index values to attributes
-        var semanticToAttributeLocations = {};
+        var attributeLocations = {};
 
         var technique = techniques[materials[primitive.material].instanceTechnique.technique];
         var parameters = technique.parameters;
@@ -613,17 +613,17 @@ define([
         var instanceProgram = pass.instanceProgram;
         var program = programs[instanceProgram.program];
         var attributes = instanceProgram.attributes;
-        var attributeLocations = program.czm.program.getVertexAttributes();
+        var programAttributeLocations = program.czm.program.getVertexAttributes();
 
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
                 var parameter = parameters[attributes[name]];
 
-                semanticToAttributeLocations[parameter.semantic] = attributeLocations[name].index;
+                attributeLocations[parameter.semantic] = programAttributeLocations[name].index;
             }
         }
 
-        return semanticToAttributeLocations;
+        return attributeLocations;
     }
 
     function createAnimations(model) {
@@ -706,7 +706,7 @@ define([
                      if (primitives.hasOwnProperty(name)) {
                          var primitive = primitives[name];
 
-                         var semanticToAttributeLocations = getSemanticToAttributeLocations(model, primitive);
+                         var attributeLocations = getAttributeLocations(model, primitive);
                          var attrs = [];
                          var primitiveAttributes = primitive.attributes;
                          for (name in primitiveAttributes) {
@@ -715,7 +715,7 @@ define([
 
                                  var type = ModelTypes[a.type];
                                  attrs.push({
-                                     index                  : semanticToAttributeLocations[name],
+                                     index                  : attributeLocations[name],
                                      vertexBuffer           : bufferViews[a.bufferView].czm.webglBuffer,
                                      componentsPerAttribute : type.componentsPerAttribute,
                                      componentDatatype      : type.componentDatatype,
