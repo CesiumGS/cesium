@@ -128,6 +128,8 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.10/jshint.js" />
+	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
+	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
@@ -221,6 +223,31 @@
 			</sourcefiles>
 		</runJsHint>
 		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
+
+	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
+		<echo message="Source:"/>
+		<apply executable="perl" parallel="true">
+			<arg value="${clocPath}"/>
+			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
+			<arg value="Source/Core/" />
+			<arg value="Source/DynamicScene/" />
+			<arg value="Source/Renderer/" />
+			<arg value="Source/Scene/" />
+			<arg value="Source/Widgets/" />
+			<arg value="Source/Workers/" />
+			<fileset id="clocFileSet" dir="Source/">
+				<include name="Shaders/*.glsl" />
+				<include name="Shaders/**/*.glsl" />
+				<include name="main.js"/>
+			</fileset>
+		</apply>
+		<echo message="${line.separator}Specs:"/>
+		<exec executable="perl">
+			<arg value="${clocPath}"/>
+			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
+			<arg value="Specs/"/>
+		</exec>
 	</target>
 
 	<target name="setNodePathValue">
