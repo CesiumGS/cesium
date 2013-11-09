@@ -347,6 +347,27 @@ define([
     var scratchIntersectMatrix1 = new Matrix3();
     var scratchIntersectMatrix2 = new Matrix3();
     var scratchTCartesian = new Cartesian3();
+    //Helper functions for collision detection.
+    function testCase1(x, a, b, B, T) {
+        if (Math.abs(T[x]) > (a[x] + b[0] * B[Matrix3.getElementIndex(0, x)] + b[1] * B[Matrix3.getElementIndex(1, x)] + b[2] * B[Matrix3.getElementIndex(2, x)])) {
+            return 0;
+        }
+        return 1;
+    }
+
+    function testCase2(x, a, b, B, T) {
+        if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * B[Matrix3.getElementIndex(0, x)] + a[1] * B[1][x] + a[2] * B[Matrix3.getElementIndex(2, x)])) {
+            return 0;
+        }
+        return 1;
+    }
+
+    function testCase3(i, j, a, b, B, T) {
+        if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * B[(i + 2) % 3][j] + a[(i + 2) % 3] * B[(i + 1) % 3][j] + b[(j + 1) % 3] * B[i][(j + 2) % 3] + b[(j + 2) % 3] * B[i][(j + 1) % 3])) {
+            return 0;
+        }
+        return 1;
+    }
     /**
      * Checks if two ObjectOrientedBoundingBoxes intersect.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
@@ -379,72 +400,53 @@ define([
         Cartesian3.pack(left.scale, a, 0);
         Cartesian3.pack(right.scale, b, 0);
 
-        function testCase1(x) {
-            if (Math.abs(T[x]) > (a[x] + b[0] * B[Matrix3.getElementIndex(0, x)] + b[1] * B[Matrix3.getElementIndex(1, x)] + b[2] * B[Matrix3.getElementIndex(2, x)])) {
-                return 0;
-            }
-            return 1;
-        }
 
-        function testCase2(x) {
-            if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * B[Matrix3.getElementIndex(0, x)] + a[1] * B[1][x] + a[2] * B[Matrix3.getElementIndex(2, x)])) {
-                return 0;
-            }
-            return 1;
-        }
 
-        function testCase3(i, j) {
-            if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * B[(i + 2) % 3][j] + a[(i + 2) % 3] * B[(i + 1) % 3][j] + b[(j + 1) % 3] * B[i][(j + 2) % 3] + b[(j + 2) % 3] * B[i][(j + 1) % 3])) {
-                return 0;
-            }
-            return 1;
-        }
-
-        if (testCase1(0) === 0) {
+        if (testCase1(0, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase1(1) === 0) {
+        if (testCase1(1, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase1(2) === 0) {
+        if (testCase1(2, a, b, B, T) === 0) {
             return false;
         }
 
-        if (testCase2(0) === 0) {
+        if (testCase2(0, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase2(1) === 0) {
+        if (testCase2(1, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase2(2) === 0) {
+        if (testCase2(2, a, b, B, T) === 0) {
             return false;
         }
 
-        if (testCase3(0, 0) === 0) {
+        if (testCase3(0, 0, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(1, 0) === 0) {
+        if (testCase3(1, 0, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(2, 0) === 0) {
+        if (testCase3(2, 0, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(0, 1) === 0) {
+        if (testCase3(0, 1, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(1, 1) === 0) {
+        if (testCase3(1, 1, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(2, 1) === 0) {
+        if (testCase3(2, 1, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(0, 2) === 0) {
+        if (testCase3(0, 2, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(1, 2) === 0) {
+        if (testCase3(1, 2, a, b, B, T) === 0) {
             return false;
         }
-        if (testCase3(2, 2) === 0) {
+        if (testCase3(2, 2, a, b, B, T) === 0) {
             return false;
         }
 
