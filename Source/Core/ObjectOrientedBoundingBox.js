@@ -370,15 +370,7 @@ define([
 
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var Bf = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
-        Bf[0] = Math.abs(Bf[0]);
-        Bf[1] = Math.abs(Bf[1]);
-        Bf[2] = Math.abs(Bf[2]);
-        Bf[3] = Math.abs(Bf[3]);
-        Bf[4] = Math.abs(Bf[4]);
-        Bf[5] = Math.abs(Bf[5]);
-        Bf[6] = Math.abs(Bf[6]);
-        Bf[7] = Math.abs(Bf[7]);
-        Bf[8] = Math.abs(Bf[8]);
+        Matrix3.abs(Bf, Bf);
 
         var T = [];
         var a = [];
@@ -473,7 +465,12 @@ define([
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.equals = function(left, right) {
-        return (left === right) || ((defined(left)) && (defined(right)) && Cartesian3.equals(left.translation, right.translation) && Matrix3.equals(left.rotation, right.rotation) && Cartesian3.equals(left.scale, right.scale));
+        return (left === right) ||
+                ((defined(left)) &&
+                 (defined(right)) &&
+                 Cartesian3.equals(left.transformedPosition, right.transformedPosition) &&
+                 Matrix3.equals(left.transformMatrix, right.transformMatrix) &&
+                 Cartesian3.equals(left.extent, right.extent));
     };
 
     /**
