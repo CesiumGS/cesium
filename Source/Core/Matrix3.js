@@ -947,6 +947,38 @@ define([
     };
 
     /**
+     * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix with signed elements.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.abs = function(matrix, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(result)) {
+            return new Matrix3(Math.abs(matrix[0]), Math.abs(matrix[3]), Math.abs(matrix[6]),
+                               Math.abs(matrix[1]), Math.abs(matrix[4]), Math.abs(matrix[7]),
+                               Math.abs(matrix[2]), Math.abs(matrix[5]), Math.abs(matrix[8]));
+        }
+        result[0] = Math.abs(matrix[0]);
+        result[1] = Math.abs(matrix[1]);
+        result[2] = Math.abs(matrix[2]);
+        result[3] = Math.abs(matrix[3]);
+        result[4] = Math.abs(matrix[4]);
+        result[5] = Math.abs(matrix[5]);
+        result[6] = Math.abs(matrix[6]);
+        result[7] = Math.abs(matrix[7]);
+        result[8] = Math.abs(matrix[8]);
+
+        return result;
+    };
+
+    /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Matrix3
