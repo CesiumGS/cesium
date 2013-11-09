@@ -157,7 +157,7 @@ define([
 
         for (i = 1; i < length; i++) {
             p = positions[i];
-            var tempPoint = Matrix3.multiplyByVector(result.rotation, p, tempPoint);
+            Matrix3.multiplyByVector(result.rotation, p, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
@@ -197,7 +197,7 @@ define([
             result = new ObjectOrientedBoundingBox();
         }
         if (defined(rotation)) {
-            result.rotation = Matrix3.fromRotationZ(rotation);
+            Matrix3.fromRotationZ(rotation, result.rotation);
         } else {
             Matrix3.clone(Matrix3.IDENTITY, result.rotation);
         }
@@ -248,9 +248,9 @@ define([
 
         function multiplyAndAdd(sign1, sign2, sign3) {
             // we are doing: result = {Cartesian} +/- {Cartesian3} +/- {Cartesian3} +/- {Cartesian3}
-            var tempPoint1 = Cartesian3.add(box.translation, Cartesian3.multiplyByScalar(r, box.scale.x * (sign1)), scratchAddCartesian1);
-            var tempPoint2 = Cartesian3.add(tempPoint1, Cartesian3.multiplyByScalar(u, box.scale.y * (sign2)), scratchAddCartesian2);
-            return Cartesian3.add(tempPoint2, Cartesian3.multiplyByScalar(f, box.scale.z * (sign3)), scratchAddCartesian3);
+            Cartesian3.add(box.translation, Cartesian3.multiplyByScalar(r, box.scale.x * (sign1)), scratchAddCartesian1);
+            Cartesian3.add(scratchAddCartesian1, Cartesian3.multiplyByScalar(u, box.scale.y * (sign2)), scratchAddCartesian2);
+            return Cartesian3.add(scratchAddCartesian2, Cartesian3.multiplyByScalar(f, box.scale.z * (sign3)), scratchAddCartesian3);
         }
 
         //POINT 0
@@ -337,9 +337,9 @@ define([
             return new ObjectOrientedBoundingBox(box.rotation, box.translation, box.scale);
         }
 
-        result.rotation = Matrix3.clone(box.rotation, result.rotation);
-        result.translation = Cartesian3.clone(box.translation, result.translation);
-        result.scale = Cartesian3.clone(box.scale, result.scale);
+        Matrix3.clone(box.rotation, result.rotation);
+        Cartesian3.clone(box.translation, result.translation);
+        Cartesian3.clone(box.scale, result.scale);
 
         return result;
     };
@@ -369,8 +369,8 @@ define([
         }
 
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
-        var Bf = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
-        Matrix3.abs(Bf, Bf);
+        var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
+        Matrix3.abs(B, B);
 
         var T = [];
         var a = [];
@@ -379,80 +379,76 @@ define([
         Cartesian3.pack(left.scale, a, 0);
         Cartesian3.pack(right.scale, b, 0);
 
-        function collide(B, T, a, b) {
-            function testCase1(x) {
-                if (Math.abs(T[x]) > (a[x] + b[0] * Bf[Matrix3.getElementIndex(0, x)] + b[1] * Bf[Matrix3.getElementIndex(1, x)] + b[2] * Bf[Matrix3.getElementIndex(2, x)])) {
-                    return 0;
-                }
-                return 1;
+        function testCase1(x) {
+            if (Math.abs(T[x]) > (a[x] + b[0] * B[Matrix3.getElementIndex(0, x)] + b[1] * B[Matrix3.getElementIndex(1, x)] + b[2] * B[Matrix3.getElementIndex(2, x)])) {
+                return 0;
             }
-
-            function testCase2(x) {
-                if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * Bf[Matrix3.getElementIndex(0, x)] + a[1] * Bf[1][x] + a[2] * Bf[Matrix3.getElementIndex(2, x)])) {
-                    return 0;
-                }
-                return 1;
-            }
-
-            function testCase3(i, j) {
-                if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * Bf[(i + 2) % 3][j] + a[(i + 2) % 3] * Bf[(i + 1) % 3][j] + b[(j + 1) % 3] * Bf[i][(j + 2) % 3] + b[(j + 2) % 3] * Bf[i][(j + 1) % 3])) {
-                    return 0;
-                }
-                return 1;
-            }
-
-            if (testCase1(0) === 0) {
-                return false;
-            }
-            if (testCase1(1) === 0) {
-                return false;
-            }
-            if (testCase1(2) === 0) {
-                return false;
-            }
-
-            if (testCase2(0) === 0) {
-                return false;
-            }
-            if (testCase2(1) === 0) {
-                return false;
-            }
-            if (testCase2(2) === 0) {
-                return false;
-            }
-
-            if (testCase3(0, 0) === 0) {
-                return false;
-            }
-            if (testCase3(1, 0) === 0) {
-                return false;
-            }
-            if (testCase3(2, 0) === 0) {
-                return false;
-            }
-            if (testCase3(0, 1) === 0) {
-                return false;
-            }
-            if (testCase3(1, 1) === 0) {
-                return false;
-            }
-            if (testCase3(2, 1) === 0) {
-                return false;
-            }
-            if (testCase3(0, 2) === 0) {
-                return false;
-            }
-            if (testCase3(1, 2) === 0) {
-                return false;
-            }
-            if (testCase3(2, 2) === 0) {
-                return false;
-            }
-
-            return true;
+            return 1;
         }
 
-        return collide(Bf, T, a, b);
+        function testCase2(x) {
+            if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * B[Matrix3.getElementIndex(0, x)] + a[1] * B[1][x] + a[2] * B[Matrix3.getElementIndex(2, x)])) {
+                return 0;
+            }
+            return 1;
+        }
+
+        function testCase3(i, j) {
+            if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * B[(i + 2) % 3][j] + a[(i + 2) % 3] * B[(i + 1) % 3][j] + b[(j + 1) % 3] * B[i][(j + 2) % 3] + b[(j + 2) % 3] * B[i][(j + 1) % 3])) {
+                return 0;
+            }
+            return 1;
+        }
+
+        if (testCase1(0) === 0) {
+            return false;
+        }
+        if (testCase1(1) === 0) {
+            return false;
+        }
+        if (testCase1(2) === 0) {
+            return false;
+        }
+
+        if (testCase2(0) === 0) {
+            return false;
+        }
+        if (testCase2(1) === 0) {
+            return false;
+        }
+        if (testCase2(2) === 0) {
+            return false;
+        }
+
+        if (testCase3(0, 0) === 0) {
+            return false;
+        }
+        if (testCase3(1, 0) === 0) {
+            return false;
+        }
+        if (testCase3(2, 0) === 0) {
+            return false;
+        }
+        if (testCase3(0, 1) === 0) {
+            return false;
+        }
+        if (testCase3(1, 1) === 0) {
+            return false;
+        }
+        if (testCase3(2, 1) === 0) {
+            return false;
+        }
+        if (testCase3(0, 2) === 0) {
+            return false;
+        }
+        if (testCase3(1, 2) === 0) {
+            return false;
+        }
+        if (testCase3(2, 2) === 0) {
+            return false;
+        }
+
+        return true;
     };
 
     /**

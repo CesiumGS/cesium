@@ -123,13 +123,35 @@ defineSuite([
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(1.0, 0.0, 0.0);
         expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(1.0, 0.0, 0.0);
+        second = new Cartesian3(2.0, 0.0, 0.0);
+        result = new Cartesian3(1.0, 0.0, 0.0);
+        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 0.0);
+        second = new Cartesian3(1.0, -20.0, 0.0);
+        result = new Cartesian3(1.0, -20.0, 0.0);
+        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -20.0, 0.0);
+        second = new Cartesian3(1.0, -15.0, 0.0);
+        result = new Cartesian3(1.0, -20.0, 0.0);
+        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 26.4);
+        second = new Cartesian3(1.0, -20.0, 26.5);
+        result = new Cartesian3(1.0, -20.0, 26.4);
+        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 26.5);
+        second = new Cartesian3(1.0, -20.0, 26.4);
+        result = new Cartesian3(1.0, -20.0, 26.4);
+        expect(Cartesian3.getMinimumByComponent(first, second)).toEqual(result);
     });
 
     it('getMinimumByComponent with a result parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
-        var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMinimumByComponent(first, second, result)).toEqual(result);
+        var result = new Cartesian3();
+        var returnedResult = Cartesian3.getMinimumByComponent(first, second, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(result);
     });
 
     it('getMinimumByComponent with a result parameter that is an input parameter', function() {
@@ -199,13 +221,35 @@ defineSuite([
         var second = new Cartesian3(1.0, 0.0, 0.0);
         var result = new Cartesian3(2.0, 0.0, 0.0);
         expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(1.0, 0.0, 0.0);
+        second = new Cartesian3(2.0, 0.0, 0.0);
+        result = new Cartesian3(2.0, 0.0, 0.0);
+        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 0.0);
+        second = new Cartesian3(1.0, -20.0, 0.0);
+        result = new Cartesian3(2.0, -15.0, 0.0);
+        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -20.0, 0.0);
+        second = new Cartesian3(1.0, -15.0, 0.0);
+        result = new Cartesian3(2.0, -15.0, 0.0);
+        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 26.4);
+        second = new Cartesian3(1.0, -20.0, 26.5);
+        result = new Cartesian3(2.0, -15.0, 26.5);
+        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian3(2.0, -15.0, 26.5);
+        second = new Cartesian3(1.0, -20.0, 26.4);
+        result = new Cartesian3(2.0, -15.0, 26.5);
+        expect(Cartesian3.getMaximumByComponent(first, second)).toEqual(result);
     });
 
     it('getMaximumByComponent with a result parameter', function() {
         var first = new Cartesian3(2.0, 0.0, 0.0);
         var second = new Cartesian3(1.0, 0.0, 0.0);
-        var result = new Cartesian3(1.0, 0.0, 0.0);
-        expect(Cartesian3.getMaximumByComponent(first, second, result)).toEqual(result);
+        var result = new Cartesian3();
+        var returnedResult = Cartesian3.getMaximumByComponent(first, second, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(result);
     });
 
     it('getMaximumByComponent with a result parameter that is an input parameter', function() {
