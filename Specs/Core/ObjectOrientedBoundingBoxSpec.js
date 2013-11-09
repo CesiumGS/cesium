@@ -18,26 +18,26 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
 
     it('fromPoints constructs empty box with undefined positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(undefined);
-        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
-        expect(box.transformedPosition).toEqual(Cartesian3.ZERO);
-        expect(box.extent).toEqual(Cartesian3.ZERO);
+        expect(box.rotation).toEqual(Matrix3.IDENTITY);
+        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqual(Cartesian3.ZERO);
     });
 
     it('fromPoints constructs empty box with empty positions', function() {
         var box = ObjectOrientedBoundingBox.fromPoints([]);
-        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
-        expect(box.transformedPosition).toEqual(Cartesian3.ZERO);
-        expect(box.extent).toEqual(Cartesian3.ZERO);
+        expect(box.rotation).toEqual(Matrix3.IDENTITY);
+        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqual(Cartesian3.ZERO);
     });
 
     it('fromPoints computes the correct values', function() {
         var box = ObjectOrientedBoundingBox.fromPoints(positions1);
-        var extent = new Cartesian3(0.5, 0.5, 0.5);
-        var transformedPosition = new Cartesian3(0.5, 0.5, 0.5);
-        var transformMatrix = new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1);
-        expect(box.extent).toEqual(extent);
-        expect(box.transformedPosition).toEqual(transformedPosition);
-        expect(box.transformMatrix).toEqual(transformMatrix);
+        var scale = new Cartesian3(0.5, 0.5, 0.5);
+        var translation = new Cartesian3(0.5, 0.5, 0.5);
+        var rotation = new Matrix3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+        expect(box.scale).toEqual(scale);
+        expect(box.translation).toEqual(translation);
+        expect(box.rotation).toEqual(rotation);
     });
 
     it('fromBoundingRectangle throws without values', function() {
@@ -49,7 +49,7 @@ defineSuite(['Core/ObjectOrientedBoundingBox', 'Core/Cartesian3', 'Core/Cartesia
 
     it('fromBoundingRectangle sets the transformation matrix to identity without rotation', function() {
         var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle());
-        expect(box.transformMatrix).toEqual(Matrix3.IDENTITY);
+        expect(box.rotation).toEqual(Matrix3.IDENTITY);
     });
 
     it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {

@@ -24,25 +24,25 @@ define([
      * @alias ObjectOrientedBoundingBox
      * @constructor
      *
-     * @param {Matrix3} [transformMatrix=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
-     * @param {Cartesian3} [transformedPosition=Cartesian3.ZERO] The position of the box.
+     * @param {Matrix3} [rotation=Matrix3.IDENTITY] The transformation matrix, to rotate the box to the right position.
+     * @param {Cartesian3} [translation=Cartesian3.ZERO] The position of the box.
      * @param {Cartesian3} [scale=Cartesian3.ZERO] The scale of the box.
      *
      * @see BoundingSphere
      */
-    var ObjectOrientedBoundingBox = function(transformMatrix, transformedPosition, scale) {
+    var ObjectOrientedBoundingBox = function(rotation, translation, scale) {
         /**
          * The transformation matrix, to rotate the box to the right position.
          * @type {Matrix3}
          * @default {@link Matrix3.IDENTITY}
          */
-        this.transformMatrix = Matrix3.clone(defaultValue(transformMatrix, Matrix3.IDENTITY));
+        this.rotation = Matrix3.clone(defaultValue(rotation, Matrix3.IDENTITY));
         /**
          * The position of the box.
          * @type {Cartesian3}
          * @default {@link Cartesian3.ZERO}
          */
-        this.transformedPosition = Cartesian3.clone(defaultValue(transformedPosition, Cartesian3.ZERO));
+        this.translation = Cartesian3.clone(defaultValue(translation, Cartesian3.ZERO));
         /**
          * The scale of the box.
          * @type {Cartesian3}
@@ -84,7 +84,7 @@ define([
 
         if (!defined(positions) || positions.length === 0) {
             result.tranformMatrix = Matrix3.IDENTITY;
-            result.transformedPosition = Cartesian3.ZERO;
+            result.translation = Cartesian3.ZERO;
             result.scale = Cartesian3.ZERO;
             return result;
         }
@@ -146,18 +146,18 @@ define([
         var u = Cartesian3.normalize(v2, v2);
         var f = Cartesian3.normalize(v3, v3);
 
-        Matrix3.setRow(result.transformMatrix, 0, r, result.transformMatrix);
-        Matrix3.setRow(result.transformMatrix, 1, u, result.transformMatrix);
-        Matrix3.setRow(result.transformMatrix, 2, f, result.transformMatrix);
+        Matrix3.setRow(result.rotation, 0, r, result.rotation);
+        Matrix3.setRow(result.rotation, 1, u, result.rotation);
+        Matrix3.setRow(result.rotation, 2, f, result.rotation);
 
         p = positions[0];
-        var tempPoint = Matrix3.multiplyByVector(result.transformMatrix, p, scratchCartesian4);
+        var tempPoint = Matrix3.multiplyByVector(result.rotation, p, scratchCartesian4);
         var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
         var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
 
         for (i = 1; i < length; i++) {
             p = positions[i];
-            var tempPoint = Matrix3.multiplyByVector(result.transformMatrix, p, tempPoint);
+            var tempPoint = Matrix3.multiplyByVector(result.rotation, p, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
@@ -166,7 +166,7 @@ define([
         Cartesian3.add(minPoint, maxPoint, center);
         Cartesian3.multiplyByScalar(center, 0.5, center);
 
-        Matrix3.multiplyByVector(result.transformMatrix, center, result.transformedPosition);
+        Matrix3.multiplyByVector(result.rotation, center, result.translation);
 
         Cartesian3.add(maxPoint, Cartesian3.negate(minPoint, minPoint), center);
         Cartesian3.multiplyByScalar(center, 0.5, result.scale);
@@ -180,7 +180,7 @@ define([
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
-     * @param {Float} rotation The rotation of the bounding box.
+     * @param {Float} [rotation=Matrix3.IDENTITY] The rotation of the bounding box.
      * @return {ObjectOrientedBoundingBox} A new 2D ObjectOrientedBoundingBox instance if one was not provided.
      *
      * @exception {DeveloperError} boundingRectangle is missing.
@@ -197,16 +197,18 @@ define([
             result = new ObjectOrientedBoundingBox();
         }
         if (defined(rotation)) {
-            result.transformMatrix = Matrix3.fromRotationZ(rotation);
+            result.rotation = Matrix3.fromRotationZ(rotation);
+        } else {
+            Matrix3.clone(Matrix3.IDENTITY, result.rotation);
         }
 
         result.scale.x = boundingRectangle.width / 2;
         result.scale.y = boundingRectangle.height / 2;
         result.scale.z = 0.0;
 
-        result.transformedPosition.x = boundingRectangle.x;
-        result.transformedPosition.y = boundingRectangle.y;
-        result.transformedPosition.z = 0.0;
+        result.translation.x = boundingRectangle.x;
+        result.translation.y = boundingRectangle.y;
+        result.translation.z = 0.0;
 
         return result;
     };
@@ -240,13 +242,13 @@ define([
             result = [];
         }
 
-        var r = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 0, r), scratchTransformColumn1);
-        var u = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 1, u), scratchTransformColumn2);
-        var f = Cartesian3.clone(Matrix3.getColumn(box.transformMatrix, 2, f), scratchTransformColumn3);
+        var r = Cartesian3.clone(Matrix3.getColumn(box.rotation, 0, r), scratchTransformColumn1);
+        var u = Cartesian3.clone(Matrix3.getColumn(box.rotation, 1, u), scratchTransformColumn2);
+        var f = Cartesian3.clone(Matrix3.getColumn(box.rotation, 2, f), scratchTransformColumn3);
 
         function multiplyAndAdd(sign1, sign2, sign3) {
             // we are doing: result = {Cartesian} +/- {Cartesian3} +/- {Cartesian3} +/- {Cartesian3}
-            var tempPoint1 = Cartesian3.add(box.transformedPosition, Cartesian3.multiplyByScalar(r, box.scale.x * (sign1)), scratchAddCartesian1);
+            var tempPoint1 = Cartesian3.add(box.translation, Cartesian3.multiplyByScalar(r, box.scale.x * (sign1)), scratchAddCartesian1);
             var tempPoint2 = Cartesian3.add(tempPoint1, Cartesian3.multiplyByScalar(u, box.scale.y * (sign2)), scratchAddCartesian2);
             return Cartesian3.add(tempPoint2, Cartesian3.multiplyByScalar(f, box.scale.z * (sign3)), scratchAddCartesian3);
         }
@@ -332,11 +334,11 @@ define([
         }
 
         if (!defined(result)) {
-            return new ObjectOrientedBoundingBox(box.transformMatrix, box.transformedPosition, box.scale);
+            return new ObjectOrientedBoundingBox(box.rotation, box.translation, box.scale);
         }
 
-        result.transformMatrix = Matrix3.clone(box.transformMatrix, result.transformMatrix);
-        result.transformedPosition = Cartesian3.clone(box.transformedPosition, result.transformedPosition);
+        result.rotation = Matrix3.clone(box.rotation, result.rotation);
+        result.translation = Cartesian3.clone(box.translation, result.translation);
         result.scale = Cartesian3.clone(box.scale, result.scale);
 
         return result;
@@ -351,8 +353,8 @@ define([
      * <code>true</code> if they intersect, <code>false</code> otherwise.
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {ObjectOrientedBoundingBox} [left] The first ObjectOrientedBoundingBox.
-     * @param {ObjectOrientedBoundingBox} [right] The second ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
      *
      * @exception {DeveloperError} left is required.
@@ -366,8 +368,8 @@ define([
             throw new DeveloperError('right is required');
         }
 
-        var leftTransformTransposed = Matrix3.transpose(left.transformMatrix, scratchIntersectMatrix1);
-        var Bf = Matrix3.multiply(leftTransformTransposed, right.transformMatrix, scratchIntersectMatrix2);
+        var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
+        var Bf = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
         Bf[0] = Math.abs(Bf[0]);
         Bf[1] = Math.abs(Bf[1]);
         Bf[2] = Math.abs(Bf[2]);
@@ -381,7 +383,7 @@ define([
         var T = [];
         var a = [];
         var b = [];
-        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.transformedPosition, Cartesian3.negate(right.transformedPosition, scratchTCartesian), scratchTCartesian), scratchIntersectMatrix1), T, 0);
+        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.translation, Cartesian3.negate(right.translation, scratchTCartesian), scratchTCartesian), scratchIntersectMatrix1), T, 0);
         Cartesian3.pack(left.scale, a, 0);
         Cartesian3.pack(right.scale, b, 0);
 
@@ -466,12 +468,12 @@ define([
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {ObjectOrientedBoundingBox} [left] The first ObjectOrientedBoundingBox.
-     * @param {ObjectOrientedBoundingBox} [right] The second ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.equals = function(left, right) {
-        return (left === right) || ((defined(left)) && (defined(right)) && Cartesian3.equals(left.transformedPosition, right.transformedPosition) && Matrix3.equals(left.transformMatrix, right.transformMatrix) && Cartesian3.equals(left.scale, right.scale));
+        return (left === right) || ((defined(left)) && (defined(right)) && Cartesian3.equals(left.translation, right.translation) && Matrix3.equals(left.rotation, right.rotation) && Cartesian3.equals(left.scale, right.scale));
     };
 
     /**
@@ -501,7 +503,7 @@ define([
      * Checks if this ObjectOrientedBoundingBox intersects the provided.
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {ObjectOrientedBoundingBox} [right] The right hand side ObjectOrientedBoundingBox.
+     * @param {ObjectOrientedBoundingBox} right The right hand side ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if this ObjectOrientedBoundingBox intersects the one provided <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.prototype.intersect = function(right) {
