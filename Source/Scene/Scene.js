@@ -653,7 +653,7 @@ define([
                 });
             }
 
-            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
+            var m = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, command.boundingVolume.center);
             scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(m, command.boundingVolume.radius);
 
             var commandList = [];
