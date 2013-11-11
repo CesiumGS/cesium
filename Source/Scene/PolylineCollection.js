@@ -502,7 +502,6 @@ define([
             commandLists.pickList.opaqueList = pickList;
             createCommandLists(this, context, frameState, pickList, modelMatrix, false, false);
 
-            var size = pickList.length;
             pickList = this._pickTranslucentCommands;
             commandLists.pickList.translucentList = pickList;
             createCommandLists(this, context, frameState, pickList, modelMatrix, false, true);
