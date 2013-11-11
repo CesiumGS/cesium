@@ -486,7 +486,7 @@ define([
 
             var vs = shaders[program.vertexShader];
             var fs = shaders[program.fragmentShader];
-// TODO: glTF needs translucent flag so we know if we need its fragment shader.
+// TODO: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
             var pickFS = createShaderSource({
                 sources : [fs],
                 pickColorQualifier : 'uniform'
