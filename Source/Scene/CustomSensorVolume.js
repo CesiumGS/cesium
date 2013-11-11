@@ -144,7 +144,7 @@ define([
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = undefined;
+        this._modelMatrix = new Matrix4();
 
         /**
          * DOC_TBA
@@ -471,8 +471,8 @@ define([
         var pass = frameState.passes;
         this._commandLists.removeAll();
 
-        if (this.modelMatrix !== this._modelMatrix) {
-            this._modelMatrix = this.modelMatrix;
+        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
             BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
         }
 

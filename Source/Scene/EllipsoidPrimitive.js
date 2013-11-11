@@ -100,7 +100,7 @@ define([
          * @see EllipsoidPrimitive#modelMatrix
          */
         this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
-        this._center = undefined;
+        this._center = new Cartesian3();
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
@@ -143,7 +143,7 @@ define([
          * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = undefined;
+        this._modelMatrix = new Matrix4();
         this._computedModelMatrix = new Matrix4();
 
         /**
@@ -319,9 +319,9 @@ define([
             boundingSphereDirty = true;
         }
 
-        if (this.modelMatrix !== this._modelMatrix || this.center !== this._center) {
-            this._modelMatrix = this.modelMatrix;
-            this._center = this._center;
+        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix) || !Cartesian3.equals(this.center, this._center)) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
+            Cartesian3.clone(this.center, this._center);
 
             // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
             Matrix4.multiplyByTranslation(this.modelMatrix, this.center, this._computedModelMatrix);
