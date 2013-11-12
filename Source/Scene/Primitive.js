@@ -57,6 +57,8 @@ define([
         when) {
     "use strict";
 
+    var EMPTY_ARRAY = [];
+
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
      * as shown in example 1 below, or from an array of instances, even if the geometry is from different
@@ -100,7 +102,7 @@ define([
      *       center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       bearing : CesiumMath.PI_OVER_FOUR
+     *       rotation : CesiumMath.PI_OVER_FOUR
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
@@ -296,6 +298,8 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugShowBoundingVolume = false;
 
+        this._translucent = undefined;
+
         this._state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
@@ -324,6 +328,15 @@ define([
         this._pickIds = [];
 
         this._commandLists = new CommandLists();
+
+        this._colorCommands = this._commandLists.opaqueList;
+        this._pickCommands = this._commandLists.pickList;
+
+        this._commandLists.opaqueList = EMPTY_ARRAY;
+        this._commandLists.translucentList = EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = EMPTY_ARRAY;
+        this._commandLists.overlayList = EMPTY_ARRAY;
     };
 
     function cloneAttribute(attribute) {
@@ -526,8 +539,6 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        var colorCommands = this._commandLists.colorList;
-        var pickCommands = this._commandLists.pickList;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -746,15 +757,23 @@ define([
             createSP = true;
         }
 
+        var translucent = this._appearance.isTranslucent();
+        if (this._translucent !== translucent) {
+            this._translucent = translucent;
+            createRS = true;
+        }
+
         if (defined(this._material)) {
             this._material.update(context);
         }
 
-        var twoPasses = appearance.closed && appearance.translucent;
+        var twoPasses = appearance.closed && translucent;
 
         if (createRS) {
+            var renderState = appearance.getRenderState();
+
             if (twoPasses) {
-                var rs = clone(appearance.renderState, false);
+                var rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -764,7 +783,7 @@ define([
                 rs.cull.face = CullFace.FRONT;
                 this._backFaceRS = context.createRenderState(rs);
             } else {
-                this._frontFaceRS = context.createRenderState(appearance.renderState);
+                this._frontFaceRS = context.createRenderState(renderState);
                 this._backFaceRS = this._frontFaceRS;
             }
 
@@ -773,7 +792,7 @@ define([
                 this._pickRS = this._backFaceRS;
             } else {
                 // Still occlude if not pickable.
-                var pickRS = clone(appearance.renderState, false);
+                var pickRS = clone(renderState, false);
                 pickRS.colorMask = {
                     red : false,
                     green : false,
@@ -802,6 +821,9 @@ define([
 
             validateShaderMatching(this._pickSP, attributeIndices);
         }
+
+        var colorCommands = this._colorCommands;
+        var pickCommands = this._pickCommands;
 
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
@@ -920,6 +942,12 @@ define([
                 colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
             }
         }
+
+        var pass = frameState.passes;
+        this._commandLists.opaqueList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.translucentList = (pass.color && translucent) ? colorCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.opaqueList = (pass.pick && !translucent) ? pickCommands : EMPTY_ARRAY;
+        this._commandLists.pickList.translucentList = (pass.pick && translucent) ? pickCommands : EMPTY_ARRAY;
 
         commandList.push(this._commandLists);
     };

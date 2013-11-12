@@ -102,9 +102,38 @@ require(['Cesium'], function(Cesium) {
         }
     });
     
+    // Red polygon outline with per position heights
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-95, 44.0, 400000),
+        Cesium.Cartographic.fromDegrees(-95, 39.0, 100000),
+        Cesium.Cartographic.fromDegrees(-87, 42.0, 100000)
+    ]);
+    
+    var redPolygonOutlineInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            perPositionHeight : true
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+        }
+    });
+    
+    // Red polygon with per position heights
+    var redPolygonInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonGeometry.fromPositions({
+            positions : positions,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            perPositionHeight : true
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+        }
+    });
+    
     // Add polygon outline instances to primitives
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [bluePolygonOutlineInstance, greenPolygonOutlineInstance],
+        geometryInstances : [redPolygonOutlineInstance, bluePolygonOutlineInstance, greenPolygonOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
             renderState : {
@@ -115,10 +144,10 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
-    
+       
     // Add polygon instances to primtives
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [bluePolygonInstance, greenPolygonInstance],
+        geometryInstances : [redPolygonInstance, bluePolygonInstance, greenPolygonInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             closed : true
         })

@@ -393,7 +393,7 @@ defineSuite([
             var tileCommandCount = 0;
 
             for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].colorList;
+                var commandList = commandLists[i].opaqueList;
                 var commandListLength = commandList.length;
                 for (var j = 0; j < commandListLength; ++j) {
                     var command = commandList[j];
@@ -452,7 +452,7 @@ defineSuite([
             var tileCommandCount = 0;
 
             for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].colorList;
+                var commandList = commandLists[i].opaqueList;
                 var commandListLength = commandList.length;
                 for (var j = 0; j < commandListLength; ++j) {
                     var command = commandList[j];
@@ -495,7 +495,7 @@ defineSuite([
             var tileCommandCount = 0;
 
             for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].colorList;
+                var commandList = commandLists[i].opaqueList;
                 var commandListLength = commandList.length;
                 for (var j = 0; j < commandListLength; ++j) {
                     var command = commandList[j];

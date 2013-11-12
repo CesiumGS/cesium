@@ -68,4 +68,4 @@ defineSuite([
             return new HomeButton('testElement', scene);
         }).toThrow();
     });
-});
+}, 'WebGL');

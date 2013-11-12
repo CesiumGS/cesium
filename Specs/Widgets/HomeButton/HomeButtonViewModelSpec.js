@@ -76,4 +76,4 @@ defineSuite([
         transitioner.morphToColumbusView();
         viewModel.command();
     });
-});
+}, 'WebGL');

@@ -108,7 +108,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b21" />
+	<property name="version" value="b22" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -127,7 +127,9 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.10/jshint.js" />
+	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
+	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
@@ -222,6 +224,31 @@
 			</sourcefiles>
 		</runJsHint>
 		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
+
+	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
+		<echo message="Source:"/>
+		<apply executable="perl" parallel="true">
+			<arg value="${clocPath}"/>
+			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
+			<arg value="Source/Core/" />
+			<arg value="Source/DynamicScene/" />
+			<arg value="Source/Renderer/" />
+			<arg value="Source/Scene/" />
+			<arg value="Source/Widgets/" />
+			<arg value="Source/Workers/" />
+			<fileset id="clocFileSet" dir="Source/">
+				<include name="Shaders/*.glsl" />
+				<include name="Shaders/**/*.glsl" />
+				<include name="main.js"/>
+			</fileset>
+		</apply>
+		<echo message="${line.separator}Specs:"/>
+		<exec executable="perl">
+			<arg value="${clocPath}"/>
+			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
+			<arg value="Specs/"/>
+		</exec>
 	</target>
 
 	<target name="setNodePathValue">

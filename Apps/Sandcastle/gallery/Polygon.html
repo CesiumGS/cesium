@@ -111,10 +111,30 @@ require(['Cesium'], function(Cesium) {
             color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.GREEN)
         }
     });
+    
+    // Orange extruded polygon with per position heights
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-108.0, 25.0, 100000),
+        Cesium.Cartographic.fromDegrees(-100.0, 25.0, 100000),
+        Cesium.Cartographic.fromDegrees(-100.0, 30.0, 100000),
+        Cesium.Cartographic.fromDegrees(-108.0, 30.0, 300000)
+    ]);
+    
+    var orangePolygonInstance = new Cesium.GeometryInstance({
+        geometry : Cesium.PolygonGeometry.fromPositions({
+            positions : positions,
+            extrudedHeight: 0,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            perPositionHeight : true
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.ORANGE)
+        }
+    });
 
     // Add polygon instances to primitives
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [redPolygonInstance, greenPolygonInstance, bluePolygonInstance],
+        geometryInstances : [redPolygonInstance, greenPolygonInstance, bluePolygonInstance, orangePolygonInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             closed : true,
             translucent : false
