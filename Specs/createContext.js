@@ -44,6 +44,7 @@ define([
         // clone options so we can change properties
         options = clone(defaultValue(options, {}));
         options.alpha = defaultValue(options.alpha, true);
+        options.antialias = defaultValue(options.antialias, false);
 
         var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);
