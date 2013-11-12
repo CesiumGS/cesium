@@ -91,6 +91,16 @@ define([
         return model.basePath + ':' + animationName + ':' + samplerName;
     }
 
+ // TODO Workaround: https://github.com/KhronosGroup/glTF/issues/185
+    var ConstantSpline = function(value) {
+        this._value = value;
+    };
+
+    ConstantSpline.prototype.evaluate = function(time, result) {
+        return this._value;
+    };
+ // END TODO Workaround
+
     ModelCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
         var spline = cachedAnimationSplines[key];
@@ -102,21 +112,27 @@ define([
             var times = input.czm.values;
             var controlPoints = output.czm.values;
 
-            if (sampler.interpolation === 'LINEAR') {
-                if (output.type === ModelConstants.FLOAT_VEC3) {
-                    spline = new LinearSpline({
-                        times : times,
-                        points : controlPoints
-                    });
-                } else if (output.type === ModelConstants.FLOAT_VEC4) {
-                    spline = new QuaternionSpline({
-                        times : times,
-                        points : controlPoints
-                    });
+// TODO Workaround: https://github.com/KhronosGroup/glTF/issues/185
+            if ((times.length === 1) && (controlPoints.length === 1)) {
+                spline = new ConstantSpline(controlPoints[0]);
+            } else {
+// END TODO Workaround
+                if (sampler.interpolation === 'LINEAR') {
+                    if (output.type === ModelConstants.FLOAT_VEC3) {
+                        spline = new LinearSpline({
+                            times : times,
+                            points : controlPoints
+                        });
+                    } else if (output.type === ModelConstants.FLOAT_VEC4) {
+                        spline = new QuaternionSpline({
+                            times : times,
+                            points : controlPoints
+                        });
+                    }
+                    // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
                 }
-                // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
+                // TODO: else support all interpolators.  https://github.com/KhronosGroup/glTF/issues/156
             }
-            // TODO: else support all interpolators.  https://github.com/KhronosGroup/glTF/issues/156
 
             cachedAnimationSplines[key] = spline;
         }
