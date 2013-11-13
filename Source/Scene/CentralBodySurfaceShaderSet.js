@@ -85,6 +85,7 @@ define([
             for (var i = 0; i < textureCount; ++i) {
                 fs +=
                     'color = sampleAndBlend(\n' +
+                    '   u_pushClip[' + i + '],\n' + // Whether we are going to clip this layer for ground push
                     '   color,\n' +
                     '   u_dayTextures[' + i + '],\n' +
                     '   textureCoordinates,\n' +

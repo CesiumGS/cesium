@@ -11,6 +11,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
+        '../Core/Extent',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -36,6 +37,7 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidalOccluder,
+        Extent,
         Intersect,
         Matrix4,
         PrimitiveType,
@@ -119,6 +121,9 @@ define([
 
             suspendLodUpdate : false
         };
+        
+        // Allow for ground push
+        this.boundingVolumeExtend = 0.0; 
     };
 
     CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, projection) {
@@ -522,6 +527,9 @@ define([
 
         var boundingVolume = tile.boundingSphere3D;
 
+        // Extend the bounding volume for ground push
+        boundingVolume.radius += surface.boundingVolumeExtend;
+
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
             BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
@@ -719,6 +727,12 @@ define([
             u_tileExtent : function() {
                 return this.tileExtent;
             },
+            u_realTileExtent : function() {
+                return this.realTileExtent;
+            },
+            u_pushClip : function() {
+                return this.pushClip;
+            },
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
@@ -768,7 +782,8 @@ define([
             center3D : undefined,
             modifiedModelView : new Matrix4(),
             tileExtent : new Cartesian4(),
-
+            realTileExtent : new Cartesian4(),
+            pushClip : [],
             dayTextures : [],
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
@@ -797,6 +812,7 @@ define([
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
+    var realTileExtentScratch = new Cartesian4();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.viewMatrix;
@@ -823,6 +839,13 @@ define([
 
                 // Not used in 3D.
                 var tileExtent = tileExtentScratch;
+
+                // Store the real tile extent for ground push
+                var realTileExtent = realTileExtentScratch;
+                realTileExtent.x = tile.extent.west;
+                realTileExtent.y = tile.extent.south;
+                realTileExtent.z = tile.extent.east;
+                realTileExtent.w = tile.extent.north;
 
                 // Only used for Mercator projections.
                 var southLatitude = 0.0;
@@ -930,6 +953,11 @@ define([
                             tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                         }
 
+                        // Ground push related setting
+                        uniformMap.pushClip[numberOfDayTextures] = 0.0;
+                        if (typeof imageryLayer.getImageryProvider().pushClip !== 'undefined')
+                            uniformMap.pushClip[numberOfDayTextures] = imageryLayer.getImageryProvider().pushClip;
+
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                         uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
@@ -984,6 +1012,7 @@ define([
                     uniformMap.dayTextures.length = numberOfDayTextures;
                     uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+                    Cartesian4.clone(realTileExtent, uniformMap.realTileExtent);
 
                     colorCommandList.push(command);
 

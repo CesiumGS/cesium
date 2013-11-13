@@ -10,6 +10,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/Ellipsoid',
@@ -57,6 +58,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         ComponentDatatype,
         Ellipsoid,
@@ -247,9 +249,30 @@ define([
         this._hasWaterMask = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
+        this.pushValue = 0.0;
+        this.pushExtent = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+        this.pushBlend = 0.0004;
+        this.pushBaseTint = new Cartesian3(1.0, 1.0, 1.0);
+        this.pushSidesTint = new Cartesian3(1.0, 1.0, 1.0);
+
         var that = this;
 
         this._drawUniforms = {
+            u_pushValue : function() {
+                return that.pushValue;
+            },
+            u_pushExtent : function() {
+                return that.pushExtent;
+            },
+            u_pushBlend : function() {
+                return that.pushBlend;
+            },
+            u_pushBaseTint : function() {
+                return that.pushBaseTint;
+            },
+            u_pushSidesTint : function() {
+                return that.pushSidesTint;
+            },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return that._zoomedOutOceanSpecularIntensity;
             },

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="NASA Black Marble imagery.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        packages: [
+                   { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
+                   { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
+               ]
+    });
+    </script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+</head>
+<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table id="layerTable">
+  <tr>
+      <td>Width</td>
+      <td id="widthSlider"></td>
+  </tr>
+  <tr>
+      <td>Depth</td>
+      <td id="depthSlider"></td>
+  </tr>
+</table>
+</div>
+<script id="cesium_sandcastle_script">
+require([
+     'Cesium', 'dijit/form/HorizontalSlider', 'dijit/TitlePane'
+], function(
+     Cesium, HorizontalSlider, TitlePane)
+{
+    "use strict";
+    
+    function createUI(centralBody) {
+        var tp = new TitlePane({
+            title: 'Adjust Ground Push',
+            id:'title-pane',
+            content: document.getElementById('layerTable'),
+            open: false
+        });
+        document.getElementById('toolbar').appendChild(tp.domNode);
+
+        widthSlider = new HorizontalSlider({
+            value : 0.01,
+            minimum : 0.0,
+            maximum : 0.02,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                centralBody.pushExtent = getPushExtentAsCartesian4(value);
+            }
+        });
+        widthSlider.placeAt('widthSlider');
+
+        depthSlider = new HorizontalSlider({
+            value : centralBody.pushValue,
+            minimum : -10000.0,
+            maximum : 10000.0,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                centralBody.pushValue = value;
+            }
+        });
+        depthSlider.placeAt('depthSlider');
+    }
+    
+    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var centralBody = widget.centralBody;
+    var scene = widget.scene;
+    
+    var pushCentreLat = 0.6594;
+    var pushCentreLon = -2.1365;
+
+    var widthSlider;
+    var depthSlider;
+    
+    // Add an imagery provider to reveal in the pushed region
+    var imageryLayerCollection = centralBody.getImageryLayers();
+    var imageryProvider = new Cesium.TileMapServiceImageryProvider({
+        url : 'http://cesium.agi.com/blackmarble',
+        maximumLevel : 8,
+        credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+    });
+    centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+    
+    function getPushExtentAsCartesian4(widthValue){
+        return new Cesium.Cartesian4(pushCentreLon-widthValue, pushCentreLat-widthValue, pushCentreLon+widthValue, pushCentreLat+widthValue);
+    }
+    
+	function setGroundPush(){
+	    // enable clipping the imagery provider so it only shows in the pushed region
+	    imageryProvider.pushClip = 1.0;
+
+		// Amount of push
+		centralBody.pushValue = -10000.0;
+		// Extent of push region
+		centralBody.pushExtent = getPushExtentAsCartesian4(0.01);
+		// Smooth the edge transition
+		centralBody.pushBlend = 0.0004;
+		
+		// Tint the push area
+		centralBody.pushBaseTint = new Cesium.Cartesian3(0.5, 0.4, 0.3);
+		centralBody.pushSidesTint = new Cesium.Cartesian3(0.7, 0.6, 0.5);
+		
+		// Expand the bounding box of the tiles to avoid render artefacts
+		centralBody._surface.boundingVolumeExtend = 10000.0;
+	}
+	setGroundPush();
+	
+	function viewSanFrancisco(){
+        var eye = new Cesium.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
+        var target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176));
+        var up = new Cesium.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
+        scene.getCamera().controller.lookAt(eye, target, up);
+	}
+	viewSanFrancisco();
+
+    createUI(centralBody);
+
+    Sandcastle.finishedLoading();
+    
+});
+</script>
+</body>
+</html>
