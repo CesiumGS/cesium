@@ -103,33 +103,33 @@ require([
         return new Cesium.Cartesian4(pushCentreLon-widthValue, pushCentreLat-widthValue, pushCentreLon+widthValue, pushCentreLat+widthValue);
     }
     
-	function setGroundPush(){
-	    // enable clipping the imagery provider so it only shows in the pushed region
-	    imageryProvider.pushClip = 1.0;
+    function setGroundPush(){
+        // enable clipping the imagery provider so it only shows in the pushed region
+        imageryProvider.pushClip = 1.0;
 
-		// Amount of push
-		centralBody.pushValue = -10000.0;
-		// Extent of push region
-		centralBody.pushExtent = getPushExtentAsCartesian4(0.01);
-		// Smooth the edge transition
-		centralBody.pushBlend = 0.0004;
-		
-		// Tint the push area
-		centralBody.pushBaseTint = new Cesium.Cartesian3(0.5, 0.4, 0.3);
-		centralBody.pushSidesTint = new Cesium.Cartesian3(0.7, 0.6, 0.5);
-		
-		// Expand the bounding box of the tiles to avoid render artefacts
-		centralBody._surface.boundingVolumeExtend = 10000.0;
-	}
-	setGroundPush();
-	
-	function viewSanFrancisco(){
+        // Amount of push
+        centralBody.pushValue = -10000.0;
+        // Extent of push region
+        centralBody.pushExtent = getPushExtentAsCartesian4(0.01);
+        // Smooth the edge transition
+        centralBody.pushBlend = 0.0004;
+        
+        // Tint the push area
+        centralBody.pushBaseTint = new Cesium.Cartesian3(0.5, 0.4, 0.3);
+        centralBody.pushSidesTint = new Cesium.Cartesian3(0.7, 0.6, 0.5);
+        
+        // Expand the bounding box of the tiles to avoid render artefacts
+        centralBody._surface.boundingVolumeExtend = 10000.0;
+    }
+    setGroundPush();
+    
+    function viewSanFrancisco(){
         var eye = new Cesium.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
         var target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176));
         var up = new Cesium.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
         scene.getCamera().controller.lookAt(eye, target, up);
-	}
-	viewSanFrancisco();
+    }
+    viewSanFrancisco();
 
     createUI(centralBody);
 

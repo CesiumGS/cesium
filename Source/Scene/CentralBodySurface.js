@@ -121,9 +121,9 @@ define([
 
             suspendLodUpdate : false
         };
-        
+
         // Allow for ground push
-        this.boundingVolumeExtend = 0.0; 
+        this.boundingVolumeExtend = 0.0;
     };
 
     CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, projection) {
@@ -955,8 +955,9 @@ define([
 
                         // Ground push related setting
                         uniformMap.pushClip[numberOfDayTextures] = 0.0;
-                        if (typeof imageryLayer.getImageryProvider().pushClip !== 'undefined')
+                        if (typeof imageryLayer.getImageryProvider().pushClip !== 'undefined') {
                             uniformMap.pushClip[numberOfDayTextures] = imageryLayer.getImageryProvider().pushClip;
+                        }
 
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
