@@ -172,6 +172,15 @@ define([
     CesiumMath.SOLAR_RADIUS = 6.955e8;
 
     /**
+     * The mean radius of the moon, according to the "Report of the IAU/IAG Working Group on
+     * Cartographic Coordinates and Rotational Elements of the Planets and satellites: 2000",
+     * Celestial Mechanics 82: 83-110, 2002.
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.LUNAR_RADIUS = 1737400.0;
+
+    /**
      * 64 * 1024
      * @type {Number}
      * @constant
@@ -531,19 +540,50 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
      *
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
+     *
      * @example
      * var t = CesiumMath.isPowerOfTwo(16); // true
      * var f = CesiumMath.isPowerOfTwo(20); // false
-     *
-     * @exception {DeveloperError} A number greater than or equal to 0 is required.
      */
     CesiumMath.isPowerOfTwo = function(n) {
         if (typeof n !== 'number' || n < 0) {
             throw new DeveloperError('A number greater than or equal to 0 is required.');
         }
 
-        var m = defaultValue(n, 0);
-        return (m !== 0) && ((m & (m - 1)) === 0);
+        return (n !== 0) && ((n & (n - 1)) === 0);
+    };
+
+    /**
+     * Computes the next power-of-two integer greater than or equal to the provided positive integer.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} n The positive integer to test.
+     *
+     * @returns {Number} The next power-of-two integer.
+     *
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
+     *
+     * @example
+     * var n = CesiumMath.nextPowerOfTwo(29); // 32
+     * var m = CesiumMath.nextPowerOfTwo(32); // 32
+     */
+    CesiumMath.nextPowerOfTwo = function(n) {
+        if (typeof n !== 'number' || n < 0) {
+            throw new DeveloperError('A number greater than or equal to 0 is required.');
+        }
+
+        // From http://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+        --n;
+        n |= n >> 1;
+        n |= n >> 2;
+        n |= n >> 4;
+        n |= n >> 8;
+        n |= n >> 16;
+        ++n;
+
+        return n;
     };
 
     /**

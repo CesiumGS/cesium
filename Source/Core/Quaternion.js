@@ -135,9 +135,9 @@ define([
             w = 0.5 * root;
             root = 0.5 / root; // 1/(4w)
 
-            x = (matrix[Matrix3.COLUMN2ROW1] - matrix[Matrix3.COLUMN1ROW2]) * root;
-            y = (matrix[Matrix3.COLUMN0ROW2] - matrix[Matrix3.COLUMN2ROW0]) * root;
-            z = (matrix[Matrix3.COLUMN1ROW0] - matrix[Matrix3.COLUMN0ROW1]) * root;
+            x = (matrix[Matrix3.COLUMN1ROW2] - matrix[Matrix3.COLUMN2ROW1]) * root;
+            y = (matrix[Matrix3.COLUMN2ROW0] - matrix[Matrix3.COLUMN0ROW2]) * root;
+            z = (matrix[Matrix3.COLUMN0ROW1] - matrix[Matrix3.COLUMN1ROW0]) * root;
         } else {
             // |w| <= 1/2
             var next = fromRotationMatrixNext;
@@ -161,9 +161,9 @@ define([
             quat[j] = (matrix[Matrix3.getElementIndex(j, i)] + matrix[Matrix3.getElementIndex(i, j)]) * root;
             quat[k] = (matrix[Matrix3.getElementIndex(k, i)] + matrix[Matrix3.getElementIndex(i, k)]) * root;
 
-            x = quat[0];
-            y = quat[1];
-            z = quat[2];
+            x = -quat[0];
+            y = -quat[1];
+            z = -quat[2];
         }
 
         if (!defined(result)) {
@@ -299,9 +299,7 @@ define([
         if (!defined(result)) {
             result = new Quaternion();
         }
-        sampledQuaternionRotation.x = array[0];
-        sampledQuaternionRotation.y = array[1];
-        sampledQuaternionRotation.z = array[2];
+        Cartesian3.fromArray(array, 0, sampledQuaternionRotation);
         var magnitude = Cartesian3.magnitude(sampledQuaternionRotation);
 
         Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
@@ -312,7 +310,8 @@ define([
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }
 
-        return Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
+        Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
+        return Quaternion.conjugate(result, result);
     };
 
     /**
@@ -769,7 +768,7 @@ define([
         // dot > 0, as the dot product approaches 1, the angle between the
         // quaternions vanishes. use linear interpolation.
         if (1.0 - dot < CesiumMath.EPSILON6) {
-            return Quaternion.lerp(start, r, t);
+            return Quaternion.lerp(start, r, t, result);
         }
 
         var theta = Math.acos(dot);
@@ -777,6 +776,152 @@ define([
         slerpScaledR = Quaternion.multiplyByScalar(r, Math.sin(t * theta), slerpScaledR);
         result = Quaternion.add(slerpScaledP, slerpScaledR, result);
         return Quaternion.multiplyByScalar(result, 1.0 / Math.sin(theta), result);
+    };
+
+    /**
+     * The logarithmic quaternion function.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} quaternion The unit quaternion.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} quaternion is required.
+     */
+    Quaternion.log = function(quaternion, result) {
+        if (!defined(quaternion)) {
+            throw new DeveloperError('quaternion is required.');
+        }
+
+        var theta = Math.acos(CesiumMath.clamp(quaternion.w, -1.0, 1.0));
+        var thetaOverSinTheta = 0.0;
+
+        if (theta !== 0.0) {
+            thetaOverSinTheta = theta / Math.sin(theta);
+        }
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        return Cartesian3.multiplyByScalar(quaternion, thetaOverSinTheta, result);
+    };
+
+    var expScratch = new Cartesian3();
+
+    /**
+     * The exponential quaternion function.
+     * @memberof Quaternion
+     *
+     * @param {Cartesian3} cartesian The cartesian.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    Quaternion.exp = function(cartesian, result) {
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        var theta = Cartesian3.magnitude(cartesian);
+        var sinThetaOverTheta = 0.0;
+
+        if (theta !== 0.0) {
+            sinThetaOverTheta = Math.sin(theta) / theta;
+        }
+
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
+
+        result.x = cartesian.x * sinThetaOverTheta;
+        result.y = cartesian.y * sinThetaOverTheta;
+        result.z = cartesian.z * sinThetaOverTheta;
+        result.w = Math.cos(theta);
+
+        return result;
+    };
+
+    var squadScratchCartesian0 = new Cartesian3();
+    var squadScratchCartesian1 = new Cartesian3();
+    var squadScratchQuaternion0 = new Quaternion();
+    var squadScratchQuaternion1 = new Quaternion();
+
+    /**
+     * Computes an inner quadrangle point.
+     * <p>This will compute quaternions that ensure a squad curve is C<sup>1</sup>.</p>
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} q0 The first quaternion.
+     * @param {Quaternion} q1 The second quaternion.
+     * @param {Quaternion} q2 The third quaternion.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} q0, q1, and q2 are required.
+     *
+     * @see Quaternion#squad
+     */
+    Quaternion.innerQuadrangle = function(q0, q1, q2, result) {
+        if (!defined(q0) || !defined(q1) || !defined(q2)) {
+            throw new DeveloperError('q0, q1, and q2 are required.');
+        }
+
+        var qInv = Quaternion.conjugate(q1, squadScratchQuaternion0);
+        Quaternion.multiply(qInv, q2, squadScratchQuaternion1);
+        var cart0 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian0);
+
+        Quaternion.multiply(qInv, q0, squadScratchQuaternion1);
+        var cart1 = Quaternion.log(squadScratchQuaternion1, squadScratchCartesian1);
+
+        Cartesian3.add(cart0, cart1, cart0);
+        Cartesian3.multiplyByScalar(cart0, 0.25, cart0);
+        Cartesian3.negate(cart0, cart0);
+        Quaternion.exp(cart0, squadScratchQuaternion0);
+
+        return Quaternion.multiply(q1, squadScratchQuaternion0, result);
+    };
+
+    /**
+     * Computes the spherical quadrangle interpolation between quaternions.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} q0 The first quaternion.
+     * @param {Quaternion} q1 The second quaternion.
+     * @param {Quaternion} s0 The first inner quadrangle.
+     * @param {Quaternion} s1 The second inner quadrangle.
+     * @param {Number} t The time in [0,1] used to interpolate.
+     * @param {Quaternion} [result] The object onto which to store the result.
+     * @returns {Quaternion} The modified result parameter or a new instance if none was provided.
+     *
+     * @exception {DeveloperError} q0, q1, s0, and s1 are required.
+     * @exception {DeveloperError} t is required and must be a number.
+     *
+     * @see Quaternion#innerQuadrangle
+     *
+     * @example
+     * // 1. compute the squad interpolation between two quaternions on a curve
+     * var s0 = Quaternion.innerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
+     * var s1 = Quaternion.innerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
+     * var q = Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
+     *
+     * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
+     * var s1 = Quaternion.innerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
+     * var q = Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
+     */
+    Quaternion.squad = function(q0, q1, s0, s1, t, result) {
+        if (!defined(q0) || !defined(q1) || !defined(s0) || !defined(s1)) {
+            throw new DeveloperError('q0, q1, s0, and s1 are required.');
+        }
+
+        if (typeof t !== 'number') {
+            throw new DeveloperError('t is required and must be a number.');
+        }
+
+        var slerp0 = Quaternion.slerp(q0, q1, t, squadScratchQuaternion0);
+        var slerp1 = Quaternion.slerp(s0, s1, t, squadScratchQuaternion1);
+        return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
     };
 
     /**
@@ -845,6 +990,34 @@ define([
      */
     Quaternion.prototype.clone = function(result) {
         return Quaternion.clone(this, result);
+    };
+
+    /**
+     * Compares this and the provided quaternion componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} [right] The right hand side quaternion.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Quaternion.prototype.equals = function(right) {
+        return Quaternion.equals(this, right);
+    };
+
+    /**
+     * Compares this and the provided quaternion componentwise and returns
+     * <code>true</code> if they are within the provided epsilon,
+     * <code>false</code> otherwise.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} [right] The right hand side quaternion.
+     * @param {Number} epsilon The epsilon to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     *
+     * @exception {DeveloperError} epsilon is required and must be a number.
+     */
+    Quaternion.prototype.equalsEpsilon = function(right, epsilon) {
+        return Quaternion.equalsEpsilon(this, right, epsilon);
     };
 
     /**

@@ -32,26 +32,6 @@ defineSuite([
         expect(property.getValue(interval2.stop)).toBe(interval2.data);
     });
 
-    it('works with non-clonable objects', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, {});
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, {});
-
-        var timesCalled = 0;
-        function noClone(value, result) {
-            timesCalled++;
-            return value;
-        }
-
-        var property = new TimeIntervalCollectionProperty(noClone);
-        property.intervals.addInterval(interval1);
-        property.intervals.addInterval(interval2);
-
-        expect(property.getValue(interval1.start)).toBe(interval1.data);
-        expect(timesCalled).toEqual(1);
-        expect(property.getValue(interval2.stop)).toBe(interval2.data);
-        expect(timesCalled).toEqual(2);
-    });
-
     it('works with clonable objects', function() {
         var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
@@ -92,5 +72,37 @@ defineSuite([
         expect(function() {
             property.getValue(undefined);
         }).toThrow();
+    });
+
+    it('equals works for differing basic type intervals', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, 5);
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, 6);
+
+        var left = new TimeIntervalCollectionProperty();
+        left.intervals.addInterval(interval1);
+        left.intervals.addInterval(interval2);
+
+        var right = new TimeIntervalCollectionProperty();
+        right.intervals.addInterval(interval1);
+
+        expect(left.equals(right)).toEqual(false);
+        right.intervals.addInterval(interval2);
+        expect(left.equals(right)).toEqual(true);
+    });
+
+    it('equals works for differing complex type intervals', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+
+        var left = new TimeIntervalCollectionProperty();
+        left.intervals.addInterval(interval1);
+        left.intervals.addInterval(interval2);
+
+        var right = new TimeIntervalCollectionProperty();
+        right.intervals.addInterval(interval1);
+
+        expect(left.equals(right)).toEqual(false);
+        right.intervals.addInterval(interval2);
+        expect(left.equals(right)).toEqual(true);
     });
 });

@@ -163,5 +163,25 @@ define([
      */
     PolylineMaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
+    /**
+     * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#isTranslucent}.
+     *
+     * @memberof PolylineMaterialAppearance
+     *
+     * @returns {Boolean} <code>true</code> if the appearance is translucent.
+     */
+    PolylineMaterialAppearance.prototype.isTranslucent = Appearance.prototype.isTranslucent;
+
+    /**
+     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
+     * it can contain a subset of render state properties identical to <code>renderState</code>
+     * passed to {@link Context#createRenderState}.
+     *
+     * @memberof PolylineMaterialAppearance
+     *
+     * @returns {Object} The render state.
+     */
+    PolylineMaterialAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
+
     return PolylineMaterialAppearance;
 });

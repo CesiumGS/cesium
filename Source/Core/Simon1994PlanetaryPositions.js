@@ -109,7 +109,7 @@ define([
             result.z = 0.0;
         }
 
-        return perifocalToEquatorial.multiplyByVector(result, result);
+        return Matrix3.multiplyByVector(perifocalToEquatorial, result, result);
     }
 
     function chooseOrbit(eccentricity, tolerance) {
@@ -494,7 +494,7 @@ define([
         computeSimonEarth(date, translation);
 
         Cartesian3.subtract(result, translation, result);
-        axesTransformation.multiplyByVector(result, result);
+        Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;
     };
@@ -511,7 +511,7 @@ define([
             date = new JulianDate();
         }
         result = computeSimonMoon(date, result);
-        axesTransformation.multiplyByVector(result, result);
+        Matrix3.multiplyByVector(axesTransformation, result, result);
 
         return result;
     };

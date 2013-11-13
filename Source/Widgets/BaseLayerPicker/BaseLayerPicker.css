@@ -1,18 +1,12 @@
+@import url(../CesiumWidget/CesiumWidget.css);
+
 .cesium-baseLayerPicker-selected {
-    display: inline-block;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 14%;
-    border: 1px solid #444;
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    box-sizing: border-box;
-    cursor: pointer;
-}
-
-.cesium-baseLayerPicker-selected:hover {
-    box-shadow: 0 0 8px #fff, 0 0 8px #fff;
+    border: none;
 }
 
 .cesium-baseLayerPicker-visible {
@@ -38,6 +32,7 @@
     right: 0;
     width: 240px;
     max-height: 500px;
+    margin-top: 5px;
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
     overflow: auto;
@@ -83,7 +78,6 @@
     margin: 0;
     padding: 0;
     cursor: pointer;
-    -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
 }

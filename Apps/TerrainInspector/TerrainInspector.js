@@ -20,7 +20,7 @@ require([
     centralBody.depthTestAgainstTerrain = true;
 
     centralBody.terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesium.agi.com/smallterrain'
+        url : 'http://cesiumweb.cloudapp.net/smallterrain'
     });
 
     var tp = new TitlePane({

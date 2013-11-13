@@ -2,11 +2,13 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        './ConstantProperty'
+        './ConstantProperty',
+        './Property'
     ], function(
         Color,
         defined,
-        ConstantProperty) {
+        ConstantProperty,
+        Property) {
     "use strict";
 
     /**
@@ -25,7 +27,7 @@ define([
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof MaterialProperty
+     * @memberof ColorMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
      * @type {String} The type of material.
@@ -36,7 +38,7 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof MaterialProperty
+     * @memberof ColorMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -50,6 +52,20 @@ define([
         }
         result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
         return result;
+    };
+
+    /**
+     * Compares this property to the provided property and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof ColorMaterialProperty
+     *
+     * @param {Property} [other] The other property.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    ColorMaterialProperty.prototype.equals = function(other) {
+        return this === other || //
+               (other instanceof ColorMaterialProperty && //
+                Property.equals(this.color, other.color));
     };
 
     return ColorMaterialProperty;

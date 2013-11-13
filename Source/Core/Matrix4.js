@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslationQuaternionRotationScale
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
      * @see Matrix4.fromUniformScale
@@ -219,6 +220,93 @@ define([
         result[13] = translation.y;
         result[14] = translation.z;
         result[15] = 1.0;
+        return result;
+    };
+
+    var scratchTrsRotation = new Matrix3();
+
+    /**
+     * Computes a Matrix4 instance from a translation, rotation, and scale (TRS)
+     * representation with the rotation represented as a quaternion.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Cartesian3} translation The translation transformation.
+     * @param {Quaternion} rotation The rotation transformation.
+     * @param {Cartesian3} scale The non-uniform scale transformation.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} translation is required.
+     * @exception {DeveloperError} rotation is required.
+     * @exception {DeveloperError} scale is required.
+     *
+     * @example
+     * result = Matrix4.fromTranslationQuaternionRotationScale(
+     *   new Cartesian3(1.0, 2.0, 3.0), // translation
+     *   Quaternion.IDENTITY,           // rotation
+     *   new Cartesian3(7.0, 8.0, 9.0), // scale
+     *   result);
+     */
+    Matrix4.fromTranslationQuaternionRotationScale = function(translation, rotation, scale, result) {
+        if (!defined(translation)) {
+            throw new DeveloperError('translation is required.');
+        }
+        if (!defined(rotation)) {
+            throw new DeveloperError('rotation is required.');
+        }
+        if (!defined(scale)) {
+            throw new DeveloperError('scale is required.');
+        }
+
+        if (!defined(result)) {
+            result = new Matrix4();
+        }
+
+        var scaleX = scale.x;
+        var scaleY = scale.y;
+        var scaleZ = scale.z;
+
+        var x2 = rotation.x * rotation.x;
+        var xy = rotation.x * rotation.y;
+        var xz = rotation.x * rotation.z;
+        var xw = rotation.x * rotation.w;
+        var y2 = rotation.y * rotation.y;
+        var yz = rotation.y * rotation.z;
+        var yw = rotation.y * rotation.w;
+        var z2 = rotation.z * rotation.z;
+        var zw = rotation.z * rotation.w;
+        var w2 = rotation.w * rotation.w;
+
+        var m00 = x2 - y2 - z2 + w2;
+        var m01 = 2.0 * (xy - zw);
+        var m02 = 2.0 * (xz + yw);
+
+        var m10 = 2.0 * (xy + zw);
+        var m11 = -x2 + y2 - z2 + w2;
+        var m12 = 2.0 * (yz - xw);
+
+        var m20 = 2.0 * (xz - yw);
+        var m21 = 2.0 * (yz + xw);
+        var m22 = -x2 - y2 + z2 + w2;
+
+        result[0]  = m00 * scaleX;
+        result[1]  = m10 * scaleX;
+        result[2]  = m20 * scaleX;
+        result[3]  = 0.0;
+        result[4]  = m01 * scaleY;
+        result[5]  = m11 * scaleY;
+        result[6]  = m21 * scaleY;
+        result[7]  = 0.0;
+        result[8]  = m02 * scaleZ;
+        result[9]  = m12 * scaleZ;
+        result[10] = m22 * scaleZ;
+        result[11] = 0.0;
+        result[12] = translation.x;
+        result[13] = translation.y;
+        result[14] = translation.z;
+        result[15] = 1.0;
+
         return result;
     };
 
@@ -1245,10 +1333,12 @@ define([
         return result;
     };
 
+    var uniformScaleScratch = new Cartesian3();
+
     /**
      * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
      * by an implicit uniform scale matrix.  This is an optimization
-     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     * for <code>Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);</code> with less allocations and arithmetic operations.
      *
      * @memberof Matrix4
      *
@@ -1262,42 +1352,82 @@ define([
      * @exception {DeveloperError} scale is required.
      *
      * @see Matrix4#fromUniformScale
+     * @see Matrix4#multiplyByScale
      *
      * @example
      * // Instead of Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);
      * Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
-        if (!defined(matrix)) {
-            throw new DeveloperError('matrix is required');
-        }
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required');
         }
 
-        if (scale === 1.0) {
+        uniformScaleScratch.x = scale;
+        uniformScaleScratch.y = scale;
+        uniformScaleScratch.z = scale;
+        return Matrix4.multiplyByScale(matrix, uniformScaleScratch, result);
+    };
+
+    /**
+     * Multiplies a transformation matrix (with a bottom row of <code>[0.0, 0.0, 0.0, 1.0]</code>)
+     * by an implicit non-uniform scale matrix.  This is an optimization
+     * for <code>Matrix4.multiply(m, Matrix4.fromScale(scale), m);</code> with less allocations and arithmetic operations.
+     *
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix on the left-hand side.
+     * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} scale is required.
+     *
+     * @see Matrix4#fromScale
+     * @see Matrix4#multiplyByUniformScale
+     *
+     * @example
+     * // Instead of Matrix4.multiply(m, Matrix4.fromScale(scale), m);
+     * Matrix4.multiplyByUniformScale(m, scale, m);
+     */
+    Matrix4.multiplyByScale = function(matrix, scale, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(scale)) {
+            throw new DeveloperError('scale is required');
+        }
+
+        var scaleX = scale.x;
+        var scaleY = scale.y;
+        var scaleZ = scale.z;
+
+        // Faster than Cartesian3.equals
+        if ((scaleX === 1.0) && (scaleY === 1.0) && (scaleZ === 1.0)) {
             return Matrix4.clone(matrix, result);
         }
 
         if (!defined(result)) {
             return new Matrix4(
-                scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
-                scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
-                scale * matrix[2], scale * matrix[6], scale * matrix[10], matrix[14],
+                scaleX * matrix[0], scaleY * matrix[4], scaleZ * matrix[8],  matrix[12],
+                scaleX * matrix[1], scaleY * matrix[5], scaleZ * matrix[9],  matrix[13],
+                scaleX * matrix[2], scaleY * matrix[6], scaleZ * matrix[10], matrix[14],
                 0.0,               0.0,               0.0,                1.0);
         }
 
-        result[0] = scale * matrix[0];
-        result[1] = scale * matrix[1];
-        result[2] = scale * matrix[2];
+        result[0] = scaleX * matrix[0];
+        result[1] = scaleX * matrix[1];
+        result[2] = scaleX * matrix[2];
         result[3] = 0.0;
-        result[4] = scale * matrix[4];
-        result[5] = scale * matrix[5];
-        result[6] = scale * matrix[6];
+        result[4] = scaleY * matrix[4];
+        result[5] = scaleY * matrix[5];
+        result[6] = scaleY * matrix[6];
         result[7] = 0.0;
-        result[8] = scale * matrix[8];
-        result[9] = scale * matrix[9];
-        result[10] = scale * matrix[10];
+        result[8] = scaleZ * matrix[8];
+        result[9] = scaleZ * matrix[9];
+        result[10] = scaleZ * matrix[10];
         result[11] = 0.0;
         result[12] = matrix[12];
         result[13] = matrix[13];
@@ -2059,196 +2189,6 @@ define([
     };
 
     /**
-     * Computes an Array from this Matrix4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
-     */
-    Matrix4.prototype.toArray = function(result) {
-        return Matrix4.toArray(this, result);
-    };
-
-    /**
-     * Retrieves a copy of the matrix column at the provided index as a Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the column to retrieve.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.getColumn = function(index, result) {
-        return Matrix4.getColumn(this, index, result);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified column in this matrix with the provided Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the column to set.
-     * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.setColumn = function(index, cartesian, result) {
-        return Matrix4.setColumn(this, index, cartesian, result);
-    };
-
-    /**
-     * Retrieves a copy of the matrix row at the provided index as a Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the row to retrieve.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.getRow = function(index, result) {
-        return Matrix4.getRow(this, index, result);
-    };
-
-    /**
-     * Computes a new matrix that replaces the specified row in this matrix with the provided Cartesian4 instance.
-     * @memberof Matrix4
-     *
-     * @param {Number} index The zero-based index of the row to set.
-     * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
-     */
-    Matrix4.prototype.setRow = function(index, cartesian, result) {
-        return Matrix4.setRow(this, index, cartesian, result);
-    };
-
-    /**
-     * Computes the product of this matrix and the provided matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} right The right hand side matrix.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Matrix4.prototype.multiply = function(right, result) {
-        return Matrix4.multiply(this, right, result);
-    };
-
-    /**
-     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
-     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit translation matrix defined by a {@link Cartesian3}.
-     *
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} translation The translation on the right-hand side of the multiplication.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     *
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} translation is required.
-     */
-    Matrix4.prototype.multiplyByTranslation = function(translation, result) {
-        return Matrix4.multiplyByTranslation(this, translation, result);
-    };
-
-    /**
-     * Multiplies this matrix, assuming it is a transformation matrix (with a bottom row of
-     * <code>[0.0, 0.0, 0.0, 1.0]</code>), by an implicit uniform scale matrix.
-     *
-     * @memberof Matrix4
-     *
-     * @param {Number} scale The scale on the right-hand side of the multiplication.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     *
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scale is required.
-     */
-    Matrix4.prototype.multiplyByUniformScale = function(scale, result) {
-        return Matrix4.multiplyByUniformScale(this, scale, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a column vector.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian4} cartesian The vector.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix4.prototype.multiplyByVector = function(cartesian, result) {
-        return Matrix4.multiplyByVector(this, cartesian, result);
-    };
-
-    /**
-     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4#multiplyByVector}
-     * with a {@link Cartesian4} with a <code>w</code> component of one.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} cartesian The point.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    Matrix4.prototype.multiplyByPoint = function(cartesian, result) {
-        return Matrix4.multiplyByPoint(this, cartesian, result);
-    };
-
-    /**
-     * Computes the product of this matrix and a scalar.
-     * @memberof Matrix4
-     *
-     * @param {Number} scalar The number to multiply by.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Matrix4.prototype.multiplyByScalar = function(scalar, result) {
-        return Matrix4.multiplyByScalar(this, scalar, result);
-    };
-    /**
-     * Computes a negated copy of this matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} matrix The matrix to negate.
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     */
-    Matrix4.prototype.negate = function(result) {
-        return Matrix4.negate(this, result);
-    };
-
-    /**
-     * Computes the transpose of this matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     */
-    Matrix4.prototype.transpose = function(result) {
-        return Matrix4.transpose(this, result);
-    };
-
-    /**
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Matrix4
@@ -2288,65 +2228,6 @@ define([
                '(' + this[1] + ', ' + this[5] + ', ' + this[9] + ', ' + this[13] +')\n' +
                '(' + this[2] + ', ' + this[6] + ', ' + this[10] + ', ' + this[14] +')\n' +
                '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] +')';
-    };
-
-    /**
-     * Gets the translation portion of this matrix, assuming the matrix is a affine transformation matrix.
-     * @memberof Matrix4
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @see Cartesian3
-     */
-    Matrix4.prototype.getTranslation = function(result) {
-        return Matrix4.getTranslation(this, result);
-    };
-
-    /**
-     * Gets the upper left 3x3 rotation matrix of this matrix, assuming the matrix is a affine transformation matrix.
-     * @memberof Matrix4
-     *
-     * @param {Matrix3} [result] The object onto which to store the result.
-     * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @see Matrix3
-     */
-    Matrix4.prototype.getRotation = function(result) {
-        return Matrix4.getRotation(this, result);
-    };
-
-    /**
-     * Computes the inverse of this matrix using Cramers Rule.
-     * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
-     * If the matrix is an affine transformation matrix, it is more efficient
-     * to invert it with {@link #inverseTransformation}.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
-     */
-    Matrix4.prototype.inverse = function(result) {
-        return Matrix4.inverse(this, result);
-    };
-
-    /**
-     * Computes the inverse of this matrix assuming it is
-     * an affine transformation matrix, where the upper left 3x3 elements
-     * are a rotation matrix, and the upper three elements in the fourth
-     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
-     * The matrix is not verified to be in the proper form.
-     * This method is faster than computing the inverse for a general 4x4
-     * matrix using {@link #inverse}.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} [result] The object onto which to store the result.
-     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Matrix4.prototype.inverseTransformation = function(result) {
-        return Matrix4.inverseTransformation(this, result);
     };
 
     return Matrix4;

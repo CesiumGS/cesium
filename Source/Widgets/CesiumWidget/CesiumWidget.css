@@ -1,3 +1,5 @@
+@import url(../SvgPath/SvgPath.css);
+
 .cesium-widget {
     position: relative;
 }
@@ -20,34 +22,65 @@
 
 .cesium-widget-button {
     display: inline-block;
+    position: relative;
     background: #303336;
     border: 1px solid #444;
-    border-radius: 5px;
+    color: #edffff;  /* For text buttons */
+    fill: #edffff;   /* For SVG buttons */
+    border-radius: 14%;
     padding: 4px 12px;
     margin: 0 3px;
     cursor: pointer;
+    overflow: hidden;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
 }
 
 .cesium-widget-button:focus {
-    color: #fff;
+    color: #fff;  /* For text buttons */
+    fill: #fff;   /* For SVG buttons */
     border-color: #ea4;
+    outline: none;
 }
 
 .cesium-widget-button:hover {
-    color: #fff;
+    color: #fff;  /* For text buttons */
+    fill: #fff;   /* For SVG buttons */
     background: #48b;
     border-color: #aef;
     box-shadow: 0 0 8px #fff;
 }
 
 .cesium-widget-button:active {
-    color: #000;
+    color: #000;  /* For text buttons */
+    fill: #000;   /* For SVG buttons */
     background: #adf;
     border-color: #fff;
     box-shadow: 0 0 8px #fff;
+}
+
+.cesium-widget-button:disabled,
+.cesium-widget-button-disabled,
+.cesium-widget-button-disabled:focus,
+.cesium-widget-button-disabled:hover,
+.cesium-widget-button-disabled:active {
+    background: #303336;
+    border-color: #444;
+    color: #646464;  /* For text buttons */
+    fill: #646464;   /* For SVG buttons */
+    box-shadow: none;
+    cursor: default;
+}
+
+.cesium-widget-toolbar-icon {
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    vertical-align: middle;
+    z-index: 0;  /* Workaround for rounded raster image corners in Chrome */
 }
 
 .cesium-widget-errorPanel {

@@ -8,7 +8,7 @@
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -101,9 +101,17 @@ require(['Cesium'], function(Cesium) {
     
     // Add instances to primitives
     primitives.add(new Cesium.Primitive({
-        geometryInstances : [redCorridor, blueCorridor],
+        geometryInstances : blueCorridor,
         appearance : new Cesium.PerInstanceColorAppearance({
             closed : true
+        })
+    }));
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : redCorridor,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed : true,
+            translucent : false
         })
     }));
     
