@@ -742,4 +742,4 @@ defineSuite([
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');
