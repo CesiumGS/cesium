@@ -182,9 +182,11 @@ define([
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
+        /*
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
+        */
 
         this._canvas = canvas;
 
@@ -1070,9 +1072,12 @@ define([
         } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
+            /*
             throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
+            */
         }
 
+        /*
         if (sizeInBytes <= 0) {
             throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
         }
@@ -1080,6 +1085,7 @@ define([
         if (!BufferUsage.validate(usage)) {
             throw new DeveloperError('usage is invalid.');
         }
+        */
 
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
@@ -1168,9 +1174,11 @@ define([
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
+        /*
         if (!IndexDatatype.validate(indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
+        */
 
         if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
@@ -1298,7 +1306,6 @@ define([
      *
      * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} description is required.
      * @exception {DeveloperError} description requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
      * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
@@ -1315,14 +1322,15 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createTexture2D = function(description) {
-        if (!description) {
-            throw new DeveloperError('description is required.');
-        }
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         var source = description.source;
         var width = defined(source) ? source.width : description.width;
         var height = defined(source) ? source.height : description.height;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
+        /*
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
@@ -1343,18 +1351,12 @@ define([
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
-        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
 
-        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
-        }
-
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
-            throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
@@ -1365,11 +1367,18 @@ define([
         if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
             throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
+        */
+
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
+            throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+        }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            if (source) {
+            /*
+            if (defined(source)) {
                 throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
+            */
 
             if (!this.getDepthTexture()) {
                 throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
@@ -1446,6 +1455,7 @@ define([
         width = defaultValue(width, gl.drawingBufferWidth);
         height = defaultValue(height, gl.drawingBufferHeight);
 
+        /*
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
@@ -1469,6 +1479,7 @@ define([
         if (framebufferYOffset + height > gl.drawingBufferHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
         }
+        */
 
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -1512,7 +1523,6 @@ define([
      * @returns {CubeMap} DOC_TBA.
      *
      * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} description is required.
      * @exception {DeveloperError} description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
      * @exception {DeveloperError} Each face in description.sources must have the same width and height.
      * @exception {DeveloperError} description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
@@ -1528,34 +1538,41 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createCubeMap = function(description) {
-        if (!description) {
-            throw new DeveloperError('description is required.');
-        }
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         var source = description.source;
         var width;
         var height;
 
-        if (source) {
+        if (defined(source)) {
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
+            /*
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
                 throw new DeveloperError('description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
+            */
 
             width = faces[0].width;
             height = faces[0].height;
 
+            /*
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
                     throw new DeveloperError('Each face in description.source must have the same width and height.');
                 }
             }
+            */
         } else {
             width = description.width;
             height = description.height;
         }
 
+        var size = width;
+        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+
+        /*
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
@@ -1563,8 +1580,6 @@ define([
         if (width !== height) {
             throw new DeveloperError('Width must equal height.');
         }
-
-        var size = width;
 
         if (size <= 0) {
             throw new DeveloperError('Width and height must be greater than zero.');
@@ -1574,7 +1589,6 @@ define([
             throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
-        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid description.pixelFormat.');
         }
@@ -1583,10 +1597,10 @@ define([
             throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
+        */
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
             throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
@@ -1718,6 +1732,7 @@ define([
         var width = defined(description.width) ? description.width : gl.drawingBufferWidth;
         var height = defined(description.height) ? description.height : gl.drawingBufferHeight;
 
+        /*
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
         }
@@ -1737,6 +1752,7 @@ define([
         if (height > this.getMaximumRenderbufferSize()) {
             throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
         }
+        */
 
         return new Renderbuffer(gl, format, width, height);
     };
@@ -1913,6 +1929,7 @@ define([
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
+        /*
         if (!TextureWrap.validate(s.wrapS)) {
             throw new DeveloperError('Invalid sampler.wrapS.');
         }
@@ -1932,6 +1949,7 @@ define([
         if (s.maximumAnisotropy < 1.0) {
             throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
         }
+        */
 
         return s;
     };
@@ -2043,11 +2061,13 @@ define([
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
+        /*
         if (defined(framebuffer) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
+        */
 
         ///////////////////////////////////////////////////////////////////////
 
@@ -2069,6 +2089,7 @@ define([
         var offset = drawCommand.offset;
         var count = drawCommand.count;
 
+        /*
         if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
@@ -2084,6 +2105,7 @@ define([
         if (count < 0) {
             throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
         }
+        */
 
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
         drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
@@ -2158,6 +2180,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
+        /*
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
         }
@@ -2165,6 +2188,7 @@ define([
         if (!defined(drawCommand.shaderProgram)) {
             throw new DeveloperError('drawCommand.shaderProgram is required.');
         }
+        */
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
@@ -2210,6 +2234,7 @@ define([
         var height = readState.height || gl.drawingBufferHeight;
         var framebuffer = readState.framebuffer || null;
 
+        /*
         if (width <= 0) {
             throw new DeveloperError('readState.width must be greater than zero.');
         }
@@ -2217,6 +2242,7 @@ define([
         if (height <= 0) {
             throw new DeveloperError('readState.height must be greater than zero.');
         }
+        */
 
         var pixels = new Uint8Array(4 * width * height);
 
@@ -2538,9 +2564,11 @@ define([
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
+        /*
         if (!defined(pickColor)) {
             throw new DeveloperError('pickColor is required.');
         }
+        */
 
         return this._pickObjects[pickColor.toRgba()];
     };
@@ -2579,9 +2607,11 @@ define([
      * });
      */
     Context.prototype.createPickId = function(object) {
+        /*
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
+        */
 
         // the increment and assignment have to be separate statements to
         // actually detect overflow in the Uint32 value
