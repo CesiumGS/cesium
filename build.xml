@@ -20,24 +20,6 @@
 
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
-
-	<target name="preprocess" depends="build">
-		<copy todir="Build/Preprocess">
-            <fileset dir="Source/">
-            	<include name="**/*.js" />
-            	<exclude name="*.js" />
-            	<exclude name="**/*.profile.js" />
-            	<exclude name="Assets/**" />
-            	<exclude name="Shaders/**" />
-                <exclude name="ThirdParty/**" />
-            </fileset>
-        </copy>
-		<searchReplace search="\s*\/\/\s*#ifdef\s+CESIUM_DEBUG[^#]*\/\/\s*#endif\s+CESIUM_DEBUG" modifiers="gi" replace="">
-			<sourcefiles dir="Build/Preprocess">
-                <include name="**/*.js" />
-            </sourcefiles>
-		</searchReplace>
-	</target>
 	
 	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
 		<copy todir="Build">
@@ -181,13 +163,6 @@
 		<exclude name="*.js" />
 		<exclude name="**/*.profile.js" />
 	</fileset>
-	
-	<scriptdef name="searchReplace" language="javascript" src="${tasksDirectory}/searchReplace.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
-		<attribute name="search" />
-		<attribute name="modifiers" />
-		<attribute name="replace" />
-		<element name="sourcefiles" type="fileset" />
-	</scriptdef>
 
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
