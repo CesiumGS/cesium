@@ -770,64 +770,69 @@ define([
 
     var gltfSemanticUniforms = {
 // TODO: All semantics from https://github.com/KhronosGroup/glTF/issues/83
-        MODEL : function(uniformState) {
+        MODEL : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getModel();
             };
         },
-        VIEW : function(uniformState) {
+        VIEW : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getView();
             };
         },
-        PROJECTION : function(uniformState) {
+        PROJECTION : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getProjection();
             };
         },
-        MODELVIEW : function(uniformState) {
+        MODELVIEW : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getModelView();
             };
         },
-        VIEWPROJECTION : function(uniformState) {
+        VIEWPROJECTION : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getViewProjection();
             };
         },
-        MODELVIEWPROJECTION : function(uniformState) {
+        MODELVIEWPROJECTION : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getModelViewProjection();
             };
         },
-        MODELINVERSE : function(uniformState) {
+        MODELINVERSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getInverseModel();
             };
         },
-        VIEWINVERSE : function(uniformState) {
+        VIEWINVERSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getInverseView();
             };
         },
-        PROJECTIONINVERSE : function(uniformState) {
+        PROJECTIONINVERSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getInverseProjection();
             };
         },
-        MODELVIEWINVERSE : function(uniformState) {
+        MODELVIEWINVERSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getInverseModelView();
             };
         },
-        VIEWPROJECTIONINVERSE : function(uniformState) {
+        VIEWPROJECTIONINVERSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getInverseViewProjection();
             };
         },
-        MODELVIEWINVERSETRANSPOSE : function(uniformState) {
+        MODELVIEWINVERSETRANSPOSE : function(uniformState, jointMatrices) {
             return function() {
                 return uniformState.getNormal();
+            };
+        },
+        JOINT_MATRIX : function(uniformState, jointMatrices) {
+            return function() {
+                return jointMatrices;
             };
         }
     };
@@ -953,6 +958,8 @@ define([
                 var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
 
                 var parameterValues = {};
+// SKIN_TODO: provide array of joint matrices
+                var jointMatrices = [Matrix4.IDENTITY, Matrix4.IDENTITY];
 
                 // Uniform parameters for this pass
                 for (name in uniforms) {
@@ -970,7 +977,7 @@ define([
                             } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
                                 // Map glTF semantic to Cesium automatic uniform
-                                func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                                func = gltfSemanticUniforms[parameter.semantic](context.getUniformState(), jointMatrices);
                             } else if (defined(parameter.source)) {
                                 func = getUniformFunctionFromSource(parameter.source, gltf);
                             } else if (defined(parameter.value)) {
@@ -996,7 +1003,8 @@ define([
                 }
 
                 instanceTechnique.czm = {
-                    uniformMap : uniformMap
+                    uniformMap : uniformMap,
+                    jointMatrices : jointMatrices
                 };
             }
         }
@@ -1040,7 +1048,7 @@ define([
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var meshes = node.meshes;
+        var meshes = defined(node.meshes) ? node.meshes : node.instanceSkin.sources;
         var meshesLength = meshes.length;
 
         for (var j = 0; j < meshesLength; ++j) {
@@ -1163,7 +1171,7 @@ define([
             while (stack.length > 0) {
                 var node = stack.pop();
 
-                if (defined(node.meshes)) {
+                if (defined(node.meshes) || defined(node.instanceSkin)) {
                     createCommand(model, node, context);
                 }
 
