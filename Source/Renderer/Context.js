@@ -182,11 +182,11 @@ define([
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         this._canvas = canvas;
 
@@ -1072,12 +1072,12 @@ define([
         } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
-            //>>excludeStart('debug', !pragmas.debug);
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
-            //>>excludeEnd('debug');
+            //>>includeEnd('debug');
         }
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (sizeInBytes <= 0) {
             throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
         }
@@ -1085,7 +1085,7 @@ define([
         if (!BufferUsage.validate(usage)) {
             throw new DeveloperError('usage is invalid.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
@@ -1174,11 +1174,11 @@ define([
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!IndexDatatype.validate(indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
@@ -1330,7 +1330,7 @@ define([
         var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
@@ -1367,18 +1367,18 @@ define([
         if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
             throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
             throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            //>>excludeStart('debug', !pragmas.debug);
+            //>>includeStart('debug', pragmas.debug);
             if (defined(source)) {
                 throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
-            //>>excludeEnd('debug');
+            //>>includeEnd('debug');
 
             if (!this.getDepthTexture()) {
                 throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
@@ -1455,7 +1455,7 @@ define([
         width = defaultValue(width, gl.drawingBufferWidth);
         height = defaultValue(height, gl.drawingBufferHeight);
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
@@ -1479,7 +1479,7 @@ define([
         if (framebufferYOffset + height > gl.drawingBufferHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -1547,22 +1547,22 @@ define([
         if (defined(source)) {
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
-            //>>excludeStart('debug', !pragmas.debug);
+            //>>includeStart('debug', pragmas.debug);
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
                 throw new DeveloperError('description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
-            //>>excludeEnd('debug');
+            //>>includeEnd('debug');
 
             width = faces[0].width;
             height = faces[0].height;
 
-            //>>excludeStart('debug', !pragmas.debug);
+            //>>includeStart('debug', pragmas.debug);
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
                     throw new DeveloperError('Each face in description.source must have the same width and height.');
                 }
             }
-            //>>excludeEnd('debug');
+            //>>includeEnd('debug');
         } else {
             width = description.width;
             height = description.height;
@@ -1572,7 +1572,7 @@ define([
         var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
@@ -1600,7 +1600,7 @@ define([
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid description.pixelDatatype.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
             throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
@@ -1732,7 +1732,7 @@ define([
         var width = defined(description.width) ? description.width : gl.drawingBufferWidth;
         var height = defined(description.height) ? description.height : gl.drawingBufferHeight;
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
         }
@@ -1752,7 +1752,7 @@ define([
         if (height > this.getMaximumRenderbufferSize()) {
             throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return new Renderbuffer(gl, format, width, height);
     };
@@ -1929,7 +1929,7 @@ define([
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!TextureWrap.validate(s.wrapS)) {
             throw new DeveloperError('Invalid sampler.wrapS.');
         }
@@ -1949,7 +1949,7 @@ define([
         if (s.maximumAnisotropy < 1.0) {
             throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return s;
     };
@@ -2061,13 +2061,13 @@ define([
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         ///////////////////////////////////////////////////////////////////////
 
@@ -2089,7 +2089,7 @@ define([
         var offset = drawCommand.offset;
         var count = drawCommand.count;
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
@@ -2105,7 +2105,7 @@ define([
         if (count < 0) {
             throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
         drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
@@ -2180,7 +2180,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
         }
@@ -2188,7 +2188,7 @@ define([
         if (!defined(drawCommand.shaderProgram)) {
             throw new DeveloperError('drawCommand.shaderProgram is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
@@ -2234,7 +2234,7 @@ define([
         var height = readState.height || gl.drawingBufferHeight;
         var framebuffer = readState.framebuffer || null;
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (width <= 0) {
             throw new DeveloperError('readState.width must be greater than zero.');
         }
@@ -2242,7 +2242,7 @@ define([
         if (height <= 0) {
             throw new DeveloperError('readState.height must be greater than zero.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var pixels = new Uint8Array(4 * width * height);
 
@@ -2564,11 +2564,11 @@ define([
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(pickColor)) {
             throw new DeveloperError('pickColor is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return this._pickObjects[pickColor.toRgba()];
     };
@@ -2607,11 +2607,11 @@ define([
      * });
      */
     Context.prototype.createPickId = function(object) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         // the increment and assignment have to be separate statements to
         // actually detect overflow in the Uint32 value

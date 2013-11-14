@@ -58,11 +58,11 @@ define([
      * @exception {DeveloperError} spherical is required.
      */
     Cartesian3.fromSpherical = function(spherical, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(spherical)) {
             throw new DeveloperError('spherical is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian3();
@@ -152,7 +152,7 @@ define([
      * @exception {DeveloperError} array is required.
      */
     Cartesian3.pack = function(value, array, startingIndex) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
@@ -160,7 +160,7 @@ define([
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
 
@@ -180,11 +180,11 @@ define([
      * @exception {DeveloperError} array is required.
      */
     Cartesian3.unpack = function(array, startingIndex, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
 
@@ -230,11 +230,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.getMaximumComponent = function(cartesian) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return Math.max(cartesian.x, cartesian.y, cartesian.z);
     };
@@ -249,11 +249,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.getMinimumComponent = function(cartesian) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return Math.min(cartesian.x, cartesian.y, cartesian.z);
     };
@@ -268,11 +268,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.magnitudeSquared = function(cartesian) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y + cartesian.z * cartesian.z;
     };
@@ -308,11 +308,11 @@ define([
      * var d = Cartesian3.distance(new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0));
      */
     Cartesian3.distance = function(left, right) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left) || !defined(right)) {
             throw new DeveloperError('left and right are required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         Cartesian3.subtract(left, right, distanceScratch);
         return Cartesian3.magnitude(distanceScratch);
@@ -329,11 +329,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.normalize = function(cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var magnitude = Cartesian3.magnitude(cartesian);
         if (!defined(result)) {
@@ -357,14 +357,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.dot = function(left, right) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return left.x * right.x + left.y * right.y + left.z * right.z;
     };
@@ -382,14 +382,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.multiplyComponents = function(left, right, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(left.x * right.x, left.y * right.y, left.z * right.z);
@@ -413,14 +413,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.add = function(left, right, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(left.x + right.x, left.y + right.y, left.z + right.z);
@@ -444,14 +444,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.subtract = function(left, right, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(left.x - right.x, left.y - right.y, left.z - right.z);
@@ -475,14 +475,14 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian3.multiplyByScalar = function(cartesian, scalar, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(cartesian.x * scalar,  cartesian.y * scalar,  cartesian.z * scalar);
@@ -506,14 +506,14 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian3.divideByScalar = function(cartesian, scalar, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(cartesian.x / scalar, cartesian.y / scalar, cartesian.z / scalar);
@@ -535,11 +535,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.negate = function(cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(-cartesian.x, -cartesian.y, -cartesian.z);
@@ -561,11 +561,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.abs = function(cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(Math.abs(cartesian.x), Math.abs(cartesian.y), Math.abs(cartesian.z));
@@ -592,7 +592,7 @@ define([
      * @exception {DeveloperError} t is required and must be a number.
      */
     Cartesian3.lerp = function(start, end, t, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(start)) {
             throw new DeveloperError('start is required.');
         }
@@ -602,7 +602,7 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         Cartesian3.multiplyByScalar(end, t, lerpScratch);
         result = Cartesian3.multiplyByScalar(start, 1.0 - t, result);
@@ -623,14 +623,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.angleBetween = function(left, right) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         Cartesian3.normalize(left, angleBetweenScratch);
         Cartesian3.normalize(right, angleBetweenScratch2);
@@ -651,11 +651,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.mostOrthogonalAxis = function(cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var f = Cartesian3.normalize(cartesian, mostOrthogonalAxisScratch);
         Cartesian3.abs(f, f);
@@ -709,11 +709,11 @@ define([
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Cartesian3.equalsEpsilon = function(left, right, epsilon) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return (left === right) ||
                ((defined(left)) &&
@@ -736,14 +736,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian3.cross = function(left, right, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var leftX = left.x;
         var leftY = left.y;

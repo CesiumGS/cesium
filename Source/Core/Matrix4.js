@@ -131,11 +131,11 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(values)) {
             throw new DeveloperError('values parameter is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return Matrix4.clone(values, result);
     };
@@ -152,11 +152,11 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(values)) {
             throw new DeveloperError('values is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(values[0], values[1], values[2], values[3],
@@ -197,14 +197,14 @@ define([
      * @exception {DeveloperError} translation is required.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(rotation)) {
             throw new DeveloperError('rotation is required.');
         }
         if (!defined(translation)) {
             throw new DeveloperError('translation is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(rotation[0], rotation[3], rotation[6], translation.x,
@@ -258,7 +258,7 @@ define([
      *   result);
      */
     Matrix4.fromTranslationQuaternionRotationScale = function(translation, rotation, scale, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(translation)) {
             throw new DeveloperError('translation is required.');
         }
@@ -268,7 +268,7 @@ define([
         if (!defined(scale)) {
             throw new DeveloperError('scale is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Matrix4();
@@ -356,11 +356,11 @@ define([
      * var m = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
      */
     Matrix4.fromScale = function(scale, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scale)) {
             throw new DeveloperError('scale is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(
@@ -408,11 +408,11 @@ define([
      * var m = Matrix4.fromScale(2.0);
      */
     Matrix4.fromUniformScale = function(scale, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(scale, 0.0,   0.0,   0.0,
@@ -458,17 +458,17 @@ define([
      * @exception {DeveloperError} camera.up is required.
      */
     Matrix4.fromCamera = function(camera, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(camera)) {
             throw new DeveloperError('camera is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var eye = camera.eye;
         var target = camera.target;
         var up = camera.up;
 
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(eye)) {
             throw new DeveloperError('camera.eye is required.');
         }
@@ -478,7 +478,7 @@ define([
         if (!defined(up)) {
             throw new DeveloperError('camera.up is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         Cartesian3.normalize(Cartesian3.subtract(target, eye, fromCameraF), fromCameraF);
         Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraS), fromCameraS);
@@ -559,7 +559,7 @@ define([
       * @exception {DeveloperError} far must be greater than zero.
       */
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (fovY <= 0.0 || fovY > Math.PI) {
             throw new DeveloperError('fovY must be in [0, PI).');
         }
@@ -575,7 +575,7 @@ define([
         if (far <= 0.0) {
             throw new DeveloperError('far must be greater than zero.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var bottom = Math.tan(fovY * 0.5);
 
@@ -631,7 +631,7 @@ define([
     * @exception {DeveloperError} far is required.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -650,7 +650,7 @@ define([
         if (!defined(far)) {
             throw new DeveloperError('far is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var a = 1.0 / (right - left);
         var b = 1.0 / (top - bottom);
@@ -710,7 +710,7 @@ define([
      * @exception {DeveloperError} far is required.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -729,7 +729,7 @@ define([
         if (!defined(far)) {
             throw new DeveloperError('far is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var column0Row0 = 2.0 * near / (right - left);
         var column1Row1 = 2.0 * near / (top - bottom);
@@ -785,7 +785,7 @@ define([
      * @exception {DeveloperError} near is required.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -801,7 +801,7 @@ define([
         if (!defined(near)) {
             throw new DeveloperError('near is required.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var column0Row0 = 2.0 * near / (right - left);
         var column1Row1 = 2.0 * near / (top - bottom);
@@ -932,11 +932,11 @@ define([
      *
      */
     Matrix4.toArray = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return [matrix[0], matrix[1], matrix[2], matrix[3],
@@ -981,14 +981,14 @@ define([
      * myMatrix[column1Row0Index] = 10.0;
      */
     Matrix4.getElementIndex = function(column, row) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 3) {
             throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
         }
         if (typeof column !== 'number' || column < 0 || column > 3) {
             throw new DeveloperError('column is required and must be 0, 1, 2, or 3.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return column * 4 + row;
     };
@@ -1025,7 +1025,7 @@ define([
      *
      */
     Matrix4.getColumn = function(matrix, index, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
@@ -1033,7 +1033,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 3) {
             throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var startIndex = index * 4;
         var x = matrix[startIndex];
@@ -1084,7 +1084,7 @@ define([
      *
      */
     Matrix4.setColumn = function(matrix, index, cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
@@ -1094,7 +1094,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 3) {
             throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         result = Matrix4.clone(matrix, result);
         var startIndex = index * 4;
@@ -1136,7 +1136,7 @@ define([
      * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
      */
     Matrix4.getRow = function(matrix, index, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
@@ -1144,7 +1144,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 3) {
             throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var x = matrix[index];
         var y = matrix[index + 4];
@@ -1194,7 +1194,7 @@ define([
      *
      */
     Matrix4.setRow = function(matrix, index, cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
@@ -1204,7 +1204,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 3) {
             throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         result = Matrix4.clone(matrix, result);
         result[index] = cartesian.x;
@@ -1227,14 +1227,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Matrix4.multiply = function(left, right, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var left0 = left[0];
         var left1 = left[1];
@@ -1338,14 +1338,14 @@ define([
      * Matrix4.multiplyByTranslation(m, position, m);
      */
     Matrix4.multiplyByTranslation = function(matrix, translation, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (!defined(translation)) {
             throw new DeveloperError('translation is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var x = translation.x;
         var y = translation.y;
@@ -1407,11 +1407,11 @@ define([
      * Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         uniformScaleScratch.x = scale;
         uniformScaleScratch.y = scale;
@@ -1443,14 +1443,14 @@ define([
      * Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (!defined(scale)) {
             throw new DeveloperError('scale is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var scaleX = scale.x;
         var scaleY = scale.y;
@@ -1501,14 +1501,14 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Matrix4.multiplyByVector = function(matrix, cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var vX = cartesian.x;
         var vY = cartesian.y;
@@ -1553,11 +1553,11 @@ define([
      * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
      */
     Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         scratchPoint.x = cartesian.x;
         scratchPoint.y = cartesian.y;
@@ -1596,14 +1596,14 @@ define([
      *
      */
     Matrix4.multiplyByScalar = function(matrix, scalar, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(matrix[0] * scalar, matrix[4] * scalar, matrix[8] * scalar, matrix[12] * scalar,
@@ -1657,11 +1657,11 @@ define([
      *
      */
     Matrix4.negate = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(-matrix[0], -matrix[4], -matrix[8], -matrix[12],
@@ -1715,11 +1715,11 @@ define([
      *
      */
     Matrix4.transpose = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix4(matrix[0], matrix[1], matrix[2], matrix[3],
@@ -1843,7 +1843,7 @@ define([
      *
      */
     Matrix4.equalsEpsilon = function(left, right, epsilon) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number');
         }
@@ -1883,11 +1883,11 @@ define([
      * @see Cartesian3
      */
     Matrix4.getTranslation = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Cartesian3(matrix[12], matrix[13], matrix[14]);
@@ -1927,11 +1927,11 @@ define([
      *
      */
     Matrix4.getRotation = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix3(matrix[0], matrix[4], matrix[8],
@@ -1965,11 +1965,11 @@ define([
       * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
       */
     Matrix4.inverse = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         //
         // Ported from:
@@ -2092,11 +2092,11 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix4.inverseTransformation = function(matrix, result) {
-        //>>excludeStart('debug', !pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //>>excludeEnd('debug');
+        //>>includeEnd('debug');
 
         //This function is an optimized version of the below 4 lines.
         //var rT = Matrix3.transpose(Matrix4.getRotation(matrix));
