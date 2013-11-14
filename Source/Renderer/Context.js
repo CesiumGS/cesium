@@ -182,7 +182,7 @@ define([
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
@@ -1072,12 +1072,12 @@ define([
         } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
-            //>>excludeStart('debug', pragmas.debug);
+            //>>excludeStart('debug', !pragmas.debug);
             throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
             //>>excludeEnd('debug');
         }
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (sizeInBytes <= 0) {
             throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
         }
@@ -1174,7 +1174,7 @@ define([
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!IndexDatatype.validate(indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
@@ -1330,7 +1330,7 @@ define([
         var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
@@ -1374,7 +1374,7 @@ define([
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            //>>excludeStart('debug', pragmas.debug);
+            //>>excludeStart('debug', !pragmas.debug);
             if (defined(source)) {
                 throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
@@ -1455,7 +1455,7 @@ define([
         width = defaultValue(width, gl.drawingBufferWidth);
         height = defaultValue(height, gl.drawingBufferHeight);
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
@@ -1547,7 +1547,7 @@ define([
         if (defined(source)) {
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
-            //>>excludeStart('debug', pragmas.debug);
+            //>>excludeStart('debug', !pragmas.debug);
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
                 throw new DeveloperError('description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
@@ -1556,7 +1556,7 @@ define([
             width = faces[0].width;
             height = faces[0].height;
 
-            //>>excludeStart('debug', pragmas.debug);
+            //>>excludeStart('debug', !pragmas.debug);
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
                     throw new DeveloperError('Each face in description.source must have the same width and height.');
@@ -1572,7 +1572,7 @@ define([
         var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
@@ -1732,7 +1732,7 @@ define([
         var width = defined(description.width) ? description.width : gl.drawingBufferWidth;
         var height = defined(description.height) ? description.height : gl.drawingBufferHeight;
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
         }
@@ -1929,7 +1929,7 @@ define([
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!TextureWrap.validate(s.wrapS)) {
             throw new DeveloperError('Invalid sampler.wrapS.');
         }
@@ -2061,7 +2061,7 @@ define([
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
@@ -2089,7 +2089,7 @@ define([
         var offset = drawCommand.offset;
         var count = drawCommand.count;
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
@@ -2180,7 +2180,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
         }
@@ -2234,7 +2234,7 @@ define([
         var height = readState.height || gl.drawingBufferHeight;
         var framebuffer = readState.framebuffer || null;
 
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (width <= 0) {
             throw new DeveloperError('readState.width must be greater than zero.');
         }
@@ -2564,7 +2564,7 @@ define([
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(pickColor)) {
             throw new DeveloperError('pickColor is required.');
         }
@@ -2607,7 +2607,7 @@ define([
      * });
      */
     Context.prototype.createPickId = function(object) {
-        //>>excludeStart('debug', pragmas.debug);
+        //>>excludeStart('debug', !pragmas.debug);
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
