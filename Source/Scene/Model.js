@@ -136,6 +136,8 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @readonly
          */
         this.gltf = options.gltf;
 
@@ -233,6 +235,7 @@ define([
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
+        this._skinnedNodes = [];
         this._commandLists = new CommandLists();
         this._pickIds = [];
     };
@@ -363,6 +366,8 @@ define([
 
     function parseNodes(model) {
         var nodes = model.gltf.nodes;
+        var skinnedNodes = model._skinnedNodes;
+
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
@@ -375,6 +380,10 @@ define([
                     rotation : undefined,
                     scale : undefined
                 };
+
+                if (defined(node.instanceSkin)) {
+                    skinnedNodes.push(node);
+                }
 
                 // TRS converted to Cesium types
                 if (defined(node.translation)) {
@@ -624,6 +633,45 @@ define([
         }
 
         return attributeLocations;
+    }
+
+    function createSkins(model) {
+        var loadResources = model._loadResources;
+
+        if (!loadResources.finishedBufferViewsCreation()) {
+            return;
+        }
+
+        var gltf = model.gltf;
+        var buffers = loadResources.buffers;
+        var bufferViews = gltf.bufferViews;
+        var skins = gltf.skins;
+
+        for (var name in skins) {
+            if (skins.hasOwnProperty(name)) {
+                var skin = skins[name];
+                var inverseBindMatrices = skin.inverseBindMatrices;
+                var bufferView = bufferViews[inverseBindMatrices.bufferView];
+
+                var type = inverseBindMatrices.type;
+                var count = inverseBindMatrices.count;
+
+// TODO: move to ModelCache.
+                var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + inverseBindMatrices.byteOffset, count);
+                var matrices =  new Array(count);
+
+                if (type === ModelConstants.FLOAT_MAT4) {
+                    for (var i = 0; i < count; ++i) {
+                        matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
+                    }
+                }
+                // TODO: else handle all valid types: https://github.com/KhronosGroup/glTF/issues/191
+
+                skin.czm = {
+                    inverseBindMatrices : matrices
+                };
+            }
+        }
     }
 
     function createAnimations(model) {
@@ -958,8 +1006,7 @@ define([
                 var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
 
                 var parameterValues = {};
-// SKIN_TODO: provide array of joint matrices
-                var jointMatrices = [Matrix4.IDENTITY, Matrix4.IDENTITY];
+                var jointMatrices = [];
 
                 // Uniform parameters for this pass
                 for (name in uniforms) {
@@ -1190,6 +1237,7 @@ define([
         createSamplers(model, context);
         createTextures(model, context);
 
+        createSkins(model);
         createAnimations(model);
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
@@ -1299,6 +1347,48 @@ define([
         model.worldBoundingSphere.radius = radius;
     }
 
+    function applySkins(model) {
+        var gltf = model.gltf;
+        var skins = gltf.skins;
+        var nodes = gltf.nodes;
+        var meshes = gltf.meshes;
+        var materials = gltf.materials;
+        var techniques = gltf.techniques;
+
+        var skinnedNodes = model._skinnedNodes;
+        var length = skinnedNodes.length;
+
+        for (var i = 0; i < length; ++i) {
+            var node = skinnedNodes[i];
+            var instanceSkin = skinnedNodes[i].instanceSkin;
+            var skin = skins[instanceSkin.skin];
+
+            var joints = skin.joints;
+            var bindShapeMatrix = skin.bindShapeMatrix;
+            var inverseBindMatrices = skin.czm.inverseBindMatrices;
+            var inverseBindMatricesLength = inverseBindMatrices.length;
+
+            var nodeNeshes = instanceSkin.sources;
+            var meshesLength = nodeNeshes.length;
+            for (var j = 0; j < meshesLength; ++j) {
+                var mesh = meshes[nodeNeshes[j]];
+
+                var primitives = mesh.primitives;
+                var primitivesLength = primitives.length;
+                for (var k = 0; k < primitivesLength; ++k) {
+                    var jointMatrices = materials[primitives[k].material].instanceTechnique.czm.jointMatrices;
+                    for (var m = 0; m < inverseBindMatricesLength; ++m) {
+//SKIN_TODO: no allocations!
+//SKIN_TODO: use bindShapeMatrix
+
+                        jointMatrices[m] = Matrix4.multiply(inverseBindMatrices[m], nodes[joints[m]].czm.transformToRoot);
+//                      jointMatrices[m] = Matrix4.IDENTITY;
+                    }
+                }
+            }
+        }
+    }
+
     function updatePickIds(model, context) {
         var id = model.id;
         if (model._id !== id) {
@@ -1353,6 +1443,11 @@ define([
                 Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
 
                 updateModelMatrix(this);
+
+                if (animated || justLoaded) {
+                    // Apply skins if animation changed any node transforms
+                    applySkins(this);
+                }
             }
         }
 

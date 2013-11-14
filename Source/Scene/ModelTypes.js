@@ -42,5 +42,27 @@ define([
         }
     };
 
+    ModelTypes[ModelConstants.FLOAT_MAT2] = {
+        componentsPerAttribute : 4,
+        componentDatatype : ComponentDatatype.FLOAT,
+        createArrayBufferView : function(buffer, byteOffset, length) {
+            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+        }
+    };
+    ModelTypes[ModelConstants.FLOAT_MAT3] = {
+        componentsPerAttribute : 9,
+        componentDatatype : ComponentDatatype.FLOAT,
+        createArrayBufferView : function(buffer, byteOffset, length) {
+            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+        }
+    };
+    ModelTypes[ModelConstants.FLOAT_MAT4] = {
+        componentsPerAttribute : 16,
+        componentDatatype : ComponentDatatype.FLOAT,
+        createArrayBufferView : function(buffer, byteOffset, length) {
+            return new Float32Array(buffer, byteOffset, this.componentsPerAttribute * length);
+        }
+    };
+
     return ModelTypes;
 });
