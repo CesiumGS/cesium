@@ -144,7 +144,7 @@ define([
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-        this._modelMatrix = undefined;
+        this._modelMatrix = new Matrix4();
 
         /**
          * DOC_TBA
@@ -451,7 +451,8 @@ define([
         }
 
         // Recreate vertex buffer when directions change
-        if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
+        var directionsChanged = this._directionsDirty || (this._bufferUsage !== this.bufferUsage);
+        if (directionsChanged) {
             this._directionsDirty = false;
             this._bufferUsage = this.bufferUsage;
             this._va = this._va && this._va.destroy();
@@ -471,8 +472,12 @@ define([
         var pass = frameState.passes;
         this._commandLists.removeAll();
 
-        if (this.modelMatrix !== this._modelMatrix) {
-            this._modelMatrix = this.modelMatrix;
+        var modelMatrixChanged = !Matrix4.equals(this.modelMatrix, this._modelMatrix);
+        if (modelMatrixChanged) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
+        }
+
+        if (directionsChanged || modelMatrixChanged) {
             BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
         }
 

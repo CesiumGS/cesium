@@ -218,7 +218,7 @@ define([
          * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
-        this._modelMatrix = undefined;
+        this._modelMatrix = new Matrix4();
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
@@ -907,8 +907,8 @@ define([
             attributes.length = 0;
         }
 
-        if (this.modelMatrix !== this._modelMatrix) {
-            this._modelMatrix = this.modelMatrix;
+        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
             this._boundingSphereWC = BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
             if (!this.allow3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphereCV = BoundingSphere.projectTo2D(this._boundingSphereWC, projection, this._boundingSphereCV);
