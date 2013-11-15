@@ -17,6 +17,7 @@ define([
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/createDefaultBaseLayers',
         '../CesiumWidget/CesiumWidget',
+        '../CesiumInspector/CesiumInspector',
         '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
         '../Geocoder/Geocoder',
@@ -44,6 +45,7 @@ define([
         BaseLayerPicker,
         createDefaultBaseLayers,
         CesiumWidget,
+        CesiumInspector,
         ClockViewModel,
         FullscreenButton,
         Geocoder,
@@ -103,6 +105,7 @@ define([
      * @param {Object} [options] Configuration options for the widget.
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+     * @param {Boolean} [options.cesiumInspector=false] If set to true, the CesiumInspector widget will be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
@@ -126,6 +129,7 @@ define([
      *
      * @see Animation
      * @see BaseLayerPicker
+     * @see CesiumInspector
      * @see CesiumWidget
      * @see FullscreenButton
      * @see HomeButton
@@ -223,6 +227,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
+
+        //Cesium Inspector
+        var cesiumInspector;
+        if (true){//(defined(options.cesiumInspector) && options.cesiumInspector === true) {
+            var cesiumInspectorContainer = document.createElement('div');
+            cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';
+            viewerContainer.appendChild(cesiumInspectorContainer);
+            cesiumInspector = new CesiumInspector(cesiumInspectorContainer, cesiumWidget.scene);
+        }
 
         //Geocoder
         var geocoder;
@@ -328,6 +341,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._container = container;
         this._element = viewerContainer;
         this._cesiumWidget = cesiumWidget;
+        this._cesiumInspector = cesiumInspector;
         this._dataSourceCollection = dataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
         this._clockViewModel = clockViewModel;
@@ -371,6 +385,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         cesiumWidget : {
             get : function() {
                 return this._cesiumWidget;
+            }
+        },
+
+        /**
+         * Gets the CesiumInspector.
+         * @memberof Viewer.prototype
+         * @type {CesiumInspector}
+         */
+        cesiumInspector : {
+            get : function() {
+                return this._cesiumInspector;
             }
         },
 
