@@ -168,7 +168,7 @@ define([
 
         Matrix3.multiplyByVector(result.rotation, center, result.translation);
 
-        Cartesian3.add(maxPoint, Cartesian3.negate(minPoint, minPoint), center);
+        Cartesian3.subtract(maxPoint, minPoint, center);
         Cartesian3.multiplyByScalar(center, 0.5, result.scale);
 
         return result;
@@ -180,7 +180,7 @@ define([
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
-     * @param {Float} [rotation=Matrix3.IDENTITY] The rotation of the bounding box.
+     * @param {Number} [rotation=0.0] The rotation of the bounding box.
      * @return {ObjectOrientedBoundingBox} A new 2D ObjectOrientedBoundingBox instance if one was not provided.
      *
      * @exception {DeveloperError} boundingRectangle is missing.
@@ -206,116 +206,9 @@ define([
         result.scale.y = boundingRectangle.height / 2;
         result.scale.z = 0.0;
 
-        result.translation.x = boundingRectangle.x;
-        result.translation.y = boundingRectangle.y;
+        result.translation.x = boundingRectangle.x+(boundingRectangle.width/2);
+        result.translation.y = boundingRectangle.y+(boundingRectangle.height/2);
         result.translation.z = 0.0;
-
-        return result;
-    };
-
-    var scratchTransformColumn1 = new Cartesian3();
-    var scratchTransformColumn2 = new Cartesian3();
-    var scratchTransformColumn3 = new Cartesian3();
-    var scratchAddCartesian1 = new Cartesian3();
-    var scratchAddCartesian2 = new Cartesian3();
-    var scratchAddCartesian3 = new Cartesian3();
-    /**
-     * Get the describing points of the ObjectOrientedBoundingBox.
-     * @memberof ObjectOrientedBoundingBox
-     *
-     * @param {ObjectOrientedBoundingBox} box The bounding box.
-     * @param {Cartesian3} [result] The object onto which to store the resulting points.
-     * @return {Cartesian3} The object onto which to store the resulting points.
-     *
-     * @exception {DeveloperError} box is required.
-     *
-     * @example
-     * var box = ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 1.57);
-     * var boxPoints = ObjectOrientedBoundingBox.getDescribingPoints(box);
-     */
-    ObjectOrientedBoundingBox.getDescribingPoints = function(box, result) {
-        if (!defined(box)) {
-            throw new DeveloperError('box is required');
-        }
-
-        if (!defined(result)) {
-            result = [];
-        }
-
-        var r = Cartesian3.clone(Matrix3.getColumn(box.rotation, 0, r), scratchTransformColumn1);
-        var u = Cartesian3.clone(Matrix3.getColumn(box.rotation, 1, u), scratchTransformColumn2);
-        var f = Cartesian3.clone(Matrix3.getColumn(box.rotation, 2, f), scratchTransformColumn3);
-
-        function multiplyAndAdd(sign1, sign2, sign3) {
-            // we are doing: result = {Cartesian} +/- {Cartesian3} +/- {Cartesian3} +/- {Cartesian3}
-            Cartesian3.add(box.translation, Cartesian3.multiplyByScalar(r, box.scale.x * (sign1)), scratchAddCartesian1);
-            Cartesian3.add(scratchAddCartesian1, Cartesian3.multiplyByScalar(u, box.scale.y * (sign2)), scratchAddCartesian2);
-            return Cartesian3.add(scratchAddCartesian2, Cartesian3.multiplyByScalar(f, box.scale.z * (sign3)), scratchAddCartesian3);
-        }
-
-        //POINT 0
-        var point = multiplyAndAdd(-1, -1, -1);
-        var resultPoint = result[0];
-        if (!defined(resultPoint)) {
-            resultPoint = result[0] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 1
-        point = multiplyAndAdd(1, -1, -1);
-        resultPoint = result[1];
-        if (!defined(resultPoint)) {
-            resultPoint = result[1] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 2
-        point = multiplyAndAdd(1, -1, 1);
-        resultPoint = result[2];
-        if (!defined(resultPoint)) {
-            resultPoint = result[2] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 3
-        point = multiplyAndAdd(-1, -1, 1);
-        resultPoint = result[3];
-        if (!defined(resultPoint)) {
-            resultPoint = result[3] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 4
-        point = multiplyAndAdd(-1, 1, -1);
-        resultPoint = result[4];
-        if (!defined(resultPoint)) {
-            resultPoint = result[4] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 5
-        point = multiplyAndAdd(1, 1, -1);
-        resultPoint = result[5];
-        if (!defined(resultPoint)) {
-            resultPoint = result[5] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 6
-        point = multiplyAndAdd(1, 1, 1);
-        resultPoint = result[6];
-        if (!defined(resultPoint)) {
-            resultPoint = result[6] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
-
-        //POINT 7
-        point = multiplyAndAdd(-1, 1, 1);
-        resultPoint = result[7];
-        if (!defined(resultPoint)) {
-            resultPoint = result[7] = new Cartesian3();
-        }
-        Cartesian3.clone(point, resultPoint);
 
         return result;
     };
@@ -348,22 +241,34 @@ define([
     var scratchIntersectMatrix2 = new Matrix3();
     var scratchTCartesian = new Cartesian3();
     //Helper functions for collision detection.
-    function testCase1(x, a, b, B, T) {
-        if (Math.abs(T[x]) > (a[x] + b[0] * B[Matrix3.getElementIndex(0, x)] + b[1] * B[Matrix3.getElementIndex(1, x)] + b[2] * B[Matrix3.getElementIndex(2, x)])) {
+    function getKeyFromIndex(index) {
+        if (index === 0) {
+            return 'x';
+        }
+        if (index === 1) {
+            return 'y';
+        }
+        if (index === 2) {
+            return 'z';
+        }
+        throw new DeveloperError('index must be 0 or 1 or 2');
+    }
+    function testCase1(k, a, b, B, T) {
+        if (Math.abs(T[getKeyFromIndex(k)]) > (a[getKeyFromIndex(k)] + b.x * B[Matrix3.getElementIndex(0, k)] + b.y * B[Matrix3.getElementIndex(1, k)] + b.z * B[Matrix3.getElementIndex(2, k)])) {
             return 0;
         }
         return 1;
     }
 
-    function testCase2(x, a, b, B, T) {
-        if (Math.abs(T[0] * B[Matrix3.getElementIndex(0, x)] + T[1] * B[Matrix3.getElementIndex(1, x)] + T[2] * B[Matrix3.getElementIndex(2, x)]) > (b[x] + a[0] * B[Matrix3.getElementIndex(0, x)] + a[1] * B[1][x] + a[2] * B[Matrix3.getElementIndex(2, x)])) {
+    function testCase2(k, a, b, B, T) {
+        if (Math.abs(T.x * B[Matrix3.getElementIndex(0, k)] + T.y * B[Matrix3.getElementIndex(1, k)] + T.z * B[Matrix3.getElementIndex(2, k)]) > (b[getKeyFromIndex(k)] + a.x * B[Matrix3.getElementIndex(0, k)] + a.y * B[1][k] + a.z * B[Matrix3.getElementIndex(2, k)])) {
             return 0;
         }
         return 1;
     }
 
     function testCase3(i, j, a, b, B, T) {
-        if (Math.abs(T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[(i + 2) % 3][j]) > (a[(i + 1) % 3] * B[(i + 2) % 3][j] + a[(i + 2) % 3] * B[(i + 1) % 3][j] + b[(j + 1) % 3] * B[i][(j + 2) % 3] + b[(j + 2) % 3] * B[i][(j + 1) % 3])) {
+        if (Math.abs(T[getKeyFromIndex((i + 2) % 3)] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[getKeyFromIndex((i + 1) % 3)] * B[(i + 2) % 3][j]) > (a[getKeyFromIndex((i + 1) % 3)] * B[(i + 2) % 3][j] + a[getKeyFromIndex((i + 2) % 3)] * B[(i + 1) % 3][j] + b[getKeyFromIndex((j + 1) % 3)] * B[i][(j + 2) % 3] + b[getKeyFromIndex((j + 2) % 3)] * B[i][(j + 1) % 3])) {
             return 0;
         }
         return 1;
@@ -393,14 +298,12 @@ define([
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
         Matrix3.abs(B, B);
 
-        var T = [];
-        var a = [];
-        var b = [];
-        Cartesian3.pack(Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.add(left.translation, Cartesian3.negate(right.translation, scratchTCartesian), scratchTCartesian), scratchIntersectMatrix1), T, 0);
-        Cartesian3.pack(left.scale, a, 0);
-        Cartesian3.pack(right.scale, b, 0);
-
-
+        var T;
+        var a;
+        var b;
+        T = Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.subtract(left.translation, right.translation, scratchTCartesian), scratchTCartesian);
+        a = left.scale;
+        b = right.scale;
 
         if (testCase1(0, a, b, B, T) === 0) {
             return false;

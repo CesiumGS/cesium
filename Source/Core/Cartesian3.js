@@ -252,7 +252,7 @@ define([
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
      * @param {Cartesian3} [result] The object into which to store the result.
-     * @returns {Number} A cartesian with the minimum components.
+     * @returns {Cartesian3} A cartesian with the minimum components.
      *
      * @exception {DeveloperError} first cartesian is missing.
      * @exception {DeveloperError} second cartesian is missing.
@@ -282,7 +282,7 @@ define([
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
      * @param {Cartesian3} [result] The object into which to store the result.
-     * @returns {Number} A cartesian with the maximum components.
+     * @returns {Cartesian3} A cartesian with the maximum components.
      *
      * @exception {DeveloperError} first cartesian is missing.
      * @exception {DeveloperError} second cartesian is missing.
@@ -694,7 +694,7 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
-       return (left === right) ||
+            return (left === right) ||
               ((defined(left)) &&
                (defined(right)) &&
                (left.x === right.x) &&
@@ -719,7 +719,12 @@ define([
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
-        return (left === right) || ((defined(left)) && (defined(right)) && (Math.abs(left.x - right.x) <= epsilon) && (Math.abs(left.y - right.y) <= epsilon) && (Math.abs(left.z - right.z) <= epsilon));
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (Math.abs(left.x - right.x) <= epsilon) &&
+                (Math.abs(left.y - right.y) <= epsilon) &&
+                (Math.abs(left.z - right.z) <= epsilon));
     };
 
     /**
