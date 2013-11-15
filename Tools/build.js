@@ -3,6 +3,6 @@
     useStrict : true,
     optimizeCss : 'standard',
     pragmas : {
-        debug : false
+        debug : true
     }
 })

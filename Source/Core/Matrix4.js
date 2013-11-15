@@ -1847,7 +1847,7 @@ define([
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number');
         }
-        //excludeEnd('debug');
+        //>>includeEnd('debug');
 
         return (left === right) ||
                 (defined(left) &&

@@ -570,7 +570,7 @@ define([
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        //excludeEnd('debug');
+        //>>includeEnd('debug');
 
         var column0Row0 = matrix[0];
         var column0Row1 = matrix[2];
