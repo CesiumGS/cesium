@@ -21,7 +21,11 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
 	
-	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
+	<target name="combine" depends="build" description="Combines all source files into a single stand-alone script.">
+		<antcall target="combineJavaScript">
+			  <param name="pragmas.debug" value="true" />
+		</antcall>
+		
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
@@ -46,6 +50,31 @@
 		<antcall target="generateDocumentation" />
 		<antcall target="buildApps" />
 	</target>
+	
+	<target name="combineRelease" depends="build" description="Combines all source files into a single stand-alone script with debugging code removed.">
+		<antcall target="combineJavaScript">
+              <param name="pragmas.debug" value="false" />
+        </antcall>
+        
+        <copy todir="Build">
+            <fileset dir="Apps/">
+                <include name="HelloWorld.html" />
+                <include name="index.html" />
+                <include name="server.js" />
+            </fileset>
+        </copy>
+
+        <replace file="Build/HelloWorld.html" token="../Build/" value="" />
+        <replace file="Build/index.html" token="../Build/" value="" />
+	</target>
+	
+	<target name="minifyRelease" description="Combines all source files into a single stand-alone, minified script with debugging code removed.">
+        <antcall target="combineRelease">
+            <param name="build.minification" value="true" />
+        </antcall>
+        <antcall target="minifyCSS" />
+    </target>
+	
 
 	<target name="instrumentForCoverage" depends="build" description="A debug build instrumented for JSCoverage (currently Windows only).">
 		<exec executable="${jscoveragePath}">
@@ -316,6 +345,7 @@
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
+			<arg value="pragmas.debug=${pragmas.debug}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
