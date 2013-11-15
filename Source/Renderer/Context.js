@@ -2069,8 +2069,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        ///////////////////////////////////////////////////////////////////////
-
         if (defined(framebuffer)) {
             framebuffer._bind();
             validateFramebuffer(context, framebuffer);

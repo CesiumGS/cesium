@@ -66,14 +66,17 @@ define([
     };
 
     function update(frustum) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
+        //>>includeEnd('debug');
 
         var f = frustum._offCenterFrustum;
 
         if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
+            //>>includeStart('debug', pragmas.debug);
             if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
                 throw new DeveloperError('fovy must be in the range [0, PI).');
             }
@@ -85,6 +88,7 @@ define([
             if (frustum.near < 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
+            //>>includeEnd('debug');
 
             frustum._fovy = frustum.fovy;
             frustum._aspectRatio = frustum.aspectRatio;
