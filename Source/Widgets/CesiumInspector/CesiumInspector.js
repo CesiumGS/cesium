@@ -7,6 +7,7 @@ define([
         '../../Core/Color',
         '../../Core/DeveloperError',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/DebugModelMatrixPrimitive',
         '../getElement',
         './CesiumInspectorViewModel',
         '../../ThirdParty/knockout'
@@ -18,6 +19,7 @@ define([
         Color,
         DeveloperError,
         PerformanceDisplay,
+        DebugModelMatrixPrimitive,
         getElement,
         CesiumInspectorViewModel,
         knockout) {
@@ -50,7 +52,7 @@ define([
         return str;
     }
 
-    var br = new BoundingRectangle(10, 250, 80, 40);
+    var br = new BoundingRectangle(10, 250, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
     var CesiumInspector = function(container, scene) {
         if (!defined(container)) {
@@ -116,7 +118,8 @@ define([
             if (this.checked) {
                 pd = new PerformanceDisplay({
                     rectangle : br,
-                    backgroundColor: bc
+                    backgroundColor: bc,
+                    font: "12px arial,sans-serif"
                 });
                 scene.getPrimitives().add(pd);
             } else {
@@ -127,14 +130,90 @@ define([
         performanceDisplay.textContent = 'Performance Display: ';
         performanceDisplay.appendChild(pdCheckbox);
 
-        knockout.applyBindings(viewModel, this._element);
-        knockout.applyBindings(viewModel, panel);
-
-        this._closeDropDown = function(e) {
-            if (!(element.contains(e.target) || panel.contains(e.target))) {
-                viewModel.dropDownVisible = false;
+        var debugSphere = document.createElement('div');
+        this._performanceDisplay = debugSphere;
+        panel.appendChild(debugSphere);
+        var bsCheckbox = document.createElement('input');
+        bsCheckbox.type = 'checkbox';
+        var pickedPrimitive;
+        bsCheckbox.onclick = function() {
+            if (this.checked) {
+                this._pick = function(e) {
+                    var newPick = scene.pick({x: e.clientX, y: e.clientY});
+                    if (defined(newPick) && newPick !== pickedPrimitive) {
+                        if (defined(pickedPrimitive)) {
+                            pickedPrimitive.primitive.debugShowBoundingVolume = false;
+                        }
+                        pickedPrimitive = newPick;
+                        pickedPrimitive.primitive.debugShowBoundingVolume = true;
+                    }
+                };
+                document.addEventListener('mousedown', this._pick, true);
+            } else {
+                if (defined(pickedPrimitive)) {
+                    pickedPrimitive.primitive.debugShowBoundingVolume = false;
+                }
+                document.removeEventListener('mousedown', this._pick, true);
             }
         };
+        debugSphere.textContent = 'Debug bounding sphere: ';
+        debugSphere.appendChild(bsCheckbox);
+
+        var refFrame = document.createElement('div');
+        this._refFrame = refFrame;
+        panel.appendChild(refFrame);
+        var rfCheckbox = document.createElement('input');
+        rfCheckbox.type = 'checkbox';
+        var mm;
+        var mp;
+        rfCheckbox.onclick = function() {
+            if (this.checked) {
+                this._pickrf = function(e) {
+                    var newrfPick = scene.pick({x: e.clientX, y: e.clientY});
+                    if (defined(newrfPick)) {
+                        mm = newrfPick.primitive.modelMatrix;
+                        if (defined(mp)) {
+                            scene.getPrimitives().remove(mp);
+                        }
+                        mp = new DebugModelMatrixPrimitive({modelMatrix: mm});
+                        scene.getPrimitives().add(mp);
+                    }
+                };
+                document.addEventListener('mousedown', this._pickrf, true);
+            } else {
+                scene.getPrimitives().remove(mp);
+                document.removeEventListener('mousedown', this._pickrf, true);
+            }
+        };
+        refFrame.textContent = 'Show reference frame: ';
+        refFrame.appendChild(rfCheckbox);
+
+        var primitiveOnly = document.createElement('div');
+        this._primitiveOnly = primitiveOnly;
+        panel.appendChild(primitiveOnly);
+        var primitiveOnlyCheckbox = document.createElement('input');
+        primitiveOnlyCheckbox.type = 'checkbox';
+        primitiveOnlyCheckbox.onclick = function() {
+            if (this.checked) {
+                this._pickpo = function(e) {
+                    var np = scene.pick({x: e.clientX, y: e.clientY});
+                    if (defined(np)) {
+                        scene.debugCommandFilter = function(command) {
+                            return command.owner === np.primitive;
+                        };
+                    }
+                };
+                document.addEventListener('mousedown', this._pickpo, true);
+            } else {
+                scene.debugCommandFilter = undefined;
+                document.removeEventListener('mousedown', this._pickpo, true);
+            }
+        };
+        primitiveOnly.textContent = 'Show only this primitive: ';
+        primitiveOnly.appendChild(primitiveOnlyCheckbox);
+
+        knockout.applyBindings(viewModel, this._element);
+        knockout.applyBindings(viewModel, panel);
 
     };
 
