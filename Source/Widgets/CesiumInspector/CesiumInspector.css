@@ -20,6 +20,15 @@
     -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
+.cesium-cesiumInspector-show {
+    visibility: visible;
+    height: auto;
+}
+.cesium-cesiumInspector-hide {
+    visibility: hidden;
+    height: 0;
+}
+
 .cesium-cesiumInspectorPanel-dropDown {
     width: 200px;
     height: 200px;
@@ -32,4 +41,9 @@
     color: #fff;
     font-family: sans-serif;
     font-size: 10pt;
+}
+
+.cesium-cesiumInspectorPanel-frustumStats {
+    padding-left: 10px;
+    background-color: rgba(80, 80, 80, 0.75);
 }

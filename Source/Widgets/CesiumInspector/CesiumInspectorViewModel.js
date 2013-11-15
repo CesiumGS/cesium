@@ -14,6 +14,13 @@ define([
     "use strict";
 
     /**
+     * The view model for {@link CesiumInspector}.
+     * @alias CesiumInspectorViewModel
+     * @constructor
+     *
+     * @param {Scene} scene The scene instance to use.
+     *
+     * @exception {DeveloperError} scene is required.
      */
     var CesiumInspectorViewModel = function(scene) {
         if (!defined(scene)) {

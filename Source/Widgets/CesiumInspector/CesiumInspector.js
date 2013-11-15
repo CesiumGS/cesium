@@ -3,7 +3,10 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/BoundingRectangle',
+        '../../Core/Color',
         '../../Core/DeveloperError',
+        '../../Scene/PerformanceDisplay',
         '../getElement',
         './CesiumInspectorViewModel',
         '../../ThirdParty/knockout'
@@ -11,14 +14,44 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        BoundingRectangle,
+        Color,
         DeveloperError,
+        PerformanceDisplay,
         getElement,
         CesiumInspectorViewModel,
         knockout) {
     "use strict";
 
     /**
+     * Inspector widget to aid in debugging
+     *
+     * @alias CesiumInspector
+     * @constructor
+     *
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
+     * @param {Scene} scene The Scene instance to use.
+     *
+     * @exception {DeveloperError} container is required.
+     * @exception {DeveloperError} scene is required.
      */
+    function frustumStatsToString(stats) {
+        var str;
+        if (defined(stats)) {
+            str = 'Total commands: ' + stats.totalCommands + '<br>Commands in frustums:';
+            var com = stats.commandsInFrustums;
+            for (var n in com) {
+                if (com.hasOwnProperty(n)) {
+                    str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + n + ': ' + com[n];
+                }
+            }
+        }
+
+        return str;
+    }
+
+    var br = new BoundingRectangle(10, 250, 80, 40);
+    var bc = new Color(0.15, 0.15, 0.15, 0.75);
     var CesiumInspector = function(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -51,14 +84,48 @@ define([
         var debugShowFrustums = document.createElement('div');
         this._debugShowFrustums = debugShowFrustums;
         panel.appendChild(debugShowFrustums);
+        var frustumStats = document.createElement('div');
+        frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-show';
         var frustumsCheckbox = document.createElement('input');
-        frustumsCheckbox.className="cesium-cesiumInspectorPanel-frustumsCheckbox";
         frustumsCheckbox.type = 'checkbox';
+        var interval;
         frustumsCheckbox.onclick = function() {
-            scene.debugShowFrustums = this.checked;
+            if (this.checked) {
+                scene.debugShowFrustums = true;
+                interval = setInterval(function() {
+                    frustumStats.innerHTML = frustumStatsToString(scene.debugFrustumStatistics);
+                }, 100);
+                frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-show';
+            } else {
+                clearInterval(interval);
+                scene.debugShowFrustums = false;
+                frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-hide';
+            }
         };
-        debugShowFrustums.textContent = 'Show Frustums';
+        debugShowFrustums.textContent = 'Show Frustums: ';
         debugShowFrustums.appendChild(frustumsCheckbox);
+        debugShowFrustums.appendChild(frustumStats);
+
+        var performanceDisplay = document.createElement('div');
+        this._performanceDisplay = performanceDisplay;
+        panel.appendChild(performanceDisplay);
+        var pdCheckbox = document.createElement('input');
+        pdCheckbox.type = 'checkbox';
+        var pd;
+        pdCheckbox.onclick = function() {
+            if (this.checked) {
+                pd = new PerformanceDisplay({
+                    rectangle : br,
+                    backgroundColor: bc
+                });
+                scene.getPrimitives().add(pd);
+            } else {
+                scene.getPrimitives().remove(pd);
+            }
+
+        };
+        performanceDisplay.textContent = 'Performance Display: ';
+        performanceDisplay.appendChild(pdCheckbox);
 
         knockout.applyBindings(viewModel, this._element);
         knockout.applyBindings(viewModel, panel);
