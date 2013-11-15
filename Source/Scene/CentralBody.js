@@ -250,7 +250,7 @@ define([
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         /**
-         * The distance that the ground is pushed towards the centre of the CentralBody within the <code>pushExtent</code>.
+         * The distance in metres that the ground is pushed towards the centre of the CentralBody within the <code>pushExtent</code>.
          *
          * @type {Number}
          * @default 0.0
