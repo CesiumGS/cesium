@@ -730,8 +730,8 @@ define([
             u_realTileExtent : function() {
                 return this.realTileExtent;
             },
-            u_pushClip : function() {
-                return this.pushClip;
+            u_showOnlyInPushedRegion : function() {
+                return this.showOnlyInPushedRegion;
             },
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
@@ -783,7 +783,7 @@ define([
             modifiedModelView : new Matrix4(),
             tileExtent : new Cartesian4(),
             realTileExtent : new Cartesian4(),
-            pushClip : [],
+            showOnlyInPushedRegion : [],
             dayTextures : [],
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
@@ -812,7 +812,6 @@ define([
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
-    var realTileExtentScratch = new Cartesian4();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.viewMatrix;
@@ -839,13 +838,6 @@ define([
 
                 // Not used in 3D.
                 var tileExtent = tileExtentScratch;
-
-                // Store the real tile extent for ground push
-                var realTileExtent = realTileExtentScratch;
-                realTileExtent.x = tile.extent.west;
-                realTileExtent.y = tile.extent.south;
-                realTileExtent.z = tile.extent.east;
-                realTileExtent.w = tile.extent.north;
 
                 // Only used for Mercator projections.
                 var southLatitude = 0.0;
@@ -954,9 +946,10 @@ define([
                         }
 
                         // Ground push related setting
-                        uniformMap.pushClip[numberOfDayTextures] = 0.0;
-                        if (typeof imageryLayer.getImageryProvider().pushClip !== 'undefined') {
-                            uniformMap.pushClip[numberOfDayTextures] = imageryLayer.getImageryProvider().pushClip;
+                        if (typeof imageryLayer.showOnlyInPushedRegion !== 'undefined') {
+                            uniformMap.showOnlyInPushedRegion[numberOfDayTextures] = imageryLayer.showOnlyInPushedRegion;
+                        } else {
+                            uniformMap.showOnlyInPushedRegion[numberOfDayTextures] = 0.0;
                         }
 
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
@@ -1013,7 +1006,9 @@ define([
                     uniformMap.dayTextures.length = numberOfDayTextures;
                     uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
-                    Cartesian4.clone(realTileExtent, uniformMap.realTileExtent);
+
+                    // Store the real tile extent for ground push
+                    uniformMap.realTileExtent= new Cartesian4(tile.extent.west, tile.extent.south, tile.extent.east, tile.extent.north);
 
                     colorCommandList.push(command);
 

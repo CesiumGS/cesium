@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="NASA Black Marble imagery.">
-    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <meta name="description" content="Push the ground level down within an extent to reveal subterranean models or imagery.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript">
@@ -62,30 +62,34 @@ require([
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                centralBody.pushExtent = getPushExtentAsCartesian4(value);
+                centralBody.pushExtent = getPushExtent(value);
             }
         });
         widthSlider.placeAt('widthSlider');
 
         depthSlider = new HorizontalSlider({
-            value : centralBody.pushValue,
+            value : centralBody.pushDepth,
             minimum : -10000.0,
             maximum : 10000.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                centralBody.pushValue = value;
+                centralBody.pushDepth = value;
             }
         });
         depthSlider.placeAt('depthSlider');
     }
     
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var widget = new Cesium.Viewer('cesiumContainer');
     var centralBody = widget.centralBody;
     var scene = widget.scene;
     
     var pushCentreLat = 0.6594;
     var pushCentreLon = -2.1365;
+
+    function getPushExtent(widthValue){
+        return new Cesium.Extent(pushCentreLon-widthValue, pushCentreLat-widthValue, pushCentreLon+widthValue, pushCentreLat+widthValue);
+    }
 
     var widthSlider;
     var depthSlider;
@@ -95,22 +99,22 @@ require([
     var imageryProvider = new Cesium.TileMapServiceImageryProvider({
         url : 'http://cesium.agi.com/blackmarble',
         maximumLevel : 8,
-        credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+        credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+        
+        // Limit the extent of the imagery layer so that tiles
+        // that will never be visible aren't loaded.
+        extent : getPushExtent(0.02)
     });
     centralBody.getImageryLayers().addImageryProvider(imageryProvider);
     
-    function getPushExtentAsCartesian4(widthValue){
-        return new Cesium.Cartesian4(pushCentreLon-widthValue, pushCentreLat-widthValue, pushCentreLon+widthValue, pushCentreLat+widthValue);
-    }
-    
     function setGroundPush(){
-        // enable clipping the imagery provider so it only shows in the pushed region
-        imageryProvider.pushClip = 1.0;
+        // Make the imagery layer only show in the pushed region.
+        centralBody.getImageryLayers().get(1).showOnlyInPushedRegion = 1.0;
 
-        // Amount of push
-        centralBody.pushValue = -10000.0;
+        // Depth of push in metres
+        centralBody.pushDepth = 10000.0;
         // Extent of push region
-        centralBody.pushExtent = getPushExtentAsCartesian4(0.01);
+        centralBody.pushExtent = getPushExtent(0.01);
         // Smooth the edge transition
         centralBody.pushBlend = 0.0004;
         
@@ -119,6 +123,7 @@ require([
         centralBody.pushSidesTint = new Cesium.Cartesian3(0.7, 0.6, 0.5);
         
         // Expand the bounding box of the tiles to avoid render artefacts
+        // by the maximum amount of push that will ever be required
         centralBody._surface.boundingVolumeExtend = 10000.0;
     }
     setGroundPush();

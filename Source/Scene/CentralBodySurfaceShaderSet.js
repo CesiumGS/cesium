@@ -69,6 +69,7 @@ define([
         var shader = this._shaders[key];
         if (!defined(shader)) {
             var vs = this.baseVertexShaderString;
+            var applyPush = vs.indexOf("#define APPLY_PUSH") !== -1;
             var fs =
                 (applyBrightness ? '#define APPLY_BRIGHTNESS\n' : '') +
                 (applyContrast ? '#define APPLY_CONTRAST\n' : '') +
@@ -85,7 +86,6 @@ define([
             for (var i = 0; i < textureCount; ++i) {
                 fs +=
                     'color = sampleAndBlend(\n' +
-                    '   u_pushClip[' + i + '],\n' + // Whether we are going to clip this layer for ground push
                     '   color,\n' +
                     '   u_dayTextures[' + i + '],\n' +
                     '   textureCoordinates,\n' +
@@ -96,7 +96,8 @@ define([
                     (applyContrast ?   '   u_dayTextureContrast[' + i + '],\n' : '0.0,\n') +
                     (applyHue ?        '   u_dayTextureHue[' + i + '],\n' : '0.0,\n') +
                     (applySaturation ? '   u_dayTextureSaturation[' + i + '],\n' : '0.0,\n') +
-                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + ']);\n' : '0.0);\n') ;
+                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + '],\n' : '0.0,\n') +
+                    (applyPush ?       '   u_showOnlyInPushedRegion[' + i + ']);\n' : '0.0);\n') ;
             }
 
             fs +=
