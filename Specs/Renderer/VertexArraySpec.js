@@ -448,7 +448,11 @@ defineSuite([
     });
 
     it('fails to get attribute', function() {
-        var va = context.createVertexArray();
+        var attributes = [{
+            value : [0.0, 0.0, 0.0],
+            componentsPerAttribute : 3
+        }];
+        var va = context.createVertexArray(attributes);
 
         expect(function() {
             return va.getAttribute();
@@ -456,7 +460,11 @@ defineSuite([
     });
 
     it('fails to destroy', function() {
-        var va = context.createVertexArray();
+        var attributes = [{
+            value : [0.0, 0.0, 0.0],
+            componentsPerAttribute : 3
+        }];
+        var va = context.createVertexArray(attributes);
         va.destroy();
 
         expect(function() {

@@ -226,10 +226,10 @@
 	</target>
 
 	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
-		<echo message="Source:"/>
+		<echo message="Source:" />
 		<apply executable="perl" parallel="true">
-			<arg value="${clocPath}"/>
-			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
+			<arg value="${clocPath}" />
+			<arg value="--read-lang-def=${clocDefinitionsPath}" />
 			<arg value="Source/Core/" />
 			<arg value="Source/DynamicScene/" />
 			<arg value="Source/Renderer/" />
@@ -239,14 +239,14 @@
 			<fileset id="clocFileSet" dir="Source/">
 				<include name="Shaders/*.glsl" />
 				<include name="Shaders/**/*.glsl" />
-				<include name="main.js"/>
+				<include name="main.js" />
 			</fileset>
 		</apply>
-		<echo message="${line.separator}Specs:"/>
+		<echo message="${line.separator}Specs:" />
 		<exec executable="perl">
-			<arg value="${clocPath}"/>
-			<arg value="--read-lang-def=${clocDefinitionsPath}"/>
-			<arg value="Specs/"/>
+			<arg value="${clocPath}" />
+			<arg value="--read-lang-def=${clocDefinitionsPath}" />
+			<arg value="Specs/" />
 		</exec>
 	</target>
 
@@ -325,8 +325,7 @@
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check"
-			unless="no.combineCesiumWorkers.create">
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />

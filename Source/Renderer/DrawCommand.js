@@ -13,7 +13,7 @@ define(function() {
      */
     var DrawCommand = function() {
         /**
-         * The bounding volume of the geometry.  This is used for culling and frustum selection.
+         * The bounding volume of the geometry in world space.  This is used for culling and frustum selection.
          * <p>
          * For best rendering performance, use the tightest possible bounding volume.  Although
          * <code>undefined</code> is allowed, always try to provide a bounding volume to
@@ -85,7 +85,7 @@ define(function() {
          *
          * @default undefined
          */
-        this.offset = undefined;
+        this.offset = 0;
 
         /**
          * The shader program to apply.
