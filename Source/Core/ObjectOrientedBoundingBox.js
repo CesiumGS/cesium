@@ -63,8 +63,7 @@ define([
             diagonal : new Matrix3()
     };
     /**
-     * Computes an instance of an ObjectOrientedBoundingBox of the given positions. The box is determined using the covariance matrix.
-     * First we build the covariance matrix, then we compute the center, rotation and the minimal edge lengths of the OBB.
+     * Computes an instance of an ObjectOrientedBoundingBox of the given positions.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      * @memberof ObjectOrientedBoundingBox
@@ -91,8 +90,9 @@ define([
 
         var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1);
 
+        var i;
         var length = positions.length;
-        for ( var i = 0; i < length; i++) {
+        for (i = 0; i < length; i++) {
             Cartesian3.add(meanPoint, positions[i], meanPoint);
         }
         Cartesian3.multiplyByScalar(meanPoint, 1.0 / length, meanPoint);
@@ -146,18 +146,19 @@ define([
         var u = Cartesian3.normalize(v2, v2);
         var f = Cartesian3.normalize(v3, v3);
 
-        Matrix3.setRow(result.rotation, 0, r, result.rotation);
-        Matrix3.setRow(result.rotation, 1, u, result.rotation);
-        Matrix3.setRow(result.rotation, 2, f, result.rotation);
+        var rotation = result.rotation;
+        Matrix3.setRow(rotation, 0, r, rotation);
+        Matrix3.setRow(rotation, 1, u, rotation);
+        Matrix3.setRow(rotation, 2, f, rotation);
 
         p = positions[0];
-        var tempPoint = Matrix3.multiplyByVector(result.rotation, p, scratchCartesian4);
+        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian4);
         var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
         var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
 
         for (i = 1; i < length; i++) {
             p = positions[i];
-            Matrix3.multiplyByVector(result.rotation, p, tempPoint);
+            Matrix3.multiplyByVector(rotation, p, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
@@ -166,7 +167,7 @@ define([
         Cartesian3.add(minPoint, maxPoint, center);
         Cartesian3.multiplyByScalar(center, 0.5, center);
 
-        Matrix3.multiplyByVector(result.rotation, center, result.translation);
+        Matrix3.multiplyByVector(rotation, center, result.translation);
 
         Cartesian3.subtract(maxPoint, minPoint, center);
         Cartesian3.multiplyByScalar(center, 0.5, result.scale);
@@ -180,10 +181,10 @@ define([
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
-     * @param {Number} [rotation=0.0] The rotation of the bounding box.
-     * @return {ObjectOrientedBoundingBox} A new 2D ObjectOrientedBoundingBox instance if one was not provided.
+     * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
+     * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
-     * @exception {DeveloperError} boundingRectangle is missing.
+     * @exception {DeveloperError} boundingRectangle is required.
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
@@ -191,24 +192,27 @@ define([
      */
     ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
         if (!defined(boundingRectangle)) {
-            throw new DeveloperError('boundingRectangle is missing');
+            throw new DeveloperError('boundingRectangle is required');
         }
+
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
         }
+
         if (defined(rotation)) {
             Matrix3.fromRotationZ(rotation, result.rotation);
         } else {
             Matrix3.clone(Matrix3.IDENTITY, result.rotation);
         }
 
-        result.scale.x = boundingRectangle.width / 2;
-        result.scale.y = boundingRectangle.height / 2;
-        result.scale.z = 0.0;
+        var scale = result.scale;
+        scale.x = boundingRectangle.width * 0.5;
+        scale.y = boundingRectangle.height * 0.5;
+        scale.z = 0.0;
 
-        result.translation.x = boundingRectangle.x+(boundingRectangle.width/2);
-        result.translation.y = boundingRectangle.y+(boundingRectangle.height/2);
-        result.translation.z = 0.0;
+        var translation = Matrix3.multiplyByVector(result.rotation, scale, result.translation);
+        translation.x += boundingRectangle.x;
+        translation.y += boundingRectangle.y;
 
         return result;
     };
@@ -240,43 +244,43 @@ define([
     var scratchIntersectMatrix1 = new Matrix3();
     var scratchIntersectMatrix2 = new Matrix3();
     var scratchTCartesian = new Cartesian3();
-    //Helper functions for collision detection.
-    function getKeyFromIndex(index) {
-        if (index === 0) {
-            return 'x';
-        }
-        if (index === 1) {
-            return 'y';
-        }
-        if (index === 2) {
-            return 'z';
-        }
-        throw new DeveloperError('index must be 0 or 1 or 2');
-    }
+    var scratchTArray = new Array(3);
+    var scratchAArray = new Array(3);
+    var scratchBArray = new Array(3);
+
     function testCase1(k, a, b, B, T) {
-        if (Math.abs(T[getKeyFromIndex(k)]) > (a[getKeyFromIndex(k)] + b.x * B[Matrix3.getElementIndex(0, k)] + b.y * B[Matrix3.getElementIndex(1, k)] + b.z * B[Matrix3.getElementIndex(2, k)])) {
-            return 0;
+        var right = a[k] + b[0] * B[Matrix3.getElementIndex(0, k)] + b[1] * B[Matrix3.getElementIndex(1, k)] + b[2] * B[Matrix3.getElementIndex(2, k)];
+        
+        if (Math.abs(T[k]) > right) {
+            return true;
         }
-        return 1;
+        return false;
     }
 
     function testCase2(k, a, b, B, T) {
-        if (Math.abs(T.x * B[Matrix3.getElementIndex(0, k)] + T.y * B[Matrix3.getElementIndex(1, k)] + T.z * B[Matrix3.getElementIndex(2, k)]) > (b[getKeyFromIndex(k)] + a.x * B[Matrix3.getElementIndex(0, k)] + a.y * B[1][k] + a.z * B[Matrix3.getElementIndex(2, k)])) {
-            return 0;
+        var left = T[0] * B[Matrix3.getElementIndex(0, k)] + T[1] * B[Matrix3.getElementIndex(1, k)] + T[2] * B[Matrix3.getElementIndex(2, k)];
+        var right = b[k] + a[0] * B[Matrix3.getElementIndex(0, k)] + a[1] * B[Matrix3.getElementIndex(1, k)] + a[2] * B[Matrix3.getElementIndex(2, k)];
+        
+        if (Math.abs(left) > right) {
+            return true;
         }
-        return 1;
+        return false;
     }
 
     function testCase3(i, j, a, b, B, T) {
-        if (Math.abs(T[getKeyFromIndex((i + 2) % 3)] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[getKeyFromIndex((i + 1) % 3)] * B[(i + 2) % 3][j]) > (a[getKeyFromIndex((i + 1) % 3)] * B[(i + 2) % 3][j] + a[getKeyFromIndex((i + 2) % 3)] * B[(i + 1) % 3][j] + b[getKeyFromIndex((j + 1) % 3)] * B[i][(j + 2) % 3] + b[getKeyFromIndex((j + 2) % 3)] * B[i][(j + 1) % 3])) {
-            return 0;
+        var left = T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[Matrix3.getElementIndex((i + 2) % 3, j)];
+        var right = a[(i + 1) % 3] * B[Matrix3.getElementIndex((i + 2) % 3, j)] + a[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)];
+        right += b[(j + 1) % 3] * B[Matrix3.getElementIndex(i, (j + 2) % 3)] + b[(j + 2) % 3] * B[Matrix3.getElementIndex(i, (j + 1) % 3)];
+        
+        if (Math.abs(left) > right) {
+            return true;
         }
-        return 1;
+        return false;
     }
+    
     /**
      * Checks if two ObjectOrientedBoundingBoxes intersect.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
-     * <code>true</code> if they intersect, <code>false</code> otherwise.
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
@@ -297,59 +301,62 @@ define([
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
         Matrix3.abs(B, B);
+        
+        var T = scratchTArray;
+        var a = scratchAArray;
+        var b = scratchBArray;
+        
+        Cartesian3.subtract(left.translation, right.translation, scratchTCartesian);
+        Matrix3.multiplyByVector(leftTransformTransposed, scratchTCartesian, scratchTCartesian);
+        Cartesian3.pack(scratchTCartesian, T);
+        Cartesian3.pack(left.scale, a);
+        Cartesian3.pack(right.scale, b);
 
-        var T;
-        var a;
-        var b;
-        T = Matrix3.multiplyByVector(leftTransformTransposed, Cartesian3.subtract(left.translation, right.translation, scratchTCartesian), scratchTCartesian);
-        a = left.scale;
-        b = right.scale;
-
-        if (testCase1(0, a, b, B, T) === 0) {
+        if (testCase1(0, a, b, B, T)) {
             return false;
         }
-        if (testCase1(1, a, b, B, T) === 0) {
+        if (testCase1(1, a, b, B, T)) {
             return false;
         }
-        if (testCase1(2, a, b, B, T) === 0) {
-            return false;
-        }
-
-        if (testCase2(0, a, b, B, T) === 0) {
-            return false;
-        }
-        if (testCase2(1, a, b, B, T) === 0) {
-            return false;
-        }
-        if (testCase2(2, a, b, B, T) === 0) {
+        if (testCase1(2, a, b, B, T)) {
             return false;
         }
 
-        if (testCase3(0, 0, a, b, B, T) === 0) {
+        if (testCase2(0, a, b, B, T)) {
             return false;
         }
-        if (testCase3(1, 0, a, b, B, T) === 0) {
+        if (testCase2(1, a, b, B, T)) {
             return false;
         }
-        if (testCase3(2, 0, a, b, B, T) === 0) {
+        if (testCase2(2, a, b, B, T)) {
             return false;
         }
-        if (testCase3(0, 1, a, b, B, T) === 0) {
+
+        if (testCase3(0, 0, a, b, B, T)) {
             return false;
         }
-        if (testCase3(1, 1, a, b, B, T) === 0) {
+        if (testCase3(1, 0, a, b, B, T)) {
             return false;
         }
-        if (testCase3(2, 1, a, b, B, T) === 0) {
+        if (testCase3(2, 0, a, b, B, T)) {
             return false;
         }
-        if (testCase3(0, 2, a, b, B, T) === 0) {
+        if (testCase3(0, 1, a, b, B, T)) {
             return false;
         }
-        if (testCase3(1, 2, a, b, B, T) === 0) {
+        if (testCase3(1, 1, a, b, B, T)) {
             return false;
         }
-        if (testCase3(2, 2, a, b, B, T) === 0) {
+        if (testCase3(2, 1, a, b, B, T)) {
+            return false;
+        }
+        if (testCase3(0, 2, a, b, B, T)) {
+            return false;
+        }
+        if (testCase3(1, 2, a, b, B, T)) {
+            return false;
+        }
+        if (testCase3(2, 2, a, b, B, T)) {
             return false;
         }
 
@@ -395,17 +402,6 @@ define([
      */
     ObjectOrientedBoundingBox.prototype.equals = function(right) {
         return ObjectOrientedBoundingBox.equals(this, right);
-    };
-
-    /**
-     * Checks if this ObjectOrientedBoundingBox intersects the provided.
-     * @memberof ObjectOrientedBoundingBox
-     *
-     * @param {ObjectOrientedBoundingBox} right The right hand side ObjectOrientedBoundingBox.
-     * @return {Boolean} <code>true</code> if this ObjectOrientedBoundingBox intersects the one provided <code>false</code> otherwise.
-     */
-    ObjectOrientedBoundingBox.prototype.intersect = function(right) {
-        return ObjectOrientedBoundingBox.intersect(this, right);
     };
 
     return ObjectOrientedBoundingBox;
