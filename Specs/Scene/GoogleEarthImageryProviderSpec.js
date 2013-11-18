@@ -218,13 +218,6 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.createImage = function(url, responseType, headers, deferred) {
-                expect(url).toEqual(proxy.getURL('http://example.invalid/default_map/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
-
-                // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
-            };
-
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;
             });
