@@ -25,10 +25,12 @@ define([
      * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
-     * @param {String} [options.data] The data to sent with the request, if any.
-     * @param {Object} [options.headers] HTTP headers to send with the requests, if any.
+     * @param {String} [options.data] The data to send with the request, if any.
+     * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     *
+     * @exception {DeveloperError} options.url is required.
      *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -39,8 +41,11 @@ define([
      * @see loadText
      *
      * @example
-     * // load a single URL asynchronously. in real code, you should use loadBlob instead.
-     * loadWithXhr('some/url', 'blob', 'GET').then(function(blob) {
+     * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
+     * loadWithXhr({
+     *     url : 'some/url',
+     *     responseType : 'blob',
+     * }).then(function(blob) {
      *     // use the data
      * }, function() {
      *     // an error occurred
