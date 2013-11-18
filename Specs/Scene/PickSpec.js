@@ -27,7 +27,7 @@ defineSuite([
     var scene;
     var primitives;
 
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
         primitives = scene.getPrimitives();
 
@@ -43,8 +43,12 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
     });
 
+    afterAll(function() {
+        destroyScene(scene);
+    });
+
     afterEach(function() {
-        destroyScene();
+        primitives.removeAll();
     });
 
     function createExtent() {

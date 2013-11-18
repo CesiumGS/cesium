@@ -148,7 +148,7 @@ defineSuite([
             antialias : false
         });
         expect(c.getAntialias()).toEqual(false);
-        c.destroy();
+        destroyContext(c);
     });
 
     it('gets the standard derivatives extension', function() {
@@ -306,7 +306,7 @@ defineSuite([
     it('isDestroyed', function() {
         var c = createContext();
         expect(c.isDestroyed()).toEqual(false);
-        c.destroy();
+        destroyContext(c);
         expect(c.isDestroyed()).toEqual(true);
     });
 
@@ -314,7 +314,7 @@ defineSuite([
         var c = createContext();
         var destroyableObject = jasmine.createSpyObj('destroyableObject', ['destroy']);
         c.cache.foo = destroyableObject;
-        c.destroy();
+        destroyContext(c);
         expect(destroyableObject.destroy).toHaveBeenCalled();
     });
 
@@ -322,16 +322,18 @@ defineSuite([
         var c = createContext();
         var nonDestroyableObject = {};
         c.cache.foo = nonDestroyableObject;
-        c.destroy();
+        destroyContext(c);
     });
 
     it('returns the underling drawingBufferWidth', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.getDrawingBufferWidth()).toBe(1024);
+        destroyContext(c);
     });
 
     it('returns the underling drawingBufferHeight', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.getDrawingBufferHeight()).toBe(768);
+        destroyContext(c);
     });
 }, 'WebGL');
