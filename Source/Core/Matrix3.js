@@ -982,7 +982,7 @@ define([
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} matrix is invertible.
+     * @exception {DeveloperError} matrix is not invertible.
      */
     Matrix3.inverse = function(matrix, result) {
         if (!defined(matrix)) {
