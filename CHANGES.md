@@ -30,7 +30,7 @@ Beta Releases
                    new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
                ]
            });
-           
+  * `loadWithXhr` now takes an options object, and allows specifying HTTP method and data to send with the request.
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
 * Added `LinearSpline` and `QuaternionSpline`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
