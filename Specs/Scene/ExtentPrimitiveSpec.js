@@ -154,7 +154,7 @@ defineSuite([
         expect(pixels[2]).toEqual(0);
         expect(pixels[3]).toEqual(255);
 
-        destroyScene();
+        destroyScene(scene);
     });
 
     it('is picked', function() {
