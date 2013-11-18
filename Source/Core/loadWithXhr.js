@@ -44,7 +44,7 @@ define([
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
      * loadWithXhr({
      *     url : 'some/url',
-     *     responseType : 'blob',
+     *     responseType : 'blob'
      * }).then(function(blob) {
      *     // use the data
      * }, function() {
