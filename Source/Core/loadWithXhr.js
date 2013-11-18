@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defined',
+        './defaultValue',
         './DeveloperError',
         './RequestErrorEvent',
         '../ThirdParty/when'
     ], function(
         defined,
+        defaultValue,
         DeveloperError,
         RequestErrorEvent,
         when) {
@@ -19,45 +21,60 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {String|Promise} url The URL of the data, or a promise for the URL.
-     * @param {String} responseType The type of response.  This controls the type of item returned.
-     * @param {Object} [headers] HTTP headers to send with the requests.
+     * @param {Object} options Options for the request.
+     * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
+     * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
+     * @param {String} [options.method='GET'] The HTTP method to use.
+     * @param {String} [options.data] The data to send with the request, if any.
+     * @param {Object} [options.headers] HTTP headers to send with the request, if any.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     *
+     * @exception {DeveloperError} options.url is required.
      *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      *
      * @see loadArrayBuffer
      * @see loadBlob
+     * @see loadJson
      * @see loadText
      *
      * @example
-     * // load a single URL asynchronously
-     * loadWithXhr('some/url', 'blob').then(function(blob) {
+     * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
+     * loadWithXhr({
+     *     url : 'some/url',
+     *     responseType : 'blob'
+     * }).then(function(blob) {
      *     // use the data
      * }, function() {
      *     // an error occurred
      * });
      */
-    var loadWithXhr = function(url, responseType, headers) {
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+    var loadWithXhr = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
 
-        return when(url, function(url) {
+        var responseType = options.responseType;
+        var method = defaultValue(options.method, 'GET');
+        var data = options.data;
+        var headers = options.headers;
+
+        return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, headers, deferred);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred);
 
             return deferred.promise;
         });
     };
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, headers, deferred) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
+        xhr.open(method, url, true);
 
         if (defined(headers)) {
             for ( var key in headers) {
@@ -83,7 +100,7 @@ define([
             deferred.reject(new RequestErrorEvent());
         };
 
-        xhr.send();
+        xhr.send(data);
     };
 
     loadWithXhr.defaultLoad = loadWithXhr.load;
