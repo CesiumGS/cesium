@@ -170,7 +170,7 @@ define([
      * viewer.extend(Cesium.viewerDynamicObjectMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
-     * viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+     * viewer.dropError.addEventListener(function(dropHandler, name, error) {
      *     console.log(error);
      *     window.alert(error);
      * });
