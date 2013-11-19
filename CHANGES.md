@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes:
   * Changed the `CatmulRomSpline` and `HermiteSpline` constructors from taking an array of structures to a structure of arrays. For example, code that looked like:
-    
+
            var controlPoints = [
                { point: new Cartesian3(1235398.0, -4810983.0, 4146266.0), time: 0.0},
                { point: new Cartesian3(1372574.0, -5345182.0, 4606657.0), time: 1.5},
@@ -17,7 +17,7 @@ Beta Releases
                { point: new Cartesian3(-2539788.0, -4724797.0, 3620093.0), time: 6.0}
            ];
            var spline = new HermiteSpline(controlPoints);
-           
+
     should now look like:
     
            var spline = HermiteSpline.createNaturalCubic({
@@ -30,17 +30,19 @@ Beta Releases
                    new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
                ]
            });
-           
+  * `loadWithXhr` now takes an options object, and allows specifying HTTP method and data to send with the request.
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
 * Added `LinearSpline`, `QuaternionSpline`, `BezierSpline` and `BSpline`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
 * Added `Math.nextPowerOfTwo`.
-           
+* Added `inverse` and `determinant` to `Matrix3`.
+* Added `Ellipsoid.transformPositionFromScaledSpace`.
+
 ### b22 - 2013-11-01
 
 * Breaking changes:
   * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
-  * The following prototype functions were removed
+  * The following prototype functions were removed:
     * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`.
     * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`. For example, code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
@@ -400,7 +402,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
-   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
+   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This option is no longer needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
    * `destroyObject` no longer deletes properties from the object being destroyed.
    * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
