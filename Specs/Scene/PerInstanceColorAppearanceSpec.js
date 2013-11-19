@@ -100,4 +100,4 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
-});
+}, 'WebGL');

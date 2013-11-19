@@ -14,9 +14,17 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('can create and destroy', function() {
-        var scene = createScene();
+    var scene;
 
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
+    });
+
+    it('can create and destroy', function() {
         var container = document.createElement('span');
         container.id = 'testContainer';
         document.body.appendChild(container);
@@ -29,12 +37,9 @@ defineSuite([
         expect(widget.isDestroyed()).toEqual(true);
 
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
     it('mousedown event closes dropdown if target is not inside container', function() {
-        var scene = createScene();
-
         var container = document.createElement('span');
         container.id = 'testContainer';
         document.body.appendChild(container);
@@ -51,12 +56,9 @@ defineSuite([
 
         widget.destroy();
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
     it('touchstart event closes dropdown if target is not inside container', function() {
-        var scene = createScene();
-
         var container = document.createElement('span');
         container.id = 'testContainer';
         document.body.appendChild(container);
@@ -73,7 +75,6 @@ defineSuite([
 
         widget.destroy();
         document.body.removeChild(container);
-        destroyScene(scene);
     });
 
     it('constructor throws with no transitioner', function() {
@@ -83,18 +84,14 @@ defineSuite([
     });
 
     it('constructor throws with no element', function() {
-        var scene = createScene();
         expect(function() {
             return new SceneModePicker(undefined, new SceneTransitioner(scene));
         }).toThrow();
-        destroyScene(scene);
     });
 
     it('constructor throws with string element that does not exist', function() {
-        var scene = createScene();
         expect(function() {
             return new SceneModePicker('does not exist', new SceneTransitioner(scene));
         }).toThrow();
-        destroyScene(scene);
     });
-});
+}, 'WebGL');
