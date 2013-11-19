@@ -42,6 +42,8 @@ Beta Releases
 * Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
 * Renamed `SceneModePickerViewModel.onTransitionStart` to `SceneModePickerViewModel.transitionStart`.
 * Renamed `Viewer.onRenderLoopError` to `Viewer.renderLoopError`.
+* Renamed `Viewer.onDropError` to `Viewer.dropError`.
+* Renamed `CesiumViewer.onDropError` to `CesiumViewer.dropError`.
 * Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
 * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
 
