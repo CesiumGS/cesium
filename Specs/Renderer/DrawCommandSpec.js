@@ -11,7 +11,7 @@ defineSuite([
         expect(c.boundingVolume).toBeUndefined();
         expect(c.cull).toEqual(true);
         expect(c.modelMatrix).toBeUndefined();
-        expect(c.offset).toBeUndefined();
+        expect(c.offset).toEqual(0);
         expect(c.count).toBeUndefined();
         expect(c.primitiveType).toBeUndefined();
         expect(c.renderState).toBeUndefined();

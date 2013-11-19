@@ -11,4 +11,4 @@
 @import url(../DynamicScene/GeoJsonDataSource.css);
 
 /* Shared CSS classes are imported last, to ensure that the above CSS must override in an order-independent fashion. */
-@import url(../CesiumWidget/CesiumWidget.css);
+@import url(./CesiumWidget/CesiumWidget.css);

@@ -63,7 +63,7 @@ defineSuite([
         if (!polylines.isDestroyed()) {
             polylines.destroy();
         }
-        us = null;
+        us = undefined;
     });
 
     it('default constructs a polyline', function() {
@@ -826,7 +826,7 @@ defineSuite([
         scene.render();
         expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
 
-        destroyScene();
+        destroyScene(scene);
     });
 
     it('does not render', function() {
@@ -1597,4 +1597,4 @@ defineSuite([
         polylines.destroy();
         expect(polylines.isDestroyed()).toEqual(true);
     });
-});
+}, 'WebGL');

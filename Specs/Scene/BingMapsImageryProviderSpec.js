@@ -162,11 +162,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -243,11 +243,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -342,15 +342,15 @@ defineSuite([
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
             // Succeed after 2 tries
             if (tries === 2) {
                 // valid URL
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             }
 
             // invalid URL
-            return loadWithXhr.defaultLoad(url, responseType, headers, deferred);
+            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred);
         };
 
         waitsFor(function() {

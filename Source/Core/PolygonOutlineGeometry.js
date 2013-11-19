@@ -44,7 +44,7 @@ define([
     "use strict";
     var createGeometryFromPositionsPositions = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
@@ -58,36 +58,44 @@ define([
             positions2D.reverse();
             cleanedPositions.reverse();
         }
+
         var subdividedPositions = [];
         var length = cleanedPositions.length;
         var i;
-        for (i = 0; i < length-1; i++) {
-            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
+        if (!perPositionHeight) {
+            for (i = 0; i < length; i++) {
+                subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[(i + 1) % length], granularity));
+            }
+        } else {
+            for (i = 0; i < length; i++) {
+                var p0 = cleanedPositions[i];
+                var p1 = cleanedPositions[(i + 1) % length];
+                subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+            }
         }
-        subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
-        length = subdividedPositions.length/3;
-        var indicesSize = length*2;
-        var indices = IndexDatatype.createTypedArray(subdividedPositions.length/3, indicesSize);
+        length = subdividedPositions.length / 3;
+        var indicesSize = length * 2;
+        var indices = IndexDatatype.createTypedArray(subdividedPositions.length / 3, indicesSize);
         var index = 0;
-        for (i = 0; i < length-1; i++) {
+        for (i = 0; i < length - 1; i++) {
             indices[index++] = i;
-            indices[index++] = i+1;
+            indices[index++] = i + 1;
         }
-        indices[index++] = length-1;
+        indices[index++] = length - 1;
         indices[index++] = 0;
 
         return new GeometryInstance({
             geometry : new Geometry({
-                attributes: new GeometryAttributes({
-                    position: new GeometryAttribute({
+                attributes : new GeometryAttributes({
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array(subdividedPositions)
                     })
                 }),
-                indices: indices,
-                primitiveType: PrimitiveType.LINES
+                indices : indices,
+                primitiveType : PrimitiveType.LINES
             })
         });
     }
@@ -96,7 +104,7 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchBoundingSphere = new BoundingSphere();
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
@@ -115,25 +123,39 @@ define([
         var i;
         var corners = new Array(length);
         corners[0] = 0;
-        for (i = 0; i < length-1; i++) {
-            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
-            corners[i+1] = subdividedPositions.length/3;
+        if (!perPositionHeight) {
+            for (i = 0; i < length - 1; i++) {
+                subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i + 1], granularity));
+                corners[i + 1] = subdividedPositions.length / 3;
+            }
+            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length - 1], cleanedPositions[0], granularity));
+        } else {
+            var p0;
+            var p1;
+            for (i = 0; i < length - 1; i++) {
+                p0 = cleanedPositions[i];
+                p1 = cleanedPositions[(i + 1) % length];
+                subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                corners[i + 1] = subdividedPositions.length / 3;
+            }
+            p0 = cleanedPositions[length - 1];
+            p1 = cleanedPositions[0];
+            subdividedPositions.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
         }
-        subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
-        length = subdividedPositions.length/3;
-        var indicesSize = ((length * 2) + corners.length)*2;
-        var indices = IndexDatatype.createTypedArray(subdividedPositions.length/3, indicesSize);
+        length = subdividedPositions.length / 3;
+        var indicesSize = ((length * 2) + corners.length) * 2;
+        var indices = IndexDatatype.createTypedArray(subdividedPositions.length / 3, indicesSize);
         var index = 0;
-        for (i = 0; i < length-1; i++) {
+        for (i = 0; i < length - 1; i++) {
             indices[index++] = i;
-            indices[index++] = i+1;
+            indices[index++] = i + 1;
             indices[index++] = i + length;
-            indices[index++] = i+1 + length;
+            indices[index++] = i + 1 + length;
         }
-        indices[index++] = length-1;
+        indices[index++] = length - 1;
         indices[index++] = 0;
-        indices[index++] = length + length-1;
+        indices[index++] = length + length - 1;
         indices[index++] = length;
 
         for (i = 0; i < corners.length; i++) {
@@ -146,15 +168,15 @@ define([
 
         return new GeometryInstance({
             geometry : new Geometry({
-                attributes: new GeometryAttributes({
-                    position: new GeometryAttribute({
+                attributes : new GeometryAttributes({
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array(subdividedPositions)
                     })
                 }),
-                indices: indices,
-                primitiveType: PrimitiveType.LINES
+                indices : indices,
+                primitiveType : PrimitiveType.LINES
             })
         });
     }
@@ -171,6 +193,7 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @exception {DeveloperError} polygonHierarchy is required.
      *
@@ -249,9 +272,10 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
+        var perPositionHeight = defaultValue(options.perPositionHeight, false);
 
-        var extrudedHeight = defaultValue(options.extrudedHeight, undefined);
-        var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6));
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (defined(extrudedHeight) && (!CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6) || perPositionHeight));
         if (extrude) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
@@ -269,6 +293,7 @@ define([
         this._extrudedHeight = extrudedHeight;
         this._extrude = extrude;
         this._polygonHierarchy = polygonHierarchy;
+        this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonOutlineGeometry';
     };
 
@@ -282,6 +307,7 @@ define([
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
      * @exception {DeveloperError} options.positions is required.
      *
@@ -314,7 +340,8 @@ define([
             height : options.height,
             extrudedHeight : options.extrudedHeight,
             ellipsoid : options.ellipsoid,
-            granularity : options.granularity
+            granularity : options.granularity,
+            perPositionHeight : options.perPositionHeight
         };
         return new PolygonOutlineGeometry(newOptions);
     };
@@ -336,6 +363,7 @@ define([
         var extrudedHeight = polygonGeometry._extrudedHeight;
         var extrude = polygonGeometry._extrude;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
+        var perPositionHeight = polygonGeometry._perPositionHeight;
 
         var boundingSphere;
         var outerPositions;
@@ -365,7 +393,7 @@ define([
                     numGrandchildren = hole.holes.length;
                 }
 
-                for (var j = 0; j < numGrandchildren; j++) {
+                for ( var j = 0; j < numGrandchildren; j++) {
                     queue.enqueue(hole.holes[j]);
                 }
             }
@@ -373,7 +401,7 @@ define([
             polygons.push(outerRing);
         }
 
-        outerPositions =  polygons[0];
+        outerPositions = polygons[0];
         // The bounding volume is just around the boundary points, so there could be cases for
         // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
         // volume doesn't cover the polygon.
@@ -384,17 +412,17 @@ define([
 
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity);
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, perPositionHeight);
                 if (defined(geometry)) {
-                    geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid);
+                    geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                     geometries.push(geometry);
                 }
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
+                geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight);
                 if (defined(geometry)) {
-                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
+                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
                     geometries.push(geometry);
                 }
             }
