@@ -5,6 +5,7 @@ defineSuite([
          'Core/Cartesian4',
          'Core/Math',
          'Core/Matrix3',
+         'Core/Quaternion',
          'Core/Intersect',
          'Core/BoundingRectangle'
      ], function(
@@ -13,6 +14,7 @@ defineSuite([
          Cartesian4,
          CesiumMath,
          Matrix3,
+         Quaternion,
          Intersect,
          BoundingRectangle) {
     "use strict";
@@ -26,6 +28,31 @@ defineSuite([
         new Cartesian3(0.0, -3.0, 0.0),
         new Cartesian3(0.0, 0.0, -4.0)
     ];
+
+    function rotatePositions(positions, axis, angle) {
+        var points = [];
+
+        var quaternion = Quaternion.fromAxisAngle(axis, angle);
+        var rotation = Matrix3.fromQuaternion(quaternion);
+
+        for (var i = 0; i < positions.length; ++i) {
+            points.push(Matrix3.multiplyByVector(rotation, positions[i]));
+        }
+
+        return {
+            points : points,
+            rotation : rotation
+        };
+    }
+
+    function translatePositions(positions, translation) {
+        var points = [];
+        for (var i = 0; i < positions.length; ++i) {
+            points.push(Cartesian3.add(translation, positions[i]));
+        }
+
+        return points;
+    }
 
     it('constructor sets expected default values', function() {
         var box = new ObjectOrientedBoundingBox();
@@ -56,12 +83,8 @@ defineSuite([
     });
 
     it('fromPoints correct translation', function() {
-        var points = [];
         var translation = new Cartesian3(10.0, -20.0, 30.0);
-        for (var i = 0; i < positions.length; ++i) {
-            points.push(Cartesian3.add(positions[i], translation));
-        }
-
+        var points = translatePositions(positions, translation);
         var box = ObjectOrientedBoundingBox.fromPoints(points);
         expect(box.rotation).toEqual(Matrix3.IDENTITY);
         expect(box.scale).toEqual(new Cartesian3(2.0, 3.0, 4.0));
@@ -69,60 +92,50 @@ defineSuite([
     });
 
     it('fromPoints rotation about z', function() {
-        var points = [];
-        var rotation = Matrix3.fromRotationZ(CesiumMath.PI_OVER_FOUR);
-        for (var i = 0; i < positions.length; ++i) {
-            points.push(Matrix3.multiplyByVector(rotation, positions[i]));
-        }
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
 
         var box = ObjectOrientedBoundingBox.fromPoints(points);
         expect(box.rotation).toEqualEpsilon(rotation, CesiumMath.EPSILON15);
-        expect(box.scale).toEqual(new Cartesian3(3.0, 2.0, 4.0));
-        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqualEpsilon(new Cartesian3(3.0, 2.0, 4.0), CesiumMath.EPSILON15);
+        expect(box.translation).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
     });
 
     it('fromPoints rotation about y', function() {
-        var points = [];
-        var rotation = Matrix3.fromRotationY(CesiumMath.PI_OVER_FOUR);
-        for (var i = 0; i < positions.length; ++i) {
-            points.push(Matrix3.multiplyByVector(rotation, positions[i]));
-        }
+        var result = rotatePositions(positions, Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
 
         var box = ObjectOrientedBoundingBox.fromPoints(points);
         expect(box.rotation).toEqualEpsilon(rotation, CesiumMath.EPSILON15);
-        expect(box.scale).toEqual(new Cartesian3(2.0, 3.0, 4.0));
-        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqualEpsilon(new Cartesian3(4.0, 3.0, 2.0), CesiumMath.EPSILON15);
+        expect(box.translation).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
     });
 
     it('fromPoints rotation about x', function() {
-        var points = [];
-        var rotation = Matrix3.fromRotationX(CesiumMath.PI_OVER_FOUR);
-        for (var i = 0; i < positions.length; ++i) {
-            points.push(Matrix3.multiplyByVector(rotation, positions[i]));
-        }
+        var result = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
 
         var box = ObjectOrientedBoundingBox.fromPoints(points);
         expect(box.rotation).toEqualEpsilon(rotation, CesiumMath.EPSILON15);
-        expect(box.scale).toEqual(new Cartesian3(2.0, 4.0, 3.0));
-        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqualEpsilon(new Cartesian3(2.0, 4.0, 3.0), CesiumMath.EPSILON15);
+        expect(box.translation).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
     });
 
-    it('fromPoints rotation, translation, and scale', function() {
-        var points = [];
-        var rotation = Matrix3.fromRotationX(CesiumMath.PI_OVER_FOUR);
+    it('fromPoints rotation and translation', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
         var translation = new Cartesian3(-40.0, 20.0, -30.0);
-        var scale = 100.0;
-        for (var i = 0; i < positions.length; ++i) {
-            var point = Matrix3.multiplyByVector(rotation, positions[i]);
-            Cartesian3.multiplyByScalar(point, scale, point);
-            Cartesian3.add(point, translation, point);
-            points.push(point);
-        }
+        points = translatePositions(points, translation);
 
         var box = ObjectOrientedBoundingBox.fromPoints(points);
         expect(box.rotation).toEqualEpsilon(rotation, CesiumMath.EPSILON15);
-        expect(box.translation).toEqual(translation);
-        expect(box.scale).toEqualEpsilon(Cartesian3.multiplyByScalar(new Cartesian3(2.0, 4.0, 3.0), scale), CesiumMath.EPSILON13);
+        expect(box.scale).toEqualEpsilon(new Cartesian3(3.0, 2.0, 4.0), CesiumMath.EPSILON14);
+        expect(box.translation).toEqualEpsilon(translation, CesiumMath.EPSILON15);
     });
 
     it('fromBoundingRectangle throws without values', function() {
@@ -135,6 +148,8 @@ defineSuite([
     it('fromBoundingRectangle sets the transformation matrix to identity without rotation', function() {
         var box = ObjectOrientedBoundingBox.fromBoundingRectangle(new BoundingRectangle());
         expect(box.rotation).toEqual(Matrix3.IDENTITY);
+        expect(box.translation).toEqual(Cartesian3.ZERO);
+        expect(box.scale).toEqual(Cartesian3.ZERO);
     });
 
     it('fromBoundingRectangle creates an ObjectOrientedBoundingBox without a result parameter', function() {
@@ -142,7 +157,6 @@ defineSuite([
         var result = new ObjectOrientedBoundingBox();
         expect(result).toEqual(box);
     });
-
 
     it('intersect throws without left box', function() {
         expect(function() {

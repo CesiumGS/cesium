@@ -88,14 +88,15 @@ define([
             return result;
         }
 
-        var meanPoint = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian1);
-
         var i;
         var length = positions.length;
-        for (i = 0; i < length; i++) {
+
+        var meanPoint = Cartesian3.clone(positions[0], scratchCartesian1);
+        for (i = 1; i < length; i++) {
             Cartesian3.add(meanPoint, positions[i], meanPoint);
         }
-        Cartesian3.multiplyByScalar(meanPoint, 1.0 / length, meanPoint);
+        var invLength = 1.0 / length;
+        Cartesian3.multiplyByScalar(meanPoint, invLength, meanPoint);
 
         var exx = 0.0;
         var exy = 0.0;
@@ -103,24 +104,24 @@ define([
         var eyy = 0.0;
         var eyz = 0.0;
         var ezz = 0.0;
-
-        var meanPointXX = meanPoint.x * meanPoint.x;
-        var meanPointXY = meanPoint.x * meanPoint.y;
-        var meanPointXZ = meanPoint.x * meanPoint.z;
-        var meanPointYY = meanPoint.y * meanPoint.y;
-        var meanPointYZ = meanPoint.y * meanPoint.z;
-        var meanPointZZ = meanPoint.z * meanPoint.z;
         var p;
 
         for (i = 0; i < length; i++) {
-            p = positions[i];
-            exx += p.x * p.x - meanPointXX;
-            exy += p.x * p.y - meanPointXY;
-            exz += p.x * p.z - meanPointXZ;
-            eyy += p.y * p.y - meanPointYY;
-            eyz += p.y * p.z - meanPointYZ;
-            ezz += p.z * p.z - meanPointZZ;
+            p = Cartesian3.subtract(positions[i], meanPoint, scratchCartesian2);
+            exx += p.x * p.x;
+            exy += p.x * p.y;
+            exz += p.x * p.z;
+            eyy += p.y * p.y;
+            eyz += p.y * p.z;
+            ezz += p.z * p.z;
         }
+
+        exx *= invLength;
+        exy *= invLength;
+        exz *= invLength;
+        eyy *= invLength;
+        eyz *= invLength;
+        ezz *= invLength;
 
         var covarianceMatrix = scratchCovarianceResult;
         covarianceMatrix[0] = exx;
@@ -134,43 +135,27 @@ define([
         covarianceMatrix[8] = ezz;
 
         var eigenDecomposition = Matrix3.getEigenDecomposition(covarianceMatrix, scratchEigenResult);
-        var unitaryMatrix = eigenDecomposition.unitary;
+        var rotation = Matrix3.transpose(eigenDecomposition.unitary, result.rotation);
 
-        //eigenvectors of covMatrix
-        var v1 = Matrix3.getColumn(unitaryMatrix, 0, scratchCartesian1);
-        var v2 = Matrix3.getColumn(unitaryMatrix, 1, scratchCartesian2);
-        var v3 = Matrix3.getColumn(unitaryMatrix, 2, scratchCartesian3);
-
-        //normalized eigenvectors
-        var r = Cartesian3.normalize(v1, v1);
-        var u = Cartesian3.normalize(v2, v2);
-        var f = Cartesian3.normalize(v3, v3);
-
-        var rotation = result.rotation;
-        Matrix3.setRow(rotation, 0, r, rotation);
-        Matrix3.setRow(rotation, 1, u, rotation);
-        Matrix3.setRow(rotation, 2, f, rotation);
-
-        p = positions[0];
-        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian4);
-        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
-        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian6);
+        p = Cartesian3.subtract(positions[0], meanPoint, scratchCartesian2);
+        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian3);
+        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian4);
+        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
 
         for (i = 1; i < length; i++) {
-            p = positions[i];
+            p = Cartesian3.subtract(positions[i], meanPoint, p);
             Matrix3.multiplyByVector(rotation, p, tempPoint);
             Cartesian3.getMinimumByComponent(minPoint, tempPoint, minPoint);
             Cartesian3.getMaximumByComponent(maxPoint, tempPoint, maxPoint);
         }
 
-        var center = scratchCartesian4;
-        Cartesian3.add(minPoint, maxPoint, center);
+        var center = Cartesian3.add(minPoint, maxPoint, scratchCartesian3);
         Cartesian3.multiplyByScalar(center, 0.5, center);
+        Matrix3.multiplyByVector(rotation, center, center);
+        Cartesian3.add(meanPoint, center, result.translation);
 
-        Matrix3.multiplyByVector(rotation, center, result.translation);
-
-        Cartesian3.subtract(maxPoint, minPoint, center);
-        Cartesian3.multiplyByScalar(center, 0.5, result.scale);
+        var scale = Cartesian3.subtract(maxPoint, minPoint, scratchCartesian3);
+        Cartesian3.multiplyByScalar(scale, 0.5, result.scale);
 
         return result;
     };
@@ -250,7 +235,7 @@ define([
 
     function testCase1(k, a, b, B, T) {
         var right = a[k] + b[0] * B[Matrix3.getElementIndex(0, k)] + b[1] * B[Matrix3.getElementIndex(1, k)] + b[2] * B[Matrix3.getElementIndex(2, k)];
-        
+
         if (Math.abs(T[k]) > right) {
             return true;
         }
@@ -260,7 +245,7 @@ define([
     function testCase2(k, a, b, B, T) {
         var left = T[0] * B[Matrix3.getElementIndex(0, k)] + T[1] * B[Matrix3.getElementIndex(1, k)] + T[2] * B[Matrix3.getElementIndex(2, k)];
         var right = b[k] + a[0] * B[Matrix3.getElementIndex(0, k)] + a[1] * B[Matrix3.getElementIndex(1, k)] + a[2] * B[Matrix3.getElementIndex(2, k)];
-        
+
         if (Math.abs(left) > right) {
             return true;
         }
@@ -271,13 +256,13 @@ define([
         var left = T[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)] - T[(i + 1) % 3] * B[Matrix3.getElementIndex((i + 2) % 3, j)];
         var right = a[(i + 1) % 3] * B[Matrix3.getElementIndex((i + 2) % 3, j)] + a[(i + 2) % 3] * B[Matrix3.getElementIndex((i + 1) % 3, j)];
         right += b[(j + 1) % 3] * B[Matrix3.getElementIndex(i, (j + 2) % 3)] + b[(j + 2) % 3] * B[Matrix3.getElementIndex(i, (j + 1) % 3)];
-        
+
         if (Math.abs(left) > right) {
             return true;
         }
         return false;
     }
-    
+
     /**
      * Checks if two ObjectOrientedBoundingBoxes intersect.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
@@ -301,11 +286,11 @@ define([
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
         Matrix3.abs(B, B);
-        
+
         var T = scratchTArray;
         var a = scratchAArray;
         var b = scratchBArray;
-        
+
         Cartesian3.subtract(left.translation, right.translation, scratchTCartesian);
         Matrix3.multiplyByVector(leftTransformTransposed, scratchTCartesian, scratchTCartesian);
         Cartesian3.pack(scratchTCartesian, T);
