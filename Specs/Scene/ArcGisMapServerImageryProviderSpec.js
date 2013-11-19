@@ -109,11 +109,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -190,11 +190,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -340,11 +340,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
 
                 // Just return any old image.
-                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
