@@ -9,7 +9,6 @@ define([
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
         '../Core/PolygonGeometry',
-        '../Core/Queue',
         './EllipsoidSurfaceAppearance',
         './Primitive',
         './Material'
@@ -23,7 +22,6 @@ define([
         Ellipsoid,
         GeometryInstance,
         PolygonGeometry,
-        Queue,
         EllipsoidSurfaceAppearance,
         Primitive,
         Material) {

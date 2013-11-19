@@ -5,7 +5,6 @@ define([
         '../Core/VertexFormat',
         './Material',
         './Appearance',
-        './MaterialAppearance',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
@@ -14,7 +13,6 @@ define([
         VertexFormat,
         Material,
         Appearance,
-        MaterialAppearance,
         EllipsoidSurfaceAppearanceVS,
         EllipsoidSurfaceAppearanceFS) {
     "use strict";
