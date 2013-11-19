@@ -30,7 +30,11 @@ define([
      * });
      */
     var loadBlob = function(url, headers) {
-        return loadWithXhr(url, 'blob', headers);
+        return loadWithXhr({
+            url : url,
+            responseType : 'blob',
+            headers : headers
+        });
     };
 
     return loadBlob;

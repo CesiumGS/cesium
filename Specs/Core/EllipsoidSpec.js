@@ -279,6 +279,42 @@ defineSuite([
         expect(returnedResult).toBeUndefined();
     });
 
+    it('transformPositionToScaledSpace works without a result parameter', function() {
+        var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
+        var expected = new Cartesian3(2.0, 2.0, 2.0);
+        var cartesian = new Cartesian3(4.0, 6.0, 8.0);
+        var returnedResult = ellipsoid.transformPositionToScaledSpace(cartesian);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON16);
+    });
+
+    it('transformPositionToScaledSpace works with a result parameter', function() {
+        var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
+        var expected = new Cartesian3(3.0, 3.0, 3.0);
+        var cartesian = new Cartesian3(6.0, 9.0, 12.0);
+        var result = new Cartesian3();
+        var returnedResult = ellipsoid.transformPositionToScaledSpace(cartesian, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON16);
+    });
+
+    it('transformPositionFromScaledSpace works without a result parameter', function() {
+        var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
+        var expected = new Cartesian3(4.0, 6.0, 8.0);
+        var cartesian = new Cartesian3(2.0, 2.0, 2.0);
+        var returnedResult = ellipsoid.transformPositionFromScaledSpace(cartesian);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON16);
+    });
+
+    it('transformPositionFromScaledSpace works with a result parameter', function() {
+        var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
+        var expected = new Cartesian3(6.0, 9.0, 12.0);
+        var cartesian = new Cartesian3(3.0, 3.0, 3.0);
+        var result = new Cartesian3();
+        var returnedResult = ellipsoid.transformPositionFromScaledSpace(cartesian, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON16);
+    });
+
     it('equals works in all cases', function() {
         var ellipsoid = new Ellipsoid(1.0, 0.0, 0.0);
         expect(ellipsoid.equals(new Ellipsoid(1.0, 0.0, 0.0))).toEqual(true);
