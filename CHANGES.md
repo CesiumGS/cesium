@@ -37,6 +37,13 @@ Beta Releases
 * Added `Math.nextPowerOfTwo`.
 * Added `inverse` and `determinant` to `Matrix3`.
 * Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Renamed `SceneTransition.onTransitionStart` to `SceneTransition.transitionStart`.
+* Renamed `SceneTransition.onTransitionComplete` to `SceneTransition.transitionComplete`.
+* Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
+* Renamed `SceneModePickerViewModel.onTransitionStart` to `SceneModePickerViewModel.transitionStart`.
+* Renamed `Viewer.onRenderLoopError` to `Viewer.renderLoopError`.
+* Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
+* Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
 
 ### b22 - 2013-11-01
 
