@@ -3,12 +3,10 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/loadText',
-        '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         '../Core/Event',
         '../Core/Extent',
-        './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './TileProviderError',
         './WebMercatorTilingScheme',
@@ -19,19 +17,16 @@ define([
         defaultValue,
         defined,
         loadText,
-        Cartesian2,
         DeveloperError,
         RuntimeError,
         Event,
         Extent,
-        DiscardMissingTileImagePolicy,
         ImageryProvider,
         TileProviderError,
         WebMercatorTilingScheme,
         GeographicTilingScheme,
         Credit,
-        when
-        ) {
+        when) {
     "use strict";
 
     /**
