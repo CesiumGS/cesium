@@ -1,11 +1,7 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/Cartesian2',
         './SceneMode'
     ], function(
-        defined,
-        Cartesian2,
         SceneMode) {
     "use strict";
 
