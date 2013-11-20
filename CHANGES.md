@@ -37,6 +37,7 @@ Beta Releases
 * Added `Math.nextPowerOfTwo`.
 * Added `inverse` and `determinant` to `Matrix3`.
 * Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Added `ObjectOrientedBoundingBox`.
 
 ### b22 - 2013-11-01
 
