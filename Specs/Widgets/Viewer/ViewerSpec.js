@@ -378,12 +378,12 @@ defineSuite([
         }).toThrow();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('raises renderLoopError and stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
         var spyListener = jasmine.createSpy('listener');
-        viewer.onRenderLoopError.addEventListener(spyListener);
+        viewer.renderLoopError.addEventListener(spyListener);
 
         var error = 'foo';
         viewer.render = function() {
