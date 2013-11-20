@@ -71,7 +71,7 @@ define([
      *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
      *          return new Cesium.TileMapServiceImageryProvider({
-     *              url : 'http://cesium.agi.com/blackmarble',
+     *              url : 'http://cesiumjs.org/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
      *          });
