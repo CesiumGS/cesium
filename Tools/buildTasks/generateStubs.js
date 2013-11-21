@@ -5,7 +5,11 @@ var load = Main.global.load;
 
 load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
-var contents = '';
+var contents = '\
+/*global define,Cesium*/\n\
+(function() {\n\
+"use strict";\n\
+/*jshint sub:true*/\n';
 var modulePathMappings = [];
 
 forEachFile('sourcefiles', function(relativePath, file) {
@@ -26,11 +30,14 @@ define(\'' + moduleId + '\', function() {\n\
     modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
 });
 
+contents += '})();';
+
 var map = '\
 /*global define*/\n\
 define(function() {\n\
+    "use strict";\
     return {\n' + modulePathMappings.join(',\n') + '\n\
-    }\n\
+    };\n\
 });';
 
 writeFileContents(attributes.get('stuboutput'), contents);
