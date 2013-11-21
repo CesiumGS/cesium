@@ -13,11 +13,11 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
-    beforeEach(function() {
+    beforeAll(function() {
         scene = createScene();
     });
 
-    afterEach(function() {
+    afterAll(function() {
         destroyScene(scene);
     });
 

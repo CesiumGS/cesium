@@ -88,13 +88,13 @@ defineSuite([
         }).toThrow();
     });
 
-    it('adds onObjectTracked event', function() {
+    it('adds objectTracked event', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.hasOwnProperty('onObjectTracked')).toEqual(true);
+        expect(viewer.hasOwnProperty('objectTracked')).toEqual(true);
     });
 
-    it('onObjectTracked is raised by trackObject', function() {
+    it('objectTracked is raised by trackObject', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
@@ -102,7 +102,7 @@ defineSuite([
         dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
         var spyListener = jasmine.createSpy('listener');
-        viewer.onObjectTracked.addEventListener(spyListener);
+        viewer.objectTracked.addEventListener(spyListener);
 
         viewer.trackedObject = dynamicObject;
 
@@ -113,7 +113,7 @@ defineSuite([
         runs(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, dynamicObject);
 
-            viewer.onObjectTracked.removeEventListener(spyListener);
+            viewer.objectTracked.removeEventListener(spyListener);
         });
     });
 
