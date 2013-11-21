@@ -169,16 +169,55 @@ var afterAll;
     var readyToCreateTests = false;
     var createTests;
 
-    require.config({
-        baseUrl : getQueryParameter('baseUrl') || '../Source',
-        paths : {
-            'Specs' : '../Specs'
-        },
-        waitSeconds : 30
-    });
+    var combined = getQueryParameter('combined');
+    var minified = getQueryParameter('minified');
+    var loadTests = true;
 
-    //start loading all of Cesium early, so it's all available for code coverage calculations.
-    require(['Cesium']);
+    // set up require for AMD, combined or minified and
+    // start loading all of Cesium early, so it's all available for code coverage calculations.
+    if (combined || minified) {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Build',
+            waitSeconds : 30
+        });
+
+        var builtCesium = (minified) ? 'Cesium/Cesium' : 'CesiumUnminified/Cesium';
+        require([builtCesium, 'Stubs/Cesium', 'Stubs/map'], function(BuiltCesium, StubCesium, map) {
+            var paths = map;
+            paths['Specs'] = '../Specs';
+            paths['ThirdParty'] = '../Source/ThirdParty';
+            paths['Workers'] = '../Source/Workers';
+
+            require.config({
+                baseUrl : getQueryParameter('baseUrl') || '../Build',
+                /*
+                paths : {
+                    'Specs' : '../Specs',
+                    'ThirdParty' : '../Source/ThirdParty',
+                    'Workers' : '../Source/Workers'              // TODO need to fix this
+                },
+                map : map,
+                */
+
+                paths : paths,
+                waitSeconds : 30
+            });
+
+            requireTests();
+        });
+
+        loadTests= false;
+    } else {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Source',
+            paths : {
+                'Specs' : '../Specs'
+            },
+            waitSeconds : 30
+        });
+
+        require(['Cesium']);
+    }
 
     defineSuite = function(deps, name, suite, categories) {
         if (typeof suite === 'object' || typeof suite === 'string') {
@@ -233,39 +272,45 @@ var afterAll;
         });
     }
 
-    //specs is an array defined by SpecList.js
-    require([
-             'Specs/addDefaultMatchers',
-             'Specs/equalsMethodEqualityTester'
-         ].concat(specs), function(
-             addDefaultMatchers,
-             equalsMethodEqualityTester) {
-        var env = jasmine.getEnv();
+    function requireTests() {
+        //specs is an array defined by SpecList.js
+        require([
+                 'Specs/addDefaultMatchers',
+                 'Specs/equalsMethodEqualityTester'
+             ].concat(specs), function(
+                 addDefaultMatchers,
+                 equalsMethodEqualityTester) {
+            var env = jasmine.getEnv();
 
-        env.beforeEach(addDefaultMatchers);
-        env.addEqualityTester(equalsMethodEqualityTester);
+            env.beforeEach(addDefaultMatchers);
+            env.addEqualityTester(equalsMethodEqualityTester);
 
-        createTests = function() {
-            var reporter = new jasmine.HtmlReporter();
-            var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
-            var suites = jasmine.getEnv().currentRunner().suites();
+            createTests = function() {
+                var reporter = new jasmine.HtmlReporter();
+                var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
+                var suites = jasmine.getEnv().currentRunner().suites();
 
-            for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
-                var suite = suites[i];
-                if (isSuiteFocused(suite)) {
-                    suites.splice(i, 1);
-                    suites.splice(insertPoint, 0, suite);
-                    insertPoint++;
-                    i--;
+                for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
+                    var suite = suites[i];
+                    if (isSuiteFocused(suite)) {
+                        suites.splice(i, 1);
+                        suites.splice(insertPoint, 0, suite);
+                        insertPoint++;
+                        i--;
+                    }
                 }
-            }
 
-            env.addReporter(reporter);
-            env.specFilter = reporter.specFilter;
-            env.execute();
-        };
+                env.addReporter(reporter);
+                env.specFilter = reporter.specFilter;
+                env.execute();
+            };
 
-        readyToCreateTests = true;
-        createTestsIfReady();
-    });
+            readyToCreateTests = true;
+            createTestsIfReady();
+        });
+    }
+
+    if (loadTests) {
+        requireTests();
+    }
 }());

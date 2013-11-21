@@ -194,6 +194,14 @@
 		<exclude name="**/*.profile.js" />
 	</fileset>
 
+	<fileset dir="${sourceDirectory}" id="cesiumStubJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="ThirdParty/*.js" />
+		<exclude name="Workers/**" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
+
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
 		<attribute name="minifystatefile" />
@@ -235,7 +243,8 @@
 	</scriptdef>
 
 	<scriptdef name="generateStubs" language="javascript" src="${tasksDirectory}/generateStubs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
-		<attribute name="output" />
+		<attribute name="stuboutput" />
+		<attribute name="mapoutput" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
@@ -323,8 +332,8 @@
 		<antcall target="combineJavaScript.combineCesium" />
 
 		<mkdir dir="${buildStubsDirectory}" />
-		<generateStubs output="${buildStubsDirectory}/Cesium.js">
-			<sourcefiles refid="cesiumJsFileSet" />
+		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" mapoutput="${buildStubsDirectory}/map.js">
+			<sourcefiles refid="cesiumStubJsFileSet" />
 		</generateStubs>
 
 		<!-- create combined Cesium.js workers -->
