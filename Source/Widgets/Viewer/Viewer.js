@@ -222,6 +222,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         var clock = cesiumWidget.clock;
         var clockViewModel = new ClockViewModel(clock);
+        var eventHelper = new EventHelper();
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -244,6 +245,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
             homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
+            if (defined(geocoder)) {
+                eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
+                    var viewModel = geocoder.viewModel;
+                    viewModel.searchText = '';
+                    if (viewModel.isSearchInProgress) {
+                        viewModel.search();
+                    }
+                });
+            }
         }
 
         //SceneModePicker
@@ -304,8 +314,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         } else if (defined(timeline)) {
             timeline.container.style.right = 0;
         }
-
-        var eventHelper = new EventHelper();
 
         //DataSourceBrowser
         function trackDataSourceClock(dataSource) {
