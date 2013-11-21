@@ -173,6 +173,7 @@
 	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
 	<property name="instrumentedDirectory" location="Instrumented" />
+	<property name="buildStubsDirectory" location="${buildDirectory}/Stubs" />
 
 	<path id="javascriptClassPath">
 		<pathelement path="${rhinoJarPath}" />
@@ -230,6 +231,11 @@
 		<attribute name="jshintoptionspath" />
 		<attribute name="sandcastlejshintoptionspath" />
 		<attribute name="failureproperty" />
+		<element name="sourcefiles" type="fileset" />
+	</scriptdef>
+
+	<scriptdef name="generateStubs" language="javascript" src="${tasksDirectory}/generateStubs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<attribute name="output" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
@@ -315,6 +321,11 @@
 
 		<!-- create combined Cesium.js	-->
 		<antcall target="combineJavaScript.combineCesium" />
+
+		<mkdir dir="${buildStubsDirectory}" />
+		<generateStubs output="${buildStubsDirectory}/Cesium.js">
+			<sourcefiles refid="cesiumJsFileSet" />
+		</generateStubs>
 
 		<!-- create combined Cesium.js workers -->
 		<antcall target="combineJavaScript.combineCesiumWorkers" />
