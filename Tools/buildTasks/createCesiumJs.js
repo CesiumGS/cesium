@@ -35,6 +35,7 @@ var contents = '\
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   "use strict";\n\
+  /*jshint sub:true*/\n\
   var Cesium = {\n\
     _shaders : {}\n\
   };\n\

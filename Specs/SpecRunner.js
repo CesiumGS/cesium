@@ -192,9 +192,8 @@ var afterAll;
             }
         });
 
-        require(['Cesium', 'Stubs/map'], function(BuiltCesium, map) {
-            var paths = map;
-            paths['Specs'] = '../../Specs';
+        require(['Cesium', 'Stubs/map'], function(BuiltCesium, paths) {
+            paths.Specs = '../../Specs';
 
             require.config({
                 paths : paths
@@ -203,7 +202,7 @@ var afterAll;
             requireTests();
         });
 
-        loadTests= false;
+        loadTests = false;
     } else {
         require.config({
             baseUrl : getQueryParameter('baseUrl') || '../Source',
