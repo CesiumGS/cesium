@@ -173,34 +173,31 @@ var afterAll;
     var minified = getQueryParameter('minified');
     var loadTests = true;
 
+    require.config({
+        waitSeconds : 30
+    });
+
     // set up require for AMD, combined or minified and
     // start loading all of Cesium early, so it's all available for code coverage calculations.
     if (combined || minified) {
         require.config({
-            baseUrl : getQueryParameter('baseUrl') || '../Build',
-            waitSeconds : 30
+            baseUrl : getQueryParameter('baseUrl') || (minified ? '../Build/Cesium' : '../Build/CesiumUnminified'),
+            paths : {
+                'Stubs' : '../Stubs'
+            },
+            shim : {
+                'Cesium' : {
+                    exports : 'Cesium'
+                }
+            }
         });
 
-        var builtCesium = (minified) ? 'Cesium/Cesium' : 'CesiumUnminified/Cesium';
-        require([builtCesium, 'Stubs/Cesium', 'Stubs/map'], function(BuiltCesium, StubCesium, map) {
+        require(['Cesium', 'Stubs/map'], function(BuiltCesium, map) {
             var paths = map;
-            paths['Specs'] = '../Specs';
-            paths['ThirdParty'] = '../Source/ThirdParty';
-            paths['Workers'] = '../Source/Workers';
+            paths['Specs'] = '../../Specs';
 
             require.config({
-                baseUrl : getQueryParameter('baseUrl') || '../Build',
-                /*
-                paths : {
-                    'Specs' : '../Specs',
-                    'ThirdParty' : '../Source/ThirdParty',
-                    'Workers' : '../Source/Workers'              // TODO need to fix this
-                },
-                map : map,
-                */
-
-                paths : paths,
-                waitSeconds : 30
+                paths : paths
             });
 
             requireTests();
@@ -212,8 +209,7 @@ var afterAll;
             baseUrl : getQueryParameter('baseUrl') || '../Source',
             paths : {
                 'Specs' : '../Specs'
-            },
-            waitSeconds : 30
+            }
         });
 
         require(['Cesium']);

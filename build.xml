@@ -181,24 +181,26 @@
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
 
-	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
-		<include name="**/*.js" />
-		<exclude name="*.js" />
-		<exclude name="Workers/**" />
-		<exclude name="**/*.profile.js" />
-	</fileset>
+	<pathconvert property="cesiumJsFileSetPath" pathsep=",">
+		<union>
+			<fileset dir="${sourceDirectory}">
+				<include name="**/*.js" />
+				<exclude name="*.js" />
+				<exclude name="Workers/**" />
+				<exclude name="**/*.profile.js" />
+			</fileset>
+			<fileset dir="${sourceDirectory}">
+				<include name="Workers/createTaskProcessorWorker.js" />
+			</fileset>
+		</union>
+		<globmapper from="${sourceDirectory}/*" to="*" handledirsep="true" />
+	</pathconvert>
+
+	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet" includes="${cesiumJsFileSetPath}" />
 
 	<fileset dir="${sourceDirectory}" id="cesiumWorkersJsFileSet">
 		<include name="**/*.js" />
 		<exclude name="*.js" />
-		<exclude name="**/*.profile.js" />
-	</fileset>
-
-	<fileset dir="${sourceDirectory}" id="cesiumStubJsFileSet">
-		<include name="**/*.js" />
-		<exclude name="*.js" />
-		<exclude name="ThirdParty/*.js" />
-		<exclude name="Workers/**" />
 		<exclude name="**/*.profile.js" />
 	</fileset>
 
@@ -333,7 +335,7 @@
 
 		<mkdir dir="${buildStubsDirectory}" />
 		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" mapoutput="${buildStubsDirectory}/map.js">
-			<sourcefiles refid="cesiumStubJsFileSet" />
+			<sourcefiles refid="cesiumJsFileSet" />
 		</generateStubs>
 
 		<!-- create combined Cesium.js workers -->

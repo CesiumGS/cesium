@@ -6,32 +6,32 @@ var load = Main.global.load;
 load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
 var contents = '';
-var map = '/*global define*/\n' +
-          'define(function() {\n' +
-          '    return {\n' +
-          '        \'*\' : {\n';
-var insertComma = false;
+var modulePathMappings = [];
 
 forEachFile('sourcefiles', function(relativePath, file) {
     "use strict";
 
-    var moduleName = relativePath.replace('\\', '/');
-    moduleName = moduleName.substring(0, moduleName.lastIndexOf('.'));
-    var name = moduleName.substring(moduleName.lastIndexOf('/') + 1);
+    var moduleId = relativePath.replace('\\', '/');
+    moduleId = moduleId.substring(0, moduleId.lastIndexOf('.'));
 
-    contents += 'define(\'' + moduleName + '\', [], function() {\n' +
-               '    return Cesium.' + name + ';\n' +
-               '});\n\n';
-    map += (insertComma ? ',\n' : '') + '            \'' + moduleName + '\' : \'Stubs/Cesium\'';
+    var baseName = file.getName();
+    var propertyName = baseName.substring(0, baseName.lastIndexOf('.'));
+    propertyName = "['" + String(propertyName) + "']";
 
-    if (!insertComma) {
-        insertComma = true;
-    }
+    contents += '\
+define(\'' + moduleId + '\', function() {\n\
+    return Cesium' + propertyName + ';\n\
+});\n\n';
+
+    modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
 });
 
-map += '\n        }\n' +
-       '    }\n' +
-       '});';
+var map = '\
+/*global define*/\n\
+define(function() {\n\
+    return {\n' + modulePathMappings.join(',\n') + '\n\
+    }\n\
+});';
 
 writeFileContents(attributes.get('stuboutput'), contents);
 writeFileContents(attributes.get('mapoutput'), map);
