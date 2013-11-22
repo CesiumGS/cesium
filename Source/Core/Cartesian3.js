@@ -246,6 +246,66 @@ define([
     };
 
     /**
+     * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} first A cartesian to compare.
+     * @param {Cartesian3} second A cartesian to compare.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     * @returns {Cartesian3} A cartesian with the minimum components.
+     *
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
+     */
+    Cartesian3.getMinimumByComponent = function(first, second, result) {
+        if (!defined(first)) {
+            throw new DeveloperError('first cartesian is missing');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('second cartesian is missing');
+        }
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        result.x = Math.min(first.x, second.x);
+        result.y = Math.min(first.y, second.y);
+        result.z = Math.min(first.z, second.z);
+
+        return result;
+    };
+
+    /**
+     * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} first A cartesian to compare.
+     * @param {Cartesian3} second A cartesian to compare.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     * @returns {Cartesian3} A cartesian with the maximum components.
+     *
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
+     */
+    Cartesian3.getMaximumByComponent = function(first, second, result) {
+        if (!defined(first)) {
+            throw new DeveloperError('first cartesian is missing');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('second cartesian is missing');
+        }
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        result.x = Math.max(first.x, second.x);
+        result.y = Math.max(first.y, second.y);
+        result.z = Math.max(first.z, second.z);
+        return result;
+    };
+
+    /**
      * Computes the provided Cartesian's squared magnitude.
      * @memberof Cartesian3
      *
@@ -449,7 +509,7 @@ define([
             throw new DeveloperError('scalar is required and must be a number.');
         }
         if (!defined(result)) {
-            return new Cartesian3(cartesian.x * scalar,  cartesian.y * scalar,  cartesian.z * scalar);
+            return new Cartesian3(cartesian.x * scalar, cartesian.y * scalar, cartesian.z * scalar);
         }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
@@ -634,12 +694,12 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left.x === right.x) &&
-                (left.y === right.y) &&
-                (left.z === right.z));
+            return (left === right) ||
+              ((defined(left)) &&
+               (defined(right)) &&
+               (left.x === right.x) &&
+               (left.y === right.y) &&
+               (left.z === right.z));
     };
 
     /**
