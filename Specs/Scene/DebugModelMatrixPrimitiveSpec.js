@@ -27,7 +27,7 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene();
+        destroyScene(scene);
     });
 
     beforeEach(function() {

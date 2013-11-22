@@ -49,6 +49,11 @@ defineSuite([
     var scene;
     var context;
     var primitives;
+    var atlas;
+
+    var greenImage;
+    var blueImage;
+    var whiteImage;
 
     beforeEach(function() {
         scene = createScene();
@@ -65,17 +70,7 @@ defineSuite([
         camera.frustum.far = 1000000000.0;
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
-    });
 
-    afterEach(function() {
-        destroyScene();
-    });
-
-    var greenImage;
-    var blueImage;
-    var whiteImage;
-
-    it('initialize billboard image for multi-frustum tests', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -90,12 +85,17 @@ defineSuite([
         }, 'Load .png file(s) for billboard collection test.', 3000);
     });
 
+    afterEach(function() {
+        atlas = atlas && atlas.destroy();
+        destroyScene(scene);
+    });
+
     var billboard0;
     var billboard1;
     var billboard2;
 
     function createBillboards() {
-        var atlas = context.createTextureAtlas({
+        atlas = context.createTextureAtlas({
             images : [greenImage, blueImage, whiteImage],
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
@@ -109,6 +109,7 @@ defineSuite([
 
         var billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard0 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50.0),
             imageIndex : 0
@@ -117,6 +118,7 @@ defineSuite([
 
         billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard1 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000.0),
             imageIndex : 1
@@ -125,6 +127,7 @@ defineSuite([
 
         billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
             imageIndex : 2
@@ -321,8 +324,8 @@ defineSuite([
     });
 
     it('render without a central body or any primitives', function() {
+        scene.initializeFrame();
         expect(function() {
-            scene.initializeFrame();
             scene.render();
         }).not.toThrow();
     });
@@ -333,8 +336,8 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1e12);
 
         createBillboards();
+        scene.initializeFrame();
         expect(function() {
-            scene.initializeFrame();
             scene.render();
         }).not.toThrow();
     });

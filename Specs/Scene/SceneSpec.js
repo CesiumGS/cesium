@@ -42,8 +42,22 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var scene;
+
+    beforeAll(function() {
+        scene = createScene();
+    });
+
+    afterEach(function() {
+        scene.debugCommandFilter = undefined;
+        scene.getPrimitives().removeAll();
+    });
+
+    afterAll(function() {
+        destroyScene(scene);
+    });
+
     it('constructor has expected defaults', function() {
-        var scene = createScene();
         expect(scene.getCanvas()).toBeInstanceOf(HTMLCanvasElement);
         expect(scene.getContext()).toBeInstanceOf(Context);
         expect(scene.getPrimitives()).toBeInstanceOf(CompositePrimitive);
@@ -59,8 +73,6 @@ defineSuite([
         expect(contextAttributes.stencil).toEqual(false);
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
-
-        destroyScene(scene);
     });
 
     it('constructor sets contextOptions', function() {
@@ -73,14 +85,13 @@ defineSuite([
             preserveDrawingBuffer : true
         };
 
-        var scene = createScene(contextOptions);
-        var contextAttributes = scene.getContext()._gl.getContextAttributes();
+        var s = createScene(contextOptions);
+        var contextAttributes = s.getContext()._gl.getContextAttributes();
         expect(contextAttributes).toEqual(contextOptions);
-        destroyScene(scene);
+        destroyScene(s);
     });
 
     it('draws background color', function() {
-        var scene = createScene();
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
@@ -89,7 +100,6 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
-        destroyScene(scene);
     });
 
     function getMockPrimitive(options) {
@@ -117,7 +127,6 @@ defineSuite([
         var event = new Event();
         event.addEventListener(spyListener);
 
-        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive({
             event : event
         }));
@@ -125,8 +134,6 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(spyListener).toHaveBeenCalled();
-
-        destroyScene(scene);
     });
 
     it('debugCommandFilter filters commands', function() {
@@ -134,7 +141,6 @@ defineSuite([
         c.execute = function() {};
         spyOn(c, 'execute');
 
-        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive({
             command : c
         }));
@@ -146,8 +152,6 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(c.execute).not.toHaveBeenCalled();
-
-        destroyScene(scene);
     });
 
     it('debugCommandFilter does not filter commands', function() {
@@ -155,7 +159,6 @@ defineSuite([
         c.execute = function() {};
         spyOn(c, 'execute');
 
-        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive({
             command : c
         }));
@@ -164,8 +167,6 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(c.execute).toHaveBeenCalled();
-
-        destroyScene(scene);
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
@@ -174,7 +175,6 @@ defineSuite([
         c.debugShowBoundingVolume = true;
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
-        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive({
             command : c
         }));
@@ -182,8 +182,6 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
-
-        destroyScene(scene);
     });
 
     it('opaque/translucent render order (1)', function() {
@@ -202,7 +200,6 @@ defineSuite([
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var scene = createScene();
         var primitives = scene.getPrimitives();
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
@@ -224,8 +221,6 @@ defineSuite([
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
-
-        destroyScene(scene);
     });
 
     it('opaque/translucent render order (2)', function() {
@@ -244,7 +239,6 @@ defineSuite([
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var scene = createScene();
         var primitives = scene.getPrimitives();
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
@@ -266,14 +260,12 @@ defineSuite([
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
-
-        destroyScene(scene);
     });
 
     it('isDestroyed', function() {
-        var scene = createScene();
-        expect(scene.isDestroyed()).toEqual(false);
-        destroyScene(scene);
-        expect(scene.isDestroyed()).toEqual(true);
+        var s = createScene();
+        expect(s.isDestroyed()).toEqual(false);
+        destroyScene(s);
+        expect(s.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
