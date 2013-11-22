@@ -139,17 +139,17 @@ defineSuite([
 
     it('throws if east is less than west', function() {
         expect(function() {
-            return ExtentGeometry.createGeometry(new ExtentGeometry({
+            return new ExtentGeometry({
                 extent : new Extent(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
-            }));
+            });
         }).toThrow();
     });
 
     it('throws if north is less than south', function() {
         expect(function() {
-            return ExtentGeometry.createGeometry(new ExtentGeometry({
+            return new ExtentGeometry({
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
-            }));
+            });
         }).toThrow();
     });
 
