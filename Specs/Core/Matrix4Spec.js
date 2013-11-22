@@ -985,6 +985,45 @@ defineSuite([
         expect(Matrix4.multiply(returnedResult, matrix)).toEqual(Matrix4.IDENTITY);
     });
 
+    it('abs throws without a matrix', function() {
+        expect(function() {
+            return Matrix4.abs();
+        }).toThrow();
+    });
+
+    it('abs works without a result parameter', function() {
+        var matrix = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        returnedResult = Matrix4.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix4(1.0, -2.0, -3.0, 4.0, 5.0, -6.0, 7.0, -8.0, 9.0, -10.0, 11.0, -12.0, 13.0, -14.0, 15.0, -16.0);
+        returnedResult = Matrix4.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('abs works with a result parameter', function() {
+        var matrix = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.abs(matrix, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
+
+    it('abs works with a result parameter that is an input result parameter', function() {
+        var matrix = new Matrix4(-1.0, -2.0, -3.0, -4.0, -5.0, -6.0, -7.0, -8.0, -9.0, -10.0, -11.0, -12.0, -13.0, -14.0, -15.0, -16.0);
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var returnedResult = Matrix4.abs(matrix, matrix);
+        expect(matrix).toBe(returnedResult);
+        expect(matrix).toEqual(expected);
+    });
+
     it('fromRowMajorArray throws with undefined parameter', function() {
         expect(function() {
             Matrix4.fromRowMajorArray(undefined);

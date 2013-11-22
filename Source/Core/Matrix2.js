@@ -550,6 +550,32 @@ define([
     };
 
     /**
+     * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
+     * @memberof Matrix2
+     *
+     * @param {Matrix2} matrix The matrix with signed elements.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix2.abs = function(matrix, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(result)) {
+            return new Matrix2(Math.abs(matrix[0]), Math.abs(matrix[2]),
+                               Math.abs(matrix[1]), Math.abs(matrix[3]));
+        }
+        result[0] = Math.abs(matrix[0]);
+        result[1] = Math.abs(matrix[1]);
+        result[2] = Math.abs(matrix[2]);
+        result[3] = Math.abs(matrix[3]);
+
+        return result;
+    };
+
+    /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Matrix2
