@@ -43,7 +43,7 @@ define([
         };
 
         this._eventHelper = new EventHelper();
-        this._eventHelper.add(transitioner.onTransitionStart, transitionStart);
+        this._eventHelper.add(transitioner.transitionStart, transitionStart);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
