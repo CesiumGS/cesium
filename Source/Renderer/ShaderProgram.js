@@ -840,39 +840,26 @@ define([
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsSource = vsSourceVersioned.version + getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) + '\n#line 0\n' + vsSourceVersioned.source;
-        var fsSource = fsSourceVersioned.version + getFragmentShaderPrecision() + getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) + '\n#line 0\n' + fsSourceVersioned.source;
+        var vsSource =
+                vsSourceVersioned.version +
+                getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) +
+                '\n#line 0\n' +
+                vsSourceVersioned.source;
+        var fsSource =
+                fsSourceVersioned.version +
+                getFragmentShaderPrecision() +
+                getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) +
+                '\n#line 0\n' +
+                fsSourceVersioned.source;
+        var log;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
         gl.compileShader(vertexShader);
-        var vsLog = gl.getShaderInfoLog(vertexShader);
-
-        if (logShaderCompilation && vsLog && vsLog.length) {
-            console.log('[GL] Vertex shader compile log: ' + vsLog);
-        }
-
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-            gl.deleteShader(vertexShader);
-            console.error('[GL] Vertex shader compile log: ' + vsLog);
-            throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + vsLog);
-        }
 
         var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(fragmentShader, fsSource);
         gl.compileShader(fragmentShader);
-        var fsLog = gl.getShaderInfoLog(fragmentShader);
-
-        if (logShaderCompilation && fsLog && fsLog.length) {
-            console.log('[GL] Fragment shader compile log: ' + fsLog);
-        }
-
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            gl.deleteShader(vertexShader);
-            gl.deleteShader(fragmentShader);
-            console.error('[GL] Fragment shader compile log: ' + fsLog);
-            throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + fsLog);
-        }
 
         var program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -890,16 +877,45 @@ define([
         }
 
         gl.linkProgram(program);
-        var linkLog = gl.getProgramInfoLog(program);
-
-        if (logShaderCompilation && linkLog && linkLog.length) {
-            console.log('[GL] Shader program link log: ' + linkLog);
-        }
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-            gl.deleteProgram(program);
-            console.error('[GL] Shader program link log: ' + linkLog);
-            throw new RuntimeError('Program failed to link.  Link log: ' + linkLog);
+            // For performance, only check compile errors if there is a linker error.
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                log = gl.getShaderInfoLog(fragmentShader);
+                console.error('[GL] Fragment shader compile log: ' + log);
+                throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + log);
+            }
+
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                log = gl.getShaderInfoLog(vertexShader);
+                console.error('[GL] Vertex shader compile log: ' + log);
+                throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + log);
+            }
+
+            log = gl.getProgramInfoLog(program);
+            console.error('[GL] Shader program link log: ' + log);
+            throw new RuntimeError('Program failed to link.  Link log: ' + log);
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getShaderInfoLog(vertexShader);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Vertex shader compile log: ' + log);
+            }
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getShaderInfoLog(fragmentShader);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Fragment shader compile log: ' + log);
+            }
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getProgramInfoLog(program);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Shader program link log: ' + log);
+            }
         }
 
         return program;
