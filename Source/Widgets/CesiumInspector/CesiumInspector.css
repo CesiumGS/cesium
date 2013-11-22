@@ -1,7 +1,11 @@
-.cesium-cesiumInspector-button {
+.cesium-cesiumInspector {
     width: 130px;
     height: 32px;
     border-radius: 5px;
+    -webkit-transition: width ease-in-out 0.25s;
+    -moz-transition: width ease-in-out 0.25s;
+    transition: width ease-in-out 0.25s;
+    
 }
 
 .cesium-cesiumInspectorPanel-visible {
@@ -22,10 +26,13 @@
 
 .cesium-cesiumInspector-show {
     visibility: visible;
+    display: block;
     height: auto;
 }
+
 .cesium-cesiumInspector-hide {
     visibility: hidden;
+    display: none;
     height: 0;
 }
 
@@ -45,5 +52,6 @@
 
 .cesium-cesiumInspectorPanel-frustumStats {
     padding-left: 10px;
+    padding: 5px;
     background-color: rgba(80, 80, 80, 0.75);
 }

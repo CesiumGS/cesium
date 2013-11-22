@@ -37,23 +37,7 @@ define([
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
      */
-    function frustumStatsToString(stats) {
-        var str;
-        if (defined(stats)) {
-            str = 'Total commands: ' + stats.totalCommands + '<br>Commands in frustums:';
-            var com = stats.commandsInFrustums;
-            for (var n in com) {
-                if (com.hasOwnProperty(n)) {
-                    str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + n + ': ' + com[n];
-                }
-            }
-        }
 
-        return str;
-    }
-
-    var br = new BoundingRectangle(10, 250, 100, 75);
-    var bc = new Color(0.15, 0.15, 0.15, 0.75);
     var CesiumInspector = function(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -73,7 +57,7 @@ define([
         this._element = element;
         this._element.type = 'button';
         this._element.textContent = 'Cesium Inspector';
-        this._element.className = 'cesium-widget-button cesium-cesiumInspector-button';
+        this._element.className = 'cesium-cesiumInspector';
         this._element.setAttribute('data-bind', 'click: toggleDropDown');
         container.appendChild(this._element);
 
@@ -87,25 +71,14 @@ define([
         this._debugShowFrustums = debugShowFrustums;
         panel.appendChild(debugShowFrustums);
         var frustumStats = document.createElement('div');
-        frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-show';
+        this._frustumStats = frustumStats;frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats';
+        frustumStats.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : showFrustums, "cesium-cesiumInspector-hide" : !showFrustums}, html: frustumStatText');
         var frustumsCheckbox = document.createElement('input');
+        this._frustumsCheckbox = frustumsCheckbox;
         frustumsCheckbox.type = 'checkbox';
-        var interval;
-        frustumsCheckbox.onclick = function() {
-            if (this.checked) {
-                scene.debugShowFrustums = true;
-                interval = setInterval(function() {
-                    frustumStats.innerHTML = frustumStatsToString(scene.debugFrustumStatistics);
-                }, 100);
-                frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-show';
-            } else {
-                clearInterval(interval);
-                scene.debugShowFrustums = false;
-                frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats cesium-cesiumInspector-hide';
-            }
-        };
-        debugShowFrustums.textContent = 'Show Frustums: ';
+        frustumsCheckbox.setAttribute('data-bind', 'click: toggleFrustums');
         debugShowFrustums.appendChild(frustumsCheckbox);
+        debugShowFrustums.appendChild(document.createTextNode('Show Frustums'));
         debugShowFrustums.appendChild(frustumStats);
 
         var performanceDisplay = document.createElement('div');
@@ -113,108 +86,39 @@ define([
         panel.appendChild(performanceDisplay);
         var pdCheckbox = document.createElement('input');
         pdCheckbox.type = 'checkbox';
-        var pd;
-        pdCheckbox.onclick = function() {
-            if (this.checked) {
-                pd = new PerformanceDisplay({
-                    rectangle : br,
-                    backgroundColor: bc,
-                    font: "12px arial,sans-serif"
-                });
-                scene.getPrimitives().add(pd);
-            } else {
-                scene.getPrimitives().remove(pd);
-            }
-
-        };
-        performanceDisplay.textContent = 'Performance Display: ';
+        pdCheckbox.setAttribute('data-bind', 'click: togglePerformance');
         performanceDisplay.appendChild(pdCheckbox);
+        performanceDisplay.appendChild(document.createTextNode('Performance Display'));
 
         var debugSphere = document.createElement('div');
         this._performanceDisplay = debugSphere;
         panel.appendChild(debugSphere);
         var bsCheckbox = document.createElement('input');
         bsCheckbox.type = 'checkbox';
-        var pickedPrimitive;
-        bsCheckbox.onclick = function() {
-            if (this.checked) {
-                this._pick = function(e) {
-                    var newPick = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(newPick) && newPick !== pickedPrimitive) {
-                        if (defined(pickedPrimitive)) {
-                            pickedPrimitive.primitive.debugShowBoundingVolume = false;
-                        }
-                        pickedPrimitive = newPick;
-                        pickedPrimitive.primitive.debugShowBoundingVolume = true;
-                    }
-                };
-                document.addEventListener('mousedown', this._pick, true);
-            } else {
-                if (defined(pickedPrimitive)) {
-                    pickedPrimitive.primitive.debugShowBoundingVolume = false;
-                }
-                document.removeEventListener('mousedown', this._pick, true);
-            }
-        };
-        debugSphere.textContent = 'Debug bounding sphere: ';
+        bsCheckbox.setAttribute('data-bind', 'click: toggleBoundingSphere');
         debugSphere.appendChild(bsCheckbox);
+        debugSphere.appendChild(document.createTextNode('Debug bounding sphere'));
 
         var refFrame = document.createElement('div');
         this._refFrame = refFrame;
         panel.appendChild(refFrame);
         var rfCheckbox = document.createElement('input');
         rfCheckbox.type = 'checkbox';
-        var mm;
-        var mp;
-        rfCheckbox.onclick = function() {
-            if (this.checked) {
-                this._pickrf = function(e) {
-                    var newrfPick = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(newrfPick)) {
-                        mm = newrfPick.primitive.modelMatrix;
-                        if (defined(mp)) {
-                            scene.getPrimitives().remove(mp);
-                        }
-                        mp = new DebugModelMatrixPrimitive({modelMatrix: mm});
-                        scene.getPrimitives().add(mp);
-                    }
-                };
-                document.addEventListener('mousedown', this._pickrf, true);
-            } else {
-                scene.getPrimitives().remove(mp);
-                document.removeEventListener('mousedown', this._pickrf, true);
-            }
-        };
-        refFrame.textContent = 'Show reference frame: ';
+        rfCheckbox.setAttribute('data-bind', 'click: toggleRefFrame');
         refFrame.appendChild(rfCheckbox);
+        refFrame.appendChild(document.createTextNode('Show reference frame'));
 
         var primitiveOnly = document.createElement('div');
         this._primitiveOnly = primitiveOnly;
         panel.appendChild(primitiveOnly);
         var primitiveOnlyCheckbox = document.createElement('input');
         primitiveOnlyCheckbox.type = 'checkbox';
-        primitiveOnlyCheckbox.onclick = function() {
-            if (this.checked) {
-                this._pickpo = function(e) {
-                    var np = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(np)) {
-                        scene.debugCommandFilter = function(command) {
-                            return command.owner === np.primitive;
-                        };
-                    }
-                };
-                document.addEventListener('mousedown', this._pickpo, true);
-            } else {
-                scene.debugCommandFilter = undefined;
-                document.removeEventListener('mousedown', this._pickpo, true);
-            }
-        };
-        primitiveOnly.textContent = 'Show only this primitive: ';
+        primitiveOnlyCheckbox.setAttribute('data-bind', 'click: togglePickPrimitive');
         primitiveOnly.appendChild(primitiveOnlyCheckbox);
+        primitiveOnly.appendChild(document.createTextNode('Show only this primitive'));
 
         knockout.applyBindings(viewModel, this._element);
-        knockout.applyBindings(viewModel, panel);
-
+        knockout.applyBindings(viewModel, this._panel);
     };
 
     defineProperties(CesiumInspector.prototype, {
