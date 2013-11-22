@@ -240,16 +240,19 @@ define([
      * @param {Cartesian4} [result] The object into which to store the result.
      * @returns {Cartesian4} A cartesian with the minimum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian4.getMinimumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new Cartesian4();
         }
@@ -271,16 +274,18 @@ define([
      * @param {Cartesian4} [result] The object into which to store the result.
      * @returns {Cartesian4} A cartesian with the maximum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian4.getMaximumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian4();

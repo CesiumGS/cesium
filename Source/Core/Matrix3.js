@@ -1005,9 +1005,12 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.abs = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Matrix3(Math.abs(matrix[0]), Math.abs(matrix[3]), Math.abs(matrix[6]),
                                Math.abs(matrix[1]), Math.abs(matrix[4]), Math.abs(matrix[7]),

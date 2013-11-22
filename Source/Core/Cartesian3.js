@@ -267,16 +267,19 @@ define([
      * @param {Cartesian3} [result] The object into which to store the result.
      * @returns {Cartesian3} A cartesian with the minimum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian3.getMinimumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new Cartesian3();
         }
@@ -297,16 +300,18 @@ define([
      * @param {Cartesian3} [result] The object into which to store the result.
      * @returns {Cartesian3} A cartesian with the maximum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian3.getMaximumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian3();

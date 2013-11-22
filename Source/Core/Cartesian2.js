@@ -238,16 +238,19 @@ define([
      * @param {Cartesian2} [result] The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the minimum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian2.getMinimumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new Cartesian2();
         }
@@ -267,16 +270,18 @@ define([
      * @param {Cartesian2} [result] The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the maximum components.
      *
-     * @exception {DeveloperError} first cartesian is missing.
-     * @exception {DeveloperError} second cartesian is missing.
+     * @exception {DeveloperError} first is required.
+     * @exception {DeveloperError} second is required.
      */
     Cartesian2.getMaximumByComponent = function(first, second, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
-            throw new DeveloperError('first cartesian is missing');
+            throw new DeveloperError('first is required.');
         }
         if (!defined(second)) {
-            throw new DeveloperError('second cartesian is missing');
+            throw new DeveloperError('second is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian2();
