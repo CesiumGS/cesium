@@ -28,6 +28,16 @@ define([
      * @param {Cartesian3} [translation=Cartesian3.ZERO] The position of the box.
      * @param {Cartesian3} [scale=Cartesian3.ZERO] The scale of the box.
      *
+     * @example
+     * // Create an ObjectOrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
+     * var rotation = Matrix3.clone(Matrix3.IDENTITY);
+     * var translation = new Cartesian3(1,0,0);
+     * var scale = new Cartesian3(0,5,0);
+     *
+     * var oobb = new ObjectOrientedBoundingBox(rotation, translation, scale);
+     *
+     * @see ObjectOrientedBoundingBox.fromPoints
+     * @see ObjectOrientedBoundingBox.fromBoundingRectangle
      * @see BoundingSphere
      */
     var ObjectOrientedBoundingBox = function(rotation, translation, scale) {

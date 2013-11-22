@@ -228,6 +228,15 @@ defineSuite([
         expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
     });
 
+    it('does not intersect (6)', function() {
+        var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
+        var points = rotatePositions(positions, Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR).points;
+        points = rotatePositions(points, Cartesian3.UNIT_Y, -CesiumMath.PI_OVER_FOUR).points;
+        points = translatePositions(points, new Cartesian3(4.0, -6.0, 8.0));
+        var box2 = ObjectOrientedBoundingBox.fromPoints(points);
+        expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
+    });
+
     it('does not intersect (7)', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
         var points = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR).points;
@@ -237,11 +246,38 @@ defineSuite([
         expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
     });
 
+    it('does not intersect (8)', function() {
+        var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
+        var points = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR).points;
+        points = rotatePositions(points, Cartesian3.UNIT_Y, -CesiumMath.PI_OVER_FOUR).points;
+        points = translatePositions(points, new Cartesian3(-4.0, 6.0, 8.0));
+        var box2 = ObjectOrientedBoundingBox.fromPoints(points);
+        expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
+    });
+
+    it('does not intersect (9)', function() {
+        var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
+        var points = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR).points;
+        points = rotatePositions(points, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR).points;
+        points = translatePositions(points, new Cartesian3(-4.0, 6.0, 8.0));
+        var box2 = ObjectOrientedBoundingBox.fromPoints(points);
+        expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
+    });
+
     it('does not intersect (10)', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
         var points = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR).points;
         points = rotatePositions(points, Cartesian3.UNIT_Z, -CesiumMath.PI_OVER_FOUR).points;
         points = translatePositions(points, new Cartesian3(-4.0, 6.0, -8.0));
+        var box2 = ObjectOrientedBoundingBox.fromPoints(points);
+        expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
+    });
+
+    it('does not intersect (11)', function() {
+        var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
+        var points = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR).points;
+        points = rotatePositions(points, Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR).points;
+        points = translatePositions(points, new Cartesian3(-4.0, 6.0, 8.0));
         var box2 = ObjectOrientedBoundingBox.fromPoints(points);
         expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
     });

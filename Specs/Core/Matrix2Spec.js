@@ -375,6 +375,45 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
+    it('abs throws without a matrix', function() {
+        expect(function() {
+            return Matrix2.abs();
+        }).toThrow();
+    });
+
+    it('abs works without a result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix2(1.0, -2.0, -3.0, 4.0);
+        returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('abs works with a result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.abs(matrix, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
+
+    it('abs works with a result parameter that is an input result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var returnedResult = Matrix2.abs(matrix, matrix);
+        expect(matrix).toBe(returnedResult);
+        expect(matrix).toEqual(expected);
+    });
+
     it('equals works in all cases', function() {
         var left = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var right = new Matrix2(1.0, 2.0, 3.0, 4.0);
