@@ -882,17 +882,20 @@ define([
             // For performance, only check compile errors if there is a linker error.
             if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(fragmentShader);
+                gl.deleteProgram(program);
                 console.error('[GL] Fragment shader compile log: ' + log);
                 throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + log);
             }
 
             if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
                 log = gl.getShaderInfoLog(vertexShader);
+                gl.deleteProgram(program);
                 console.error('[GL] Vertex shader compile log: ' + log);
                 throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + log);
             }
 
             log = gl.getProgramInfoLog(program);
+            gl.deleteProgram(program);
             console.error('[GL] Shader program link log: ' + log);
             throw new RuntimeError('Program failed to link.  Link log: ' + log);
         }
