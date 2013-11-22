@@ -36,12 +36,22 @@ Beta Releases
                ]
            });
   * `loadWithXhr` now takes an options object, and allows specifying HTTP method and data to send with the request.
+  * Renamed `SceneTransitioner.onTransitionStart` to `SceneTransitioner.transitionStart`.
+  * Renamed `SceneTransitioner.onTransitionComplete` to `SceneTransitioner.transitionComplete`.
+  * Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
+  * Renamed `SceneModePickerViewModel.onTransitionStart` to `SceneModePickerViewModel.transitionStart`.
+  * Renamed `Viewer.onRenderLoopError` to `Viewer.renderLoopError`.
+  * Renamed `Viewer.onDropError` to `Viewer.dropError`.
+  * Renamed `CesiumViewer.onDropError` to `CesiumViewer.dropError`.
+  * Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
+  * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
 * Added `LinearSpline` and `QuaternionSpline`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
 * Added `Math.nextPowerOfTwo`.
 * Added `inverse` and `determinant` to `Matrix3`.
 * Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Added `ObjectOrientedBoundingBox`.
 
 ### b22 - 2013-11-01
 

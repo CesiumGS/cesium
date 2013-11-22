@@ -1,9 +1,7 @@
 /*global define*/
 define([
         '../Core/Color',
-        '../Core/combine',
         '../Core/destroyObject',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
@@ -21,9 +19,7 @@ define([
         '../Shaders/ViewportQuadFS'
     ], function(
         Color,
-        combine,
         destroyObject,
-        defaultValue,
         defined,
         DeveloperError,
         BoundingRectangle,
