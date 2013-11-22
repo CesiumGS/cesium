@@ -32,7 +32,7 @@ define(\'' + moduleId + '\', function() {\n\
 
 contents += '})();';
 
-var map = '\
+var paths = '\
 /*global define*/\n\
 define(function() {\n\
     "use strict";\
@@ -41,4 +41,4 @@ define(function() {\n\
 });';
 
 writeFileContents(attributes.get('stuboutput'), contents);
-writeFileContents(attributes.get('mapoutput'), map);
+writeFileContents(attributes.get('pathsoutput'), paths);

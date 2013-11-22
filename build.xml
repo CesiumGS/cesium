@@ -246,7 +246,7 @@
 
 	<scriptdef name="generateStubs" language="javascript" src="${tasksDirectory}/generateStubs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="stuboutput" />
-		<attribute name="mapoutput" />
+		<attribute name="pathsoutput" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
@@ -334,7 +334,7 @@
 		<antcall target="combineJavaScript.combineCesium" />
 
 		<mkdir dir="${buildStubsDirectory}" />
-		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" mapoutput="${buildStubsDirectory}/map.js">
+		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" pathsoutput="${buildStubsDirectory}/paths.js">
 			<sourcefiles refid="cesiumJsFileSet" />
 		</generateStubs>
 
