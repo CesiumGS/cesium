@@ -69,9 +69,10 @@ define([
     var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
     var scratchEigenResult = {
-            unitary : new Matrix3(),
-            diagonal : new Matrix3()
+        unitary : new Matrix3(),
+        diagonal : new Matrix3()
     };
+
     /**
      * Computes an instance of an ObjectOrientedBoundingBox of the given positions.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
