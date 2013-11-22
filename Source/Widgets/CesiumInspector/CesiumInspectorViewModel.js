@@ -36,7 +36,7 @@ define([
         return str;
     }
 
-    var br = new BoundingRectangle(10, 250, 100, 75);
+    var br = new BoundingRectangle(10, 300, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     /**

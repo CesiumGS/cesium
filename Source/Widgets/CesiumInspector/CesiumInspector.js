@@ -53,19 +53,25 @@ define([
         this._viewModel = viewModel;
         this._container = container;
 
-        var element = document.createElement('button');
+        var element = document.createElement('div');
         this._element = element;
-        this._element.type = 'button';
-        this._element.textContent = 'Cesium Inspector';
-        this._element.className = 'cesium-cesiumInspector';
-        this._element.setAttribute('data-bind', 'click: toggleDropDown');
+        var text = document.createElement('div');
+        text.textContent = 'Cesium Inspector';
+        text.className = 'cesium-cesiumInspector-button';
+        text.setAttribute('data-bind', 'click: toggleDropDown');
+        element.appendChild(text);
+        element.className = 'cesium-cesiumInspector';
+        element.setAttribute('data-bind', 'css: { "cesium-cesiumInspector-visible" : dropDownVisible, "cesium-cesiumInspector-hidden" : !dropDownVisible }');
         container.appendChild(this._element);
 
         var panel = document.createElement('div');
         this._panel = panel;
         panel.className = 'cesium-cesiumInspectorPanel-dropDown';
-        panel.setAttribute('data-bind', 'css: { "cesium-cesiumInspectorPanel-visible" : dropDownVisible, "cesium-cesiumInspectorPanel-hidden" : !dropDownVisible }');
-        container.appendChild(panel);
+        element.appendChild(panel);
+
+        var general = document.createElement('div');
+        general.textContent = 'General';
+        panel.appendChild(general);
 
         var debugShowFrustums = document.createElement('div');
         this._debugShowFrustums = debugShowFrustums;
@@ -90,6 +96,10 @@ define([
         performanceDisplay.appendChild(pdCheckbox);
         performanceDisplay.appendChild(document.createTextNode('Performance Display'));
 
+        var prim = document.createElement('div');
+        prim.innerHTML = '<br>Primitives';
+        panel.appendChild(prim);
+
         var debugSphere = document.createElement('div');
         this._performanceDisplay = debugSphere;
         panel.appendChild(debugSphere);
@@ -97,7 +107,7 @@ define([
         bsCheckbox.type = 'checkbox';
         bsCheckbox.setAttribute('data-bind', 'click: toggleBoundingSphere');
         debugSphere.appendChild(bsCheckbox);
-        debugSphere.appendChild(document.createTextNode('Debug bounding sphere'));
+        debugSphere.appendChild(document.createTextNode('Show bounding sphere'));
 
         var refFrame = document.createElement('div');
         this._refFrame = refFrame;
@@ -118,7 +128,6 @@ define([
         primitiveOnly.appendChild(document.createTextNode('Show only this primitive'));
 
         knockout.applyBindings(viewModel, this._element);
-        knockout.applyBindings(viewModel, this._panel);
     };
 
     defineProperties(CesiumInspector.prototype, {

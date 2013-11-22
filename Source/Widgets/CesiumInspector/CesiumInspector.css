@@ -1,27 +1,32 @@
 .cesium-cesiumInspector {
-    width: 130px;
-    height: 32px;
     border-radius: 5px;
     -webkit-transition: width ease-in-out 0.25s;
     -moz-transition: width ease-in-out 0.25s;
     transition: width ease-in-out 0.25s;
-    
+    background: #303336;
+    border: 1px solid #444;
+    color: #edffff;
+    display: inline-block;
+    position: relative;
+    padding: 4px 12px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow: hidden;
 }
 
-.cesium-cesiumInspectorPanel-visible {
-    visibility: visible;
-    opacity: 1;
-    transition: opacity 0.25s linear;
-    -webkit-transition: opacity 0.25s linear;
-    -moz-transition: opacity 0.25s linear;
+.cesium-cesiumInspector input, .cesium-cesiumInspector-button{
+    cursor: pointer;
 }
 
-.cesium-cesiumInspectorPanel-hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s 0.25s, opacity 0.25s linear;
-    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
-    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
+.cesium-cesiumInspector-visible {
+    width: 170px;
+    height: auto;
+}
+
+.cesium-cesiumInspector-hidden {
+    width: 122px;
+    height: 20px;
 }
 
 .cesium-cesiumInspector-show {
@@ -37,17 +42,10 @@
 }
 
 .cesium-cesiumInspectorPanel-dropDown {
-    width: 200px;
-    height: 200px;
-    position: absolute;
-    top: 33px;
-    left: 5px;
-    background-color: rgba(38, 38, 38, 0.75);
-    padding: 5px;
-    border-radius: 5px;
-    color: #fff;
+    margin: 5px 0;
     font-family: sans-serif;
     font-size: 10pt;
+    width: 170px;
 }
 
 .cesium-cesiumInspectorPanel-frustumStats {
