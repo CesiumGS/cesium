@@ -1,9 +1,17 @@
 /*global define*/
 define([
+        './clone',
+        './defined',
         './loadWithXhr'
     ], function(
+        clone,
+        defined,
         loadWithXhr) {
     "use strict";
+
+    var defaultHeaders = {
+            Accept: 'application/octet-stream,*/*;q=0.01'
+        };
 
     /**
      * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
@@ -30,6 +38,14 @@ define([
      * });
      */
     var loadArrayBuffer = function(url, headers) {
+        if (!defined(headers)) {
+            headers = defaultHeaders;
+        } else if (!defined(headers.Accept)) {
+            // clone before adding the Accept header
+            headers = clone(headers);
+            headers.Accept = defaultHeaders.Accept;
+        }
+
         return loadWithXhr({
             url : url,
             responseType : 'arraybuffer',

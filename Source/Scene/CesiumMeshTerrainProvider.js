@@ -9,8 +9,11 @@ define([
         '../Core/writeTextToCanvas',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
+        '../Core/Math',
         './Credit',
         './GeographicTilingScheme',
         './MeshTerrainData',
@@ -27,8 +30,11 @@ define([
         writeTextToCanvas,
         BoundingSphere,
         Cartesian3,
+        Cartographic,
         DeveloperError,
         Event,
+        Extent,
+        CesiumMath,
         Credit,
         GeographicTilingScheme,
         MeshTerrainData,
@@ -118,6 +124,10 @@ define([
         requestMetadata();
     };
 
+    var cartesian3Scratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
+    var extentScratch = new Extent();
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link CesiumTerrainProvider#isReady} returns true.  The result must include terrain data and
@@ -147,10 +157,10 @@ define([
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
 
-        y = (yTiles - y - 1);
+        var tmsY = (yTiles - y - 1);
 
         // TODO: use all the available URL templates.
-        var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', y);
+        var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
 
         var proxy = this._proxy;
         if (typeof proxy !== 'undefined') {
@@ -181,7 +191,8 @@ define([
             var cartesian3Length = float64Length * cartesian3Elements;
             var boundingSphereLength = float64Length * boundingSphereElements;
             var vertexElements = 6;
-            var vertexLength = float32Length * vertexElements;
+            var encodedVertexElements = 3;
+            var encodedVertexLength = uint16Length * encodedVertexElements;
             var triangleElements = 3;
             var triangleLength = uint16Length * triangleElements;
 
@@ -204,14 +215,60 @@ define([
 
             var vertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var vertexBuffer = new Float32Array(buffer, pos, vertexCount * vertexElements);
-            pos += vertexCount * vertexLength;
+            var encodedVertexBuffer = new Uint16Array(buffer, pos, vertexCount * 3);
+            pos += vertexCount * encodedVertexLength;
 
             if (vertexCount > 64 * 1024) {
                 // More than 64k vertices, so read 32-bit indices.
                 // TODO: Basic WebGL doesn't support 32-bit indices, so we also need to
                 //       split this mesh or maybe use an extension.
                 throw new DeveloperError('TODO: 32-bit indices are not yet supported.');
+            }
+
+            // Decode the vertex buffer.
+            var extent = that._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
+            var ellipsoid = that._tilingScheme.getEllipsoid();
+
+            var uBuffer = encodedVertexBuffer.subarray(0, vertexCount);
+            var vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
+            var heightBuffer = encodedVertexBuffer.subarray(vertexCount * 2, 3 * vertexCount);
+
+            var vertexBuffer = new Float32Array(vertexCount * vertexElements);
+
+            var lastU = 0;
+            var lastV = 0;
+            var lastHeight = 0;
+            var maxShort = 32766;
+
+            function zigZagDecode(value) {
+                return (value >> 1) ^ (-(value & 1));
+            }
+
+            for (var i = 0; i < vertexCount; ++i) {
+                var uShort = zigZagDecode(uBuffer[i]) + lastU;
+                var vShort = zigZagDecode(vBuffer[i]) + lastV;
+                var heightShort = zigZagDecode(heightBuffer[i]) + lastHeight;
+
+                lastU = uShort;
+                lastV = vShort;
+                lastHeight = heightShort;
+
+                var u = uShort / maxShort;
+                var v = vShort / maxShort;
+
+                cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
+                cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
+                cartographicScratch.height = CesiumMath.lerp(minimumHeight, maximumHeight, heightShort / maxShort);
+
+                ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+
+                var index = i * 6;
+                vertexBuffer[index++] = cartesian3Scratch.x - center.x;
+                vertexBuffer[index++] = cartesian3Scratch.y - center.y;
+                vertexBuffer[index++] = cartesian3Scratch.z - center.z;
+                vertexBuffer[index++] = cartographicScratch.height;
+                vertexBuffer[index++] = u;
+                vertexBuffer[index++] = v;
             }
 
             var triangleCount = view.getUint32(pos, true);
