@@ -667,8 +667,14 @@ define([
                 }
                 // TODO: else handle all valid types: https://github.com/KhronosGroup/glTF/issues/191
 
+                var bindShapeMatrix;
+                if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
+                    bindShapeMatrix = Matrix4.clone(skin.bindShapeMatrix);
+                }
+
                 skin.czm = {
-                    inverseBindMatrices : matrices
+                    inverseBindMatrices : matrices,
+                    bindShapeMatrix : bindShapeMatrix // not used when undefined
                 };
             }
         }
@@ -1347,6 +1353,8 @@ define([
         model.worldBoundingSphere.radius = radius;
     }
 
+    var scratchObjectSpace = new Matrix4();
+
     function applySkins(model) {
         var gltf = model.gltf;
         var skins = gltf.skins;
@@ -1360,11 +1368,14 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var node = skinnedNodes[i];
+
+            scratchObjectSpace = Matrix4.inverse(node.czm.transformToRoot);
+
             var instanceSkin = skinnedNodes[i].instanceSkin;
             var skin = skins[instanceSkin.skin];
 
             var joints = skin.joints;
-            var bindShapeMatrix = skin.bindShapeMatrix;
+            var bindShapeMatrix = skin.czm.bindShapeMatrix;
             var inverseBindMatrices = skin.czm.inverseBindMatrices;
             var inverseBindMatricesLength = inverseBindMatrices.length;
 
@@ -1378,11 +1389,14 @@ define([
                 for (var k = 0; k < primitivesLength; ++k) {
                     var jointMatrices = materials[primitives[k].material].instanceTechnique.czm.jointMatrices;
                     for (var m = 0; m < inverseBindMatricesLength; ++m) {
-//SKIN_TODO: no allocations!
-//SKIN_TODO: use bindShapeMatrix
 
-                        jointMatrices[m] = Matrix4.multiply(inverseBindMatrices[m], nodes[joints[m]].czm.transformToRoot);
-//                      jointMatrices[m] = Matrix4.IDENTITY;
+                        // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                        jointMatrices[m] = Matrix4.multiply(scratchObjectSpace, nodes[joints[m]].czm.transformToRoot, jointMatrices[m]);
+                        jointMatrices[m] = Matrix4.multiply(jointMatrices[m], inverseBindMatrices[m], jointMatrices[m]);
+                        if (defined(bindShapeMatrix)) {
+                            // Optimization for when bind shape matrix is the identity.
+                            jointMatrices[m] = Matrix4.multiply(jointMatrices[m], bindShapeMatrix, jointMatrices[m]);
+                        }
                     }
                 }
             }
