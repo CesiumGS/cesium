@@ -48,6 +48,9 @@ forEachFile('sourcefiles', function(relativePath, file) {
         return;
     }
 
+    // make a copy of the options, JSHint modifies the object it's given
+    options = JSON.parse(JSON.stringify(options));
+
     if (!JSHINT(source, options)) {
         JSHINT.errors.forEach(function(error) {
             if (error) {

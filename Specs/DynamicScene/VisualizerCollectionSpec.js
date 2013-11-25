@@ -1,14 +1,10 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/VisualizerCollection',
-         'Core/JulianDate',
-         'Specs/createScene',
-         'Specs/destroyScene'
+         'Core/JulianDate'
      ], function(
          VisualizerCollection,
-         JulianDate,
-         createScene,
-         destroyScene) {
+         JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -140,4 +136,4 @@ defineSuite([
         visualizers.removeAllPrimitives();
         expect(mockVisualizer.removeAllPrimitivesCalled).toEqual(true);
     });
-}, 'WebGL');
+});

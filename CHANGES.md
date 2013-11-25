@@ -4,28 +4,100 @@ Change Log
 Beta Releases
 -------------
 
+### b23 - 2013-12-02
+
+* Breaking changes:
+  * Changed the `CatmulRomSpline` and `HermiteSpline` constructors from taking an array of structures to a structure of arrays. For example, code that looked like:
+
+           var controlPoints = [
+               { point: new Cartesian3(1235398.0, -4810983.0, 4146266.0), time: 0.0},
+               { point: new Cartesian3(1372574.0, -5345182.0, 4606657.0), time: 1.5},
+               { point: new Cartesian3(-757983.0, -5542796.0, 4514323.0), time: 3.0},
+               { point: new Cartesian3(-2821260.0, -5248423.0, 4021290.0), time: 4.5},
+               { point: new Cartesian3(-2539788.0, -4724797.0, 3620093.0), time: 6.0}
+           ];
+           var spline = new HermiteSpline(controlPoints);
+
+    should now look like:
+
+           var spline = new HermiteSpline({
+               times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
+               points : [
+                   new Cartesian3(1235398.0, -4810983.0, 4146266.0),
+                   new Cartesian3(1372574.0, -5345182.0, 4606657.0),
+                   new Cartesian3(-757983.0, -5542796.0, 4514323.0),
+                   new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+                   new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+               ]
+           });
+  * `loadWithXhr` now takes an options object, and allows specifying HTTP method and data to send with the request.
+  * Renamed `SceneTransitioner.onTransitionStart` to `SceneTransitioner.transitionStart`.
+  * Renamed `SceneTransitioner.onTransitionComplete` to `SceneTransitioner.transitionComplete`.
+  * Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
+  * Renamed `SceneModePickerViewModel.onTransitionStart` to `SceneModePickerViewModel.transitionStart`.
+  * Renamed `Viewer.onRenderLoopError` to `Viewer.renderLoopError`.
+  * Renamed `Viewer.onDropError` to `Viewer.dropError`.
+  * Renamed `CesiumViewer.onDropError` to `CesiumViewer.dropError`.
+  * Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
+  * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
+* Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
+* Added `LinearSpline` and `QuaternionSpline`.
+* Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
+* Added `Math.nextPowerOfTwo`.
+* Added `inverse` and `determinant` to `Matrix3`.
+* Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Added `ObjectOrientedBoundingBox`.
+
 ### b22 - 2013-11-01
 
 * Breaking changes:
-   * The following prototype functions were removed:
-      * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`
-      * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`
-
-      Code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
-   * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
-   * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
-   * Replaced `SkyBox.getSources` with `SkyBox.sources`.
-   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
-   * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
-   * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
-   * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
-   * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
-   * `Property` implementations are now required to implement a prototype `equals` function.
-   * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
-* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+  * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
+  * The following prototype functions were removed:
+    * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`.
+    * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`. For example, code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
+  * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
+  * Renamed `DynamicBillboard.nearFarScalar` to `DynamicBillboard.scaleByDistance`.
+  * All data sources must now implement `DataSource.getName`, which returns a user-readable name for the data source.
+  * CZML `document` objects are no longer added to the `DynamicObjectCollection` created by `CzmlDataSource`.  Use the `CzmlDataSource` interface to access the data instead.
+  * `TimeInterval.equals`, and `TimeInterval.equalsEpsilon` now compare interval data as well.
+  * All SVG files were deleted from `Widgets/Images` and replaced by a new `SvgPath` class.
+  * The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button now depend on `CesiumWidget.css` for global Cesium button styles.
+  * The toolbar widgets expect their `container` to be the toolbar itself now, no need for separate containers for each widget on the bar.
+  * `Property` implementations are now required to implement a prototype `equals` function.
+  * `ConstantProperty` and `TimeIntervalCollectionProperty` no longer take a `clone` function and instead require objects to implement prototype `clone` and `equals` functions.
+  * The `SkyBox` constructor now takes an `options` argument with a `sources` property, instead of directly taking `sources`.
+  * Replaced `SkyBox.getSources` with `SkyBox.sources`.
+  * The `bearing` property of `DynamicEllipse` is now called `rotation`.
+  * CZML `ellipse.bearing` property is now `ellipse.rotation`
+* Added a `Geocoder` widget that allows users to enter an address or the name of a landmark and zoom to that location.  It is enabled by default in applications that use the `Viewer` widget.
+* Added `GoogleEarthImageryProvider`.
 * Added `Moon` for drawing the moon, and `IauOrientationAxes` for computing the Moon's orientation.
+* Added `Material.translucent` property. Set this property or `Appearance.translucent` for correct rendering order. Translucent geometries are rendered after opaque geometries.
+* Added `enableLighting`, `lightingFadeOutDistance`, and `lightingFadeInDistance` properties to `CentralBody` to configure lighting.
+* Added `Billboard.setTranslucencyByDistance`, `Label.setTranslucencyByDistance`, `DynamicBillboard.translucencyByDistance`, and `DynamicLabel.translucencyByDistance` to control minimum/maximum translucency based on camera distance.
+* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
+* Added `Shapes.compute2DCircle`.
 * Added `Appearances` tab to Sandcastle with an example for each geometry appearance.
+* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
+* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
+* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
+* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
+* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
+* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
+* The toolbar widgets (Home, SceneMode, BaseLayerPicker) and the fullscreen button can now be styled directly with user-supplied CSS.
+* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
+* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
+* Added `Matrix3.getEigenDecomposition`.
+* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
+* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
+* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
+* Added `FrameState.events`.
+* Added `Primitive.allowPicking` to save memory when picking is not needed.
+* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
+* Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
 * Added `options` argument to the `EllipsoidPrimitive` constructor.
+* Upgraded Knockout from version 2.3.0 to 3.0.0.
+* Upgraded RequireJS to version 2.1.9, and Almond to 0.2.6.
 * Added a user-defined `id` to all primitives for use with picking.  For example:
 
             primitives.add(new Polygon({
@@ -39,25 +111,6 @@ Beta Releases
             if (defined(p) && defined(p.id)) {
                // Use properties and functions in p.id
             }
-* Added `Scene.drillPick` to return list of objects each containing 1 primitive at a screen space position.
-* Added `PolylineVolumeGeometry` and `PolylineVolumeGeometryOutline`.
-* Added `Shapes.compute2DCircle`.
-* Added `Matrix3.getEigenDecomposition`.
-* Added `PolylineOutlineMaterialProperty` for use with `DynamicPolyline.material`.
-* Added `skyBox` to the `CesiumWidget` and `Viewer` constructors for changing the default stars.
-* Added utility function `getFilenameFromUri`, which given a URI with or without query parameters, returns the last segment of the URL.
-* Upgraded RequireJS to version 2.1.8, and Almond to 0.2.6.
-* Added the ability to use `Array` and `JulianDate` objects as custom CZML properties.
-* Added `DynamicObject.name` and corresponding CZML support.  This is a non-unique, user-readable name for the object.
-* Added `DynamicObject.parent` and corresponding CZML support.  This allows for `DataSource` objects to present data hierarchically.
-* Added `DynamicPoint.scaleByDistance` to control minimum/maximum point size based on distance from the camera.
-* Added prototype versions of `equals` and `equalsEpsilon` method back to `Cartesian2`, `Cartesian3`, `Cartesian4`, and `Quaternion`.
-* Added prototype equals function to `NearFarScalar`, and `TimeIntervalCollection`.
-* Added `Matrix4.fromTranslationQuaternionRotationScale` and `Matrix4.multiplyByScale`.
-* Added `FrameState.events`.
-* Added `Primitive.allowPicking` to save memory when picking is not needed.
-* Added `debugShowBoundingVolume`, for debugging primitive rendering, to `Primitive`, `Polygon`, `ExtentPrimitive`, `EllipsoidPrimitive`, `BillboardCollection`, `LabelCollection`, and `PolylineCollection`.
-* Added `DebugModelMatrixPrimitive` for debugging primitive's `modelMatrix`.
 
 ### b21 - 2013-10-01
 
@@ -359,7 +412,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
-   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
+   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This option is no longer needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
    * `destroyObject` no longer deletes properties from the object being destroyed.
    * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.

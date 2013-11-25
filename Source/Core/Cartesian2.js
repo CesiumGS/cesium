@@ -220,6 +220,64 @@ define([
     };
 
     /**
+     * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} first A cartesian to compare.
+     * @param {Cartesian2} second A cartesian to compare.
+     * @param {Cartesian2} [result] The object into which to store the result.
+     * @returns {Cartesian2} A cartesian with the minimum components.
+     *
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
+     */
+    Cartesian2.getMinimumByComponent = function(first, second, result) {
+        if (!defined(first)) {
+            throw new DeveloperError('first cartesian is missing');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('second cartesian is missing');
+        }
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+
+        result.x = Math.min(first.x, second.x);
+        result.y = Math.min(first.y, second.y);
+
+        return result;
+    };
+
+    /**
+     * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} first A cartesian to compare.
+     * @param {Cartesian2} second A cartesian to compare.
+     * @param {Cartesian2} [result] The object into which to store the result.
+     * @returns {Cartesian2} A cartesian with the maximum components.
+     *
+     * @exception {DeveloperError} first cartesian is missing.
+     * @exception {DeveloperError} second cartesian is missing.
+     */
+    Cartesian2.getMaximumByComponent = function(first, second, result) {
+        if (!defined(first)) {
+            throw new DeveloperError('first cartesian is missing');
+        }
+        if (!defined(second)) {
+            throw new DeveloperError('second cartesian is missing');
+        }
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+
+        result.x = Math.max(first.x, second.x);
+        result.y = Math.max(first.y, second.y);
+        return result;
+    };
+
+    /**
      * Computes the provided Cartesian's squared magnitude.
      * @memberof Cartesian2
      *

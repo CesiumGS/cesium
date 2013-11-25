@@ -9,6 +9,13 @@
 var defineSuite;
 
 /**
+ * Defines a test suite that is skipped.
+ *
+ * @see defineSuite
+ */
+var xdefineSuite;
+
+/**
  * Registers a function that is called before running all tests.
  *
  * @param {Function} beforeAllFunction The function to run before all tests.
@@ -180,6 +187,30 @@ var afterAll;
     //start loading all of Cesium early, so it's all available for code coverage calculations.
     require(['Cesium']);
 
+    function allTestsReady() {
+        return tests.every(function(test) {
+            return !!test.f;
+        });
+    }
+
+    function createTestsIfReady() {
+        if (readyToCreateTests && allTestsReady()) {
+            tests.sort(function(a, b) {
+                return a.name.toUpperCase().localeCompare(b.name.toUpperCase());
+            });
+
+            tests.forEach(function(test, i) {
+                //calling the function registers the test with Jasmine
+                var suite = test.f();
+
+                //keep track of the index of the test in the suite so the sort later is stable.
+                suite.index = i;
+            });
+
+            createTests();
+        }
+    }
+
     defineSuite = function(deps, name, suite, categories) {
         if (typeof suite === 'object' || typeof suite === 'string') {
             categories = suite;
@@ -209,29 +240,8 @@ var afterAll;
         });
     };
 
-    function createTestsIfReady() {
-        if (readyToCreateTests && allTestsReady()) {
-            tests.sort(function(a, b) {
-                return a.name.toUpperCase().localeCompare(b.name.toUpperCase());
-            });
-
-            tests.forEach(function(test, i) {
-                //calling the function registers the test with Jasmine
-                var suite = test.f();
-
-                //keep track of the index of the test in the suite so the sort later is stable.
-                suite.index = i;
-            });
-
-            createTests();
-        }
-    }
-
-    function allTestsReady() {
-        return tests.every(function(test) {
-            return !!test.f;
-        });
-    }
+    xdefineSuite = function(deps, name, suite, categories) {
+    };
 
     //specs is an array defined by SpecList.js
     require([

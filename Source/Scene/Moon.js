@@ -83,9 +83,7 @@ define([
             radii : this.ellipsoid.getRadii(),
             material : Material.fromType(Material.ImageType),
             onlySunLighting : this.onlySunLighting,
-            _owner : this,
-            _executeInClosestFrustum : false,
-            _writeDepth : true
+            _owner : this
         });
 
         this._axes = new IauOrientationAxes();

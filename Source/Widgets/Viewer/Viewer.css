@@ -1,10 +1,13 @@
 @import url(../Animation/Animation.css);
 @import url(../BaseLayerPicker/BaseLayerPicker.css);
-@import url(../CesiumWidget/CesiumWidget.css);
 @import url(../FullscreenButton/FullscreenButton.css);
-@import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
+@import url(../SvgPath/SvgPath.css);
 @import url(../Timeline/Timeline.css);
+@import url(../Geocoder/Geocoder.css);
+
+/* Shared CSS classes are imported last, to ensure that the above CSS must override in an order-independent fashion. */
+@import url(../CesiumWidget/CesiumWidget.css);
 
 .cesium-viewer {
     font-family: sans-serif;
@@ -61,26 +64,8 @@
 	right: 5px;
 }
 
-.cesium-viewer-homeButtonContainer {
+.cesium-viewer-geocoderContainer {
+    position: relative;
     display: inline-block;
-    width: 32px;
-    height: 32px;
-    vertical-align: middle;
-    margin: 1px;
-}
-
-.cesium-viewer-sceneModePickerContainer {
-    display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	margin: 1px;
-}
-
-.cesium-viewer-baseLayerPickerContainer {
-	display: inline-block;
-	width: 32px;
-	height: 32px;
-	vertical-align: middle;
-	margin: 1px;
+    margin: 0 3px;
 }

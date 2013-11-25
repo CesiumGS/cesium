@@ -508,7 +508,7 @@ defineSuite([
                     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                     semiMinorAxis : 1000000.0,
                     semiMajorAxis : 1000000.0,
-                    bearing : CesiumMath.PI_OVER_FOUR
+                    rotation : CesiumMath.PI_OVER_FOUR
                 }),
                 id : 'ellipse',
                 attributes : {
@@ -1412,7 +1412,7 @@ defineSuite([
             });
             render3D(instance);
         });
-    });
+    }, 'WebGL');
 
     describe('PolylineGeometry', function() {
         var instance;
@@ -1488,7 +1488,7 @@ defineSuite([
             });
             render3D(instance, undefined, appearance);
         });
-    });
+    }, 'WebGL');
 
     describe('Custom geometry', function() {
         describe('with indices', function() {
@@ -1534,7 +1534,7 @@ defineSuite([
             it('pick', function() {
                 pickGeometry(instance);
             });
-        });
+        }, 'WebGL');
 
         describe('without indices', function() {
             var instance;
@@ -1580,7 +1580,7 @@ defineSuite([
             it('pick', function() {
                 pickGeometry(instance);
             });
-        });
+        }, 'WebGL');
     });
 
-});
+}, 'WebGL');

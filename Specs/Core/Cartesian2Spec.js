@@ -93,6 +93,182 @@ defineSuite([
         expect(Cartesian2.getMinimumComponent(cartesian)).toEqual(cartesian.y);
     });
 
+    it('getMinimumByComponent without a result parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(1.0, 0.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(1.0, 0.0);
+        second = new Cartesian2(2.0, 0.0);
+        result = new Cartesian2(1.0, 0.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(1.0, -20.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -20.0);
+        second = new Cartesian2(1.0, -15.0);
+        result = new Cartesian2(1.0, -20.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(1.0, -20.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(1.0, -20.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+    });
+
+    it('getMinimumByComponent with a result parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2();
+        var returnedResult = Cartesian2.getMinimumByComponent(first, second, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(result);
+    });
+
+    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(1.0, 0.0);
+        expect(Cartesian2.getMinimumByComponent(first, second, first)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian2.getMinimumByComponent(first, second, first)).toEqual(result);
+    });
+
+    it('getMinimumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(1.0, 0.0);
+        expect(Cartesian2.getMinimumByComponent(first, second, second)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian2.getMinimumByComponent(first, second, second)).toEqual(result);
+    });
+
+    it('getMinimumByComponent throws without first', function() {
+        expect(function() {
+            Cartesian2.getMinimumByComponent();
+        }).toThrow();
+    });
+
+    it('getMinimumByComponent throws without second', function() {
+        expect(function() {
+            Cartesian2.getMinimumByComponent(new Cartesian2());
+        }).toThrow();
+    });
+
+    it('getMinimumByComponent works when first\'s or second\'s X is lesser', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(1.0, 0.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        second.x = 3.0;
+        result.x = 2.0;
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+    });
+
+    it('getMinimumByComponent works when first\'s or second\'s Y is lesser', function() {
+        var first = new Cartesian2(0.0, 2.0);
+        var second = new Cartesian2(0.0, 1.0);
+        var result = new Cartesian2(0.0, 1.0);
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+        second.y = 3.0;
+        result.y = 2.0;
+        expect(Cartesian2.getMinimumByComponent(first, second)).toEqual(result);
+    });
+
+    it('getMaximumByComponent without a result parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(2.0, 0.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(1.0, 0.0);
+        second = new Cartesian2(2.0, 0.0);
+        result = new Cartesian2(2.0, 0.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(2.0, -15.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -20.0);
+        second = new Cartesian2(1.0, -15.0);
+        result = new Cartesian2(2.0, -15.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(2.0, -15.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        first = new Cartesian2(2.0, -15.0);
+        second = new Cartesian2(1.0, -20.0);
+        result = new Cartesian2(2.0, -15.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+    });
+
+    it('getMaximumByComponent with a result parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2();
+        var returnedResult = Cartesian2.getMaximumByComponent(first, second, result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).toEqual(result);
+    });
+
+    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(2.0, 0.0);
+        expect(Cartesian2.getMaximumByComponent(first, second, first)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian2.getMaximumByComponent(first, second, first)).toEqual(result);
+    });
+
+    it('getMaximumByComponent with a result parameter that is an input parameter', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(2.0, 0.0);
+        expect(Cartesian2.getMaximumByComponent(first, second, second)).toEqual(result);
+        first.x = 1.0;
+        second.x = 2.0;
+        expect(Cartesian2.getMaximumByComponent(first, second, second)).toEqual(result);
+    });
+
+    it('getMaximumByComponent throws without first', function() {
+        expect(function() {
+            Cartesian2.getMaximumByComponent();
+        }).toThrow();
+    });
+
+    it('getMaximumByComponent throws without second', function() {
+        expect(function() {
+            Cartesian2.getMaximumByComponent(new Cartesian2());
+        }).toThrow();
+    });
+
+    it('getMaximumByComponent works when first\'s or second\'s X is greater', function() {
+        var first = new Cartesian2(2.0, 0.0);
+        var second = new Cartesian2(1.0, 0.0);
+        var result = new Cartesian2(2.0, 0.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        second.x = 3.0;
+        result.x = 3.0;
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+    });
+
+    it('getMaximumByComponent works when first\'s or second\'s Y is greater', function() {
+        var first = new Cartesian2(0.0, 2.0);
+        var second = new Cartesian2(0.0, 1.0);
+        var result = new Cartesian2(0.0, 2.0);
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+        second.y = 3.0;
+        result.y = 3.0;
+        expect(Cartesian2.getMaximumByComponent(first, second)).toEqual(result);
+    });
+
     it('magnitudeSquared', function() {
         var cartesian = new Cartesian2(2.0, 3.0);
         expect(Cartesian2.magnitudeSquared(cartesian)).toEqual(13);
@@ -196,7 +372,7 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
     });
-  
+
     it('add works with a result parameter that is an input parameter', function() {
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(4.0, 5.0);

@@ -32,9 +32,9 @@ define([
         /**
          * A Number {@link Property} which determines the polyline's outline width.
          * @type {Property}
-         * @default new ConstantProperty(1)
+         * @default new ConstantProperty(0)
          */
-        this.outlineWidth = new ConstantProperty(1);
+        this.outlineWidth = new ConstantProperty(0);
     };
 
     /**

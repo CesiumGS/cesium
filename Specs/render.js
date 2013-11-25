@@ -28,10 +28,7 @@ define([
         return commandsExecuted;
     }
 
-    function render(context, frameState, primitive, commandLists) {
-        commandLists = defaultValue(commandLists, []);
-        primitive.update(context, frameState, commandLists);
-
+    function executeList(context, frameState, commandLists, listName) {
         var commandsExecuted = 0;
         var cullingVolume = frameState.cullingVolume;
         var occluder;
@@ -41,16 +38,14 @@ define([
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].colorList;
+            var commandList = commandLists[i][listName];
             var commandListLength = commandList.length;
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
                 if (defined(boundingVolume)) {
-                    var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
-                    var transformedBV = boundingVolume.transform(modelMatrix);
-                    if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV))) {
+                    if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                            (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
                         continue;
                     }
                 }
@@ -60,6 +55,15 @@ define([
             }
         }
 
+        return commandsExecuted;
+    }
+
+    function render(context, frameState, primitive, commandLists) {
+        commandLists = defaultValue(commandLists, []);
+        primitive.update(context, frameState, commandLists);
+
+        var commandsExecuted = executeList(context, frameState, commandLists, 'opaqueList');
+        commandsExecuted += executeList(context, frameState, commandLists, 'translucentList');
         commandsExecuted += executeOverlayCommands(context, commandLists);
 
         return commandsExecuted;

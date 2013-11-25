@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/jsonp',
-        '../Core/writeTextToCanvas',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -18,7 +17,6 @@ define([
         defaultValue,
         defined,
         jsonp,
-        writeTextToCanvas,
         Cartesian2,
         DeveloperError,
         Event,
@@ -59,6 +57,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider

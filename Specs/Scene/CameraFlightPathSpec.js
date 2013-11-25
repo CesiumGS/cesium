@@ -8,7 +8,8 @@ defineSuite([
          'Core/Extent',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         'Specs/createScene'
+         'Specs/createScene',
+         'Specs/destroyScene'
      ], function (
          CameraFlightPath,
          Cartesian3,
@@ -18,15 +19,21 @@ defineSuite([
          Extent,
          OrthographicFrustum,
          SceneMode,
-         createScene) {
+         createScene,
+         destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var scene, frameState;
+    var scene;
+    var frameState;
 
     beforeEach(function() {
         scene = createScene();
         frameState = scene.getFrameState();
+    });
+
+    afterEach(function() {
+        destroyScene(scene);
     });
 
     function createOrthographicFrustum() {
@@ -747,4 +754,4 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-});
+},'WebGL');

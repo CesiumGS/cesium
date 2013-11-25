@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Cartographic',
@@ -11,9 +10,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Math',
         './SceneMode'
-    ],
-    function(
-        defaultValue,
+    ], function(
         defined,
         DeveloperError,
         Cartographic,

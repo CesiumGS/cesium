@@ -32,13 +32,10 @@ define([
         '../Renderer/createShaderSource',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
-        './CreditDisplay',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
-        './Material',
         './SceneMode',
         './TerrainProvider',
-        './ViewportQuad',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyFSPole',
@@ -79,13 +76,10 @@ define([
         createShaderSource,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
-        CreditDisplay,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
-        Material,
         SceneMode,
         TerrainProvider,
-        ViewportQuad,
         CentralBodyFS,
         CentralBodyFSDepth,
         CentralBodyFSPole,
@@ -213,11 +207,39 @@ define([
          */
         this.tileCacheSize = 100;
 
+        /**
+         * Enable lighting the globe with the sun as a light source.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.enableLighting = false;
+        this._enableLighting = false;
+
+        /**
+         * The distance where everything becomes lit. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 6500000.0
+         */
+        this.lightingFadeOutDistance = 6500000.0;
+
+        /**
+         * The distance where lighting resumes. This only takes effect
+         * when <code>enableLighting</code> is <code>true</code>.
+         *
+         * @type {Number}
+         * @default 9000000.0
+         */
+        this.lightingFadeInDistance = 9000000.0;
+
         this._lastOceanNormalMapUrl = undefined;
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._showingPrettyOcean = false;
         this._hasWaterMask = false;
+        this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
 
@@ -227,6 +249,9 @@ define([
             },
             u_oceanNormalMap : function() {
                 return that._oceanNormalMap;
+            },
+            u_lightingFadeDistance : function() {
+                return that._lightingFadeDistance;
             }
         };
     };
@@ -619,6 +644,7 @@ define([
         var projectionChanged = this._projection !== projection;
         var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
+        var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._surfaceShaderSet) ||
             !defined(this._northPoleCommand.shaderProgram) ||
@@ -626,6 +652,7 @@ define([
             modeChanged ||
             projectionChanged ||
             hasWaterMaskChanged ||
+            hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
@@ -662,7 +689,10 @@ define([
             }
 
             this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
-                defines : [hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''],
+                defines : [
+                    (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
+                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                ],
                 sources : [CentralBodyVS, getPositionMode, get2DYPositionFraction]
             });
 
@@ -671,7 +701,8 @@ define([
             this._surfaceShaderSet.baseFragmentShaderString = createShaderSource({
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
-                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : '')
+                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
+                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
                 ],
                 sources : [CentralBodyFS]
             });
@@ -701,7 +732,7 @@ define([
         commandLists.removeAll();
 
         if (pass.color) {
-            var colorCommandList = commandLists.colorList;
+            var colorCommandList = commandLists.opaqueList;
 
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
@@ -720,6 +751,9 @@ define([
             } else {
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
+
+            this._lightingFadeDistance.x = this.lightingFadeOutDistance;
+            this._lightingFadeDistance.y = this.lightingFadeInDistance;
 
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.setTerrainProvider(this.terrainProvider);
@@ -747,7 +781,7 @@ define([
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandLists.pickList.push(this._depthCommand);
+            commandLists.pickList.opaqueList.push(this._depthCommand);
         }
 
         if (!commandLists.empty()) {

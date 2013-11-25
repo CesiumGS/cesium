@@ -73,8 +73,11 @@ define([
         this._pickCommand = new DrawCommand();
         this._commandLists = new CommandLists();
 
+        this._boundingSphere = new BoundingSphere();
+        this._boundingSphereWC = new BoundingSphere();
+
         this._frontFaceColorCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._frontFaceColorCommand.boundingVolume = new BoundingSphere();
+        this._frontFaceColorCommand.boundingVolume = this._boundingSphereWC;
         this._frontFaceColorCommand.owner = this;
 
         this._backFaceColorCommand.primitiveType = this._frontFaceColorCommand.primitiveType;
@@ -141,6 +144,7 @@ define([
          * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this._modelMatrix = new Matrix4();
 
         /**
          * DOC_TBA
@@ -184,6 +188,7 @@ define([
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;
+        this._translucent = undefined;
 
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
@@ -291,7 +296,7 @@ define([
             boundingVolumePositions.push(p);
         }
 
-        BoundingSphere.fromPoints(boundingVolumePositions, customSensorVolume._frontFaceColorCommand.boundingVolume);
+        BoundingSphere.fromPoints(boundingVolumePositions, customSensorVolume._boundingSphere);
 
         return positions;
     }
@@ -374,59 +379,80 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
+        var translucent = this.material.isTranslucent();
+
         // Initial render state creation
-        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (!defined(this._frontFaceColorCommand.renderState))) {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) ||
+                (!defined(this._frontFaceColorCommand.renderState)) ||
+                (this._translucent !== translucent)) {
+
             this._showThroughEllipsoid = this.showThroughEllipsoid;
+            this._translucent = translucent;
 
-            var rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                cull : {
-                    enabled : true,
-                    face : CullFace.BACK
-                }
-            });
+            var rs;
 
-            this._frontFaceColorCommand.renderState = rs;
+            if (translucent) {
+                rs = context.createRenderState({
+                    depthTest : {
+                        // This would be better served by depth testing with a depth buffer that does not
+                        // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
+                        // so we can selectively depth test.
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND,
+                    cull : {
+                        enabled : true,
+                        face : CullFace.BACK
+                    }
+                });
 
-            rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND,
-                cull : {
-                    enabled : true,
-                    face : CullFace.FRONT
-                }
-            });
+                this._frontFaceColorCommand.renderState = rs;
 
-            this._backFaceColorCommand.renderState = rs;
+                rs = context.createRenderState({
+                    depthTest : {
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND,
+                    cull : {
+                        enabled : true,
+                        face : CullFace.FRONT
+                    }
+                });
 
-            rs = context.createRenderState({
-                depthTest : {
-                    // This would be better served by depth testing with a depth buffer that does not
-                    // include the ellipsoid depth - or a g-buffer containing an ellipsoid mask
-                    // so we can selectively depth test.
-                    enabled : !this.showThroughEllipsoid
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND
-            });
-            this._pickCommand.renderState = rs;
+                this._backFaceColorCommand.renderState = rs;
+
+                rs = context.createRenderState({
+                    depthTest : {
+                        enabled : !this.showThroughEllipsoid
+                    },
+                    depthMask : false,
+                    blending : BlendingState.ALPHA_BLEND
+                });
+                this._pickCommand.renderState = rs;
+            } else {
+                rs = context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    },
+                    depthMask : true
+                });
+                this._frontFaceColorCommand.renderState = rs;
+
+                rs = context.createRenderState({
+                    depthTest : {
+                        enabled : true
+                    },
+                    depthMask : true
+                });
+                this._pickCommand.renderState = rs;
+            }
         }
 
         // Recreate vertex buffer when directions change
-        if ((this._directionsDirty) || (this._bufferUsage !== this.bufferUsage)) {
+        var directionsChanged = this._directionsDirty || (this._bufferUsage !== this.bufferUsage);
+        if (directionsChanged) {
             this._directionsDirty = false;
             this._bufferUsage = this.bufferUsage;
             this._va = this._va && this._va.destroy();
@@ -445,6 +471,15 @@ define([
 
         var pass = frameState.passes;
         this._commandLists.removeAll();
+
+        var modelMatrixChanged = !Matrix4.equals(this.modelMatrix, this._modelMatrix);
+        if (modelMatrixChanged) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
+        }
+
+        if (directionsChanged || modelMatrixChanged) {
+            BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
+        }
 
         this._frontFaceColorCommand.modelMatrix = this.modelMatrix;
         this._backFaceColorCommand.modelMatrix = this._frontFaceColorCommand.modelMatrix;
@@ -473,8 +508,12 @@ define([
                 };
             }
 
-            this._commandLists.colorList.push(backFaceColorCommand);
-            this._commandLists.colorList.push(frontFaceColorCommand);
+            if (translucent) {
+                this._commandLists.translucentList.push(this._backFaceColorCommand);
+                this._commandLists.translucentList.push(this._frontFaceColorCommand);
+            } else {
+                this._commandLists.opaqueList.push(this._frontFaceColorCommand);
+            }
         }
 
         if (pass.pick) {
@@ -507,7 +546,11 @@ define([
                 }], false, false);
             }
 
-            this._commandLists.pickList.push(pickCommand);
+            if (translucent) {
+                this._commandLists.pickList.translucentList.push(pickCommand);
+            } else {
+                this._commandLists.pickList.opaqueList.push(pickCommand);
+            }
         }
 
         if (!this._commandLists.empty()) {

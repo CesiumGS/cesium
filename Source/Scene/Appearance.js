@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Renderer/BlendingState',
         '../Renderer/CullFace',
         '../Renderer/createShaderSource'
     ], function(
+        clone,
         defaultValue,
         defined,
         BlendingState,
@@ -97,13 +99,45 @@ define([
      *
      * @memberof Appearance
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         return createShaderSource({
             defines : [this.flat ? 'FLAT' : '', this.faceForward ? 'FACE_FORWARD' : ''],
             sources : [defined(this.material) ? this.material.shaderSource : '', this.fragmentShaderSource]
         });
+    };
+
+    /**
+     * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#isTranslucent}.
+     *
+     * @memberof Appearance
+     *
+     * @returns {Boolean} <code>true</code> if the appearance is translucent.
+     */
+    Appearance.prototype.isTranslucent = function() {
+        return (defined(this.material) && this.material.isTranslucent()) || (!defined(this.material) && this.translucent);
+    };
+
+    /**
+     * Creates a render state.  This is not the final {@link RenderState} instance; instead,
+     * it can contain a subset of render state properties identical to <code>renderState</code>
+     * passed to {@link Context#createRenderState}.
+     *
+     * @memberof Appearance
+     *
+     * @returns {Object} The render state.
+     */
+    Appearance.prototype.getRenderState = function() {
+        var translucent = this.isTranslucent();
+        var rs = clone(this.renderState, false);
+        if (translucent) {
+            rs.depthMask = false;
+            rs.blending = BlendingState.ALPHA_BLEND;
+        } else {
+            rs.depthMask = true;
+        }
+        return rs;
     };
 
     /**

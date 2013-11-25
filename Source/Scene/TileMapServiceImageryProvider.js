@@ -6,7 +6,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/loadXML',
-        '../Core/writeTextToCanvas',
         '../Core/Extent',
         './Credit',
         './ImageryProvider',
@@ -19,7 +18,6 @@ define([
         DeveloperError,
         Event,
         loadXML,
-        writeTextToCanvas,
         Extent,
         Credit,
         ImageryProvider,
@@ -52,6 +50,7 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider

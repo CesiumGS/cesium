@@ -108,7 +108,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b21" />
+	<property name="version" value="b22" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -118,7 +118,7 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.8" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.9" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
 	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.6/almond.js" />
@@ -127,7 +127,9 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.10/jshint.js" />
+	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
+	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
@@ -223,6 +225,31 @@
 		<fail if="jsHint.failure" message="JSHint failed!" />
 	</target>
 
+	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
+		<echo message="Source:" />
+		<apply executable="perl" parallel="true">
+			<arg value="${clocPath}" />
+			<arg value="--read-lang-def=${clocDefinitionsPath}" />
+			<arg value="Source/Core/" />
+			<arg value="Source/DynamicScene/" />
+			<arg value="Source/Renderer/" />
+			<arg value="Source/Scene/" />
+			<arg value="Source/Widgets/" />
+			<arg value="Source/Workers/" />
+			<fileset id="clocFileSet" dir="Source/">
+				<include name="Shaders/*.glsl" />
+				<include name="Shaders/**/*.glsl" />
+				<include name="main.js" />
+			</fileset>
+		</apply>
+		<echo message="${line.separator}Specs:" />
+		<exec executable="perl">
+			<arg value="${clocPath}" />
+			<arg value="--read-lang-def=${clocDefinitionsPath}" />
+			<arg value="Specs/" />
+		</exec>
+	</target>
+
 	<target name="setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
 			<os family="windows" />
@@ -298,8 +325,7 @@
 		</exec>
 	</target>
 
-	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check"
-			unless="no.combineCesiumWorkers.create">
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
@@ -498,13 +524,13 @@
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
 			<replacefilter token="../../Source" value="." />
 			<replacefilter token="../Apps/CesiumViewer" value="." />
-			<replacefilter token="../ThirdParty/requirejs-2.1.8" value="." />
+			<replacefilter token="../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="CesiumViewerStartup.js" />
 		</replace>
 
 		<!-- rewrite the paths in the HTML -->
 		<replace dir="${cesiumViewerOutputDirectory}" summary="true">
-			<replacefilter token="../../ThirdParty/requirejs-2.1.8" value="." />
+			<replacefilter token="../../ThirdParty/requirejs-2.1.9" value="." />
 			<include name="index.html" />
 		</replace>
 
