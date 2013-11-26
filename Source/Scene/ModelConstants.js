@@ -56,6 +56,9 @@ define(function() {
         TEXTURE_WRAP_T : 0x2803,
 
         ARRAY_BUFFER : 0x8892,
-        ELEMENT_ARRAY_BUFFER : 0x8893
+        ELEMENT_ARRAY_BUFFER : 0x8893,
+
+        TEXTURE_2D : 0x0DE1,
+        TEXTURE_CUBE_MAP : 0x8513
     };
 });

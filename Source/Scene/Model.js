@@ -588,12 +588,18 @@ define([
                 source = canvas;
             }
 
-// TODO: consider target, format, and internalFormat
+// TODO: consider format in addition to internalFormat?  https://github.com/KhronosGroup/glTF/issues/195
 // TODO: texture cache
-            var tx = context.createTexture2D({
-                source : source,
-                flipY : false
-            });
+            var tx;
+
+            if (texture.target === ModelConstants.TEXTURE_2D) {
+                tx = context.createTexture2D({
+                    source : source,
+                    pixelFormat : texture.internalFormat,
+                    flipY : false
+                });
+            }
+            // TODO: else handle ModelConstants.TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
 
             if (mipmap) {
                 tx.generateMipmap();
