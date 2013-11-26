@@ -2095,13 +2095,13 @@ define([
             count = defaultValue(count, indexBuffer.getNumberOfIndices());
 
             va._bind();
-            context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
+            context._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
             va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
 
             va._bind();
-            context._gl.drawArrays(primitiveType.value, offset, count);
+            context._gl.drawArrays(primitiveType, offset, count);
             va._unBind();
         }
     }
