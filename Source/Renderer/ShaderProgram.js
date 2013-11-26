@@ -34,15 +34,15 @@ define([
             };
         case gl.FLOAT_VEC2:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR2;
+                return UniformDatatype.FLOAT_VEC2;
             };
         case gl.FLOAT_VEC3:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR3;
+                return UniformDatatype.FLOAT_VEC3;
             };
         case gl.FLOAT_VEC4:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR4;
+                return UniformDatatype.FLOAT_VEC4;
             };
         case gl.INT:
             return function() {
@@ -50,15 +50,15 @@ define([
             };
         case gl.INT_VEC2:
             return function() {
-                return UniformDatatype.INT_VECTOR2;
+                return UniformDatatype.INT_VEC2;
             };
         case gl.INT_VEC3:
             return function() {
-                return UniformDatatype.INT_VECTOR3;
+                return UniformDatatype.INT_VEC3;
             };
         case gl.INT_VEC4:
             return function() {
-                return UniformDatatype.INT_VECTOR4;
+                return UniformDatatype.INT_VEC4;
             };
         case gl.BOOL:
             return function() {
@@ -66,27 +66,27 @@ define([
             };
         case gl.BOOL_VEC2:
             return function() {
-                return UniformDatatype.BOOL_VECTOR2;
+                return UniformDatatype.BOOL_VEC2;
             };
         case gl.BOOL_VEC3:
             return function() {
-                return UniformDatatype.BOOL_VECTOR3;
+                return UniformDatatype.BOOL_VEC3;
             };
         case gl.BOOL_VEC4:
             return function() {
-                return UniformDatatype.BOOL_VECTOR4;
+                return UniformDatatype.BOOL_VEC4;
             };
         case gl.FLOAT_MAT2:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX2;
+                return UniformDatatype.FLOAT_MAT2;
             };
         case gl.FLOAT_MAT3:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX3;
+                return UniformDatatype.FLOAT_MAT3;
             };
         case gl.FLOAT_MAT4:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX4;
+                return UniformDatatype.FLOAT_MAT4;
             };
         case gl.SAMPLER_2D:
             return function() {
@@ -243,7 +243,7 @@ define([
      *
      * var mvp = sp.getAllUniforms().u_mvp;
      * console.log(mvp.getName());           // 'u_mvp'
-     * console.log(mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
+     * console.log(mvp.getDatatype().name);  // 'FLOAT_MAT4'
      * mvp.value = Matrix4.IDENTITY;
      *
      * //////////////////////////////////////////////////////////////////////
@@ -331,7 +331,7 @@ define([
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
+         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MAT4'
          */
         this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
 
