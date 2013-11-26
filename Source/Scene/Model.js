@@ -20,7 +20,6 @@ define([
         '../Core/Matrix4',
         '../Core/BoundingSphere',
         '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
         '../Core/Math',
         '../Core/Event',
         '../Core/JulianDate',
@@ -58,7 +57,6 @@ define([
         Matrix4,
         BoundingSphere,
         IndexDatatype,
-        PrimitiveType,
         CesiumMath,
         Event,
         JulianDate,
@@ -1075,16 +1073,6 @@ define([
         };
     }
 
-    var gltfPrimitiveType = {
-    };
-    gltfPrimitiveType[ModelConstants.POINTS] = PrimitiveType.POINTS;
-    gltfPrimitiveType[ModelConstants.LINES] = PrimitiveType.LINES;
-    gltfPrimitiveType[ModelConstants.LINE_LOOP] = PrimitiveType.LINE_LOOP;
-    gltfPrimitiveType[ModelConstants.LINE_STRIP] = PrimitiveType.LINE_STRIP;
-    gltfPrimitiveType[ModelConstants.TRIANGLES] = PrimitiveType.TRIANGLES;
-    gltfPrimitiveType[ModelConstants.TRIANGLE_STRIP] = PrimitiveType.TRIANGLE_STRIP;
-    gltfPrimitiveType[ModelConstants.TRIANGLE_FAN] = PrimitiveType.TRIANGLE_FAN;
-
     function createCommand(model, node, context) {
         node.czm.meshesCommands = defaultValue(node.czm.meshesCommands, {});
         var czmMeshesCommands = node.czm.meshesCommands;
@@ -1137,7 +1125,6 @@ define([
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
-                var primitiveType = gltfPrimitiveType[primitive.primitive];
                 var vertexArray = primitive.czm.vertexArray;
                 var count = ix.count;
                 var offset = (ix.byteOffset / gltfIndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
@@ -1157,7 +1144,7 @@ define([
                 var command = new DrawCommand();
                 command.boundingVolume = new BoundingSphere(); // updated in update()
                 command.modelMatrix = new Matrix4();           // computed in update()
-                command.primitiveType = primitiveType;
+                command.primitiveType = primitive.primitive;
                 command.vertexArray = vertexArray;
                 command.count = count;
                 command.offset = offset;
@@ -1183,7 +1170,7 @@ define([
                 var pickCommand = new DrawCommand();
                 pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
                 pickCommand.modelMatrix = new Matrix4();           // computed in update()
-                pickCommand.primitiveType = primitiveType;
+                pickCommand.primitiveType = primitive.primitive;
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
                 pickCommand.offset = offset;
