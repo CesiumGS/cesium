@@ -1367,7 +1367,7 @@ define([
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            if (source) {
+            if (defined(source)) {
                 throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
 
@@ -1388,12 +1388,12 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
-        if (source) {
+        if (defined(source)) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
-            if (source.arrayBufferView) {
+            if (defined(source.arrayBufferView)) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
             } else {
