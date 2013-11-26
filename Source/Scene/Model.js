@@ -418,12 +418,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var gltfIndexDatatype = {
-    };
-    gltfIndexDatatype[ModelConstants.UNSIGNED_BYTE] = IndexDatatype.UNSIGNED_BYTE;
-    gltfIndexDatatype[ModelConstants.UNSIGNED_SHORT] = IndexDatatype.UNSIGNED_SHORT;
-    gltfIndexDatatype[ModelConstants.UNSIGNED_INT] = IndexDatatype.UNSIGNED_INT;
-
     function createBuffers(model, context) {
         var loadResources = model._loadResources;
 
@@ -465,7 +459,7 @@ define([
 
                 if (!defined(bufferView.czm.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, gltfIndexDatatype[instance.type]);
+                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
                     indexBuffer.setVertexArrayDestroyable(false);
                     bufferView.czm.webglBuffer = indexBuffer;
                     // In theory, several glTF indices with different types could
@@ -1127,7 +1121,7 @@ define([
 
                 var vertexArray = primitive.czm.vertexArray;
                 var count = ix.count;
-                var offset = (ix.byteOffset / gltfIndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
+                var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.type));  // glTF has offset in bytes.  Cesium has offsets in indices
                 var uniformMap = instanceTechnique.czm.uniformMap;
                 var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
                 var rs = pass.states.czm.renderState;
