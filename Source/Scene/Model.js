@@ -501,12 +501,6 @@ define([
         }
     }
 
-    var gltfTextureWrap = {
-    };
-    gltfTextureWrap[ModelConstants.CLAMP_TO_EDGE] = TextureWrap.CLAMP_TO_EDGE;
-    gltfTextureWrap[ModelConstants.REPEAT] = TextureWrap.REPEAT;
-    gltfTextureWrap[ModelConstants.MIRRORED_REPEAT] = TextureWrap.MIRRORED_REPEAT;
-
     var gltfTextureMinificationFilter = {
     };
     gltfTextureMinificationFilter[ModelConstants.NEAREST] = TextureMinificationFilter.NEAREST;
@@ -534,8 +528,8 @@ define([
 
                     sampler.czm = {
                         sampler : context.createSampler({
-                            wrapS : gltfTextureWrap[sampler.wrapS],
-                            wrapT : gltfTextureWrap[sampler.wrapT],
+                            wrapS : sampler.wrapS,
+                            wrapT : sampler.wrapT,
                             minificationFilter : gltfTextureMinificationFilter[sampler.minFilter],
                             magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
                         })
@@ -562,10 +556,10 @@ define([
                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
                 (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR);
             var requiresNpot = mipmap ||
-                (sampler.wrapS === ModelConstants.REPEAT) ||
-                (sampler.wrapS === ModelConstants.MIRRORED_REPEAT) ||
-                (sampler.wrapT === ModelConstants.REPEAT) ||
-                (sampler.wrapT === ModelConstants.MIRRORED_REPEAT);
+                (sampler.wrapS === TextureWrap.REPEAT) ||
+                (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
+                (sampler.wrapT === TextureWrap.REPEAT) ||
+                (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
 
             var source = textureToCreate.image;
             var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);

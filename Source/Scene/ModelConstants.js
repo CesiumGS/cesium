@@ -30,10 +30,6 @@ define(function() {
         SAMPLER_2D : 0x8B5E,
         SAMPLER_CUBE : 0x8B60,
 
-        REPEAT : 0x2901,
-        CLAMP_TO_EDGE : 0x812F,
-        MIRRORED_REPEAT : 0x8370,
-
         NEAREST : 0x2600,
         LINEAR : 0x2601,
 
