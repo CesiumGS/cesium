@@ -308,7 +308,7 @@ define([
                 southVertices : southVertices,
                 eastVertices : eastVertices,
                 northVertices: northVertices,
-                childTileMask: getChildMaskForTile(that, level, x, y)
+                childTileMask: getChildMaskForTile(that, level, x, tmsY)
             });
         });
     };
