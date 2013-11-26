@@ -108,7 +108,7 @@ define([
             console.error(error);
         };
 
-        viewer.onDropError.addEventListener(function(viewerArg, name, error) {
+        viewer.dropError.addEventListener(function(viewerArg, name, error) {
             showLoadError(name, error);
         });
 
@@ -238,8 +238,8 @@ define([
                             // startOffset : 3.0,
                             // stopTime : (new JulianDate()).addSeconds(4),
                             // removeOnStop : true,
-                            speedup : 1.0,
-                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
+                            speedup : 0.5, //1.0,
+//                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
                             // reverse : true,
                             start : animationStart,
                             stop : animationStop
@@ -288,12 +288,12 @@ define([
 
 //      scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
 
-/*
+// /*
         scene.getPrimitives().add(new DebugModelMatrixPrimitive({
             modelMatrix : modelMatrix,
             scale : 100000.0,
             width : 10.0
         }));
-*/
+// */
     }
 });
