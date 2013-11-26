@@ -25,7 +25,6 @@ define([
         '../Core/JulianDate',
         '../Renderer/TextureWrap',
         '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureMagnificationFilter',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/DrawCommand',
@@ -62,7 +61,6 @@ define([
         JulianDate,
         TextureWrap,
         TextureMinificationFilter,
-        TextureMagnificationFilter,
         BufferUsage,
         BlendingState,
         DrawCommand,
@@ -501,20 +499,6 @@ define([
         }
     }
 
-    var gltfTextureMinificationFilter = {
-    };
-    gltfTextureMinificationFilter[ModelConstants.NEAREST] = TextureMinificationFilter.NEAREST;
-    gltfTextureMinificationFilter[ModelConstants.LINEAR] = TextureMinificationFilter.LINEAR;
-    gltfTextureMinificationFilter[ModelConstants.NEAREST_MIPMAP_NEAREST] = TextureMinificationFilter.NEAREST_MIPMAP_NEAREST;
-    gltfTextureMinificationFilter[ModelConstants.LINEAR_MIPMAP_NEAREST] = TextureMinificationFilter.LINEAR_MIPMAP_NEAREST;
-    gltfTextureMinificationFilter[ModelConstants.NEAREST_MIPMAP_LINEAR] = TextureMinificationFilter.NEAREST_MIPMAP_LINEAR;
-    gltfTextureMinificationFilter[ModelConstants.LINEAR_MIPMAP_LINEAR] = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
-
-    var gltfTextureMagnificationFilter = {
-    };
-    gltfTextureMagnificationFilter[ModelConstants.NEAREST] = TextureMagnificationFilter.NEAREST;
-    gltfTextureMagnificationFilter[ModelConstants.LINEAR] = TextureMagnificationFilter.LINEAR;
-
     function createSamplers(model, context) {
         var loadResources = model._loadResources;
 
@@ -530,8 +514,8 @@ define([
                         sampler : context.createSampler({
                             wrapS : sampler.wrapS,
                             wrapT : sampler.wrapT,
-                            minificationFilter : gltfTextureMinificationFilter[sampler.minFilter],
-                            magnificationFilter : gltfTextureMagnificationFilter[sampler.magFilter]
+                            minificationFilter : sampler.minFilter,
+                            magnificationFilter : sampler.magFilter
                         })
                     };
                 }
@@ -551,10 +535,10 @@ define([
             var sampler = samplers[texture.sampler];
 
             var mipmap =
-                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_NEAREST) ||
-                (sampler.minFilter === ModelConstants.NEAREST_MIPMAP_LINEAR) ||
-                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_NEAREST) ||
-                (sampler.minFilter === ModelConstants.LINEAR_MIPMAP_LINEAR);
+                (sampler.minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                (sampler.minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                (sampler.minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                (sampler.minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
             var requiresNpot = mipmap ||
                 (sampler.wrapS === TextureWrap.REPEAT) ||
                 (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
