@@ -40,7 +40,8 @@ Beta Releases
   * Renamed `CesiumViewer.onDropError` to `CesiumViewer.dropError`.
   * Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
   * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
-  * `PixelFormat` and `PrimitiveType` properties are now JavaScript numbers, not `Enumeration` instances.
+  * `PixelFormat`, `PrimitiveType`, and `IndexDatatype` properties are now JavaScript numbers, not `Enumeration` instances.
+  * Replaced `sizeInByte` properties on `IndexDatatype` with `IndexDatatype.getSizeInBytes`.
 * Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
 * Added `LinearSpline` and `QuaternionSpline`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.

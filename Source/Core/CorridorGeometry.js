@@ -125,7 +125,7 @@ define([
         var rightPos, leftPos;
         var halfLength = endPositionLength / 2;
 
-        var indices = IndexDatatype.createTypedArray(size/3, indicesLength);
+        var indices = IndexDatatype.createTypedArray(size / 3, indicesLength);
         var index = 0;
         if (addEndPositions) { // add rounded end
             leftPos = cartesian3;
@@ -586,7 +586,7 @@ define([
         var i;
         var iLength = indices.length;
         var twoLength = length + length;
-        var newIndices = IndexDatatype.createTypedArray(newPositions.length/3, iLength * 2 + twoLength * 3);
+        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, iLength * 2 + twoLength * 3);
         newIndices.set(indices);
         var index = iLength;
         for (i = 0; i < iLength; i += 3) { // bottom indices
