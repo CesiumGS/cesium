@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,22 +9,20 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var TextureMagnificationFilter = {
         /**
-         * DOC_TBA
+         * 0x2600.  Nearest magnification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2600
          */
-        NEAREST : new Enumeration(0x2600, 'NEAREST'),
+        NEAREST : 0x2600,
 
         /**
-         * DOC_TBA
+         * 0x2601.  Linear (bilinear for 2D textures) magnification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2601
          */
-        LINEAR : new Enumeration(0x2601, 'LINEAR'),
+        LINEAR : 0x2601,
 
         /**
          * DOC_TBA
