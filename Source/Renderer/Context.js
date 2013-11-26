@@ -1172,11 +1172,11 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
+        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
         }
 
-        var bytesPerIndex = indexDatatype.sizeInBytes;
+        var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
 
         var gl = this._gl;
         var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
@@ -2095,7 +2095,7 @@ define([
             count = defaultValue(count, indexBuffer.getNumberOfIndices());
 
             va._bind();
-            context._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+            context._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype(), offset);
             va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
