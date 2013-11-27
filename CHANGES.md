@@ -42,13 +42,13 @@ Beta Releases
   * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
   * `PixelFormat`, `PrimitiveType`, `IndexDatatype`, `TextureWrap`, `TextureMinificationFilter`, and `TextureMagnificationFilter` properties are now JavaScript numbers, not `Enumeration` instances.
   * Replaced `sizeInBytes` properties on `IndexDatatype` with `IndexDatatype.getSizeInBytes`.
-* Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
-* Added `LinearSpline` and `QuaternionSpline`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
-* Added `Math.nextPowerOfTwo`.
-* Added `inverse` and `determinant` to `Matrix3`.
-* Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Added `QuaternionSpline` and `LinearSpline`.
+* Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
+* Added `Matrix3.inverse` and `Matrix3.determinant`.
 * Added `ObjectOrientedBoundingBox`.
+* Added `Ellipsoid.transformPositionFromScaledSpace`.
+* Added `Math.nextPowerOfTwo`.
 
 ### b22 - 2013-11-01
 
