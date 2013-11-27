@@ -1,26 +1,16 @@
 /*global define*/
 define([
-        './Enumeration',
         './defined',
         './DeveloperError',
-        './FeatureDetection',
         './Math'
     ], function(
-        Enumeration,
         defined,
         DeveloperError,
-        FeatureDetection,
         CesiumMath) {
     "use strict";
 
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
-
     /**
-     * Enumerations for WebGL index datatypes.  These corresponds to the
+     * Constants for WebGL index datatypes.  These corresponds to the
      * <code>type</code> parameter of <a href="http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml">drawElements</a>.
      *
      * @alias IndexDatatype
@@ -28,40 +18,57 @@ define([
      */
     var IndexDatatype = {
         /**
-         * 8-bit unsigned byte enumeration corresponding to <code>UNSIGNED_BYTE</code> and the type
+         * 0x1401.  8-bit unsigned byte corresponding to <code>UNSIGNED_BYTE</code> and the type
          * of an element in <code>Uint8Array</code>.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1401
          */
-        UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE', {
-            sizeInBytes : Uint8Array.BYTES_PER_ELEMENT
-        }),
+        UNSIGNED_BYTE : 0x1401,
 
         /**
-         * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
+         * 0x1403.  16-bit unsigned short corresponding to <code>UNSIGNED_SHORT</code> and the type
          * of an element in <code>Uint16Array</code>.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1403
          */
-        UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT', {
-            sizeInBytes : Uint16Array.BYTES_PER_ELEMENT
-        }),
+        UNSIGNED_SHORT : 0x1403,
 
         /**
-         * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
+         * 0x1405.  32-bit unsigned int corresponding to <code>UNSIGNED_INT</code> and the type
          * of an element in <code>Uint32Array</code>.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1405
          */
-        UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
-            sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
-        })
+        UNSIGNED_INT : 0x1405
+    };
+
+    /**
+     * Returns the size, in bytes, of the corresponding datatype.
+     *
+     * @param {IndexDatatype} indexDatatype The index datatype to get the size of.
+     *
+     * @returns {Number} The size in bytes.
+     *
+     * @exception {DeveloperError} indexDatatype is required and must be a valid IndexDatatype constant.
+     *
+     * @example
+     * // Returns 2
+     * var size = IndexDatatype.getSizeInBytes(IndexDatatype.UNSIGNED_SHORT);
+     */
+    IndexDatatype.getSizeInBytes = function(indexDatatype) {
+        switch(indexDatatype) {
+            case IndexDatatype.UNSIGNED_BYTE:
+                return Uint8Array.BYTES_PER_ELEMENT;
+            case IndexDatatype.UNSIGNED_SHORT:
+                return Uint16Array.BYTES_PER_ELEMENT;
+            case IndexDatatype.UNSIGNED_INT:
+                return Uint32Array.BYTES_PER_ELEMENT;
+        }
+
+        throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
     };
 
     /**
@@ -69,18 +76,18 @@ define([
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
      *
-     * @returns {Boolean} <code>true</code> if the provided index datatype is a valid enumeration value; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
      *
      * @example
      * if (!IndexDatatype.validate(indexDatatype)) {
-     *   throw new DeveloperError('indexDatatype must be a valid enumeration value.');
+     *   throw new DeveloperError('indexDatatype must be a valid value.');
      * }
      */
     IndexDatatype.validate = function(indexDatatype) {
-        return defined(indexDatatype) && defined(indexDatatype.value) &&
-               (indexDatatype.value === IndexDatatype.UNSIGNED_BYTE.value ||
-                indexDatatype.value === IndexDatatype.UNSIGNED_SHORT.value ||
-                indexDatatype.value === IndexDatatype.UNSIGNED_INT.value);
+        return defined(indexDatatype) &&
+               (indexDatatype === IndexDatatype.UNSIGNED_BYTE ||
+                indexDatatype === IndexDatatype.UNSIGNED_SHORT ||
+                indexDatatype === IndexDatatype.UNSIGNED_INT);
     };
 
     /**
