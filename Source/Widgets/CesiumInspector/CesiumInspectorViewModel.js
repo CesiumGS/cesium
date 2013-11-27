@@ -6,6 +6,7 @@ define([
         '../../Core/BoundingRectangle',
         '../../Scene/PerformanceDisplay',
         '../../Scene/DebugModelMatrixPrimitive',
+        '../../Scene/TileCoordinatesImageryProvider',
         '../../Core/Color',
         '../createCommand',
         '../../ThirdParty/knockout'
@@ -16,6 +17,7 @@ define([
         BoundingRectangle,
         PerformanceDisplay,
         DebugModelMatrixPrimitive,
+        TileCoordinatesImageryProvider,
         Color,
         createCommand,
         knockout) {
@@ -36,7 +38,32 @@ define([
         return str;
     }
 
-    var br = new BoundingRectangle(10, 300, 100, 75);
+    function setFilter(viewModel) {
+        if (viewModel.filterPrimitive) {
+            viewModel._scene.debugCommandFilter = function(command) {
+                return command.owner === viewModel._primitive.primitive;
+            };
+        } else {
+            viewModel._scene.debugCommandFilter = undefined;
+        }
+    }
+
+    function setRefFrame(viewModel) {
+        if (viewModel.showRefFrame) {
+            var modelMatrix = viewModel._primitive.primitive.modelMatrix;
+            viewModel._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
+            viewModel._scene.getPrimitives().add(viewModel._modelMatrixPrimitive);
+        } else if (defined(viewModel._modelMatrixPrimitive)){
+            viewModel._scene.getPrimitives().remove(viewModel._modelMatrixPrimitive);
+            viewModel._modelMatrixPrimitive = undefined;
+        }
+    }
+
+    function setBoundingSphere(viewModel) {
+        viewModel._primitive.primitive.debugShowBoundingVolume = viewModel.showBoundingSphere;
+    }
+
+    var br = new BoundingRectangle(210, 10, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     /**
@@ -56,9 +83,14 @@ define([
         var that = this;
 
         this._scene = scene;
+        this._primitive = undefined;
+        this._modelMatrixPrimitive = undefined;
+
         var frustumInterval;
 
-        this.frustumStatText = knockout.observable();
+        this.frustumStatText = '';
+        this.tileText = '';
+
         /**
          * Gets or sets whether the imagery selection drop-down is currently visible.
          * @type {Boolean}
@@ -69,9 +101,13 @@ define([
         this.showPerformance = false;
         this.showBoundingSphere = false;
         this.showRefFrame = false;
-        this.pickPrimitive = false;
+        this.wireframe = false;
+        this.filterPrimitive = false;
+        this.pickPrimitiveActive = false;
+        this.pickTileActive = false;
+        this.hasPickedPrimitive = false;
 
-        knockout.track(this, ['dropDownVisible', 'showFrustums', 'frustumStatText']);
+        knockout.track(this, ['dropDownVisible', 'showFrustums', 'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive', 'tileText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
@@ -107,75 +143,69 @@ define([
             return true;
         });
 
-        var pickBoundingSphere;
-        var pickedPrimitive;
         this._toggleBoundingSphere = createCommand(function() {
             that.showBoundingSphere = !that.showBoundingSphere;
-            if (that.showBoundingSphere) {
-                pickBoundingSphere = function(e) {
-                    var newPick = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(newPick) && newPick !== pickedPrimitive) {
-                        if (defined(pickedPrimitive)) {
-                            pickedPrimitive.primitive.debugShowBoundingVolume = false;
-                        }
-                        pickedPrimitive = newPick;
-                        pickedPrimitive.primitive.debugShowBoundingVolume = true;
-                    }
-                };
-                document.addEventListener('mousedown', pickBoundingSphere, true);
-            } else {
-                if (defined(pickedPrimitive)) {
-                    pickedPrimitive.primitive.debugShowBoundingVolume = false;
-                }
-                document.removeEventListener('mousedown', pickBoundingSphere, true);
-            }
-
+            setBoundingSphere(that);
             return true;
         });
 
-        var modelMatrix;
-        var modelMatrixPrimitive;
-        var pickRefFrame;
         this._toggleRefFrame = createCommand(function() {
             that.showRefFrame = !that.showRefFrame;
-            if (that.showRefFrame) {
-                pickRefFrame = function(e) {
-                    var newrfPick = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(newrfPick)) {
-                        modelMatrix = newrfPick.primitive.modelMatrix;
-                        if (defined(modelMatrixPrimitive)) {
-                            scene.getPrimitives().remove(modelMatrixPrimitive);
-                        }
-                        modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
-                        that._scene.getPrimitives().add(modelMatrixPrimitive);
-                    }
-                };
-                document.addEventListener('mousedown', pickRefFrame, true);
-            } else {
-                that._scene.getPrimitives().remove(modelMatrixPrimitive);
-                document.removeEventListener('mousedown', pickRefFrame, true);
+            setRefFrame(that);
+            return true;
+        });
+
+        this._toggleFilterPrimitive = createCommand(function() {
+            that.filterPrimitive = !that.filterPrimitive;
+            setFilter(that);
+            return true;
+        });
+
+        var centralBody = this._scene.getPrimitives().getCentralBody();
+        this._toggleWireframe = createCommand(function() {
+            that.wireframe = !that.wireframe;
+            centralBody._surface._debug.wireframe = that.wireframe;
+            return true;
+        });
+
+        this._toggleSuspendUpdates = createCommand(function() {
+            that.suspendUpdates = !that.suspendUpdates;
+            centralBody._surface._debug.suspendLodUpdate = that.suspendUpdates;
+//            if (!that.suspendUpdates) {
+  //              renderSelectedTileOnlyCheckbox.set("checked", false);
+    //        }
+            return true;
+        });
+
+        var tileBoundariesLayer;
+        this._toggleShowTileCoords = createCommand(function() {
+            that.showTileCoords = !that.showTileCoords;
+            if (that.showTileCoords && !defined(tileBoundariesLayer)) {
+                tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new TileCoordinatesImageryProvider({
+                    tilingScheme : centralBody.terrainProvider.getTilingScheme()
+                }));
+            } else if (!that.showTileCoords && defined(tileBoundariesLayer)) {
+                centralBody.getImageryLayers().remove(tileBoundariesLayer);
+                tileBoundariesLayer = undefined;
             }
             return true;
         });
 
-        var pickPickPrimitive;
-        this._togglePickPrimitive = createCommand(function() {
-            that.pickPrimitive = !that.pickPrimitive;
-            if (that.pickPrimitive) {
-                pickPickPrimitive = function(e) {
-                    var np = scene.pick({x: e.clientX, y: e.clientY});
-                    if (defined(np)) {
-                        that._scene.debugCommandFilter = function(command) {
-                            return command.owner === np.primitive;
-                        };
-                    }
-                };
-                document.addEventListener('mousedown', pickPickPrimitive, true);
-            } else {
-                that._scene.debugCommandFilter = undefined;
-                document.removeEventListener('mousedown', pickPickPrimitive, true);
-            }
-            return true;
+        this._pickPrimitive = createCommand(function() {
+            that.pickPrimitiveActive = true;
+            var pickPrimitive = function(e) {
+                var newPick = scene.pick({x: e.clientX, y: e.clientY});
+                if (defined(newPick)) {
+                    that.primitive = newPick;
+                }
+                document.removeEventListener('mousedown', pickPrimitive, true);
+                that.pickPrimitiveActive = false;
+            };
+            document.addEventListener('mousedown', pickPrimitive, true);
+        });
+
+        this._pickTile = createCommand(function() {
+
         });
 
     };
@@ -217,9 +247,70 @@ define([
             }
         },
 
-        togglePickPrimitive : {
+        toggleFilterPrimitive : {
             get : function() {
-                return this._togglePickPrimitive;
+                return this._toggleFilterPrimitive;
+            }
+        },
+
+        toggleWireframe : {
+            get : function() {
+                return this._toggleWireframe;
+            }
+        },
+
+        toggleSuspendUpdates : {
+            get : function() {
+                return this._toggleSuspendUpdates;
+            }
+        },
+
+        toggleShowTileCoords : {
+            get : function() {
+                return this._toggleShowTileCoords;
+            }
+        },
+
+        pickPrimitive : {
+            get : function() {
+                return this._pickPrimitive;
+            }
+        },
+
+        pickTile : {
+            get : function() {
+                return this._pickTile;
+            }
+        },
+
+        primitive: {
+            set : function(newPrimitive) {
+                var oldPrimitive = this._primitive;
+                if (newPrimitive !== oldPrimitive) {
+                    if (!defined(oldPrimitive)) {
+                        this.hasPickedPrimitive = true;
+                    } else {
+                        oldPrimitive.primitive.debugShowBoundingVolume = false;
+                    }
+                    this._scene.debugCommandFilter = undefined;
+                    if (defined(this._modelMatrixPrimitive)) {
+                        this._scene.getPrimitives().remove(this._modelMatrixPrimitive);
+                        this._modelMatrixPrimitive = undefined;
+                    }
+
+                    this._primitive = newPrimitive;
+                    newPrimitive.primitive.show = false;
+                    setTimeout(function(){
+                        newPrimitive.primitive.show = true;
+                    }, 50);
+                    setBoundingSphere(this);
+                    setRefFrame(this);
+                    setFilter(this);
+                }
+            },
+
+            get : function() {
+                return this._primitive;
             }
         }
     });

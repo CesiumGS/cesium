@@ -66,21 +66,20 @@ define([
 
         var panel = document.createElement('div');
         this._panel = panel;
-        panel.className = 'cesium-cesiumInspectorPanel-dropDown';
+        panel.className = 'cesium-cesiumInspector-dropDown';
         element.appendChild(panel);
 
+        // General
         var general = document.createElement('div');
         general.textContent = 'General';
         panel.appendChild(general);
 
         var debugShowFrustums = document.createElement('div');
-        this._debugShowFrustums = debugShowFrustums;
         panel.appendChild(debugShowFrustums);
         var frustumStats = document.createElement('div');
-        this._frustumStats = frustumStats;frustumStats.className = 'cesium-cesiumInspectorPanel-frustumStats';
+        frustumStats.className = 'cesium-cesiumInspector-frustumStats';
         frustumStats.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : showFrustums, "cesium-cesiumInspector-hide" : !showFrustums}, html: frustumStatText');
         var frustumsCheckbox = document.createElement('input');
-        this._frustumsCheckbox = frustumsCheckbox;
         frustumsCheckbox.type = 'checkbox';
         frustumsCheckbox.setAttribute('data-bind', 'click: toggleFrustums');
         debugShowFrustums.appendChild(frustumsCheckbox);
@@ -88,7 +87,6 @@ define([
         debugShowFrustums.appendChild(frustumStats);
 
         var performanceDisplay = document.createElement('div');
-        this._performanceDisplay = performanceDisplay;
         panel.appendChild(performanceDisplay);
         var pdCheckbox = document.createElement('input');
         pdCheckbox.type = 'checkbox';
@@ -96,25 +94,31 @@ define([
         performanceDisplay.appendChild(pdCheckbox);
         performanceDisplay.appendChild(document.createTextNode('Performance Display'));
 
+        // Primitives
         var prim = document.createElement('div');
         prim.innerHTML = '<br>Primitives';
         panel.appendChild(prim);
 
+        var pickPrimitiveButton = document.createElement('input');
+        pickPrimitiveButton.type = 'button';
+        pickPrimitiveButton.value = 'Pick a primitive';
+        pickPrimitiveButton.className = 'cesium-cesiumInspector-pickButton';
+        pickPrimitiveButton.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickPrimitiveActive}, click: pickPrimitive');
+        panel.appendChild(pickPrimitiveButton);
+
         var debugSphere = document.createElement('div');
-        this._performanceDisplay = debugSphere;
         panel.appendChild(debugSphere);
         var bsCheckbox = document.createElement('input');
         bsCheckbox.type = 'checkbox';
-        bsCheckbox.setAttribute('data-bind', 'click: toggleBoundingSphere');
+        bsCheckbox.setAttribute('data-bind', 'click: toggleBoundingSphere, enable: hasPickedPrimitive');
         debugSphere.appendChild(bsCheckbox);
         debugSphere.appendChild(document.createTextNode('Show bounding sphere'));
 
         var refFrame = document.createElement('div');
-        this._refFrame = refFrame;
         panel.appendChild(refFrame);
         var rfCheckbox = document.createElement('input');
         rfCheckbox.type = 'checkbox';
-        rfCheckbox.setAttribute('data-bind', 'click: toggleRefFrame');
+        rfCheckbox.setAttribute('data-bind', 'click: toggleRefFrame, enable: hasPickedPrimitive');
         refFrame.appendChild(rfCheckbox);
         refFrame.appendChild(document.createTextNode('Show reference frame'));
 
@@ -123,9 +127,51 @@ define([
         panel.appendChild(primitiveOnly);
         var primitiveOnlyCheckbox = document.createElement('input');
         primitiveOnlyCheckbox.type = 'checkbox';
-        primitiveOnlyCheckbox.setAttribute('data-bind', 'click: togglePickPrimitive');
+        primitiveOnlyCheckbox.setAttribute('data-bind', 'click: toggleFilterPrimitive, enable: hasPickedPrimitive');
         primitiveOnly.appendChild(primitiveOnlyCheckbox);
         primitiveOnly.appendChild(document.createTextNode('Show only this primitive'));
+
+        // Terrain
+        var terrain = document.createElement('div');
+        terrain.innerHTML = '<br>Terrain';
+        panel.appendChild(terrain);
+
+        var wireframe = document.createElement('div');
+        panel.appendChild(wireframe);
+        var wCheckbox = document.createElement('input');
+        wCheckbox.type = 'checkbox';
+        wCheckbox.setAttribute('data-bind', 'click: toggleWireframe');
+        wireframe.appendChild(wCheckbox);
+        wireframe.appendChild(document.createTextNode('Wireframe'));
+
+        var suspendUpdates = document.createElement('div');
+        panel.appendChild(suspendUpdates);
+        var upCheckbox = document.createElement('input');
+        upCheckbox.type = 'checkbox';
+        upCheckbox.setAttribute('data-bind', 'click: toggleSuspendUpdates');
+        suspendUpdates.appendChild(upCheckbox);
+        suspendUpdates.appendChild(document.createTextNode('Suspend LOD update'));
+
+        var tileCoords = document.createElement('div');
+        panel.appendChild(tileCoords);
+        var coordCheck = document.createElement('input');
+        coordCheck.type = 'checkbox';
+        coordCheck.setAttribute('data-bind', 'click: toggleShowTileCoords');
+        tileCoords.appendChild(coordCheck);
+        tileCoords.appendChild(document.createTextNode('Show tile coordinates'));
+
+        var pickTileButton = document.createElement('input');
+        pickTileButton.type = 'button';
+        pickTileButton.value = 'Pick a tile';
+        pickTileButton.className = 'cesium-cesiumInspector-pickButton';
+        pickTileButton.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-pickButtonHighlight" : pickTileActive}, click: pickTile');
+        panel.appendChild(pickTileButton);
+        var tileInfo = document.createElement('div');
+        panel.appendChild(tileInfo);
+        tileInfo.textContent = 'Tile: ';
+        var tileText = document.createElement('span');
+        tileInfo.appendChild(tileText);
+        tileText.setAttribute('data-bind', 'html: tileText');
 
         knockout.applyBindings(viewModel, this._element);
     };

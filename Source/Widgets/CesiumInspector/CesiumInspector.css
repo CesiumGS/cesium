@@ -15,7 +15,7 @@
     overflow: hidden;
 }
 
-.cesium-cesiumInspector input, .cesium-cesiumInspector-button{
+.cesium-cesiumInspector input:enabled, .cesium-cesiumInspector-button{
     cursor: pointer;
 }
 
@@ -41,15 +41,39 @@
     height: 0;
 }
 
-.cesium-cesiumInspectorPanel-dropDown {
+.cesium-cesiumInspector-dropDown {
     margin: 5px 0;
     font-family: sans-serif;
     font-size: 10pt;
     width: 170px;
 }
 
-.cesium-cesiumInspectorPanel-frustumStats {
+.cesium-cesiumInspector-frustumStats {
     padding-left: 10px;
     padding: 5px;
     background-color: rgba(80, 80, 80, 0.75);
+}
+
+.cesium-cesiumInspector-pickButton {
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
+    color: #edffff;
+    border-radius: 5px;
+    padding: 4px 12px;
+    margin: 0 3px;
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.cesium-cesiumInspector-pickButton:focus {
+     outline: none;
+}
+
+.cesium-cesiumInspector-pickButton:active, .cesium-cesiumInspector-pickButtonHighlight {
+    color: #000;  /* For text buttons */
+    background: #adf;
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff;
 }

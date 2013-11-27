@@ -728,7 +728,7 @@ define([
                 this.geometryInstances = undefined;
             }
 
-            this._geomtries = undefined;
+            this._geometries = undefined;
             this._createdGeometries = undefined;
             this._state = PrimitiveState.COMPLETE;
         }
