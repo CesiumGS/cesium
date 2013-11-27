@@ -234,7 +234,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var cesiumInspectorContainer = document.createElement('div');
             cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';
             viewerContainer.appendChild(cesiumInspectorContainer);
-            cesiumInspector = new CesiumInspector(cesiumInspectorContainer, cesiumWidget.scene);
+            cesiumInspector = new CesiumInspector(cesiumInspectorContainer, cesiumWidget.scene, cesiumWidget.canvas);
         }
 
         //Geocoder

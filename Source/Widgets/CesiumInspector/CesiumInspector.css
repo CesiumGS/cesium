@@ -15,12 +15,21 @@
     overflow: hidden;
 }
 
+.cesium-cesiumInspector-button {
+    text-align: center;
+}
+
+.cesium-cesiumInspector-visible .cesium-cesiumInspector-button {
+    border-bottom: 1px solid #aaa;
+    padding-bottom: 3px;
+}
+
 .cesium-cesiumInspector input:enabled, .cesium-cesiumInspector-button{
     cursor: pointer;
 }
 
 .cesium-cesiumInspector-visible {
-    width: 170px;
+    width: 185px;
     height: auto;
 }
 
@@ -45,7 +54,7 @@
     margin: 5px 0;
     font-family: sans-serif;
     font-size: 10pt;
-    width: 170px;
+    width: 185px;
 }
 
 .cesium-cesiumInspector-frustumStats {
@@ -60,11 +69,11 @@
     color: #edffff;
     border-radius: 5px;
     padding: 4px 12px;
-    margin: 0 3px;
     cursor: pointer;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+    margin: 0 auto;
 }
 
 .cesium-cesiumInspector-pickButton:focus {
@@ -76,4 +85,24 @@
     background: #adf;
     border-color: #fff;
     box-shadow: 0 0 8px #fff;
+}
+
+.cesium-cesiumInspector-center {
+    text-align: center;
+}
+
+.cesium-cesiumInspector-sectionHeader {
+    font-weight: bold;
+    font-size: 12pt;
+}
+
+.cesium-cesiumInspector-pickSection {
+    border: 1px solid #aaa;
+    border-radius: 5px;
+    padding: 3px;
+    margin-bottom: 5px;
+}
+
+.cesium-cesiumInspector-section {
+    margin-bottom: 15px;
 }

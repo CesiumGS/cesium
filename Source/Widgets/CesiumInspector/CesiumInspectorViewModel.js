@@ -38,32 +38,7 @@ define([
         return str;
     }
 
-    function setFilter(viewModel) {
-        if (viewModel.filterPrimitive) {
-            viewModel._scene.debugCommandFilter = function(command) {
-                return command.owner === viewModel._primitive.primitive;
-            };
-        } else {
-            viewModel._scene.debugCommandFilter = undefined;
-        }
-    }
-
-    function setRefFrame(viewModel) {
-        if (viewModel.showRefFrame) {
-            var modelMatrix = viewModel._primitive.primitive.modelMatrix;
-            viewModel._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
-            viewModel._scene.getPrimitives().add(viewModel._modelMatrixPrimitive);
-        } else if (defined(viewModel._modelMatrixPrimitive)){
-            viewModel._scene.getPrimitives().remove(viewModel._modelMatrixPrimitive);
-            viewModel._modelMatrixPrimitive = undefined;
-        }
-    }
-
-    function setBoundingSphere(viewModel) {
-        viewModel._primitive.primitive.debugShowBoundingVolume = viewModel.showBoundingSphere;
-    }
-
-    var br = new BoundingRectangle(210, 10, 100, 75);
+    var br = new BoundingRectangle(220, 5, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     /**
@@ -75,7 +50,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var CesiumInspectorViewModel = function(scene) {
+    var CesiumInspectorViewModel = function(scene, canvas) {
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
         }
@@ -83,8 +58,11 @@ define([
         var that = this;
 
         this._scene = scene;
+        this._canvas = canvas;
         this._primitive = undefined;
+        this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
+        this._performanceDisplay = undefined;
 
         var frustumInterval;
 
@@ -106,15 +84,19 @@ define([
         this.pickPrimitiveActive = false;
         this.pickTileActive = false;
         this.hasPickedPrimitive = false;
+        this.hasPickedTile = false;
+        this.tileBoundingSphere = false;
+        this.filterTile = false;
+        this.suspendUpdates = false;
+        this.showTileCoords = false;
 
-        knockout.track(this, ['dropDownVisible', 'showFrustums', 'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive', 'tileText']);
+        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'showFrustums', 'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive', 'hasPickedTile', 'tileText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
 
-        this._toggleFrustums = createCommand(function(){
-            that.showFrustums = !that.showFrustums;
+        this._toggleFrustums = createCommand(function() {
             if (that.showFrustums) {
                 that._scene.debugShowFrustums = true;
                 that._frustumInterval = setInterval(function() {
@@ -127,59 +109,64 @@ define([
             return true;
         });
 
-        var performanceDisplay;
-        this._togglePerformance = createCommand(function(){
-            that.showPerformance = !that.showPerformance;
+        this._togglePerformance = createCommand(function() {
             if (that.showPerformance) {
-                performanceDisplay = new PerformanceDisplay({
+                that._performanceDisplay = new PerformanceDisplay({
                     rectangle : br,
                     backgroundColor: bc,
                     font: "12px arial,sans-serif"
                 });
-                that._scene.getPrimitives().add(performanceDisplay);
+                that._scene.getPrimitives().add(that._performanceDisplay);
             } else {
-                that._scene.getPrimitives().remove(performanceDisplay);
+                that._scene.getPrimitives().remove(that._performanceDisplay);
             }
             return true;
         });
 
         this._toggleBoundingSphere = createCommand(function() {
-            that.showBoundingSphere = !that.showBoundingSphere;
-            setBoundingSphere(that);
+            that._primitive.primitive.debugShowBoundingVolume = that.showBoundingSphere;
             return true;
         });
 
         this._toggleRefFrame = createCommand(function() {
-            that.showRefFrame = !that.showRefFrame;
-            setRefFrame(that);
+            if (that.showRefFrame) {
+                var modelMatrix = that._primitive.primitive.modelMatrix;
+                that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
+                that._scene.getPrimitives().add(that._modelMatrixPrimitive);
+            } else if (defined(that._modelMatrixPrimitive)){
+                that._scene.getPrimitives().remove(that._modelMatrixPrimitive);
+                that._modelMatrixPrimitive = undefined;
+            }
             return true;
         });
 
         this._toggleFilterPrimitive = createCommand(function() {
-            that.filterPrimitive = !that.filterPrimitive;
-            setFilter(that);
+            if (that.filterPrimitive) {
+                that._scene.debugCommandFilter = function(command) {
+                    return command.owner === that._primitive.primitive;
+                };
+            } else {
+                that._scene.debugCommandFilter = undefined;
+            }
             return true;
         });
 
         var centralBody = this._scene.getPrimitives().getCentralBody();
         this._toggleWireframe = createCommand(function() {
-            that.wireframe = !that.wireframe;
             centralBody._surface._debug.wireframe = that.wireframe;
             return true;
         });
 
         this._toggleSuspendUpdates = createCommand(function() {
-            that.suspendUpdates = !that.suspendUpdates;
             centralBody._surface._debug.suspendLodUpdate = that.suspendUpdates;
-//            if (!that.suspendUpdates) {
-  //              renderSelectedTileOnlyCheckbox.set("checked", false);
-    //        }
+            if (!that.suspendUpdates) {
+                that.filterTile = false;
+            }
             return true;
         });
 
         var tileBoundariesLayer;
         this._toggleShowTileCoords = createCommand(function() {
-            that.showTileCoords = !that.showTileCoords;
             if (that.showTileCoords && !defined(tileBoundariesLayer)) {
                 tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new TileCoordinatesImageryProvider({
                     tilingScheme : centralBody.terrainProvider.getTilingScheme()
@@ -191,23 +178,96 @@ define([
             return true;
         });
 
-        this._pickPrimitive = createCommand(function() {
-            that.pickPrimitiveActive = true;
-            var pickPrimitive = function(e) {
-                var newPick = scene.pick({x: e.clientX, y: e.clientY});
-                if (defined(newPick)) {
-                    that.primitive = newPick;
-                }
-                document.removeEventListener('mousedown', pickPrimitive, true);
-                that.pickPrimitiveActive = false;
-            };
-            document.addEventListener('mousedown', pickPrimitive, true);
+        this._toggleTileBoundingSphere = createCommand(function() {
+            if (that.tileBoundingSphere) {
+                centralBody._surface._debug.boundingSphereTile = that._tile;
+            } else {
+                centralBody._surface._debug.boundingSphereTile = undefined;
+            }
+            return true;
         });
+
+        this._toggleRenderTile = createCommand(function() {
+            if (!that.filterTile) {
+                that.suspendUpdates = false;
+                that.toggleSuspendUpdates();
+            } else {
+                that.suspendUpdates = true;
+                that.toggleSuspendUpdates();
+
+                centralBody._surface._tilesToRenderByTextureCount = [];
+
+                if (defined(that._tile)) {
+                    var readyTextureCount = 0;
+                    var tileImageryCollection = that._tile.imagery;
+                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                        var tileImagery = tileImageryCollection[i];
+                        if (defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
+                            ++readyTextureCount;
+                        }
+                    }
+
+                    centralBody._surface._tilesToRenderByTextureCount[readyTextureCount] = [that._tile];
+                }
+            }
+            return true;
+        });
+
+        var pickPrimitive = function(e) {
+            var newPick = scene.pick({x: e.clientX, y: e.clientY});
+            if (defined(newPick)) {
+                that.primitive = newPick;
+            }
+            canvas.removeEventListener('mousedown', pickPrimitive, false);
+            that.pickPrimitiveActive = false;
+        };
+        this._pickPrimitive = createCommand(function() {
+            that.pickPrimitiveActive = !that.pickPrimitiveActive;
+            if (that.pickPrimitiveActive) {
+                canvas.addEventListener('mousedown', pickPrimitive, false);
+            } else {
+                canvas.removeEventListener('mousedown', pickPrimitive, false);
+            }
+        });
+
+        var selectTile = function (e) {
+            var selectedTile;
+            var ellipsoid = centralBody.getEllipsoid();
+            var cartesian = scene.getCamera().controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
+
+            if (defined(cartesian)) {
+                var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+                var tilesRendered = centralBody._surface._tilesToRenderByTextureCount;
+                for (var textureCount = 0; !selectedTile && textureCount < tilesRendered.length; ++textureCount) {
+                    var tilesRenderedByTextureCount = tilesRendered[textureCount];
+                    if (!defined(tilesRenderedByTextureCount)) {
+                        continue;
+                    }
+
+                    for (var tileIndex = 0; !selectedTile && tileIndex < tilesRenderedByTextureCount.length; ++tileIndex) {
+                        var tile = tilesRenderedByTextureCount[tileIndex];
+                        if (tile.extent.contains(cartographic)) {
+                            selectedTile = tile;
+                        }
+                    }
+                }
+            }
+
+            that.tile = selectedTile;
+
+            canvas.removeEventListener('mousedown', selectTile, false);
+            that.pickTileActive = false;
+        };
 
         this._pickTile = createCommand(function() {
+            that.pickTileActive = !that.pickTileActive;
 
+            if (that.pickTileActive) {
+                canvas.addEventListener('mousedown', selectTile, false);
+            } else {
+                canvas.removeEventListener('mousedown', selectTile, false);
+            }
         });
-
     };
 
     defineProperties(CesiumInspectorViewModel.prototype, {
@@ -271,6 +331,18 @@ define([
             }
         },
 
+        toggleTileBoundingSphere : {
+            get : function() {
+                return this._toggleTileBoundingSphere;
+            }
+        },
+
+        toggleRenderTile : {
+            get : function() {
+                return this._toggleRenderTile;
+            }
+        },
+
         pickPrimitive : {
             get : function() {
                 return this._pickPrimitive;
@@ -287,9 +359,8 @@ define([
             set : function(newPrimitive) {
                 var oldPrimitive = this._primitive;
                 if (newPrimitive !== oldPrimitive) {
-                    if (!defined(oldPrimitive)) {
-                        this.hasPickedPrimitive = true;
-                    } else {
+                    this.hasPickedPrimitive = true;
+                    if (defined(oldPrimitive)) {
                         oldPrimitive.primitive.debugShowBoundingVolume = false;
                     }
                     this._scene.debugCommandFilter = undefined;
@@ -297,20 +368,41 @@ define([
                         this._scene.getPrimitives().remove(this._modelMatrixPrimitive);
                         this._modelMatrixPrimitive = undefined;
                     }
-
                     this._primitive = newPrimitive;
                     newPrimitive.primitive.show = false;
                     setTimeout(function(){
                         newPrimitive.primitive.show = true;
                     }, 50);
-                    setBoundingSphere(this);
-                    setRefFrame(this);
-                    setFilter(this);
+                    this.toggleBoundingSphere();
+                    this.toggleRefFrame();
+                    this.toggleFilterPrimitive();
                 }
             },
 
             get : function() {
                 return this._primitive;
+            }
+        },
+
+        tile: {
+            set : function(newTile) {
+                if (defined(newTile)) {
+                    this.hasPickedTile = true;
+                    var oldTile = this._tile;
+                    if (newTile !== oldTile) {
+                        this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
+                        this.tileText += '<br>SW corner: ' + newTile.extent.west + ', ' + newTile.extent.south;
+                        this.tileText += '<br>NE corner: ' + newTile.extent.east + ', ' + newTile.extent.north;
+                    }
+                    this._tile = newTile;
+                } else {
+                    this.hasPickedTile = false;
+                    this._tile = undefined;
+                }
+            },
+
+            get : function() {
+                return this._tile;
             }
         }
     });
