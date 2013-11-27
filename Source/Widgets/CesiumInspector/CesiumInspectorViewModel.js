@@ -64,81 +64,74 @@ define([
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
 
-        var frustumInterval;
+        this.frustums = false;
+        this.performance = false;
+        this.primitiveBoundingSphere = false;
+        this.primitiveRefFrame = false;
+        this.filterPrimitive = false;
+        this.tileBoundingSphere = false;
+        this.filterTile = false;
+        this.wireframe = false;
+        this.suspendUpdates = false;
+        this.tileCoords = false;
 
         this.frustumStatText = '';
         this.tileText = '';
 
-        /**
-         * Gets or sets whether the imagery selection drop-down is currently visible.
-         * @type {Boolean}
-         * @default false
-         */
-        this.dropDownVisible = false;
-        this.showFrustums = false;
-        this.showPerformance = false;
-        this.showBoundingSphere = false;
-        this.showRefFrame = false;
-        this.wireframe = false;
-        this.filterPrimitive = false;
-        this.pickPrimitiveActive = false;
-        this.pickTileActive = false;
         this.hasPickedPrimitive = false;
         this.hasPickedTile = false;
-        this.tileBoundingSphere = false;
-        this.filterTile = false;
-        this.suspendUpdates = false;
-        this.showTileCoords = false;
 
-        this.generalShow = true;
-        this.generalText = '-';
+        this.pickPrimitiveActive = false;
+        this.pickTileActive = false;
 
-        this.primitivesShow = false;
-        this.primitiveText = '+';
+        this.dropDownVisible = true;
+        this.generalVisible = true;
+        this.primitivesVisible = false;
+        this.terrainVisible = false;
 
-        this.terrainShow = false;
-        this.terrainText = '+';
+        this.generalSwitchText = '-';
+        this.primitivesSwitchText = '+';
+        this.terrainSwitchText = '+';
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'showFrustums',
+        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
                               'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
-                              'hasPickedTile', 'tileText', 'generalShow', 'generalText',
-                              'primitivesShow', 'primitiveText', 'terrainShow', 'terrainText']);
+                              'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
+                              'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
 
         this._toggleGeneral = createCommand(function() {
-            that.generalShow = ! that.generalShow;
-            that.generalText = that.generalShow ? '-' : '+';
+            that.generalVisible = ! that.generalVisible;
+            that.generalSwitchText = that.generalVisible ? '-' : '+';
         });
 
         this._togglePrimitives = createCommand(function() {
-            that.primitivesShow = ! that.primitivesShow;
-            that.primitiveText = that.primitivesShow ? '-' : '+';
+            that.primitivesVisible = ! that.primitivesVisible;
+            that.primitivesSwitchText = that.primitivesVisible ? '-' : '+';
         });
 
         this._toggleTerrain = createCommand(function() {
-            that.terrainShow = ! that.terrainShow;
-            that.terrainText = that.terrainShow ? '-' : '+';
+            that.terrainVisible = ! that.terrainVisible;
+            that.terrainSwitchText = that.terrainVisible ? '-' : '+';
         });
 
-
-        this._toggleFrustums = createCommand(function() {
-            if (that.showFrustums) {
+        this._showFrustums = createCommand(function() {
+            if (that.frustums) {
                 that._scene.debugShowFrustums = true;
                 that._frustumInterval = setInterval(function() {
                     that.frustumStatText = frustumStatsToString(scene.debugFrustumStatistics);
                 }, 100);
             } else {
                 clearInterval(that._frustumInterval);
-                that._scene.debugShowFrustums = false;
+                that._scenfrustumsrustums = false;
             }
             return true;
         });
 
-        this._togglePerformance = createCommand(function() {
-            if (that.showPerformance) {
+        this._showPerformance = createCommand(function() {
+            if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
                     rectangle : br,
                     backgroundColor: bc,
@@ -151,13 +144,13 @@ define([
             return true;
         });
 
-        this._toggleBoundingSphere = createCommand(function() {
-            that._primitive.primitive.debugShowBoundingVolume = that.showBoundingSphere;
+        this._showPrimitiveBoundingSphere = createCommand(function() {
+            that._primitive.primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
             return true;
         });
 
-        this._toggleRefFrame = createCommand(function() {
-            if (that.showRefFrame) {
+        this._showPrimitiveRefFrame = createCommand(function() {
+            if (that.primitiveRefFrame) {
                 var modelMatrix = that._primitive.primitive.modelMatrix;
                 that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
                 that._scene.getPrimitives().add(that._modelMatrixPrimitive);
@@ -168,7 +161,7 @@ define([
             return true;
         });
 
-        this._toggleFilterPrimitive = createCommand(function() {
+        this._doFilterPrimitive = createCommand(function() {
             if (that.filterPrimitive) {
                 that._scene.debugCommandFilter = function(command) {
                     return command.owner === that._primitive.primitive;
@@ -180,12 +173,12 @@ define([
         });
 
         var centralBody = this._scene.getPrimitives().getCentralBody();
-        this._toggleWireframe = createCommand(function() {
+        this._showWireframe = createCommand(function() {
             centralBody._surface._debug.wireframe = that.wireframe;
             return true;
         });
 
-        this._toggleSuspendUpdates = createCommand(function() {
+        this._doSuspendUpdates = createCommand(function() {
             centralBody._surface._debug.suspendLodUpdate = that.suspendUpdates;
             if (!that.suspendUpdates) {
                 that.filterTile = false;
@@ -194,19 +187,19 @@ define([
         });
 
         var tileBoundariesLayer;
-        this._toggleShowTileCoords = createCommand(function() {
-            if (that.showTileCoords && !defined(tileBoundariesLayer)) {
+        this._showTileCoords = createCommand(function() {
+            if (that.tileCoords && !defined(tileBoundariesLayer)) {
                 tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new TileCoordinatesImageryProvider({
                     tilingScheme : centralBody.terrainProvider.getTilingScheme()
                 }));
-            } else if (!that.showTileCoords && defined(tileBoundariesLayer)) {
+            } else if (!that.tileCoords && defined(tileBoundariesLayer)) {
                 centralBody.getImageryLayers().remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
             return true;
         });
 
-        this._toggleTileBoundingSphere = createCommand(function() {
+        this._showTileBoundingSphere = createCommand(function() {
             if (that.tileBoundingSphere) {
                 centralBody._surface._debug.boundingSphereTile = that._tile;
             } else {
@@ -215,13 +208,13 @@ define([
             return true;
         });
 
-        this._toggleRenderTile = createCommand(function() {
+        this._doFilterTile = createCommand(function() {
             if (!that.filterTile) {
                 that.suspendUpdates = false;
-                that.toggleSuspendUpdates();
+                that.doSuspendUpdates();
             } else {
                 that.suspendUpdates = true;
-                that.toggleSuspendUpdates();
+                that.doSuspendUpdates();
 
                 centralBody._surface._tilesToRenderByTextureCount = [];
 
@@ -312,63 +305,63 @@ define([
             }
         },
 
-        toggleFrustums : {
+        showFrustums : {
             get : function() {
-                return this._toggleFrustums;
+                return this._showFrustums;
             }
         },
 
-        togglePerformance : {
+        showPerformance : {
             get : function() {
-                return this._togglePerformance;
+                return this._showPerformance;
             }
         },
 
-        toggleBoundingSphere : {
+        showPrimitiveBoundingSphere : {
             get : function() {
-                return this._toggleBoundingSphere;
+                return this._showPrimitiveBoundingSphere;
             }
         },
 
-        toggleRefFrame : {
+        showPrimitiveRefFrame : {
             get : function() {
-                return this._toggleRefFrame;
+                return this._showPrimitiveRefFrame;
             }
         },
 
-        toggleFilterPrimitive : {
+        doFilterPrimitive : {
             get : function() {
-                return this._toggleFilterPrimitive;
+                return this._doFilterPrimitive;
             }
         },
 
-        toggleWireframe : {
+        showWireframe : {
             get : function() {
-                return this._toggleWireframe;
+                return this._showWireframe;
             }
         },
 
-        toggleSuspendUpdates : {
+        doSuspendUpdates : {
             get : function() {
-                return this._toggleSuspendUpdates;
+                return this._doSuspendUpdates;
             }
         },
 
-        toggleShowTileCoords : {
+        showTileCoords : {
             get : function() {
-                return this._toggleShowTileCoords;
+                return this._showTileCoords;
             }
         },
 
-        toggleTileBoundingSphere : {
+        showTileBoundingSphere : {
             get : function() {
-                return this._toggleTileBoundingSphere;
+                return this._showTileBoundingSphere;
             }
         },
 
-        toggleRenderTile : {
+        doFilterTile : {
             get : function() {
-                return this._toggleRenderTile;
+                return this._doFilterTile;
             }
         },
 
@@ -420,9 +413,9 @@ define([
                     setTimeout(function(){
                         newPrimitive.primitive.show = true;
                     }, 50);
-                    this.toggleBoundingSphere();
-                    this.toggleRefFrame();
-                    this.toggleFilterPrimitive();
+                    this.showPrimitiveBoundingSphere();
+                    this.showPrimitiveRefFrame();
+                    this.doFilterPrimitive();
                 }
             },
 
@@ -442,6 +435,8 @@ define([
                         this.tileText += '<br>NE corner: ' + newTile.extent.east + ', ' + newTile.extent.north;
                     }
                     this._tile = newTile;
+                    this.showTileBoundingSphere();
+                    this.doFilterTile();
                 } else {
                     this.hasPickedTile = false;
                     this._tile = undefined;

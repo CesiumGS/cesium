@@ -8,6 +8,7 @@ define([
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerInspectorMixin',
         'domReady!'
     ], function(
         defined,
@@ -17,7 +18,8 @@ define([
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin) {
+        viewerDynamicObjectMixin,
+        viewerInspectorMixin) {
     "use strict";
     /*global console*/
 
@@ -67,6 +69,9 @@ define([
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
+        if (endUserOptions.inspector) {
+            viewer.extend(viewerInspectorMixin);
+        }
 
         var showLoadError = function(name, error) {
             var title = 'An error occurred while loading the file: ' + name;
