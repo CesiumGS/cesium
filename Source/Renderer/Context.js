@@ -205,9 +205,9 @@ define([
         options.alpha = defaultValue(options.alpha, false); // WebGL default is true
         options.failIfMajorPerformanceCaveat = defaultValue(options.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
-        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
+        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options) || undefined;
 
-        if (!this._originalGLContext) {
+        if (!defined(this._originalGLContext)) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
         }
 
