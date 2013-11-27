@@ -89,7 +89,7 @@ defineSuite([
 
     it('credit display displays hyperlink credit', function() {
         var creditDisplay = new CreditDisplay(container);
-        var link = 'http://cesium.agi.com/';
+        var link = 'http://cesiumjs.org/';
         var credit = new Credit(undefined, undefined, link);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
