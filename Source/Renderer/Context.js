@@ -1325,8 +1325,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var source = options.source;
-        var width = defined(source) ? source.width : description.width;
-        var height = defined(source) ? source.height : description.height;
+        var width = defined(source) ? source.width : options.width;
+        var height = defined(source) ? source.height : options.height;
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
@@ -1569,8 +1569,8 @@ define([
         }
 
         var size = width;
-        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
-        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
