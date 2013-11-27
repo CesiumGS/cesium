@@ -176,8 +176,8 @@ var afterAll;
     var readyToCreateTests = false;
     var createTests;
 
-    var combined = getQueryParameter('combined');
-    var minified = getQueryParameter('minified');
+    var built = getQueryParameter('built');
+    var release = getQueryParameter('release');
     var loadTests = true;
 
     require.config({
@@ -186,9 +186,9 @@ var afterAll;
 
     // set up require for AMD, combined or minified and
     // start loading all of Cesium early, so it's all available for code coverage calculations.
-    if (combined || minified) {
+    if (built) {
         require.config({
-            baseUrl : getQueryParameter('baseUrl') || (minified ? '../Build/Cesium' : '../Build/CesiumUnminified'),
+            baseUrl : getQueryParameter('baseUrl') || '../Build/Cesium',
             paths : {
                 'Stubs' : '../Stubs'
             },
@@ -287,7 +287,7 @@ var afterAll;
                  equalsMethodEqualityTester) {
             var env = jasmine.getEnv();
 
-            env.beforeEach(addDefaultMatchers);
+            env.beforeEach(addDefaultMatchers(!release));
             env.addEqualityTester(equalsMethodEqualityTester);
 
             createTests = function() {
