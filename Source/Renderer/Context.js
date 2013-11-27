@@ -200,12 +200,10 @@ define([
 
         this._canvas = canvas;
 
-        if (!defined(options)) {
-            options = {};
-        }
-        if (!defined(options.alpha)) {
-            options.alpha = false;
-        }
+        options = defaultValue(options, {});
+        // Override select WebGL defaults
+        options.alpha = defaultValue(options.alpha, false); // WebGL default is true
+        options.failIfMajorPerformanceCaveat = defaultValue(options.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
         this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options);
 
