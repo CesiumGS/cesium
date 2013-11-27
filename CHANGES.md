@@ -20,6 +20,7 @@ Beta Releases
                  alpha : true
                }
            });
+* Added `CentralBody.maximumScreenSpaceError`.
 
 ### b23 - 2013-12-02
 
