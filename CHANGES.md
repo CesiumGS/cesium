@@ -4,6 +4,23 @@ Change Log
 Beta Releases
 -------------
 
+### b24 - 2014-01-02
+
+* Breaking changes:
+   * Added new `allowTextureFilterAnisotropic` and `` properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+
+           var viewer = new Viewer('cesiumContainer', { 
+               alpha : true
+           });
+
+    should now look like:
+
+           var viewer = new Viewer('cesiumContainer', {
+               webgl : {
+                 alpha : true
+               }
+           });
+
 ### b23 - 2013-12-02
 
 * Breaking changes:

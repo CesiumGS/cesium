@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -36,6 +37,7 @@ define([
         './ClearCommand',
         './PassState'
     ], function(
+        clone,
         defaultValue,
         defined,
         DeveloperError,
@@ -201,11 +203,14 @@ define([
         this._canvas = canvas;
 
         options = defaultValue(options, {});
-        // Override select WebGL defaults
-        options.alpha = defaultValue(options.alpha, false); // WebGL default is true
-        options.failIfMajorPerformanceCaveat = defaultValue(options.failIfMajorPerformanceCaveat, true); // WebGL default is false
+        options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
+        var webglOptions = defaultValue(options.webgl, {});
 
-        this._originalGLContext = canvas.getContext('webgl', options) || canvas.getContext('experimental-webgl', options) || undefined;
+        // Override select WebGL defaults
+        webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
+
+        this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
 
         if (!defined(this._originalGLContext)) {
             throw new RuntimeError('The browser supports WebGL, but initialization failed.');
@@ -254,9 +259,11 @@ define([
         this._elementIndexUint = getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
         this._textureFloat = getExtension(gl, ['OES_texture_float']);
-        var textureFilterAnisotropic = getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']);
+
+        var textureFilterAnisotropic = options.allowTextureFilterAnisotropic ? getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']) : undefined;
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
@@ -280,6 +287,48 @@ define([
 
         this._pickObjects = {};
         this._nextPickColor = new Uint32Array(1);
+
+        /**
+         * Returns the read-only options used to create this context.  The <code>webgl</code> property corresponds to the
+         * <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> object used to
+         * create the WebGL context.  Default values are shown in the code example below.
+         * <p>
+         * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
+         * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
+         * <code>options.webgl.alpha</code> to true.
+         * </p>
+         * <p>
+         * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
+         * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
+         * which is not appropriate for almost any Cesium app.
+         * </p>
+         * <p>
+         * The other <code>options.webgl</code> properties match the WebGL defaults for <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>.
+         * </p>
+         * <p>
+         * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
+         * WebGL extension is supported.  Check {@link Context#getTextureFilterAnisotropic}.  Setting this to false will improve
+         * performance, but hurt visual quality, especially for horizon views.
+         * </p>
+         *
+         * @type {Object}
+         * @constant
+         *
+         * @example
+         * {
+         *   webgl : {
+         *     alpha : false,
+         *     depth : true,
+         *     stencil : false,
+         *     antialias : true,
+         *     premultipliedAlpha : true,
+         *     preserveDrawingBuffer : false
+         *     failIfMajorPerformanceCaveat : true
+         *   },
+         *   allowTextureFilterAnisotropic : true
+         * }
+         */
+        this.options = clone(options);
 
         /**
          * A cache of objects tied to this context.  Just before the Context is destroyed,
