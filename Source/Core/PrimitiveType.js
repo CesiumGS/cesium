@@ -38,7 +38,7 @@ define(function() {
          */
         LINE_STRIP : 0x0003,
         /**
-         * 0x0004.  Triangles primitive where each three vertices (or indices) is a triangle.  Triangles are do not necessarily share edges.
+         * 0x0004.  Triangles primitive where each three vertices (or indices) is a triangle.  Triangles do not necessarily share edges.
          *
          * @type {Number}
          * @constant
