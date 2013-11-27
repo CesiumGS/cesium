@@ -1172,11 +1172,11 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
+        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
         }
 
-        var bytesPerIndex = indexDatatype.sizeInBytes;
+        var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
 
         var gl = this._gl;
         var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
@@ -1290,41 +1290,41 @@ define([
     /**
      * DOC_TBA.
      *
-     * description.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
+     * options.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
      *
      * @memberof Context
      *
      * @returns {Texture} DOC_TBA.
      *
-     * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
-     * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} description is required.
-     * @exception {DeveloperError} description requires a source field to create an initialized texture or width and height fields to create a blank texture.
+     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {DeveloperError} options is required.
+     * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
      * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
      * @exception {DeveloperError} Height must be greater than zero.
      * @exception {DeveloperError} Height must be less than or equal to the maximum texture size.
-     * @exception {DeveloperError} Invalid description.pixelFormat.
-     * @exception {DeveloperError} Invalid description.pixelDatatype.
-     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
-     * @exception {DeveloperError} When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
-     * @exception {DeveloperError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
+     * @exception {DeveloperError} Invalid options.pixelFormat.
+     * @exception {DeveloperError} Invalid options.pixelDatatype.
+     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.
+     * @exception {DeveloperError} When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.
+     * @exception {DeveloperError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.
      *
      * @see Context#createTexture2DFromFramebuffer
      * @see Context#createCubeMap
      * @see Context#createSampler
      */
-    Context.prototype.createTexture2D = function(description) {
-        if (!description) {
-            throw new DeveloperError('description is required.');
+    Context.prototype.createTexture2D = function(options) {
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
         }
 
-        var source = description.source;
-        var width = defined(source) ? source.width : description.width;
-        var height = defined(source) ? source.height : description.height;
+        var source = options.source;
+        var width = defined(source) ? source.width : options.width;
+        var height = defined(source) ? source.height : options.height;
 
         if (!defined(width) || !defined(height)) {
-            throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
+            throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
 
         if (width <= 0) {
@@ -1343,43 +1343,43 @@ define([
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
-        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid description.pixelFormat.');
+            throw new DeveloperError('Invalid options.pixelFormat.');
         }
 
-        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError('Invalid description.pixelDatatype.');
+            throw new DeveloperError('Invalid options.pixelDatatype.');
         }
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
-            throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
             ((pixelDatatype !== PixelDatatype.UNSIGNED_SHORT) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT))) {
-            throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT, description.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
+            throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
         }
 
         if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
-            throw new DeveloperError('When description.pixelFormat is DEPTH_STENCIL, description.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
+            throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            if (source) {
-                throw new DeveloperError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+            if (defined(source)) {
+                throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
 
             if (!this.getDepthTexture()) {
-                throw new RuntimeError('When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
+                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
             }
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
-        var flipY = defaultValue(description.flipY, true);
+        var preMultiplyAlpha = options.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
+        var flipY = defaultValue(options.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_2D;
@@ -1388,12 +1388,12 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
-        if (source) {
+        if (defined(source)) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
 
-            if (source.arrayBufferView) {
+            if (defined(source.arrayBufferView)) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
             } else {
@@ -1486,61 +1486,61 @@ define([
      *
      * @memberof Context
      *
-     * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [description.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} [description.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
+     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
      *
      * @returns {TextureAtlas} The new texture atlas.
      *
      * @see TextureAtlas
      */
-    Context.prototype.createTextureAtlas = function(description) {
-        description = description || {};
-        description.context = this;
-        return new TextureAtlas(description);
+    Context.prototype.createTextureAtlas = function(options) {
+        options = defaultValue(options, {});
+        options.context = this;
+        return new TextureAtlas(options);
     };
 
     /**
      * DOC_TBA.
      *
-     * description.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
+     * options.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
      *
      * @memberof Context
      *
      * @returns {CubeMap} DOC_TBA.
      *
-     * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} description is required.
-     * @exception {DeveloperError} description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
-     * @exception {DeveloperError} Each face in description.sources must have the same width and height.
-     * @exception {DeveloperError} description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {DeveloperError} options is required.
+     * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
+     * @exception {DeveloperError} Each face in options.sources must have the same width and height.
+     * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
      * @exception {DeveloperError} Width must equal height.
      * @exception {DeveloperError} Width and height must be greater than zero.
      * @exception {DeveloperError} Width and height must be less than or equal to the maximum cube map size.
-     * @exception {DeveloperError} Invalid description.pixelFormat.
-     * @exception {DeveloperError} description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} Invalid description.pixelDatatype.
+     * @exception {DeveloperError} Invalid options.pixelFormat.
+     * @exception {DeveloperError} options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} Invalid options.pixelDatatype.
      *
      * @see Context#createTexture2D
      * @see Context#createTexture2DFromFramebuffer
      * @see Context#createSampler
      */
-    Context.prototype.createCubeMap = function(description) {
-        if (!description) {
-            throw new DeveloperError('description is required.');
+    Context.prototype.createCubeMap = function(options) {
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
         }
 
-        var source = description.source;
+        var source = options.source;
         var width;
         var height;
 
-        if (source) {
+        if (defined(source)) {
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
-                throw new DeveloperError('description.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
+                throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
 
             width = faces[0].width;
@@ -1548,16 +1548,16 @@ define([
 
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
-                    throw new DeveloperError('Each face in description.source must have the same width and height.');
+                    throw new DeveloperError('Each face in options.source must have the same width and height.');
                 }
             }
         } else {
-            width = description.width;
-            height = description.height;
+            width = options.width;
+            height = options.height;
         }
 
         if (!defined(width) || !defined(height)) {
-            throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
+            throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
 
         if (width !== height) {
@@ -1574,28 +1574,28 @@ define([
             throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
-        var pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid description.pixelFormat.');
+            throw new DeveloperError('Invalid options.pixelFormat.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
-            throw new DeveloperError('description.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+            throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        var pixelDatatype = defaultValue(description.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError('Invalid description.pixelDatatype.');
+            throw new DeveloperError('Invalid options.pixelDatatype.');
         }
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
-            throw new RuntimeError('When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
         // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = description.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
-        var flipY = defaultValue(description.flipY, true);
+        var preMultiplyAlpha = options.preMultiplyAlpha || ((pixelFormat === PixelFormat.RGB) || (pixelFormat === PixelFormat.LUMINANCE));
+        var flipY = defaultValue(options.flipY, true);
 
         var gl = this._gl;
         var textureTarget = gl.TEXTURE_CUBE_MAP;
@@ -1612,7 +1612,7 @@ define([
             }
         }
 
-        if (source) {
+        if (defined(source)) {
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
@@ -1643,7 +1643,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} [description] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
      *
@@ -1689,8 +1689,8 @@ define([
      *   })
      * });
      */
-    Context.prototype.createFramebuffer = function(description) {
-        return new Framebuffer(this._gl, description);
+    Context.prototype.createFramebuffer = function(options) {
+        return new Framebuffer(this._gl, options);
     };
 
     /**
@@ -1698,7 +1698,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} [description] DOC_TBA.
+     * @param {Object} [options] DOC_TBA.
      *
      * @returns {createRenderbuffer} DOC_TBA.
      *
@@ -1710,13 +1710,13 @@ define([
      *
      * @see Context#createFramebuffer
      */
-    Context.prototype.createRenderbuffer = function(description) {
+    Context.prototype.createRenderbuffer = function(options) {
         var gl = this._gl;
 
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var format = defaultValue(description.format, RenderbufferFormat.RGBA4);
-        var width = defined(description.width) ? description.width : gl.drawingBufferWidth;
-        var height = defined(description.height) ? description.height : gl.drawingBufferHeight;
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var format = defaultValue(options.format, RenderbufferFormat.RGBA4);
+        var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
+        var height = defined(options.height) ? options.height : gl.drawingBufferHeight;
 
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
@@ -2095,13 +2095,13 @@ define([
             count = defaultValue(count, indexBuffer.getNumberOfIndices());
 
             va._bind();
-            context._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
+            context._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype(), offset);
             va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);
 
             va._bind();
-            context._gl.drawArrays(primitiveType.value, offset, count);
+            context._gl.drawArrays(primitiveType, offset, count);
             va._unBind();
         }
     }
