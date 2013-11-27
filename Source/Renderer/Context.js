@@ -167,6 +167,18 @@ define([
         return glWrapper;
     }
 
+    function getExtension(gl, names) {
+        var length = names.length;
+        for (var i = 0; i < length; ++i) {
+            var extension = gl.getExtension(names[i]);
+            if (extension) {
+                return extension;
+            }
+        }
+
+        return undefined;
+    }
+
     /**
      * DOC_TBA
      *
@@ -240,15 +252,15 @@ define([
         this._antialias = gl.getContextAttributes().antialias;
 
         // Query and initialize extensions
-        this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
-        this._elementIndexUint = gl.getExtension('OES_element_index_uint');
-        this._depthTexture = gl.getExtension('WEBGL_depth_texture') || gl.getExtension('WEBKIT_WEBGL_depth_texture');
-        this._textureFloat = gl.getExtension('OES_texture_float');
-        var textureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+        this._standardDerivatives = getExtension(gl, ['OES_standard_derivatives']);
+        this._elementIndexUint = getExtension(gl, ['OES_element_index_uint']);
+        this._depthTexture = getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
+        this._textureFloat = getExtension(gl, ['OES_texture_float']);
+        var textureFilterAnisotropic = getExtension(gl, ['EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic']);
         this._textureFilterAnisotropic = textureFilterAnisotropic;
-        this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
-        this._vertexArrayObject = gl.getExtension('OES_vertex_array_object');
-        this._fragDepth = gl.getExtension('EXT_frag_depth');
+        this._maximumTextureFilterAnisotropy = defined(textureFilterAnisotropic) ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+        this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
+        this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
