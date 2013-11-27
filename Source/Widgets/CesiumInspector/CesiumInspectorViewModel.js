@@ -90,11 +90,39 @@ define([
         this.suspendUpdates = false;
         this.showTileCoords = false;
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'showFrustums', 'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive', 'hasPickedTile', 'tileText']);
+        this.generalShow = true;
+        this.generalText = '-';
+
+        this.primitivesShow = false;
+        this.primitiveText = '+';
+
+        this.terrainShow = false;
+        this.terrainText = '+';
+
+        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'showFrustums',
+                              'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
+                              'hasPickedTile', 'tileText', 'generalShow', 'generalText',
+                              'primitivesShow', 'primitiveText', 'terrainShow', 'terrainText']);
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
+
+        this._toggleGeneral = createCommand(function() {
+            that.generalShow = ! that.generalShow;
+            that.generalText = that.generalShow ? '-' : '+';
+        });
+
+        this._togglePrimitives = createCommand(function() {
+            that.primitivesShow = ! that.primitivesShow;
+            that.primitiveText = that.primitivesShow ? '-' : '+';
+        });
+
+        this._toggleTerrain = createCommand(function() {
+            that.terrainShow = ! that.terrainShow;
+            that.terrainText = that.terrainShow ? '-' : '+';
+        });
+
 
         this._toggleFrustums = createCommand(function() {
             if (that.showFrustums) {
@@ -221,6 +249,7 @@ define([
             canvas.removeEventListener('mousedown', pickPrimitive, false);
             that.pickPrimitiveActive = false;
         };
+
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
@@ -340,6 +369,24 @@ define([
         toggleRenderTile : {
             get : function() {
                 return this._toggleRenderTile;
+            }
+        },
+
+        toggleGeneral : {
+            get : function() {
+                return this._toggleGeneral;
+            }
+        },
+
+        togglePrimitives : {
+            get : function() {
+                return this._togglePrimitives;
+            }
+        },
+
+        toggleTerrain : {
+            get : function() {
+                return this._toggleTerrain;
             }
         },
 

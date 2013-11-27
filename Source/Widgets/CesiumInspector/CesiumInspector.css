@@ -39,15 +39,13 @@
 }
 
 .cesium-cesiumInspector-show {
-    visibility: visible;
-    display: block;
-    height: auto;
+    max-height: 200px;
 }
 
 .cesium-cesiumInspector-hide {
-    visibility: hidden;
-    display: none;
-    height: 0;
+    max-height: 0;
+    padding: 0 !important;
+    overflow: hidden;
 }
 
 .cesium-cesiumInspector-dropDown {
@@ -105,4 +103,12 @@
 
 .cesium-cesiumInspector-section {
     margin-bottom: 15px;
+    -webkit-transition: max-height 0.25s;
+    -moz-transition: max-height 0.25s;
+    transition: max-height 0.25s;
+}
+
+.cesium-cesiumInspector-toggleSwitch {
+    padding: 3px;
+    cursor: pointer;
 }

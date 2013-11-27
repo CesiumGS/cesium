@@ -72,11 +72,16 @@ define([
         // General
         var general = document.createElement('div');
         general.className = 'cesium-cesiumInspector-sectionHeader';
-        general.textContent = 'General';
+        var plus = document.createElement('span');
+        plus.className = 'cesium-cesiumInspector-toggleSwitch';
+        plus.setAttribute('data-bind', 'click: toggleGeneral, text: generalText');
+        general.appendChild(plus);
+        general.appendChild(document.createTextNode('General'));
         panel.appendChild(general);
 
         var generalSection = document.createElement('div');
         generalSection.className = 'cesium-cesiumInspector-section';
+        generalSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : generalShow, "cesium-cesiumInspector-hide" : !generalShow}');
         panel.appendChild(generalSection);
         var debugShowFrustums = document.createElement('div');
         generalSection.appendChild(debugShowFrustums);
@@ -101,11 +106,16 @@ define([
         // Primitives
         var prim = document.createElement('div');
         prim.className = 'cesium-cesiumInspector-sectionHeader';
-        prim.innerHTML = 'Primitives';
+        plus = document.createElement('span');
+        plus.className = 'cesium-cesiumInspector-toggleSwitch';
+        plus.setAttribute('data-bind', 'click: togglePrimitives, text: primitiveText');
+        prim.appendChild(plus);
+        prim.appendChild(document.createTextNode('Primitives'));
         panel.appendChild(prim);
 
         var primitivesSection = document.createElement('div');
         primitivesSection.className = 'cesium-cesiumInspector-section';
+        primitivesSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : primitivesShow, "cesium-cesiumInspector-hide" : !primitivesShow}');
         panel.appendChild(primitivesSection);
         var pickPrimRequired = document.createElement('div');
         pickPrimRequired.className = 'cesium-cesiumInspector-pickSection';
@@ -149,11 +159,16 @@ define([
         // Terrain
         var terrain = document.createElement('div');
         terrain.className = 'cesium-cesiumInspector-sectionHeader';
-        terrain.innerHTML = 'Terrain';
+        plus = document.createElement('span');
+        plus.className = 'cesium-cesiumInspector-toggleSwitch';
+        plus.setAttribute('data-bind', 'click: toggleTerrain, text: terrainText');
+        terrain.appendChild(plus);
+        terrain.appendChild(document.createTextNode('Terrain'));
         panel.appendChild(terrain);
 
         var terrainSection = document.createElement('div');
         terrainSection.className = 'cesium-cesiumInspector-section';
+        terrainSection.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : terrainShow, "cesium-cesiumInspector-hide" : !terrainShow}');
         panel.appendChild(terrainSection);
         var pickTileRequired = document.createElement('div');
         pickTileRequired.className = 'cesium-cesiumInspector-pickSection';
