@@ -152,7 +152,12 @@ defineSuite([
         });
 
         var contextAttributes = widget.scene.getContext()._gl.getContextAttributes();
-        expect(contextAttributes).toEqual(contextOptions);
+        expect(contextAttributes.alpha).toEqual(contextOptions.alpha);
+        expect(contextAttributes.depth).toEqual(contextOptions.depth);
+        expect(contextAttributes.stencil).toEqual(contextOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(contextOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(contextOptions.premultipliedAlpha);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(contextOptions.preserveDrawingBuffer);
     });
 
     it('throws if no container provided', function() {
