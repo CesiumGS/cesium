@@ -122,7 +122,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesium.agi.com/smallterrain',
+     *         url : 'http://cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -179,7 +179,7 @@ define([
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.getFrameState().creditDisplay;
 
-            var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesium.agi.com/');
+            var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
             var centralBody = new CentralBody(ellipsoid);
@@ -211,7 +211,7 @@ define([
                     url : 'http://dev.virtualearth.net',
                     // Some versions of Safari support WebGL, but don't correctly implement
                     // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
+                    proxy: FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesiumjs.org/proxy/')
                 });
             }
 

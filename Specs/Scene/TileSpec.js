@@ -180,7 +180,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : 'http://cesium.agi.com/smallterrain'
+                url : 'http://cesiumjs.org/smallterrain'
             });
         });
 
