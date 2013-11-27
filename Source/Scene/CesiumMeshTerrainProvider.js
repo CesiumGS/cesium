@@ -276,6 +276,18 @@ define([
             var indexBuffer = new Uint16Array(buffer, pos, triangleCount * triangleElements);
             pos += triangleCount * triangleLength;
 
+            // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
+            // https://code.google.com/p/webgl-loader/source/browse/trunk/samples/loader.js?r=99#55
+            // Copyright 2012 Google Inc., Apache 2.0 license.
+            var highest = 0;
+            for (var i = 0; i < indexBuffer.length; ++i) {
+                var code = indexBuffer[i];
+                indexBuffer[i] = highest - code;
+                if (code === 0) {
+                    ++highest;
+                }
+            }
+
             var westVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
             var westVertices = new Uint16Array(buffer, pos, westVertexCount);
