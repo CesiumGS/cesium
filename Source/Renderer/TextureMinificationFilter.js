@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,58 +9,52 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var TextureMinificationFilter = {
         /**
-         * DOC_TBA
+         * 0x2600.  Nearest minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2600
          */
-        NEAREST : new Enumeration(0x2600, 'NEAREST'),
+        NEAREST : 0x2600,
 
         /**
-         * DOC_TBA
+         * 0x2601.  Linear (bilinear for 2D textures) minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2601
          */
-        LINEAR : new Enumeration(0x2601, 'LINEAR'),
+        LINEAR : 0x2601,
 
         /**
-         * DOC_TBA
+         * 0x2700.  Nearest-mipmap-nearest minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2700
          */
-        NEAREST_MIPMAP_NEAREST : new Enumeration(0x2700, 'NEAREST_MIPMAP_NEAREST'),
+        NEAREST_MIPMAP_NEAREST : 0x2700,
 
         /**
-         * DOC_TBA
+         * 0x2701.  Linear-mipmap-nearest minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2701
          */
-        LINEAR_MIPMAP_NEAREST : new Enumeration(0x2701, 'LINEAR_MIPMAP_NEAREST'),
+        LINEAR_MIPMAP_NEAREST : 0x2701,
 
         /**
-         * DOC_TBA
+         * 0x2702.  Nearest-mipmap-linear minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2702
          */
-        NEAREST_MIPMAP_LINEAR : new Enumeration(0x2702, 'NEAREST_MIPMAP_LINEAR'),
+        NEAREST_MIPMAP_LINEAR : 0x2702,
 
         /**
-         * DOC_TBA
+         * 0x2703.  Linear-mipmap-linear minification texture filtering.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2703
          */
-        LINEAR_MIPMAP_LINEAR : new Enumeration(0x2703, 'LINEAR_MIPMAP_LINEAR'),
+        LINEAR_MIPMAP_LINEAR : 0x2703,
 
         /**
          * DOC_TBA

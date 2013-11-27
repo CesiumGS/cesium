@@ -565,6 +565,22 @@ define([
     };
 
     /**
+     * Transforms a Cartesian X, Y, Z position from the ellipsoid-scaled space by multiplying
+     * its components by the result of {@link Ellipsoid#getRadii}.
+     *
+     * @memberof Ellipsoid
+     *
+     * @param {Cartesian3} position The position to transform.
+     * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
+     *        return a new instance.
+     * @returns {Cartesian3} The position expressed in the unscaled space.  The returned instance is the
+     *          one passed as the result parameter if it is not undefined, or a new instance of it is.
+     */
+    Ellipsoid.prototype.transformPositionFromScaledSpace = function(position, result) {
+        return Cartesian3.multiplyComponents(position, this._radii, result);
+    };
+
+    /**
      * Compares this Ellipsoid against the provided Ellipsoid componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Ellipsoid

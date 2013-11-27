@@ -947,6 +947,104 @@ define([
     };
 
     /**
+     * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix with signed elements.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.abs = function(matrix, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+        if (!defined(result)) {
+            return new Matrix3(Math.abs(matrix[0]), Math.abs(matrix[3]), Math.abs(matrix[6]),
+                               Math.abs(matrix[1]), Math.abs(matrix[4]), Math.abs(matrix[7]),
+                               Math.abs(matrix[2]), Math.abs(matrix[5]), Math.abs(matrix[8]));
+        }
+        result[0] = Math.abs(matrix[0]);
+        result[1] = Math.abs(matrix[1]);
+        result[2] = Math.abs(matrix[2]);
+        result[3] = Math.abs(matrix[3]);
+        result[4] = Math.abs(matrix[4]);
+        result[5] = Math.abs(matrix[5]);
+        result[6] = Math.abs(matrix[6]);
+        result[7] = Math.abs(matrix[7]);
+        result[8] = Math.abs(matrix[8]);
+
+        return result;
+    };
+
+    /**
+     * Computes the determinant of the provided matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to use.
+     * @returns {Number} The value of the determinant of the matrix.
+     *
+     * @exception {DeveloperError} matrix is required.
+     */
+    Matrix3.determinant = function(matrix) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+
+        var m11 = matrix[0];
+        var m21 = matrix[3];
+        var m31 = matrix[6];
+        var m12 = matrix[1];
+        var m22 = matrix[4];
+        var m32 = matrix[7];
+        var m13 = matrix[2];
+        var m23 = matrix[5];
+        var m33 = matrix[8];
+
+        return m11 * (m22 * m33 - m23 * m32) + m12 * (m23 * m31 - m21 * m33) + m13 * (m21 * m32 - m22 * m31);
+    };
+
+    /**
+     * Computes the inverse of the provided matrix.
+     * @memberof Matrix3
+     *
+     * @param {Matrix3} matrix The matrix to invert.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} matrix is required.
+     * @exception {DeveloperError} matrix is not invertible.
+     */
+    Matrix3.inverse = function(matrix, result) {
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required');
+        }
+
+        var m11 = matrix[0];
+        var m21 = matrix[1];
+        var m31 = matrix[2];
+        var m12 = matrix[3];
+        var m22 = matrix[4];
+        var m32 = matrix[5];
+        var m13 = matrix[6];
+        var m23 = matrix[7];
+        var m33 = matrix[8];
+
+        var determinant = Matrix3.determinant(matrix);
+
+        if (Math.abs(determinant) <= CesiumMath.EPSILON15) {
+            throw new DeveloperError('matrix is not invertible');
+        }
+
+        var m = new Matrix3(m22 * m33 - m23 * m32, m13 * m32 - m12 * m33, m12 * m23 - m13 * m22,
+                            m23 * m31 - m21 * m33, m11 * m33 - m13 * m31, m13 * m21 - m11 * m23,
+                            m21 * m32 - m22 * m31, m12 * m31 - m11 * m32, m11 * m22 - m12 * m21);
+       var scale = 1.0 / determinant;
+       return Matrix3.multiplyByScalar(m, scale, result);
+    };
+
+    /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      * @memberof Matrix3

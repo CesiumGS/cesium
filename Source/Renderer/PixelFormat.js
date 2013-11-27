@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,67 +9,61 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var PixelFormat = {
         /**
-         * A pixel format containing a depth value.
+         * 0x1902.  A pixel format containing a depth value.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1902
          */
-        DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
+        DEPTH_COMPONENT : 0x1902,
 
         /**
-         * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
+         * 0x84F9.  A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x84F9
          */
-        DEPTH_STENCIL : new Enumeration(0x84F9, 'DEPTH_STENCIL'),
+        DEPTH_STENCIL : 0x84F9,
 
         /**
-         * DOC_TBA
+         * 0x1906.  A pixel format containing an alpha channel.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1906
          */
-        ALPHA : new Enumeration(0x1906, 'ALPHA'),
+        ALPHA : 0x1906,
 
         /**
-         * DOC_TBA
+         * 0x1907.  A pixel format containing red, green, and blue channels.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1907
          */
-        RGB : new Enumeration(0x1907, 'RGB'),
+        RGB : 0x1907,
 
         /**
-         * DOC_TBA
+         * 0x1908.  A pixel format containing red, green, blue, and alpha channels.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1908
          */
-        RGBA : new Enumeration(0x1908, 'RGBA'),
+        RGBA : 0x1908,
 
         /**
-         * DOC_TBA
+         * 0x1909.  A pixel format containing a luminance (intensity) channel.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1909
          */
-        LUMINANCE : new Enumeration(0x1909, 'LUMINANCE'),
+        LUMINANCE : 0x1909,
 
         /**
-         * DOC_TBA
+         * 0x190A.  A pixel format containing luminance (intensity) and alpha channels.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 0x190A
          */
-        LUMINANCE_ALPHA : new Enumeration(0x190A, 'LUMINANCE_ALPHA'),
+        LUMINANCE_ALPHA : 0x190A,
 
         /**
          * Returns true if the pixel format is a valid enumeration value.

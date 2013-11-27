@@ -120,6 +120,24 @@ defineSuite([
         expect(p.indices.length).toEqual(2 * 6);
     });
 
+    it('computes positions with per position heights', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var positions = ellipsoid.cartographicArrayToCartesianArray([
+           Cartographic.fromDegrees(-50.0, -50.0, 100000.0),
+           Cartographic.fromDegrees(50.0, -50.0, 0.0),
+           Cartographic.fromDegrees(50.0, 50.0, 0.0),
+           Cartographic.fromDegrees(-50.0, 50.0, 0.0)
+       ]);
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            granularity : CesiumMath.PI_OVER_THREE,
+            perPositionHeight : true
+        }));
+
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(100000, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(0, CesiumMath.EPSILON6);
+    });
+
     it('creates a polygon from hierarchy', function() {
         var hierarchy = {
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
@@ -255,4 +273,4 @@ defineSuite([
         expect(p.indices.length).toEqual(2 * 12 * 2 + 12*2);
     });
 
-}, 'WebGL');
+});
