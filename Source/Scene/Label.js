@@ -53,7 +53,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var Label = function(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

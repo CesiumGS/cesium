@@ -32,26 +32,11 @@
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
     <script src="CesiumSandcastle.js"></script>
-    <script type="text/javascript">
-        if (window.location.host === "cesium.agi.com") {
-            var _gaq = _gaq || [];
-            _gaq.push(['_setAccount', 'UA-30040272-1']);
-            _gaq.push(['_trackPageview']);
-            (function () {
-                var ga = document.createElement('script');
-                ga.type = 'text/javascript';
-                ga.async = true;
-                ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-                var s = document.getElementsByTagName('script')[0];
-                s.parentNode.insertBefore(ga, s);
-            })();
-        }
-    </script>
     <meta property="og:title" content="Cesium Sandcastle" />
     <meta property="og:description" content="The Cesium Sandcastle provides an interactive environment for testing Cesium code." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="http://cesium.agi.com" />
-    <meta property="og:image" content="http://cesium.agi.com/CesiumViewer.jpg" />
+    <meta property="og:url" content="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html" />
+    <meta property="og:image" content="http://cesiumjs.org/images/Sandcastle.png" />
     <meta property="og:site_name" content="Cesium" />
     <meta property="fb:admins" content="1222088662,1322006496" />
 </head>
@@ -59,7 +44,7 @@
     <div id="loading"><span>Loading...</span></div>
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
-            <div class="cesiumTitle"><a href="http://cesium.agi.com" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
+            <div class="cesiumTitle"><a href="http://cesiumjs.org/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
             <div id="buttonRun" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFunction', showLabel: true">
                 Run (F8)
             </div>
