@@ -349,7 +349,7 @@ define([
      *
      * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Materials.html">Cesium Sandcastle Materials Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html">Cesium Sandcastle Materials Demo</a>
      */
     var Material = function(description) {
         /**

@@ -38,4 +38,4 @@ To keep our code quality high, please make sure:
 If new public classes, functions, or properties were added, also:
    * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
    * Update [CHANGES.md](CHANGES.md).
-   * If the change is significant, add a new [Sandcastle](http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
+   * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
