@@ -3,11 +3,12 @@ attribute vec3 positionLow;
 attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
-attribute vec2 pixelOffset;
+attribute vec4 pixelOffsetAndNearFarDistance;   // x,y, nearDistance, farDistance
 attribute vec4 eyeOffsetAndScale;               // eye offset in meters
 attribute vec4 rotationAndAlignedAxis;
 attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 translucencyByDistance;          // near, nearTrans, far, farTrans
+attribute vec4 pixelOffsetByDistance;           // near.x, near.y, far.x, far.y
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -53,6 +54,7 @@ void main()
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
     vec2 origin = originAndShow.xy;
     float show = originAndShow.z;
+    vec2 pixelOffset = pixelOffsetAndNearFarDistance.xy;
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -63,7 +65,7 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
 
-#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY)
+#if defined(EYE_DISTANCE_SCALING) || defined(EYE_DISTANCE_TRANSLUCENCY) || defined(EYE_DISTANCE_PIXEL_OFFSET)
     float lengthSq;
     if (czm_sceneMode == czm_sceneMode2D)
     {
@@ -94,6 +96,14 @@ void main()
     {
         positionEC.xyz = vec3(0.0);
     }
+#endif
+
+#ifdef EYE_DISTANCE_PIXEL_OFFSET
+    vec2 nearFarDistance = pixelOffsetAndNearFarDistance.zw;
+    vec4 xOffset = vec4(nearFarDistance.x, pixelOffsetByDistance.x, nearFarDistance.y, pixelOffsetByDistance.z);
+    vec4 yOffset = vec4(nearFarDistance.x, pixelOffsetByDistance.y, nearFarDistance.y, pixelOffsetByDistance.w);
+    pixelOffset.x += getNearFarScalar(xOffset, lengthSq);
+    pixelOffset.y += getNearFarScalar(yOffset, lengthSq);
 #endif
 
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);

@@ -80,7 +80,8 @@ define([
         color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
         rotationAndAlignedAxis : 8,
         scaleByDistance : 9,
-        translucencyByDistance : 10
+        translucencyByDistance : 10,
+        pixelOffsetByDistance : 11
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -166,6 +167,10 @@ define([
         this._shaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistancePick = false;
+
+        this._shaderPixelOffsetByDistance = false;
+        this._compiledShaderPixelOffsetByDistance = false;
+        this._compiledShaderPixelOffsetByDistancePick = false;
 
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
@@ -663,7 +668,7 @@ define([
             usage : buffersUsage[POSITION_INDEX]
         }, {
             index : attributeIndices.pixelOffset,
-            componentsPerAttribute : 2,
+            componentsPerAttribute : 4, // x,y, and optional nearDistance,farDistance
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_INDEX]
         }, {
@@ -716,6 +721,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[TRANSLUCENCY_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeIndices.pixelOffsetByDistance,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[PIXEL_OFFSET_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -758,14 +768,35 @@ define([
     function writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
         var pixelOffset = billboard.getPixelOffset();
+        var nearDistance = 0.0;
+        var farDistance = 1.0;
+        var pixelOffsetByDistance = billboard.getPixelOffsetByDistance();
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x, pixelOffset.y);
-
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeIndices.pixelOffset];
-        writer(i + 0, pixelOffset.x, pixelOffset.y);
-        writer(i + 1, pixelOffset.x, pixelOffset.y);
-        writer(i + 2, pixelOffset.x, pixelOffset.y);
-        writer(i + 3, pixelOffset.x, pixelOffset.y);
+
+        var writer;
+        if (defined(pixelOffsetByDistance)) {
+            writer = allPurposeWriters[attributeIndices.pixelOffsetByDistance];
+            var nearOffset = pixelOffsetByDistance.nearValue;
+            var farOffset = pixelOffsetByDistance.farValue;
+            nearDistance = pixelOffsetByDistance.near;
+            farDistance = pixelOffsetByDistance.far;
+            writer(i + 0, nearOffset.x, nearOffset.y, farOffset.x, farOffset.y);
+            writer(i + 1, nearOffset.x, nearOffset.y, farOffset.x, farOffset.y);
+            writer(i + 2, nearOffset.x, nearOffset.y, farOffset.x, farOffset.y);
+            writer(i + 3, nearOffset.x, nearOffset.y, farOffset.x, farOffset.y);
+
+            if (!nearOffset.equals(Cartesian2.ZERO) || !farOffset.equals(Cartesian2.ZERO)) {
+                // pixel offset by distance calculation in shader need not be enabled
+                // until a billboard with near and far !== Cartesian2.Zero is found
+                billboardCollection._shaderPixelOffsetByDistance = true;
+            }
+        }
+        writer = allPurposeWriters[attributeIndices.pixelOffset];
+        writer(i + 0, pixelOffset.x, pixelOffset.y, nearDistance, farDistance);
+        writer(i + 1, pixelOffset.x, pixelOffset.y, nearDistance, farDistance);
+        writer(i + 2, pixelOffset.x, pixelOffset.y, nearDistance, farDistance);
+        writer(i + 3, pixelOffset.x, pixelOffset.y, nearDistance, farDistance);
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -1241,13 +1272,15 @@ define([
             if (!defined(this._sp) ||
                     (this._shaderRotation && !this._compiledShaderRotation) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
+                    (this._shaderPixelOffsetByDistance && !this._compiledShaderPixelOffsetByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                     this._sp,
                     createShaderSource({
                         defines : [this._shaderRotation ? 'ROTATION' : '',
                                    this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : '',
-                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : ''],
+                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : '',
+                                   this._shaderPixelOffsetByDistance ? 'EYE_DISTANCE_PIXEL_OFFSET' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     BillboardCollectionFS,
@@ -1255,6 +1288,7 @@ define([
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+                this._compiledShaderPixelOffsetByDistance = this._shaderPixelOffsetByDistance;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1287,14 +1321,16 @@ define([
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
+                    (this._shaderPixelOffsetByDistance && !this._compiledShaderPixelOffsetByDistancePick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
                     this._spPick,
                     createShaderSource({
                         defines : ['RENDER_FOR_PICK',
                                    this._shaderRotation ? 'ROTATION' : '',
                                    this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : '',
-                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : ''],
+                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : '',
+                                   this._shaderPixelOffsetByDistance ? 'EYE_DISTANCE_PIXEL_OFFSET' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     createShaderSource({
@@ -1305,6 +1341,7 @@ define([
                 this._compiledShaderRotationPick = this._shaderRotation;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
+                this._compiledShaderPixelOffsetByDistancePick = this._shaderPixelOffsetByDistance;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];
