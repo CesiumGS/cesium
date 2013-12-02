@@ -99,10 +99,8 @@
     right: 0;
     background: rgba(84, 84, 84, 0.8);
     color: #edffff;
-    font-weight: bold;
-    margin: 0 0 2px 0;
-    padding: 8px 6px 6px 110px;
-    letter-spacing: 1px;
+    margin: 0;
+    padding: 5px 6px 6px;
 }
 
 .cesium-dataSourceBrowser-dataSourcesContainerHide {
@@ -110,27 +108,26 @@
     top: 3px;
     right: 1px;
     font-size: 18px;
-    border: 1px solid transparent;
     padding: 1px 12px;
-    background-color: transparent;
+    background: #3D3D3D;
 }
 
 .cesium-dataSourceBrowser-addDataSourceButton {
     position: absolute;
     top: 3px;
     right: 45px;
-    border: 1px solid transparent;
-    background-color: transparent;
-    letter-spacing: 0;
+    padding: 4px 7px 3px;
+    background: #3D3D3D;
 }
 
 .cesium-dataSourceBrowser-dataSourcesInfo {
-    padding-left: 110px;
+    padding-left: 10px;
+    padding-top: 3px;
 }
 
 .cesium-dataSourceBrowser-dataSourcesFilterBox {
     display: none;
-    padding-left: 15px;
+    padding-right: 100px;
 }
 
 .cesium-dataSourceBrowser-dataSourcesFilterBox-visible {
@@ -143,6 +140,7 @@
     border: solid 1px #444;
     color: #ff5;
     padding: 0 2px;
+    margin: 0;
     border-radius: 4px;
     font-size: 16px;
 }
@@ -155,7 +153,7 @@ ul.cesium-dataSourceBrowser-dataSources {
     width: 100%;
     max-height: 500px;
     overflow: auto;
-    padding-bottom: 2px;
+    padding: 2px 0;
 }
 
 li:nth-child(odd) > .cesium-dataSourceBrowser-item,

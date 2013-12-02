@@ -81,7 +81,6 @@ css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible,\
         // This is the header bar on the list of data sources.
         var dataSourcesContainerHeader = document.createElement('div');
         dataSourcesContainerHeader.className = 'cesium-dataSourceBrowser-dataSourcesContainerHeader';
-        dataSourcesContainerHeader.textContent = 'Data sources';
         dataSourcesContainer.appendChild(dataSourcesContainerHeader);
 
         // Hide button for the list of data sources.
@@ -100,25 +99,13 @@ attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
         dataSourcesContainerHeader.appendChild(addDataSourceButton);
 
-        // This is the container for the complete list of data sources.
-        var dataSourcesContainerBody = document.createElement('div');
-        dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
-        dataSourcesContainerBody.setAttribute('data-bind', 'style : { maxHeight : maxHeightOffset(40) }');
-        dataSourcesContainer.appendChild(dataSourcesContainerBody);
-
-        // Info message, if there are no data sources.
-        var dataSourcesInfo = document.createElement('div');
-        dataSourcesInfo.className = 'cesium-dataSourceBrowser-dataSourcesInfo';
-        dataSourcesInfo.setAttribute('data-bind', 'text: infoText');
-        dataSourcesContainerBody.appendChild(dataSourcesInfo);
-
         // Text filter box
         var dataSourcesFilterBox = document.createElement('div');
         dataSourcesFilterBox.className = 'cesium-dataSourceBrowser-dataSourcesFilterBox';
         dataSourcesFilterBox.textContent = "Search: ";
         dataSourcesFilterBox.setAttribute('data-bind', '\
 css: { "cesium-dataSourceBrowser-dataSourcesFilterBox-visible" : dataSourcesLength > 0 }');
-        dataSourcesContainerBody.appendChild(dataSourcesFilterBox);
+        dataSourcesContainerHeader.appendChild(dataSourcesFilterBox);
 
         // Text filter input
         var dataSourcesFilterInput = document.createElement('input');
@@ -128,6 +115,19 @@ css: { "cesium-dataSourceBrowser-dataSourcesFilterBox-visible" : dataSourcesLeng
 value: searchText,\
 valueUpdate: \'afterkeydown\'');
         dataSourcesFilterBox.appendChild(dataSourcesFilterInput);
+
+        // Info message, if there are no data sources.
+        var dataSourcesInfo = document.createElement('div');
+        dataSourcesInfo.className = 'cesium-dataSourceBrowser-dataSourcesInfo';
+        dataSourcesInfo.setAttribute('data-bind', 'text: infoText');
+        dataSourcesContainerHeader.appendChild(dataSourcesInfo);
+
+        // This is the container for the complete list of data sources.
+        var dataSourcesContainerBody = document.createElement('div');
+        dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
+        dataSourcesContainerBody.setAttribute('data-bind', '\
+style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "block" : "none") },');
+        dataSourcesContainer.appendChild(dataSourcesContainerBody);
 
         // The root UL of the actual list of data sources, that uses the template.
         var dataSourcesRootElement = document.createElement('ul');
