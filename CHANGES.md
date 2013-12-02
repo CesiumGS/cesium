@@ -49,6 +49,7 @@ Beta Releases
 * Added `ObjectOrientedBoundingBox`.
 * Added `Ellipsoid.transformPositionFromScaledSpace`.
 * Added `Math.nextPowerOfTwo`.
+* Renamed our main website from [cesium.agi.com](http://cesium.agi.com/) to [cesiumjs.org](http://cesiumjs.org/).
 
 ### b22 - 2013-11-01
 
