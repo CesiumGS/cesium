@@ -90,6 +90,43 @@ require(['Cesium'], function(Cesium) {
         scene.getPrimitives().add(labels);
     }
 
+    function labelPixelOffsetByDistance(scene, ellipsoid) {
+        Sandcastle.declare(labelPixelOffsetByDistance); // For highlighting in Sandcastle.
+
+        var image = new Image();
+        image.onload = function() {
+            var imageSize = image.height;
+            var nearScale = 5.0;
+            var nearOffsetXY = new Cesium.Cartesian2(0.0, imageSize*nearScale);
+            var farScale = 0.5;
+            var farOffsetXY = new Cesium.Cartesian2(0.0, imageSize*farScale);
+
+            var labels = new Cesium.LabelCollection();
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                image : image
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+                scaleByDistance : new Cesium.NearFarScalar(1.5e2, nearScale, 1.5e7, farScale),
+                imageIndex : 0
+            });
+
+            labels.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
+                text     : 'Philadelphia',
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                pixelOffsetByDistance : new Cesium.NearFarScalar(1.5e2, nearOffsetXY, 1.5e7, farOffsetXY)
+            });
+
+            scene.getPrimitives().add(billboards);
+            scene.getPrimitives().add(labels);
+        };
+        image.src = '../images/facility.gif';
+    }
+
     function labelTranslucencyByDistance(scene, ellipsoid) {
         Sandcastle.declare(labelTranslucencyByDistance); // For highlighting in Sandcastle.
         var labels = new Cesium.LabelCollection();
@@ -160,6 +197,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(labelTranslucencyByDistance);
         };
         button.textContent = 'Fade label by distance';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            primitives.removeAll();
+            labelPixelOffsetByDistance(scene, ellipsoid);
+            Sandcastle.highlight(labelPixelOffsetByDistance);
+        };
+        button.textContent = 'Offset label by distance';
         toolbar.appendChild(button);
     }
 

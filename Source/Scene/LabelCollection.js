@@ -187,6 +187,7 @@ define([
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
                 glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
+                glyph.billboard.setPixelOffsetByDistance(label._pixelOffsetByDistance);
             }
         }
 

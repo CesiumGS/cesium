@@ -49,6 +49,7 @@ define([
      * @internalConstructor
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} pixelOffsetByDistance.far must be greater than pixelOffsetByDistance.near
      *
      * @see LabelCollection
      * @see LabelCollection#add
@@ -61,6 +62,10 @@ define([
         if (defined(options.translucencyByDistance) &&
                 options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
+        if (defined(options.pixelOffsetByDistance) &&
+                options.pixelOffsetByDistance.far <= options.pixelOffsetByDistance.near) {
+            throw new DeveloperError('pixelOffsetByDistance.far must be greater than pixelOffsetByDistance.near.');
         }
 
         this._text = defaultValue(options.text, '');
@@ -78,6 +83,7 @@ define([
         this._scale = defaultValue(options.scale, 1.0);
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._pixelOffsetByDistance = options.pixelOffsetByDistance;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -516,6 +522,59 @@ define([
     };
 
     /**
+     * Returns the near and far pixel offset properties of a Label based on the label's distance from the camera.
+     *
+     * @memberof Label
+     *
+     * @returns {NearFarScalar} The near/far pixel offset values based on camera distance to the billboard
+     *
+     * @see Label#setPixelOffsetByDistance
+     */
+    Label.prototype.getPixelOffsetByDistance = function() {
+        return this._pixelOffsetByDistance;
+    };
+
+    /**
+     * Sets near and far pixel offset properties of a Label based on the Label's distance from the camera.
+     * A label's pixel offset will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the label's pixel offset remains clamped to the nearest bound.  If undefined,
+     * pixelOffsetByDistance will be disabled.
+     *
+     * @memberof Label
+     *
+     * @param {NearFarScalar} pixelOffset The configuration of near and far distances and their respective pixel offset values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Label#getPixelOffsetByDistance
+     *
+     * @example
+     * // Example 1.
+     * // Set a label's pixelOffset to (0,0) when the
+     * // camera is 1500 meters from the billboard and increase to 10.0 pixels
+     * // in the y direction the camera distance approaches 8.0e6 meters.
+     * text.setPixelOffsetByDistance(new NearFarScalar(1.5e2, Cartesian2.ZERO, 8.0e6, new Cartesian2(0, 10)));
+     *
+     * // Example 2.
+     * // disable pixel offset by distance
+     * text.setPixelOffsetByDistance(undefined);
+     */
+    Label.prototype.setPixelOffsetByDistance = function(value) {
+        if (NearFarScalar.equals(this._pixelOffsetByDistance, value)) {
+            return;
+        }
+
+        if (value.far <= value.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        this._pixelOffsetByDistance = NearFarScalar.clone(value, this._pixelOffsetByDistance);
+        rebindAllGlyphs(this);
+    };
+
+    /**
      * Returns the 3D Cartesian offset applied to this label in eye coordinates.
      *
      * @memberof Label
@@ -803,6 +862,7 @@ define([
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               NearFarScalar.equals(this._pixelOffsetByDistance, other._pixelOffsetByDistance) &&
                this._id === other._id;
     };
 
