@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,31 +9,29 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var TextureWrap = {
         /**
-         * DOC_TBA
+         * 0x812F.  Clamps texture coordinates to the normalized range [0, 1].
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x812F
          */
-        CLAMP_TO_EDGE : new Enumeration(0x812F, 'CLAMP_TO_EDGE'),
+        CLAMP_TO_EDGE : 0x812F,
 
         /**
-         * DOC_TBA
+         * 0x2901.  Repeats texture coordinates outside the normalized range [0, 1] by ignoring the integer part.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x2901
          */
-        REPEAT : new Enumeration(0x2901, 'REPEAT'),
+        REPEAT : 0x2901,
 
         /**
-         * DOC_TBA
+         * 0x8370.  Mirror repeats texture coordinates outside the normalized range [0, 1], using the
+         * integer part of the texture coordinate if it is even, or 1.0 minus the fractional part if it is odd.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x8370
          */
-        MIRRORED_REPEAT : new Enumeration(0x8370, 'MIRRORED_REPEAT'),
+        MIRRORED_REPEAT : 0x8370,
 
         /**
          * DOC_TBA

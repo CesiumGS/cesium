@@ -61,7 +61,7 @@ define([
      *
      * @internalConstructor
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
         options = defaultValue(options, EMPTY_OBJECT);
