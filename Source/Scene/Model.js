@@ -34,7 +34,8 @@ define([
         './ModelTypes',
         './ModelCache',
         './ModelAnimationCollection',
-        './SceneMode'
+        './SceneMode',
+        './gltfDefaults'
     ], function(
         combine,
         defined,
@@ -70,7 +71,8 @@ define([
         ModelTypes,
         ModelCache,
         ModelAnimationCollection,
-        SceneMode) {
+        SceneMode,
+        gltfDefaults) {
     "use strict";
 
     var ModelState = {
@@ -135,7 +137,7 @@ define([
          *
          * @readonly
          */
-        this.gltf = options.gltf;
+        this.gltf = gltfDefaults(options.gltf);
 
         /**
          * DOC_TBA
@@ -260,7 +262,7 @@ define([
         });
 
         loadText(url, options.headers).then(function(data) {
-            model.gltf = JSON.parse(data);
+            model.gltf = gltfDefaults(JSON.parse(data));
             model.basePath = basePath;
             model.jsonLoad.raiseEvent();
         });
@@ -355,9 +357,6 @@ define([
         }
     }
 
-    var defaultTranslation = Cartesian3.ZERO;
-    var defaultRotation = Quaternion.IDENTITY;
-    var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
     var scratchAxis = new Cartesian3();
 
     function parseNodes(model) {
@@ -381,25 +380,13 @@ define([
                     skinnedNodes.push(node);
                 }
 
-                // TRS converted to Cesium types
-                if (defined(node.translation)) {
+                if (!defined(node.matrix)) {
+                    // TRS converted to Cesium types
                     node.czm.translation = Cartesian3.fromArray(node.translation);
-                } else {
-                    node.czm.translation = Cartesian3.clone(defaultTranslation);
-                }
-
-                if (defined(node.rotation)) {
                     var axis = Cartesian3.fromArray(node.rotation, 0, scratchAxis);
                     var angle = node.rotation[3];
                     node.czm.rotation = Quaternion.fromAxisAngle(axis, angle);
-                } else {
-                    node.czm.rotation = Quaternion.clone(defaultRotation);
-                }
-
-                if (defined(node.scale)) {
                     node.czm.scale = Cartesian3.fromArray(node.scale);
-                } else {
-                    node.czm.scale = Cartesian3.clone(defaultScale);
                 }
             }
         }
@@ -448,24 +435,35 @@ define([
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
-        // through glTF indices to create the bufferview's index buffer.
-        var indices = model.gltf.indices;
-        for (var name in indices) {
-            if (indices.hasOwnProperty(name)) {
-                var instance = indices[name];
+        // through glTF accessors to create the bufferview's index buffer.
+        var accessors = model.gltf.accessors;
+        for (var name in accessors) {
+            if (accessors.hasOwnProperty(name)) {
+                var instance = accessors[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if (!defined(bufferView.czm.webglBuffer)) {
+                if ((bufferView.target === ModelConstants.ELEMENT_ARRAY_BUFFER) && !defined(bufferView.czm.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
                     indexBuffer.setVertexArrayDestroyable(false);
                     bufferView.czm.webglBuffer = indexBuffer;
-                    // In theory, several glTF indices with different types could
+                    // In theory, several glTF accessors with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
                 }
             }
         }
+    }
+
+    function createAttributeLocations(attributes) {
+        var attributeLocations = {};
+        var length = attributes.length;
+
+        for (var i = 0; i < length; ++i) {
+            attributeLocations[attributes[i]] = i;
+        }
+
+        return attributeLocations;
     }
 
     function createPrograms(model, context) {
@@ -490,12 +488,12 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
+            var attributeLocations = createAttributeLocations(program.attributes);
 
             program.czm = {
-                program : context.getShaderCache().getShaderProgram(vs, fs),
-                pickProgram : context.getShaderCache().getShaderProgram(vs, pickFS)
+                program : context.getShaderCache().getShaderProgram(vs, fs, attributeLocations),
+                pickProgram : context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations)
             };
-// TODO: in theory, pickProgram could have a different set of attribute locations
         }
     }
 
@@ -583,7 +581,6 @@ define([
     }
 
     function getAttributeLocations(model, primitive) {
-// TODO: this could be done per material, not per mesh, if we don't change glTF
         var gltf = model.gltf;
         var programs = gltf.programs;
         var techniques = gltf.techniques;
@@ -723,8 +720,7 @@ define([
 
          var gltf = model.gltf;
          var bufferViews = gltf.bufferViews;
-         var attributes = gltf.attributes;
-         var indices = gltf.indices;
+         var accessors = gltf.accessors;
          var meshes = gltf.meshes;
          var name;
 
@@ -741,7 +737,7 @@ define([
                          var primitiveAttributes = primitive.attributes;
                          for (name in primitiveAttributes) {
                              if (primitiveAttributes.hasOwnProperty(name)) {
-                                 var a = attributes[primitiveAttributes[name]];
+                                 var a = accessors[primitiveAttributes[name]];
 
                                  var type = ModelTypes[a.type];
                                  attrs.push({
@@ -756,7 +752,7 @@ define([
                              }
                          }
 
-                         var i = indices[primitive.indices];
+                         var i = accessors[primitive.indices];
                          var indexBuffer = bufferViews[i.bufferView].czm.webglBuffer;
 
                          primitive.czm = {
@@ -1059,8 +1055,7 @@ define([
 
         var gltf = model.gltf;
 
-        var attributes = gltf.attributes;
-        var indices = gltf.indices;
+        var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
 
         var programs = gltf.programs;
@@ -1084,7 +1079,7 @@ define([
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
-                var ix = indices[primitive.indices];
+                var ix = accessors[primitive.indices];
                 var instanceTechnique = materials[primitive.material].instanceTechnique;
                 var technique = techniques[instanceTechnique.technique];
                 var pass = technique.passes[technique.pass];
@@ -1093,7 +1088,7 @@ define([
                 var boundingSphere;
                 var positionAttribute = primitive.attributes.POSITION;
                 if (defined(positionAttribute)) {
-                    var a = attributes[positionAttribute];
+                    var a = accessors[positionAttribute];
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
