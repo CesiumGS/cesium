@@ -1,9 +1,5 @@
 {
-    "animations": {},
-    "asset": {
-        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
-    },
-    "attributes": {
+    "accessors": {
         "attribute_100": {
             "bufferView": "bufferView_5085",
             "byteOffset": 3168,
@@ -8129,35 +8125,7 @@
                 9.53144
             ],
             "type": 35665
-        }
-    },
-    "bufferViews": {
-        "bufferView_5085": {
-            "buffer": "SuperMurdoch",
-            "byteLength": 390864,
-            "byteOffset": 0,
-            "target": 34962
         },
-        "bufferView_5086": {
-            "buffer": "SuperMurdoch",
-            "byteLength": 81816,
-            "byteOffset": 390864,
-            "target": 34963
-        },
-        "bufferView_5087": {
-            "buffer": "SuperMurdoch",
-            "byteLength": 0,
-            "byteOffset": 472680
-        }
-    },
-    "buffers": {
-        "SuperMurdoch": {
-            "byteLength": 472680,
-            "path": "SuperMurdoch.bin",
-            "type": "arraybuffer"
-        }
-    },
-    "indices": {
         "indices_1016": {
             "bufferView": "bufferView_5086",
             "byteOffset": 76590,
@@ -9603,6 +9571,36 @@
             "byteOffset": 76578,
             "count": 6,
             "type": 5123
+        }
+    },
+    "animations": {},
+    "asset": {
+        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
+    },
+    "bufferViews": {
+        "bufferView_5085": {
+            "buffer": "SuperMurdoch",
+            "byteLength": 390864,
+            "byteOffset": 0,
+            "target": 34962
+        },
+        "bufferView_5086": {
+            "buffer": "SuperMurdoch",
+            "byteLength": 81816,
+            "byteOffset": 390864,
+            "target": 34963
+        },
+        "bufferView_5087": {
+            "buffer": "SuperMurdoch",
+            "byteLength": 0,
+            "byteOffset": 472680
+        }
+    },
+    "buffers": {
+        "SuperMurdoch": {
+            "byteLength": 472680,
+            "path": "SuperMurdoch.bin",
+            "type": "arraybuffer"
         }
     },
     "materials": {
@@ -13434,24 +13432,6 @@
         },
         "ID295": {
             "children": [],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "ID296",
                 "ID302",
@@ -13522,24 +13502,6 @@
         },
         "ID422": {
             "children": [],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "ID423",
                 "ID429",
@@ -13894,34 +13856,24 @@
                 "ID65",
                 "ID84"
             ],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "name": "SketchUp"
         }
     },
     "profile": "WebGL 1.0.2",
     "programs": {
         "program_0": {
+            "attributes": [
+                "a_normal",
+                "a_position"
+            ],
             "fragmentShader": "SuperMurdoch0FS",
             "vertexShader": "SuperMurdoch0VS"
         },
         "program_1": {
+            "attributes": [
+                "a_normal",
+                "a_position"
+            ],
             "fragmentShader": "SuperMurdoch2FS",
             "vertexShader": "SuperMurdoch2VS"
         }

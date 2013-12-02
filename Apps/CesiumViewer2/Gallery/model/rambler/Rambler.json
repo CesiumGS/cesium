@@ -1,9 +1,5 @@
 {
-    "animations": {},
-    "asset": {
-        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
-    },
-    "attributes": {
+    "accessors": {
         "attribute_100": {
             "bufferView": "bufferView_15637",
             "byteOffset": 157008,
@@ -24551,35 +24547,7 @@
                 -0.907308
             ],
             "type": 35665
-        }
-    },
-    "bufferViews": {
-        "bufferView_15637": {
-            "buffer": "Rambler",
-            "byteLength": 10344480,
-            "byteOffset": 0,
-            "target": 34962
         },
-        "bufferView_15638": {
-            "buffer": "Rambler",
-            "byteLength": 1197492,
-            "byteOffset": 10344480,
-            "target": 34963
-        },
-        "bufferView_15639": {
-            "buffer": "Rambler",
-            "byteLength": 0,
-            "byteOffset": 11541972
-        }
-    },
-    "buffers": {
-        "Rambler": {
-            "byteLength": 11541972,
-            "path": "Rambler.bin",
-            "type": "arraybuffer"
-        }
-    },
-    "indices": {
         "indices_10007": {
             "bufferView": "bufferView_15638",
             "byteOffset": 706944,
@@ -28977,6 +28945,36 @@
             "byteOffset": 703872,
             "count": 1536,
             "type": 5123
+        }
+    },
+    "animations": {},
+    "asset": {
+        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
+    },
+    "bufferViews": {
+        "bufferView_15637": {
+            "buffer": "Rambler",
+            "byteLength": 10344480,
+            "byteOffset": 0,
+            "target": 34962
+        },
+        "bufferView_15638": {
+            "buffer": "Rambler",
+            "byteLength": 1197492,
+            "byteOffset": 10344480,
+            "target": 34963
+        },
+        "bufferView_15639": {
+            "buffer": "Rambler",
+            "byteLength": 0,
+            "byteOffset": 11541972
+        }
+    },
+    "buffers": {
+        "Rambler": {
+            "byteLength": 11541972,
+            "path": "Rambler.bin",
+            "type": "arraybuffer"
         }
     },
     "materials": {
@@ -42702,24 +42700,6 @@
                 "ID5631",
                 "ID5644"
             ],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "ID5657",
                 "ID5663",
@@ -42807,24 +42787,6 @@
         },
         "ID5688": {
             "children": [],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "ID5689",
                 "ID5695"
@@ -42881,24 +42843,6 @@
         },
         "ID5703": {
             "children": [],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "ID5704",
                 "ID5710"
@@ -43219,30 +43163,16 @@
                 "ID5717",
                 "ID5718"
             ],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "name": "SketchUp"
         }
     },
     "profile": "WebGL 1.0.2",
     "programs": {
         "program_0": {
+            "attributes": [
+                "a_normal",
+                "a_position"
+            ],
             "fragmentShader": "Rambler0FS",
             "vertexShader": "Rambler0VS"
         }

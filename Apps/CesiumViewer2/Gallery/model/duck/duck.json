@@ -1,9 +1,5 @@
 {
-    "animations": {},
-    "asset": {
-        "generator": "collada2gltf@c513fe6e4a2adf231163a66af0e08855076533a9"
-    },
-    "attributes": {
+    "accessors": {
         "attribute_23": {
             "bufferView": "bufferView_29",
             "byteOffset": 0,
@@ -52,7 +48,17 @@
                 0.019963
             ],
             "type": 35664
+        },
+        "indices_21": {
+            "bufferView": "bufferView_30",
+            "byteOffset": 0,
+            "count": 12636,
+            "type": 5123
         }
+    },
+    "animations": {},
+    "asset": {
+        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -94,14 +100,6 @@
     "images": {
         "image_0": {
             "path": "duckCM.png"
-        }
-    },
-    "indices": {
-        "indices_21": {
-            "bufferView": "bufferView_30",
-            "byteOffset": 0,
-            "count": 12636,
-            "type": 5123
         }
     },
     "lights": {
@@ -166,24 +164,6 @@
     "nodes": {
         "LOD3sp": {
             "children": [],
-            "matrix": [
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1,
-                0,
-                0,
-                0,
-                0,
-                1
-            ],
             "meshes": [
                 "LOD3spShape-lib"
             ],
@@ -239,6 +219,11 @@
     "profile": "WebGL 1.0.2",
     "programs": {
         "program_0": {
+            "attributes": [
+                "a_normal",
+                "a_position",
+                "a_texcoord0"
+            ],
             "fragmentShader": "duck0FS",
             "vertexShader": "duck0VS"
         }
