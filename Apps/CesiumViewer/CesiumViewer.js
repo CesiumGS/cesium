@@ -80,7 +80,7 @@ define([
             console.error(error);
         };
 
-        viewer.onDropError.addEventListener(function(viewerArg, name, error) {
+        viewer.dropError.addEventListener(function(viewerArg, name, error) {
             showLoadError(name, error);
         });
 

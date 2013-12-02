@@ -246,7 +246,7 @@ defineSuite([
         });
     });
 
-    it('onDropError is raised on exception', function() {
+    it('dropError is raised on exception', function() {
         var mockEvent = {
             dataTransfer : {
                 files : [{
@@ -265,7 +265,7 @@ defineSuite([
 
         var spyListener = jasmine.createSpy('listener');
 
-        viewer.onDropError.addEventListener(spyListener);
+        viewer.dropError.addEventListener(spyListener);
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
@@ -275,11 +275,11 @@ defineSuite([
         runs(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, 'czml1.czml', jasmine.any(SyntaxError));
 
-            viewer.onDropError.removeEventListener(spyListener);
+            viewer.dropError.removeEventListener(spyListener);
         });
     });
 
-    it('onDropError is raised FileReader error', function() {
+    it('dropError is raised FileReader error', function() {
         var mockEvent = {
             dataTransfer : {
                 files : [{
@@ -298,7 +298,7 @@ defineSuite([
 
         var spyListener = jasmine.createSpy('listener');
 
-        viewer.onDropError.addEventListener(spyListener);
+        viewer.dropError.addEventListener(spyListener);
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
@@ -308,7 +308,7 @@ defineSuite([
         runs(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, mockEvent.dataTransfer.files[0].name, mockEvent.dataTransfer.files[0].errorMessage);
 
-            viewer.onDropError.removeEventListener(spyListener);
+            viewer.dropError.removeEventListener(spyListener);
         });
     });
 
@@ -414,9 +414,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws if onDropError property already added by another mixin.', function() {
+    it('throws if dropError property already added by another mixin.', function() {
         viewer = new Viewer(container);
-        viewer.onDropError = true;
+        viewer.dropError = true;
         expect(function() {
             viewer.extend(viewerDragDropMixin);
         }).toThrow();

@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : 'http://cesium.agi.com/smallterrain'
+        url : 'http://cesiumjs.org/smallterrain'
     });
 
     it('queries heights', function() {

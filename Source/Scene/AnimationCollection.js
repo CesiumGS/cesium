@@ -19,7 +19,7 @@ define([
      * @alias AnimationCollection
      * @constructor
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
      */
     var AnimationCollection = function() {
     };
