@@ -128,6 +128,7 @@
 .cesium-dataSourceBrowser-dataSourcesFilterBox {
     display: none;
     padding-right: 100px;
+    white-space: nowrap;
 }
 
 .cesium-dataSourceBrowser-dataSourcesFilterBox-visible {
