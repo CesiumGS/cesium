@@ -661,6 +661,7 @@ define([
          }
 
          var animations = model.gltf.animations;
+         var accessors = model.gltf.accessors;
          var name;
 
          for (var animationName in animations) {
@@ -670,12 +671,11 @@ define([
                  var parameters = animation.parameters;
                  var samplers = animation.samplers;
 
+                 var parameterValues = {};
+
                  for (name in parameters) {
                      if (parameters.hasOwnProperty(name)) {
-                         var parameter = parameters[name];
-                         parameter.czm = {
-                             values : ModelCache.getAnimationParameterValues(model, parameter)
-                         };
+                         parameterValues[name] = ModelCache.getAnimationParameterValues(model, accessors[parameters[name]]);
                      }
                  }
 
@@ -683,7 +683,7 @@ define([
                      if (samplers.hasOwnProperty(name)) {
                          var sampler = samplers[name];
                          sampler.czm = {
-                             spline : ModelCache.getAnimationSpline(model, animationName, animation, name, sampler)
+                             spline : ModelCache.getAnimationSpline(model, animationName, animation, name, sampler, parameterValues)
                          };
                      }
                  }
@@ -695,11 +695,10 @@ define([
                  for (name in channels) {
                      if (channels.hasOwnProperty(name)) {
                          var channel = channels[name];
-                         var timeParameter = parameters[samplers[channel.sampler].input];
-                         var times = timeParameter.czm.values;
+                         var times = parameterValues[samplers[channel.sampler].input];
 
                          startTime = Math.min(startTime, times[0]);
-                         stopTime = Math.max(stopTime, times[timeParameter.count - 1]);
+                         stopTime = Math.max(stopTime, times[times.length - 1]);
                      }
                  }
 

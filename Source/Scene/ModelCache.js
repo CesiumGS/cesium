@@ -26,24 +26,24 @@ define([
     var cachedAnimationParameters = {
     };
 
-    function getAnimationParameterKey(model, parameter) {
+    function getAnimationParameterKey(model, accessor) {
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
 
-        var bufferView = bufferViews[parameter.bufferView];
+        var bufferView = bufferViews[accessor.bufferView];
         var buffer = buffers[bufferView.buffer];
 
-        var byteOffset = bufferView.byteOffset + parameter.byteOffset;
-        var byteLength = parameter.count * ModelTypes[parameter.type].componentsPerAttribute;
+        var byteOffset = bufferView.byteOffset + accessor.byteOffset;
+        var byteLength = accessor.count * ModelTypes[accessor.type].componentsPerAttribute;
 
         return model.basePath + buffer.path + ':' + byteOffset + ':' + byteLength;
     }
 
     var axisScratch = new Cartesian3();
 
-    ModelCache.getAnimationParameterValues = function(model, parameter) {
-        var key = getAnimationParameterKey(model, parameter);
+    ModelCache.getAnimationParameterValues = function(model, accessor) {
+        var key = getAnimationParameterKey(model, accessor);
         var values = cachedAnimationParameters[key];
 
         if (!defined(values)) {
@@ -52,13 +52,13 @@ define([
             var gltf = model.gltf;
             var bufferViews = gltf.bufferViews;
 
-            var bufferView = bufferViews[parameter.bufferView];
+            var bufferView = bufferViews[accessor.bufferView];
 
-            var type = parameter.type;
-            var count = parameter.count;
+            var type = accessor.type;
+            var count = accessor.count;
 
             // Convert typed array to Cesium types
-            var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + parameter.byteOffset, parameter.count);
+            var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.count);
             var i;
 
             if (type === ModelConstants.FLOAT) {
@@ -101,16 +101,14 @@ define([
     };
  // END TODO Workaround
 
-    ModelCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler) {
+    ModelCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, parameterValues) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
         var spline = cachedAnimationSplines[key];
 
         if (!defined(spline)) {
-            var input = animation.parameters[sampler.input];
-            var output = animation.parameters[sampler.output];
-
-            var times = input.czm.values;
-            var controlPoints = output.czm.values;
+            var times = parameterValues[sampler.input];
+            var output = model.gltf.accessors[animation.parameters[sampler.output]];
+            var controlPoints = parameterValues[sampler.output];
 
 // TODO Workaround: https://github.com/KhronosGroup/glTF/issues/185
             if ((times.length === 1) && (controlPoints.length === 1)) {
