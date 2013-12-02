@@ -822,7 +822,7 @@ define([
             },
 
             getDatatype : function() {
-                return UniformDatatype.FLOAT_MATRIX4;
+                return UniformDatatype.FLOAT_MAT4;
             },
 
             getValue : function(uniformState) {
@@ -895,7 +895,7 @@ define([
             },
 
             getDatatype : function() {
-                return UniformDatatype.FLOAT_MATRIX4;
+                return UniformDatatype.FLOAT_MAT4;
             },
 
             getValue : function(uniformState) {
