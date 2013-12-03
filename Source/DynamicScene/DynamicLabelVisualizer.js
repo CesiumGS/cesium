@@ -336,6 +336,11 @@ define([
         if (defined(property)) {
             label.setTranslucencyByDistance(property.getValue(time));
         }
+
+        property = dynamicLabel._pixelOffsetByDistance;
+        if (defined(property)) {
+            label.setPixelOffsetByDistance(property.getValue(time));
+        }
     }
 
     DynamicLabelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
