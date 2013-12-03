@@ -56,7 +56,10 @@
 	</target>
 
 	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
-		<antcall target="minify" />
+		<antcall target="minifyRelease" />
+		<antcall target="combine">
+			<param name="build.debugUnminified" value="true" />
+		</antcall>
 		<antcall target="generateDocumentation" />
 		<antcall target="buildApps" />
 	</target>
@@ -431,7 +434,16 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript.copyUnminified" unless="${build.minification}">
+	<target name="combineJavascript.checkCopy">
+		<condition property="combineJavascript.noCopy">
+			<or>
+				<istrue value="${build.minification}" />
+				<isset property="build.debugUnminified" />
+			</or>
+		</condition>
+	</target>
+
+	<target name="combineJavaScript.copyUnminified" depends="combineJavascript.checkCopy" unless="${combineJavascript.noCopy}">
 		<copy todir="${buildOutputDirectory}">
 			<fileset dir="${unminifiedOutputDirectory}" />
 		</copy>
