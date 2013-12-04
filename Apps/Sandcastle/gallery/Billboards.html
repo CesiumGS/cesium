@@ -182,6 +182,33 @@ require(['Cesium'], function(Cesium) {
         image.src = '../images/Cesium_Logo_overlay.png';
     }
 
+    function billboardPixelOffsetScaleByDistance(scene, ellipsoid) {
+        Sandcastle.declare(billboardPixelOffsetScaleByDistance); // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                image : image
+            });
+            billboards.setTextureAtlas(textureAtlas);
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                pixelOffset : new Cesium.Cartesian2(1.0, 0.0),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 10.0, 1.5e6, 0.0)
+            });
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                pixelOffset : new Cesium.Cartesian2(-1.0, 0.0),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 10.0, 1.5e6, 0.0)
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../images/facility.gif';
+    }
+
     function addPointBillboards(scene, ellipsoid) {
         Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
@@ -459,6 +486,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(billboardTranslucencyByDistance);
         };
         button.textContent = 'Fade by viewer distance';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'cesium-button';
+        button.onclick = function() {
+            primitives.removeAll();
+            billboardPixelOffsetScaleByDistance(scene, ellipsoid);
+            Sandcastle.highlight(billboardPixelOffsetScaleByDistance);
+        };
+        button.textContent = 'Offset by viewer distance';
         toolbar.appendChild(button);
     }
 

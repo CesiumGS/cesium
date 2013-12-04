@@ -110,7 +110,8 @@ require(['Cesium'], function(Cesium) {
 
             labels.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
-                text     : 'Philadelphia',
+                text     : 'Label on top of scaling billboard',
+                font : '20px sans-serif',
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                 pixelOffset : new Cesium.Cartesian2(0.0, image.height),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
