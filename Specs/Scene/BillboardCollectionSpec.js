@@ -133,6 +133,7 @@ defineSuite([
         expect(b.getAlignedAxis()).toEqual(Cartesian3.ZERO);
         expect(b.getScaleByDistance()).not.toBeDefined();
         expect(b.getTranslucencyByDistance()).not.toBeDefined();
+        expect(b.getPixelOffsetScaleByDistance()).not.toBeDefined();
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
         expect(b.getId()).not.toBeDefined();
@@ -158,6 +159,7 @@ defineSuite([
             alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
+            pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             width : 300.0,
             height : 200.0,
             id : 'id'
@@ -179,6 +181,7 @@ defineSuite([
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(b.getTranslucencyByDistance()).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
+        expect(b.getPixelOffsetScaleByDistance()).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
         expect(b.getId()).toEqual('id');
@@ -206,6 +209,7 @@ defineSuite([
         b.setHeight(200.0);
         b.setScaleByDistance(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         b.setTranslucencyByDistance(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+        b.setPixelOffsetScaleByDistance(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
 
         expect(b.getShow()).toEqual(false);
         expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -223,6 +227,7 @@ defineSuite([
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.getTranslucencyByDistance()).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
+        expect(b.getPixelOffsetScaleByDistance()).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
     });
@@ -237,6 +242,12 @@ defineSuite([
         var b = billboards.add();
         b.setTranslucencyByDistance(undefined);
         expect(b.getTranslucencyByDistance()).not.toBeDefined();
+    });
+
+    it('disable billboard setPixelOffsetScaleByDistance', function() {
+        var b = billboards.add();
+        b.setPixelOffsetScaleByDistance(undefined);
+        expect(b.getPixelOffsetScaleByDistance()).not.toBeDefined();
     });
 
     it('render billboard with scaleByDistance', function() {
@@ -303,6 +314,38 @@ defineSuite([
         us.update(context, createFrameState(createCamera(context)));
     });
 
+    it('render billboard with pixelOffsetScaleByDistance', function() {
+        billboards.setTextureAtlas(createTextureAtlas(context, [greenImage]));
+        billboards.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            pixelOffset : { x: 1.0, y: 0.0},
+            pixelOffsetScaleByDistance: new NearFarScalar(1.0, 0.0, 3.0, 10.0),
+            imageIndex : 0
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var us = context.getUniformState();
+        var eye = new Cartesian3(0.0, 0.0, 1.0);
+        var target = Cartesian3.ZERO;
+        var up = Cartesian3.UNIT_Y;
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        eye = new Cartesian3(0.0, 0.0, 6.0);
+        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        us.update(context, createFrameState(createCamera(context)));
+    });
+
     it('throws setScaleByDistance with nearDistance === farDistance', function() {
         var b = billboards.add();
         var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
@@ -325,6 +368,31 @@ defineSuite([
         var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.setScaleByDistance(scale);
+        }).toThrow();
+    });
+
+    it('throws setPixelOffsetScaleByDistance with nearDistance === farDistance', function() {
+        var b = billboards.add();
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            b.setPixelOffsetScaleByDistance(scale);
+        }).toThrow();
+    });
+
+    it('throws new billboard with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)', function() {
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            billboards.add({
+                pixelOffsetScaleByDistance : scale
+            });
+        }).toThrow();
+    });
+
+    it('throws setPixelOffsetScaleByDistance with nearDistance > farDistance', function() {
+        var b = billboards.add();
+        var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+        expect(function() {
+            b.setPixelOffsetScaleByDistance(scale);
         }).toThrow();
     });
 
@@ -1242,6 +1310,32 @@ defineSuite([
         translucency.nearValue = 0.0;
         translucency.farValue = 0.0;
         b.setTranslucencyByDistance(translucency);
+        pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject).toBeUndefined();
+    });
+
+    it('pick a billboard using pixelOffsetScaleByDistance', function() {
+        billboards.setTextureAtlas(createTextureAtlas(context, [whiteImage]));
+        var b = billboards.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            pixelOffset : {
+                x : 0.0,
+                y : 1.0
+            },
+            imageIndex : 0
+        });
+
+        var pixelOffsetScale = new NearFarScalar(1.0, 0.0, 3.0e9, 0.0);
+        b.setPixelOffsetScaleByDistance(pixelOffsetScale);
+        var pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject.primitive).toEqual(b);
+        pixelOffsetScale.nearValue = 10.0;
+        pixelOffsetScale.farValue = 10.0;
+        b.setPixelOffsetScaleByDistance(pixelOffsetScale);
         pickedObject = pick(context, frameState, billboards, 0, 0);
         expect(pickedObject).toBeUndefined();
     });

@@ -362,9 +362,9 @@ define([
             billboard.setTranslucencyByDistance(property.getValue(time));
         }
 
-        property = dynamicBillboard._pixelOffsetByDistance;
+        property = dynamicBillboard._pixelOffsetScaleByDistance;
         if (defined(property)) {
-            billboard.setPixelOffsetByDistance(property.getValue(time));
+            billboard.setPixelOffsetScaleByDistance(property.getValue(time));
         }
     }
 

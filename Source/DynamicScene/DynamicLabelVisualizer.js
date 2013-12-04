@@ -337,9 +337,9 @@ define([
             label.setTranslucencyByDistance(property.getValue(time));
         }
 
-        property = dynamicLabel._pixelOffsetByDistance;
+        property = dynamicLabel._pixelOffsetScaleByDistance;
         if (defined(property)) {
-            label.setPixelOffsetByDistance(property.getValue(time));
+            label.setPixelOffsetScaleByDistance(property.getValue(time));
         }
     }
 
