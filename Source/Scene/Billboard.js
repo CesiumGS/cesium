@@ -999,6 +999,7 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
+    var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
         if (!defined(billboardCollection)) {
@@ -1013,8 +1014,12 @@ define([
             throw new DeveloperError('frameState is required.');
         }
 
+        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        Cartesian2.clone(this._pixelOffset, tempPixelOffset);
+        Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
+
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, context, frameState);
     };
 
     /**
