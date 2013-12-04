@@ -526,7 +526,7 @@ define([
      *
      * @memberof Label
      *
-     * @returns {NearFarScalar} The near/far pixel offset scale values based on camera distance to the billboard
+     * @returns {NearFarScalar} The near/far pixel offset scale values based on camera distance to the label
      *
      * @see Label#setPixelOffsetScaleByDistance
      * @see Label#setPixelOffset
@@ -546,16 +546,18 @@ define([
      *
      * @memberof Label
      *
-     * @param {NearFarScalar} pixelOffsetScale The configuration of near and far distances and their respective pixel offset values
+     * @param {NearFarScalar} pixelOffsetScale The configuration of near and far distances and their respective scaling factor to be applied to the pixelOffset
      *
      * @exception {DeveloperError} far distance must be greater than near distance.
      *
      * @see Label#getPixelOffsetScaleByDistance
+     * @see Label#setPixelOffset
+     * @see Label#getPixelOffset
      *
      * @example
      * // Example 1.
      * // Set a label's pixel offset scale to 0.0 when the
-     * // camera is 1500 meters from the billboard and scale pixel offset to 10.0 pixels
+     * // camera is 1500 meters from the label and scale pixel offset to 10.0 pixels
      * // in the y direction the camera distance approaches 8.0e6 meters.
      * text.setPixelOffset(new Cartesian2(0.0, 1.0);
      * text.setPixelOffsetScaleByDistance(new NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));

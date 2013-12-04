@@ -687,7 +687,10 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            pixelOffset : { x: 1.0, y: 0.0},
+            pixelOffset : {
+                x: 1.0,
+                y: 0.0
+            },
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,

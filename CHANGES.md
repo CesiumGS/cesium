@@ -4,6 +4,10 @@ Change Log
 Beta Releases
 -------------
 
+### b24 - 2013-01-02
+
+* Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
+
 ### b23 - 2013-12-02
 
 * Breaking changes:

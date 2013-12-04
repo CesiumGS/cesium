@@ -322,7 +322,10 @@ defineSuite([
                 y : 0.0,
                 z : 0.0
             },
-            pixelOffset : { x: 1.0, y: 0.0},
+            pixelOffset : {
+                x: 1.0,
+                y: 0.0
+            },
             pixelOffsetScaleByDistance: new NearFarScalar(1.0, 0.0, 3.0, 10.0),
             imageIndex : 0
         });

@@ -85,7 +85,7 @@ define([
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
-        this._translate = new Cartesian2(0.0, 0.0);
+        this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
@@ -459,17 +459,17 @@ define([
      * // disable pixel offset by distance
      * b.setPixelOffsetScaleByDistance(undefined);
      */
-    Billboard.prototype.setPixelOffsetScaleByDistance = function(pixelOffset) {
-        if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, pixelOffset)) {
+    Billboard.prototype.setPixelOffsetScaleByDistance = function(pixelOffsetScale) {
+        if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, pixelOffsetScale)) {
             return;
         }
 
-        if (pixelOffset.far <= pixelOffset.near) {
+        if (pixelOffsetScale.far <= pixelOffsetScale.near) {
             throw new DeveloperError('far distance must be greater than near distance.');
         }
 
         makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
-        this._pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffset, this._pixelOffsetScaleByDistance);
+        this._pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScale, this._pixelOffsetScaleByDistance);
     };
 
     /**
