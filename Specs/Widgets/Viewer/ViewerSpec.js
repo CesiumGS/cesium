@@ -281,7 +281,7 @@ defineSuite([
     });
 
     it('can set contextOptions', function() {
-        var contextOptions = {
+        var webglOptions = {
             alpha : true,
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
@@ -289,13 +289,25 @@ defineSuite([
             premultipliedAlpha : false,
             preserveDrawingBuffer : true
         };
+        var contextOptions = {
+            allowTextureFilterAnisotropic : false,
+            webgl : webglOptions
+        };
 
         viewer = new Viewer(container, {
             contextOptions : contextOptions
         });
 
-        var contextAttributes = viewer.scene.getContext()._gl.getContextAttributes();
-        expect(contextAttributes).toEqual(contextOptions);
+        var context = viewer.scene.getContext();
+        var contextAttributes = context._gl.getContextAttributes();
+
+        expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
+        expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
+        expect(contextAttributes.depth).toEqual(webglOptions.depth);
+        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
     it('can set scene mode', function() {
