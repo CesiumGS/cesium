@@ -203,6 +203,17 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         *
+         * @readonly
+         */
+        this.allowPicking = defaultValue(options.allowPicking, true);
+
+        /**
+         * DOC_TBA
          */
         this.jsonLoad = new Event();
 
@@ -253,13 +264,7 @@ define([
             basePath = url.substring(0, i + 1);
         }
 
-        var model = new Model({
-            show : options.show,
-            modelMatrix : options.modelMatrix,
-            scale : options.scale,
-            id : options.id,
-            debugShowBoundingVolume : options.debugShowBoundingVolume
-        });
+        var model = new Model(options);
 
         loadText(url, options.headers).then(function(data) {
             model.gltf = gltfDefaults(JSON.parse(data));
@@ -481,19 +486,23 @@ define([
             var name = loadResources.programsToCreate.dequeue();
             var program = programs[name];
 
+            var attributeLocations = createAttributeLocations(program.attributes);
             var vs = shaders[program.vertexShader];
             var fs = shaders[program.fragmentShader];
-// TODO: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            var pickFS = createShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'uniform'
-            });
-            var attributeLocations = createAttributeLocations(program.attributes);
 
             program.czm = {
                 program : context.getShaderCache().getShaderProgram(vs, fs, attributeLocations),
-                pickProgram : context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations)
+                pickProgram : undefined
             };
+
+            if (model.allowPicking) {
+             // TODO: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+                var pickFS = createShaderSource({
+                    sources : [fs],
+                    pickColorQualifier : 'uniform'
+                });
+                program.czm.pickProgram = context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations);
+            }
         }
     }
 
@@ -1046,10 +1055,12 @@ define([
 
         var opaqueColorCommands = model._commandLists.opaqueList;
         var translucentColorCommands = model._commandLists.translucentList;
+
         var opaquePickCommands = model._commandLists.pickList.opaqueList;
         var translucentPickCommands = model._commandLists.pickList.translucentList;
-
         var pickIds = model._pickIds;
+        var allowPicking = model.allowPicking;
+
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
         var gltf = model.gltf;
@@ -1125,29 +1136,33 @@ define([
                     opaqueColorCommands.push(command);
                 }
 
-                var pickId = context.createPickId(owner);
-                pickIds.push(pickId);
+                var pickCommand = undefined;
 
-                var pickUniformMap = combine([
-                    uniformMap, {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    }], false, false);
+                if (allowPicking) {
+                    var pickId = context.createPickId(owner);
+                    pickIds.push(pickId);
 
-                var pickCommand = new DrawCommand();
-                pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
-                pickCommand.modelMatrix = new Matrix4();           // computed in update()
-                pickCommand.primitiveType = primitive.primitive;
-                pickCommand.vertexArray = vertexArray;
-                pickCommand.count = count;
-                pickCommand.offset = offset;
-                pickCommand.shaderProgram = programs[instanceProgram.program].czm.pickProgram;
-                pickCommand.uniformMap = pickUniformMap;
-                pickCommand.renderState = rs;
-                pickCommand.owner = owner;
-                if (isTranslucent) {
-                    translucentPickCommands.push(pickCommand);
-                } else {
-                    opaquePickCommands.push(pickCommand);
+                    var pickUniformMap = combine([
+                        uniformMap, {
+                            czm_pickColor : createPickColorFunction(pickId.color)
+                        }], false, false);
+
+                    pickCommand = new DrawCommand();
+                    pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
+                    pickCommand.modelMatrix = new Matrix4();           // computed in update()
+                    pickCommand.primitiveType = primitive.primitive;
+                    pickCommand.vertexArray = vertexArray;
+                    pickCommand.count = count;
+                    pickCommand.offset = offset;
+                    pickCommand.shaderProgram = programs[instanceProgram.program].czm.pickProgram;
+                    pickCommand.uniformMap = pickUniformMap;
+                    pickCommand.renderState = rs;
+                    pickCommand.owner = owner;
+                    if (isTranslucent) {
+                        translucentPickCommands.push(pickCommand);
+                    } else {
+                        opaquePickCommands.push(pickCommand);
+                    }
                 }
 
                 meshesCommands.push({
@@ -1227,6 +1242,7 @@ define([
     var scratchSpheres = [];
 
     function updateModelMatrix(model) {
+        var allowPicking = model.allowPicking;
         var gltf = model.gltf;
         var scenes = gltf.scenes;
         var nodes = gltf.nodes;
@@ -1264,13 +1280,14 @@ define([
                             for (var j = 0 ; j < meshCommandLength; ++j) {
                                 var primitiveCommand = meshCommand[j];
                                 var command = primitiveCommand.command;
-                                var pickCommand = primitiveCommand.pickCommand;
-
                                 Matrix4.multiply(computedModelMatrix, transformToRoot, command.modelMatrix);
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-
                                 BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+
+                                if (allowPicking) {
+                                    var pickCommand = primitiveCommand.pickCommand;
+                                    Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                                }
 
                                 Cartesian3.add(command.boundingVolume.center, sphereCenter, sphereCenter);
                                 spheres.push(command.boundingVolume);

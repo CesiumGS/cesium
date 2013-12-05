@@ -202,6 +202,7 @@ define([
             url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
             modelMatrix : modelMatrix,
             scale : 10.0
+            //, allowPicking : false
             //, debugShowBoundingVolume : true
         }));
 
