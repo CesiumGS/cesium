@@ -241,7 +241,7 @@ define([
 
             if (!defined(object[lastMovementName])) {
                 var lastMovement = handler.getLastMovement();
-                if (!lastMovement || sameMousePosition(lastMovement)) {
+                if (!defined(lastMovement) || sameMousePosition(lastMovement)) {
                     return;
                 }
 
