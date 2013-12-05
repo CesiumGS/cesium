@@ -26,6 +26,9 @@ define(function() {
      *
      * // parameters can be observable from the view model
      * <div data-bind="cesiumSvgPath: { path: currentPath, width: currentWidth, height: currentHeight }"></div>
+     *
+     * // or the whole object can be observable from the view model
+     * <div data-bind="cesiumSvgPath: svgPathOptions"></div>
      */
     var SvgPathBindingHandler = {
         register : function(knockout) {
