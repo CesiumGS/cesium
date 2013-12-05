@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b24 - 2014-01-02
+
+* Breaking changes:
+   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
+
 ### b23 - 2013-12-02
 
 * Breaking changes:
