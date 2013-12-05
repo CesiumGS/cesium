@@ -43,8 +43,9 @@ define([
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties
         options = clone(defaultValue(options, {}));
-        options.alpha = defaultValue(options.alpha, true);
-        options.antialias = defaultValue(options.antialias, false);
+        options.webgl = clone(defaultValue(options.webgl, {}));
+        options.webgl.alpha = defaultValue(options.webgl.alpha, true);
+        options.webgl.antialias = defaultValue(options.webgl.antialias, false);
 
         var canvas = createCanvas(canvasWidth, canvasHeight);
         var context = new Context(canvas, options);
