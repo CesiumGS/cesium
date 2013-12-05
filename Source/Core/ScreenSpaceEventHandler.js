@@ -37,10 +37,10 @@ define([
         this._modifiedMouseEvents = {};
         for ( var modifier in KeyboardEventModifier) {
             if (KeyboardEventModifier.hasOwnProperty(modifier)) {
-                this._modifiedMouseEvents[modifier] = {};
+                this._modifiedMouseEvents[KeyboardEventModifier[modifier]] = {};
                 for (button in ScreenSpaceEventType) {
                     if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                        this._modifiedMouseEvents[modifier][button] = undefined;
+                        this._modifiedMouseEvents[KeyboardEventModifier[modifier]][button] = undefined;
                     }
                 }
             }
@@ -109,13 +109,13 @@ define([
         }
 
         var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
+        if (defined(modifier)) {
+            mouseEvents = this._modifiedMouseEvents[modifier];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (defined(type) && defined(type.name) && defined(mouseEvents)) {
+        if (defined(type.name) && defined(mouseEvents)) {
             mouseEvents[type.name] = action;
         }
     };
@@ -140,13 +140,13 @@ define([
         }
 
         var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
+        if (defined(modifier)) {
+            mouseEvents = this._modifiedMouseEvents[modifier];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (defined(type) && defined(type.name) && defined(mouseEvents)) {
+        if (defined(type.name) && defined(mouseEvents)) {
             return mouseEvents[type.name];
         }
 
@@ -173,13 +173,13 @@ define([
         }
 
         var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
+        if (defined(modifier)) {
+            mouseEvents = this._modifiedMouseEvents[modifier];
         } else {
             mouseEvents = this._mouseEvents;
         }
 
-        if (defined(type) && defined(type.name) && defined(mouseEvents) && defined(mouseEvents[type.name])) {
+        if (defined(type.name) && defined(mouseEvents) && defined(mouseEvents[type.name])) {
             delete mouseEvents[type.name];
         }
     };

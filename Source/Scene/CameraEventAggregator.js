@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Math',
@@ -11,6 +12,7 @@ define([
         './CameraEventType'
     ], function(
         defined,
+        defaultValue,
         DeveloperError,
         destroyObject,
         CesiumMath,
@@ -36,11 +38,12 @@ define([
     }
 
     function getIndex(type, modifier) {
-        return type * MAX_MODS + modifier + 1;
+        modifier = !defined(modifier) ? 0 : modifier + 1;
+        return type * MAX_MODS + modifier;
     }
 
-    function listenToPinch(aggregator, canvas, modifier) {
-        var index = getIndex(CameraEventType.PINCH, modifier);
+    function listenToPinch(aggregator, modifier, canvas) {
+        var index = getIndex(CameraEventType.PINCH, modifier) - 1;
 
         if (modifier === 0) {
             modifier = undefined;
@@ -93,7 +96,7 @@ define([
     }
 
     function listenToWheel(aggregator, modifier) {
-        var index = getIndex(CameraEventType.WHEEL, modifier);
+        var index = getIndex(CameraEventType.WHEEL, modifier) - 1;
 
         if (modifier === 0) {
             modifier = undefined;
@@ -124,15 +127,13 @@ define([
         }, ScreenSpaceEventType.WHEEL, modifier);
     }
 
-    function listenMouseButton(aggregator, canvas, modifier, type) {
-        var index = getIndex(type, modifier);
+    function listenMouseButtonDownUp(aggregator, modifier, type) {
+        var index = getIndex(type, modifier) - 1;
 
         if (modifier === 0) {
             modifier = undefined;
         }
 
-        var update = aggregator._update;
-        var movement = aggregator._movement;
         var lastMovement = aggregator._lastMovement;
         var isDown = aggregator._isDown;
         var pressTime = aggregator._pressTime;
@@ -161,18 +162,28 @@ define([
             isDown[index] = false;
             releaseTime[index] = new Date();
         }, up, modifier);
+    }
+
+    function listenMouseMove(aggregator, modifier) {
+        var update = aggregator._update;
+        var movement = aggregator._movement;
+        var lastMovement = aggregator._lastMovement;
+        var isDown = aggregator._isDown;
 
         aggregator._eventHandler.setInputAction(function(mouseMovement) {
-            if (isDown[index]) {
-                if (!update) {
-                    movement[index].endPosition = Cartesian2.clone(mouseMovement.endPosition);
-                } else {
-                    lastMovement[index] = movement[index];
-                    movement[index] = mouseMovement;
-                    update[index] = false;
+            for (var i = 0; i < MAX_EVENT_TYPES; ++i) {
+                var index = getIndex(i, modifier) - 1;
+                if (isDown[index]) {
+                    if (!update[index]) {
+                        movement[index].endPosition = Cartesian2.clone(mouseMovement.endPosition);
+                    } else {
+                        lastMovement[index] = movement[index];
+                        movement[index] = mouseMovement;
+                        update[index] = false;
+                    }
                 }
             }
-        }, ScreenSpaceEventType.MOUSE_MOVE, modifier);
+        }, ScreenSpaceEventType.MOUSE_MOVE, (modifier === 0) ? undefined : (modifier - 1));
     }
 
     /**
@@ -210,11 +221,12 @@ define([
         }
 
         for (var j = 0; j < MAX_MODS; ++j) {
-            listenToPinch(this, canvas, j);
-            listenToWheel(this, canvas, j);
-            listenMouseButton(this, canvas, j, CameraEventType.LEFT_DRAG);
-            listenMouseButton(this, canvas, j, CameraEventType.RIGHT_DRAG);
-            listenMouseButton(this, canvas, j, CameraEventType.MIDDLE_DRAG);
+            listenToWheel(this, j);
+            listenToPinch(this, j, canvas);
+            listenMouseButtonDownUp(this, j, CameraEventType.LEFT_DRAG);
+            listenMouseButtonDownUp(this, j, CameraEventType.RIGHT_DRAG);
+            listenMouseButtonDownUp(this, j, CameraEventType.MIDDLE_DRAG);
+            listenMouseMove(this, j);
         }
     };
 
