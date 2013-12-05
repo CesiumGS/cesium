@@ -7,7 +7,7 @@ Beta Releases
 ### b24 - 2014-01-02
 
 * Breaking changes:
-   * Added `allowTextureFilterAnisotropic` property to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+   * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
 
            var viewer = new Viewer('cesiumContainer', { 
                alpha : true

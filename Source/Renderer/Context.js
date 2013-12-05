@@ -202,6 +202,7 @@ define([
 
         this._canvas = canvas;
 
+        options = clone(options, true);
         options = defaultValue(options, {});
         options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
         var webglOptions = defaultValue(options.webgl, {});
@@ -328,7 +329,7 @@ define([
          *   allowTextureFilterAnisotropic : true
          * }
          */
-        this.options = clone(options);
+        this.options = options;
 
         /**
          * A cache of objects tied to this context.  Just before the Context is destroyed,
