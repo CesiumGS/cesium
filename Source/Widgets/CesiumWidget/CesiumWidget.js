@@ -433,7 +433,7 @@ define([
         content.appendChild(buttonPanel);
 
         var okButton = document.createElement('span');
-        okButton.className = 'cesium-widget-button';
+        okButton.className = 'cesium-button';
         okButton.textContent = 'OK';
         okButton.tabIndex = 100;
         okButton.onclick = function() {
