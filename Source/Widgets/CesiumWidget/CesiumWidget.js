@@ -1,7 +1,6 @@
 /*global define,console*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
@@ -28,7 +27,6 @@ define([
         '../getElement'
     ], function(
         buildModuleUrl,
-        Cartesian2,
         Cartesian3,
         Clock,
         DefaultProxy,

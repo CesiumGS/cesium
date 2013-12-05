@@ -5,14 +5,6 @@ define(function() {
     var svgNS = 'http://www.w3.org/2000/svg';
     var svgClassName = 'cesium-svgPath-svg';
 
-    function emptyNode(knockout, node) {
-        var child;
-        while ((child = node.firstChild)) {
-            knockout.cleanNode(child);
-            node.removeChild(child);
-        }
-    }
-
     /**
      * A Knockout binding handler that creates a DOM element for a single SVG path.
      * This binding handler will be registered as cesiumSvgPath.
