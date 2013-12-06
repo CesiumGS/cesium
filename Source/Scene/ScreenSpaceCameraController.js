@@ -418,11 +418,9 @@ define([
     }
 
     function update2D(controller) {
-        /*
-        if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
+        if (controller._aggregator.anyButtonDown()) {
             controller._animationCollection.removeAll();
         }
-        */
 
         if (controller.enableTranslate) {
             reactToInput(controller, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
@@ -436,8 +434,7 @@ define([
             reactToInput(controller, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         }
 
-        /*
-        if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
+        if (!controller._aggregator.anyButtonDown() &&
                 !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                 !controller._animationCollection.contains(controller._animation)) {
             var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
@@ -447,7 +444,6 @@ define([
         }
 
         controller._animationCollection.update();
-        */
     }
 
     var translateCVStartRay = new Ray();
@@ -536,8 +532,6 @@ define([
     }
 
     function updateCV(controller) {
-        //var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
-
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
             if (controller.enableRotate) {
                 reactToInput(controller, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
@@ -547,11 +541,9 @@ define([
                 reactToInput(controller, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
             }
         } else {
-            /*
-            if (buttonDown) {
+            if (controller._aggregator.anyButtonDown()) {
                 controller._animationCollection.removeAll();
             }
-            */
 
             if (controller.enableTilt) {
                 reactToInput(controller, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
@@ -569,8 +561,7 @@ define([
                 reactToInput(controller, controller.lookEventTypes, look3D);
             }
 
-            /*
-            if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+            if (!controller._aggregator.anyButtonDown() && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                     !controller._animationCollection.contains(controller._animation)) {
                 var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
@@ -579,7 +570,6 @@ define([
             }
 
             controller._animationCollection.update();
-            */
         }
     }
 

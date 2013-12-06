@@ -57,11 +57,13 @@ define([
         var releaseTime = aggregator._releaseTime;
 
         aggregator._eventHandler.setInputAction(function() {
+            aggregator._buttonsDown++;
             isDown[index] = true;
             pressTime[index] = new Date();
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
+            aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[index] = false;
             releaseTime[index] = new Date();
         }, ScreenSpaceEventType.PINCH_END, modifier);
@@ -148,12 +150,14 @@ define([
         }
 
         aggregator._eventHandler.setInputAction(function() {
+            aggregator._buttonsDown++;
             lastMovement[index] = undefined;
             isDown[index] = true;
             pressTime[index] = new Date();
         }, down, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
+            aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
             isDown[index] = false;
             releaseTime[index] = new Date();
         }, up, modifier);
@@ -209,6 +213,8 @@ define([
         this._isDown = new Array(length);
         this._pressTime = new Array(length);
         this._releaseTime = new Array(length);
+
+        this._buttonsDown = 0;
 
         for (var i = 0; i < length; ++i) {
             this._update[i] = true;
@@ -305,6 +311,16 @@ define([
 
         var index = getIndex(type, modifier);
         return this._isDown[index];
+    };
+
+    /**
+     * Gets whether any mouse button is down or a touch has started.
+     * @memberof CameraEventAggregator
+     *
+     * @returns {Boolean} Whether any mouse button is down or a touch has started.
+     */
+    CameraEventAggregator.prototype.anyButtonDown = function() {
+        return this._buttonsDown > 0;
     };
 
     /**
