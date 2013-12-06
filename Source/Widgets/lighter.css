@@ -1,3 +1,9 @@
+@import url(./Animation/lighter.css);
+@import url(./BaseLayerPicker/lighter.css);
+@import url(./CesiumWidget/lighter.css);
+@import url(./Geocoder/lighter.css);
+@import url(./Timeline/lighter.css);
+
 .cesium-lighter .cesium-button {
     color: #111;  /* For text buttons */
     fill: #111;   /* For SVG buttons */
@@ -37,9 +43,3 @@
     fill: #999;   /* For SVG buttons */
     box-shadow: none;
 }
-
-@import url(./Animation/lighter.css);
-@import url(./BaseLayerPicker/lighter.css);
-@import url(./CesiumWidget/lighter.css);
-@import url(./Geocoder/lighter.css);
-@import url(./Timeline/lighter.css);
