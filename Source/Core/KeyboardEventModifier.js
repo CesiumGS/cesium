@@ -14,24 +14,27 @@ define(['./Enumeration'], function(Enumeration) {
          *
          * @type {Enumeration}
          * @constant
+         * @default 0
          */
-        SHIFT : 1,
+        SHIFT : new Enumeration(0, 'SHIFT'),
 
         /**
          * Represents the control key being held down.
          *
          * @type {Enumeration}
          * @constant
+         * @default 1
          */
-        CTRL : 2,
+        CTRL : new Enumeration(1, 'CTRL'),
 
         /**
          * Represents the alt key being held down.
          *
          * @type {Enumeration}
          * @constant
+         * @default 2
          */
-        ALT : 3
+        ALT : new Enumeration(2, 'ALT')
     };
 
     return KeyboardEventModifier;
