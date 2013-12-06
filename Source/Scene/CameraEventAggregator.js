@@ -38,12 +38,12 @@ define([
     }
 
     function getIndex(type, modifier) {
-        modifier = !defined(modifier) ? 0 : modifier + 1;
+        modifier = defaultValue(modifier, 0);
         return type * MAX_MODS + modifier;
     }
 
     function listenToPinch(aggregator, modifier, canvas) {
-        var index = getIndex(CameraEventType.PINCH, modifier) - 1;
+        var index = getIndex(CameraEventType.PINCH, modifier);
 
         if (modifier === 0) {
             modifier = undefined;
@@ -57,7 +57,6 @@ define([
         var releaseTime = aggregator._releaseTime;
 
         aggregator._eventHandler.setInputAction(function() {
-            //that._lastMovement = undefined;
             isDown[index] = true;
             pressTime[index] = new Date();
         }, ScreenSpaceEventType.PINCH_START, modifier);
@@ -74,7 +73,6 @@ define([
                     movement[index].distance.endPosition = Cartesian2.clone(mouseMovement.distance.endPosition);
                     movement[index].angleAndHeight.endPosition = Cartesian2.clone(mouseMovement.angleAndHeight.endPosition);
                 } else {
-                    //that._lastMovement = that._movement;
                     movement[index] = mouseMovement;
                     update[index] = false;
                     movement[index].prevAngle = movement[index].angleAndHeight.startPosition.x;
@@ -96,7 +94,7 @@ define([
     }
 
     function listenToWheel(aggregator, modifier) {
-        var index = getIndex(CameraEventType.WHEEL, modifier) - 1;
+        var index = getIndex(CameraEventType.WHEEL, modifier);
 
         if (modifier === 0) {
             modifier = undefined;
@@ -128,7 +126,7 @@ define([
     }
 
     function listenMouseButtonDownUp(aggregator, modifier, type) {
-        var index = getIndex(type, modifier) - 1;
+        var index = getIndex(type, modifier);
 
         if (modifier === 0) {
             modifier = undefined;
@@ -172,7 +170,7 @@ define([
 
         aggregator._eventHandler.setInputAction(function(mouseMovement) {
             for (var i = 0; i < MAX_EVENT_TYPES; ++i) {
-                var index = getIndex(i, modifier) - 1;
+                var index = getIndex(i, modifier);
                 if (isDown[index]) {
                     if (!update[index]) {
                         movement[index].endPosition = Cartesian2.clone(mouseMovement.endPosition);
@@ -183,7 +181,7 @@ define([
                     }
                 }
             }
-        }, ScreenSpaceEventType.MOUSE_MOVE, (modifier === 0) ? undefined : (modifier - 1));
+        }, ScreenSpaceEventType.MOUSE_MOVE, (modifier === 0) ? undefined : modifier);
     }
 
     /**
