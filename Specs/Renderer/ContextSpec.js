@@ -145,7 +145,9 @@ defineSuite([
 
     it('gets antialias', function() {
         var c = createContext({
-            antialias : false
+            webgl : {
+                antialias : false
+            }
         });
         expect(c.getAntialias()).toEqual(false);
         destroyContext(c);
