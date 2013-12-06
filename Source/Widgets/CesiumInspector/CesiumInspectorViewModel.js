@@ -125,7 +125,7 @@ define([
                 }, 100);
             } else {
                 clearInterval(that._frustumInterval);
-                that._scenfrustumsrustums = false;
+                that._scene.debugShowFrustums = false;
             }
             return true;
         });
@@ -235,7 +235,7 @@ define([
         });
 
         var pickPrimitive = function(e) {
-            var newPick = scene.pick({x: e.clientX, y: e.clientY});
+            var newPick = that._scene.pick({x: e.clientX, y: e.clientY});
             if (defined(newPick)) {
                 that.primitive = newPick;
             }
@@ -255,7 +255,7 @@ define([
         var selectTile = function (e) {
             var selectedTile;
             var ellipsoid = centralBody.getEllipsoid();
-            var cartesian = scene.getCamera().controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
+            var cartesian = that._scene.getCamera().controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
