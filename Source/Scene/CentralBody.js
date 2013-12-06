@@ -197,6 +197,15 @@ define([
         this.depthTestAgainstTerrain = false;
 
         /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = 2;
+
+        /**
          * The size of the terrain tile cache, expressed as a number of tiles.  Any additional
          * tiles beyond this number will be freed, as long as they aren't needed for rendering
          * this frame.  A larger number will consume more memory but will show detail faster
@@ -755,6 +764,7 @@ define([
             this._lightingFadeDistance.x = this.lightingFadeOutDistance;
             this._lightingFadeDistance.y = this.lightingFadeInDistance;
 
+            this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,

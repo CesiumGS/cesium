@@ -40,7 +40,9 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext({
-            stencil : true
+            webgl : {
+                stencil : true
+            }
         });
     });
 
