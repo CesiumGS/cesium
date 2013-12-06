@@ -108,7 +108,7 @@ define([
 
         aggregator._eventHandler.setInputAction(function(delta) {
             // TODO: magic numbers
-            var arcLength = 2 * CesiumMath.toRadians(delta);
+            var arcLength = 15.0 * CesiumMath.toRadians(delta);
             if (!update[index]) {
                 movement[index].endPosition.y = movement[index].endPosition.y + arcLength;
             } else {
@@ -117,11 +117,8 @@ define([
                     endPosition : new Cartesian2(0.0, arcLength),
                     motion : new Cartesian2()
                 };
-                lastMovement[index] = movement[index]; // This looks unusual, but its needed for wheel inertia.
                 update[index] = false;
             }
-            pressTime[index] = new Date();
-            releaseTime[index] = new Date(pressTime[index].getTime() + Math.abs(arcLength) * 5.0);
         }, ScreenSpaceEventType.WHEEL, modifier);
     }
 
