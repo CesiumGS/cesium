@@ -157,7 +157,7 @@ define([
         this.translateEventTypes = CameraEventType.LEFT_DRAG;
         this.zoomEventTypes = [CameraEventType.RIGHT_DRAG, CameraEventType.WHEEL, CameraEventType.PINCH];
         this.rotateEventTypes = CameraEventType.LEFT_DRAG;
-        this.tiltEventTypes = CameraEventType.MIDDLE_DRAG;
+        this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH];
         this.lookEventTypes = {
             eventType : CameraEventType.LEFT_DRAG,
             modifier : KeyboardEventModifier.SHIFT
@@ -357,6 +357,10 @@ define([
     }
 
     function zoom2D(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         handleZoom(controller, movement, controller._zoomFactor, controller._cameraController.getMagnitude());
     }
 
@@ -514,6 +518,10 @@ define([
     var zoomCVWindowPos = new Cartesian2();
     var zoomCVWindowRay = new Ray();
     function zoomCV(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         var windowPosition = zoomCVWindowPos;
         windowPosition.x = controller._canvas.clientWidth / 2;
         windowPosition.y = controller._canvas.clientHeight / 2;
@@ -780,6 +788,10 @@ define([
     var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
     var tilt3DTransform = new Matrix4();
     function tilt3D(controller, movement) {
+        if (defined(movement.angleAndHeight)) {
+            movement = movement.angleAndHeight;
+        }
+
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
