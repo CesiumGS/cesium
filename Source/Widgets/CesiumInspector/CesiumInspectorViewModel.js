@@ -64,33 +64,165 @@ define([
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
 
+        /**
+         * Gets or sets the show frustums state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.frustums = false;
+
+        /**
+         * Gets or sets the show performance display state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.performance = false;
+
+        /**
+         * Gets or sets the show primitive bounding sphere state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.primitiveBoundingSphere = false;
+
+        /**
+         * Gets or sets the show primitive reference frame state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.primitiveRefFrame = false;
+
+        /**
+         * Gets or sets the filter primitive state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.filterPrimitive = false;
+
+        /**
+         * Gets or sets the show tile bounding sphere state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.tileBoundingSphere = false;
+
+        /**
+         * Gets or sets the filter tile state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.filterTile = false;
+
+        /**
+         * Gets or sets the show wireframe state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.wireframe = false;
+
+        /**
+         * Gets or sets the suspend updates state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.suspendUpdates = false;
+
+        /**
+         * Gets or sets the show tile coordinates state.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.tileCoords = false;
 
+        /**
+         * Gets or sets the frustum statistic text.  This property is observable.
+         *
+         * @type {String}
+         */
         this.frustumStatText = '';
+
+        /**
+         * Gets or sets the selected tile information text.  This property is observable.
+         *
+         * @type {String}
+         */
         this.tileText = '';
 
+        /**
+         * Gets if a primitive has been selected.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.hasPickedPrimitive = false;
+
+        /**
+         * Gets if a tile has been selected.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.hasPickedTile = false;
 
-        this.pickPrimitiveActive = false;
-        this.pickTileActive = false;
+        /**
+         * Gets if the picking primitive command is active.  This property is observable.
+         *
+         * @type {Boolean}
+         */
+        this.pickPimitiveActive = false;
 
+        /**
+         * Gets if the picking tile command is active.  This property is observable.
+         *
+         * @type {Boolean}
+         */
+        this.pickTleActive = false;
+
+        /**
+         * Gets or sets if the cesium inspector drop down is visible.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.dropDownVisible = true;
+
+        /**
+         * Gets or sets if the general section is visible.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.generalVisible = true;
+
+        /**
+         * Gets or sets if the primitive section is visible.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.primitivesVisible = false;
+
+        /**
+         * Gets or sets if the terrain section is visible.  This property is observable.
+         *
+         * @type {Boolean}
+         */
         this.terrainVisible = false;
 
+        /**
+         * Gets or sets if the text on the general section expand button.  This property is observable.
+         *
+         * @type {String}
+         */
         this.generalSwitchText = '-';
+
+        /**
+         * Gets or sets if the text on the primitive section expand button.  This property is observable.
+         *
+         * @type {String}
+         */
         this.primitivesSwitchText = '+';
+
+        /**
+         * Gets or sets if the text on the terrain section expand button.  This property is observable.
+         *
+         * @type {String}
+         */
         this.terrainSwitchText = '+';
 
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
@@ -317,96 +449,192 @@ define([
             }
         },
 
+        /**
+         * Gets the command to toggle {@link Scene.debugShowFrustums}
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showFrustums : {
             get : function() {
                 return this._showFrustums;
             }
         },
 
+        /**
+         * Gets the command to toggle the visibility of a {@link PerformanceDisplay}
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showPerformance : {
             get : function() {
                 return this._showPerformance;
             }
         },
 
+        /**
+         * Gets the command to toggle the visibility of a BoundingSphere for a primitive
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showPrimitiveBoundingSphere : {
             get : function() {
                 return this._showPrimitiveBoundingSphere;
             }
         },
 
+        /**
+         * Gets the command to toggle the visibility of a {@link DebugModelMatrixPrimitive} for the model matrix of a primitive
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showPrimitiveRefFrame : {
             get : function() {
                 return this._showPrimitiveRefFrame;
             }
         },
 
+        /**
+         * Gets the command to toggle a filter that renders only a selected primitive
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         doFilterPrimitive : {
             get : function() {
                 return this._doFilterPrimitive;
             }
         },
 
+        /**
+         * Gets the command to toggle the view of the CentralBody as a wireframe
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showWireframe : {
             get : function() {
                 return this._showWireframe;
             }
         },
 
+        /**
+         * Gets the command to toggle whether to suspend tile updates
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         doSuspendUpdates : {
             get : function() {
                 return this._doSuspendUpdates;
             }
         },
 
+        /**
+         * Gets the command to toggle the visibility of tile coordinates
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showTileCoords : {
             get : function() {
                 return this._showTileCoords;
             }
         },
 
+        /**
+         * Gets the command to toggle the visibility of a BoundingSphere for a selected tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         showTileBoundingSphere : {
             get : function() {
                 return this._showTileBoundingSphere;
             }
         },
 
+        /**
+         * Gets the command to toggle a filter that renders only a selected tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         doFilterTile : {
             get : function() {
                 return this._doFilterTile;
             }
         },
 
+        /**
+         * Gets the command to expand and collapse the general section
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         toggleGeneral : {
             get : function() {
                 return this._toggleGeneral;
             }
         },
 
+        /**
+         * Gets the command to expand and collapse the primitives section
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         togglePrimitives : {
             get : function() {
                 return this._togglePrimitives;
             }
         },
 
+        /**
+         * Gets the command to expand and collapse the terrain section
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         toggleTerrain : {
             get : function() {
                 return this._toggleTerrain;
             }
         },
 
+        /**
+         * Gets the command to pick a primitive
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         pickPrimitive : {
             get : function() {
                 return this._pickPrimitive;
             }
         },
 
+        /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         pickTile : {
             get : function() {
                 return this._pickTile;
             }
         },
 
+        /**
+         * Gets or sets the current selected primitive
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         primitive: {
             set : function(newPrimitive) {
                 var oldPrimitive = this._primitive;
@@ -436,6 +664,12 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the current selected tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
         tile: {
             set : function(newTile) {
                 if (defined(newTile)) {
