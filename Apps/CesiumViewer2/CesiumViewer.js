@@ -15,6 +15,7 @@ define([
         'Core/ScreenSpaceEventType',
         'Scene/DebugModelMatrixPrimitive',
         'Core/JulianDate',
+        'Scene/gltfStatistics',
         ///////////////////////////////////////////////////////////////////////
         'Core/defined',
         'DynamicScene/CzmlDataSource',
@@ -41,6 +42,7 @@ define([
         ScreenSpaceEventType,
         DebugModelMatrixPrimitive,
         JulianDate,
+        gltfStatistics,
         ///////////////////////////////////////////////////////////////////////
         defined,
         CzmlDataSource,
@@ -228,7 +230,12 @@ define([
             console.log('Removed ' + animation.name);
         });
 
+        var statistics;
+
         model.jsonLoad.addEventListener(function() {
+            statistics = gltfStatistics(model.gltf);
+            console.log(statistics);
+
             if (endUserOptions.animate) {
                 var animations = model.gltf.animations;
                 for (var name in animations) {
@@ -272,15 +279,24 @@ define([
 
         var prevPickedNode;
         var prevPickedMesh;
+        var prevPickedPrimitiveIndex;
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
                 var pick = scene.pick(movement.endPosition);
                 if (defined(pick) && (pick.primitive === model)) {
-                    if ((prevPickedNode !== pick.gltf.node) || (prevPickedMesh !== pick.gltf.mesh)) {
-                        prevPickedNode = pick.gltf.node;
-                        prevPickedMesh = pick.gltf.mesh;
-                        console.log(pick.gltf.node.name + ". mesh: " + pick.gltf.mesh.name);
+                    var gltf = pick.gltf;
+                    if ((prevPickedNode !== gltf.node) || (prevPickedMesh !== gltf.mesh) || (prevPickedPrimitiveIndex !== gltf.primitiveIndex)) {
+                        prevPickedNode = gltf.node;
+                        prevPickedMesh = gltf.mesh;
+                        prevPickedPrimitiveIndex = gltf.primitiveIndex;
+
+                        var stats = statistics.meshStatistics[gltf.mesh.name];
+                        console.log('node: ' + gltf.node.name + '. mesh: ' + gltf.mesh.name + '. primitiveIndex: ' + prevPickedPrimitiveIndex);
+                        console.log('   mesh triangles: ' + stats.numberOfTriangles.toLocaleString());
+                        if (gltf.mesh.primitives.length > 1) {
+                            console.log('   primitive triangles: ' + stats.primitives[gltf.primitiveIndex].numberOfTriangles.toLocaleString());
+                        }
                     }
                 }
             },
