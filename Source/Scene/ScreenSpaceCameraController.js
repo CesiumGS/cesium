@@ -331,7 +331,7 @@ define([
 
     var scratchEventTypeArray = [];
 
-    function reactToInput(controller, eventTypes, action, inertiaConstant, inertiaStateName) {
+    function reactToInput(controller, enabled, eventTypes, action, inertiaConstant, inertiaStateName) {
         var aggregator = controller._aggregator;
 
         if (!Array.isArray(eventTypes)) {
@@ -347,12 +347,14 @@ define([
 
             var moving = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
 
-            if (moving) {
-                action(controller, aggregator.getMovement(type, modifier));
-            }
+            if (enabled) {
+                if (moving) {
+                    action(controller, aggregator.getMovement(type, modifier));
+                }
 
-            if (!moving && inertiaConstant < 1.0) {
-                maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
+                if (!moving && inertiaConstant < 1.0) {
+                    maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
+                }
             }
         }
     }
@@ -471,17 +473,9 @@ define([
             controller._animationCollection.removeAll();
         }
 
-        if (controller.enableTranslate) {
-            reactToInput(controller, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-        }
-
-        if (controller.enableZoom) {
-            reactToInput(controller, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        }
-
-        if (controller.enableRotate) {
-            reactToInput(controller, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
-        }
+        reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
 
         if (!controller._aggregator.anyButtonDown() &&
                 !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
@@ -582,33 +576,17 @@ define([
 
     function updateCV(controller) {
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
-            if (controller.enableRotate) {
-                reactToInput(controller, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-            }
-
-            if (controller.enableZoom) {
-                reactToInput(controller, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            }
+                reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
             if (controller._aggregator.anyButtonDown()) {
                 controller._animationCollection.removeAll();
             }
 
-            if (controller.enableTilt) {
-                reactToInput(controller, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
-            }
-
-            if (controller.enableTranslate) {
-                reactToInput(controller, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-            }
-
-            if (controller.enableZoom) {
-                reactToInput(controller, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            }
-
-            if (controller.enableLook) {
-                reactToInput(controller, controller.lookEventTypes, look3D);
-            }
+            reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
 
             if (!controller._aggregator.anyButtonDown() && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                     !controller._animationCollection.contains(controller._animation)) {
@@ -920,21 +898,10 @@ define([
     }
 
     function update3D(controller) {
-        if (controller.enableRotate) {
-            reactToInput(controller, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-        }
-
-        if (controller.enableTilt) {
-            reactToInput(controller, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
-        }
-
-        if (controller.enableZoom) {
-            reactToInput(controller, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        }
-
-        if (controller.enableLook) {
-            reactToInput(controller, controller.lookEventTypes, look3D);
-        }
+        reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+        reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
     /**
