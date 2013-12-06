@@ -1114,7 +1114,8 @@ define([
                     gltf : {
                         node : node,
                         mesh : mesh,
-                        primitive : primitive
+                        primitive : primitive,
+                        primitiveIndex : i
                     }
                 };
 
