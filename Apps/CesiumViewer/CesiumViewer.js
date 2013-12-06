@@ -8,7 +8,7 @@ define([
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
-        'Widgets/Viewer/viewerInspectorMixin',
+        'Widgets/Viewer/viewerCesiumInspectorMixin',
         'domReady!'
     ], function(
         defined,
@@ -19,7 +19,7 @@ define([
         Viewer,
         viewerDragDropMixin,
         viewerDynamicObjectMixin,
-        viewerInspectorMixin) {
+        viewerCesiumInspectorMixin) {
     "use strict";
     /*global console*/
 
@@ -70,7 +70,7 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
         if (endUserOptions.inspector) {
-            viewer.extend(viewerInspectorMixin);
+            viewer.extend(viewerCesiumInspectorMixin);
         }
 
         var showLoadError = function(name, error) {

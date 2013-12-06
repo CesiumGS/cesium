@@ -224,7 +224,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
 
-
         //Geocoder
         var geocoder;
         if (!defined(options.geocoder) || options.geocoder !== false) {
@@ -374,7 +373,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 return this._cesiumWidget;
             }
         },
-
 
         /**
          * Gets the Geocoder.

@@ -21,6 +21,7 @@ Beta Releases
                }
            });
 * Added `CentralBody.maximumScreenSpaceError`.
+* Added `CesiumInspector` widget.
 
 ### b23 - 2013-12-02
 
