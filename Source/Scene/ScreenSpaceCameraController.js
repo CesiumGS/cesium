@@ -153,11 +153,60 @@ define([
          * @default {@link Number.POSITIVE_INFINITY}
          */
         this.maximumZoomDistance = Number.POSITIVE_INFINITY;
-
+        /**
+         * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default {@link CameraEventType.LEFT_DRAG}
+         */
         this.translateEventTypes = CameraEventType.LEFT_DRAG;
+        /**
+         * The input that allows the user to zoom in/out.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default [{@link CameraEventType.RIGHT_DRAG}, {@link CameraEventType.WHEEL}, {@link CameraEventType.PINCH}]
+         */
         this.zoomEventTypes = [CameraEventType.RIGHT_DRAG, CameraEventType.WHEEL, CameraEventType.PINCH];
+        /**
+         * The input that allows the user to rotate around the globe or another object. This only applies in 3D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default {@link CameraEventType.LEFT_DRAG}
+         */
         this.rotateEventTypes = CameraEventType.LEFT_DRAG;
+        /**
+         * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}]
+         */
         this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH];
+        /**
+         * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default { eventType : {@link CameraEventType.LEFT_DRAG}, modifier : {@link KeyboardEventModifier.SHIFT} }
+         */
         this.lookEventTypes = {
             eventType : CameraEventType.LEFT_DRAG,
             modifier : KeyboardEventModifier.SHIFT
