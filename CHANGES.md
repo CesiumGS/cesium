@@ -21,6 +21,7 @@ Beta Releases
                }
            });
 * Added `CentralBody.maximumScreenSpaceError`.
+* Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
 
 ### b23 - 2013-12-02
 
