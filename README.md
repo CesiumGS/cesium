@@ -4,7 +4,7 @@
 
 Cesium is a WebGL virtual globe and map engine.
 
-http://cesium.agi.com/
+http://cesiumjs.org/
 
 ### Mission ###
 
@@ -16,12 +16,12 @@ Our mission is to create the leading web-based globe and map for visualizing dyn
 
 ### Get Started ###
 
-See the [Getting Started](http://cesium.agi.com/2013/04/12/Cesium-up-and-running/).  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
+See the [Getting Started](http://cesiumjs.org/2013/04/12/Cesium-up-and-running/).  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
 
 Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki).
 
 <p align="center">
-<img src="http://cesium.agi.com/images/OneApiThreeViews.png" height="150" />&nbsp;
-<img src="http://cesium.agi.com/images/KoreaLaunch.png" height="150" />&nbsp;
-<img src="http://cesium.agi.com/images/Terrain.png" height="150" />
+<img src="http://cesiumjs.org/images/OneApiThreeViews.png" height="150" />&nbsp;
+<img src="http://cesiumjs.org/images/KoreaLaunch.png" height="150" />&nbsp;
+<img src="http://cesiumjs.org/images/Terrain.png" height="150" />
 </p>

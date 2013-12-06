@@ -219,7 +219,7 @@ define([
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
-        if (this._textureFilterAnisotropic) {
+        if (defined(this._textureFilterAnisotropic)) {
             gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, sampler.maximumAnisotropy);
         }
         gl.bindTexture(target, null);
