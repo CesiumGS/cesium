@@ -193,7 +193,9 @@ define([
      * Destroys the WebGL resources held by this object.
      */
     PerformanceDisplay.prototype.destroy = function() {
-        this._quad = this._quad.destroy();
+        if (defined(this._quad)) {
+            this._quad = this._quad.destroy();
+        }
         return destroyObject(this);
     };
 

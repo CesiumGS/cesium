@@ -38,7 +38,7 @@ define([
      * @exception {DeveloperError} scene is required.
      */
 
-    var CesiumInspector = function(container, scene, canvas) {
+    var CesiumInspector = function(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -49,7 +49,7 @@ define([
 
         container = getElement(container);
 
-        var viewModel = new CesiumInspectorViewModel(scene, canvas);
+        var viewModel = new CesiumInspectorViewModel(scene);
         this._viewModel = viewModel;
         this._container = container;
 
@@ -274,10 +274,8 @@ define([
      */
     CesiumInspector.prototype.destroy = function() {
         knockout.cleanNode(this._element);
-        knockout.cleanNode(this._panel);
         var container = this._container;
         container.removeChild(this._element);
-        container.removeChild(this._panel);
         return destroyObject(this);
     };
 

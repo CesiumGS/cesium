@@ -50,7 +50,7 @@ define([
      *
      * @exception {DeveloperError} scene is required.
      */
-    var CesiumInspectorViewModel = function(scene, canvas) {
+    var CesiumInspectorViewModel = function(scene) {
         if (!defined(scene)) {
             throw new DeveloperError('scene is required');
         }
@@ -58,7 +58,7 @@ define([
         var that = this;
 
         this._scene = scene;
-        this._canvas = canvas;
+        this._canvas = scene.getCanvas();
         this._primitive = undefined;
         this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
@@ -239,16 +239,16 @@ define([
             if (defined(newPick)) {
                 that.primitive = newPick;
             }
-            canvas.removeEventListener('mousedown', pickPrimitive, false);
+            that._canvas.removeEventListener('mousedown', pickPrimitive, false);
             that.pickPrimitiveActive = false;
         };
 
         this._pickPrimitive = createCommand(function() {
             that.pickPrimitiveActive = !that.pickPrimitiveActive;
             if (that.pickPrimitiveActive) {
-                canvas.addEventListener('mousedown', pickPrimitive, false);
+                that._canvas.addEventListener('mousedown', pickPrimitive, false);
             } else {
-                canvas.removeEventListener('mousedown', pickPrimitive, false);
+                that._canvas.removeEventListener('mousedown', pickPrimitive, false);
             }
         });
 
@@ -277,7 +277,7 @@ define([
 
             that.tile = selectedTile;
 
-            canvas.removeEventListener('mousedown', selectTile, false);
+            that._canvas.removeEventListener('mousedown', selectTile, false);
             that.pickTileActive = false;
         };
 
@@ -285,17 +285,29 @@ define([
             that.pickTileActive = !that.pickTileActive;
 
             if (that.pickTileActive) {
-                canvas.addEventListener('mousedown', selectTile, false);
+                that._canvas.addEventListener('mousedown', selectTile, false);
             } else {
-                canvas.removeEventListener('mousedown', selectTile, false);
+                that._canvas.removeEventListener('mousedown', selectTile, false);
             }
         });
     };
 
     defineProperties(CesiumInspectorViewModel.prototype, {
         /**
+         * Gets the scene to control.
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
+
+        /**
          * Gets the command to toggle the visibility of the drop down.
-         * @memberof BaseLayerPickerViewModel.prototype
+         * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
          */
