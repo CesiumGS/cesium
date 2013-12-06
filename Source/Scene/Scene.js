@@ -91,21 +91,16 @@ define([
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  Default values are shown in the code example below.
+     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
      * @see <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
      *
      * @example
-     * // Create scene with default context options.
+     * // Create scene without anisotropic texture filtering
      * var scene = new Scene(canvas, {
-     *     alpha : false,
-     *     depth : true,
-     *     stencil : false,
-     *     antialias : true,
-     *     premultipliedAlpha : true,
-     *     preserveDrawingBuffer : false
+     *   allowTextureFilterAnisotropic : false
      * });
      */
     var Scene = function(canvas, contextOptions, creditContainer) {

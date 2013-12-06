@@ -76,7 +76,7 @@ defineSuite([
     });
 
     it('constructor sets contextOptions', function() {
-        var contextOptions = {
+        var webglOptions = {
             alpha : true,
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
@@ -85,9 +85,18 @@ defineSuite([
             preserveDrawingBuffer : true
         };
 
-        var s = createScene(contextOptions);
+        var s = createScene({
+            webgl : webglOptions
+        });
+
         var contextAttributes = s.getContext()._gl.getContextAttributes();
-        expect(contextAttributes).toEqual(contextOptions);
+        expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
+        expect(contextAttributes.depth).toEqual(webglOptions.depth);
+        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
+
         destroyScene(s);
     });
 
