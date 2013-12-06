@@ -280,6 +280,34 @@ define([
         }
     }
 
+    var scratchEventTypeArray = [];
+
+    function reactToInput(controller, eventTypes, action, inertiaConstant, inertiaStateName) {
+        var aggregator = controller._aggregator;
+
+        if (!Array.isArray(eventTypes)) {
+            scratchEventTypeArray[0] = eventTypes;
+            eventTypes = scratchEventTypeArray;
+        }
+
+        var length = eventTypes.length;
+        for (var i = 0; i < length; ++i) {
+            var eventType = eventTypes[i];
+            var type = defined(eventType.eventType) ? eventType.eventType : eventType;
+            var modifier = eventType.modifier;
+
+            var moving = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
+
+            if (moving) {
+                action(controller, aggregator.getMovement(type, modifier));
+            }
+
+            if (!moving && inertiaConstant < 1.0) {
+                maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
+            }
+        }
+    }
+
     function handleZoom(object, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
@@ -385,8 +413,6 @@ define([
         controller._cameraController.twistRight(deltaPhi);
     }
 
-    var scratchEventTypeArray = [];
-
     function update2D(controller) {
         /*
         if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
@@ -394,86 +420,16 @@ define([
         }
         */
 
-        var aggregator = controller._aggregator;
-        var i;
-        var length;
-        var eventType;
-        var type;
-        var modifier;
-
         if (controller.enableTranslate) {
-            var translateTypes = controller.translateEventTypes;
-            if (!Array.isArray(translateTypes)) {
-                scratchEventTypeArray[0] = translateTypes;
-                translateTypes = scratchEventTypeArray;
-            }
-
-            length = translateTypes.length;
-            for (i = 0; i < length; ++i) {
-                eventType = translateTypes[i];
-                type = defined(eventType.eventType) ? eventType.eventType : eventType;
-                modifier = eventType.modifier;
-
-                var translating = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
-
-                if (translating) {
-                    translate2D(controller, aggregator.getMovement(type, modifier));
-                }
-
-                if (!translating && controller.inertiaTranslate < 1.0) {
-                    maintainInertia(aggregator, type, modifier, controller.inertiaTranslate, translate2D, controller, '_lastInertiaTranslateMovement');
-                }
-            }
+            reactToInput(controller, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
         }
 
         if (controller.enableZoom) {
-            var zoomTypes = controller.zoomEventTypes;
-            if (!Array.isArray(zoomTypes)) {
-                scratchEventTypeArray[0] = zoomTypes;
-                zoomTypes = scratchEventTypeArray;
-            }
-
-            length = zoomTypes.length;
-            for (i = 0; i < length; ++i) {
-                eventType = zoomTypes[i];
-                type = defined(eventType.eventType) ? eventType.eventType : eventType;
-                modifier = eventType.modifier;
-
-                var zooming = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
-
-                if (zooming) {
-                    zoom2D(controller, aggregator.getMovement(type, modifier));
-                }
-
-                if (!zooming && controller.inertiaZoom < 1.0) {
-                    maintainInertia(aggregator, type, modifier, controller.inertiaZoom, zoom2D, controller, '_lastInertiaZoomMovement');
-                }
-            }
+            reactToInput(controller, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         }
 
         if (controller.enableRotate) {
-            var twistTypes = controller.tiltEventTypes;
-            if (!Array.isArray(twistTypes)) {
-                scratchEventTypeArray[0] = twistTypes;
-                twistTypes = scratchEventTypeArray;
-            }
-
-            length = twistTypes.length;
-            for (i = 0; i < length; ++i) {
-                eventType = twistTypes[i];
-                type = defined(eventType.eventType) ? eventType.eventType : eventType;
-                modifier = eventType.modifier;
-
-                var twisting = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
-
-                if (twisting) {
-                    twist2D(controller, aggregator.getMovement(type, modifier));
-                }
-
-                if (!twisting && controller.inertiaSpin < 1.0) {
-                    maintainInertia(aggregator, type, modifier, controller.inertiaSpin, twist2D, controller, '_lastInertiaTiltMovement');
-                }
-            }
+            reactToInput(controller, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         }
 
         /*
@@ -530,6 +486,10 @@ define([
     var rotateCVCenter = new Cartesian3();
     var rotateTransform = new Matrix4();
     function rotateCV(controller, movement) {
+        if (defined(movement.angleAndHeight)) {
+            movement = movement.angleAndHeight;
+        }
+
         var windowPosition = rotateCVWindowPos;
         windowPosition.x = controller._canvas.clientWidth / 2;
         windowPosition.y = controller._canvas.clientHeight / 2;
@@ -568,116 +528,40 @@ define([
     }
 
     function updateCV(controller) {
-        return;
-
-        var zoom = controller._zoomHandler;
-        var zoomimg = zoom.isMoving() && zoom.getMovement();
-        var wheelZoom = controller._zoomWheelHandler;
-        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
-        var pinch = controller._pinchHandler;
-        var pinching = pinch.isMoving()  && pinch.getMovement();
-        var translate = controller._translateHandler;
-        var translating = translate.isMoving() && translate.getMovement();
-        var rotate = controller._rotateHandler;
-        var rotating = rotate.isMoving() && rotate.getMovement();
-        var spin = controller._spinHandler;
-        var spinning = spin.isMoving() && spin.getMovement();
-        var look = controller._lookHandler;
-        var looking = look.isMoving() && look.getMovement();
-
-        var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
+        //var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
 
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
             if (controller.enableRotate) {
-                if (spinning) {
-                    rotate3D(controller, spin.getMovement());
-                }
-
-                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                    maintainInertia(spin, controller.inertiaSpin, rotate3D, controller, '_lastInertiaSpinMovement');
-                }
+                reactToInput(controller, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
             }
 
             if (controller.enableZoom) {
-                if (zoomimg) {
-                    zoom3D(controller, zoom.getMovement());
-                } else if (wheelZooming) {
-                    zoom3D(controller, wheelZoom.getMovement());
-                } else if (pinching) {
-                    zoom3D(controller, pinch.getMovement().distance);
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-                }
+                reactToInput(controller, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
             }
         } else {
+            /*
             if (buttonDown) {
                 controller._animationCollection.removeAll();
             }
+            */
 
             if (controller.enableTilt) {
-                if (rotating) {
-                    rotateCV(controller, rotate.getMovement());
-                }
-
-                if (pinching) {
-                    rotateCV(controller, pinch.getMovement().angleAndHeight);
-                }
-
-                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                    maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
+                reactToInput(controller, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
             }
 
             if (controller.enableTranslate) {
-                if (translating) {
-                    translateCV(controller, translate.getMovement());
-                }
-
-                if (!buttonDown && controller.inertiaTranslate >= 0.0 && controller.inertiaTranslate < 1.0) {
-                    maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
-                }
+                reactToInput(controller, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
             }
 
             if (controller.enableZoom) {
-                if (zoomimg) {
-                    zoomCV(controller, zoom.getMovement());
-                } else if (wheelZooming) {
-                    zoomCV(controller, wheelZoom.getMovement());
-                } else if (pinching) {
-                    zoomCV(controller, pinch.getMovement().distance);
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
+                reactToInput(controller, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
             }
 
-            if (controller.enableLook && looking) {
-                look3D(controller, look.getMovement());
+            if (controller.enableLook) {
+                reactToInput(controller, controller.lookEventTypes, look3D);
             }
 
+            /*
             if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
                     !controller._animationCollection.contains(controller._animation)) {
                 var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
@@ -687,9 +571,8 @@ define([
             }
 
             controller._animationCollection.update();
+            */
         }
-
-        return true;
     }
 
     var spin3DPick = new Cartesian3();
@@ -877,6 +760,10 @@ define([
 
     var zoom3DUnitPosition = new Cartesian3();
     function zoom3D(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         // CAMERA TODO: remove access to camera
         var camera = controller._cameraController._camera;
         var ellipsoid = controller._ellipsoid;
