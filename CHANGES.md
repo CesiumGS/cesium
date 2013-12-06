@@ -21,6 +21,7 @@ Beta Releases
                }
            });
    * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
+   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
 * Added `CentralBody.maximumScreenSpaceError`.
 
 ### b23 - 2013-12-02
