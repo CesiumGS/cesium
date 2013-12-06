@@ -869,80 +869,21 @@ define([
     }
 
     function update3D(controller) {
-        return;
-
-        var spin = controller._spinHandler;
-        var rightZoom = controller._zoomHandler;
-        var wheelZoom = controller._zoomWheelHandler;
-        var pinch = controller._pinchHandler;
-        var spinning = spin.isMoving() && spin.getMovement();
-        var rightZooming = rightZoom.isMoving() && rightZoom.getMovement();
-        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
-        var pinching = pinch.isMoving() && pinch.getMovement();
-        var rotate = controller._rotateHandler;
-        var rotating = rotate.isMoving() && rotate.getMovement();
-        var look = controller._lookHandler;
-        var looking = look.isMoving() && look.getMovement();
-
-        var buttonDown = spin.isButtonDown() || rightZoom.isButtonDown() || rotate.isButtonDown() || looking || wheelZooming || pinching;
-
         if (controller.enableRotate) {
-            if (spinning) {
-                spin3D(controller, spin.getMovement());
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
-            }
-
+            reactToInput(controller, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
         }
 
         if (controller.enableTilt) {
-            if (rotating) {
-                tilt3D(controller, rotate.getMovement());
-            }
-            if (pinching) {
-                tilt3D(controller, pinch.getMovement().angleAndHeight);
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(pinch, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
-            }
+            reactToInput(controller, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         }
 
         if (controller.enableZoom) {
-            if (rightZooming) {
-                zoom3D(controller, rightZoom.getMovement());
-            } else if (wheelZooming) {
-                zoom3D(controller, wheelZoom.getMovement());
-            } else if (pinching) {
-                zoom3D(controller, pinch.getMovement().distance);
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-            }
+            reactToInput(controller, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         }
 
         if (controller.enableLook) {
-            if (looking) {
-                look3D(controller, look.getMovement());
-            }
+            reactToInput(controller, controller.lookEventTypes, look3D);
         }
-
-        return true;
     }
 
     /**
