@@ -332,6 +332,10 @@ define([
     var scratchEventTypeArray = [];
 
     function reactToInput(controller, enabled, eventTypes, action, inertiaConstant, inertiaStateName) {
+        if (!defined(eventTypes)) {
+            return;
+        }
+
         var aggregator = controller._aggregator;
 
         if (!Array.isArray(eventTypes)) {

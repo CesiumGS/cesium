@@ -6,11 +6,13 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/GeographicProjection',
          'Core/IntersectionTests',
+         'Core/KeyboardEventModifier',
          'Core/Math',
          'Core/Matrix4',
          'Core/Ray',
          'Scene/Camera',
          'Scene/CameraColumbusViewMode',
+         'Scene/CameraEventType',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
          'ThirdParty/Tween',
@@ -22,11 +24,13 @@ defineSuite([
          Ellipsoid,
          GeographicProjection,
          IntersectionTests,
+         KeyboardEventModifier,
          CesiumMath,
          Matrix4,
          Ray,
          Camera,
          CameraColumbusViewMode,
+         CameraEventType,
          OrthographicFrustum,
          SceneMode,
          Tween,
@@ -929,6 +933,62 @@ defineSuite([
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
+    });
+
+    it('can set input type to undefined', function() {
+        var frameState = setUp3D();
+        controller.zoomEventTypes = undefined;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(camera.position).toEqual(position);
+    });
+
+    it('can change default input', function() {
+        var frameState = setUp3D();
+        controller.translateEventTypes = undefined;
+        controller.rotateEventTypes = undefined;
+        controller.tiltEventTypes = undefined;
+        controller.lookEventTypes = undefined;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        controller.zoomEventTypes = CameraEventType.LEFT_DRAG;
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeLessThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        controller.zoomEventTypes = {
+            eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.SHIFT
+        };
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, endPosition, startPosition, true);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        controller.zoomEventTypes = [
+            CameraEventType.MIDDLE_DRAG,
+            {
+                eventType : CameraEventType.LEFT_DRAG,
+                modifier : KeyboardEventModifier.SHIFT
+            }
+        ];
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeLessThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, endPosition, startPosition, true);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
     });
 
     it('is destroyed', function() {
