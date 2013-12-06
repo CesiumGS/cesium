@@ -23,31 +23,16 @@ define([
         CameraEventType) {
     "use strict";
 
-    var MAX_EVENT_TYPES = 0;
-    for (var type in CameraEventType) {
-        if (CameraEventType.hasOwnProperty(type)) {
-            ++MAX_EVENT_TYPES;
+    function getKey(type, modifier) {
+        var key = type.name;
+        if (defined(modifier)) {
+            key += '+' + modifier.name;
         }
-    }
-
-    var MAX_MODS = 1;
-    for (var modifier in KeyboardEventModifier) {
-        if (KeyboardEventModifier.hasOwnProperty(modifier)) {
-            ++MAX_MODS;
-        }
-    }
-
-    function getIndex(type, modifier) {
-        modifier = defaultValue(modifier, 0);
-        return type * MAX_MODS + modifier;
+        return key;
     }
 
     function listenToPinch(aggregator, modifier, canvas) {
-        var index = getIndex(CameraEventType.PINCH, modifier);
-
-        if (modifier === 0) {
-            modifier = undefined;
-        }
+        var key = getKey(CameraEventType.PINCH, modifier);
 
         var update = aggregator._update;
         var movement = aggregator._movement;
@@ -56,32 +41,35 @@ define([
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
+        update[key] = true;
+        isDown[key] = false;
+
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown++;
-            isDown[index] = true;
-            pressTime[index] = new Date();
+            isDown[key] = true;
+            pressTime[key] = new Date();
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
-            isDown[index] = false;
-            releaseTime[index] = new Date();
+            isDown[key] = false;
+            releaseTime[key] = new Date();
         }, ScreenSpaceEventType.PINCH_END, modifier);
 
         aggregator._eventHandler.setInputAction(function(mouseMovement) {
-            if (isDown[index]) {
+            if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
-                if (!update[index]) {
-                    movement[index].distance.endPosition = Cartesian2.clone(mouseMovement.distance.endPosition);
-                    movement[index].angleAndHeight.endPosition = Cartesian2.clone(mouseMovement.angleAndHeight.endPosition);
+                if (!update[key]) {
+                    movement[key].distance.endPosition = Cartesian2.clone(mouseMovement.distance.endPosition);
+                    movement[key].angleAndHeight.endPosition = Cartesian2.clone(mouseMovement.angleAndHeight.endPosition);
                 } else {
-                    movement[index] = mouseMovement;
-                    update[index] = false;
-                    movement[index].prevAngle = movement[index].angleAndHeight.startPosition.x;
+                    movement[key] = mouseMovement;
+                    update[key] = false;
+                    movement[key].prevAngle = movement[key].angleAndHeight.startPosition.x;
                 }
                 // Make sure our aggregation of angles does not "flip" over 360 degrees.
-                var angle = movement[index].angleAndHeight.endPosition.x;
-                var prevAngle = movement[index].prevAngle;
+                var angle = movement[key].angleAndHeight.endPosition.x;
+                var prevAngle = movement[key].prevAngle;
                 var TwoPI = Math.PI * 2;
                 while (angle >= (prevAngle + Math.PI)) {
                     angle -= TwoPI;
@@ -89,18 +77,14 @@ define([
                 while (angle < (prevAngle - Math.PI)) {
                     angle += TwoPI;
                 }
-                movement[index].angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
-                movement[index].angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
+                movement[key].angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
+                movement[key].angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
             }
         }, ScreenSpaceEventType.PINCH_MOVE, modifier);
     }
 
     function listenToWheel(aggregator, modifier) {
-        var index = getIndex(CameraEventType.WHEEL, modifier);
-
-        if (modifier === 0) {
-            modifier = undefined;
-        }
+        var key = getKey(CameraEventType.WHEEL, modifier);
 
         var update = aggregator._update;
         var movement = aggregator._movement;
@@ -108,33 +92,33 @@ define([
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
+        update[key] = true;
+
         aggregator._eventHandler.setInputAction(function(delta) {
             // TODO: magic numbers
             var arcLength = 15.0 * CesiumMath.toRadians(delta);
-            if (!update[index]) {
-                movement[index].endPosition.y = movement[index].endPosition.y + arcLength;
+            if (!update[key]) {
+                movement[key].endPosition.y = movement[key].endPosition.y + arcLength;
             } else {
-                movement[index] = {
+                movement[key] = {
                     startPosition : new Cartesian2(),
                     endPosition : new Cartesian2(0.0, arcLength),
                     motion : new Cartesian2()
                 };
-                update[index] = false;
+                update[key] = false;
             }
         }, ScreenSpaceEventType.WHEEL, modifier);
     }
 
     function listenMouseButtonDownUp(aggregator, modifier, type) {
-        var index = getIndex(type, modifier);
-
-        if (modifier === 0) {
-            modifier = undefined;
-        }
+        var key = getKey(type, modifier);
 
         var lastMovement = aggregator._lastMovement;
         var isDown = aggregator._isDown;
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
+
+        isDown[key] = false;
 
         var down;
         var up;
@@ -151,15 +135,15 @@ define([
 
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown++;
-            lastMovement[index] = undefined;
-            isDown[index] = true;
-            pressTime[index] = new Date();
+            lastMovement[key] = undefined;
+            isDown[key] = true;
+            pressTime[key] = new Date();
         }, down, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown = Math.max(aggregator._buttonsDown - 1, 0);
-            isDown[index] = false;
-            releaseTime[index] = new Date();
+            isDown[key] = false;
+            releaseTime[key] = new Date();
         }, up, modifier);
     }
 
@@ -169,20 +153,35 @@ define([
         var lastMovement = aggregator._lastMovement;
         var isDown = aggregator._isDown;
 
+        for ( var typeName in CameraEventType) {
+            if (CameraEventType.hasOwnProperty(typeName)) {
+                var type = CameraEventType[typeName];
+                if (defined(type.name)) {
+                    var key = getKey(type, modifier);
+                    update[key] = true;
+                }
+            }
+        }
+
         aggregator._eventHandler.setInputAction(function(mouseMovement) {
-            for (var i = 0; i < MAX_EVENT_TYPES; ++i) {
-                var index = getIndex(i, modifier);
-                if (isDown[index]) {
-                    if (!update[index]) {
-                        movement[index].endPosition = Cartesian2.clone(mouseMovement.endPosition);
-                    } else {
-                        lastMovement[index] = movement[index];
-                        movement[index] = mouseMovement;
-                        update[index] = false;
+            for ( var typeName in CameraEventType) {
+                if (CameraEventType.hasOwnProperty(typeName)) {
+                    var type = CameraEventType[typeName];
+                    if (defined(type.name)) {
+                        var key = getKey(type, modifier);
+                        if (isDown[key]) {
+                            if (!update[key]) {
+                                movement[key].endPosition = Cartesian2.clone(mouseMovement.endPosition);
+                            } else {
+                                lastMovement[key] = movement[key];
+                                movement[key] = mouseMovement;
+                                update[key] = false;
+                            }
+                        }
                     }
                 }
             }
-        }, ScreenSpaceEventType.MOUSE_MOVE, (modifier === 0) ? undefined : modifier);
+        }, ScreenSpaceEventType.MOUSE_MOVE, modifier);
     }
 
     /**
@@ -206,28 +205,34 @@ define([
 
         this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
-        var length = MAX_EVENT_TYPES * MAX_MODS;
-        this._update = new Array(length);
-        this._movement = new Array(length);
-        this._lastMovement = new Array(length);
-        this._isDown = new Array(length);
-        this._pressTime = new Array(length);
-        this._releaseTime = new Array(length);
+        this._update = {};
+        this._movement = {};
+        this._lastMovement = {};
+        this._isDown = {};
+        this._pressTime = {};
+        this._releaseTime = {};
 
         this._buttonsDown = 0;
 
-        for (var i = 0; i < length; ++i) {
-            this._update[i] = true;
-            this._isDown[i] = false;
-        }
+        listenToWheel(this, undefined);
+        listenToPinch(this, undefined, canvas);
+        listenMouseButtonDownUp(this, undefined, CameraEventType.LEFT_DRAG);
+        listenMouseButtonDownUp(this, undefined, CameraEventType.RIGHT_DRAG);
+        listenMouseButtonDownUp(this, undefined, CameraEventType.MIDDLE_DRAG);
+        listenMouseMove(this, undefined);
 
-        for (var j = 0; j < MAX_MODS; ++j) {
-            listenToWheel(this, j);
-            listenToPinch(this, j, canvas);
-            listenMouseButtonDownUp(this, j, CameraEventType.LEFT_DRAG);
-            listenMouseButtonDownUp(this, j, CameraEventType.RIGHT_DRAG);
-            listenMouseButtonDownUp(this, j, CameraEventType.MIDDLE_DRAG);
-            listenMouseMove(this, j);
+        for ( var modifierName in KeyboardEventModifier) {
+            if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
+                var modifier = KeyboardEventModifier[modifierName];
+                if (defined(modifier.name)) {
+                    listenToWheel(this, modifier);
+                    listenToPinch(this, modifier, canvas);
+                    listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);
+                    listenMouseButtonDownUp(this, modifier, CameraEventType.RIGHT_DRAG);
+                    listenMouseButtonDownUp(this, modifier, CameraEventType.MIDDLE_DRAG);
+                    listenMouseMove(this, modifier);
+                }
+            }
         }
     };
 
@@ -246,8 +251,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        return !this._update[index];
+        var key = getKey(type, modifier);
+        return !this._update[key];
     };
 
     /**
@@ -269,9 +274,9 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        var movement = this._movement[index];
-        this._update[index] = true;
+        var key = getKey(type, modifier);
+        var movement = this._movement[key];
+        this._update[key] = true;
         return movement;
     };
 
@@ -290,8 +295,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        return this._lastMovement[index];
+        var key = getKey(type, modifier);
+        return this._lastMovement[key];
     };
 
     /**
@@ -309,8 +314,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        return this._isDown[index];
+        var key = getKey(type, modifier);
+        return this._isDown[key];
     };
 
     /**
@@ -338,8 +343,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        return this._pressTime[index];
+        var key = getKey(type, modifier);
+        return this._pressTime[key];
     };
 
     /**
@@ -357,8 +362,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var index = getIndex(type, modifier);
-        return this._releaseTime[index];
+        var key = getKey(type, modifier);
+        return this._releaseTime[key];
     };
 
     /**
