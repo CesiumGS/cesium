@@ -10,6 +10,7 @@ define([
         '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
+        '../Core/Extent',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -34,6 +35,7 @@ define([
         FeatureDetection,
         DeveloperError,
         EllipsoidalOccluder,
+        Extent,
         Intersect,
         Matrix4,
         PrimitiveType,
@@ -117,6 +119,9 @@ define([
 
             suspendLodUpdate : false
         };
+
+        // Allow for ground push
+        this.boundingVolumeExtend = 0.0;
     };
 
     CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, projection) {
@@ -520,6 +525,9 @@ define([
 
         var boundingVolume = tile.boundingSphere3D;
 
+        // Extend the bounding volume for ground push
+        boundingVolume.radius += surface.boundingVolumeExtend;
+
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
             BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
@@ -717,6 +725,12 @@ define([
             u_tileExtent : function() {
                 return this.tileExtent;
             },
+            u_realTileExtent : function() {
+                return this.realTileExtent;
+            },
+            u_showOnlyInPushedRegion : function() {
+                return this.showOnlyInPushedRegion;
+            },
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
@@ -766,7 +780,8 @@ define([
             center3D : undefined,
             modifiedModelView : new Matrix4(),
             tileExtent : new Cartesian4(),
-
+            realTileExtent : new Cartesian4(),
+            showOnlyInPushedRegion : [],
             dayTextures : [],
             dayTextureTranslationAndScale : [],
             dayTextureTexCoordsExtent : [],
@@ -928,6 +943,13 @@ define([
                             tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                         }
 
+                        // Ground push related setting
+                        if (typeof imageryLayer.showOnlyInPushedRegion !== 'undefined') {
+                            uniformMap.showOnlyInPushedRegion[numberOfDayTextures] = imageryLayer.showOnlyInPushedRegion;
+                        } else {
+                            uniformMap.showOnlyInPushedRegion[numberOfDayTextures] = 0.0;
+                        }
+
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                         uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
@@ -982,6 +1004,9 @@ define([
                     uniformMap.dayTextures.length = numberOfDayTextures;
                     uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+
+                    // Store the real tile extent for ground push
+                    uniformMap.realTileExtent= new Cartesian4(tile.extent.west, tile.extent.south, tile.extent.east, tile.extent.north);
 
                     colorCommandList.push(command);
 

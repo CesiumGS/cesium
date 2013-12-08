@@ -69,6 +69,7 @@ define([
         var shader = this._shaders[key];
         if (!defined(shader)) {
             var vs = this.baseVertexShaderString;
+            var applyPush = vs.indexOf("#define APPLY_PUSH") !== -1;
             var fs =
                 (applyBrightness ? '#define APPLY_BRIGHTNESS\n' : '') +
                 (applyContrast ? '#define APPLY_CONTRAST\n' : '') +
@@ -95,7 +96,8 @@ define([
                     (applyContrast ?   '   u_dayTextureContrast[' + i + '],\n' : '0.0,\n') +
                     (applyHue ?        '   u_dayTextureHue[' + i + '],\n' : '0.0,\n') +
                     (applySaturation ? '   u_dayTextureSaturation[' + i + '],\n' : '0.0,\n') +
-                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + ']);\n' : '0.0);\n') ;
+                    (applyGamma ?      '   u_dayTextureOneOverGamma[' + i + '],\n' : '0.0,\n') +
+                    (applyPush ?       '   u_showOnlyInPushedRegion[' + i + ']);\n' : '0.0);\n') ;
             }
 
             fs +=

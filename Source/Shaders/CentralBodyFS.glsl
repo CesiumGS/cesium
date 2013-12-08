@@ -49,6 +49,13 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
 
+#ifdef APPLY_PUSH
+varying float v_push;
+uniform vec3 u_pushBaseTint;
+uniform vec3 u_pushSidesTint;
+uniform float u_showOnlyInPushedRegion[TEXTURE_UNITS];
+#endif
+
 vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,
@@ -60,7 +67,8 @@ vec3 sampleAndBlend(
     float textureContrast,
     float textureHue,
     float textureSaturation,
-    float textureOneOverGamma)
+    float textureOneOverGamma,
+    float showOnlyInPushedRegion)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
@@ -100,6 +108,25 @@ vec3 sampleAndBlend(
 
 #ifdef APPLY_GAMMA
     color = pow(color, vec3(textureOneOverGamma));
+#endif
+
+#ifdef APPLY_PUSH
+    // If we're clipping this layer
+    if (showOnlyInPushedRegion > 0.5){
+        float amt2 = 1.0-smoothstep(0.95, 1.0, v_push);
+        color = mix(color, vec3(0.0), amt2);
+        alpha = mix(alpha, 0.0, amt2);
+    } else if (v_push > 0.0001){
+        // Only darken if we're not clipping a layer
+        if( showOnlyInPushedRegion < 0.5 ) {
+            vec3 edgeColor = color * u_pushSidesTint;
+            vec3 pushColor = color * u_pushBaseTint;
+            float amt = 1.0-smoothstep(0.0, 0.05, v_push);
+            float amt2 = 1.0-smoothstep(0.95, 1.0, v_push); 
+            color = mix(color, edgeColor, (1.0-amt));
+            color = mix(color, pushColor, (1.0-amt2));
+        }
+    }
 #endif
 
     return mix(previousColor, color, alpha * textureAlpha);

@@ -14,13 +14,28 @@ varying vec3 v_positionEC;
 
 varying vec2 v_textureCoordinates;
 
+// Ground push related settings
+#ifdef APPLY_PUSH
+varying float v_push;
+uniform vec4 u_realTileExtent;
+uniform float u_pushDepth;
+uniform float u_pushBlend;
+uniform vec4 u_pushExtent;
+#endif
+
 // These functions are generated at runtime.
 vec4 getPosition(vec3 position3DWC);
 float get2DYPositionFraction();
 
 vec4 getPosition3DMode(vec3 position3DWC)
 {
+#ifdef APPLY_PUSH
+    vec3 geocentricNormal = normalize(position3DWC); // Use incoming position as geocentric normal
+    vec3 pmod = position3DAndHeight.xyz + geocentricNormal * (v_push * u_pushDepth);
+    return czm_projection * (u_modifiedModelView * vec4(pmod, 1.0));
+#else
     return czm_projection * (u_modifiedModelView * vec4(position3DAndHeight.xyz, 1.0));
+#endif
 }
 
 float get2DMercatorYPositionFraction()
@@ -66,7 +81,11 @@ vec4 getPosition2DMode(vec3 position3DWC)
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
+#ifdef APPLY_PUSH
+    return getPositionPlanarEarth(position3DWC, position3DAndHeight.w + v_push * u_pushDepth);
+#else
     return getPositionPlanarEarth(position3DWC, position3DAndHeight.w);
+#endif
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
@@ -79,8 +98,34 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     return czm_modelViewProjection * morphPosition;
 }
 
+#ifdef APPLY_PUSH
+float calcPush1d(float x, float sidesStart, float baseStart, float baseFinish, float sidesFinish)
+{
+    // Outside push extent
+    if( x <= sidesStart || x >= sidesFinish ) return 0.0;
+
+    // Inside base region
+    if( x >= baseStart && x <= baseFinish ) return 1.0;
+
+    // Smooth the sides
+    if( x < baseStart ) return smoothstep(sidesStart, baseStart, x);
+    return smoothstep(sidesFinish, baseFinish, x);
+}
+
+float calcPush(vec2 loc)
+{
+    return calcPush1d(loc.x, u_pushExtent.x - u_pushBlend, u_pushExtent.x, u_pushExtent.z, u_pushExtent.z + u_pushBlend)
+    * calcPush1d(loc.y, u_pushExtent.y - u_pushBlend, u_pushExtent.y, u_pushExtent.w, u_pushExtent.w + u_pushBlend);
+}
+#endif
+
 void main() 
 {
+#ifdef APPLY_PUSH
+    vec2 actualLoc = mix(u_realTileExtent.st, u_realTileExtent.pq, vec2(textureCoordinates.x, textureCoordinates.y));
+    v_push = calcPush(actualLoc);
+#endif
+
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
 
     gl_Position = getPosition(position3DWC);
