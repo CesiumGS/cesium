@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView'
     ], function(
-        defaultValue,
         defined,
         DeveloperError,
         defineProperties,
