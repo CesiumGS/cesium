@@ -184,29 +184,40 @@ require(['Cesium'], function(Cesium) {
 
     function billboardPixelOffsetScaleByDistance(scene, ellipsoid) {
         Sandcastle.declare(billboardPixelOffsetScaleByDistance); // For highlighting in Sandcastle.
-        var image = new Image();
-        image.onload = function() {
+
+        Cesium.when.all([
+                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../images/facility.gif')
+                        ],
+                        function(images) {
             var billboards = new Cesium.BillboardCollection();
             var textureAtlas = scene.getContext().createTextureAtlas({
-                image : image
+                images : images
             });
             billboards.setTextureAtlas(textureAtlas);
+
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            var facilityHeight = images[1].height;
+
             // colocated billboards, separate as viewer gets closer
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
-                imageIndex : 0,
-                pixelOffset : new Cesium.Cartesian2(1.0, 0.0),
-                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 10.0, 1.5e6, 0.0)
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                imageIndex : 1,
             });
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 imageIndex : 0,
-                pixelOffset : new Cesium.Cartesian2(-1.0, 0.0),
-                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 10.0, 1.5e6, 0.0)
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset : new Cesium.Cartesian2(0.0, facilityHeight),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
+                translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
             });
             scene.getPrimitives().add(billboards);
-        };
-        image.src = '../images/facility.gif';
+        });
     }
 
     function addPointBillboards(scene, ellipsoid) {
