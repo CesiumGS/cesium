@@ -250,18 +250,10 @@ defineSuite([
 
     it('can remove all labels', function() {
         labels.add({
-            position : {
-                x : 1.0,
-                y : 2.0,
-                z : 3.0
-            }
+            position : new Cartesian3(1.0, 2.0, 3.0)
         });
         labels.add({
-            position : {
-                x : 4.0,
-                y : 5.0,
-                z : 6.0
-            }
+            position : new Cartesian3(4.0, 5.0, 6.0)
         });
         expect(labels.getLength()).toEqual(2);
 
@@ -297,21 +289,13 @@ defineSuite([
 
     it('can render after modifying and removing a label', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'o',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -340,11 +324,7 @@ defineSuite([
 
     it('can render a label', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -359,11 +339,7 @@ defineSuite([
 
     it('can render after adding a label', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -376,11 +352,7 @@ defineSuite([
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
         labels.add({
-            position : {
-                x : -0.5,
-                y : 0.0,
-                z : 0.0
-            }, // Closer to viewer
+            position : new Cartesian3(-0.5, 0.0, 0.0), // Closer to viewer
             text : 'x',
             fillColor : {
                 red : 1.0,
@@ -398,11 +370,7 @@ defineSuite([
 
     it('can render after removing a label', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -424,11 +392,7 @@ defineSuite([
 
     it('can render after removing and adding a label', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -447,11 +411,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -464,11 +424,7 @@ defineSuite([
 
     it('can render after removing all labels', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -490,11 +446,7 @@ defineSuite([
 
     it('can render after removing all labels and adding a label', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -511,11 +463,7 @@ defineSuite([
 
         labels.removeAll();
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -527,11 +475,7 @@ defineSuite([
 
     it('can render with a different buffer usage', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -552,11 +496,7 @@ defineSuite([
 
     it('does not render labels with show set to false', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -582,11 +522,7 @@ defineSuite([
 
     it('does not render labels that are behind the viewer', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -601,30 +537,18 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        label.setPosition({
-            x : -2.0,
-            y : 0.0,
-            z : 0.0
-        }); // Behind viewer
+        label.setPosition(new Cartesian3(-2.0, 0.0, 0.0)); // Behind viewer
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        label.setPosition({
-            x : 0.0,
-            y : 0.0,
-            z : 0.0
-        }); // Back in front of viewer
+        label.setPosition(Cartesian3.ZERO); // Back in front of viewer
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render labels with a scale of zero', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -650,11 +574,7 @@ defineSuite([
 
     it('render label with translucencyByDistance', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
@@ -682,15 +602,8 @@ defineSuite([
 
     it('render label with pixelOffsetScaleByDistance', function() {
         labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
-            pixelOffset : {
-                x: 1.0,
-                y: 0.0
-            },
+            position : Cartesian3.ZERO,
+            pixelOffset : new Cartesian2(1.0, 0.0),
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
@@ -718,11 +631,7 @@ defineSuite([
 
     it('can pick a label', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER,
@@ -737,11 +646,7 @@ defineSuite([
     it('does not pick a label with show set to false', function() {
         labels.add({
             show : false,
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -753,11 +658,7 @@ defineSuite([
 
     it('pick a label using translucencyByDistance', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
+            position : Cartesian3.ZERO,
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -776,15 +677,8 @@ defineSuite([
 
     it('pick a label using pixelOffsetScaleByDistance', function() {
         var label = labels.add({
-            position : {
-                x : 0.0,
-                y : 0.0,
-                z : 0.0
-            },
-            pixelOffset : {
-                x : 0.0,
-                y : 1.0
-            },
+            position : Cartesian3.ZERO,
+            pixelOffset : new Cartesian2(0.0, 1.0),
             text : 'x',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
@@ -984,11 +878,7 @@ defineSuite([
             labels.clampToPixel = false;
             var label = labels.add({
                 text : 'abc',
-                position : {
-                    x : 0.0,
-                    y : 0.0,
-                    z : 0.0
-                }
+                position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
 
@@ -999,15 +889,8 @@ defineSuite([
             labels.clampToPixel = false;
             var label = labels.add({
                 text : 'abc',
-                position : {
-                    x : 0.0,
-                    y : 0.0,
-                    z : 0.0
-                },
-                pixelOffset : {
-                    x : 1.0,
-                    y : 2.0
-                }
+                position : Cartesian3.ZERO,
+                pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
 
@@ -1018,16 +901,8 @@ defineSuite([
             labels.clampToPixel = false;
             var label = labels.add({
                 text : 'abc',
-                position : {
-                    x : 0.0,
-                    y : 0.0,
-                    z : 0.0
-                },
-                eyeOffset : {
-                    x : 5.0,
-                    y : 5.0,
-                    z : 0.0
-                }
+                position : Cartesian3.ZERO,
+                eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
             });
             labels.update(context, frameState, []);
 
@@ -1046,19 +921,11 @@ defineSuite([
 
         it('can equal another label', function() {
             var label = labels.add({
-                position : {
-                    x : 1.0,
-                    y : 2.0,
-                    z : 3.0
-                },
+                position : new Cartesian3(1.0, 2.0, 3.0),
                 text : 'equals'
             });
             var otherLabel = labels.add({
-                position : {
-                    x : 1.0,
-                    y : 2.0,
-                    z : 3.0
-                },
+                position : new Cartesian3(1.0, 2.0, 3.0),
                 text : 'equals'
             });
 
@@ -1067,18 +934,10 @@ defineSuite([
 
         it('can differ from another label', function() {
             var label = labels.add({
-                position : {
-                    x : 1.0,
-                    y : 2.0,
-                    z : 3.0
-                }
+                position : new Cartesian3(1.0, 2.0, 3.0)
             });
             var otherLabel = labels.add({
-                position : {
-                    x : 4.0,
-                    y : 5.0,
-                    z : 6.0
-                }
+                position : new Cartesian3(4.0, 5.0, 6.0)
             });
 
             expect(label).not.toEqual(otherLabel);
@@ -1336,10 +1195,7 @@ defineSuite([
             var scale = 2.0;
             var font = '20px "Open Sans"';
             var verticalOrigin = VerticalOrigin.CENTER;
-            var pixelOffset = {
-                x : 10,
-                y : 15
-            };
+            var pixelOffset = new Cartesian2(10.0, 15.0);
 
             var one = labels.add({
                 text : text,
@@ -1374,11 +1230,7 @@ defineSuite([
             var offset1 = getGlyphBillboardVertexTranslate(label, 1);
             var offset2 = getGlyphBillboardVertexTranslate(label, 2);
 
-            label.setPosition({
-                x : 1,
-                y : 1,
-                z : 1
-            });
+            label.setPosition(new Cartesian3(1.0, 1.0, 1.0));
             labels.update(context, frameState, []);
 
             expect(getGlyphBillboardVertexTranslate(label, 0)).toEqual(offset0);
@@ -1396,11 +1248,7 @@ defineSuite([
             var offset1 = getGlyphBillboardVertexTranslate(label, 1);
             var offset2 = getGlyphBillboardVertexTranslate(label, 2);
 
-            label.setEyeOffset({
-                x : 10.0,
-                y : 10.0,
-                z : -10.0
-            });
+            label.setEyeOffset(new Cartesian3(10.0, 10.0, -10.0));
             labels.update(context, frameState, []);
 
             expect(getGlyphBillboardVertexTranslate(label, 0)).toEqual(offset0);

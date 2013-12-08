@@ -234,11 +234,11 @@ define([
             dimensions = glyph.dimensions;
 
             if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                glyphPixelOffset.y = 0.0 - dimensions.descent * scale;
+                glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = 0.0 - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = 0.0 - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
             if (defined(glyph.billboard)) {
