@@ -54,6 +54,7 @@ define([
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -61,7 +62,7 @@ define([
      *
      * @internalConstructor
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
         options = defaultValue(options, EMPTY_OBJECT);
@@ -73,6 +74,10 @@ define([
                 options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
+        if (defined(options.pixelOffsetScaleByDistance) &&
+                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+        }
 
         this._show = defaultValue(options.show, true);
 
@@ -80,6 +85,7 @@ define([
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
 
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
@@ -92,6 +98,7 @@ define([
         this._height = options.height;
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._id = options.id;
 
         this._pickId = undefined;
@@ -114,7 +121,8 @@ define([
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
-    Billboard.NUMBER_OF_PROPERTIES = 13;
+    var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
+    Billboard.NUMBER_OF_PROPERTIES = 14;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -288,6 +296,18 @@ define([
         }
     };
 
+    Billboard.prototype._setTranslate = function(value) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+
+        var translate = this._translate;
+        if (!Cartesian2.equals(translate, value)) {
+            Cartesian2.clone(value, translate);
+            makeDirty(this, PIXEL_OFFSET_INDEX);
+        }
+    };
+
     /**
      * Returns the near and far scaling properties of a Billboard based on the billboard's distance from the camera.
      *
@@ -392,6 +412,64 @@ define([
 
         makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
         this._translucencyByDistance = NearFarScalar.clone(translucency, this._translucencyByDistance);
+    };
+
+    /**
+     * Returns the near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @returns {NearFarScalar} The near/far pixel offset scaling values based on camera distance to the billboard
+     *
+     * @see Billboard#setPixelOffsetScaleByDistance
+     * @see Billboard#setPixelOffset
+     * @see Billboard#getPixelOffset
+     */
+    Billboard.prototype.getPixelOffsetScaleByDistance = function() {
+        return this._pixelOffsetScaleByDistance;
+    };
+
+    /**
+     * Sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the billboard's pixel offset scale remains clamped to the nearest bound.  If undefined,
+     * pixelOffsetScaleByDistance will be disabled.
+     *
+     * @memberof Billboard
+     *
+     * @param {NearFarScalar} pixelOffsetScale The configuration of near and far distances and their respective pixel offset scaling values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Billboard#getPixelOffsetScaleByDistance
+     * @see Billboard#setPixelOffset
+     * @see Billboard#getPixelOffset
+     *
+     * @example
+     * // Example 1.
+     * // Set a billboard's pixel offset scale to 0.0 when the
+     * // camera is 1500 meters from the billboard and scale pixel offset to 10.0 pixels
+     * // in the y direction the camera distance approaches 8.0e6 meters.
+     * b.setPixelOffset(new Cartesian2(0.0, 1.0);
+     * b.setPixelOffsetScaleByDistance(new NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
+     *
+     * // Example 2.
+     * // disable pixel offset by distance
+     * b.setPixelOffsetScaleByDistance(undefined);
+     */
+    Billboard.prototype.setPixelOffsetScaleByDistance = function(pixelOffsetScale) {
+        if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, pixelOffsetScale)) {
+            return;
+        }
+
+        if (pixelOffsetScale.far <= pixelOffsetScale.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
+        this._pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScale, this._pixelOffsetScaleByDistance);
     };
 
     /**
@@ -921,6 +999,7 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
+    var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
         if (!defined(billboardCollection)) {
@@ -935,8 +1014,12 @@ define([
             throw new DeveloperError('frameState is required.');
         }
 
+        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        Cartesian2.clone(this._pixelOffset, tempPixelOffset);
+        Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
+
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, context, frameState);
     };
 
     /**
@@ -960,9 +1043,11 @@ define([
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+               Cartesian2.equals(this._translate, other._translate) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
                this._id === other._id;
     };
 

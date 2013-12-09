@@ -1,4 +1,4 @@
-.cesium-widget-chromeFrameOverlay {
+.cesium-chromeFrameOverlay {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -10,6 +10,6 @@
     color: white;
 }
 
-.cesium-widget-chromeFrameOverlay div {
+.cesium-chromeFrameOverlay div {
     padding: 2em;
 }

@@ -178,6 +178,7 @@ define([
                     billboard.setShow(label._show);
                     billboard.setPosition(label._position);
                     billboard.setEyeOffset(label._eyeOffset);
+                    billboard.setPixelOffset(label._pixelOffset);
                     billboard.setHorizontalOrigin(HorizontalOrigin.LEFT);
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
@@ -187,6 +188,7 @@ define([
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
                 glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
+                glyph.billboard.setPixelOffsetScaleByDistance(label._pixelOffsetScaleByDistance);
             }
         }
 
@@ -223,9 +225,7 @@ define([
             widthOffset -= totalWidth * scale;
         }
 
-        var pixelOffset = label._pixelOffset;
-
-        glyphPixelOffset.x = pixelOffset.x + widthOffset;
+        glyphPixelOffset.x = widthOffset;
         glyphPixelOffset.y = 0;
 
         var verticalOrigin = label._verticalOrigin;
@@ -234,15 +234,15 @@ define([
             dimensions = glyph.dimensions;
 
             if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                glyphPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
+                glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
             if (defined(glyph.billboard)) {
-                glyph.billboard.setPixelOffset(glyphPixelOffset);
+                glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
             glyphPixelOffset.x += dimensions.width * scale;
@@ -298,7 +298,7 @@ define([
      *   text : 'Another label'
      * });
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

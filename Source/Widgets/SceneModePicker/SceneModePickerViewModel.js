@@ -84,7 +84,6 @@ define([
         /**
          * Gets the currently active tooltip.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.selectedTooltip = undefined;
         knockout.defineProperty(this, 'selectedTooltip', function() {
