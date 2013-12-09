@@ -4,12 +4,14 @@ defineSuite([
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
+         'Core/TimeIntervalCollection',
          'DynamicScene/DynamicObject'
      ], function(
          DynamicObjectCollection,
          JulianDate,
          Iso8601,
          TimeInterval,
+         TimeIntervalCollection,
          DynamicObject) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -244,8 +246,10 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/2012-08-02');
-        dynamicObject2.availability = TimeInterval.fromIso8601('2012-08-05/2012-08-06');
+        dynamicObject.availability = new TimeIntervalCollection();
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
+        dynamicObject2.availability = new TimeIntervalCollection();
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
@@ -260,8 +264,10 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z');
-        dynamicObject2.availability = TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06');
+        dynamicObject.availability = new TimeIntervalCollection();
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject2.availability = new TimeIntervalCollection();
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
