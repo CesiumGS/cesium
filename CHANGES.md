@@ -12,7 +12,7 @@ Beta Releases
 ### b24 - 2014-01-02
 
 * Breaking changes:
-   * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+  * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
 
            var viewer = new Viewer('cesiumContainer', { 
                alpha : true
@@ -25,7 +25,10 @@ Beta Releases
                  alpha : true
                }
            });
+  * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
+  * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
 * Added `CentralBody.maximumScreenSpaceError`.
+* Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
 
 ### b23 - 2013-12-02
 

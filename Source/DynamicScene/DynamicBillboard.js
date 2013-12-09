@@ -35,6 +35,7 @@ define(['../Core/defaultValue',
         this._show = undefined;
         this._scaleByDistance = undefined;
         this._translucencyByDistance = undefined;
+        this._pixelOffsetScaleByDistance = undefined;
         this._propertyChanged = new Event();
     };
 
@@ -150,7 +151,16 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        translucencyByDistance : createDynamicPropertyDescriptor('translucencyByDistance', '_translucencyByDistance')
+        translucencyByDistance : createDynamicPropertyDescriptor('translucencyByDistance', '_translucencyByDistance'),
+
+        /**
+         * Gets or sets the {@link NearFarScalar} {@link Property} used to set pixel offset scaling based on distance.
+         * If undefined, no additional scale is applied to the pixel offset
+         * @memberof DynamicBillboard.prototype
+         * @type {Property}
+         */
+        pixelOffsetScaleByDistance : createDynamicPropertyDescriptor('pixelOffsetScaleByDistance', '_pixelOffsetScaleByDistance')
+
     });
 
     /**
@@ -178,6 +188,7 @@ define(['../Core/defaultValue',
         result.height = this._height;
         result.scaleByDistance = this._scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
+        result.pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
         return result;
     };
 
@@ -207,6 +218,7 @@ define(['../Core/defaultValue',
         this.height = defaultValue(this._height, source._height);
         this.scaleByDistance = defaultValue(this._scaleByDistance, source._scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source._translucencyByDistance);
+        this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source._pixelOffsetScaleByDistance);
     };
 
     return DynamicBillboard;

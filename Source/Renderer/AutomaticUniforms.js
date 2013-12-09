@@ -11,7 +11,26 @@ define([
 
     var viewerPositionWCScratch = new Cartesian3();
 
-    return {
+    var AutomaticUniform = function(options) {
+        this.getSize = options.getSize;
+        this.getDatatype = options.getDatatype;
+        this.getValue = options.getValue;
+    };
+
+    AutomaticUniform.prototype.getDeclaration = function(name) {
+        var declaration = 'uniform ' + this.getDatatype().getGLSL() + ' ' + name;
+
+        var size = this.getSize();
+        if (size === 1) {
+            declaration += ';';
+        } else {
+            declaration += '[' + size.toString() + '];';
+        }
+
+        return declaration;
+    };
+
+    var AutomaticUniforms = {
         /**
          * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
          * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
@@ -30,7 +49,7 @@ define([
          * // by the viewport's width and height.
          * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
          */
-        czm_viewport : {
+        czm_viewport : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -48,7 +67,7 @@ define([
                     w : v.height
                 };
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 orthographic projection matrix that
@@ -77,7 +96,7 @@ define([
          * // Example
          * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
          */
-        czm_viewportOrthographic : {
+        czm_viewportOrthographic : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -89,7 +108,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getViewportOrthographic();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
@@ -125,7 +144,7 @@ define([
          * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
          * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
          */
-        czm_viewportTransformation : {
+        czm_viewportTransformation : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -137,7 +156,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getViewportTransformation();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
@@ -158,7 +177,7 @@ define([
          * // Example
          * vec4 worldPosition = czm_model * modelPosition;
          */
-        czm_model : {
+        czm_model : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -170,7 +189,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModel();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
@@ -190,7 +209,7 @@ define([
          * // Example
          * vec4 modelPosition = czm_inverseModel * worldPosition;
          */
-        czm_inverseModel : {
+        czm_inverseModel : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -202,7 +221,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseModel();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 view transformation matrix that
@@ -225,7 +244,7 @@ define([
          * // Example
          * vec4 eyePosition = czm_view * worldPosition;
          */
-        czm_view : {
+        czm_view : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -237,7 +256,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getView();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 view transformation matrix that
@@ -259,7 +278,7 @@ define([
          * // Example
          * vec4 eyePosition3D = czm_view3D * worldPosition3D;
          */
-        czm_view3D : {
+        czm_view3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -271,7 +290,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getView3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 view rotation matrix that
@@ -292,7 +311,7 @@ define([
          * // Example
          * vec3 eyeVector = czm_viewRotation * worldVector;
          */
-        czm_viewRotation : {
+        czm_viewRotation : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -304,7 +323,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getViewRotation();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 view rotation matrix that
@@ -326,7 +345,7 @@ define([
          * // Example
          * vec3 eyeVector = czm_viewRotation3D * worldVector;
          */
-        czm_viewRotation3D : {
+        czm_viewRotation3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -338,7 +357,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getViewRotation3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
@@ -358,7 +377,7 @@ define([
          * // Example
          * vec4 worldPosition = czm_inverseView * eyePosition;
          */
-        czm_inverseView : {
+        czm_inverseView : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -370,7 +389,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseView();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
@@ -392,7 +411,7 @@ define([
          * // Example
          * vec4 worldPosition = czm_inverseView3D * eyePosition;
          */
-        czm_inverseView3D : {
+        czm_inverseView3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -404,7 +423,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseView3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that
@@ -425,7 +444,7 @@ define([
          * // Example
          * vec4 worldVector = czm_inverseViewRotation * eyeVector;
          */
-        czm_inverseViewRotation : {
+        czm_inverseViewRotation : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -437,7 +456,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseViewRotation();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that
@@ -459,7 +478,7 @@ define([
          * // Example
          * vec4 worldVector = czm_inverseViewRotation3D * eyeVector;
          */
-        czm_inverseViewRotation3D : {
+        czm_inverseViewRotation3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -471,7 +490,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseViewRotation3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix that
@@ -493,7 +512,7 @@ define([
          * // Example
          * gl_Position = czm_projection * eyePosition;
          */
-        czm_projection : {
+        czm_projection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -505,7 +524,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
@@ -525,7 +544,7 @@ define([
          * // Example
          * vec4 eyePosition = czm_inverseProjection * clipPosition;
          */
-        czm_inverseProjection : {
+        czm_inverseProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -537,7 +556,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
@@ -560,7 +579,7 @@ define([
          * // Example
          * gl_Position = czm_infiniteProjection * eyePosition;
          */
-        czm_infiniteProjection : {
+        czm_infiniteProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -572,7 +591,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInfiniteProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
@@ -600,7 +619,7 @@ define([
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view * czm_model * modelPosition;
          */
-        czm_modelView : {
+        czm_modelView : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -612,7 +631,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelView();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
@@ -640,7 +659,7 @@ define([
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view3D * czm_model * modelPosition;
          */
-        czm_modelView3D : {
+        czm_modelView3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -652,7 +671,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelView3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
@@ -680,7 +699,7 @@ define([
          * @see czm_translateRelativeToEye
          * @see EncodedCartesian3
          */
-        czm_modelViewRelativeToEye : {
+        czm_modelViewRelativeToEye : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -692,7 +711,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelViewRelativeToEye();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
@@ -711,7 +730,7 @@ define([
          * // Example
          * vec4 modelPosition = czm_inverseModelView * eyePosition;
          */
-        czm_inverseModelView : {
+        czm_inverseModelView : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -723,7 +742,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseModelView();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
@@ -746,7 +765,7 @@ define([
          * // Example
          * vec4 modelPosition = czm_inverseModelView3D * eyePosition;
          */
-        czm_inverseModelView3D : {
+        czm_inverseModelView3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -758,7 +777,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseModelView3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
@@ -784,7 +803,7 @@ define([
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
          */
-        czm_viewProjection : {
+        czm_viewProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -796,7 +815,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getViewProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
@@ -857,7 +876,7 @@ define([
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
          */
-        czm_modelViewProjection : {
+        czm_modelViewProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -869,7 +888,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelViewProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 inverse model-view-projection transformation matrix that
@@ -930,7 +949,7 @@ define([
          * @see czm_translateRelativeToEye
          * @see EncodedCartesian3
          */
-        czm_modelViewProjectionRelativeToEye : {
+        czm_modelViewProjectionRelativeToEye : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -942,7 +961,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelViewProjectionRelativeToEye();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
@@ -970,7 +989,7 @@ define([
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
          */
-        czm_modelViewInfiniteProjection : {
+        czm_modelViewInfiniteProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -982,7 +1001,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getModelViewInfiniteProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
@@ -1005,7 +1024,7 @@ define([
          * // Example
          * vec3 eyeNormal = czm_normal * normal;
          */
-        czm_normal : {
+        czm_normal : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1017,7 +1036,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getNormal();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
@@ -1043,7 +1062,7 @@ define([
          * // Example
          * vec3 eyeNormal = czm_normal3D * normal;
          */
-        czm_normal3D : {
+        czm_normal3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1055,7 +1074,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getNormal3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
@@ -1077,7 +1096,7 @@ define([
          * // Example
          * vec3 normalMC = czm_inverseNormal * normalEC;
          */
-        czm_inverseNormal : {
+        czm_inverseNormal : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1089,7 +1108,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseNormal();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
@@ -1113,7 +1132,7 @@ define([
          * // Example
          * vec3 normalMC = czm_inverseNormal3D * normalEC;
          */
-        czm_inverseNormal3D : {
+        czm_inverseNormal3D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1125,7 +1144,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseNormal3D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
@@ -1136,7 +1155,7 @@ define([
          *
          * @see UniformState#getEyeHeight2D
          */
-        czm_eyeHeight2D : {
+        czm_eyeHeight2D : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1148,7 +1167,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getEyeHeight2D();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
@@ -1168,7 +1187,7 @@ define([
          * // Example
          * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
          */
-        czm_entireFrustum : {
+        czm_entireFrustum : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1180,7 +1199,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getEntireFrustum();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
@@ -1200,7 +1219,7 @@ define([
          * // Example
          * float frustumLength = czm_currentFrustum.y - czm_currentFrustum.x;
          */
-        czm_currentFrustum : {
+        czm_currentFrustum : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1212,7 +1231,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getCurrentFrustum();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the size of a pixel in meters at a distance of one meter
@@ -1228,7 +1247,7 @@ define([
          * // Example: the pixel size at a position in eye coordinates
          * float pixelSize = czm_pixelSizeInMeters * positionEC.z;
          */
-        czm_pixelSizeInMeters : {
+        czm_pixelSizeInMeters : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1240,7 +1259,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getPixelSize();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
@@ -1256,7 +1275,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_sunPositionWC;
          */
-        czm_sunPositionWC : {
+        czm_sunPositionWC : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1268,7 +1287,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getSunPositionWC();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the sun position in Columbus view world coordinates.
@@ -1283,7 +1302,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_sunPositionColumbusView;
          */
-        czm_sunPositionColumbusView : {
+        czm_sunPositionColumbusView : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1295,7 +1314,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getSunPositionColumbusView();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
@@ -1315,7 +1334,7 @@ define([
          * // Example
          * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
          */
-        czm_sunDirectionEC : {
+        czm_sunDirectionEC : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1327,7 +1346,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getSunDirectionEC();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
@@ -1344,7 +1363,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_sunDirectionWC;
          */
-        czm_sunDirectionWC : {
+        czm_sunDirectionWC : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1356,7 +1375,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getSunDirectionWC();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
@@ -1375,7 +1394,7 @@ define([
          * // Example
          * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
          */
-        czm_moonDirectionEC : {
+        czm_moonDirectionEC : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1387,7 +1406,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getMoonDirectionEC();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the high bits of the camera position in model
@@ -1405,7 +1424,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCHigh;
          */
-        czm_encodedCameraPositionMCHigh : {
+        czm_encodedCameraPositionMCHigh : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1417,7 +1436,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getEncodedCameraPositionMCHigh();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the low bits of the camera position in model
@@ -1435,7 +1454,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCLow;
          */
-        czm_encodedCameraPositionMCLow : {
+        czm_encodedCameraPositionMCLow : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1447,7 +1466,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getEncodedCameraPositionMCLow();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
@@ -1459,7 +1478,7 @@ define([
          * // GLSL declaration
          * uniform vec3 czm_viewerPositionWC;
          */
-        czm_viewerPositionWC : {
+        czm_viewerPositionWC : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1471,7 +1490,7 @@ define([
             getValue : function(uniformState) {
                 return Matrix4.getTranslation(uniformState.getInverseView(), viewerPositionWCScratch);
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the frame number. This uniform is automatically incremented
@@ -1484,7 +1503,7 @@ define([
          * // GLSL declaration
          * uniform float czm_frameNumber;
          */
-        czm_frameNumber : {
+        czm_frameNumber : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1496,7 +1515,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getFrameState().frameNumber;
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the current morph transition time between
@@ -1512,7 +1531,7 @@ define([
          * // Example
          * vec4 p = czm_columbusViewMorph(position2D, position3D, czm_morphTime);
          */
-        czm_morphTime : {
+        czm_morphTime : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1524,7 +1543,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getFrameState().morphTime;
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing the current {@link SceneMode} enumeration, expressed
@@ -1548,7 +1567,7 @@ define([
          *     eyeHeightSq = czm_eyeHeight2D.y;
          * }
          */
-        czm_sceneMode : {
+        czm_sceneMode : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1560,7 +1579,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getFrameState().mode.value;
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
@@ -1579,7 +1598,7 @@ define([
          * // Example
          * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
          */
-        czm_temeToPseudoFixed : {
+        czm_temeToPseudoFixed : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -1591,6 +1610,8 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getTemeToPseudoFixedMatrix();
             }
-        }
+        })
     };
+
+    return AutomaticUniforms;
 });
