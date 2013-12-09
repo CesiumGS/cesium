@@ -37,7 +37,6 @@ define([
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
      */
-
     var CesiumInspector = function(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -87,7 +86,7 @@ define([
         generalSection.appendChild(debugShowFrustums);
         var frustumStats = document.createElement('div');
         frustumStats.className = 'cesium-cesiumInspector-frustumStats';
-        frustumStats.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" : !frustums}, html: frustumStatText');
+        frustumStats.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : frustums, "cesium-cesiumInspector-hide" : !frustums}, html: frustumStatisticText');
         var frustumsCheckbox = document.createElement('input');
         frustumsCheckbox.type = 'checkbox';
         frustumsCheckbox.setAttribute('data-bind', 'checked: frustums, click: showFrustums');
@@ -143,7 +142,7 @@ define([
         pickPrimRequired.appendChild(refFrame);
         var rfCheckbox = document.createElement('input');
         rfCheckbox.type = 'checkbox';
-        rfCheckbox.setAttribute('data-bind', 'checked: primitiveRefFrame, click: showPrimitiveRefFrame, enable: hasPickedPrimitive');
+        rfCheckbox.setAttribute('data-bind', 'checked: primitiveReferenceFrame, click: showPrimitiveReferenceFrame, enable: hasPickedPrimitive');
         refFrame.appendChild(rfCheckbox);
         refFrame.appendChild(document.createTextNode('Show reference frame'));
 
@@ -226,7 +225,7 @@ define([
         terrainSection.appendChild(tileCoords);
         var coordCheck = document.createElement('input');
         coordCheck.type = 'checkbox';
-        coordCheck.setAttribute('data-bind', 'checked: tileCoords, click: showTileCoords');
+        coordCheck.setAttribute('data-bind', 'checked: tileCoordinates, click: showTileCoordinates');
         tileCoords.appendChild(coordCheck);
         tileCoords.appendChild(document.createTextNode('Show tile coordinates'));
 

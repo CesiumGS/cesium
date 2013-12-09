@@ -65,7 +65,6 @@ defineSuite([
             viewModel.showFrustums();
             expect(viewModel.scene.debugShowFrustums).toBe(false);
         }, 250);
-
     });
 
     it('show performance', function() {

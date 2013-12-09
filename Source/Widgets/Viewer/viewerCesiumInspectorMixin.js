@@ -41,7 +41,6 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerCesiumInspectorMixin);
      */
-
     var viewerCesiumInspectorMixin = function(viewer) {
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');

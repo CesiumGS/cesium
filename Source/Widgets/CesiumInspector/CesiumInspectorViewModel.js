@@ -66,167 +66,167 @@ define([
 
         /**
          * Gets or sets the show frustums state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.frustums = false;
 
         /**
          * Gets or sets the show performance display state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.performance = false;
 
         /**
          * Gets or sets the show primitive bounding sphere state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.primitiveBoundingSphere = false;
 
         /**
          * Gets or sets the show primitive reference frame state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
-        this.primitiveRefFrame = false;
+        this.primitiveReferenceFrame = false;
 
         /**
          * Gets or sets the filter primitive state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.filterPrimitive = false;
 
         /**
          * Gets or sets the show tile bounding sphere state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.tileBoundingSphere = false;
 
         /**
          * Gets or sets the filter tile state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.filterTile = false;
 
         /**
          * Gets or sets the show wireframe state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.wireframe = false;
 
         /**
          * Gets or sets the suspend updates state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.suspendUpdates = false;
 
         /**
          * Gets or sets the show tile coordinates state.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
-        this.tileCoords = false;
+        this.tileCoordinates = false;
 
         /**
          * Gets or sets the frustum statistic text.  This property is observable.
-         *
          * @type {String}
+         * @default ''
          */
-        this.frustumStatText = '';
+        this.frustumStatisticText = '';
 
         /**
          * Gets or sets the selected tile information text.  This property is observable.
-         *
          * @type {String}
+         * @default ''
          */
         this.tileText = '';
 
         /**
          * Gets if a primitive has been selected.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.hasPickedPrimitive = false;
 
         /**
-         * Gets if a tile has been selected.  This property is observable.
-         *
+         * Gets if a tile has been selected.  This property is observable
          * @type {Boolean}
+         * @default false
          */
         this.hasPickedTile = false;
 
         /**
          * Gets if the picking primitive command is active.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.pickPimitiveActive = false;
 
         /**
          * Gets if the picking tile command is active.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
-        this.pickTleActive = false;
+        this.pickTileActive = false;
 
         /**
          * Gets or sets if the cesium inspector drop down is visible.  This property is observable.
-         *
          * @type {Boolean}
+         * @default true
          */
         this.dropDownVisible = true;
 
         /**
          * Gets or sets if the general section is visible.  This property is observable.
-         *
          * @type {Boolean}
+         * @default true
          */
         this.generalVisible = true;
 
         /**
          * Gets or sets if the primitive section is visible.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.primitivesVisible = false;
 
         /**
          * Gets or sets if the terrain section is visible.  This property is observable.
-         *
          * @type {Boolean}
+         * @default false
          */
         this.terrainVisible = false;
 
         /**
          * Gets or sets if the text on the general section expand button.  This property is observable.
-         *
          * @type {String}
+         * @default '-'
          */
         this.generalSwitchText = '-';
 
         /**
          * Gets or sets if the text on the primitive section expand button.  This property is observable.
-         *
          * @type {String}
+         * @default '+'
          */
         this.primitivesSwitchText = '+';
 
         /**
          * Gets or sets if the text on the terrain section expand button.  This property is observable.
-         *
          * @type {String}
+         * @default '+'
          */
         this.terrainSwitchText = '+';
 
         knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
-                              'frustumStatText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
+                              'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
                               'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
 
@@ -253,7 +253,7 @@ define([
             if (that.frustums) {
                 that._scene.debugShowFrustums = true;
                 that._frustumInterval = setInterval(function() {
-                    that.frustumStatText = frustumStatsToString(scene.debugFrustumStatistics);
+                    that.frustumStatisticText = frustumStatsToString(scene.debugFrustumStatistics);
                 }, 100);
             } else {
                 clearInterval(that._frustumInterval);
@@ -267,7 +267,7 @@ define([
                 that._performanceDisplay = new PerformanceDisplay({
                     rectangle : br,
                     backgroundColor: bc,
-                    font: "12px arial,sans-serif"
+                    font: '12px arial,sans-serif'
                 });
                 that._scene.getPrimitives().add(that._performanceDisplay);
             } else {
@@ -281,8 +281,8 @@ define([
             return true;
         });
 
-        this._showPrimitiveRefFrame = createCommand(function() {
-            if (that.primitiveRefFrame) {
+        this._showPrimitiveReferenceFrame = createCommand(function() {
+            if (that.primitiveReferenceFrame) {
                 var modelMatrix = that._primitive.primitive.modelMatrix;
                 that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
                 that._scene.getPrimitives().add(that._modelMatrixPrimitive);
@@ -319,12 +319,12 @@ define([
         });
 
         var tileBoundariesLayer;
-        this._showTileCoords = createCommand(function() {
-            if (that.tileCoords && !defined(tileBoundariesLayer)) {
+        this._showTileCoordinates = createCommand(function() {
+            if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
                 tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new TileCoordinatesImageryProvider({
                     tilingScheme : centralBody.terrainProvider.getTilingScheme()
                 }));
-            } else if (!that.tileCoords && defined(tileBoundariesLayer)) {
+            } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
                 centralBody.getImageryLayers().remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
@@ -491,9 +491,9 @@ define([
          *
          * @type {Command}
          */
-        showPrimitiveRefFrame : {
+        showPrimitiveReferenceFrame : {
             get : function() {
-                return this._showPrimitiveRefFrame;
+                return this._showPrimitiveReferenceFrame;
             }
         },
 
@@ -539,9 +539,9 @@ define([
          *
          * @type {Command}
          */
-        showTileCoords : {
+        showTileCoordinates : {
             get : function() {
-                return this._showTileCoords;
+                return this._showTileCoordinates;
             }
         },
 
@@ -654,7 +654,7 @@ define([
                         newPrimitive.primitive.show = true;
                     }, 50);
                     this.showPrimitiveBoundingSphere();
-                    this.showPrimitiveRefFrame();
+                    this.showPrimitiveReferenceFrame();
                     this.doFilterPrimitive();
                 }
             },
