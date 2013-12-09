@@ -1,5 +1,5 @@
 /*global define*/
-define(['require',
+define([
         '../BaseLayerPicker/ImageryProviderViewModel',
         '../../Core/buildModuleUrl',
         '../../Core/FeatureDetection',
@@ -9,17 +9,16 @@ define(['require',
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider'
-        ], function (
-                require,
-                ImageryProviderViewModel,
-                buildModuleUrl,
-                FeatureDetection,
-                DefaultProxy,
-                BingMapsImageryProvider,
-                BingMapsStyle,
-                ArcGisMapServerImageryProvider,
-                OpenStreetMapImageryProvider,
-                TileMapServiceImageryProvider) {
+    ], function(
+        ImageryProviderViewModel,
+        buildModuleUrl,
+        FeatureDetection,
+        DefaultProxy,
+        BingMapsImageryProvider,
+        BingMapsStyle,
+        ArcGisMapServerImageryProvider,
+        OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider) {
     "use strict";
 
     /**
