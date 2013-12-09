@@ -90,7 +90,7 @@ define([
 
         var metadataUrl = this._url + 'layer.json';
         if (defined(this._proxy)) {
-            metadataUrl = this._proxy.getURL(this._url);
+            metadataUrl = this._proxy.getURL(metadataUrl);
         }
 
         var that = this;
@@ -99,7 +99,7 @@ define([
         function metadataSuccess(data) {
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                that._tileUrlTemplates[i] = makeRelativeUrlAbsolute(metadataUrl, that._tileUrlTemplates[i]);
+                that._tileUrlTemplates[i] = makeRelativeUrlAbsolute(metadataUrl, that._tileUrlTemplates[i]).replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
