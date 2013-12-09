@@ -196,7 +196,10 @@ define([
          * @type {CameraEventType|Array|undefined}
          * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}]
          */
-        this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH];
+        this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
+            eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.CTRL
+        }];
         /**
          * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
          * <p>
@@ -354,9 +357,7 @@ define([
             if (enabled) {
                 if (moving) {
                     action(controller, aggregator.getMovement(type, modifier));
-                }
-
-                if (!moving && inertiaConstant < 1.0) {
+                } else if (inertiaConstant < 1.0) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
             }
