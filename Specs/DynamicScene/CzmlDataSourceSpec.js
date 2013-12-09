@@ -999,9 +999,9 @@ defineSuite([
 
     it('CZML Availability works with a single interval.', function() {
         var packet1 = {
-                id : 'testObject',
-                availability : '2000-01-01/2001-01-01'
-            };
+            id : 'testObject',
+            availability : '2000-01-01/2001-01-01'
+        };
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
@@ -1012,9 +1012,9 @@ defineSuite([
         expect(dynamicObject.availability.get(0)).toEqual(interval);
 
         var packet2 = {
-                id : 'testObject',
-                availability : '2000-02-02/2001-02-02'
-            };
+            id : 'testObject',
+            availability : '2000-02-02/2001-02-02'
+        };
 
         dataSource.process(packet2);
         interval = TimeInterval.fromIso8601(packet2.availability);
@@ -1024,9 +1024,9 @@ defineSuite([
 
     it('CZML Availability works with multiple intervals.', function() {
         var packet1 = {
-                id : 'testObject',
-                availability : ['2000-01-01/2001-01-01', '2002-01-01/2003-01-01']
-            };
+            id : 'testObject',
+            availability : ['2000-01-01/2001-01-01', '2002-01-01/2003-01-01']
+        };
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
@@ -1039,9 +1039,9 @@ defineSuite([
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
 
         var packet2 = {
-                id : 'testObject',
-                availability : ['2003-01-01/2004-01-01', '2005-01-01/2006-01-01']
-            };
+            id : 'testObject',
+            availability : ['2003-01-01/2004-01-01', '2005-01-01/2006-01-01']
+        };
         dataSource.process(packet2);
 
         interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
