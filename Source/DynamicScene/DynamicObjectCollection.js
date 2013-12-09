@@ -140,10 +140,10 @@ define(['../Core/createGuid',
                 var start = availability.getStart();
                 var stop = availability.getStop();
                 if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
-                    startTime = object.availability.getStart();
+                    startTime = start;
                 }
                 if (stop.greaterThan(stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
-                    stopTime = object.availability.getStop();
+                    stopTime = stop;
                 }
             }
         }
