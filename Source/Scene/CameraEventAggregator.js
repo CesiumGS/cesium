@@ -257,10 +257,6 @@ define([
 
     /**
      * Gets the aggregated start and end position of the current event.
-     * <p>
-     * NOTE: This function has a side effect. Once this function is called, the event
-     * is assumed to be handled and will signal that a new event should be tracked.
-     * </p>
      * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
@@ -276,7 +272,6 @@ define([
 
         var key = getKey(type, modifier);
         var movement = this._movement[key];
-        this._update[key] = true;
         return movement;
     };
 
@@ -364,6 +359,18 @@ define([
 
         var key = getKey(type, modifier);
         return this._releaseTime[key];
+    };
+
+    /**
+     * Signals that all of the events have been handled and the aggregator should be reset to handle new events.
+     * @memberof CameraEventAgregator
+     */
+    CameraEventAggregator.prototype.reset = function() {
+        for ( var name in this._update) {
+            if (this._update.hasOwnProperty(name)) {
+                this._update[name] = true;
+            }
+        }
     };
 
     /**

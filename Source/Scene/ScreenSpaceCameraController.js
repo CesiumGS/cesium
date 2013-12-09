@@ -904,8 +904,8 @@ define([
 
     function update3D(controller) {
         reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-        reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
@@ -922,6 +922,8 @@ define([
             this._horizontalRotationAxis = undefined;
             update3D(this);
         }
+
+        this._aggregator.reset();
     };
 
     /**
