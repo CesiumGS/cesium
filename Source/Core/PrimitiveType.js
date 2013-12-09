@@ -1,5 +1,5 @@
 /*global define*/
-define(['./Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,61 +9,58 @@ define(['./Enumeration'], function(Enumeration) {
      */
     var PrimitiveType = {
         /**
-         * DOC_TBA
+         * 0x0000.  Points primitive where each vertex (or index) is a separate point.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0000
          */
-        POINTS : new Enumeration(0x0000, 'POINTS'),
+        POINTS : 0x0000,
         /**
-         * DOC_TBA
+         * 0x0001.  Lines primitive where each two vertices (or indices) is a line segment.  Line segments are not necessarily connected.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0001
          */
-        LINES : new Enumeration(0x0001, 'LINES'),
+        LINES : 0x0001,
         /**
-         * DOC_TBA
+         * 0x0002.  Line loop primitive where each vertex (or index) after the first connects a line to
+         * the previous vertex, and the last vertex implicitly connects to the first.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0002
          */
-        LINE_LOOP : new Enumeration(0x0002, 'LINE_LOOP'),
+        LINE_LOOP : 0x0002,
         /**
-         * DOC_TBA
+         * 0x0003.  Line strip primitive where each vertex (or index) after the first connects a line to the previous vertex.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0003
          */
-        LINE_STRIP : new Enumeration(0x0003, 'LINE_STRIP'),
+        LINE_STRIP : 0x0003,
         /**
-         * DOC_TBA
+         * 0x0004.  Triangles primitive where each three vertices (or indices) is a triangle.  Triangles do not necessarily share edges.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0004
          */
-        TRIANGLES : new Enumeration(0x0004, 'TRIANGLES'),
+        TRIANGLES : 0x0004,
         /**
-         * DOC_TBA
+         * 0x0005.  Triangle strip primitive where each vertex (or index) after the first two connect to
+         * the previous two vertices forming a triangle.  For example, this can be used to model a wall.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0004
          */
-        TRIANGLE_STRIP : new Enumeration(0x0005, 'TRIANGLE_STRIP'),
+        TRIANGLE_STRIP : 0x0005,
         /**
-         * DOC_TBA
+         * 0x0006.  Triangle fan primitive where each vertex (or index) after the first two connect to
+         * the previous vertex and the first vertex forming a triangle.  For example, this can be used
+         * to model a cone or circle.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x0006
          */
-        TRIANGLE_FAN : new Enumeration(0x0006, 'TRIANGLE_FAN'),
+        TRIANGLE_FAN : 0x0006,
 
         /**
          * DOC_TBA
@@ -73,13 +70,13 @@ define(['./Enumeration'], function(Enumeration) {
          * @returns {Boolean}
          */
         validate : function(primitiveType) {
-            return ((primitiveType.value === PrimitiveType.POINTS.value) ||
-                    (primitiveType.value === PrimitiveType.LINES.value) ||
-                    (primitiveType.value === PrimitiveType.LINE_LOOP.value) ||
-                    (primitiveType.value === PrimitiveType.LINE_STRIP.value) ||
-                    (primitiveType.value === PrimitiveType.TRIANGLES.value) ||
-                    (primitiveType.value === PrimitiveType.TRIANGLE_STRIP.value) ||
-                    (primitiveType.value === PrimitiveType.TRIANGLE_FAN.value));
+            return ((primitiveType === PrimitiveType.POINTS) ||
+                    (primitiveType === PrimitiveType.LINES) ||
+                    (primitiveType === PrimitiveType.LINE_LOOP) ||
+                    (primitiveType === PrimitiveType.LINE_STRIP) ||
+                    (primitiveType === PrimitiveType.TRIANGLES) ||
+                    (primitiveType === PrimitiveType.TRIANGLE_STRIP) ||
+                    (primitiveType === PrimitiveType.TRIANGLE_FAN));
         }
     };
 

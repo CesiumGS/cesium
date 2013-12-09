@@ -121,7 +121,7 @@ define([
 
         //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
         if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, +this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
+            gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
         } else {
             gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
         }
@@ -303,7 +303,7 @@ define([
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
-        if (this._textureFilterAnisotropic) {
+        if (defined(this._textureFilterAnisotropic)) {
             gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, sampler.maximumAnisotropy);
         }
         gl.bindTexture(target, null);

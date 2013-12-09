@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/combine',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -25,7 +24,6 @@ define([
         defaultValue,
         BoxGeometry,
         Cartesian3,
-        Cartesian4,
         combine,
         defined,
         DeveloperError,
@@ -83,7 +81,7 @@ define([
      * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

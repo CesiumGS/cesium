@@ -1,6 +1,5 @@
-@import url(../../Source/Widgets/Viewer/Viewer.css);
+@import url(../../Source/Widgets/widgets.css);
 @import url(../../Source/Widgets/lighter.css);
-@import url(../../Source/Widgets/checkForChromeFrame.css);
 
 body {
     height: 100%;

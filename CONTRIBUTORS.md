@@ -40,4 +40,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
 
-Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.
+Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

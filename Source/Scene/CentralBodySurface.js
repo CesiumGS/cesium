@@ -9,7 +9,6 @@ define([
         '../Core/Cartesian4',
         '../Core/FeatureDetection',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
         '../Core/Matrix4',
@@ -34,7 +33,6 @@ define([
         Cartesian4,
         FeatureDetection,
         DeveloperError,
-        Ellipsoid,
         EllipsoidalOccluder,
         Intersect,
         Matrix4,
@@ -60,17 +58,16 @@ define([
      * @constructor
      * @private
      */
-    var CentralBodySurface = function(description) {
-        if (!defined(description.terrainProvider)) {
-            throw new DeveloperError('description.terrainProvider is required.');
+    var CentralBodySurface = function(options) {
+        if (!defined(options.terrainProvider)) {
+            throw new DeveloperError('options.terrainProvider is required.');
         }
-        if (!defined(description.imageryLayerCollection)) {
-            throw new DeveloperError('description.imageryLayerCollection is required.');
+        if (!defined(options.imageryLayerCollection)) {
+            throw new DeveloperError('options.imageryLayerCollection is required.');
         }
 
-        this._terrainProvider = description.terrainProvider;
-        this._imageryLayerCollection = description.imageryLayerCollection;
-        this._maxScreenSpaceError = defaultValue(description.maxScreenSpaceError, 2);
+        this._terrainProvider = options.terrainProvider;
+        this._imageryLayerCollection = options.imageryLayerCollection;
 
         this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
         this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
@@ -88,6 +85,7 @@ define([
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
+        this._maximumScreenSpaceError = 2;
         this._tileCacheSize = 100;
 
         // The number of milliseconds each frame to allow for processing the tile load queue.
@@ -402,7 +400,7 @@ define([
             // This one doesn't load children unless we refine to them.
             // We may want to revisit this in the future.
 
-            if (screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) < surface._maxScreenSpaceError) {
+            if (screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) < surface._maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(surface, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile)) {

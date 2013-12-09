@@ -32,13 +32,10 @@ define([
         '../Renderer/createShaderSource',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
-        './CreditDisplay',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
-        './Material',
         './SceneMode',
         './TerrainProvider',
-        './ViewportQuad',
         '../Shaders/CentralBodyFS',
         '../Shaders/CentralBodyFSDepth',
         '../Shaders/CentralBodyFSPole',
@@ -79,13 +76,10 @@ define([
         createShaderSource,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
-        CreditDisplay,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
-        Material,
         SceneMode,
         TerrainProvider,
-        ViewportQuad,
         CentralBodyFS,
         CentralBodyFSDepth,
         CentralBodyFSPole,
@@ -201,6 +195,15 @@ define([
          * @default false
          */
         this.depthTestAgainstTerrain = false;
+
+        /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = 2;
 
         /**
          * The size of the terrain tile cache, expressed as a number of tiles.  Any additional
@@ -761,6 +764,7 @@ define([
             this._lightingFadeDistance.x = this.lightingFadeOutDistance;
             this._lightingFadeDistance.y = this.lightingFadeInDistance;
 
+            this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,

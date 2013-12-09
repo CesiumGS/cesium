@@ -78,7 +78,7 @@ require(['Cesium'], function(Cesium) {
         });
         scene.getPrimitives().add(polylines);
     }
-    
+
     function flyToExtent(scene) {
         Sandcastle.declare(flyToExtent); // For highlighting in Sandcastle.
         var west = Cesium.Math.toRadians(-90.0);
@@ -92,7 +92,7 @@ require(['Cesium'], function(Cesium) {
             destination : extent
         });
         scene.getAnimations().add(flight);
-        
+
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
@@ -184,63 +184,39 @@ require(['Cesium'], function(Cesium) {
         controller.enableTilt = true;
     }
 
-    function createButtons(scene) {
-        var toolbar = document.getElementById('toolbar');
-        
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            reset(scene);
-            flyToSanDiego(scene);
-            Sandcastle.highlight(flyToSanDiego);
-        };
-        button.textContent = 'Fly to San Diego';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            reset(scene);
-            flyToMyLocation(scene);
-            Sandcastle.highlight(flyToMyLocation);
-        };
-        button.textContent = 'Fly to My Location';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            reset(scene);
-            flyToExtent(scene);
-            Sandcastle.highlight(flyToExtent);
-        };
-        button.textContent = 'Fly to Extent';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            reset(scene);
-            viewAnExtent(scene);
-            Sandcastle.highlight(viewAnExtent);
-        };
-        button.textContent = 'View an Extent';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            reset(scene);
-            eastNorthUp(scene);
-            Sandcastle.highlight(eastNorthUp);
-        };
-        button.textContent = 'Set camera reference frame';
-        toolbar.appendChild(button);
-    }
-
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    createButtons(widget.scene);
+    var scene = widget.scene;
+
+    Sandcastle.addToolbarButton('Fly to San Diego', function() {
+        reset(scene);
+        flyToSanDiego(scene);
+        Sandcastle.highlight(flyToSanDiego);
+    });
+
+    Sandcastle.addToolbarButton('Fly to My Location', function() {
+        reset(scene);
+        flyToMyLocation(scene);
+        Sandcastle.highlight(flyToMyLocation);
+    });
+
+    Sandcastle.addToolbarButton('Fly to Extent', function() {
+        reset(scene);
+        flyToExtent(scene);
+        Sandcastle.highlight(flyToExtent);
+    });
+
+    Sandcastle.addToolbarButton('View an Extent', function() {
+        reset(scene);
+        viewAnExtent(scene);
+        Sandcastle.highlight(viewAnExtent);
+    });
+
+    Sandcastle.addToolbarButton('Set camera reference frame', function() {
+        reset(scene);
+        eastNorthUp(scene);
+        Sandcastle.highlight(eastNorthUp);
+    });
 
     Sandcastle.finishedLoading();
 });

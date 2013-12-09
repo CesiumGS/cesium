@@ -49,11 +49,12 @@ define([
      * @internalConstructor
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
      *
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
      */
     var Label = function(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -61,6 +62,10 @@ define([
         if (defined(options.translucencyByDistance) &&
                 options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
+        if (defined(options.pixelOffsetScaleByDistance) &&
+                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
 
         this._text = defaultValue(options.text, '');
@@ -78,6 +83,7 @@ define([
         this._scale = defaultValue(options.scale, 1.0);
         this._id = options.id;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -516,6 +522,64 @@ define([
     };
 
     /**
+     * Returns the near and far pixel offset scaling properties of a Label based on the label's distance from the camera.
+     *
+     * @memberof Label
+     *
+     * @returns {NearFarScalar} The near/far pixel offset scale values based on camera distance to the label
+     *
+     * @see Label#setPixelOffsetScaleByDistance
+     * @see Label#setPixelOffset
+     * @see Label#getPixelOffset
+     */
+    Label.prototype.getPixelOffsetScaleByDistance = function() {
+        return this._pixelOffsetScaleByDistance;
+    };
+
+    /**
+     * Sets near and far pixel offset scaling properties of a Label based on the Label's distance from the camera.
+     * A label's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the label's pixel offset scaling remains clamped to the nearest bound.  If undefined,
+     * pixelOffsetScaleByDistance will be disabled.
+     *
+     * @memberof Label
+     *
+     * @param {NearFarScalar} pixelOffsetScale The configuration of near and far distances and their respective scaling factor to be applied to the pixelOffset
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Label#getPixelOffsetScaleByDistance
+     * @see Label#setPixelOffset
+     * @see Label#getPixelOffset
+     *
+     * @example
+     * // Example 1.
+     * // Set a label's pixel offset scale to 0.0 when the
+     * // camera is 1500 meters from the label and scale pixel offset to 10.0 pixels
+     * // in the y direction the camera distance approaches 8.0e6 meters.
+     * text.setPixelOffset(new Cartesian2(0.0, 1.0);
+     * text.setPixelOffsetScaleByDistance(new NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
+     *
+     * // Example 2.
+     * // disable pixel offset by distance
+     * text.setPixelOffsetScaleByDistance(undefined);
+     */
+    Label.prototype.setPixelOffsetScaleByDistance = function(value) {
+        if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, value)) {
+            return;
+        }
+
+        if (value.far <= value.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, this._pixelOffsetScaleByDistance);
+        rebindAllGlyphs(this);
+    };
+
+    /**
      * Returns the 3D Cartesian offset applied to this label in eye coordinates.
      *
      * @memberof Label
@@ -803,6 +867,7 @@ define([
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
                this._id === other._id;
     };
 

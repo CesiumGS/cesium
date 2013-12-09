@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -9,7 +8,6 @@ define([
         '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/requestAnimationFrame',
-        '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
         '../Animation/Animation',
@@ -24,10 +22,8 @@ define([
         '../subscribeAndEvaluate',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
-        Cartesian2,
         defaultValue,
         defined,
         DeveloperError,
@@ -36,7 +32,6 @@ define([
         Event,
         EventHelper,
         requestAnimationFrame,
-        ScreenSpaceEventType,
         DataSourceCollection,
         DataSourceDisplay,
         Animation,
@@ -51,8 +46,7 @@ define([
         subscribeAndEvaluate,
         HomeButton,
         SceneModePicker,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -80,7 +74,7 @@ define([
             } catch (e) {
                 viewer._useDefaultRenderLoop = false;
                 viewer._renderLoopRunning = false;
-                viewer._onRenderLoopError.raiseEvent(viewer, e);
+                viewer._renderLoopError.raiseEvent(viewer, e);
                 if (viewer._showRenderLoopErrors) {
                     /*global console*/
                     viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
@@ -116,7 +110,7 @@ define([
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
+     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} container is required.
@@ -141,7 +135,7 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesium.agi.com/smallterrain',
+     *         url : 'http://cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     //Hide the base layer picker
@@ -170,7 +164,7 @@ define([
      * viewer.extend(Cesium.viewerDynamicObjectMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
-     * viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+     * viewer.dropError.addEventListener(function(dropHandler, name, error) {
      *     console.log(error);
      *     window.alert(error);
      * });
@@ -353,7 +347,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-        this._onRenderLoopError = new Event();
+        this._renderLoopError = new Event();
 
         //Start the render loop if not explicitly disabled in options.
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
@@ -566,9 +560,9 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
          * @memberof Viewer.prototype
          * @type {Event}
          */
-        onRenderLoopError : {
+        renderLoopError : {
             get : function() {
-                return this._onRenderLoopError;
+                return this._renderLoopError;
             }
         },
 
