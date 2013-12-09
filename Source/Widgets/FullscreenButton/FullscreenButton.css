@@ -1,6 +1,4 @@
-@import url(../CesiumWidget/CesiumWidget.css);
-
-.cesium-widget-button.cesium-fullscreenButton {
+.cesium-button.cesium-fullscreenButton {
     display: block;
     width: 100%;
     height: 100%;

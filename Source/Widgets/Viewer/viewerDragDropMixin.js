@@ -22,7 +22,6 @@ define([
         when,
         getElement) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.

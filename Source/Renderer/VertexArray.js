@@ -166,7 +166,7 @@ define([
         var vao;
 
         // Setup VAO if extension is supported
-        if (vertexArrayObject !== null) {
+        if (defined(vertexArrayObject)) {
             vao = vertexArrayObject.createVertexArrayOES();
             vertexArrayObject.bindVertexArrayOES(vao);
             bind(gl, vaAttributes, indexBuffer);

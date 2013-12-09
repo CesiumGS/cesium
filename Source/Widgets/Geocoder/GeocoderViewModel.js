@@ -83,7 +83,6 @@ define([
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
          *
          * @type {Boolean}
-         * @default false
          */
         this.isSearchInProgress = undefined;
         knockout.defineProperty(this, 'isSearchInProgress', {
@@ -94,7 +93,6 @@ define([
 
         /**
          * Gets or sets the text to search for.
-         * @memberof GeocoderViewModel.prototype
          *
          * @type {String}
          */
@@ -117,7 +115,6 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in milliseconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
-         * @memberof GeocoderViewModel.prototype
          *
          * @type {Number}
          * @default 1500

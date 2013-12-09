@@ -106,67 +106,43 @@ require(['Cesium'], function(Cesium) {
         scene.getPrimitives().add(labels);
     }
 
-    function createButtons(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
-        var scene = widget.scene;
-        var primitives = scene.getPrimitives();
-        var toolbar = document.getElementById('toolbar');
-        
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addLabel(scene, ellipsoid);
-            Sandcastle.highlight(addLabel);
-        };
-        button.textContent = 'Add label';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            setLabelFont(scene, ellipsoid);
-            Sandcastle.highlight(setLabelFont);
-        };
-        button.textContent = 'Set font';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            setLabelProperties(scene, ellipsoid);
-            Sandcastle.highlight(setLabelProperties);
-        };
-        button.textContent = 'Set properties';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addLabelsInReferenceFrame(scene, ellipsoid);
-            Sandcastle.highlight(addLabelsInReferenceFrame);
-        };
-        button.textContent = 'Add labels in reference frame';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            labelTranslucencyByDistance(scene, ellipsoid);
-            Sandcastle.highlight(labelTranslucencyByDistance);
-        };
-        button.textContent = 'Fade label by distance';
-        toolbar.appendChild(button);
-    }
-
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    createButtons(widget);
-    addLabel(widget.scene, widget.centralBody.getEllipsoid());
+    var ellipsoid = widget.centralBody.getEllipsoid();
+    var scene = widget.scene;
+    var primitives = scene.getPrimitives();
+
+    addLabel(scene, ellipsoid);
+
+    Sandcastle.addToolbarButton('Add label', function() {
+        primitives.removeAll();
+        addLabel(scene, ellipsoid);
+        Sandcastle.highlight(addLabel);
+    });
+
+    Sandcastle.addToolbarButton('Set font', function() {
+        primitives.removeAll();
+        setLabelFont(scene, ellipsoid);
+        Sandcastle.highlight(setLabelFont);
+    });
+
+    Sandcastle.addToolbarButton('Set properties', function() {
+        primitives.removeAll();
+        setLabelProperties(scene, ellipsoid);
+        Sandcastle.highlight(setLabelProperties);
+    });
+
+    Sandcastle.addToolbarButton('Add labels in reference frame', function() {
+        primitives.removeAll();
+        addLabelsInReferenceFrame(scene, ellipsoid);
+        Sandcastle.highlight(addLabelsInReferenceFrame);
+    });
+
+    Sandcastle.addToolbarButton('Fade label by distance', function() {
+        primitives.removeAll();
+        labelTranslucencyByDistance(scene, ellipsoid);
+        Sandcastle.highlight(labelTranslucencyByDistance);
+    });
 
     Sandcastle.finishedLoading();
 });
