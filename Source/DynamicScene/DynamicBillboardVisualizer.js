@@ -361,6 +361,11 @@ define([
         if (defined(property)) {
             billboard.setTranslucencyByDistance(property.getValue(time));
         }
+
+        property = dynamicBillboard._pixelOffsetScaleByDistance;
+        if (defined(property)) {
+            billboard.setPixelOffsetScaleByDistance(property.getValue(time));
+        }
     }
 
     DynamicBillboardVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
