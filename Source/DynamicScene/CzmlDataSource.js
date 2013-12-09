@@ -755,20 +755,16 @@ define([
         if (Array.isArray(packetData)) {
             var length = packetData.length;
             for (var i = 0; i < length; i++) {
-                interval = TimeInterval.fromIso8601(packetData[i]);
-                if (defined(interval)) {
-                    if (!defined(intervals)) {
-                        intervals = new TimeIntervalCollection();
-                    }
-                    intervals.addInterval(interval);
+                if (!defined(intervals)) {
+                    intervals = new TimeIntervalCollection();
                 }
+                interval = TimeInterval.fromIso8601(packetData[i]);
+                intervals.addInterval(interval);
             }
         } else {
             interval = TimeInterval.fromIso8601(packetData);
-            if (defined(interval)) {
-                intervals = new TimeIntervalCollection();
-                intervals.addInterval(interval);
-            }
+            intervals = new TimeIntervalCollection();
+            intervals.addInterval(interval);
         }
         dynamicObject.availability = intervals;
     }
@@ -819,10 +815,8 @@ define([
         }
         if (defined(clockPacket.interval)) {
             var interval = TimeInterval.fromIso8601(clockPacket.interval);
-            if (defined(interval)) {
-                clock.startTime = interval.start;
-                clock.stopTime = interval.stop;
-            }
+            clock.startTime = interval.start;
+            clock.stopTime = interval.stop;
         }
         if (defined(clockPacket.currentTime)) {
             clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
