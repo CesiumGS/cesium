@@ -1,7 +1,6 @@
 /*global define,console*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
@@ -28,7 +27,6 @@ define([
         '../getElement'
     ], function(
         buildModuleUrl,
-        Cartesian2,
         Cartesian3,
         Clock,
         DefaultProxy,
@@ -433,7 +431,7 @@ define([
         content.appendChild(buttonPanel);
 
         var okButton = document.createElement('span');
-        okButton.className = 'cesium-widget-button';
+        okButton.className = 'cesium-button';
         okButton.textContent = 'OK';
         okButton.tabIndex = 100;
         okButton.onclick = function() {

@@ -182,6 +182,44 @@ require(['Cesium'], function(Cesium) {
         image.src = '../images/Cesium_Logo_overlay.png';
     }
 
+    function billboardPixelOffsetScaleByDistance(scene, ellipsoid) {
+        Sandcastle.declare(billboardPixelOffsetScaleByDistance); // For highlighting in Sandcastle.
+
+        Cesium.when.all([
+                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../images/facility.gif')
+                        ],
+                        function(images) {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                images : images
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            var facilityHeight = images[1].height;
+
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                imageIndex : 1
+            });
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset : new Cesium.Cartesian2(0.0, facilityHeight),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
+                translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
+            });
+            scene.getPrimitives().add(billboards);
+        });
+    }
+
     function addPointBillboards(scene, ellipsoid) {
         Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
@@ -365,107 +403,73 @@ require(['Cesium'], function(Cesium) {
         image.src = '../images/facility.gif';
     }
 
-    function createButtons(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
-        var scene = widget.scene;
-        var primitives = scene.getPrimitives();
-        var toolbar = document.getElementById('toolbar');
-        
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addBillboard(scene, ellipsoid);
-            Sandcastle.highlight(addBillboard);
-        };
-        button.textContent = 'Add billboard';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            setBillboardPropertiesAtCreation(scene, ellipsoid);
-            Sandcastle.highlight(setBillboardPropertiesAtCreation);
-        };
-        button.textContent = 'Set billboard properties at creation';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            setBillboardProperties(scene, ellipsoid);
-            Sandcastle.highlight(setBillboardProperties);
-        };
-        button.textContent = 'Change billboard properties';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addMultipleBillboards(scene, ellipsoid);
-            Sandcastle.highlight(addMultipleBillboards);
-        };
-        button.textContent = 'Add multiple billboards';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addPointBillboards(scene, ellipsoid);
-            Sandcastle.highlight(addPointBillboards);
-        };
-        button.textContent = 'Add point billboards';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addMarkerBillboards(scene, ellipsoid);
-            Sandcastle.highlight(addMarkerBillboards);
-        };
-        button.textContent = 'Add marker billboards';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            addBillboardsInReferenceframe(scene, ellipsoid);
-            Sandcastle.highlight(addBillboardsInReferenceframe);
-        };
-        button.textContent = 'Add billboards in reference frame';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            scaleBillboardByDistance(scene, ellipsoid);
-            Sandcastle.highlight(scaleBillboardByDistance);
-        };
-        button.textContent = 'Scale by viewer distance';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            primitives.removeAll();
-            billboardTranslucencyByDistance(scene, ellipsoid);
-            Sandcastle.highlight(billboardTranslucencyByDistance);
-        };
-        button.textContent = 'Fade by viewer distance';
-        toolbar.appendChild(button);
-    }
-
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    createButtons(widget);
-    addBillboard(widget.scene, widget.centralBody.getEllipsoid());
+    var ellipsoid = widget.centralBody.getEllipsoid();
+    var scene = widget.scene;
+    var primitives = scene.getPrimitives();
+
+    addBillboard(scene, ellipsoid);
+
+    Sandcastle.addToolbarButton('Add billboard', function() {
+        primitives.removeAll();
+        addBillboard(scene, ellipsoid);
+        Sandcastle.highlight(addBillboard);
+    });
+
+    Sandcastle.addToolbarButton('Set billboard properties at creation', function() {
+        primitives.removeAll();
+        setBillboardPropertiesAtCreation(scene, ellipsoid);
+        Sandcastle.highlight(setBillboardPropertiesAtCreation);
+    });
+
+    Sandcastle.addToolbarButton('Change billboard properties', function() {
+        primitives.removeAll();
+        setBillboardProperties(scene, ellipsoid);
+        Sandcastle.highlight(setBillboardProperties);
+    });
+
+    Sandcastle.addToolbarButton('Add multiple billboards', function() {
+        primitives.removeAll();
+        addMultipleBillboards(scene, ellipsoid);
+        Sandcastle.highlight(addMultipleBillboards);
+    });
+
+    Sandcastle.addToolbarButton('Add point billboards', function() {
+        primitives.removeAll();
+        addPointBillboards(scene, ellipsoid);
+        Sandcastle.highlight(addPointBillboards);
+    });
+
+    Sandcastle.addToolbarButton('Add marker billboards', function() {
+        primitives.removeAll();
+        addMarkerBillboards(scene, ellipsoid);
+        Sandcastle.highlight(addMarkerBillboards);
+    });
+
+    Sandcastle.addToolbarButton('Add billboards in reference frame', function() {
+        primitives.removeAll();
+        addBillboardsInReferenceframe(scene, ellipsoid);
+        Sandcastle.highlight(addBillboardsInReferenceframe);
+    });
+
+    Sandcastle.addToolbarButton('Scale by viewer distance', function() {
+        primitives.removeAll();
+        scaleBillboardByDistance(scene, ellipsoid);
+        Sandcastle.highlight(scaleBillboardByDistance);
+    });
+
+    Sandcastle.addToolbarButton('Fade by viewer distance', function() {
+        primitives.removeAll();
+        billboardTranslucencyByDistance(scene, ellipsoid);
+        Sandcastle.highlight(billboardTranslucencyByDistance);
+    });
+    
+    Sandcastle.addToolbarButton('Offset by viewer distance', function() {
+        primitives.removeAll();
+        billboardPixelOffsetScaleByDistance(scene, ellipsoid);
+        Sandcastle.highlight(billboardPixelOffsetScaleByDistance);
+    });
 
     Sandcastle.finishedLoading();
 });

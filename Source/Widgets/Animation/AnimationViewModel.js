@@ -146,7 +146,6 @@ define([
         /**
          * Gets the string representation of the current time.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.timeLabel = undefined;
         knockout.defineProperty(this, 'timeLabel', function() {
@@ -156,7 +155,6 @@ define([
         /**
          * Gets the string representation of the current date.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.dateLabel = undefined;
         knockout.defineProperty(this, 'dateLabel', function() {
@@ -166,7 +164,6 @@ define([
         /**
          * Gets the string representation of the current multiplier.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.multiplierLabel = undefined;
         knockout.defineProperty(this, 'multiplierLabel', function() {
@@ -189,7 +186,6 @@ define([
         /**
          * Gets or sets the current shuttle ring angle.  This property is observable.
          * @type {Number}
-         * @default undefined
          */
         this.shuttleRingAngle = undefined;
         knockout.defineProperty(this, 'shuttleRingAngle', {
