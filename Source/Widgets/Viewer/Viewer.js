@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -9,7 +8,6 @@ define([
         '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/requestAnimationFrame',
-        '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
         '../Animation/Animation',
@@ -24,10 +22,8 @@ define([
         '../subscribeAndEvaluate',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
-        Cartesian2,
         defaultValue,
         defined,
         DeveloperError,
@@ -36,7 +32,6 @@ define([
         Event,
         EventHelper,
         requestAnimationFrame,
-        ScreenSpaceEventType,
         DataSourceCollection,
         DataSourceDisplay,
         Animation,
@@ -51,8 +46,7 @@ define([
         subscribeAndEvaluate,
         HomeButton,
         SceneModePicker,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
