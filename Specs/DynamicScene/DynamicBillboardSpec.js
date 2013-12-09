@@ -36,6 +36,7 @@ defineSuite([
         source.height = new ConstantProperty(36);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
         var target = new DynamicBillboard();
         target.merge(source);
@@ -54,6 +55,7 @@ defineSuite([
         expect(target.height).toBe(source.height);
         expect(target.scaleByDistance).toBe(source.scaleByDistance);
         expect(target.translucencyByDistance).toBe(source.translucencyByDistance);
+        expect(target.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -72,6 +74,7 @@ defineSuite([
         source.height = new ConstantProperty(36);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
         var image = new ConstantProperty('');
         var rotation = new ConstantProperty(5);
@@ -87,6 +90,7 @@ defineSuite([
         var height = new ConstantProperty(3);
         var scaleByDistance = new ConstantProperty(new NearFarScalar());
         var translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        var pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
         var target = new DynamicBillboard();
         target.image = image;
@@ -103,6 +107,7 @@ defineSuite([
         target.height = height;
         target.scaleByDistance = scaleByDistance;
         target.translucencyByDistance = translucencyByDistance;
+        target.pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
 
         target.merge(source);
 
@@ -120,6 +125,7 @@ defineSuite([
         expect(target.height).toBe(height);
         expect(target.scaleByDistance).toBe(scaleByDistance);
         expect(target.translucencyByDistance).toBe(translucencyByDistance);
+        expect(target.pixelOffsetScaleByDistance).toBe(pixelOffsetScaleByDistance);
     });
 
     it('clone works', function() {
@@ -138,6 +144,7 @@ defineSuite([
         source.height = new ConstantProperty(36);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
         source.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        source.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
         var result = source.clone();
         expect(result.image).toBe(source.image);
@@ -154,6 +161,7 @@ defineSuite([
         expect(result.height).toBe(source.height);
         expect(result.scaleByDistance).toBe(source.scaleByDistance);
         expect(result.translucencyByDistance).toBe(source.translucencyByDistance);
+        expect(result.pixelOffsetScaleByDistance).toBe(source.pixelOffsetScaleByDistance);
     });
 
     it('merge throws if source undefined', function() {

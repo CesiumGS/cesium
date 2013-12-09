@@ -16,6 +16,26 @@
         registered : [],
         finishedLoading : function() {
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
+        },
+        addToolbarButton : function(text, onclick, toolbarID) {
+            var button = document.createElement('button');
+            button.className = 'sandcastle-button';
+            button.onclick = onclick;
+            button.textContent = text;
+            document.getElementById(toolbarID || 'toolbar').appendChild(button);
+        },
+        addToolbarMenu : function(options, onchange, toolbarID) {
+            var menu = document.createElement('select');
+            menu.className = 'sandcastle-button';
+            menu.onchange = onchange;
+            document.getElementById(toolbarID || 'toolbar').appendChild(menu);
+
+            for (var i = 0, len = options.length; i < len; ++i) {
+                var option = document.createElement('option');
+                option.textContent = options[i].text;
+                option.value = options[i].value;
+                menu.appendChild(option);
+            }
         }
     };
 
