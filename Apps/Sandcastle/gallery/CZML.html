@@ -145,51 +145,30 @@ require(['Cesium'], function(Cesium) {
         viewer.scene.getCamera().controller.viewExtent(extent);
     }
 
-    function createButtons() {
-        var toolbar = document.getElementById('toolbar');
-
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            czmlSatellites();
-            Sandcastle.highlight(czmlSatellites);
-        };
-        button.textContent = 'Satellites';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            czmlSensors();
-            Sandcastle.highlight(czmlSensors);
-        };
-        button.textContent = 'Sensors';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            czmlVehicle();
-            Sandcastle.highlight(czmlVehicle);
-        };
-        button.textContent = 'Vehicle';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            useBuiltInCzml();
-            Sandcastle.highlight(useBuiltInCzml);
-        };
-        button.textContent = 'Built-in CZML';
-        toolbar.appendChild(button);
-    }
-
     var viewer = new Cesium.Viewer('cesiumContainer');
     viewer.extend(Cesium.viewerDynamicObjectMixin);
 
     czmlSatellites();
-    createButtons();
+
+    Sandcastle.addToolbarButton('Satellites', function() {
+        czmlSatellites();
+        Sandcastle.highlight(czmlSatellites);
+    });
+
+    Sandcastle.addToolbarButton('Sensors', function() {
+        czmlSensors();
+        Sandcastle.highlight(czmlSensors);
+    });
+
+    Sandcastle.addToolbarButton('Vehicle', function() {
+        czmlVehicle();
+        Sandcastle.highlight(czmlVehicle);
+    });
+
+    Sandcastle.addToolbarButton('Built-in CZML', function() {
+        useBuiltInCzml();
+        Sandcastle.highlight(useBuiltInCzml);
+    });
 
     Sandcastle.finishedLoading();
 });
