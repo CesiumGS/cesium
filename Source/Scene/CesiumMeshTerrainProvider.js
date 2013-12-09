@@ -238,7 +238,7 @@ define([
             var lastU = 0;
             var lastV = 0;
             var lastHeight = 0;
-            var maxShort = 32766;
+            var maxShort = 32767;
 
             function zigZagDecode(value) {
                 return (value >> 1) ^ (-(value & 1));
