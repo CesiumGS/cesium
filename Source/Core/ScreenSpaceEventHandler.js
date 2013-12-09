@@ -28,24 +28,6 @@ define([
      */
     var ScreenSpaceEventHandler = function(element) {
         this._mouseEvents = {};
-        for ( var button in ScreenSpaceEventType) {
-            if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                this._mouseEvents[button] = undefined;
-            }
-        }
-
-        this._modifiedMouseEvents = {};
-        for ( var modifier in KeyboardEventModifier) {
-            if (KeyboardEventModifier.hasOwnProperty(modifier)) {
-                this._modifiedMouseEvents[modifier] = {};
-                for (button in ScreenSpaceEventType) {
-                    if (ScreenSpaceEventType.hasOwnProperty(button)) {
-                        this._modifiedMouseEvents[modifier][button] = undefined;
-                    }
-                }
-            }
-        }
-
         this._leftMouseButtonDown = false;
         this._middleMouseButtonDown = false;
         this._rightMouseButtonDown = false;
@@ -83,6 +65,14 @@ define([
         };
     }
 
+    function getMouseEventsKey(type, modifier) {
+        var key = type.name;
+        if (defined(modifier)) {
+            key += '+' + modifier.name;
+        }
+        return key;
+    }
+
     /**
      * Set a function to be executed on an input event.
      *
@@ -90,7 +80,7 @@ define([
      *
      * @param {Function} action Function to be executed when the input event occurs.
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} action is required.
@@ -103,21 +93,12 @@ define([
         if (!defined(action)) {
             throw new DeveloperError('action is required.');
         }
-
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
 
-        var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
-        } else {
-            mouseEvents = this._mouseEvents;
-        }
-
-        if (defined(type) && defined(type.name) && defined(mouseEvents)) {
-            mouseEvents[type.name] = action;
-        }
+        var key = getMouseEventsKey(type, modifier);
+        this._mouseEvents[key] = action;
     };
 
     /**
@@ -126,7 +107,7 @@ define([
      * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
@@ -139,18 +120,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
-        } else {
-            mouseEvents = this._mouseEvents;
-        }
-
-        if (defined(type) && defined(type.name) && defined(mouseEvents)) {
-            return mouseEvents[type.name];
-        }
-
-        return undefined;
+        var key = getMouseEventsKey(type, modifier);
+        return this._mouseEvents[key];
     };
 
     /**
@@ -159,7 +130,7 @@ define([
      * @memberof ScreenSpaceEventHandler
      *
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} modifier A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @exception {DeveloperError} type is required.
@@ -172,16 +143,8 @@ define([
             throw new DeveloperError('type is required.');
         }
 
-        var mouseEvents;
-        if (defined(modifier) && defined(modifier.name)) {
-            mouseEvents = this._modifiedMouseEvents[modifier.name];
-        } else {
-            mouseEvents = this._mouseEvents;
-        }
-
-        if (defined(type) && defined(type.name) && defined(mouseEvents) && defined(mouseEvents[type.name])) {
-            delete mouseEvents[type.name];
-        }
+        var key = getMouseEventsKey(type, modifier);
+        delete this._mouseEvents[key];
     };
 
     function getModifier(event) {

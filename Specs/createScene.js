@@ -13,7 +13,8 @@ define([
 
     function createScene(options) {
         options = clone(defaultValue(options, {}));
-        options.antialias = defaultValue(options.antialias, false);
+        options.webgl = clone(defaultValue(options.webgl, {}));
+        options.webgl.antialias = defaultValue(options.webgl.antialias, false);
         return new Scene(createCanvas(), options);
     }
 

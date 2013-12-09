@@ -110,20 +110,6 @@ define([
         scratchUniformMatrix4 = new Float32Array(16);
     }
 
-    function getAutomaticUniformDeclaration(uniforms, uniform) {
-        var automaticUniform = uniforms[uniform];
-        var declaration = 'uniform ' + automaticUniform.getDatatype().getGLSL() + ' ' + uniform;
-
-        var size = automaticUniform.getSize();
-        if (size === 1) {
-            declaration += ';';
-        } else {
-            declaration += '[' + size.toString() + '];';
-        }
-
-        return declaration;
-    }
-
     /**
      * A shader program's uniform, including the uniform's value.  This is most commonly used to change
      * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
@@ -463,27 +449,27 @@ define([
             switch (activeUniform.type) {
             case _gl.FLOAT:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniform1f(_locations[i], this.value[i]);
                     }
                 };
             case _gl.FLOAT_VEC2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform2f(_locations[i], v.x, v.y);
                     }
                 };
             case _gl.FLOAT_VEC3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform3f(_locations[i], v.x, v.y, v.z);
                     }
                 };
             case _gl.FLOAT_VEC4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
                         if (defined(v.red)) {
@@ -498,7 +484,7 @@ define([
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var value = this.value[i];
                         var index = this.textureUnitIndex + i;
                         _gl.activeTexture(_gl.TEXTURE0 + index);
@@ -508,14 +494,14 @@ define([
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniform1i(_locations[i], this.value[i]);
                     }
                 };
             case _gl.INT_VEC2:
             case _gl.BOOL_VEC2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform2i(_locations[i], v.x, v.y);
                     }
@@ -523,7 +509,7 @@ define([
             case _gl.INT_VEC3:
             case _gl.BOOL_VEC3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform3i(_locations[i], v.x, v.y, v.z);
                     }
@@ -531,26 +517,26 @@ define([
             case _gl.INT_VEC4:
             case _gl.BOOL_VEC4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform4i(_locations[i], v.x, v.y, v.z, v.w);
                     }
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i], scratchUniformMatrix2));
                     }
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i], scratchUniformMatrix3));
                     }
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i], scratchUniformMatrix4));
                     }
                 };
@@ -563,7 +549,7 @@ define([
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
 
-                for ( var i = 0; i < _locations.length; ++i) {
+                for (var i = 0; i < _locations.length; ++i) {
                     var index = textureUnitIndex + i;
                     _gl.uniform1i(_locations[i], index);
                 }
@@ -647,14 +633,17 @@ define([
     ShaderProgram._czmBuiltinsAndUniforms = {};
 
     // combine automatic uniforms and Cesium built-ins
-    for ( var builtin in CzmBuiltins) {
-        if (CzmBuiltins.hasOwnProperty(builtin)) {
-            ShaderProgram._czmBuiltinsAndUniforms[builtin] = CzmBuiltins[builtin];
+    for ( var builtinName in CzmBuiltins) {
+        if (CzmBuiltins.hasOwnProperty(builtinName)) {
+            ShaderProgram._czmBuiltinsAndUniforms[builtinName] = CzmBuiltins[builtinName];
         }
     }
-    for ( var uniform in AutomaticUniforms) {
-        if (AutomaticUniforms.hasOwnProperty(uniform)) {
-            ShaderProgram._czmBuiltinsAndUniforms[uniform] = getAutomaticUniformDeclaration(AutomaticUniforms, uniform);
+    for ( var uniformName in AutomaticUniforms) {
+        if (AutomaticUniforms.hasOwnProperty(uniformName)) {
+            var uniform = AutomaticUniforms[uniformName];
+            if (typeof uniform.getDeclaration === 'function') {
+                ShaderProgram._czmBuiltinsAndUniforms[uniformName] = uniform.getDeclaration(uniformName);
+            }
         }
     }
 
@@ -693,7 +682,7 @@ define([
         var dependencyNode;
 
         // check if already loaded
-        for ( var i = 0; i < nodes.length; ++i) {
+        for (var i = 0; i < nodes.length; ++i) {
             if (nodes[i].name === name) {
                 dependencyNode = nodes[i];
             }
@@ -710,7 +699,7 @@ define([
                     // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
                     var numberOfLines = commentBlock.match(/\n/gm).length;
                     var modifiedComment = '';
-                    for ( var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
+                    for (var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
                         if (lineNumber === 0) {
                             modifiedComment += '// Comment replaced to prevent problems when determining dependencies on built-in functions\n';
                         } else {
@@ -782,7 +771,7 @@ define([
 
             dependencyNodes.push(currentNode);
 
-            for ( var i = 0; i < currentNode.dependsOn.length; ++i) {
+            for (var i = 0; i < currentNode.dependsOn.length; ++i) {
                 // remove the edge from the graph
                 var referencedNode = currentNode.dependsOn[i];
                 var index = referencedNode.requiredBy.indexOf(currentNode);
@@ -797,7 +786,7 @@ define([
 
         // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
         var badNodes = [];
-        for ( var j = 0; j < allNodes.length; ++j) {
+        for (var j = 0; j < allNodes.length; ++j) {
             if (allNodes[j].requiredBy.length !== 0) {
                 badNodes.push(allNodes[j]);
             }
@@ -815,13 +804,13 @@ define([
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes, ShaderProgram._czmBuiltinsAndUniforms);
+        generateDependencies(root, dependencyNodes);
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
         // Iterate in reverse so that dependent items are declared before they are used.
         var builtinsSource = '';
-        for ( var i = dependencyNodes.length - 1; i >= 0; --i) {
+        for (var i = dependencyNodes.length - 1; i >= 0; --i) {
             builtinsSource = builtinsSource + dependencyNodes[i].glslSource + '\n';
         }
 
@@ -926,7 +915,7 @@ define([
 
     function findVertexAttributes(gl, program, numberOfAttributes) {
         var attributes = {};
-        for ( var i = 0; i < numberOfAttributes; ++i) {
+        for (var i = 0; i < numberOfAttributes; ++i) {
             var attr = gl.getActiveAttrib(program, i);
             var location = gl.getAttribLocation(program, attr.name);
 
@@ -947,7 +936,7 @@ define([
 
         var numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
-        for ( var i = 0; i < numberOfUniforms; ++i) {
+        for (var i = 0; i < numberOfUniforms; ++i) {
             var activeUniform = gl.getActiveUniform(program, i);
             var suffix = '[0]';
             var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ? activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
