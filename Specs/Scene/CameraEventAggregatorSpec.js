@@ -102,12 +102,12 @@ defineSuite([
         args.clientX = endPosition.x;
         args.clientY = endPosition.y;
         canvas.fireEvents('mousemove', args);
-        var movement = handler.getMovement(CameraEventType.LEFT_DRAG);
+        handler.reset();
         args.clientX = endPosition2.x;
         args.clientY = endPosition2.y;
         canvas.fireEvents('mousemove', args);
 
-        movement = handler.getLastMovement(CameraEventType.LEFT_DRAG);
+        var movement = handler.getLastMovement(CameraEventType.LEFT_DRAG);
         expect(movement).toBeDefined();
         expect(movement.startPosition).toEqual(startPosition);
         expect(movement.endPosition).toEqual(endPosition);
@@ -120,7 +120,7 @@ defineSuite([
 
         MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         expect(handler.isMoving(CameraEventType.LEFT_DRAG)).toEqual(true);
-        var movement = handler.getMovement(CameraEventType.LEFT_DRAG);
+        handler.reset();
         expect(handler.isMoving(CameraEventType.LEFT_DRAG)).toEqual(false);
     });
 
