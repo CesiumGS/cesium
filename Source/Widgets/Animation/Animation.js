@@ -1,24 +1,20 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Color',
         '../getElement',
-        '../subscribeAndEvaluate',
-        '../../ThirdParty/knockout'
+        '../subscribeAndEvaluate'
     ], function(
-        defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Color,
         getElement,
-        subscribeAndEvaluate,
-        knockout) {
+        subscribeAndEvaluate) {
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";
