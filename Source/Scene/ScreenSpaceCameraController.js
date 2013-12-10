@@ -194,7 +194,10 @@ define([
          * or an array of any of the preceding.
          * </p>
          * @type {CameraEventType|Array|undefined}
-         * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}]
+         * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}, {
+         *     eventType : {@link CameraEventType.LEFT_DRAG},
+         *     modifier : {@link KeyboardEventModifier.CTRL}
+         * }]
          */
         this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
             eventType : CameraEventType.LEFT_DRAG,
