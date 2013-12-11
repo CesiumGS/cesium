@@ -182,6 +182,44 @@ require(['Cesium'], function(Cesium) {
         image.src = '../images/Cesium_Logo_overlay.png';
     }
 
+    function billboardPixelOffsetScaleByDistance(scene, ellipsoid) {
+        Sandcastle.declare(billboardPixelOffsetScaleByDistance); // For highlighting in Sandcastle.
+
+        Cesium.when.all([
+                         Cesium.loadImage('../images/Cesium_Logo_overlay.png'),
+                         Cesium.loadImage('../images/facility.gif')
+                        ],
+                        function(images) {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                images : images
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            // As viewer zooms closer to facility billboard,
+            // increase pixelOffset on CesiumLogo billboard to this height
+            var facilityHeight = images[1].height;
+
+            // colocated billboards, separate as viewer gets closer
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                imageIndex : 1
+            });
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+                pixelOffset : new Cesium.Cartesian2(0.0, facilityHeight),
+                pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
+                translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
+            });
+            scene.getPrimitives().add(billboards);
+        });
+    }
+
     function addPointBillboards(scene, ellipsoid) {
         Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
@@ -425,6 +463,12 @@ require(['Cesium'], function(Cesium) {
         primitives.removeAll();
         billboardTranslucencyByDistance(scene, ellipsoid);
         Sandcastle.highlight(billboardTranslucencyByDistance);
+    });
+    
+    Sandcastle.addToolbarButton('Offset by viewer distance', function() {
+        primitives.removeAll();
+        billboardPixelOffsetScaleByDistance(scene, ellipsoid);
+        Sandcastle.highlight(billboardPixelOffsetScaleByDistance);
     });
 
     Sandcastle.finishedLoading();
