@@ -194,7 +194,7 @@ define([
     ModelAnimationCollection.prototype.update = function(frameState) {
         if (JulianDate.equals(frameState.time, frameState.previousTime)) {
             // Animations are currently only time-dependent so do not animate when paused or picking
-            return;
+            return false;
         }
 
         var animationOccured = false;
