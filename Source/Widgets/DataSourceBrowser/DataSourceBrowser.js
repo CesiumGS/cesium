@@ -41,7 +41,7 @@ define([
 
         // The layer button reveals the dataSourceBrowser panel.
         var layerButton = document.createElement('div');
-        layerButton.className = 'cesium-dataSourceBrowser-layerButton cesium-widget-button cesium-widget-toolbar-icon';
+        layerButton.className = 'cesium-dataSourceBrowser-layerButton cesium-button cesium-toolbar-button';
         layerButton.innerHTML = '&raquo;';
         layerButton.setAttribute('data-bind', 'click: toggleVisibility,\
 css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
