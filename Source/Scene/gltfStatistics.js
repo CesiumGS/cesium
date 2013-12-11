@@ -103,6 +103,7 @@ define([
             numberOfMaterials : getNumberOf(gltf.materials),
             numberOfNodes : getNumberOf(gltf.nodes),
             numberOfTotalPrimitives : getNumberOfPrimitives(gltf.meshes),
+            numberOfAnimations : getNumberOf(gltf.animations),
 
             meshStatistics : getMeshStatistics(gltf)
         };
