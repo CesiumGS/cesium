@@ -30,7 +30,6 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CommandLists',
         '../Renderer/createShaderSource',
-        './ModelConstants',
         './ModelTypes',
         './ModelCache',
         './ModelAnimationCollection',
@@ -67,7 +66,6 @@ define([
         DrawCommand,
         CommandLists,
         createShaderSource,
-        ModelConstants,
         ModelTypes,
         ModelCache,
         ModelAnimationCollection,
@@ -427,7 +425,7 @@ define([
                 webglBuffer : undefined
             };
 
-            if (bufferView.target === ModelConstants.ARRAY_BUFFER) {
+            if (bufferView.target === WebGLRenderingContext.ARRAY_BUFFER) {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
@@ -447,7 +445,7 @@ define([
                 var instance = accessors[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if ((bufferView.target === ModelConstants.ELEMENT_ARRAY_BUFFER) && !defined(bufferView.czm.webglBuffer)) {
+                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(bufferView.czm.webglBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
                     indexBuffer.setVertexArrayDestroyable(false);
@@ -569,14 +567,14 @@ define([
 // TODO: texture cache
             var tx;
 
-            if (texture.target === ModelConstants.TEXTURE_2D) {
+            if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
                 tx = context.createTexture2D({
                     source : source,
                     pixelFormat : texture.internalFormat,
                     flipY : false
                 });
             }
-            // TODO: else handle ModelConstants.TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+            // TODO: else handle WebGLRenderingContext.TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
 
             if (mipmap) {
                 tx.generateMipmap();
@@ -642,7 +640,7 @@ define([
                 var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + inverseBindMatrices.byteOffset, count);
                 var matrices =  new Array(count);
 
-                if (type === ModelConstants.FLOAT_MAT4) {
+                if (type === WebGLRenderingContext.FLOAT_MAT4) {
                     for (var i = 0; i < count; ++i) {
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
@@ -939,23 +937,23 @@ define([
     var gltfUniformFunctions = {
     };
 
-    gltfUniformFunctions[ModelConstants.FLOAT] = getScalarUniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[ModelConstants.INT] = getScalarUniformFunction;
-    gltfUniformFunctions[ModelConstants.INT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[ModelConstants.INT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[ModelConstants.INT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[ModelConstants.BOOL] = getScalarUniformFunction;
-    gltfUniformFunctions[ModelConstants.BOOL_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[ModelConstants.BOOL_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[ModelConstants.BOOL_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_MAT2] = getMat2UniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_MAT3] = getMat3UniformFunction;
-    gltfUniformFunctions[ModelConstants.FLOAT_MAT4] = getMat4UniformFunction;
-    gltfUniformFunctions[ModelConstants.SAMPLER_2D] = getTextureUniformFunction;
-    // TODO: function for gltfUniformFunctions[ModelConstants.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.INT] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.INT_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.INT_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.INT_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.BOOL] = getScalarUniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC2] = getVec2UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC3] = getVec3UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC4] = getVec4UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT2] = getMat2UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
+    gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
+    // TODO: function for gltfUniformFunctions[WebGLRenderingContext.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
 
     function getUniformFunctionFromSource(source, gltf) {
         var nodes = gltf.nodes;

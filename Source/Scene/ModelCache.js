@@ -5,7 +5,6 @@ define([
         '../Core/Quaternion',
         '../Core/LinearSpline',
         '../Core/QuaternionSpline',
-        './ModelConstants',
         './ModelTypes'
     ], function(
         defined,
@@ -13,7 +12,6 @@ define([
         Quaternion,
         LinearSpline,
         QuaternionSpline,
-        ModelConstants,
         ModelTypes) {
     "use strict";
 
@@ -61,15 +59,15 @@ define([
             var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.count);
             var i;
 
-            if (type === ModelConstants.FLOAT) {
+            if (type === WebGLRenderingContext.FLOAT) {
                 values = typedArray;
             }
-            else if (type === ModelConstants.FLOAT_VEC3) {
+            else if (type === WebGLRenderingContext.FLOAT_VEC3) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if (type === ModelConstants.FLOAT_VEC4) {
+            } else if (type === WebGLRenderingContext.FLOAT_VEC4) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
@@ -116,12 +114,12 @@ define([
             } else {
 // END TODO Workaround
                 if (sampler.interpolation === 'LINEAR') {
-                    if (output.type === ModelConstants.FLOAT_VEC3) {
+                    if (output.type === WebGLRenderingContext.FLOAT_VEC3) {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if (output.type === ModelConstants.FLOAT_VEC4) {
+                    } else if (output.type === WebGLRenderingContext.FLOAT_VEC4) {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints
