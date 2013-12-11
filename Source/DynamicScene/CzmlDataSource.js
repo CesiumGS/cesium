@@ -25,6 +25,7 @@ define([
         '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
+        '../Core/TimeIntervalCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
@@ -86,6 +87,7 @@ define([
         RuntimeError,
         Spherical,
         TimeInterval,
+        TimeIntervalCollection,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -757,15 +759,28 @@ define([
     }
 
     function processAvailability(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var availability = packet.availability;
-        if (!defined(availability)) {
+        var interval;
+        var packetData = packet.availability;
+        if (!defined(packetData)) {
             return;
         }
 
-        var interval = TimeInterval.fromIso8601(availability);
-        if (defined(interval)) {
-            dynamicObject.availability = interval;
+        var intervals;
+        if (Array.isArray(packetData)) {
+            var length = packetData.length;
+            for (var i = 0; i < length; i++) {
+                if (!defined(intervals)) {
+                    intervals = new TimeIntervalCollection();
+                }
+                interval = TimeInterval.fromIso8601(packetData[i]);
+                intervals.addInterval(interval);
+            }
+        } else {
+            interval = TimeInterval.fromIso8601(packetData);
+            intervals = new TimeIntervalCollection();
+            intervals.addInterval(interval);
         }
+        dynamicObject.availability = intervals;
     }
 
     function processBillboard(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -814,10 +829,8 @@ define([
         }
         if (defined(clockPacket.interval)) {
             var interval = TimeInterval.fromIso8601(clockPacket.interval);
-            if (defined(interval)) {
-                clock.startTime = interval.start;
-                clock.stopTime = interval.stop;
-            }
+            clock.startTime = interval.start;
+            clock.stopTime = interval.stop;
         }
         if (defined(clockPacket.currentTime)) {
             clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);

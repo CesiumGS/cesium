@@ -27,8 +27,11 @@ Beta Releases
            });
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
+  * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
 * Added `CentralBody.maximumScreenSpaceError`.
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
+* The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
+* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
 
 ### b23 - 2013-12-02
 
