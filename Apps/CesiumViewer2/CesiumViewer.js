@@ -198,7 +198,7 @@ define([
         viewer.timeline.zoomTo(new JulianDate(), (new JulianDate()).addSeconds(30.0));
 
         var rotateX = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.toRadians(90.0)), Cartesian3.ZERO);
-        var modelMatrix = Matrix4.multiply(Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 0.0))), rotateX);
+        var modelMatrix = Matrix4.multiply(Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 100.0))), rotateX);
 
         var model = scene.getPrimitives().add(Model.fromText({
             url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
@@ -247,7 +247,7 @@ define([
                             // stopTime : (new JulianDate()).addSeconds(4),
                             // removeOnStop : true,
                             speedup : 0.5, //1.0,
-//                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
+                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
                             // reverse : true,
                             start : animationStart,
                             stop : animationStop
