@@ -120,13 +120,13 @@ define(['../Core/createGuid',
             }
         },
         /**
-         * The availability TimeInterval, if any, associated with this object.
+         * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
          * @memberof DynamicObject.prototype
-         * @type {TimeInterval}
+         * @type {TimeIntervalCollection}
          */
         availability : createDynamicPropertyDescriptor('availability', '_availability'),
         /**
