@@ -1236,9 +1236,10 @@ define([
         return Matrix4.fromTranslationQuaternionRotationScale(czm.translation, czm.rotation, czm.scale, result);
     }
 
-    // To reduce allocations in update()
+    // To reduce allocations in updateModelMatrix()
     var scratchNodeStack = [];
     var scratchSpheres = [];
+    var scratchSubtract = new Cartesian3();
 
     function updateModelMatrix(model) {
         var allowPicking = model.allowPicking;
@@ -1311,21 +1312,23 @@ define([
         }
 
         // Compute bounding sphere around the model
-        var radius = 0;
+        var radiusSquared = 0;
+        var index = 0;
 
         length = spheres.length;
         Cartesian3.divideByScalar(sphereCenter, length, sphereCenter);
         for (i = 0; i < length; ++i) {
             var bbs = spheres[i];
-            var r = Cartesian3.magnitude(Cartesian3.subtract(bbs.center, sphereCenter)) + bbs.radius;
+            var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, sphereCenter, scratchSubtract));
 
-            if (r > radius) {
-                radius = r;
+            if (r > radiusSquared) {
+                radiusSquared = r;
+                index = i;
             }
         }
 
         Cartesian3.clone(sphereCenter, model.worldBoundingSphere.center);
-        model.worldBoundingSphere.radius = radius;
+        model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
     }
 
     var scratchObjectSpace = new Matrix4();
