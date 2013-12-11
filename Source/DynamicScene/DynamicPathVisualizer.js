@@ -267,15 +267,21 @@ define([
                 if (hasTrailTime) {
                     sampleStart = time.addSeconds(-trailTime);
                 }
-                if (hasAvailability && (!hasTrailTime || availability.start.greaterThan(sampleStart))) {
-                    sampleStart = availability.start;
-                }
-
                 if (hasLeadTime) {
                     sampleStop = time.addSeconds(leadTime);
                 }
-                if (hasAvailability && (!hasLeadTime || availability.stop.lessThan(sampleStop))) {
-                    sampleStop = availability.stop;
+
+                if (hasAvailability) {
+                    var start = availability.getStart();
+                    var stop = availability.getStop();
+
+                    if (!hasTrailTime || start.greaterThan(sampleStart)) {
+                        sampleStart = start;
+                    }
+
+                    if (!hasLeadTime || stop.lessThan(sampleStop)) {
+                        sampleStop = stop;
+                    }
                 }
                 show = sampleStart.lessThan(sampleStop);
             }
