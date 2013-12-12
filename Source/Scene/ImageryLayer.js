@@ -628,6 +628,10 @@ define([
                 return;
             }
 
+            if (defined(imagePromise.tileAttribution)) {
+                imagery.attribution = imagePromise.tileAttribution;
+            }
+
             when(imagePromise, success, failure);
         }
 

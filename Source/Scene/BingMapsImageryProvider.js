@@ -7,6 +7,8 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
+        '../Core/Math',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
@@ -22,6 +24,8 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
+        Extent,
+        CesiumMath,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
@@ -123,7 +127,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -143,6 +147,25 @@ define([
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
+            }
+
+            var attributionList = that._attributionList = resource.imageryProviders;
+            for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+                var attribution = attributionList[attributionIndex];
+
+                attribution.credit = new Credit(attribution.attribution);
+
+                var coverageAreas = attribution.coverageAreas;
+
+                for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
+                    var area = coverageAreas[areaIndex];
+                    var bbox = area.bbox;
+                    area.bbox = new Extent(
+                            CesiumMath.toRadians(bbox[1]),
+                            CesiumMath.toRadians(bbox[0]),
+                            CesiumMath.toRadians(bbox[3]),
+                            CesiumMath.toRadians(bbox[2]));
+                }
             }
 
             that._ready = true;
@@ -361,6 +384,8 @@ define([
         return this._ready;
     };
 
+    var extentScratch = new Extent();
+
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link BingMapsImageryProvider#isReady} returns true.
@@ -383,8 +408,46 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        var promise = ImageryProvider.loadImage(this, url);
+        if (defined(promise)) {
+            // Add attribution information to the promise.
+            var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
+            promise.tileAttribution = getExtentAttribution(this._attributionList, level, extent);
+        }
+        return promise;
     };
+
+    var intersectionScratch = new Extent();
+
+    function getExtentAttribution(attributionList, level, extent) {
+        // Bing levels start at 1, while ours start at 0.
+        ++level;
+
+        var result = [];
+
+        for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+            var attribution = attributionList[attributionIndex];
+            var coverageAreas = attribution.coverageAreas;
+
+            var included = false;
+
+            for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
+                var area = coverageAreas[areaIndex];
+                if (level >= area.zoomMin && level <= area.zoomMax) {
+                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
+                    if (!intersection.isEmpty()) {
+                        included = true;
+                    }
+                }
+            }
+
+            if (included) {
+                result.push(attribution.credit);
+            }
+        }
+
+        return result;
+    }
 
     /**
      * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
