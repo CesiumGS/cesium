@@ -150,6 +150,10 @@ define([
             }
 
             var attributionList = that._attributionList = resource.imageryProviders;
+            if (!attributionList) {
+                attributionList = that._attributionList = [];
+            }
+
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
 
