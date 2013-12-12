@@ -1135,7 +1135,7 @@ define([
                     opaqueColorCommands.push(command);
                 }
 
-                var pickCommand = undefined;
+                var pickCommand;
 
                 if (allowPicking) {
                     var pickId = context.createPickId(owner);
