@@ -721,6 +721,28 @@ define([
         return result;
     };
 
+    /**
+     * Computes the distance from the bounding sphere to a point.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The sphere.
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The distance from the bounding sphere to the point.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} cartesian is required.
+     */
+    BoundingSphere.distanceTo = function(sphere, cartesian) {
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+
+        return Cartesian3.distance(sphere.center, cartesian);
+    };
+
     var scratchCartesian3 = new Cartesian3();
     /**
      * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
@@ -963,6 +985,19 @@ define([
      */
     BoundingSphere.prototype.transform = function(transform, result) {
         return BoundingSphere.transform(this, transform, result);
+    };
+
+    /**
+     * Computes the distance from the bounding sphere to a point.
+     * @memberof BoundingSphere
+     *
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The distance from the bounding sphere to the point.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     */
+    BoundingSphere.prototype.distanceTo = function(cartesian) {
+        return BoundingSphere.distanceTo(this, cartesian);
     };
 
     /**
