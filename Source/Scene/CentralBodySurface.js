@@ -797,6 +797,8 @@ define([
     var centerEyeScratch = new Cartesian4();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
+        displayCredits(surface, frameState);
+
         var viewMatrix = frameState.camera.viewMatrix;
 
         var maxTextures = context.getMaximumTextureImageUnits();
@@ -1051,6 +1053,25 @@ define([
             }
             tile.meshForWireframePromise = undefined;
         });
+    }
+
+    function displayCredits(centralBodySurface, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        var credit = centralBodySurface._terrainProvider.getCredit();
+        if (defined(credit)) {
+            creditDisplay.addCredit(credit);
+        }
+
+        var imageryLayerCollection = centralBodySurface._imageryLayerCollection;
+        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            var layer = imageryLayerCollection.get(i);
+            if (layer.show) {
+                credit = layer.getImageryProvider().getCredit();
+                if (defined(credit)) {
+                    creditDisplay.addCredit(credit);
+                }
+            }
+        }
     }
 
     return CentralBodySurface;
