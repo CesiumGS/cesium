@@ -393,13 +393,15 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
+     * @memberof BingMapsImageryProvider
+     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
      *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
-     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
         if (!this._ready) {
