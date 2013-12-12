@@ -387,6 +387,27 @@ define([
     var extentScratch = new Extent();
 
     /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
+     */
+    BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
+        }
+
+        // Add attribution information to the promise.
+        var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
+        return getExtentAttribution(this._attributionList, level, extent);
+    };
+
+    /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *
@@ -401,53 +422,15 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         var url = buildImageUrl(this, x, y, level);
-        var promise = ImageryProvider.loadImage(this, url);
-        if (defined(promise)) {
-            // Add attribution information to the promise.
-            var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
-            promise.tileAttribution = getExtentAttribution(this._attributionList, level, extent);
-        }
-        return promise;
+        return ImageryProvider.loadImage(this, url);
     };
-
-    var intersectionScratch = new Extent();
-
-    function getExtentAttribution(attributionList, level, extent) {
-        // Bing levels start at 1, while ours start at 0.
-        ++level;
-
-        var result = [];
-
-        for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
-            var attribution = attributionList[attributionIndex];
-            var coverageAreas = attribution.coverageAreas;
-
-            var included = false;
-
-            for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
-                var area = coverageAreas[areaIndex];
-                if (level >= area.zoomMin && level <= area.zoomMax) {
-                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
-                    if (!intersection.isEmpty()) {
-                        included = true;
-                    }
-                }
-            }
-
-            if (included) {
-                result.push(attribution.credit);
-            }
-        }
-
-        return result;
-    }
 
     /**
      * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
@@ -545,6 +528,38 @@ define([
         }
 
         return imageUrl;
+    }
+
+    var intersectionScratch = new Extent();
+
+    function getExtentAttribution(attributionList, level, extent) {
+        // Bing levels start at 1, while ours start at 0.
+        ++level;
+
+        var result = [];
+
+        for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+            var attribution = attributionList[attributionIndex];
+            var coverageAreas = attribution.coverageAreas;
+
+            var included = false;
+
+            for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
+                var area = coverageAreas[areaIndex];
+                if (level >= area.zoomMin && level <= area.zoomMax) {
+                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
+                    if (!intersection.isEmpty()) {
+                        included = true;
+                    }
+                }
+            }
+
+            if (included) {
+                result.push(attribution.credit);
+            }
+        }
+
+        return result;
     }
 
     return BingMapsImageryProvider;

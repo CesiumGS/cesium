@@ -628,8 +628,8 @@ define([
                 return;
             }
 
-            if (defined(imagePromise.tileAttribution)) {
-                imagery.attribution = imagePromise.tileAttribution;
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
             }
 
             when(imagePromise, success, failure);

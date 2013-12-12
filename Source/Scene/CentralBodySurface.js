@@ -974,11 +974,11 @@ define([
                         }
                         applyGamma = applyGamma || uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
-                        if (defined(imagery.attribution)) {
+                        if (defined(imagery.credits)) {
                             var creditDisplay = frameState.creditDisplay;
-                            var attribution = imagery.attribution;
-                            for (var creditIndex = 0, creditLength = attribution.length; creditIndex < creditLength; ++creditIndex) {
-                                creditDisplay.addCredit(attribution[creditIndex]);
+                            var credits = imagery.credits;
+                            for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
+                                creditDisplay.addCredit(credits[creditIndex]);
                             }
                         }
 
