@@ -408,7 +408,6 @@ define([
             throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
 
-        // Add attribution information to the promise.
         var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
         return getExtentAttribution(this._attributionList, level, extent);
     };
