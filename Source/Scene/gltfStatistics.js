@@ -70,7 +70,7 @@ define([
                     }
 
                     primitivesStatistics[i] = {
-                        numberOfTriangles : primitiveNumberOfTriangles,
+                        numberOfTriangles : primitiveNumberOfTriangles
                     };
                     meshNumberOfTriangles += primitiveNumberOfTriangles;
                 }
