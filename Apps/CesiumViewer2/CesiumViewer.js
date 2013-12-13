@@ -193,6 +193,7 @@ define([
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         //scene.getPrimitives().setCentralBody(undefined);
+        scene.debugShowCommands = endUserOptions.showCommands;
         scene.skyBox = undefined;
         scene.skyAtmosphere = undefined;
         viewer.timeline.zoomTo(new JulianDate(), (new JulianDate()).addSeconds(30.0));
