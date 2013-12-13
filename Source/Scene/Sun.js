@@ -188,7 +188,7 @@ define([
             return undefined;
         }
 
-        if (!frameState.passes.color) {
+        if (!frameState.passes.render) {
             return undefined;
         }
 

@@ -26,10 +26,10 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/CommandLists',
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -70,10 +70,10 @@ define([
         Transforms,
         BufferUsage,
         ClearCommand,
-        CommandLists,
         DepthFunction,
         DrawCommand,
         createShaderSource,
+        Pass,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -132,19 +132,20 @@ define([
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.pass = Pass.OPAQUE;
         this._depthCommand.owner = this;
 
         this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._northPoleCommand.pass = Pass.OPAQUE;
         this._northPoleCommand.owner = this;
         this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand.pass = Pass.OPAQUE;
         this._southPoleCommand.owner = this;
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
-
-        this._commandLists = new CommandLists();
 
         /**
          * Determines the color of the north pole. If the day tile provider imagery does not
@@ -737,20 +738,15 @@ define([
         this._projection = projection;
 
         var pass = frameState.passes;
-        var commandLists = this._commandLists;
-        commandLists.removeAll();
-
-        if (pass.color) {
-            var colorCommandList = commandLists.opaqueList;
-
+        if (pass.render) {
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
                 if (this._drawNorthPole) {
-                    colorCommandList.push(this._northPoleCommand);
+                    commandList.push(this._northPoleCommand);
                 }
 
                 if (this._drawSouthPole) {
-                    colorCommandList.push(this._southPoleCommand);
+                    commandList.push(this._southPoleCommand);
                 }
             }
 
@@ -769,7 +765,7 @@ define([
             this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,
                     frameState,
-                    colorCommandList,
+                    commandList,
                     this._drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
@@ -780,23 +776,22 @@ define([
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 if (!this.depthTestAgainstTerrain) {
-                    colorCommandList.push(this._clearDepthCommand);
+                    commandList.push(this._clearDepthCommand);
                     if (mode === SceneMode.SCENE3D) {
-                        colorCommandList.push(this._depthCommand);
+                        commandList.push(this._depthCommand);
                     }
                 }
             }
         }
 
+        // TODO: picking
+        /*
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
             commandLists.pickList.opaqueList.push(this._depthCommand);
         }
-
-        if (!commandLists.empty()) {
-            commandList.push(commandLists);
-        }
+        */
     };
 
     /**

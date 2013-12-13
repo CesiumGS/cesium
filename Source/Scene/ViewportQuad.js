@@ -12,9 +12,9 @@ define([
         './Material',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -30,9 +30,9 @@ define([
         Material,
         BufferUsage,
         BlendingState,
-        CommandLists,
         DrawCommand,
         createShaderSource,
+        Pass,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -55,9 +55,8 @@ define([
         this._va = undefined;
         this._overlayCommand = new DrawCommand();
         this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._overlayCommand.pass = Pass.OVERLAY;
         this._overlayCommand.owner = this;
-        this._commandLists = new CommandLists();
-        this._commandLists.overlayList.push(this._overlayCommand);
 
         /**
          * Determines if the viewport quad primitive will be shown.
@@ -194,7 +193,7 @@ define([
         }
 
         var pass = frameState.passes;
-        if (pass.overlay) {
+        if (pass.render) {
             if (this._material !== this.material) {
                 // Recompile shader when material changes
                 this._material = this.material;
@@ -207,7 +206,7 @@ define([
             this._material.update(context);
 
             this._overlayCommand.uniformMap = this._material._uniforms;
-            commandList.push(this._commandLists);
+            commandList.push(this._overlayCommand);
         }
     };
 
@@ -248,7 +247,6 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
-
         return destroyObject(this);
     };
 

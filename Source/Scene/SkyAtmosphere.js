@@ -130,8 +130,8 @@ define([
             return undefined;
         }
 
-        // The atmosphere is only rendered during the color pass; it is not pickable, it doesn't cast shadows, etc.
-        if (!frameState.passes.color) {
+        // The atmosphere is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
+        if (!frameState.passes.render) {
             return undefined;
         }
 
