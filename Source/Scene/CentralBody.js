@@ -784,14 +784,11 @@ define([
             }
         }
 
-        // TODO: picking
-        /*
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandLists.pickList.opaqueList.push(this._depthCommand);
+            commandList.push(this._depthCommand);
         }
-        */
     };
 
     /**

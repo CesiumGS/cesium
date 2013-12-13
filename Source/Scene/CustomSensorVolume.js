@@ -516,8 +516,6 @@ define([
             }
         }
 
-        // TODO: picking
-        /*
         if (pass.pick) {
             var pickCommand = this._pickCommand;
 
@@ -548,13 +546,9 @@ define([
                 }], false, false);
             }
 
-            if (translucent) {
-                this._commandLists.pickList.translucentList.push(pickCommand);
-            } else {
-                this._commandLists.pickList.opaqueList.push(pickCommand);
-            }
+            pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+            commandList.push(pickCommand);
         }
-        */
     };
 
     /**

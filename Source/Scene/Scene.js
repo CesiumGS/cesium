@@ -460,7 +460,7 @@ define([
 
             if (command.pass === Pass.OPAQUE || command instanceof ClearCommand) {
                 frustumCommands.opaqueCommands[frustumCommands.opaqueIndex++] = command;
-            } else {
+            } else if (command.pass === Pass.TRANSLUCENT){
                 frustumCommands.translucentCommands[frustumCommands.translucentIndex++] = command;
             }
 
@@ -483,7 +483,7 @@ define([
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
-    function createPotentiallyVisibleSet(scene, pick) {
+    function createPotentiallyVisibleSet(scene) {
         var commandList = scene._commandList;
         var overlayList = scene._overlayCommandList;
 
@@ -573,7 +573,7 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
-            createPotentiallyVisibleSet(scene, pick);
+            createPotentiallyVisibleSet(scene);
         }
     }
 
@@ -955,8 +955,6 @@ define([
      *
      */
     Scene.prototype.pick = function(windowPosition) {
-        return; // TODO
-
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
@@ -980,7 +978,7 @@ define([
 
         this._commandList.length = 0;
         updatePrimitives(this);
-        createPotentiallyVisibleSet(this, renderListNames, true);
+        createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);

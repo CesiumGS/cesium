@@ -861,6 +861,7 @@ define([
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
+                pickCommand.pass = pass;
                 ++m;
 
                 ++vaIndex;
@@ -920,12 +921,6 @@ define([
             boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
         }
 
-        length = pickCommands.length;
-        for (i = 0; i < length; ++i) {
-            pickCommands[i].modelMatrix = this.modelMatrix;
-            pickCommands[i].boundingVolume = boundingSphere;
-        }
-
         var passes = frameState.passes;
         if (passes.render) {
             length = colorCommands.length;
@@ -938,7 +933,15 @@ define([
             }
         }
 
-        // TODO: picking
+        if (passes.pick) {
+            length = pickCommands.length;
+            for (i = 0; i < length; ++i) {
+                pickCommands[i].modelMatrix = this.modelMatrix;
+                pickCommands[i].boundingVolume = boundingSphere;
+
+                commandList.push(pickCommands[i]);
+            }
+        }
     };
 
     function createGetFunction(name, perInstanceAttributes) {

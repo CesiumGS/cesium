@@ -372,8 +372,6 @@ define([
             commandList.push(colorCommand);
         }
 
-        // TODO: picking
-        /*
         if (passes.pick) {
             var pickCommand = this._pickCommand;
 
@@ -410,14 +408,10 @@ define([
 
             pickCommand.boundingVolume = this._boundingSphere;
             pickCommand.modelMatrix = this._computedModelMatrix;
+            pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-            if (translucent) {
-                ellipsoidCommandLists.pickList.translucentList.push(pickCommand);
-            } else {
-                ellipsoidCommandLists.pickList.opaqueList.push(pickCommand);
-            }
+            commandList.push(pickCommand);
         }
-        */
     };
 
     /**

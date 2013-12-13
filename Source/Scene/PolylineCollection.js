@@ -480,13 +480,10 @@ define([
             createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
         }
 
-        // TODO: picking
-        /*
         if (pass.pick) {
             var pickList = this._pickCommands;
             createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
         }
-        */
     };
 
     var boundingSphereScratch = new BoundingSphere();

@@ -1327,11 +1327,9 @@ define([
             }
         }
 
-        // TODO: picking
-        /*
+
         if (picking) {
             var pickList = this._pickCommands;
-            commandLists.pickList.opaqueList = pickList;
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
@@ -1377,10 +1375,12 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
+
+                commandList.push(command);
             }
         }
-        */
     };
 
     /**
