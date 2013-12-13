@@ -1323,7 +1323,7 @@ define([
         // Compute bounding sphere around the model
         var radiusSquared = 0;
         var index = 0;
-console.log(spheres.length);
+
         length = spheres.length;
         Cartesian3.divideByScalar(sphereCenter, length, sphereCenter);
         for (i = 0; i < length; ++i) {
