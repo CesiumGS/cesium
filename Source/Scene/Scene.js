@@ -263,8 +263,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowCommands = true;
-        // TODO: make enum?
+        this.debugShowCommands = false;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -589,67 +588,45 @@ define([
         return attributeLocations;
     }
 
-    function createCommandDebugFragmentShaderSource(command) {
+    function createDebugFragmentShaderSource(command, scene) {
         var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_commandDebug_main()');
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
 
-        if (!defined(command._debugColor)) {
-            command._debugColor = Color.fromRandom();
-        }
-        var c = command._debugColor;
-
-        var pickMain =
+        var newMain =
             'void main() \n' +
             '{ \n' +
-            '    czm_commandDebug_main(); \n' +
-            '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n' +
-            '}';
+            '    czm_Debug_main(); \n';
 
-        return renamedFS + '\n' + pickMain;
-    }
-
-    function executeDebugCommandCommand(command, context, passState) {
-        if (defined(command.shaderProgram)) {
-            // Replace shader for command visualization
-            var sp = command.shaderProgram;
-            var attributeLocations = getAttributeLocations(sp);
-
-            command.shaderProgram = context.getShaderCache().getShaderProgram(
-                sp.vertexShaderSource, createCommandDebugFragmentShaderSource(command), attributeLocations);
-            command.execute(context, passState);
-            command.shaderProgram.release();
-            command.shaderProgram = sp;
+        if (scene.debugShowCommands) {
+            if (!defined(command._debugColor)) {
+                command._debugColor = Color.fromRandom();
+            }
+            var c = command._debugColor;
+            newMain += '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
         }
+
+        if (scene.debugShowFrustums) {
+            // Support up to three frustums.  If a command overlaps all
+            // three, it's code is not changed.
+            var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
+            var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
+            var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
+            newMain += '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+        }
+
+        newMain += '}';
+
+        return renamedFS + '\n' + newMain;
     }
 
-    function createFrustumDebugFragmentShaderSource(command) {
-        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_frustumDebug_main()');
-
-        // Support up to three frustums.  If a command overlaps all
-        // three, it's code is not changed.
-        var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
-        var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
-        var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-
-        var pickMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_frustumDebug_main(); \n' +
-            '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n' +
-            '}';
-
-        return renamedFS + '\n' + pickMain;
-    }
-
-    function executeFrustumDebugCommand(command, context, passState) {
+    function executeDebugCommand(command, scene, context, passState) {
         if (defined(command.shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = command.shaderProgram;
             var attributeLocations = getAttributeLocations(sp);
 
             command.shaderProgram = context.getShaderCache().getShaderProgram(
-                sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), attributeLocations);
+                sp.vertexShaderSource, createDebugFragmentShaderSource(command, scene), attributeLocations);
             command.execute(context, passState);
             command.shaderProgram.release();
             command.shaderProgram = sp;
@@ -661,10 +638,8 @@ define([
             return;
         }
 
-        if (scene.debugShowCommands) {
-            executeDebugCommandCommand(command, context, passState);
-        } else if (scene.debugShowFrustums) {
-            executeFrustumDebugCommand(command, context, passState);
+        if (scene.debugShowCommands || scene.debugShowFrustums) {
+            executeDebugCommand(command, scene, context, passState);
         } else {
             command.execute(context, passState);
         }
