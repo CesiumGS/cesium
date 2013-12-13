@@ -261,6 +261,12 @@ define([
         this.debugCommandFilter = undefined;
 
         /**
+         * DOC_TBA
+         */
+        this.debugShowCommands = true;
+        // TODO: make enum?
+
+        /**
          * This property is for debugging only; it is not for production use.
          * <p>
          * When <code>true</code>, commands are shaded based on the frustums they
@@ -571,6 +577,51 @@ define([
         }
     }
 
+    function getAttributeLocations(shaderProgram) {
+        var attributeLocations = {};
+        var attributes = shaderProgram.getVertexAttributes();
+        for (var a in attributes) {
+            if (attributes.hasOwnProperty(a)) {
+                attributeLocations[a] = attributes[a].index;
+            }
+        }
+
+        return attributeLocations;
+    }
+
+    function createCommandDebugFragmentShaderSource(command) {
+        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_commandDebug_main()');
+
+        if (!defined(command._debugColor)) {
+            command._debugColor = Color.fromRandom();
+        }
+        var c = command._debugColor;
+
+        var pickMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_commandDebug_main(); \n' +
+            '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    }
+
+    function executeDebugCommandCommand(command, context, passState) {
+        if (defined(command.shaderProgram)) {
+            // Replace shader for command visualization
+            var sp = command.shaderProgram;
+            var attributeLocations = getAttributeLocations(sp);
+
+            command.shaderProgram = context.getShaderCache().getShaderProgram(
+                sp.vertexShaderSource, createCommandDebugFragmentShaderSource(command), attributeLocations);
+            command.execute(context, passState);
+            command.shaderProgram.release();
+            command.shaderProgram = sp;
+        }
+    }
+
     function createFrustumDebugFragmentShaderSource(command) {
         var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_frustumDebug_main()');
@@ -595,19 +646,11 @@ define([
         if (defined(command.shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = command.shaderProgram;
-            var attributeLocations = {};
-            var attributes = sp.getVertexAttributes();
-            for (var a in attributes) {
-                if (attributes.hasOwnProperty(a)) {
-                    attributeLocations[a] = attributes[a].index;
-                }
-            }
+            var attributeLocations = getAttributeLocations(sp);
 
             command.shaderProgram = context.getShaderCache().getShaderProgram(
                 sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), attributeLocations);
-
             command.execute(context, passState);
-
             command.shaderProgram.release();
             command.shaderProgram = sp;
         }
@@ -618,10 +661,12 @@ define([
             return;
         }
 
-        if (!scene.debugShowFrustums) {
-            command.execute(context, passState);
-        } else {
+        if (scene.debugShowCommands) {
+            executeDebugCommandCommand(command, context, passState);
+        } else if (scene.debugShowFrustums) {
             executeFrustumDebugCommand(command, context, passState);
+        } else {
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
