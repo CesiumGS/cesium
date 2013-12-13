@@ -1263,6 +1263,7 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         // Compute bounding sphere that includes all transformed nodes
+        scratchSpheres.length = 0;
         var spheres = scratchSpheres;
         var sphereCenter = new Cartesian3();
 
@@ -1322,7 +1323,7 @@ define([
         // Compute bounding sphere around the model
         var radiusSquared = 0;
         var index = 0;
-
+console.log(spheres.length);
         length = spheres.length;
         Cartesian3.divideByScalar(sphereCenter, length, sphereCenter);
         for (i = 0; i < length; ++i) {
