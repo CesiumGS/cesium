@@ -402,7 +402,7 @@ defineSuite([
         polygon = createPolygon();
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
@@ -427,7 +427,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));

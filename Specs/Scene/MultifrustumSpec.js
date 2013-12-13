@@ -16,8 +16,8 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
-         'Renderer/CommandLists',
          'Renderer/DrawCommand',
+         'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection'
@@ -38,8 +38,8 @@ defineSuite([
          PrimitiveType,
          BlendingState,
          BufferUsage,
-         CommandLists,
          DrawCommand,
+         Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection) {
@@ -222,7 +222,7 @@ defineSuite([
             };
         };
 
-        Primitive.prototype.update = function(context, frameState, commandLists) {
+        Primitive.prototype.update = function(context, frameState, commandList) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -267,10 +267,9 @@ defineSuite([
             command.modelMatrix = this._modelMatrix;
             command.executeInClosestFrustum = closestFrustum;
             command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
+            command.pass = Pass.OPAQUE;
 
-            var commandList = new CommandLists();
-            commandList.opaqueList.push(command);
-            commandLists.push(commandList);
+            commandList.push(command);
         };
 
         Primitive.prototype.destroy = function() {

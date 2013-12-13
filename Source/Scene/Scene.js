@@ -659,7 +659,7 @@ define([
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
-            commandList[0].opaqueList[0].execute(context, passState);
+            commandList[0].execute(context, passState);
         }
     }
 
