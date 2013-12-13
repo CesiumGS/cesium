@@ -687,6 +687,12 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    function createTranslucentCompareFunction(position) {
+        return function(a, b) {
+            return a.boundingVolume.distanceTo(position) < b.boundingVolume.distanceTo(position);
+        };
+    }
+
     function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
@@ -711,7 +717,6 @@ define([
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
-
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -749,6 +754,7 @@ define([
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
+        var translucentCompare = createTranslucentCompareFunction(camera.positionWC);
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -770,7 +776,8 @@ define([
             }
 
             commands = frustumCommands.translucentCommands;
-            length = frustumCommands.translucentIndex;
+            length = commands.length = frustumCommands.translucentIndex;
+            commands.sort(translucentCompare);
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
