@@ -261,7 +261,16 @@ define([
         this.debugCommandFilter = undefined;
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, commands are randomly shaded.  This is useful
+         * for performance analysis to see what parts of a scene or model are
+         * command-dense and could benefit from batching.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
          */
         this.debugShowCommands = false;
 
@@ -725,7 +734,6 @@ define([
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
-
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
