@@ -3,13 +3,13 @@ define(['../Core/Enumeration'], function(Enumeration) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Enumerates the available input for interacting with the camera.
      *
      * @exports CameraEventType
      */
     var CameraEventType = {
         /**
-         * DOC_TBA
+         * A left mouse button press followed by moving the mouse and releasing the button.
          *
          * @type {Enumeration}
          * @constant
@@ -18,7 +18,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         LEFT_DRAG : new Enumeration(0, 'LEFT_DRAG'),
 
         /**
-         * DOC_TBA
+         *  A right mouse button press followed by moving the mouse and releasing the button.
          *
          * @type {Enumeration}
          * @constant
@@ -27,7 +27,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         RIGHT_DRAG : new Enumeration(1, 'RIGHT_DRAG'),
 
         /**
-         * DOC_TBA
+         *  A middle mouse button press followed by moving the mouse and releasing the button.
          *
          * @type {Enumeration}
          * @constant
@@ -36,7 +36,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         MIDDLE_DRAG : new Enumeration(2, 'MIDDLE_DRAG'),
 
         /**
-         * DOC_TBA
+         * Scrolling the middle mouse button.
          *
          * @type {Enumeration}
          * @constant
