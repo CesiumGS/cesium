@@ -383,12 +383,12 @@ define([
         result.far = this.far;
 
         // force update of clone to compute matrices
-        result._left = this.left;
-        result._right = this.right;
-        result._top = this.top;
-        result._bottom = this.bottom;
-        result._near = this.near;
-        result._far = this.far;
+        result._left = undefined;
+        result._right = undefined;
+        result._top = undefined;
+        result._bottom = undefined;
+        result._near = undefined;
+        result._far = undefined;
 
         return result;
     };
