@@ -237,7 +237,8 @@ define([
         model.jsonLoad.addEventListener(function() {
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
-
+        });
+        model.readyToRender.addEventListener(function() {
             if (endUserOptions.animate) {
                 var animations = model.gltf.animations;
                 for (var name in animations) {
@@ -258,8 +259,7 @@ define([
                     }
                 }
             }
-        });
-        model.readyToRender.addEventListener(function() {
+
             var center = model.worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
