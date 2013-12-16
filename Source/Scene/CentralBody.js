@@ -725,6 +725,7 @@ define([
 
             this._showingPrettyOcean = defined(this._oceanNormalMap);
             this._hasWaterMask = hasWaterMask;
+            this._enableLighting = this.enableLighting;
         }
 
         var cameraPosition = frameState.camera.positionWC;
