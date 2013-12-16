@@ -197,6 +197,7 @@ defineSuite([
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
+        c.pass = Pass.OPAQUE;
         c.shaderProgram = scene.getContext().getShaderCache().getShaderProgram(
             'void main() { gl_Position = vec4(1.0); }',
             'void main() { gl_FragColor = vec4(1.0); }');

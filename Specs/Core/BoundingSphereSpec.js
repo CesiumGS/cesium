@@ -413,11 +413,11 @@ defineSuite([
         expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
     });
 
-    it('distance to point', function() {
+    it('estimated distance squared to point', function() {
         var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
         var position = new Cartesian3(-2.0, 1.0, 0.0);
-        var expected = Cartesian3.magnitude(position);
-        expect(bs.distanceTo(position)).toEqual(expected);
+        var expected = Cartesian3.magnitudeSquared(position) - 1.0;
+        expect(bs.distanceSquaredTo(position)).toEqual(expected);
     });
 
     it('projectTo2D', function() {
@@ -527,15 +527,15 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static distanceTo throws without a sphere', function() {
+    it('static distanceSquaredTo throws without a sphere', function() {
         expect(function() {
-            BoundingSphere.distanceTo();
+            BoundingSphere.distanceSquaredTo();
         }).toThrow();
     });
 
-    it('static distanceTo throws without a cartesian', function() {
+    it('static distanceSquaredTo throws without a cartesian', function() {
         expect(function() {
-            BoundingSphere.distanceTo(new BoundingSphere());
+            BoundingSphere.distanceSquaredTo(new BoundingSphere());
         }).toThrow();
     });
 
