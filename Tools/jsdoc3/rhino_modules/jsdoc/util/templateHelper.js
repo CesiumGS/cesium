@@ -110,14 +110,6 @@ function toLink(longname, content) {
     else {
         // support for {@link classname#methodname|Link Name}
         url = longname;
-        if(longname[0] == '&'){
-            longname = longname.substr(1);
-            var split = longname.indexOf('|');
-            if (split == -1){
-                split = longname.indexOf('#');
-                longname = longname + '|' + longname.substr(split+1)
-            }
-        }
         var split = url.indexOf('|');
         if (split !== -1){
             content = url.substr(split+1);

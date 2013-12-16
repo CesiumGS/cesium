@@ -462,7 +462,7 @@
         url = url.replace(/(#.+|$)/, hash);
         pos = url.indexOf('|')
         if(pos === -1){
-            return '<a href="'+url+'" target="_self">'+hash+'</a>';
+            return '<a href="'+url+'" target="_self">'+hash.substr(1)+'</a>';
         }
         return '<a href="'+url.substr(0, pos)+'" target="_self">'+url.substr(pos+1)+'</a>';
 
