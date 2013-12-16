@@ -28,6 +28,7 @@ Beta Releases
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
 * The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
 * The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
+* Fix disabling `CentralBody.enableLighting`.
 
 ### b23 - 2013-12-02
 
