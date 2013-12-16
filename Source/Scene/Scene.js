@@ -34,6 +34,7 @@ define([
         './SceneTransforms',
         './FrameState',
         './OrthographicFrustum',
+        './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
@@ -75,6 +76,7 @@ define([
         SceneTransforms,
         FrameState,
         OrthographicFrustum,
+        PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
@@ -710,12 +712,24 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    var scratchPerspectiveFrustum = new PerspectiveFrustum();
+    var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
+    var scratchOrthographicFrustum = new OrthographicFrustum();
+
     function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
+
+        var frustum;
+        if (defined(camera.frustum.fovy)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
 
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {

@@ -321,15 +321,19 @@ define([
      *
      * @returns {OrthographicFrustum} A new copy of the OrthographicFrustum instance.
      */
-    OrthographicFrustum.prototype.clone = function() {
-        var frustum = new OrthographicFrustum();
-        frustum.left = this.left;
-        frustum.right = this.right;
-        frustum.top = this.top;
-        frustum.bottom = this.bottom;
-        frustum.near = this.near;
-        frustum.far = this.far;
-        return frustum;
+    OrthographicFrustum.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new OrthographicFrustum();
+        }
+
+        result.left = this.left;
+        result.right = this.right;
+        result.top = this.top;
+        result.bottom = this.bottom;
+        result.near = this.near;
+        result.far = this.far;
+
+        return result;
     };
 
     /**
