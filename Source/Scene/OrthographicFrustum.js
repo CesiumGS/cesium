@@ -316,10 +316,10 @@ define([
 
     /**
      * Returns a duplicate of a OrthographicFrustum instance.
-     *
      * @memberof OrthographicFrustum
      *
-     * @returns {OrthographicFrustum} A new copy of the OrthographicFrustum instance.
+     * @param {OrthographicFrustum} [result] The object onto which to store the result.
+     * @returns {OrthographicFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
      */
     OrthographicFrustum.prototype.clone = function(result) {
         if (!defined(result)) {
