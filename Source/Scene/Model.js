@@ -94,7 +94,12 @@ define([
         this.pendingTextureLoads = 0;
 
         this.createSamplers = true;
+        this.createSkins = true;
+        this.createAnimations = true;
+        this.createVertexArrays = true;
         this.createRenderStates = true;
+        this.createUniformMaps = true;
+        this.createCommands = true;
     }
 
     LoadResources.prototype.finishedPendingLoads = function() {
@@ -633,6 +638,11 @@ define([
             return;
         }
 
+        if (!loadResources.createSkins) {
+            return;
+        }
+        loadResources.createSkins = false;
+
         var gltf = model.gltf;
         var buffers = loadResources.buffers;
         var bufferViews = gltf.bufferViews;
@@ -683,6 +693,11 @@ define([
         if (!loadResources.finishedPendingLoads()) {
             return;
         }
+
+        if (!loadResources.createAnimations) {
+            return;
+        }
+        loadResources.createAnimations = false;
 
         model._runtime.animations = {
         };
@@ -744,6 +759,11 @@ define([
          if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
              return;
          }
+
+         if (!loadResources.createVertexArrays) {
+             return;
+         }
+         loadResources.createVertexArrays = false;
 
          var gltf = model.gltf;
          var bufferViews = gltf.bufferViews;
@@ -992,6 +1012,11 @@ define([
             return;
         }
 
+        if (!loadResources.createUniformMaps) {
+            return;
+        }
+        loadResources.createUniformMaps = false;
+
         var name;
         var gltf = model.gltf;
         var materials = gltf.materials;
@@ -1200,6 +1225,11 @@ define([
         if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
             return;
         }
+
+        if (!loadResources.createCommands) {
+            return;
+        }
+        loadResources.createCommands = false;
 
         // Create commands for nodes in the default scene.
 
