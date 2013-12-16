@@ -100,6 +100,7 @@ define([
         this.createRenderStates = true;
         this.createUniformMaps = true;
         this.createCommands = true;
+        this.createNodes = true;
     }
 
     LoadResources.prototype.finishedPendingLoads = function() {
@@ -256,7 +257,9 @@ define([
         this._loadResources = undefined;
 
         this._runtime = {
-            animations : undefined
+            animations : undefined,
+            rootNodes : undefined,
+            nodes : undefined
         };
 
         this._skinnedNodes = [];
@@ -387,26 +390,8 @@ define([
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
-                node.czm = {
-                    meshesCommands : undefined,
-                    transformToRoot : new Matrix4(),
-                    computedMatrix : undefined,
-                    translation : undefined,
-                    rotation : undefined,
-                    scale : undefined
-                };
-
                 if (defined(node.instanceSkin)) {
                     skinnedNodes.push(node);
-                }
-
-                if (!defined(node.matrix)) {
-                    // TRS converted to Cesium types
-                    node.czm.translation = Cartesian3.fromArray(node.translation);
-                    var axis = Cartesian3.fromArray(node.rotation, 0, scratchAxis);
-                    var angle = node.rotation[3];
-                    node.czm.rotation = Quaternion.fromAxisAngle(axis, angle);
-                    node.czm.scale = Cartesian3.fromArray(node.scale);
                 }
             }
         }
@@ -690,7 +675,8 @@ define([
     function createAnimations(model) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedPendingLoads()) {
+//        if (!loadResources.finishedPendingLoads()) {
+        if (loadResources.createNodes) {
             return;
         }
 
@@ -702,10 +688,9 @@ define([
         model._runtime.animations = {
         };
 
-        var gltf = model.gltf;
-        var nodes = gltf.nodes;
-        var animations = gltf.animations;
-        var accessors = gltf.accessors;
+        var runtimeNodes = model._runtime.nodes;
+        var animations = model.gltf.animations;
+        var accessors = model.gltf.accessors;
         var name;
 
          for (var animationName in animations) {
@@ -741,7 +726,7 @@ define([
 
                      var spline = ModelCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
                      // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(nodes[target.id].czm, target.path, spline);
+                     channelEvaluators[i] = getChannelEvaluator(runtimeNodes[target.id], target.path, spline);
                  }
 
                  model._runtime.animations[animationName] = {
@@ -996,12 +981,10 @@ define([
     gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
     // TODO: function for gltfUniformFunctions[WebGLRenderingContext.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
 
-    function getUniformFunctionFromSource(source, gltf) {
-        var nodes = gltf.nodes;
-        var czm = nodes[source].czm;
-
+    function getUniformFunctionFromSource(source, model) {
+        // TODO: faster in closure.  Chicken and egg.
         return function() {
-            return czm.computedMatrix;
+            return model._runtime.nodes[source].computedMatrix;
         };
     }
 
@@ -1056,7 +1039,7 @@ define([
                                 // Map glTF semantic to Cesium automatic uniform
                                 func = gltfSemanticUniforms[parameter.semantic](context.getUniformState(), jointMatrices);
                             } else if (defined(parameter.source)) {
-                                func = getUniformFunctionFromSource(parameter.source, gltf);
+                                func = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
                                 func = gltfUniformFunctions[parameter.type](parameter.value, gltf);
@@ -1093,10 +1076,7 @@ define([
         };
     }
 
-    function createCommand(model, node, context) {
-        node.czm.meshesCommands = defaultValue(node.czm.meshesCommands, {});
-        var czmMeshesCommands = node.czm.meshesCommands;
-
+    function createCommand(model, node, czmMeshesCommands, context) {
         var opaqueColorCommands = model._commandLists.opaqueList;
         var translucentColorCommands = model._commandLists.translucentList;
 
@@ -1219,19 +1199,20 @@ define([
         }
     }
 
-    function createCommands(model, context) {
+    function createNodes(model, context) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
             return;
         }
 
-        if (!loadResources.createCommands) {
+        if (!loadResources.createNodes) {
             return;
         }
-        loadResources.createCommands = false;
+        loadResources.createNodes = false;
 
-        // Create commands for nodes in the default scene.
+        var rootNodes = [];
+        var runtimeNodes = {};
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
@@ -1242,23 +1223,85 @@ define([
 
         var stack = [];
 
+        var matrix;
+        var translation;
+        var rotation;
+        var scale;
+
         for (var i = 0; i < length; ++i) {
-            stack.push(nodes[sceneNodes[i]]);
+            stack.push({
+                parentRuntimeNode : undefined,
+                gltfNode : nodes[sceneNodes[i]],
+                id : sceneNodes[i]
+            });
 
             while (stack.length > 0) {
-                var node = stack.pop();
+                var n = stack.pop();
+                var parentRuntimeNode = n.parentRuntimeNode;
+                var gltfNode = n.gltfNode;
 
-                if (defined(node.meshes) || defined(node.instanceSkin)) {
-                    createCommand(model, node, context);
+                // Node hierarchy is a DAG so a node can have more than one parent so it may already exist
+                var runtimeNode = runtimeNodes[n.id];
+                if (!defined(runtimeNode)) {
+                    if (defined(gltfNode.matrix)) {
+                        matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
+                        translation = undefined;
+                        rotation = undefined;
+                        scale = undefined;
+                    } else {
+                        // TRS converted to Cesium types
+                        var axis = Cartesian3.fromArray(gltfNode.rotation, 0, scratchAxis);
+                        var angle = gltfNode.rotation[3];
+
+                        matrix = undefined;
+                        translation = Cartesian3.fromArray(gltfNode.translation);
+                        rotation = Quaternion.fromAxisAngle(axis, angle);
+                        scale = Cartesian3.fromArray(gltfNode.scale);
+                    }
+
+                    runtimeNode = {
+                        matrix : matrix,
+                        translation : translation,
+                        rotation : rotation,
+                        scale : scale,
+
+                        transformToRoot : new Matrix4(),
+                        computedMatrix : undefined,
+
+                        commands : undefined,
+
+                        children : [],
+                        parents : []
+                    };
+                    runtimeNodes[n.id] = runtimeNode;
                 }
 
-                var children = node.children;
+                if (defined(parentRuntimeNode)) {
+                    parentRuntimeNode.children.push(runtimeNode);
+                    runtimeNode.parents.push(parentRuntimeNode);
+                } else {
+                    rootNodes.push(runtimeNode);
+                }
+
+                if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
+                    runtimeNode.commands = {};
+                    createCommand(model, gltfNode, runtimeNode.commands, context);
+                }
+
+                var children = gltfNode.children;
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
-                    stack.push(nodes[children[k]]);
+                    stack.push({
+                        parentRuntimeNode : runtimeNode,
+                        gltfNode : nodes[children[k]],
+                        id : children[k]
+                    });
                 }
             }
         }
+
+        model._runtime.rootNodes = rootNodes;
+        model._runtime.nodes = runtimeNodes;
     }
 
     function createResources(model, context) {
@@ -1268,26 +1311,25 @@ define([
         createTextures(model, context);
 
         createSkins(model);
-        createAnimations(model);
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
-
-        createCommands(model, context);     // using glTF scene
+        createNodes(model, context);        // using glTF scene
+        createAnimations(model);            // depends on runtime nodes being created.
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     function getNodeMatrix(node, result) {
         if (defined(node.matrix)) {
-            return Matrix4.fromColumnMajorArray(node.matrix, result);
+            result = node.matrix;
+            return node.matrix;
         }
 
-        var czm = node.czm;
-        return Matrix4.fromTranslationQuaternionRotationScale(czm.translation, czm.rotation, czm.scale, result);
+        return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
     }
 
- // To reduce allocations in updateModelMatrix()
+    // To reduce allocations in updateModelMatrix()
     var scratchNodeStack = [];
 
     var scratchSphereCenter = new Cartesian3();
@@ -1297,12 +1339,9 @@ define([
     function updateModelMatrix(model) {
         var allowPicking = model.allowPicking;
         var gltf = model.gltf;
-        var scenes = gltf.scenes;
-        var nodes = gltf.nodes;
 
-        var scene = scenes[gltf.scene];
-        var sceneNodes = scene.nodes;
-        var length = sceneNodes.length;
+        var rootNodes = model._runtime.rootNodes;
+        var length = rootNodes.length;
 
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
@@ -1313,15 +1352,15 @@ define([
         var spheres = scratchSpheres;
 
         for (var i = 0; i < length; ++i) {
-            var n = nodes[sceneNodes[i]];
+            var n = rootNodes[i];
 
-            getNodeMatrix(n, n.czm.transformToRoot);
+            n.transformToRoot = getNodeMatrix(n);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
                 n = nodeStack.pop();
-                var transformToRoot = n.czm.transformToRoot;
-                var meshCommands = n.czm.meshesCommands;
+                var transformToRoot = n.transformToRoot;
+                var meshCommands = n.commands;
 
                 if (defined(meshCommands)) {
                     // Node has meshes.  Update their commands.
@@ -1350,16 +1389,16 @@ define([
                     }
                 } else {
                     // Node has a light or camera
-                    n.czm.computedMatrix = Matrix4.multiply(computedModelMatrix, transformToRoot, n.czm.computedMatrix);
+                    n.computedMatrix = Matrix4.multiply(computedModelMatrix, transformToRoot, n.computedMatrix);
                 }
 
                 var children = n.children;
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
-                    var child = nodes[children[k]];
+                    var child = children[k];
 
-                    var childMatrix = getNodeMatrix(child, child.czm.transformToRoot);
-                    Matrix4.multiply(transformToRoot, childMatrix, child.czm.transformToRoot);
+                    var childMatrix = getNodeMatrix(child, child.transformToRoot);
+                    Matrix4.multiply(transformToRoot, childMatrix, child.transformToRoot);
                     nodeStack.push(child);
                 }
             }
@@ -1586,6 +1625,8 @@ define([
         destroyCzm(gltf.programs, 'program');
         destroyCzm(gltf.programs, 'pickProgram');
         destroyCzm(gltf.textures, 'texture');
+
+        // TODO: destroy in this._runtime
 
         var meshes = gltf.meshes;
         var name;
