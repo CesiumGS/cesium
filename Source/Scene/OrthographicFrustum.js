@@ -333,6 +333,14 @@ define([
         result.near = this.near;
         result.far = this.far;
 
+        // force update of clone to compute matrices
+        result._left = this.left;
+        result._right = this.right;
+        result._top = this.top;
+        result._bottom = this.bottom;
+        result._near = this.near;
+        result._far = this.far;
+
         return result;
     };
 

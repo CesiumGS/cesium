@@ -211,6 +211,13 @@ define([
         result.aspectRatio = this.aspectRatio;
         result.near = this.near;
         result.far = this.far;
+
+        // force update of clone to compute matrices
+        result._fovy = undefined;
+        result._aspectRatio = undefined;
+        result._near = undefined;
+        result._far = undefined;
+
         this._offCenterFrustum.clone(result._offCenterFrustum);
 
         return result;
