@@ -7,6 +7,7 @@ Beta Releases
 ### b24 - 2014-01-02
 
 * Breaking changes:
+  * Orientation representation in CZML files has been flipped to be inline with graphics conventions.  All CZML files specifying orientation need to be updated so that the quaternion values are the conjugate of what was previously being specified.  
   * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
 
            var viewer = new Viewer('cesiumContainer', { 
@@ -27,7 +28,8 @@ Beta Releases
 * Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
 * The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
-* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
+* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements. 
+* `Quaternion.unpackInterpolationResult` was returning the conjugate of the interpolated value. The extra conjugation has been removed.
 
 ### b23 - 2013-12-02
 
