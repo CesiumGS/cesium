@@ -721,18 +721,26 @@ define([
         return result;
     };
 
+    var distanceSquaredToScratch = new Cartesian3();
+
     /**
-     * Computes the distance from the bounding sphere to a point.
+     * Computes the estimated distance squared from the closest point on a bounding sphere to a point.
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The sphere.
      * @param {Cartesian3} cartesian The point
-     * @returns {Number} The distance from the bounding sphere to the point.
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} cartesian is required.
+     *
+     * @example
+     * // Sort bounding spheres from back to front
+     * spheres.sort(function(a, b) {
+     *     return BoundingSphere.distanceSquaredTo(b, camera.positionWC) - BoundingSphere.distanceSquaredTo(a, camera.positionWC);
+     * });
      */
-    BoundingSphere.distanceTo = function(sphere, cartesian) {
+    BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -740,7 +748,8 @@ define([
             throw new DeveloperError('cartesian is required.');
         }
 
-        return Cartesian3.distance(sphere.center, cartesian);
+        var diff = Cartesian3.subtract(sphere.center, cartesian, distanceSquaredToScratch);
+        return Cartesian3.magnitudeSquared(diff) - sphere.radius * sphere.radius;
     };
 
     var scratchCartesian3 = new Cartesian3();
@@ -988,16 +997,16 @@ define([
     };
 
     /**
-     * Computes the distance from the bounding sphere to a point.
+     * Computes the estimated distance squared from the closest point on a bounding sphere to a point.
      * @memberof BoundingSphere
      *
      * @param {Cartesian3} cartesian The point
-     * @returns {Number} The distance from the bounding sphere to the point.
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
      *
      * @exception {DeveloperError} cartesian is required.
      */
-    BoundingSphere.prototype.distanceTo = function(cartesian) {
-        return BoundingSphere.distanceTo(this, cartesian);
+    BoundingSphere.prototype.distanceSquaredTo = function(cartesian) {
+        return BoundingSphere.distanceSquaredTo(this, cartesian);
     };
 
     /**

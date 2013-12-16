@@ -718,7 +718,7 @@ define([
 
     function createTranslucentCompareFunction(position) {
         return function(a, b) {
-            return a.boundingVolume.distanceTo(position) < b.boundingVolume.distanceTo(position);
+            return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
         };
     }
 

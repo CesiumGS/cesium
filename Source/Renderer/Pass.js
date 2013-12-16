@@ -3,8 +3,10 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * The render pass for a command.
      * @exports Pass
+     *
+     * @see DrawCommand#pass
      */
     var Pass = {
         /**
