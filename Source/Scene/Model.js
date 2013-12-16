@@ -1244,8 +1244,10 @@ define([
         return Matrix4.fromTranslationQuaternionRotationScale(czm.translation, czm.rotation, czm.scale, result);
     }
 
-    // To reduce allocations in updateModelMatrix()
+ // To reduce allocations in updateModelMatrix()
     var scratchNodeStack = [];
+
+    var scratchSphereCenter = new Cartesian3();
     var scratchSpheres = [];
     var scratchSubtract = new Cartesian3();
 
@@ -1263,9 +1265,9 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         // Compute bounding sphere that includes all transformed nodes
+        Cartesian3.clone(Cartesian3.ZERO, scratchSphereCenter);
         scratchSpheres.length = 0;
         var spheres = scratchSpheres;
-        var sphereCenter = new Cartesian3();
 
         for (var i = 0; i < length; ++i) {
             var n = nodes[sceneNodes[i]];
@@ -1298,7 +1300,7 @@ define([
                                     BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                                 }
 
-                                Cartesian3.add(command.boundingVolume.center, sphereCenter, sphereCenter);
+                                Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
                                 spheres.push(command.boundingVolume);
                             }
                         }
@@ -1325,10 +1327,10 @@ define([
         var index = 0;
 
         length = spheres.length;
-        Cartesian3.divideByScalar(sphereCenter, length, sphereCenter);
+        Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
         for (i = 0; i < length; ++i) {
             var bbs = spheres[i];
-            var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, sphereCenter, scratchSubtract));
+            var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
 
             if (r > radiusSquared) {
                 radiusSquared = r;
@@ -1336,7 +1338,7 @@ define([
             }
         }
 
-        Cartesian3.clone(sphereCenter, model.worldBoundingSphere.center);
+        Cartesian3.clone(scratchSphereCenter, model.worldBoundingSphere.center);
         model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
     }
 
