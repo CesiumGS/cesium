@@ -15,7 +15,7 @@ define([
      * @alias ModelAnimation
      * @internalConstructor
      */
-    var ModelAnimation = function(options, animation) {
+    var ModelAnimation = function(options, runtimeAnimation) {
         /**
          * DOC_TBA
          *
@@ -118,7 +118,7 @@ define([
         this.stop = options.stop;
 
         this._state = ModelAnimationState.STOPPED;
-        this._animation = animation;
+        this._runtimeAnimation = runtimeAnimation;
         this._startTime = undefined;
         this._duration = undefined;
     };

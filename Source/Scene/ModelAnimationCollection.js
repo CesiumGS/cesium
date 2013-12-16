@@ -77,20 +77,20 @@ define([
      * @param {Event} [options.update] DOC_TBA
      * @param {Event} [options.stop] DOC_TBA
      *
-     * @exception {DeveloperError} The gltf property is not defined.  Wait for the {@see Model#jsonLoad} event.
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@see Model#readyToRender} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      */
     ModelAnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var gltf = this._model.gltf;
+        var animations = this._model._runtime.animations;
 
-        if (!defined(gltf)) {
-            throw new DeveloperError('The gltf property is not defined.  Wait for the jsonLoad event.');
+        if (!defined(animations)) {
+            throw new DeveloperError('Animations are not loaded.  Wait for the {@see Model#readyToRender} event.');
         }
 
-        var animation = gltf.animations[options.name];
+        var animation = animations[options.name];
 
         if (!defined(animation)) {
             throw new DeveloperError('options.name is required and must be a valid animation name.');
@@ -167,22 +167,11 @@ define([
         return this._scheduledAnimations[index];
     };
 
-    function animateChannels(model, scheduledAnimation, localAnimationTime) {
-        var nodes = model.gltf.nodes;
-        var animation = scheduledAnimation._animation;
-        var samplers = animation.samplers;
-        var channels = animation.channels;
-        var length = channels.length;
-
+    function animateChannels(runtimeAnimation, localAnimationTime) {
+        var channelEvaluators = runtimeAnimation.channelEvaluators;
+        var length = channelEvaluators.length;
         for (var i = 0; i < length; ++i) {
-            var channel = channels[i];
-
-            var target = channel.target;
-            // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
-            var czmNode = nodes[target.id].czm;
-            var spline = samplers[channel.sampler].czm.spline;
-
-            czmNode[target.path] = spline.evaluate(localAnimationTime, czmNode[target.path]);
+            channelEvaluators[i](localAnimationTime);
         }
     }
 
@@ -207,14 +196,14 @@ define([
 
         for (var i = 0; i < length; ++i) {
             var scheduledAnimation = scheduledAnimations[i];
-            var animation = scheduledAnimation._animation;
+            var runtimeAnimation = scheduledAnimation._runtimeAnimation;
 
             if (!defined(scheduledAnimation._startTime)) {
                 scheduledAnimation._startTime = defaultValue(scheduledAnimation.startTime, sceneTime).addSeconds(scheduledAnimation.startOffset);
             }
 
             if (!defined(scheduledAnimation._duration)) {
-                scheduledAnimation._duration = animation.czm.stopTime * (1.0 / scheduledAnimation.speedup);
+                scheduledAnimation._duration = runtimeAnimation.stopTime * (1.0 / scheduledAnimation.speedup);
             }
 
             var startTime = scheduledAnimation._startTime;
@@ -262,9 +251,9 @@ define([
 
                 var localAnimationTime = delta * duration * scheduledAnimation.speedup;
                 // Clamp in case float-point roundoff goes outside the animation's first or last keyframe
-                localAnimationTime = CesiumMath.clamp(localAnimationTime, animation.czm.startTime, animation.czm.stopTime);
+                localAnimationTime = CesiumMath.clamp(localAnimationTime, runtimeAnimation.startTime, runtimeAnimation.stopTime);
 
-                animateChannels(model, scheduledAnimation, localAnimationTime);
+                animateChannels(runtimeAnimation, localAnimationTime);
 
                 if (defined(scheduledAnimation.update)) {
                     events.push({

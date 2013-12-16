@@ -250,6 +250,10 @@ define([
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
+        this._runtime = {
+            animations : undefined
+        };
+
         this._skinnedNodes = [];
         this._commandLists = new CommandLists();
         this._pickIds = [];
@@ -571,7 +575,6 @@ define([
                 source = canvas;
             }
 
-// TODO: consider format in addition to internalFormat?  https://github.com/KhronosGroup/glTF/issues/195
 // TODO: texture cache
             var tx;
 
@@ -668,16 +671,27 @@ define([
         }
     }
 
+    function getChannelEvaluator(runtimeNode, targetPath, spline) {
+        return function(localAnimationTime) {
+            runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
+        };
+    }
+
     function createAnimations(model) {
         var loadResources = model._loadResources;
 
-         if (!loadResources.finishedPendingLoads()) {
-             return;
-         }
+        if (!loadResources.finishedPendingLoads()) {
+            return;
+        }
 
-         var animations = model.gltf.animations;
-         var accessors = model.gltf.accessors;
-         var name;
+        model._runtime.animations = {
+        };
+
+        var gltf = model.gltf;
+        var nodes = gltf.nodes;
+        var animations = gltf.animations;
+        var accessors = gltf.accessors;
+        var name;
 
          for (var animationName in animations) {
              if (animations.hasOwnProperty(animationName)) {
@@ -694,32 +708,31 @@ define([
                      }
                  }
 
-                 for (name in samplers) {
-                     if (samplers.hasOwnProperty(name)) {
-                         var sampler = samplers[name];
-                         sampler.czm = {
-                             spline : ModelCache.getAnimationSpline(model, animationName, animation, name, sampler, parameterValues)
-                         };
-                     }
-                 }
-
                  // Find start and stop time for the entire animation
                  var startTime = Number.MAX_VALUE;
                  var stopTime = -Number.MAX_VALUE;
 
-                 for (name in channels) {
-                     if (channels.hasOwnProperty(name)) {
-                         var channel = channels[name];
-                         var times = parameterValues[samplers[channel.sampler].input];
+                 var length = channels.length;
+                 var channelEvaluators = new Array(length);
 
-                         startTime = Math.min(startTime, times[0]);
-                         stopTime = Math.max(stopTime, times[times.length - 1]);
-                     }
+                 for (var i = 0; i < length; ++i) {
+                     var channel = channels[i];
+                     var target = channel.target;
+                     var sampler = samplers[channel.sampler];
+                     var times = parameterValues[sampler.input];
+
+                     startTime = Math.min(startTime, times[0]);
+                     stopTime = Math.max(stopTime, times[times.length - 1]);
+
+                     var spline = ModelCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
+                     // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
+                     channelEvaluators[i] = getChannelEvaluator(nodes[target.id].czm, target.path, spline);
                  }
 
-                 animation.czm = {
+                 model._runtime.animations[animationName] = {
                      startTime : startTime,
-                     stopTime : stopTime
+                     stopTime : stopTime,
+                     channelEvaluators : channelEvaluators
                  };
              }
          }
