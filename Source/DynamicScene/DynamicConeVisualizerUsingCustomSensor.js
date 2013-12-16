@@ -356,9 +356,9 @@ define([
             defined(orientation) &&
             (!Cartesian3.equals(position, cone._visualizerPosition) ||
              !Quaternion.equals(orientation, cone._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
             cone._visualizerPosition = Cartesian3.clone(position, cone._visualizerPosition);
             cone._visualizerOrientation = Quaternion.clone(orientation, cone._visualizerOrientation);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(orientation, orientation), matrix3Scratch), position, cone.modelMatrix);
         }
 
         cone.material = MaterialProperty.getValue(time, dynamicCone._outerMaterial, cone.material);

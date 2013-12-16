@@ -264,9 +264,9 @@ define([
             defined(orientation) &&
             (!Cartesian3.equals(position, pyramid._visualizerPosition) ||
              !Quaternion.equals(orientation, pyramid._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
             Cartesian3.clone(position, pyramid._visualizerPosition);
             Quaternion.clone(orientation, pyramid._visualizerOrientation);
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(Quaternion.conjugate(orientation, orientation), matrix3Scratch), position, pyramid.modelMatrix);
         }
 
         pyramid.material = MaterialProperty.getValue(time, dynamicPyramid._material, pyramid.material);
