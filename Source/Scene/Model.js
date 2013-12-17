@@ -380,9 +380,9 @@ define([
         }
     }
 
-    var scratchAxis = new Cartesian3();
-
     function parseNodes(model) {
+        var runtimeNodes = {};
+
         var nodes = model.gltf.nodes;
         var skinnedNodes = model._skinnedNodes;
 
@@ -390,11 +390,28 @@ define([
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
+                runtimeNodes[name] = {
+                    matrix : undefined,
+                    translation : undefined,
+                    rotation : undefined,
+                    scale : undefined,
+
+                    transformToRoot : new Matrix4(),
+                    computedMatrix : new Matrix4(),
+
+                    commands : undefined,
+
+                    children : [],
+                    parents : []
+                };
+
                 if (defined(node.instanceSkin)) {
                     skinnedNodes.push(node);
                 }
             }
         }
+
+        model._runtime.nodes = runtimeNodes;
     }
 
     function parse(model) {
@@ -675,8 +692,7 @@ define([
     function createRuntimeAnimations(model) {
         var loadResources = model._loadResources;
 
-//        if (!loadResources.finishedPendingLoads()) {
-        if (loadResources.createRuntimeNodes) {
+        if (!loadResources.finishedPendingLoads()) {
             return;
         }
 
@@ -982,9 +998,9 @@ define([
     // TODO: function for gltfUniformFunctions[WebGLRenderingContext.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
 
     function getUniformFunctionFromSource(source, model) {
-        // TODO: faster in closure.  Chicken and egg.
+        var runtimeNode = model._runtime.nodes[source];
         return function() {
-            return model._runtime.nodes[source].computedMatrix;
+            return runtimeNode.computedMatrix;
         };
     }
 
@@ -1212,7 +1228,7 @@ define([
         loadResources.createRuntimeNodes = false;
 
         var rootNodes = [];
-        var runtimeNodes = {};
+        var runtimeNodes = model._runtime.nodes;
 
         var gltf = model.gltf;
         var nodes = gltf.nodes;
@@ -1222,6 +1238,7 @@ define([
         var length = sceneNodes.length;
 
         var stack = [];
+        var axis = new Cartesian3();
 
         var matrix;
         var translation;
@@ -1242,38 +1259,16 @@ define([
 
                 // Node hierarchy is a DAG so a node can have more than one parent so it may already exist
                 var runtimeNode = runtimeNodes[n.id];
-                if (!defined(runtimeNode)) {
+                if (runtimeNode.parents.length === 0) {
                     if (defined(gltfNode.matrix)) {
-                        matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
-                        translation = undefined;
-                        rotation = undefined;
-                        scale = undefined;
+                        runtimeNode.matrix = Matrix4.fromColumnMajorArray(gltfNode.matrix);
                     } else {
                         // TRS converted to Cesium types
-                        var axis = Cartesian3.fromArray(gltfNode.rotation, 0, scratchAxis);
-                        var angle = gltfNode.rotation[3];
-
-                        matrix = undefined;
-                        translation = Cartesian3.fromArray(gltfNode.translation);
-                        rotation = Quaternion.fromAxisAngle(axis, angle);
-                        scale = Cartesian3.fromArray(gltfNode.scale);
+                        axis = Cartesian3.fromArray(gltfNode.rotation, 0, axis);
+                        runtimeNode.translation = Cartesian3.fromArray(gltfNode.translation);
+                        runtimeNode.rotation = Quaternion.fromAxisAngle(axis, gltfNode.rotation[3]);
+                        runtimeNode.scale = Cartesian3.fromArray(gltfNode.scale);
                     }
-
-                    runtimeNode = {
-                        matrix : matrix,
-                        translation : translation,
-                        rotation : rotation,
-                        scale : scale,
-
-                        transformToRoot : new Matrix4(),
-                        computedMatrix : undefined,
-
-                        commands : undefined,
-
-                        children : [],
-                        parents : []
-                    };
-                    runtimeNodes[n.id] = runtimeNode;
                 }
 
                 if (defined(parentRuntimeNode)) {
@@ -1311,11 +1306,11 @@ define([
         createTextures(model, context);
 
         createSkins(model);
+        createRuntimeAnimations(model);
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
         createRuntimeNodes(model, context); // using glTF scene
-        createRuntimeAnimations(model);     // depends on runtime nodes being created.
     }
 
     ///////////////////////////////////////////////////////////////////////////
