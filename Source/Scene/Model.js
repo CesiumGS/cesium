@@ -266,7 +266,9 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            textures : {}
+            textures : {},
+
+            samplers : {}
         };
 
         this._skinnedNodes = [];
@@ -531,19 +533,18 @@ define([
         if (loadResources.createSamplers) {
             loadResources.createSamplers = false;
 
+            var rendererSamplers = model._rendererResources.samplers;
             var samplers = model.gltf.samplers;
             for (var name in samplers) {
                 if (samplers.hasOwnProperty(name)) {
                     var sampler = samplers[name];
 
-                    sampler.czm = {
-                        sampler : context.createSampler({
-                            wrapS : sampler.wrapS,
-                            wrapT : sampler.wrapT,
-                            minificationFilter : sampler.minFilter,
-                            magnificationFilter : sampler.magFilter
-                        })
-                    };
+                    rendererSamplers[name] = context.createSampler({
+                        wrapS : sampler.wrapS,
+                        wrapT : sampler.wrapT,
+                        minificationFilter : sampler.minFilter,
+                        magnificationFilter : sampler.magFilter
+                    });
                 }
             }
         }
@@ -552,19 +553,19 @@ define([
     function createTextures(model, context) {
         var loadResources = model._loadResources;
         var textures = model.gltf.textures;
-        var samplers = model.gltf.samplers;
+        var rendererSamplers = model._rendererResources.samplers;
 
         // Create one texture per frame
         if (loadResources.texturesToCreate.length > 0) {
             var textureToCreate = loadResources.texturesToCreate.dequeue();
             var texture = textures[textureToCreate.name];
-            var sampler = samplers[texture.sampler];
+            var sampler = rendererSamplers[texture.sampler];
 
             var mipmap =
-                (sampler.minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-                (sampler.minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-                (sampler.minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-                (sampler.minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
             var requiresNpot = mipmap ||
                 (sampler.wrapS === TextureWrap.REPEAT) ||
                 (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
@@ -599,7 +600,7 @@ define([
             if (mipmap) {
                 tx.generateMipmap();
             }
-            tx.setSampler(sampler.czm.sampler);
+            tx.setSampler(sampler);
 
             model._rendererResources.textures[textureToCreate.name] = tx;
         }
