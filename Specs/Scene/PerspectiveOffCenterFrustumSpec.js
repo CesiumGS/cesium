@@ -171,4 +171,16 @@ defineSuite([
             return frustum.infiniteProjectionMatrix;
         }).toThrowDeveloperError();
     });
+
+    it('clone', function() {
+        var frustum2 = frustum.clone();
+        expect(frustum).toEqual(frustum2);
+    });
+
+    it('clone with result parameter', function() {
+        var result = new PerspectiveOffCenterFrustum();
+        var frustum2 = frustum.clone(result);
+        expect(frustum2).toBe(result);
+        expect(frustum).toEqual(frustum2);
+    });
 });
