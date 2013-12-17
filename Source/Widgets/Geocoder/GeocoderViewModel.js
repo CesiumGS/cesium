@@ -279,6 +279,7 @@ define([
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
 
                 camera.transform = Matrix4.IDENTITY;
+                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
             }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
