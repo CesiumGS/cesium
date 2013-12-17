@@ -365,20 +365,32 @@ define([
 
     /**
      * Returns a duplicate of a PerspectiveOffCenterFrustum instance.
-     *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @returns {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
+     * @param {PerspectiveOffCenterFrustum} [result] The object onto which to store the result.
+     * @returns {PerspectiveOffCenterFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
      */
-    PerspectiveOffCenterFrustum.prototype.clone = function() {
-        var frustum = new PerspectiveOffCenterFrustum();
-        frustum.right = this.right;
-        frustum.left = this.left;
-        frustum.top = this.top;
-        frustum.bottom = this.bottom;
-        frustum.near = this.near;
-        frustum.far = this.far;
-        return frustum;
+    PerspectiveOffCenterFrustum.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new PerspectiveOffCenterFrustum();
+        }
+
+        result.right = this.right;
+        result.left = this.left;
+        result.top = this.top;
+        result.bottom = this.bottom;
+        result.near = this.near;
+        result.far = this.far;
+
+        // force update of clone to compute matrices
+        result._left = undefined;
+        result._right = undefined;
+        result._top = undefined;
+        result._bottom = undefined;
+        result._near = undefined;
+        result._far = undefined;
+
+        return result;
     };
 
     /**
