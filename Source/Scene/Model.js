@@ -95,12 +95,12 @@ define([
 
         this.createSamplers = true;
         this.createSkins = true;
-        this.createAnimations = true;
+        this.createRuntimeAnimations = true;
         this.createVertexArrays = true;
         this.createRenderStates = true;
         this.createUniformMaps = true;
         this.createCommands = true;
-        this.createNodes = true;
+        this.createRuntimeNodes = true;
     }
 
     LoadResources.prototype.finishedPendingLoads = function() {
@@ -435,7 +435,7 @@ define([
                 bufferView.czm.webglBuffer = vertexBuffer;
             }
 
-            // bufferViews referencing animations are ignored here and handled in createAnimations.
+            // bufferViews referencing animations are ignored here and handled in createRuntimeAnimations.
         }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
@@ -672,18 +672,18 @@ define([
         };
     }
 
-    function createAnimations(model) {
+    function createRuntimeAnimations(model) {
         var loadResources = model._loadResources;
 
 //        if (!loadResources.finishedPendingLoads()) {
-        if (loadResources.createNodes) {
+        if (loadResources.createRuntimeNodes) {
             return;
         }
 
-        if (!loadResources.createAnimations) {
+        if (!loadResources.createRuntimeAnimations) {
             return;
         }
-        loadResources.createAnimations = false;
+        loadResources.createRuntimeAnimations = false;
 
         model._runtime.animations = {
         };
@@ -1199,17 +1199,17 @@ define([
         }
     }
 
-    function createNodes(model, context) {
+    function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
             return;
         }
 
-        if (!loadResources.createNodes) {
+        if (!loadResources.createRuntimeNodes) {
             return;
         }
-        loadResources.createNodes = false;
+        loadResources.createRuntimeNodes = false;
 
         var rootNodes = [];
         var runtimeNodes = {};
@@ -1314,8 +1314,8 @@ define([
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
         createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
-        createNodes(model, context);        // using glTF scene
-        createAnimations(model);            // depends on runtime nodes being created.
+        createRuntimeNodes(model, context); // using glTF scene
+        createRuntimeAnimations(model);     // depends on runtime nodes being created.
     }
 
     ///////////////////////////////////////////////////////////////////////////
