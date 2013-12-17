@@ -74,8 +74,19 @@ define([
          * Determines if primitives in this composite will be shown.
          *
          * @type Boolean
+         * @default true
          */
         this.show = true;
+
+        /**
+         * Determines if the primitives in this composite should be sorted. If set to <code>true</code>,
+         * an attempt will be made to sort the primitives; otherwise, the primitives are assumed to be sorted
+         * in the correct drawing order.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.sortPrimitives = true;
     };
 
     /**
@@ -392,6 +403,8 @@ define([
         return this._primitives.length;
     };
 
+    var scratchCommandList = [];
+
     /**
      * @private
      */
@@ -406,8 +419,25 @@ define([
 
         var primitives = this._primitives;
         var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            primitives[i].update(context, frameState, commandList);
+        var i;
+
+        if (this.sortPrimitives) {
+            for (i = 0; i < length; ++i) {
+                primitives[i].update(context, frameState, commandList);
+            }
+        } else {
+            for (i = 0; i < length; ++i) {
+                scratchCommandList.length = 0;
+                primitives[i].update(context, frameState, scratchCommandList);
+
+                var tempCommandListLength = scratchCommandList.length;
+                var commandListLength = commandList.length;
+                for (var j = 0; j < tempCommandListLength; ++j) {
+                    var command = scratchCommandList[j];
+                    command.index = tempCommandListLength + j;
+                    commandList.push(command);
+                }
+            }
         }
     };
 
