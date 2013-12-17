@@ -261,6 +261,13 @@ define([
             rootNodes : undefined,
             nodes : undefined
         };
+        this._rendererResources = {
+            bufferViews : {},
+            vertexArrays : {},
+            programs : {},
+            pickPrograms : {},
+            textures : {}
+        };
 
         this._skinnedNodes = [];
         this._commandLists = new CommandLists();
@@ -436,20 +443,18 @@ define([
         var bufferView;
         var bufferViews = model.gltf.bufferViews;
         var buffers = loadResources.buffers;
+        var rendererBufferViews = model._rendererResources.bufferViews;
 
         while (loadResources.bufferViewsToCreate.length > 0) {
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
-            bufferView.czm = {
-                webglBuffer : undefined
-            };
 
             if (bufferView.target === WebGLRenderingContext.ARRAY_BUFFER) {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
                 vertexBuffer.setVertexArrayDestroyable(false);
-                bufferView.czm.webglBuffer = vertexBuffer;
+                rendererBufferViews[bufferViewName] = vertexBuffer;
             }
 
             // bufferViews referencing animations are ignored here and handled in createRuntimeAnimations.
@@ -464,11 +469,11 @@ define([
                 var instance = accessors[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(bufferView.czm.webglBuffer)) {
+                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBufferViews[instance.bufferView])) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
                     indexBuffer.setVertexArrayDestroyable(false);
-                    bufferView.czm.webglBuffer = indexBuffer;
+                    rendererBufferViews[instance.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -507,10 +512,7 @@ define([
             var vs = shaders[program.vertexShader];
             var fs = shaders[program.fragmentShader];
 
-            program.czm = {
-                program : context.getShaderCache().getShaderProgram(vs, fs, attributeLocations),
-                pickProgram : undefined
-            };
+            model._rendererResources.programs[name] = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
 
             if (model.allowPicking) {
              // TODO: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -518,7 +520,7 @@ define([
                     sources : [fs],
                     pickColorQualifier : 'uniform'
                 });
-                program.czm.pickProgram = context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations);
+                model._rendererResources.pickPrograms[name] = context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations);
             }
         }
     }
@@ -599,9 +601,7 @@ define([
             }
             tx.setSampler(sampler.czm.sampler);
 
-            texture.czm = {
-                texture : tx
-            };
+            model._rendererResources.textures[textureToCreate.name] = tx;
         }
     }
 
@@ -618,9 +618,8 @@ define([
         var parameters = technique.parameters;
         var pass = technique.passes[technique.pass];
         var instanceProgram = pass.instanceProgram;
-        var program = programs[instanceProgram.program];
         var attributes = instanceProgram.attributes;
-        var programAttributeLocations = program.czm.program.getVertexAttributes();
+        var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].getVertexAttributes();
 
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
@@ -757,59 +756,55 @@ define([
     function createVertexArrays(model, context) {
         var loadResources = model._loadResources;
 
-         if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
-             return;
-         }
+        if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
+            return;
+        }
 
-         if (!loadResources.createVertexArrays) {
-             return;
-         }
-         loadResources.createVertexArrays = false;
+        if (!loadResources.createVertexArrays) {
+            return;
+        }
+        loadResources.createVertexArrays = false;
 
-         var gltf = model.gltf;
-         var bufferViews = gltf.bufferViews;
-         var accessors = gltf.accessors;
-         var meshes = gltf.meshes;
-         var name;
+        var rendererBufferViews = model._rendererResources.bufferViews;
+        var rendererVertexArrays = model._rendererResources.vertexArrays;
+        var gltf = model.gltf;
+        var accessors = gltf.accessors;
+        var meshes = gltf.meshes;
 
-         for (name in meshes) {
-             if (meshes.hasOwnProperty(name)) {
-                 var primitives = meshes[name].primitives;
+        for (var meshName in meshes) {
+            if (meshes.hasOwnProperty(meshName)) {
+                var primitives = meshes[meshName].primitives;
+                var primitivesLength = primitives.length;
 
-                 for (name in primitives) {
-                     if (primitives.hasOwnProperty(name)) {
-                         var primitive = primitives[name];
+                for (var i = 0; i < primitivesLength; ++i) {
+                    var primitive = primitives[i];
 
-                         var attributeLocations = getAttributeLocations(model, primitive);
-                         var attrs = [];
-                         var primitiveAttributes = primitive.attributes;
-                         for (name in primitiveAttributes) {
-                             if (primitiveAttributes.hasOwnProperty(name)) {
-                                 var a = accessors[primitiveAttributes[name]];
+                    var attributeLocations = getAttributeLocations(model, primitive);
+                    var attrs = [];
+                    var primitiveAttributes = primitive.attributes;
+                    for (var attrName in primitiveAttributes) {
+                        if (primitiveAttributes.hasOwnProperty(attrName)) {
+                            var a = accessors[primitiveAttributes[attrName]];
 
-                                 var type = ModelTypes[a.type];
-                                 attrs.push({
-                                     index                  : attributeLocations[name],
-                                     vertexBuffer           : bufferViews[a.bufferView].czm.webglBuffer,
-                                     componentsPerAttribute : type.componentsPerAttribute,
-                                     componentDatatype      : type.componentDatatype,
-                                     normalize              : false,
-                                     offsetInBytes          : a.byteOffset,
-                                     strideInBytes          : a.byteStride
-                                 });
-                             }
-                         }
+                            var type = ModelTypes[a.type];
+                            attrs.push({
+                                index                  : attributeLocations[attrName],
+                                vertexBuffer           : rendererBufferViews[a.bufferView],
+                                componentsPerAttribute : type.componentsPerAttribute,
+                                componentDatatype      : type.componentDatatype,
+                                normalize              : false,
+                                offsetInBytes          : a.byteOffset,
+                                strideInBytes          : a.byteStride
+                            });
+                        }
+                    }
 
-                         var i = accessors[primitive.indices];
-                         var indexBuffer = bufferViews[i.bufferView].czm.webglBuffer;
-
-                         primitive.czm = {
-                             vertexArray : context.createVertexArray(attrs, indexBuffer)
-                         };
-                     }
-                 }
-             }
-         }
+                    var accessor = accessors[primitive.indices];
+                    var indexBuffer = rendererBufferViews[accessor.bufferView];
+                    rendererVertexArrays[meshName + '.primitive.' + i] = context.createVertexArray(attrs, indexBuffer);
+                }
+            }
+        }
     }
 
     function createRenderStates(model, context) {
@@ -913,13 +908,13 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getScalarUniformFunction(value, gltf) {
+    function getScalarUniformFunction(value, model) {
         return function() {
             return value;
         };
     }
 
-    function getVec2UniformFunction(value, gltf) {
+    function getVec2UniformFunction(value, model) {
         var v = Cartesian2.fromArray(value);
 
         return function() {
@@ -927,7 +922,7 @@ define([
         };
     }
 
-    function getVec3UniformFunction(value, gltf) {
+    function getVec3UniformFunction(value, model) {
         var v = Cartesian3.fromArray(value);
 
         return function() {
@@ -935,7 +930,7 @@ define([
         };
     }
 
-    function getVec4UniformFunction(value, gltf) {
+    function getVec4UniformFunction(value, model) {
         var v = Cartesian4.fromArray(value);
 
         return function() {
@@ -943,7 +938,7 @@ define([
         };
     }
 
-    function getMat2UniformFunction(value, gltf) {
+    function getMat2UniformFunction(value, model) {
         var v = Matrix2.fromColumnMajorArray(value);
 
         return function() {
@@ -951,7 +946,7 @@ define([
         };
     }
 
-    function getMat3UniformFunction(value, gltf) {
+    function getMat3UniformFunction(value, model) {
         var v = Matrix3.fromColumnMajorArray(value);
 
         return function() {
@@ -959,7 +954,7 @@ define([
         };
     }
 
-    function getMat4UniformFunction(value, gltf) {
+    function getMat4UniformFunction(value, model) {
         var v = Matrix4.fromColumnMajorArray(value);
 
         return function() {
@@ -967,9 +962,8 @@ define([
         };
     }
 
-    function getTextureUniformFunction(value, gltf) {
-        var texture = gltf.textures[value];
-        var tx = texture.czm.texture;
+    function getTextureUniformFunction(value, model) {
+        var tx = model._rendererResources.textures[value];
 
         return function() {
             return tx;
@@ -1032,7 +1026,7 @@ define([
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
-                var activeUniforms = programs[instanceProgram.program].czm.program.getAllUniforms();
+                var activeUniforms = model._rendererResources.programs[instanceProgram.program].getAllUniforms();
 
                 var parameterValues = {};
                 var jointMatrices = [];
@@ -1049,7 +1043,7 @@ define([
 
                             if (defined(instanceParameters[parameterName])) {
                                 // Parameter overrides by the instance technique
-                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], gltf);
+                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
                             } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
                                 // Map glTF semantic to Cesium automatic uniform
@@ -1058,7 +1052,7 @@ define([
                                 func = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
-                                func = gltfUniformFunctions[parameter.type](parameter.value, gltf);
+                                func = gltfUniformFunctions[parameter.type](parameter.value, model);
                             }
 
                             parameterValues[parameterName] = {
@@ -1103,12 +1097,14 @@ define([
 
         var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
-        var gltf = model.gltf;
+        var resources = model._rendererResources;
+        var rendererVertexArrays = resources.vertexArrays;
+        var rendererPrograms = resources.programs;
+        var rendererPickPrograms = resources.pickPrograms;
 
+        var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-
-        var programs = gltf.programs;
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
@@ -1142,7 +1138,7 @@ define([
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
-                var vertexArray = primitive.czm.vertexArray;
+                var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.type));  // glTF has offset in bytes.  Cesium has offsets in indices
                 var uniformMap = instanceTechnique.czm.uniformMap;
@@ -1166,7 +1162,7 @@ define([
                 command.vertexArray = vertexArray;
                 command.count = count;
                 command.offset = offset;
-                command.shaderProgram = programs[instanceProgram.program].czm.program;
+                command.shaderProgram = rendererPrograms[instanceProgram.program];
                 command.uniformMap = uniformMap;
                 command.renderState = rs;
                 command.owner = owner;
@@ -1195,7 +1191,7 @@ define([
                     pickCommand.vertexArray = vertexArray;
                     pickCommand.count = count;
                     pickCommand.offset = offset;
-                    pickCommand.shaderProgram = programs[instanceProgram.program].czm.pickProgram;
+                    pickCommand.shaderProgram = rendererPickPrograms[instanceProgram.program];
                     pickCommand.uniformMap = pickUniformMap;
                     pickCommand.renderState = rs;
                     pickCommand.owner = owner;
@@ -1584,13 +1580,10 @@ define([
         return false;
     };
 
-    function destroyCzm(property, resourceName) {
+    function destroy(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                var czm = property[name].czm;
-                if (defined(czm) && defined(czm[resourceName])) {
-                    czm[resourceName] = czm[resourceName].destroy();
-                }
+                property[name].destroy();
             }
         }
     }
@@ -1615,31 +1608,14 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-        var gltf = this.gltf;
-        destroyCzm(gltf.bufferViews, 'webglBuffer');
-        destroyCzm(gltf.programs, 'program');
-        destroyCzm(gltf.programs, 'pickProgram');
-        destroyCzm(gltf.textures, 'texture');
-
-        // TODO: destroy in this._runtime
-
-        var meshes = gltf.meshes;
-        var name;
-
-        for (name in meshes) {
-            if (meshes.hasOwnProperty(name)) {
-                var primitives = meshes[name].primitives;
-
-                for (name in primitives) {
-                    if (primitives.hasOwnProperty(name)) {
-                        var czm = primitives[name].czm;
-                        if (defined(czm) && defined(czm.vertexArray)) {
-                            czm.vertexArray = czm.vertexArray.destroy();
-                        }
-                    }
-                }
-            }
-        }
+        var resources = this._rendererResources;
+        destroy(resources.bufferViews);
+        destroy(resources.vertexArrays);
+        destroy(resources.programs);
+        destroy(resources.pickPrograms);
+        destroy(resources.textures);
+        resources = undefined;
+        this._rendererResources = undefined;
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
