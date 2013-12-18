@@ -193,6 +193,24 @@ defineSuite([
         expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
+    it('debugShowCommands tints commands', function() {
+        var c = new DrawCommand();
+        c.execute = function() {};
+        c.shaderProgram = scene.getContext().getShaderCache().getShaderProgram(
+            'void main() { gl_Position = vec4(1.0); }',
+            'void main() { gl_FragColor = vec4(1.0); }');
+
+        scene.getPrimitives().add(getMockPrimitive({
+            command : c
+        }));
+
+        scene.debugShowCommands = true;
+        scene.initializeFrame();
+        scene.render();
+        expect(c._debugColor).toBeDefined();
+        scene.debugShowCommands = false;
+    });
+
     it('opaque/translucent render order (1)', function() {
         var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 

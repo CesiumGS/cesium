@@ -34,6 +34,7 @@ define([
         './SceneTransforms',
         './FrameState',
         './OrthographicFrustum',
+        './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
@@ -75,6 +76,7 @@ define([
         SceneTransforms,
         FrameState,
         OrthographicFrustum,
+        PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
@@ -259,6 +261,20 @@ define([
          * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, commands are randomly shaded.  This is useful
+         * for performance analysis to see what parts of a scene or model are
+         * command-dense and could benefit from batching.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowCommands = false;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -571,43 +587,58 @@ define([
         }
     }
 
-    function createFrustumDebugFragmentShaderSource(command) {
-        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_frustumDebug_main()');
+    function getAttributeLocations(shaderProgram) {
+        var attributeLocations = {};
+        var attributes = shaderProgram.getVertexAttributes();
+        for (var a in attributes) {
+            if (attributes.hasOwnProperty(a)) {
+                attributeLocations[a] = attributes[a].index;
+            }
+        }
 
-        // Support up to three frustums.  If a command overlaps all
-        // three, it's code is not changed.
-        var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
-        var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
-        var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-
-        var pickMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_frustumDebug_main(); \n' +
-            '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n' +
-            '}';
-
-        return renamedFS + '\n' + pickMain;
+        return attributeLocations;
     }
 
-    function executeFrustumDebugCommand(command, context, passState) {
+    function createDebugFragmentShaderSource(command, scene) {
+        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+
+        var newMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_Debug_main(); \n';
+
+        if (scene.debugShowCommands) {
+            if (!defined(command._debugColor)) {
+                command._debugColor = Color.fromRandom();
+            }
+            var c = command._debugColor;
+            newMain += '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+        }
+
+        if (scene.debugShowFrustums) {
+            // Support up to three frustums.  If a command overlaps all
+            // three, it's code is not changed.
+            var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
+            var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
+            var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
+            newMain += '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+        }
+
+        newMain += '}';
+
+        return renamedFS + '\n' + newMain;
+    }
+
+    function executeDebugCommand(command, scene, context, passState) {
         if (defined(command.shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = command.shaderProgram;
-            var attributeLocations = {};
-            var attributes = sp.getVertexAttributes();
-            for (var a in attributes) {
-                if (attributes.hasOwnProperty(a)) {
-                    attributeLocations[a] = attributes[a].index;
-                }
-            }
+            var attributeLocations = getAttributeLocations(sp);
 
             command.shaderProgram = context.getShaderCache().getShaderProgram(
-                sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), attributeLocations);
-
+                sp.vertexShaderSource, createDebugFragmentShaderSource(command, scene), attributeLocations);
             command.execute(context, passState);
-
             command.shaderProgram.release();
             command.shaderProgram = sp;
         }
@@ -618,10 +649,10 @@ define([
             return;
         }
 
-        if (!scene.debugShowFrustums) {
-            command.execute(context, passState);
+        if (scene.debugShowCommands || scene.debugShowFrustums) {
+            executeDebugCommand(command, scene, context, passState);
         } else {
-            executeFrustumDebugCommand(command, context, passState);
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -681,12 +712,24 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    var scratchPerspectiveFrustum = new PerspectiveFrustum();
+    var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
+    var scratchOrthographicFrustum = new OrthographicFrustum();
+
     function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
+
+        var frustum;
+        if (defined(camera.frustum.fovy)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
 
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
@@ -705,7 +748,6 @@ define([
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
-
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
