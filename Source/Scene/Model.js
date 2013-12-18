@@ -99,7 +99,6 @@ define([
         this.createVertexArrays = true;
         this.createRenderStates = true;
         this.createUniformMaps = true;
-        this.createCommands = true;
         this.createRuntimeNodes = true;
     }
 
@@ -1365,8 +1364,12 @@ define([
                             for (var j = 0 ; j < meshCommandLength; ++j) {
                                 var primitiveCommand = meshCommand[j];
                                 var command = primitiveCommand.command;
-                                Matrix4.multiply(computedModelMatrix, transformToRoot, command.modelMatrix);
+                                Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
+
+                                // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
+                                // Preprocess this and store it with each node.
                                 BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                                //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                                 if (allowPicking) {
                                     var pickCommand = primitiveCommand.pickCommand;
@@ -1381,7 +1384,7 @@ define([
                     }
                 } else {
                     // Node has a light or camera
-                    n.computedMatrix = Matrix4.multiply(computedModelMatrix, transformToRoot, n.computedMatrix);
+                    n.computedMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                 }
 
                 var children = n.children;
@@ -1390,7 +1393,7 @@ define([
                     var child = children[k];
 
                     var childMatrix = getNodeMatrix(child, child.transformToRoot);
-                    Matrix4.multiply(transformToRoot, childMatrix, child.transformToRoot);
+                    Matrix4.multiplyTransformation(transformToRoot, childMatrix, child.transformToRoot);
                     nodeStack.push(child);
                 }
             }
@@ -1452,6 +1455,7 @@ define([
                 for (var k = 0; k < primitivesLength; ++k) {
                     var jointMatrices = materials[primitives[k].material].instanceTechnique.czm.jointMatrices;
                     for (var m = 0; m < inverseBindMatricesLength; ++m) {
+// TODO: replace these with Matrix4.multiplyTransformation below
 
                         // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
                         jointMatrices[m] = Matrix4.multiply(scratchObjectSpace, nodes[joints[m]].czm.transformToRoot, jointMatrices[m]);
