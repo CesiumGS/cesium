@@ -684,8 +684,8 @@ define([
         return Intersect.INSIDE;
     };
 
-    var transformCart4 = Cartesian4.clone(Cartesian4.UNIT_W);
     var columnScratch = new Cartesian3();
+
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
@@ -711,12 +711,32 @@ define([
             result = new BoundingSphere();
         }
 
-        Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
-
-        result.center = Cartesian3.clone(transformCart4, result.center);
+        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
         result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+
+        return result;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (!defined(transform)) {
+            throw new DeveloperError('transform is required.');
+        }
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.radius = sphere.radius;
 
         return result;
     };
