@@ -297,7 +297,23 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            return czmlInterval.unitQuaternion;
+            //TODO: Currently Quaternion convention in CZML is the opposite of what Cesium expects.
+            //To avoid unecessary CZML churn, we conjugate manually for now.  During the next big CZML
+            //update, we should remove this code and change the convention.
+            var unitQuaternion = czmlInterval.unitQuaternion;
+            if (defined(unitQuaternion)) {
+                if (unitQuaternion.length === 4) {
+                    return [-unitQuaternion[0], -unitQuaternion[1], -unitQuaternion[2], unitQuaternion[3]];
+                }
+
+                unitQuaternion = unitQuaternion.slice(0);
+                for (var i = 0; i < unitQuaternion.length; i += 5) {
+                    unitQuaternion[i + 1] = -unitQuaternion[i + 1];
+                    unitQuaternion[i + 2] = -unitQuaternion[i + 2];
+                    unitQuaternion[i + 3] = -unitQuaternion[i + 3];
+                }
+            }
+            return unitQuaternion;
         case Uri:
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:

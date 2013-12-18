@@ -835,7 +835,7 @@ define([
          * // Example
          * vec4 worldPosition = czm_inverseViewProjection * clipPosition;
          */
-        czm_inverseViewProjection : {
+        czm_inverseViewProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -847,7 +847,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseViewProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
@@ -908,7 +908,7 @@ define([
          * // Example
          * vec4 modelPosition = czm_inverseModelViewProjection * clipPosition;
          */
-        czm_inverseModelViewProjection : {
+        czm_inverseModelViewProjection : new AutomaticUniform({
             getSize : function() {
                 return 1;
             },
@@ -920,7 +920,7 @@ define([
             getValue : function(uniformState) {
                 return uniformState.getInverseModelViewProjection();
             }
-        },
+        }),
 
         /**
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that

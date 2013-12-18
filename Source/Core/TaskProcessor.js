@@ -79,7 +79,9 @@ define([
             workerModule : TaskProcessor._workerModulePrefix + processor._workerName
         };
 
-        if (defined(require.toUrl)) {
+        if (defined(TaskProcessor._loaderConfig)) {
+            bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
+        } else if (defined(require.toUrl)) {
             var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
             bootstrapMessage.loaderConfig.baseUrl = baseUrl;
         } else {
@@ -205,6 +207,7 @@ define([
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
+    TaskProcessor._loaderConfig = undefined;
 
     return TaskProcessor;
 });
