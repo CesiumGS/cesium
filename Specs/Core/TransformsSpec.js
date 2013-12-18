@@ -232,11 +232,11 @@ defineSuite([
         it('throws if the date parameter is not specified', function() {
             expect(function() {
                 Transforms.computeIcrfToFixedMatrix(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 Transforms.computeFixedToIcrfMatrix(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('works with data from STK Components', function() {
@@ -571,36 +571,36 @@ defineSuite([
     it('eastNorthUpToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('northEastDownToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.northEastDownToFixedFrame(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeTemeToPseudoFixedMatrix throws without a date', function() {
         expect(function() {
             Transforms.computeTemeToPseudoFixedMatrix(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without modelViewProjectionMatrix', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(undefined, Matrix4.IDENTITY, Cartesian3.ZERO);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without viewportTransformation', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, undefined, Cartesian3.ZERO);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without a point', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, Matrix4.IDENTITY, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

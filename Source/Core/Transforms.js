@@ -72,9 +72,11 @@ define([
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      */
     Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
+        //>>includeEnd('debug');
 
         // If x and y are zero, assume origin is at a pole, which is a special case.
         if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
@@ -176,9 +178,11 @@ define([
      * var transform = Transforms.northEastDownToFixedFrame(center);
      */
     Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
+        //>>includeEnd('debug');
 
         if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
             CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
@@ -282,9 +286,11 @@ define([
      * updateAndRender();
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
+        //>>includeEnd('debug');
 
         // GMST is actually computed using UT1.  We're using UTC as an approximation of UT1.
         // We do not want to use the function like convertTaiToUtc in JulianDate because
@@ -422,9 +428,11 @@ define([
      * updateAndRender();
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
+        //>>includeEnd('debug');
 
         var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
         if (!defined(fixedToIcrfMtx)) {
@@ -468,9 +476,11 @@ define([
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
+        //>>includeEnd('debug');
 
         // Compute pole wander
         var eop = Transforms.earthOrientationParameters.compute(date, eopScratch);
@@ -588,6 +598,7 @@ define([
      * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(modelViewProjectionMatrix)) {
             throw new DeveloperError('modelViewProjectionMatrix is required.');
         }
@@ -599,6 +610,7 @@ define([
         if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
+        //>>includeEnd('debug');
 
         var tmp = pointToWindowCoordinatesTemp;
 
