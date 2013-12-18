@@ -310,8 +310,7 @@ define([
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }
 
-        Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
-        return Quaternion.conjugate(result, result);
+        return Quaternion.multiply(sampledQuaternionTempQuaternion, sampledQuaternionQuaternion0, result);
     };
 
     /**
