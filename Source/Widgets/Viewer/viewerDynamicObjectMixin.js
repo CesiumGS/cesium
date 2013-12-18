@@ -82,6 +82,12 @@ define([
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
         }
 
+        //Subscribe to the geocoder search if it exists, so that we can
+        //clear the trackedObject when it is clicked.
+        if (defined(viewer.geocoder)) {
+            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearTrackedObject);
+        }
+
         //We need to subscribe to the data sources and collections so that we can clear the
         //tracked object when it is removed from the scene.
         function onDynamicCollectionChanged(collection, added, removed) {
