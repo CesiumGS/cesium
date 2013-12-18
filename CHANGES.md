@@ -9,7 +9,7 @@ Beta Releases
 * Breaking changes:
   * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
 
-           var viewer = new Viewer('cesiumContainer', { 
+           var viewer = new Viewer('cesiumContainer', {
                alpha : true
            });
 
@@ -23,6 +23,7 @@ Beta Releases
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
   * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
+* The minified, combined `Cesium.js` file now omits certain `DeveloperError` checks, to increase performance and reduce file size.  When developing your application, we recommend using the unminified version locally for early error detection, then deploying the minified version to production.
 * Added `CentralBody.maximumScreenSpaceError`.
 * Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
