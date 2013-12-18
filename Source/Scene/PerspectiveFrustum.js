@@ -197,19 +197,30 @@ define([
 
     /**
      * Returns a duplicate of a PerspectiveFrustum instance.
-     *
      * @memberof PerspectiveFrustum
      *
-     * @returns {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
+     * @param {PerspectiveFrustum} [result] The object onto which to store the result.
+     * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
      */
-    PerspectiveFrustum.prototype.clone = function() {
-        var frustum = new PerspectiveFrustum();
-        frustum.fovy = this.fovy;
-        frustum.aspectRatio = this.aspectRatio;
-        frustum.near = this.near;
-        frustum.far = this.far;
-        frustum._offCenterFrustum = this._offCenterFrustum.clone();
-        return frustum;
+    PerspectiveFrustum.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new PerspectiveFrustum();
+        }
+
+        result.fovy = this.fovy;
+        result.aspectRatio = this.aspectRatio;
+        result.near = this.near;
+        result.far = this.far;
+
+        // force update of clone to compute matrices
+        result._fovy = undefined;
+        result._aspectRatio = undefined;
+        result._near = undefined;
+        result._far = undefined;
+
+        this._offCenterFrustum.clone(result._offCenterFrustum);
+
+        return result;
     };
 
     /**
