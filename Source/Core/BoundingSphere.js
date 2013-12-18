@@ -352,9 +352,11 @@ define([
 
         stride = defaultValue(stride, 3);
 
+        //>>includeStart('debug', pragmas.debug);
         if (stride < 3) {
             throw new DeveloperError('stride must be 3 or greater.');
         }
+        //>>includeEnd('debug');
 
         var currentPos = fromPointsCurrentPos;
         currentPos.x = positions[0] + center.x;
@@ -506,9 +508,11 @@ define([
      * var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-0.5, -0.5, -0.5), new Cartesian3(0.5, 0.5, 0.5));
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(corner) || !defined(oppositeCorner)) {
             throw new DeveloperError('corner and oppositeCorner are required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -537,9 +541,11 @@ define([
      * var boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -587,6 +593,7 @@ define([
      * @exception {DeveloperError} right is required.
      */
     BoundingSphere.union = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -594,6 +601,7 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -628,6 +636,7 @@ define([
      * @exception {DeveloperError} point is required.
      */
     BoundingSphere.expand = function(sphere, point, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -635,6 +644,7 @@ define([
         if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
+        //>>includeEnd('debug');
 
         result = BoundingSphere.clone(sphere, result);
 
@@ -662,6 +672,7 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.intersect = function(sphere, plane) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -669,6 +680,7 @@ define([
         if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
+        //>>includeEnd('debug');
 
         var center = sphere.center;
         var radius = sphere.radius;
@@ -684,8 +696,8 @@ define([
         return Intersect.INSIDE;
     };
 
-    var transformCart4 = Cartesian4.clone(Cartesian4.UNIT_W);
     var columnScratch = new Cartesian3();
+
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
@@ -699,6 +711,33 @@ define([
      * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transform = function(sphere, transform, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        if (!defined(transform)) {
+            throw new DeveloperError('transform is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
+                Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
+                Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+
+        return result;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -710,13 +749,10 @@ define([
         if (!defined(result)) {
             result = new BoundingSphere();
         }
+        //>>includeEnd('debug');
 
-        Matrix4.multiplyByPoint(transform, sphere.center, transformCart4);
-
-        result.center = Cartesian3.clone(transformCart4, result.center);
-        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.radius = sphere.radius;
 
         return result;
     };
@@ -741,6 +777,7 @@ define([
      * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -752,6 +789,7 @@ define([
         if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Interval();
@@ -789,9 +827,11 @@ define([
      * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
+        //>>includeEnd('debug');
 
         projection = defaultValue(projection, projectTo2DProjection);
 

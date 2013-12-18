@@ -64,7 +64,7 @@ defineSuite([
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
             buffer = context.createVertexBuffer({}, BufferUsage.STATIC_DRAW);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates index buffer', function() {
@@ -105,7 +105,7 @@ defineSuite([
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
             buffer = context.createIndexBuffer({}, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('destroys', function() {
@@ -118,13 +118,13 @@ defineSuite([
     it('fails to create', function() {
         expect(function() {
             buffer = context.createVertexBuffer(0, BufferUsage.STATIC_DRAW);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create again', function() {
         expect(function() {
             buffer = context.createVertexBuffer(4, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to provide an array view', function() {

@@ -7,7 +7,7 @@
     body { font-family: sans-serif; }
     li { margin-top: 5px; }
     .outer > li { margin-top: 1.4em; }
-    .smallFont { font-size: 50%; }    
+    .smallFont { font-size: 60%; }
     </style>
 </head>
 
@@ -40,7 +40,8 @@
         Tests
         <ul>
             <li>
-                <a href="Specs/SpecRunner.html?skipWebGLValidation">Run all tests</a> <span class="smallFont">(<a href="Specs/SpecRunner.html">Run with WebGL validation</a>)</span>
+                <a href="Specs/SpecRunner.html?skipWebGLValidation">Run all tests</a>
+                <span class="smallFont">(<a href="Specs/SpecRunner.html">Run with WebGL validation</a>)</span>
             </li>
             <li>
                 <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
@@ -52,6 +53,10 @@
                 <a href="Specs/SpecRunner.html?category=All&amp;not=WebGL">Run only non-WebGL tests</a>
             </li>
             <li>
+                <a href="Specs/SpecRunner.html?built=true">Run all tests against combined file</a>
+                <span class="smallFont">(<a href="Specs/SpecRunner.html?built=true&release=true">Run all tests against combined file with debug code removed</a>)</span>
+            </li>
+            <li>
                 <a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">Run all tests with code coverage</a>
                 (build 'instrumentForCoverage' first.)
             </li>
@@ -61,6 +66,6 @@
         <a href="Build/Documentation/index.html">Documentation</a>
     </li>
 </ul>
-       
+
 </body>
 </html>
