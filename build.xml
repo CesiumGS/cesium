@@ -22,7 +22,7 @@
 	</target>
 
 	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
-		<copy todir="Build">
+		<copy todir="${buildDirectory}">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
@@ -30,8 +30,8 @@
 			</fileset>
 		</copy>
 
-		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
-		<replace file="Build/index.html" token="../Build/" value="" />
+		<replace file="${buildDirectory}/HelloWorld.html" token="../${buildDirectory}/" value="" />
+		<replace file="${buildDirectory}/index.html" token="../${buildDirectory}/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -72,11 +72,10 @@
 
 	<target name="makeZipFile" depends="release" description="Builds zip files containing all release files.">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
-			<fileset dir="Build">
+			<fileset dir="${buildDirectory}">
 				<include name="Cesium/**" />
 				<include name="Documentation/**" />
-				<include name="HelloWorld.html" />
-				<include name="index.html" />
+				<include name="*.html" />
 				<include name="server.js" />
 			</fileset>
 			<include name="LICENSE.md" />
@@ -85,7 +84,14 @@
 		</zip>
 
 		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
-			<include name="Build/**" />
+			<fileset dir="${buildDirectory}">
+				<include name="Cesium/**" />
+				<include name="CesiumUnminified/**" />
+				<include name="Documentation/**" />
+				<include name="Apps/**" />
+				<include name="*.html" />
+				<include name="server.js" />
+			</fileset>
 			<include name="Apps/**" />
 			<include name="Examples/**" />
 			<include name="Source/**" />
