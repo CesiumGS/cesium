@@ -21,9 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
 
-	<target name="combine" depends="build" description="Combines all source files into a single stand-alone script.">
-		<antcall target="combineJavaScript" />
-
+	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
@@ -351,7 +349,7 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
-		<condition property="debug" value="${pragmas.debug}">
+		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
 			<isset property="pragmas.debug" />
 		</condition>
 
@@ -359,7 +357,7 @@
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
-			<arg value="pragmas.debug=${debug}" />
+			<arg value="${debugOption}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -370,7 +368,7 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
-		<condition property="debug" value="${pragmas.debug}">
+		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
 			<isset property="pragmas.debug" />
 		</condition>
 
@@ -379,7 +377,7 @@
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
-			<arg value="pragmas.debug=${debug}" />
+			<arg value="${debugOption}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -394,7 +392,7 @@
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
-			<arg value="pragmas.debug=${debug}" />
+			<arg value="${debugOption}" />
 			<arg value="baseUrl=." />
 
 			<srcfile prefix="name=Workers/" />
