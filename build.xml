@@ -30,8 +30,8 @@
 			</fileset>
 		</copy>
 
-		<replace file="${buildDirectory}/HelloWorld.html" token="../${buildDirectory}/" value="" />
-		<replace file="${buildDirectory}/index.html" token="../${buildDirectory}/" value="" />
+		<replace file="${buildDirectory}/HelloWorld.html" token="../Build/" value="" />
+		<replace file="${buildDirectory}/index.html" token="../Build/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -84,14 +84,14 @@
 		</zip>
 
 		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
-			<fileset dir="${buildDirectory}">
+			<zipfileset dir="${buildDirectory}" prefix="Build">
 				<include name="Cesium/**" />
 				<include name="CesiumUnminified/**" />
 				<include name="Documentation/**" />
 				<include name="Apps/**" />
 				<include name="*.html" />
 				<include name="server.js" />
-			</fileset>
+			</zipfileset>
 			<include name="Apps/**" />
 			<include name="Examples/**" />
 			<include name="Source/**" />
@@ -535,10 +535,6 @@
 	</target>
 
 	<target name="buildApps" description="Create built versions of all example applications.">
-		<antcall target="combine">
-			<param name="build.minification" value="true" />
-		</antcall>
-
 		<antcall target="buildCesiumViewer" />
 	</target>
 
@@ -554,6 +550,7 @@
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=uglify2" />
+			<arg value="pragmas.debug=false" />
 			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
 			<arg value="name=CesiumViewer/CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
