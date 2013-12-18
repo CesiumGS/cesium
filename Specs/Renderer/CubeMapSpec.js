@@ -885,13 +885,13 @@ defineSuite([
     it('fails to create (description)', function() {
         expect(function() {
             cubeMap = context.createCubeMap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source)', function() {
         expect(function() {
             cubeMap = context.createCubeMap({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (width, no height)', function() {
@@ -899,7 +899,7 @@ defineSuite([
             cubeMap = context.createCubeMap({
                 width : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (width != height)', function() {
@@ -908,7 +908,7 @@ defineSuite([
                 width : 16,
                 height : 32
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (small width)', function() {
@@ -917,7 +917,7 @@ defineSuite([
                 width : 0,
                 height : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large width)', function() {
@@ -926,7 +926,7 @@ defineSuite([
                 width : context.getMaximumCubeMapSize() + 1,
                 height : context.getMaximumCubeMapSize() + 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (PixelFormat)', function() {
@@ -936,7 +936,7 @@ defineSuite([
                 height : 16,
                 pixelFormat : 'invalid PixelFormat'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws during creation if pixel format is depth or depth-stencil', function() {
@@ -946,7 +946,7 @@ defineSuite([
                 height : 16,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
@@ -969,7 +969,7 @@ defineSuite([
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source)', function() {
@@ -977,7 +977,7 @@ defineSuite([
             cubeMap = context.createCubeMap({
                 source : {}
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source width and height)', function() {
@@ -992,7 +992,7 @@ defineSuite([
                     negativeZ : blueOverRedImage // 1x2
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (source)', function() {

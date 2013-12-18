@@ -150,63 +150,63 @@ defineSuite([
     it('factorial throws for non-numbers', function() {
         expect(function() {
             CesiumMath.factorial({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('factorial throws for negative numbers', function() {
         expect(function() {
             CesiumMath.factorial(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('factorial throws for undefined', function() {
         expect(function() {
             CesiumMath.factorial();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('incrementWrap throws for minimum value >= maximum value', function() {
         expect(function() {
             CesiumMath.incrementWrap(5, 0, 10);
-        }).toThrow();
+        }).toThrowDeveloperError();
         expect(function() {
             CesiumMath.incrementWrap(5, 10, 10);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isPowerOfTwo throws for non-numbers', function() {
         expect(function() {
             CesiumMath.isPowerOfTwo({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isPowerOfTwo throws for negative numbers', function() {
         expect(function() {
             CesiumMath.isPowerOfTwo(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isPowerOfTwo throws for undefined', function() {
         expect(function() {
             CesiumMath.isPowerOfTwo();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('nextPowerOfTwo throws for non-numbers', function() {
         expect(function() {
             CesiumMath.nextPowerOfTwo({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('nextPowerOfTwo throws for negative numbers', function() {
         expect(function() {
             CesiumMath.nextPowerOfTwo(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('nextPowerOfTwo throws for undefined', function() {
         expect(function() {
             CesiumMath.nextPowerOfTwo();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

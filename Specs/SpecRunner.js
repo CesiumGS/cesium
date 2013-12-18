@@ -176,16 +176,50 @@ var afterAll;
     var readyToCreateTests = false;
     var createTests;
 
+    var built = getQueryParameter('built');
+    var release = getQueryParameter('release');
+    var loadTests = true;
+
     require.config({
-        baseUrl : getQueryParameter('baseUrl') || '../Source',
-        paths : {
-            'Specs' : '../Specs'
-        },
         waitSeconds : 30
     });
 
-    //start loading all of Cesium early, so it's all available for code coverage calculations.
-    require(['Cesium']);
+    // set up require for AMD, combined or minified and
+    // start loading all of Cesium early, so it's all available for code coverage calculations.
+    if (built) {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Build/Cesium',
+            paths : {
+                'Stubs' : '../Stubs'
+            },
+            shim : {
+                'Cesium' : {
+                    exports : 'Cesium'
+                }
+            }
+        });
+
+        require(['Cesium', 'Stubs/paths'], function(BuiltCesium, paths) {
+            paths.Specs = '../../Specs';
+
+            require.config({
+                paths : paths
+            });
+
+            requireTests();
+        });
+
+        loadTests = false;
+    } else {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Source',
+            paths : {
+                'Specs' : '../Specs'
+            }
+        });
+
+        require(['Cesium']);
+    }
 
     function allTestsReady() {
         return tests.every(function(test) {
@@ -243,39 +277,45 @@ var afterAll;
     xdefineSuite = function(deps, name, suite, categories) {
     };
 
-    //specs is an array defined by SpecList.js
-    require([
-             'Specs/addDefaultMatchers',
-             'Specs/equalsMethodEqualityTester'
-         ].concat(specs), function(
-             addDefaultMatchers,
-             equalsMethodEqualityTester) {
-        var env = jasmine.getEnv();
+    function requireTests() {
+        //specs is an array defined by SpecList.js
+        require([
+                 'Specs/addDefaultMatchers',
+                 'Specs/equalsMethodEqualityTester'
+             ].concat(specs), function(
+                 addDefaultMatchers,
+                 equalsMethodEqualityTester) {
+            var env = jasmine.getEnv();
 
-        env.beforeEach(addDefaultMatchers);
-        env.addEqualityTester(equalsMethodEqualityTester);
+            env.beforeEach(addDefaultMatchers(!release));
+            env.addEqualityTester(equalsMethodEqualityTester);
 
-        createTests = function() {
-            var reporter = new jasmine.HtmlReporter();
-            var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
-            var suites = jasmine.getEnv().currentRunner().suites();
+            createTests = function() {
+                var reporter = new jasmine.HtmlReporter();
+                var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
+                var suites = jasmine.getEnv().currentRunner().suites();
 
-            for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
-                var suite = suites[i];
-                if (isSuiteFocused(suite)) {
-                    suites.splice(i, 1);
-                    suites.splice(insertPoint, 0, suite);
-                    insertPoint++;
-                    i--;
+                for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
+                    var suite = suites[i];
+                    if (isSuiteFocused(suite)) {
+                        suites.splice(i, 1);
+                        suites.splice(insertPoint, 0, suite);
+                        insertPoint++;
+                        i--;
+                    }
                 }
-            }
 
-            env.addReporter(reporter);
-            env.specFilter = reporter.specFilter;
-            env.execute();
-        };
+                env.addReporter(reporter);
+                env.specFilter = reporter.specFilter;
+                env.execute();
+            };
 
-        readyToCreateTests = true;
-        createTestsIfReady();
-    });
+            readyToCreateTests = true;
+            createTestsIfReady();
+        });
+    }
+
+    if (loadTests) {
+        requireTests();
+    }
 }());
