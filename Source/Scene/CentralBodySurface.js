@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
@@ -31,6 +32,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         FeatureDetection,
         DeveloperError,
         EllipsoidalOccluder,
@@ -314,6 +316,8 @@ define([
         }
     }
 
+    var scratchCamera = new Cartographic();
+
     function selectTilesForRendering(surface, context, frameState) {
         var debug = surface._debug;
 
@@ -359,7 +363,7 @@ define([
         var cameraPosition = frameState.camera.positionWC;
 
         var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
-        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition);
+        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCamera);
 
         surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
 
