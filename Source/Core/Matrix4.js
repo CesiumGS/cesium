@@ -124,9 +124,11 @@ define([
      * DOC_TBA
      */
     Matrix4.fromArray = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
 
@@ -1353,12 +1355,14 @@ define([
      * DOC_TBA - Use doc similar to inverseTransformation
      */
     Matrix4.multiplyTransformation = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        //>>includeEnd('debug');
 
         var left0 = left[0];
         var left1 = left[1];
@@ -1646,12 +1650,14 @@ define([
      * DOC_TBA
      */
     Matrix4.multiplyByPointAsVector = function(matrix, cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        //>>includeEnd('debug');
 
         var vX = cartesian.x;
         var vY = cartesian.y;
@@ -1729,6 +1735,7 @@ define([
      * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
      */
     Matrix4.multiplyByPoint2 = function(matrix, cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
@@ -1736,6 +1743,7 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        //>>includeEnd('debug');
 
         var vX = cartesian.x;
         var vY = cartesian.y;

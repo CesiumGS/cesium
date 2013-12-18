@@ -737,6 +737,7 @@ define([
      * DOC_TBA
      */
     BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -748,6 +749,7 @@ define([
         if (!defined(result)) {
             result = new BoundingSphere();
         }
+        //>>includeEnd('debug');
 
         result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
         result.radius = sphere.radius;
