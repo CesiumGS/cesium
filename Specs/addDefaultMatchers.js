@@ -1,9 +1,11 @@
 /*global define*/
 define([
         'Core/defined',
+        'Core/DeveloperError',
         './equals'
     ], function(
         defined,
+        DeveloperError,
         equals) {
     "use strict";
 
@@ -101,14 +103,36 @@ define([
 
             toThrowDeveloperError : (function() {
                 if (debug) {
-                    return function(func) {
-                        var threw = false;
-                        try {
-                            func();
-                        } catch (e) {
-                            threw = true;
+                    return function(expected) {
+                        // based on the built-in Jasmine toThrow matcher
+                        var result = false;
+                        var exception;
+
+                        if (typeof this.actual !== 'function') {
+                            throw new Error('Actual is not a function');
                         }
-                        return threw;
+
+                        try {
+                            this.actual();
+                        } catch (e) {
+                            exception = e;
+                        }
+
+                        if (exception) {
+                            result = exception instanceof DeveloperError;
+                        }
+
+                        var not = this.isNot ? "not " : "";
+
+                        this.message = function() {
+                            if (result) {
+                                return ["Expected function " + not + "to throw DeveloperError, but it threw", exception.message || exception].join(' ');
+                            } else {
+                                return "Expected function to throw DeveloperError.";
+                            }
+                        };
+
+                        return result;
                     };
                 }
 
