@@ -86,12 +86,15 @@ define([
 
         var animations = this._model._runtime.animations;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for the {@see Model#readyToRender} event.');
         }
+        //>>includeEnd('debug');
 
         var animation = animations[options.name];
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(animation)) {
             throw new DeveloperError('options.name is required and must be a valid animation name.');
         }
@@ -99,6 +102,7 @@ define([
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
             throw new DeveloperError('options.speedup must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var scheduledAnimation = new ModelAnimation(options, animation);
         this._scheduledAnimations.push(scheduledAnimation);

@@ -281,9 +281,11 @@ define([
      * DOC_TBA
      */
     Model.fromText = function(options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required');
         }
+        //>>includeEnd('debug');
 
         var url = options.url;
         var basePath = '';
