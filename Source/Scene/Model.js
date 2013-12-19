@@ -1334,7 +1334,7 @@ define([
     var scratchSpheres = [];
     var scratchSubtract = new Cartesian3();
 
-    function updateModelMatrix(model, modelTransformChanged) {
+    function updateModelMatrix(model, modelTransformChanged, justLoaded) {
         var allowPicking = model.allowPicking;
         var gltf = model.gltf;
 
@@ -1352,7 +1352,6 @@ define([
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
 
-            n.anyAncestorDirty = modelTransformChanged;
             n.transformToRoot = getNodeMatrix(n);
             nodeStack.push(n);
 
@@ -1363,11 +1362,10 @@ define([
 
                 // This nodes transform needs to be updated if
                 // - It was targeted for animation this frame, or
-                // - Any of its ancestors were targeted for animation this frame, or
-                // - The model's transform changed this frame.  See above.
+                // - Any of its ancestors were targeted for animation this frame
                 var dirty = (n.dirty || n.anyAncestorDirty);
 
-                if (dirty) {
+                if (dirty || modelTransformChanged || justLoaded) {
                     if (defined(meshCommands)) {
                         // Node has meshes.  Update their commands.
 
@@ -1411,7 +1409,7 @@ define([
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = children[k];
 
-                    if (dirty) {
+                    if (dirty || justLoaded) {
                         var childMatrix = getNodeMatrix(child, child.transformToRoot);
                         Matrix4.multiplyTransformation(transformToRoot, childMatrix, child.transformToRoot);
                     }
@@ -1564,15 +1562,15 @@ define([
 
         if (this._state === ModelState.LOADED) {
             var animated = this.animations.update(frameState);
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded;
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale);
 
             // Update modelMatrix throughout the tree as needed
-            if (animated || modelTransformChanged) {
+            if (animated || modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
 
-                updateModelMatrix(this, modelTransformChanged);
+                updateModelMatrix(this, modelTransformChanged, justLoaded);
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
