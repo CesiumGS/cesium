@@ -149,7 +149,7 @@ define([
             }
         }
 
-        function onHomeButtonClicked() {
+        function clearObjects() {
             viewer.trackedObject = undefined;
             viewer.balloonedObject = undefined;
         }
@@ -157,13 +157,13 @@ define([
         //Subscribe to the home button beforeExecute event if it exists,
         // so that we can clear the trackedObject and balloon.
         if (defined(viewer.homeButton)) {
-            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, onHomeButtonClicked);
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearObjects);
         }
 
         //Subscribe to the geocoder search if it exists, so that we can
         //clear the trackedObject when it is clicked.
         if (defined(viewer.geocoder)) {
-            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearTrackedObject);
+            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearObjects);
         }
 
         //We need to subscribe to the data sources and collections so that we can clear the
