@@ -267,7 +267,9 @@ define([
             pickPrograms : {},
             textures : {},
 
-            samplers : {}
+            samplers : {},
+            renderStates : {},
+            uniformMaps : {}
         };
 
         this._skinnedNodes = [];
@@ -812,7 +814,7 @@ define([
 
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
-
+            var rendererRenderStates = model._rendererResources.renderStates;
             var techniques = model.gltf.techniques;
             for (var name in techniques) {
                 if (techniques.hasOwnProperty(name)) {
@@ -820,18 +822,16 @@ define([
                     var pass = technique.passes[technique.pass];
                     var states = pass.states;
 
-                    states.czm = {
-                        renderState : context.createRenderState({
-                            cull : {
-                                enabled : !!states.cullFaceEnable
-                            },
-                            depthTest : {
-                                enabled : !!states.depthTestEnable
-                            },
-                            depthMask : !!states.depthMask,
-                            blending : !!states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
-                        })
-                    };
+                    rendererRenderStates[name] = context.createRenderState({
+                        cull : {
+                            enabled : !!states.cullFaceEnable
+                        },
+                        depthTest : {
+                            enabled : !!states.depthTestEnable
+                        },
+                        depthMask : !!states.depthMask,
+                        blending : !!states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                    });
                 }
             }
         }
@@ -1010,15 +1010,15 @@ define([
         }
         loadResources.createUniformMaps = false;
 
-        var name;
         var gltf = model.gltf;
         var materials = gltf.materials;
         var techniques = gltf.techniques;
         var programs = gltf.programs;
+        var rendererUniformMaps = model._rendererResources.uniformMaps;
 
-        for (name in materials) {
-            if (materials.hasOwnProperty(name)) {
-                var material = materials[name];
+        for (var materialName in materials) {
+            if (materials.hasOwnProperty(materialName)) {
+                var material = materials[materialName];
                 var instanceTechnique = material.instanceTechnique;
                 var instanceParameters = instanceTechnique.values;
                 var technique = techniques[instanceTechnique.technique];
@@ -1032,7 +1032,7 @@ define([
                 var jointMatrices = [];
 
                 // Uniform parameters for this pass
-                for (name in uniforms) {
+                for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
                         // Only add active uniforms
                         if (defined(activeUniforms[name])) {
@@ -1073,9 +1073,9 @@ define([
                 }
 
                 instanceTechnique.czm = {
-                    uniformMap : uniformMap,
                     jointMatrices : jointMatrices
                 };
+                rendererUniformMaps[materialName] = uniformMap;
             }
         }
     }
@@ -1086,7 +1086,7 @@ define([
         };
     }
 
-    function createCommand(model, node, czmMeshesCommands, context) {
+    function createCommand(model, node, nodeCommands, context) {
         var opaqueColorCommands = model._commandLists.opaqueList;
         var translucentColorCommands = model._commandLists.translucentList;
 
@@ -1101,6 +1101,8 @@ define([
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
+        var rendererRenderStates = resources.renderStates;
+        var rendererUniformMaps = resources.uniformMaps;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
@@ -1120,8 +1122,8 @@ define([
             // The glTF node hierarchy is a DAG so a node can have more than one
             // parent, so a node may already have commands.  If so, append more
             // since they will have a different model matrix.
-            czmMeshesCommands[name] = defaultValue(czmMeshesCommands[name], []);
-            var meshesCommands = czmMeshesCommands[name];
+            nodeCommands[name] = defaultValue(nodeCommands[name], []);
+            var meshCommands = nodeCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
@@ -1141,9 +1143,9 @@ define([
                 var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.type));  // glTF has offset in bytes.  Cesium has offsets in indices
-                var uniformMap = instanceTechnique.czm.uniformMap;
+                var uniformMap = rendererUniformMaps[primitive.material];
                 var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
-                var rs = pass.states.czm.renderState;
+                var rs = rendererRenderStates[instanceTechnique.technique];
                 var owner = {
                     primitive : model,
                     id : model.id,
@@ -1202,7 +1204,7 @@ define([
                     }
                 }
 
-                meshesCommands.push({
+                meshCommands.push({
                     command : command,
                     pickCommand : pickCommand,
                     boundingSphere : boundingSphere
