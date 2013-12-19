@@ -31,51 +31,51 @@ defineSuite([
         frustum.fovy = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         frustum.fovy = CesiumMath.TWO_PI;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('negative aspect ratio throws an exception', function() {
         frustum.aspectRatio = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('out of range near plane throws an exception', function() {
         frustum.near = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('negative far plane throws an exception', function() {
         frustum.far = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no position throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no direction throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no up throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get frustum left plane', function() {
@@ -134,7 +134,7 @@ defineSuite([
     it('get pixel size throws without canvas dimensions', function() {
         expect(function() {
             return frustum.getPixelSize();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel size', function() {
@@ -165,6 +165,18 @@ defineSuite([
         var frustum = new PerspectiveFrustum();
         expect(function() {
             return frustum.infiniteProjectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
+    });
+
+    it('clone', function() {
+        var frustum2 = frustum.clone();
+        expect(frustum).toEqual(frustum2);
+    });
+
+    it('clone with result parameter', function() {
+        var result = new PerspectiveFrustum();
+        var frustum2 = frustum.clone(result);
+        expect(frustum2).toBe(result);
+        expect(frustum).toEqual(frustum2);
     });
 });

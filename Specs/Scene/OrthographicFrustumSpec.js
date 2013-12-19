@@ -146,15 +146,22 @@ defineSuite([
         expect(pixelSize.y).toEqual(2.0);
     });
 
-    it('clone', function() {
-        var clone = frustum.clone();
-        expect(clone).toEqual(frustum);
-    });
-
     it('throws with undefined frustum parameters', function() {
         var frustum = new OrthographicFrustum();
         expect(function() {
             return frustum.projectionMatrix;
         }).toThrow();
+    });
+
+    it('clone', function() {
+        var frustum2 = frustum.clone();
+        expect(frustum).toEqual(frustum2);
+    });
+
+    it('clone with result parameter', function() {
+        var result = new OrthographicFrustum();
+        var frustum2 = frustum.clone(result);
+        expect(frustum2).toBe(result);
+        expect(frustum).toEqual(frustum2);
     });
 });

@@ -22,7 +22,7 @@
 	</target>
 
 	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
-		<copy todir="Build">
+		<copy todir="${buildDirectory}">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
@@ -30,8 +30,8 @@
 			</fileset>
 		</copy>
 
-		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
-		<replace file="Build/index.html" token="../Build/" value="" />
+		<replace file="${buildDirectory}/HelloWorld.html" token="../Build/" value="" />
+		<replace file="${buildDirectory}/index.html" token="../Build/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -41,8 +41,23 @@
 		<antcall target="minifyCSS" />
 	</target>
 
+	<target name="combineRelease" description="Combines all source files into a single stand-alone script with debugging code removed.">
+		<antcall target="combine">
+			<param name="pragmas.debug" value="false" />
+		</antcall>
+	</target>
+
+	<target name="minifyRelease" description="Combines all source files into a single stand-alone, minified script with debugging code removed.">
+		<antcall target="minify">
+			<param name="pragmas.debug" value="false" />
+		</antcall>
+	</target>
+
 	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
-		<antcall target="minify" />
+		<antcall target="minifyRelease" />
+		<antcall target="combine">
+			<param name="build.debugUnminified" value="true" />
+		</antcall>
 		<antcall target="generateDocumentation" />
 		<antcall target="buildApps" />
 	</target>
@@ -57,11 +72,10 @@
 
 	<target name="makeZipFile" depends="release" description="Builds zip files containing all release files.">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
-			<fileset dir="Build">
+			<fileset dir="${buildDirectory}">
 				<include name="Cesium/**" />
 				<include name="Documentation/**" />
-				<include name="HelloWorld.html" />
-				<include name="index.html" />
+				<include name="*.html" />
 				<include name="server.js" />
 			</fileset>
 			<include name="LICENSE.md" />
@@ -70,7 +84,14 @@
 		</zip>
 
 		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
-			<include name="Build/**" />
+			<zipfileset dir="${buildDirectory}" prefix="Build">
+				<include name="Cesium/**" />
+				<include name="CesiumUnminified/**" />
+				<include name="Documentation/**" />
+				<include name="Apps/**" />
+				<include name="*.html" />
+				<include name="server.js" />
+			</zipfileset>
 			<include name="Apps/**" />
 			<include name="Examples/**" />
 			<include name="Source/**" />
@@ -144,6 +165,7 @@
 	<property name="buildDocumentationDirectory" location="${buildDirectory}/Documentation" />
 	<property name="buildDocumentationImagesDirectory" location="${buildDocumentationDirectory}/images" />
 	<property name="instrumentedDirectory" location="Instrumented" />
+	<property name="buildStubsDirectory" location="${buildDirectory}/Stubs" />
 
 	<path id="javascriptClassPath">
 		<pathelement path="${rhinoJarPath}" />
@@ -151,12 +173,22 @@
 		<pathelement path="${toolsDirectory}/commons-logging-1.1.1/commons-logging-1.1.1.jar" />
 	</path>
 
-	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
-		<include name="**/*.js" />
-		<exclude name="*.js" />
-		<exclude name="Workers/**" />
-		<exclude name="**/*.profile.js" />
-	</fileset>
+	<pathconvert property="cesiumJsFileSetPath" pathsep=",">
+		<union>
+			<fileset dir="${sourceDirectory}">
+				<include name="**/*.js" />
+				<exclude name="*.js" />
+				<exclude name="Workers/**" />
+				<exclude name="**/*.profile.js" />
+			</fileset>
+			<fileset dir="${sourceDirectory}">
+				<include name="Workers/createTaskProcessorWorker.js" />
+			</fileset>
+		</union>
+		<globmapper from="${sourceDirectory}/*" to="*" handledirsep="true" />
+	</pathconvert>
+
+	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet" includes="${cesiumJsFileSetPath}" />
 
 	<fileset dir="${sourceDirectory}" id="cesiumWorkersJsFileSet">
 		<include name="**/*.js" />
@@ -201,6 +233,12 @@
 		<attribute name="jshintoptionspath" />
 		<attribute name="sandcastlejshintoptionspath" />
 		<attribute name="failureproperty" />
+		<element name="sourcefiles" type="fileset" />
+	</scriptdef>
+
+	<scriptdef name="generateStubs" language="javascript" src="${tasksDirectory}/generateStubs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<attribute name="stuboutput" />
+		<attribute name="pathsoutput" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
@@ -287,6 +325,11 @@
 		<!-- create combined Cesium.js	-->
 		<antcall target="combineJavaScript.combineCesium" />
 
+		<mkdir dir="${buildStubsDirectory}" />
+		<generateStubs stuboutput="${buildStubsDirectory}/Cesium.js" pathsoutput="${buildStubsDirectory}/paths.js">
+			<sourcefiles refid="cesiumJsFileSet" />
+		</generateStubs>
+
 		<!-- create combined Cesium.js workers -->
 		<antcall target="combineJavaScript.combineCesiumWorkers" />
 
@@ -312,10 +355,15 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
+		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
+			<isset property="pragmas.debug" />
+		</condition>
+
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
+			<arg value="${debugOption}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -326,11 +374,16 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
+		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
+			<isset property="pragmas.debug" />
+		</condition>
+
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
+			<arg value="${debugOption}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -345,6 +398,7 @@
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
+			<arg value="${debugOption}" />
 			<arg value="baseUrl=." />
 
 			<srcfile prefix="name=Workers/" />
@@ -384,7 +438,16 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript.copyUnminified" unless="${build.minification}">
+	<target name="combineJavascript.checkCopy">
+		<condition property="combineJavascript.noCopy">
+			<or>
+				<istrue value="${build.minification}" />
+				<isset property="build.debugUnminified" />
+			</or>
+		</condition>
+	</target>
+
+	<target name="combineJavaScript.copyUnminified" depends="combineJavascript.checkCopy" unless="${combineJavascript.noCopy}">
 		<copy todir="${buildOutputDirectory}">
 			<fileset dir="${unminifiedOutputDirectory}" />
 		</copy>
@@ -472,10 +535,6 @@
 	</target>
 
 	<target name="buildApps" description="Create built versions of all example applications.">
-		<antcall target="combine">
-			<param name="build.minification" value="true" />
-		</antcall>
-
 		<antcall target="buildCesiumViewer" />
 	</target>
 
@@ -491,6 +550,7 @@
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=uglify2" />
+			<arg value="pragmas.debug=false" />
 			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
 			<arg value="name=CesiumViewer/CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />

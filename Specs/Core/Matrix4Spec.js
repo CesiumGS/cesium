@@ -988,7 +988,7 @@ defineSuite([
     it('abs throws without a matrix', function() {
         expect(function() {
             return Matrix4.abs();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('abs works without a result parameter', function() {
@@ -1027,67 +1027,67 @@ defineSuite([
     it('fromRowMajorArray throws with undefined parameter', function() {
         expect(function() {
             Matrix4.fromRowMajorArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromColumnMajorArray throws with undefined parameter', function() {
         expect(function() {
             Matrix4.fromColumnMajorArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRotationTranslation throws without rotation parameter', function() {
         expect(function() {
             Matrix4.fromRotationTranslation(undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRotationTranslation throws without translation parameter', function() {
         expect(function() {
             Matrix4.fromRotationTranslation(new Matrix4(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromTranslationQuaternionRotationScale throws without translation parameter', function() {
         expect(function() {
             Matrix4.fromTranslationQuaternionRotationScale(undefined, new Quaternion(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromTranslationQuaternionRotationScale throws without rotation parameter', function() {
         expect(function() {
             Matrix4.fromTranslationQuaternionRotationScale(new Matrix3(), undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromTranslationQuaternionRotationScale throws without scale parameter', function() {
         expect(function() {
             Matrix4.fromTranslationQuaternionRotationScale(new Matrix3(), new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromTranslation throws without translation parameter', function() {
         expect(function() {
             Matrix4.fromTranslation(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromScale throws without scale parameter', function() {
         expect(function() {
             Matrix4.fromScale(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromUniformScale throws without scale parameter', function() {
         expect(function() {
             Matrix4.fromUniformScale(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromCamera throws without camera', function() {
         expect(function() {
             Matrix4.fromCamera(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromCamera throws without eye', function() {
@@ -1096,7 +1096,7 @@ defineSuite([
                 target : Cartesian3.negate(Cartesian3.UNIT_Z),
                 up : Cartesian3.UNIT_Y
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromCamera throws without target', function() {
@@ -1105,7 +1105,7 @@ defineSuite([
                 eye : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Y
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromCamera throws without up', function() {
@@ -1114,149 +1114,149 @@ defineSuite([
                 eye : Cartesian3.ZERO,
                 target : Cartesian3.negate(Cartesian3.UNIT_Z)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(undefined, right, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, undefined, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, undefined, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, undefined, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, top, undefined, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createOrthographicOffCenter throws without far', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, near = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, top, near, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (undefined, right, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, undefined, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, undefined, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, undefined, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, top, undefined, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveOffCenter throws without far', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, near = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, top, near, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createInfinitePerspectiveOffCenter throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (undefined, right, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createInfinitePerspectiveOffCenter throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, undefined, bottom, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createInfinitePerspectiveOffCenter throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, undefined, top, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createInfinitePerspectiveOffCenter throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, undefined, near, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, undefined, far);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
     it('createPerspectiveFieldOfView throws with out of range y field of view', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(0, 1, 2, 3);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveFieldOfView throws with out of range aspect', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 0, 2, 3);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveFieldOfView throws with out of range near', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 1, 0, 3);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createPerspectiveFieldOfView throws with out of range far', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 1, 2, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static clone returns undefined without matrix parameter', function() {
@@ -1266,7 +1266,7 @@ defineSuite([
     it('static toArray throws without matrix parameter', function() {
         expect(function() {
             Matrix4.toArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getElement throws without row parameter', function() {
@@ -1274,7 +1274,7 @@ defineSuite([
         var col = 0.0;
         expect(function() {
             Matrix4.getElementIndex(col, row);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getElement throws without column parameter', function() {
@@ -1282,34 +1282,34 @@ defineSuite([
         var col;
         expect(function() {
             Matrix4.getElementIndex(col, row);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getColumn throws without matrix parameter', function() {
         expect(function() {
             Matrix4.getColumn(undefined, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getColumn throws without of range index parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.getColumn(matrix, 4);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without matrix parameter', function() {
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.setColumn(undefined, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without cartesian parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.setColumn(matrix, 1, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without of range index parameter', function() {
@@ -1317,34 +1317,34 @@ defineSuite([
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.setColumn(matrix, 4, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getRow throws without matrix parameter', function() {
         expect(function() {
             Matrix4.getRow(undefined, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getRow throws without of range index parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.getRow(matrix, 4);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without matrix parameter', function() {
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.setRow(undefined, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without cartesian parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.setRow(matrix, 1, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without of range index parameter', function() {
@@ -1352,138 +1352,138 @@ defineSuite([
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.setRow(matrix, 4, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no left parameter', function() {
         var right = new Matrix4();
         expect(function() {
             Matrix4.multiply(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no right parameter', function() {
         var left = new Matrix4();
         expect(function() {
             Matrix4.multiply(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByTranslation throws with no matrix parameter', function() {
         var translation = new Cartesian3();
         expect(function() {
             Matrix4.multiplyByTranslation(undefined, translation);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByTranslation throws with no translation parameter', function() {
         var m = new Matrix4();
         expect(function() {
             Matrix4.multiplyByTranslation(m, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByUniformScale throws with no matrix parameter', function() {
         expect(function() {
             Matrix4.multiplyByUniformScale(undefined, 2.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByUniformScale throws with no scale parameter', function() {
         var m = new Matrix4();
         expect(function() {
             Matrix4.multiplyByUniformScale(m, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScale throws with no matrix parameter', function() {
         expect(function() {
             Matrix4.multiplyByScale(undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScale throws with no scale parameter', function() {
         var m = new Matrix4();
         expect(function() {
             Matrix4.multiplyByScale(m, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByVector throws with no matrix parameter', function() {
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.multiplyByVector(undefined, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByVector throws with no cartesian parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.multiplyByVector(matrix, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByPoint throws with no matrix parameter', function() {
         var cartesian = new Cartesian4();
         expect(function() {
             Matrix4.multiplyByPoint(undefined, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByPoint throws with no cartesian parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.multiplyByPoint(matrix, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no matrix parameter', function() {
         expect(function() {
             Matrix4.multiplyByScalar(undefined, 2);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with non-numeric scalar parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
             Matrix4.multiplyByScalar(matrix, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static negate throws without matrix parameter', function() {
         expect(function() {
             Matrix4.negate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static transpose throws without matrix parameter', function() {
         expect(function() {
             Matrix4.transpose(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static equalsEpsilon throws with non-number parameter', function() {
         expect(function() {
             Matrix4.equalsEpsilon(new Matrix4(), new Matrix4(), {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getTranslation throws without matrix parameter', function() {
         expect(function() {
             Matrix4.getTranslation(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getRotation throws without matrix parameter', function() {
         expect(function() {
             Matrix4.getRotation(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static inverse throws without matrix parameter', function() {
         expect(function() {
             Matrix4.inverse(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static inverse throws with non-inversable matrix', function() {
@@ -1496,6 +1496,6 @@ defineSuite([
     it('static inverseTransformation throws without matrix parameter', function() {
         expect(function() {
             Matrix4.inverseTransformation(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });
