@@ -410,6 +410,8 @@ define([
 
                     transformToRoot : new Matrix4(),
                     computedMatrix : new Matrix4(),
+                    dirty : false,
+                    anyAncestorDirty : false,
 
                     commands : undefined,
 
@@ -689,6 +691,7 @@ define([
     function getChannelEvaluator(runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
             runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
+            runtimeNode.dirty = true;
         };
     }
 
@@ -1331,7 +1334,7 @@ define([
     var scratchSpheres = [];
     var scratchSubtract = new Cartesian3();
 
-    function updateModelMatrix(model) {
+    function updateModelMatrix(model, modelTransformChanged) {
         var allowPicking = model.allowPicking;
         var gltf = model.gltf;
 
@@ -1349,6 +1352,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
 
+            n.anyAncestorDirty = modelTransformChanged;
             n.transformToRoot = getNodeMatrix(n);
             nodeStack.push(n);
 
@@ -1357,47 +1361,62 @@ define([
                 var transformToRoot = n.transformToRoot;
                 var meshCommands = n.commands;
 
-                if (defined(meshCommands)) {
-                    // Node has meshes.  Update their commands.
+                // This nodes transform needs to be updated if
+                // - It was targeted for animation this frame, or
+                // - Any of its ancestors were targeted for animation this frame, or
+                // - The model's transform changed this frame.  See above.
+                var dirty = (n.dirty || n.anyAncestorDirty);
 
-                    var name;
-                    for (name in meshCommands) {
-                        if (meshCommands.hasOwnProperty(name)) {
-                            var meshCommand = meshCommands[name];
-                            var meshCommandLength = meshCommand.length;
-                            for (var j = 0 ; j < meshCommandLength; ++j) {
-                                var primitiveCommand = meshCommand[j];
-                                var command = primitiveCommand.command;
-                                Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
+                if (dirty) {
+                    if (defined(meshCommands)) {
+                        // Node has meshes.  Update their commands.
 
-                                // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
-                                // Preprocess this and store it with each node.
-                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-                                //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                        var name;
+                        for (name in meshCommands) {
+                            if (meshCommands.hasOwnProperty(name)) {
+                                var meshCommand = meshCommands[name];
+                                var meshCommandLength = meshCommand.length;
+                                for (var j = 0 ; j < meshCommandLength; ++j) {
+                                    var primitiveCommand = meshCommand[j];
+                                    var command = primitiveCommand.command;
+                                    Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
 
-                                if (allowPicking) {
-                                    var pickCommand = primitiveCommand.pickCommand;
-                                    Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                    BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                                    // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
+                                    // Preprocess this and store it with each node.
+                                    BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                                    //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+
+                                    if (allowPicking) {
+                                        var pickCommand = primitiveCommand.pickCommand;
+                                        Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+                                        BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                                    }
+
+                                    Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
+                                    spheres.push(command.boundingVolume);
                                 }
-
-                                Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
-                                spheres.push(command.boundingVolume);
                             }
                         }
+                    } else {
+                        // Node has a light or camera
+                        n.computedMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                     }
-                } else {
-                    // Node has a light or camera
-                    n.computedMatrix = Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, n.computedMatrix);
                 }
+
+                n.dirty = false;
+                n.anyAncestorDirty = false;
 
                 var children = n.children;
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = children[k];
 
-                    var childMatrix = getNodeMatrix(child, child.transformToRoot);
-                    Matrix4.multiplyTransformation(transformToRoot, childMatrix, child.transformToRoot);
+                    if (dirty) {
+                        var childMatrix = getNodeMatrix(child, child.transformToRoot);
+                        Matrix4.multiplyTransformation(transformToRoot, childMatrix, child.transformToRoot);
+                    }
+
+                    child.anyAncestorDirty = dirty;
                     nodeStack.push(child);
                 }
             }
@@ -1419,6 +1438,7 @@ define([
             }
         }
 
+        // TODO: world bounding sphere is wrong unless all nodes are dirty.
         Cartesian3.clone(scratchSphereCenter, model.worldBoundingSphere.center);
         model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
     }
@@ -1544,14 +1564,15 @@ define([
 
         if (this._state === ModelState.LOADED) {
             var animated = this.animations.update(frameState);
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded;
 
             // Update modelMatrix throughout the tree as needed
-            if (animated || !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
+            if (animated || modelTransformChanged) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
 
-                updateModelMatrix(this);
+                updateModelMatrix(this, modelTransformChanged);
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
