@@ -563,7 +563,7 @@ defineSuite([
                     }
                 })
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {

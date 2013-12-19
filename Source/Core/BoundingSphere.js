@@ -352,9 +352,11 @@ define([
 
         stride = defaultValue(stride, 3);
 
+        //>>includeStart('debug', pragmas.debug);
         if (stride < 3) {
             throw new DeveloperError('stride must be 3 or greater.');
         }
+        //>>includeEnd('debug');
 
         var currentPos = fromPointsCurrentPos;
         currentPos.x = positions[0] + center.x;
@@ -506,9 +508,11 @@ define([
      * var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-0.5, -0.5, -0.5), new Cartesian3(0.5, 0.5, 0.5));
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(corner) || !defined(oppositeCorner)) {
             throw new DeveloperError('corner and oppositeCorner are required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -537,9 +541,11 @@ define([
      * var boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -587,6 +593,7 @@ define([
      * @exception {DeveloperError} right is required.
      */
     BoundingSphere.union = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
@@ -594,6 +601,7 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -628,6 +636,7 @@ define([
      * @exception {DeveloperError} point is required.
      */
     BoundingSphere.expand = function(sphere, point, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -635,6 +644,7 @@ define([
         if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
+        //>>includeEnd('debug');
 
         result = BoundingSphere.clone(sphere, result);
 
@@ -662,6 +672,7 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.intersect = function(sphere, plane) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -669,6 +680,7 @@ define([
         if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
+        //>>includeEnd('debug');
 
         var center = sphere.center;
         var radius = sphere.radius;
@@ -699,6 +711,7 @@ define([
      * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transform = function(sphere, transform, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -706,6 +719,7 @@ define([
         if (!defined(transform)) {
             throw new DeveloperError('transform is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
@@ -741,6 +755,7 @@ define([
      * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
@@ -752,6 +767,7 @@ define([
         if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Interval();
@@ -789,9 +805,11 @@ define([
      * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
+        //>>includeEnd('debug');
 
         projection = defaultValue(projection, projectTo2DProjection);
 
