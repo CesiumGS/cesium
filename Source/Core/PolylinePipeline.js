@@ -35,7 +35,7 @@ define([
     var PolylinePipeline = {};
 
     var wrapLongitudeInversMatrix = new Matrix4();
-    var wrapLongitudeOrigin = new Cartesian4();
+    var wrapLongitudeOrigin = new Cartesian3();
     var wrapLongitudeXZNormal = new Cartesian4();
     var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeYZNormal = new Cartesian4();

@@ -162,6 +162,7 @@ define([
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
+    var sunPosScratch = new Cartesian4();
 
     SunPostProcess.prototype.update = function(context) {
         var width = context.getDrawingBufferWidth();
@@ -369,7 +370,7 @@ define([
 
         // create up sampled render state
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
-        var sunPositionEC = Matrix4.multiplyByPoint(viewMatrix, sunPosition, sunPositionECScratch);
+        var sunPositionEC = Matrix4.multiplyByVector(viewMatrix, Cartesian4.fromElements(sunPosition.x, sunPosition.y, sunPosition.z, 1, sunPosScratch), sunPositionECScratch);
         var sunPositionWC = Transforms.pointToWindowCoordinates(viewProjectionMatrix, viewportTransformation, sunPosition, sunPositionWCScratch);
 
         sunPositionEC.x += CesiumMath.SOLAR_RADIUS;

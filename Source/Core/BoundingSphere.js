@@ -725,7 +725,7 @@ define([
             result = new BoundingSphere();
         }
 
-        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
         result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
@@ -751,7 +751,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
         result.radius = sphere.radius;
 
         return result;
