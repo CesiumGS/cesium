@@ -734,7 +734,18 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
+     * The transformation matrix is not verified to have a uniform scale of 1.
+     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1003,6 +1014,24 @@ define([
      */
     BoundingSphere.prototype.transform = function(transform, result) {
         return BoundingSphere.transform(this, transform, result);
+    };
+
+    /**
+     * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
+     * The transformation matrix is not verified to have a uniform scale of 1.
+     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} transform is required.
+     */
+    BoundingSphere.prototype.transformWithoutScale = function(transform, result) {
+        return BoundingSphere.transformWithoutScale(this, transform, result);
     };
 
     /**

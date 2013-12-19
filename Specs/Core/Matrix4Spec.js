@@ -56,6 +56,28 @@ defineSuite([
         expect(matrix[Matrix4.COLUMN3ROW3]).toEqual(16.0);
     });
 
+    it('fromArray works without a result parameter', function() {
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a result parameter', function() {
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var result = new Matrix4();
+        var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0], 0, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a starting index', function() {
+        var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
+        var result = new Matrix4();
+        var matrix = Matrix4.fromArray([0.0, 0.0, 0.0, 1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0], 3, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var matrix = Matrix4.fromRowMajorArray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]);
@@ -1022,6 +1044,12 @@ defineSuite([
         var returnedResult = Matrix4.abs(matrix, matrix);
         expect(matrix).toBe(returnedResult);
         expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray throws without an array', function() {
+        expect(function() {
+            return Matrix4.fromArray();
+        }).toThrowDeveloperError();
     });
 
     it('fromRowMajorArray throws with undefined parameter', function() {

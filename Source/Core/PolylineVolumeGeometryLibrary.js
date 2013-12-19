@@ -118,7 +118,7 @@ define([
         rotationZ = Matrix3.fromRotationZ(angle, rotationZ);
 
         heightCartesian.z = height;
-        transform = Matrix4.multiply(transform, Matrix4.fromRotationTranslation(rotationZ, heightCartesian, translation), transform);
+        transform = Matrix4.multiplyTransformation(transform, Matrix4.fromRotationTranslation(rotationZ, heightCartesian, translation), transform);
         var scale = scaleMatrix;
         scale[0] = xScalar;
 

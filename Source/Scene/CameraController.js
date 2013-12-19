@@ -418,7 +418,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = Matrix4.multiply(transform, oldTransform);
+            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform);
 
             var invTransform = camera.inverseTransform;
             Matrix4.multiplyByPoint(invTransform, position, camera.position);
