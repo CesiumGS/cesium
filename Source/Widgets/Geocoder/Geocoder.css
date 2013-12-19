@@ -49,10 +49,12 @@
     fill: #edffff;
 }
 
-.cesium-viewer-geocoderContainer:hover .cesium-geocoder-searchButton {    background-color: #48b;
+.cesium-viewer-geocoderContainer:hover .cesium-geocoder-searchButton {
+    background-color: #48b;
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
 }
+
 .cesium-viewer-geocoderContainer .cesium-geocoder-input:focus + .cesium-geocoder-goButton{
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
