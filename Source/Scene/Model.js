@@ -1127,8 +1127,6 @@ define([
             // The glTF node hierarchy is a DAG so a node can have more than one
             // parent, so a node may already have commands.  If so, append more
             // since they will have a different model matrix.
-            nodeCommands[name] = defaultValue(nodeCommands[name], []);
-            var meshCommands = nodeCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
@@ -1209,7 +1207,7 @@ define([
                     }
                 }
 
-                meshCommands.push({
+                nodeCommands.push({
                     command : command,
                     pickCommand : pickCommand,
                     boundingSphere : boundingSphere
@@ -1282,7 +1280,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
-                    runtimeNode.commands = {};
+                    runtimeNode.commands = [];
                     createCommand(model, gltfNode, runtimeNode.commands, context);
                 }
 
@@ -1358,7 +1356,7 @@ define([
             while (nodeStack.length > 0) {
                 n = nodeStack.pop();
                 var transformToRoot = n.transformToRoot;
-                var meshCommands = n.commands;
+                var commands = n.commands;
 
                 // This nodes transform needs to be updated if
                 // - It was targeted for animation this frame, or
@@ -1366,34 +1364,27 @@ define([
                 var dirty = (n.dirty || n.anyAncestorDirty);
 
                 if (dirty || modelTransformChanged || justLoaded) {
-                    if (defined(meshCommands)) {
-                        // Node has meshes.  Update their commands.
+                    if (defined(commands)) {
+                        // Node has meshes, which has primitives.  Update their commands.
+                        var commandsLength = commands.length;
+                        for (var j = 0 ; j < commandsLength; ++j) {
+                            var primitiveCommand = commands[j];
+                            var command = primitiveCommand.command;
+                            Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
 
-                        var name;
-                        for (name in meshCommands) {
-                            if (meshCommands.hasOwnProperty(name)) {
-                                var meshCommand = meshCommands[name];
-                                var meshCommandLength = meshCommand.length;
-                                for (var j = 0 ; j < meshCommandLength; ++j) {
-                                    var primitiveCommand = meshCommand[j];
-                                    var command = primitiveCommand.command;
-                                    Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
+                            // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
+                            // Preprocess this and store it with each node.
+                            BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+                            //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
-                                    // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
-                                    // Preprocess this and store it with each node.
-                                    BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-                                    //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                                    if (allowPicking) {
-                                        var pickCommand = primitiveCommand.pickCommand;
-                                        Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                        BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                                    }
-
-                                    Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
-                                    spheres.push(command.boundingVolume);
-                                }
+                            if (allowPicking) {
+                                var pickCommand = primitiveCommand.pickCommand;
+                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
+                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
+
+                            Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
+                            spheres.push(command.boundingVolume);
                         }
                     } else {
                         // Node has a light or camera
