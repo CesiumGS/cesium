@@ -1094,9 +1094,9 @@ define([
     };
 
     var view2Dto3DPScratch = new Cartesian3();
-    var view2Dto3DRScratch = new Cartesian4();
-    var view2Dto3DUScratch = new Cartesian4();
-    var view2Dto3DDScratch = new Cartesian4();
+    var view2Dto3DRScratch = new Cartesian3();
+    var view2Dto3DUScratch = new Cartesian3();
+    var view2Dto3DDScratch = new Cartesian3();
     var view2Dto3DCartographicScratch = new Cartographic();
     var view2Dto3DCartesian3Scratch = new Cartesian3();
     var view2Dto3DMatrix4Scratch = new Matrix4();
@@ -1145,9 +1145,9 @@ define([
         var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
         // Transform each camera direction to the fixed axes.
-        Matrix4.multiplyByVector(enuToFixed, r, r);
-        Matrix4.multiplyByVector(enuToFixed, u, u);
-        Matrix4.multiplyByVector(enuToFixed, d, d);
+        Matrix4.multiplyByPointAsVector(enuToFixed, r, r);
+        Matrix4.multiplyByPointAsVector(enuToFixed, u, u);
+        Matrix4.multiplyByPointAsVector(enuToFixed, d, d);
 
         // Compute the view matrix based on the new fixed-frame camera position and directions.
         if (!defined(result)) {

@@ -658,7 +658,7 @@ defineSuite([
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Cartesian3(17, 18, 19);
         var expected = new Cartesian3(114, 334, 554);
-        var result = Matrix4.multiplyByPoint2(left, right);
+        var result = Matrix4.multiplyByPoint(left, right);
         expect(result).toEqual(expected);
     });
 
@@ -667,7 +667,7 @@ defineSuite([
         var right = new Cartesian3(17, 18, 19);
         var expected = new Cartesian3(114, 334, 554);
         var result = new Cartesian3();
-        var returnedResult = Matrix4.multiplyByPoint2(left, right, result);
+        var returnedResult = Matrix4.multiplyByPoint(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
@@ -1426,14 +1426,14 @@ defineSuite([
     it('static multiplyByPoint throws with no matrix parameter', function() {
         var cartesian = new Cartesian4();
         expect(function() {
-            Matrix4.multiplyByPoint2(undefined, cartesian);
+            Matrix4.multiplyByPoint(undefined, cartesian);
         }).toThrowDeveloperError();
     });
 
     it('static multiplyByPoint throws with no cartesian parameter', function() {
         var matrix = new Matrix4();
         expect(function() {
-            Matrix4.multiplyByPoint2(matrix, undefined);
+            Matrix4.multiplyByPoint(matrix, undefined);
         }).toThrowDeveloperError();
     });
 
