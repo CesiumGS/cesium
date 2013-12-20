@@ -290,13 +290,13 @@ define([
         });
 
         this._showPrimitiveBoundingSphere = createCommand(function() {
-            that._primitive.primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
+            that._primitive.debugShowBoundingVolume = that.primitiveBoundingSphere;
             return true;
         });
 
         this._showPrimitiveReferenceFrame = createCommand(function() {
             if (that.primitiveReferenceFrame) {
-                var modelMatrix = that._primitive.primitive.modelMatrix;
+                var modelMatrix = that._primitive.modelMatrix;
                 that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
                 that._scene.getPrimitives().add(that._modelMatrixPrimitive);
             } else if (defined(that._modelMatrixPrimitive)){
@@ -309,7 +309,10 @@ define([
         this._doFilterPrimitive = createCommand(function() {
             if (that.filterPrimitive) {
                 that._scene.debugCommandFilter = function(command) {
-                    return command.owner === that._primitive.primitive;
+                    if (defined(that._primitive._billboardCollection)) {
+                        return command.owner === that._primitive._billboardCollection;
+                    }
+                    return command.owner === that._primitive;
                 };
             } else {
                 that._scene.debugCommandFilter = undefined;
@@ -380,12 +383,12 @@ define([
         });
 
         var pickPrimitive = function(e) {
-            var newPick = that._scene.pick({x: e.clientX, y: e.clientY});
-            if (defined(newPick)) {
-                that.primitive = newPick;
-            }
             that._canvas.removeEventListener('mousedown', pickPrimitive, false);
             that.pickPrimitiveActive = false;
+            var newPick = that._scene.pick({x: e.clientX, y: e.clientY});
+            if (defined(newPick)) {
+                that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
+            }
         };
 
         this._pickPrimitive = createCommand(function() {
@@ -654,7 +657,7 @@ define([
                 if (newPrimitive !== oldPrimitive) {
                     this.hasPickedPrimitive = true;
                     if (defined(oldPrimitive)) {
-                        oldPrimitive.primitive.debugShowBoundingVolume = false;
+                        oldPrimitive.debugShowBoundingVolume = false;
                     }
                     this._scene.debugCommandFilter = undefined;
                     if (defined(this._modelMatrixPrimitive)) {
@@ -662,9 +665,9 @@ define([
                         this._modelMatrixPrimitive = undefined;
                     }
                     this._primitive = newPrimitive;
-                    newPrimitive.primitive.show = false;
+                    newPrimitive.show = false;
                     setTimeout(function(){
-                        newPrimitive.primitive.show = true;
+                        newPrimitive.show = true;
                     }, 50);
                     this.showPrimitiveBoundingSphere();
                     this.showPrimitiveReferenceFrame();

@@ -184,6 +184,7 @@ define([
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
                     billboard._id = label._id;
+                    billboard._collection = label._labelCollection;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
