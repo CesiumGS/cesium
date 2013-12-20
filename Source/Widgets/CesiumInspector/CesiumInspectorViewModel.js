@@ -26,19 +26,35 @@ define([
     function frustumStatsToString(stats) {
         var str;
         if (defined(stats)) {
-            str = 'Total commands: ' + stats.totalCommands + '<br>Commands in frustums:';
+            str = 'Command Statistics';
             var com = stats.commandsInFrustums;
             for (var n in com) {
                 if (com.hasOwnProperty(n)) {
-                    str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + n + ': ' + com[n];
+                    var num = parseInt(n, 10);
+                    var s;
+                    if (num === 7) {
+                        s = '1, 2 and 3';
+                    } else {
+                        var f = [];
+                        for (var i = 2; i >= 0; i--) {
+                            var p = Math.pow(2, i);
+                            if (num >= p) {
+                                f.push(i + 1);
+                                num -= p;
+                            }
+                        }
+                        s = f.reverse().join(' and ');
+                    }
+                    str += '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + com[n] + ' in frustum ' + s;
                 }
             }
+            str += '<br>Total: ' + stats.totalCommands;
         }
 
         return str;
     }
 
-    var br = new BoundingRectangle(220, 5, 100, 75);
+    var br = new BoundingRectangle(220, 50, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     /**
@@ -56,9 +72,10 @@ define([
         }
 
         var that = this;
-
+        var canvas = scene.getCanvas();
         this._scene = scene;
-        this._canvas = scene.getCanvas();
+        this._canvas = canvas;
+        br.x = canvas.clientWidth - br.width - 10;
         this._primitive = undefined;
         this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
@@ -252,11 +269,7 @@ define([
         this._showFrustums = createCommand(function() {
             if (that.frustums) {
                 that._scene.debugShowFrustums = true;
-                that._frustumInterval = setInterval(function() {
-                    that.frustumStatisticText = frustumStatsToString(scene.debugFrustumStatistics);
-                }, 100);
             } else {
-                clearInterval(that._frustumInterval);
                 that._scene.debugShowFrustums = false;
             }
             return true;
@@ -691,6 +704,20 @@ define([
 
             get : function() {
                 return this._tile;
+            }
+        },
+
+        update :  {
+            get : function() {
+                var that = this;
+                return function() {
+                    if (that.frustums) {
+                        that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
+                    }
+                    if (that.performance) {
+                        br.x = that._canvas.clientWidth - br.width - 10;
+                    }
+                };
             }
         }
     });

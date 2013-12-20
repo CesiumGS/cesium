@@ -75,6 +75,7 @@ define([
         this._time = undefined;
         this._texture = undefined;
         this._viewportHeight = 0;
+        this._viewportWidth = 0;
     };
 
     /**
@@ -157,8 +158,10 @@ define([
         }
 
         var viewportHeight = context.getDrawingBufferHeight();
-        if (viewportHeight !== this._viewportHeight) {
+        var viewportWidth = context.getDrawingBufferWidth();
+        if (viewportHeight !== this._viewportHeight || viewportWidth !== this._viewportWidth) {
             this._viewportHeight = viewportHeight;
+            this._viewportWidth = viewportWidth;
             var rect = this._quad.rectangle;
             rect.x = this._rectangle.x;
             rect.y = viewportHeight - canvasHeight - this._rectangle.y;

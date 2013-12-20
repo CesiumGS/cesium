@@ -2,6 +2,7 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
+        '../../Core/requestAnimationFrame',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/Event',
@@ -14,6 +15,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        requestAnimationFrame,
         DeveloperError,
         defineProperties,
         Event,
@@ -25,6 +27,33 @@ define([
         getElement) {
     "use strict";
     /*global console*/
+
+    function startRenderLoop(viewer) {
+        viewer._renderLoopRunning = true;
+
+        function render() {
+            if (viewer.isDestroyed()) {
+                return;
+            }
+            try {
+                viewer.resize();
+                viewer.render();
+                viewer.cesiumInspector.viewModel.update();
+                requestAnimationFrame(render);
+            } catch (e) {
+                viewer._useDefaultRenderLoop = false;
+                viewer._renderLoopRunning = false;
+                viewer._renderLoopError.raiseEvent(viewer, e);
+                if (viewer._showRenderLoopErrors) {
+                    /*global console*/
+                    viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                    console.error(e);
+                }
+            }
+        }
+
+        requestAnimationFrame(render);
+    }
 
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.
@@ -51,6 +80,8 @@ define([
         viewer.container.appendChild(cesiumInspectorContainer);
         var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.cesiumWidget.scene);
 
+        viewer.useDefaultRenderLoop = false;
+
         defineProperties(viewer, {
             cesiumInspector : {
                 get : function() {
@@ -58,6 +89,8 @@ define([
                 }
             }
         });
+
+        startRenderLoop(viewer);
     };
 
     return viewerCesiumInspectorMixin;
