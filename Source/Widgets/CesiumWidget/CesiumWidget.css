@@ -54,11 +54,10 @@
     color: #fe4;
 }
 
-.cesium-widget-errorPanel-message {
+.cesium-widget-errorPanel-scroll {
     overflow: auto;
     font-family: monospace;
     white-space: pre-wrap;
-    resize: vertical;
     padding: 0;
     margin: 10px 0;
 }
