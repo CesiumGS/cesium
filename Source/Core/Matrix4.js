@@ -1736,7 +1736,8 @@ define([
     };
 
     /**
-     * Computes the product of a matrix and a {@link Cartesian3}.
+     * Computes the product of a matrix and a {@link Cartesian3}. This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of 1, but returns a {@link Cartesian3} instead of a {@link Cartesian4}.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix.
