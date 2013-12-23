@@ -996,8 +996,6 @@ define([
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
-
-        Matrix4.setColumn(camera.transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
