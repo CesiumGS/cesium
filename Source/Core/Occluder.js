@@ -62,6 +62,38 @@ define([
     };
 
     /**
+     * Creates an occluder from a bounding sphere and the camera position.
+     * @memberof Occluder
+     *
+     * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
+     * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
+     * @param {Occluder} [result] The object onto which to store the result.
+     * @returns {Occluder} The occluder derived from an object's position and radius, as well as the camera position.
+     *
+     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
+     * @exception {DeveloperError} <code>cameraPosition</code> is required.
+     */
+    Occluder.fromBoundingSphere = function(occluderBoundingSphere, cameraPosition, result) {
+        if (!occluderBoundingSphere) {
+            throw new DeveloperError('occluderBoundingSphere is required.');
+        }
+
+        if (!cameraPosition) {
+            throw new DeveloperError('camera position is required.');
+        }
+
+        if (!defined(result)) {
+            return new Occluder(occluderBoundingSphere, cameraPosition);
+        }
+
+        Cartesian3.clone(occluderBoundingSphere.center, result._occluderPosition);
+        result._occluderRadius = occluderBoundingSphere.radius;
+        result.setCameraPosition(cameraPosition);
+
+        return result;
+    };
+
+    /**
      * Returns the position of the occluder.
      *
      * @memberof Occluder
@@ -81,15 +113,17 @@ define([
         return this._occluderRadius;
     };
 
+    var scratchCartesian3 = new Cartesian3();
+
     /**
      * Sets the position of the camera.
      *
      * @param {Cartesian3} cameraPosition The new position of the camera.
      */
     Occluder.prototype.setCameraPosition = function(cameraPosition) {
-        cameraPosition = Cartesian3.clone(cameraPosition);
+        cameraPosition = Cartesian3.clone(cameraPosition, this._cameraPosition);
 
-        var cameraToOccluderVec = Cartesian3.subtract(this._occluderPosition, cameraPosition);
+        var cameraToOccluderVec = Cartesian3.subtract(this._occluderPosition, cameraPosition, scratchCartesian3);
         var invCameraToOccluderDistance = Cartesian3.magnitudeSquared(cameraToOccluderVec);
         var occluderRadiusSqrd = this._occluderRadius * this._occluderRadius;
 
@@ -99,9 +133,9 @@ define([
         if (invCameraToOccluderDistance > occluderRadiusSqrd) {
             horizonDistance = Math.sqrt(invCameraToOccluderDistance - occluderRadiusSqrd);
             invCameraToOccluderDistance = 1.0 / Math.sqrt(invCameraToOccluderDistance);
-            horizonPlaneNormal = Cartesian3.multiplyByScalar(cameraToOccluderVec, invCameraToOccluderDistance);
+            horizonPlaneNormal = Cartesian3.multiplyByScalar(cameraToOccluderVec, invCameraToOccluderDistance, scratchCartesian3);
             var nearPlaneDistance = horizonDistance * horizonDistance * invCameraToOccluderDistance;
-            horizonPlanePosition = Cartesian3.add(cameraPosition, Cartesian3.multiplyByScalar(horizonPlaneNormal, nearPlaneDistance));
+            horizonPlanePosition = Cartesian3.add(cameraPosition, Cartesian3.multiplyByScalar(horizonPlaneNormal, nearPlaneDistance, scratchCartesian3), scratchCartesian3);
         } else {
             horizonDistance = Number.MAX_VALUE;
         }

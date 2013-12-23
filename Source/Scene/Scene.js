@@ -393,6 +393,7 @@ define([
     };
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
+    var scratchOccluder;
 
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
@@ -401,7 +402,8 @@ define([
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
-            return new Occluder(scratchOccluderBoundingSphere, scene._camera.positionWC);
+            scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
+            return scratchOccluder;
         }
 
         return undefined;
