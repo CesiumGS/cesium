@@ -121,6 +121,7 @@
 
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
+	<property name="pragmas.debug" value="true" />
 
 	<!-- properties controlling how to run the server-->
 	<property name="runServer.public" value="false" />
@@ -355,15 +356,11 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
-		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
-			<isset property="pragmas.debug" />
-		</condition>
-
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
-			<arg value="${debugOption}" />
+			<arg value="pragmas.debug=${pragmas.debug}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -374,16 +371,12 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
-		<condition property="debugOption" value="pragmas.debug=${pragmas.debug}" else="">
-			<isset property="pragmas.debug" />
-		</condition>
-
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
-			<arg value="${debugOption}" />
+			<arg value="pragmas.debug=${pragmas.debug}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
@@ -398,7 +391,7 @@
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
-			<arg value="${debugOption}" />
+			<arg value="pragmas.debug=${pragmas.debug}" />
 			<arg value="baseUrl=." />
 
 			<srcfile prefix="name=Workers/" />
