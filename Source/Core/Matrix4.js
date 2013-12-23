@@ -1706,7 +1706,7 @@ define([
      * Matrix4.multiplyByPointAsVector(matrix, p, result);
      * // A shortcut for
      * //   Cartesian3 p = ...
-     * //   Matrix4.multiplyByPointAsVector(matrix, new Cartesian4(p.x, p.y, p.z, 0.0), result);
+     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 0.0), result);
      */
     Matrix4.multiplyByPointAsVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
