@@ -30,7 +30,7 @@ define([
      */
     var SceneTransforms = {};
 
-    var actualPosition = new Cartesian4();
+    var actualPosition = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
 
     /**

@@ -939,14 +939,14 @@ define([
         return this._id;
     };
 
-    var tempCartesian4 = new Cartesian4();
+    var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
-        Matrix4.multiplyByVector(modelMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, tempCartesian4), tempCartesian4);
-        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
+        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
+        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
     var scracthMatrix4 = new Matrix4();
