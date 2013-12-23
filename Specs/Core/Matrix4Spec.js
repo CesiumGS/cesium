@@ -577,6 +577,33 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyTransformation works without a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 0, 0, 0, 1);
+        var expected = new Matrix4(134, 140, 146, 156, 386, 404, 422, 448, 638, 668, 698, 740, 0, 0, 0, 1);
+        var result = Matrix4.multiplyTransformation(left, right);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyTransformation works with a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 0, 0, 0, 1);
+        var expected = new Matrix4(134, 140, 146, 156, 386, 404, 422, 448, 638, 668, 698, 740, 0, 0, 0, 1);
+        var result = new Matrix4();
+        var returnedResult = Matrix4.multiplyTransformation(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyTransformation works with a result parameter that is an input result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
+        var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 0, 0, 0, 1);
+        var expected = new Matrix4(134, 140, 146, 156, 386, 404, 422, 448, 638, 668, 698, 740, 0, 0, 0, 1);
+        var returnedResult = Matrix4.multiplyTransformation(left, right, left);
+        expect(returnedResult).toBe(left);
+        expect(left).toEqual(expected);
+    });
+
     it('multiplyByTranslation works without a result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
@@ -693,6 +720,25 @@ defineSuite([
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expected);
     });
+
+    it('multiplyByPointAsVector works without a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Cartesian3(17, 18, 19);
+        var expected = new Cartesian3(110, 326, 542);
+        var result = Matrix4.multiplyByPointAsVector(left, right);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByPointAsVector works with a result parameter', function() {
+        var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+        var right = new Cartesian3(17, 18, 19);
+        var expected = new Cartesian3(110, 326, 542);
+        var result = new Cartesian3();
+        var returnedResult = Matrix4.multiplyByPointAsVector(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
 
     it('multiplyByScalar works without a result parameter', function() {
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);

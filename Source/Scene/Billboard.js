@@ -960,7 +960,7 @@ define([
         var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
-        var mv = Matrix4.multiply(view, modelMatrix, scracthMatrix4);
+        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scracthMatrix4);
         var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
 
         // Apply eye offset, e.g., czm_eyeOffset

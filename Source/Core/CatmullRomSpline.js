@@ -48,7 +48,7 @@ define([
             timeVec.z = u;
             timeVec.y = u * u;
             timeVec.x = timeVec.y * u;
-            timeVec.w = 1;
+            timeVec.w = 1.0;
 
             var p0, p1, p2, p3, coefs;
             if (i === 0) {

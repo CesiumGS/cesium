@@ -582,7 +582,7 @@ define([
         if (uniformState._modelViewDirty) {
             uniformState._modelViewDirty = false;
 
-            Matrix4.multiply(uniformState._view, uniformState._model, uniformState._modelView);
+            Matrix4.multiplyTransformation(uniformState._view, uniformState._model, uniformState._modelView);
         }
     }
 
@@ -604,7 +604,7 @@ define([
         if (uniformState._modelView3DDirty) {
             uniformState._modelView3DDirty = false;
 
-            Matrix4.multiply(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
+            Matrix4.multiplyTransformation(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
         }
     }
 

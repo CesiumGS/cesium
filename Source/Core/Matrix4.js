@@ -1390,6 +1390,11 @@ define([
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * var m1 = new Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+     * var m2 = Transforms.eastNorthUpToFixedFrame(new Cartesian3(1.0, 1.0, 1.0));
+     * var m3 = Matrix4.multiplyTransformation(m1, m2);
      */
     Matrix4.multiplyTransformation = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1729,7 +1734,6 @@ define([
         result.z = z;
         return result;
     };
-
 
     /**
      * Computes the product of a matrix and a {@link Cartesian3}.
