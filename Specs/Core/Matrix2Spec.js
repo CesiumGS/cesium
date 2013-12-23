@@ -26,6 +26,28 @@ defineSuite([
         expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
     });
 
+    it('fromArray works without a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var matrix = Matrix2.fromArray([1.0, 3.0, 2.0, 4.0]);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromArray([1.0, 3.0, 2.0, 4.0], 0, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a starting index', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromArray([0.0, 0.0, 0.0, 1.0, 3.0, 2.0, 4.0], 3, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var matrix = Matrix2.fromRowMajorArray([1.0, 2.0, 3.0, 4.0]);
@@ -477,6 +499,12 @@ defineSuite([
     it('toString', function() {
         var matrix = new Matrix2(1, 2, 3, 4);
         expect(matrix.toString()).toEqual('(1, 2)\n(3, 4)');
+    });
+
+    it('fromArray throws without an array', function() {
+        expect(function() {
+            Matrix2.fromArray();
+        }).toThrowDeveloperError();
     });
 
     it('fromRowMajorArray throws with undefined parameter', function() {
