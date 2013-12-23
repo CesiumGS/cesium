@@ -991,30 +991,26 @@ define([
     var viewExtentCVCartographic = new Cartographic();
     var viewExtentCVNorthEast = new Cartesian3();
     var viewExtentCVSouthWest = new Cartesian3();
-    var viewExtentCVTransform = new Matrix4();
     function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
 
-        var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
-        Matrix4.setColumn(transform, 3, Cartesian4.UNIT_W);
+        Matrix4.setColumn(camera.transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var position = projection.project(cart);
-        var northEast = Cartesian3.clone(position, viewExtentCVNorthEast);
-        Matrix4.multiplyByPoint(transform, northEast, northEast);
+        var northEast = projection.project(cart, viewExtentCVNorthEast);
+        Matrix4.multiplyByPoint(camera.transform, northEast, northEast);
         Matrix4.multiplyByPoint(invTransform, northEast, northEast);
 
         cart.longitude = west;
         cart.latitude = south;
-        position = projection.project(cart);
-        var southWest = Cartesian3.clone(position, viewExtentCVSouthWest);
-        Matrix4.multiplyByPoint(transform, southWest, southWest);
+        var southWest = projection.project(cart, viewExtentCVSouthWest);
+        Matrix4.multiplyByPoint(camera.transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);

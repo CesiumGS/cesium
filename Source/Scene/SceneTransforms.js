@@ -30,7 +30,7 @@ define([
      */
     var SceneTransforms = {};
 
-    var actualPosition = new Cartesian3();
+    var actualPosition = new Cartesian4();
     var positionCC = new Cartesian4();
 
     /**
@@ -77,7 +77,7 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
+        Matrix4.multiplyByVector(viewProjection, actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
     };
@@ -120,7 +120,6 @@ define([
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
 
         if (!defined(actualPosition)) {
-            result = undefined;
             return undefined;
         }
 
