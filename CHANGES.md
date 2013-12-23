@@ -23,6 +23,8 @@ Beta Releases
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
   * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
+  * Removed prototype version of `BoundingSphere.transform`
+  * `Matrix4.multiplyByPoint` now returns a `Cartesian3` instead of a `Cartesian4`
 * The minified, combined `Cesium.js` file now omits certain `DeveloperError` checks, to increase performance and reduce file size.  When developing your application, we recommend using the unminified version locally for early error detection, then deploying the minified version to production.
 * Added `CentralBody.maximumScreenSpaceError`.
 * Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
@@ -31,6 +33,9 @@ Beta Releases
 * The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
 * Fix disabling `CentralBody.enableLighting`.
 * Fix geocoder flights when following an object.
+* Added `BoundingSphere.transformsWithoutScale`
+* Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
+* Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
 
 ### b23 - 2013-12-02
 
