@@ -410,13 +410,13 @@ define([
 
                     transformToRoot : new Matrix4(),
                     computedMatrix : new Matrix4(),
-                    dirty : false,
-                    anyAncestorDirty : false,
+                    dirty : false,                      // for graph traversal
+                    anyAncestorDirty : false,           // for graph traversal
 
-                    commands : undefined,
+                    commands : [],                      // will be empty for transform, light, and camera nodes
 
-                    children : [],
-                    parents : []
+                    children : [],                      // will be empty for leaf nodes
+                    parents : []                        // will be empty for root nodes
                 };
 
                 if (defined(node.instanceSkin)) {
@@ -1091,7 +1091,7 @@ define([
         };
     }
 
-    function createCommand(model, node, nodeCommands, context) {
+    function createCommand(model, gltfNode, nodeCommands, context) {
         var opaqueColorCommands = model._commandLists.opaqueList;
         var translucentColorCommands = model._commandLists.translucentList;
 
@@ -1115,7 +1115,7 @@ define([
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var meshes = defined(node.meshes) ? node.meshes : node.instanceSkin.sources;
+        var meshes = defined(gltfNode.meshes) ? gltfNode.meshes : gltfNode.instanceSkin.sources;
         var meshesLength = meshes.length;
 
         for (var j = 0; j < meshesLength; ++j) {
@@ -1153,7 +1153,7 @@ define([
                     primitive : model,
                     id : model.id,
                     gltf : {
-                        node : node,
+                        node : gltfNode,
                         mesh : mesh,
                         primitive : primitive,
                         primitiveIndex : i
@@ -1280,7 +1280,6 @@ define([
                 }
 
                 if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
-                    runtimeNode.commands = [];
                     createCommand(model, gltfNode, runtimeNode.commands, context);
                 }
 
@@ -1364,9 +1363,9 @@ define([
                 var dirty = (n.dirty || n.anyAncestorDirty);
 
                 if (dirty || modelTransformChanged || justLoaded) {
-                    if (defined(commands)) {
+                    var commandsLength = commands.length;
+                    if (commandsLength > 0) {
                         // Node has meshes, which has primitives.  Update their commands.
-                        var commandsLength = commands.length;
                         for (var j = 0 ; j < commandsLength; ++j) {
                             var primitiveCommand = commands[j];
                             var command = primitiveCommand.command;
@@ -1448,6 +1447,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var node = skinnedNodes[i];
 
+// TODO: use Matrix4.inverseTransformation
             scratchObjectSpace = Matrix4.inverse(node.czm.transformToRoot);
 
             var instanceSkin = skinnedNodes[i].instanceSkin;
