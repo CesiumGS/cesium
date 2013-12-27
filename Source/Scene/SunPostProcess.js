@@ -162,7 +162,6 @@ define([
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
-
     SunPostProcess.prototype.update = function(context) {
         var width = context.getDrawingBufferWidth();
         var height = context.getDrawingBufferHeight();

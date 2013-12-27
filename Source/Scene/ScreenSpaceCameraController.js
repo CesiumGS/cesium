@@ -617,7 +617,7 @@ define([
         }
     }
 
-    var rotate3DRestrictedDirection = Cartesian4.clone(Cartesian4.ZERO);
+    var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
@@ -687,7 +687,7 @@ define([
         if (defined(restrictedAngle)) {
             var direction = Cartesian3.clone(cameraController._camera.directionWC, rotate3DRestrictedDirection);
             var invTransform = Matrix4.inverseTransformation(transform);
-            Matrix4.multiplyByVector(invTransform, direction, direction);
+            direction = Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
 
             var dot = -Cartesian3.dot(direction, constrainedAxis);
             var angle = Math.acos(dot);
