@@ -82,7 +82,7 @@ define([
     };
 
     function LoadResources() {
-        this.bufferViewsToCreate = new Queue();
+        this.buffersToCreate = new Queue();
         this.buffers = {};
         this.pendingBufferLoads = 0;
 
@@ -109,13 +109,13 @@ define([
     };
 
     LoadResources.prototype.finishedResourceCreation = function() {
-        return ((this.bufferViewsToCreate.length === 0) &&
+        return ((this.buffersToCreate.length === 0) &&
                 (this.programsToCreate.length === 0) &&
                 (this.texturesToCreate.length === 0));
     };
 
-    LoadResources.prototype.finishedBufferViewsCreation = function() {
-        return ((this.pendingBufferLoads === 0) && (this.bufferViewsToCreate.length === 0));
+    LoadResources.prototype.finishedBuffersCreation = function() {
+        return ((this.pendingBufferLoads === 0) && (this.buffersToCreate.length === 0));
     };
 
     LoadResources.prototype.finishedProgramCreation = function() {
@@ -261,7 +261,7 @@ define([
             nodes : undefined
         };
         this._rendererResources = {
-            bufferViews : {},
+            buffers : {},
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
@@ -336,7 +336,7 @@ define([
         var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
-                model._loadResources.bufferViewsToCreate.enqueue(name);
+                model._loadResources.buffersToCreate.enqueue(name);
             }
         }
     }
@@ -450,10 +450,10 @@ define([
         var bufferView;
         var bufferViews = model.gltf.bufferViews;
         var buffers = loadResources.buffers;
-        var rendererBufferViews = model._rendererResources.bufferViews;
+        var rendererBuffers = model._rendererResources.buffers;
 
-        while (loadResources.bufferViewsToCreate.length > 0) {
-            var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
+        while (loadResources.buffersToCreate.length > 0) {
+            var bufferViewName = loadResources.buffersToCreate.dequeue();
             bufferView = bufferViews[bufferViewName];
 
             if (bufferView.target === WebGLRenderingContext.ARRAY_BUFFER) {
@@ -461,10 +461,11 @@ define([
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
                 vertexBuffer.setVertexArrayDestroyable(false);
-                rendererBufferViews[bufferViewName] = vertexBuffer;
+                rendererBuffers[bufferViewName] = vertexBuffer;
             }
 
             // bufferViews referencing animations are ignored here and handled in createRuntimeAnimations.
+            // bufferViews referencing skins are ignored here and handled in createSkins.
         }
 
         // The Cesium Renderer requires knowing the datatype for an index buffer
@@ -476,11 +477,11 @@ define([
                 var instance = accessors[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBufferViews[instance.bufferView])) {
+                if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[instance.bufferView])) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
                     indexBuffer.setVertexArrayDestroyable(false);
-                    rendererBufferViews[instance.bufferView] = indexBuffer;
+                    rendererBuffers[instance.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -641,7 +642,7 @@ define([
     function createSkins(model) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedBufferViewsCreation()) {
+        if (!loadResources.finishedBuffersCreation()) {
             return;
         }
 
@@ -763,7 +764,7 @@ define([
     function createVertexArrays(model, context) {
         var loadResources = model._loadResources;
 
-        if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
+        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
             return;
         }
 
@@ -772,7 +773,7 @@ define([
         }
         loadResources.createVertexArrays = false;
 
-        var rendererBufferViews = model._rendererResources.bufferViews;
+        var rendererBuffers = model._rendererResources.buffers;
         var rendererVertexArrays = model._rendererResources.vertexArrays;
         var gltf = model.gltf;
         var accessors = gltf.accessors;
@@ -796,7 +797,7 @@ define([
                             var type = ModelTypes[a.type];
                             attrs.push({
                                 index                  : attributeLocations[attrName],
-                                vertexBuffer           : rendererBufferViews[a.bufferView],
+                                vertexBuffer           : rendererBuffers[a.bufferView],
                                 componentsPerAttribute : type.componentsPerAttribute,
                                 componentDatatype      : type.componentDatatype,
                                 normalize              : false,
@@ -807,7 +808,7 @@ define([
                     }
 
                     var accessor = accessors[primitive.indices];
-                    var indexBuffer = rendererBufferViews[accessor.bufferView];
+                    var indexBuffer = rendererBuffers[accessor.bufferView];
                     rendererVertexArrays[meshName + '.primitive.' + i] = context.createVertexArray(attrs, indexBuffer);
                 }
             }
@@ -1628,7 +1629,7 @@ define([
      */
     Model.prototype.destroy = function() {
         var resources = this._rendererResources;
-        destroy(resources.bufferViews);
+        destroy(resources.buffers);
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
