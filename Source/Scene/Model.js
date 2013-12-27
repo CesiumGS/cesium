@@ -433,17 +433,6 @@ define([
             }
         }
 
-// TODO: get the right skeletons
-        var length = skinnedNodes.length;
-        for (var i = 0; i < length; ++i) {
-            var skinnedNode = skinnedNodes[i];
-            var gltfSkeletons = nodes[skinnedNode.name].instanceSkin.skeletons;
-            var skeletonsLength = gltfSkeletons.length;
-            for (var j = 0; j < skeletonsLength; ++j) {
-                skinnedNode.skeletons.push(runtimeNodes[gltfSkeletons[j]]);
-            }
-        }
-
         model._runtime.nodes = runtimeNodes;
         model._runtime.skinnedNodes = skinnedNodes;
     }
@@ -676,6 +665,7 @@ define([
         var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
         var nodes = gltf.nodes;
+        var runtimeNodes = model._runtime.nodes;
         var runtimeSkins = {};
 
         for (var name in skins) {
@@ -715,6 +705,14 @@ define([
         for (var j = 0; j < length; ++j) {
             var skinnedNode = skinnedNodes[j];
             skinnedNode.skin = runtimeSkins[nodes[skinnedNode.name].instanceSkin.skin];
+
+            // TODO: we first find nodes with the names in instanceSkin.skeletons, then we only search those nodes and their sub-trees for nodes with jointId equal to the strings in skin.joints. Is this correct?
+            // TODO: https://github.com/KhronosGroup/glTF/issues/193
+            var gltfSkeletons = nodes[skinnedNode.name].instanceSkin.skeletons;
+            var skeletonsLength = gltfSkeletons.length;
+            for (var k = 0; k < skeletonsLength; ++k) {
+                skinnedNode.skeletons.push(runtimeNodes[gltfSkeletons[k]]);
+            }
         }
     }
 
@@ -1493,7 +1491,7 @@ define([
             scratchObjectSpace = Matrix4.inverseTransformation(node.transformToRoot, scratchObjectSpace);
 
             var jointMatrices = node.jointMatrices;
-            var joints = node.skeletons;                    // TODO: use what?
+            var joints = node.skeletons;
             var skin = node.skin;
             var bindShapeMatrix = skin.bindShapeMatrix;
             var inverseBindMatrices = skin.inverseBindMatrices;
