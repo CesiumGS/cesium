@@ -258,7 +258,8 @@ define([
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
-            nodes : undefined
+            nodes : undefined,
+            skinnedNodes : undefined
         };
         this._rendererResources = {
             buffers : {},
@@ -272,7 +273,6 @@ define([
             uniformMaps : {}
         };
 
-        this._skinnedNodes = [];
         this._commandLists = new CommandLists();
         this._pickIds = [];
     };
@@ -394,15 +394,18 @@ define([
 
     function parseNodes(model) {
         var runtimeNodes = {};
+        var skinnedNodes = [];
 
         var nodes = model.gltf.nodes;
-        var skinnedNodes = model._skinnedNodes;
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
-                runtimeNodes[name] = {
+                var runtimeNode = {
+// TODO: remove these?
+                    name : name,
+
                     matrix : undefined,
                     translation : undefined,
                     rotation : undefined,
@@ -413,19 +416,36 @@ define([
                     dirty : false,                      // for graph traversal
                     anyAncestorDirty : false,           // for graph traversal
 
-                    commands : [],                      // will be empty for transform, light, and camera nodes
+                    commands : [],                      // empty for transform, light, and camera nodes
 
-                    children : [],                      // will be empty for leaf nodes
-                    parents : []                        // will be empty for root nodes
+                    skin : undefined,                   // undefined when node is not skinned
+                    jointMatrices : [],                 // empty when node is not skinned
+                    skeletons : [],                     // empty when node is not skinned
+
+                    children : [],                      // empty for leaf nodes
+                    parents : []                        // empty for root nodes
                 };
+                runtimeNodes[name] = runtimeNode;
 
                 if (defined(node.instanceSkin)) {
-                    skinnedNodes.push(node);
+                    skinnedNodes.push(runtimeNode);
                 }
             }
         }
 
+// TODO: get the right skeletons
+        var length = skinnedNodes.length;
+        for (var i = 0; i < length; ++i) {
+            var skinnedNode = skinnedNodes[i];
+            var gltfSkeletons = nodes[skinnedNode.name].instanceSkin.skeletons;
+            var skeletonsLength = gltfSkeletons.length;
+            for (var j = 0; j < skeletonsLength; ++j) {
+                skinnedNode.skeletons.push(runtimeNodes[gltfSkeletons[j]]);
+            }
+        }
+
         model._runtime.nodes = runtimeNodes;
+        model._runtime.skinnedNodes = skinnedNodes;
     }
 
     function parse(model) {
@@ -655,6 +675,8 @@ define([
         var buffers = loadResources.buffers;
         var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
+        var nodes = gltf.nodes;
+        var runtimeSkins = {};
 
         for (var name in skins) {
             if (skins.hasOwnProperty(name)) {
@@ -681,11 +703,18 @@ define([
                     bindShapeMatrix = Matrix4.clone(skin.bindShapeMatrix);
                 }
 
-                skin.czm = {
+                runtimeSkins[name] = {
                     inverseBindMatrices : matrices,
                     bindShapeMatrix : bindShapeMatrix // not used when undefined
                 };
             }
+        }
+
+        var skinnedNodes = model._runtime.skinnedNodes;
+        var length = skinnedNodes.length;
+        for (var j = 0; j < length; ++j) {
+            var skinnedNode = skinnedNodes[j];
+            skinnedNode.skin = runtimeSkins[nodes[skinnedNode.name].instanceSkin.skin];
         }
     }
 
@@ -845,71 +874,67 @@ define([
 
     var gltfSemanticUniforms = {
 // TODO: All semantics from https://github.com/KhronosGroup/glTF/issues/83
-        MODEL : function(uniformState, jointMatrices) {
+        MODEL : function(uniformState) {
             return function() {
                 return uniformState.getModel();
             };
         },
-        VIEW : function(uniformState, jointMatrices) {
+        VIEW : function(uniformState) {
             return function() {
                 return uniformState.getView();
             };
         },
-        PROJECTION : function(uniformState, jointMatrices) {
+        PROJECTION : function(uniformState) {
             return function() {
                 return uniformState.getProjection();
             };
         },
-        MODELVIEW : function(uniformState, jointMatrices) {
+        MODELVIEW : function(uniformState) {
             return function() {
                 return uniformState.getModelView();
             };
         },
-        VIEWPROJECTION : function(uniformState, jointMatrices) {
+        VIEWPROJECTION : function(uniformState) {
             return function() {
                 return uniformState.getViewProjection();
             };
         },
-        MODELVIEWPROJECTION : function(uniformState, jointMatrices) {
+        MODELVIEWPROJECTION : function(uniformState) {
             return function() {
                 return uniformState.getModelViewProjection();
             };
         },
-        MODELINVERSE : function(uniformState, jointMatrices) {
+        MODELINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseModel();
             };
         },
-        VIEWINVERSE : function(uniformState, jointMatrices) {
+        VIEWINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseView();
             };
         },
-        PROJECTIONINVERSE : function(uniformState, jointMatrices) {
+        PROJECTIONINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseProjection();
             };
         },
-        MODELVIEWINVERSE : function(uniformState, jointMatrices) {
+        MODELVIEWINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseModelView();
             };
         },
-        VIEWPROJECTIONINVERSE : function(uniformState, jointMatrices) {
+        VIEWPROJECTIONINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseViewProjection();
             };
         },
-        MODELVIEWINVERSETRANSPOSE : function(uniformState, jointMatrices) {
+        MODELVIEWINVERSETRANSPOSE : function(uniformState) {
             return function() {
                 return uniformState.getNormal();
             };
-        },
-        JOINT_MATRIX : function(uniformState, jointMatrices) {
-            return function() {
-                return jointMatrices;
-            };
         }
+        // JOINT_MATRIX created in createCommands()
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1035,7 +1060,7 @@ define([
                 var activeUniforms = model._rendererResources.programs[instanceProgram.program].getAllUniforms();
 
                 var parameterValues = {};
-                var jointMatrices = [];
+                var jointMatrixUniformName;
 
                 // Uniform parameters for this pass
                 for (var name in uniforms) {
@@ -1052,8 +1077,13 @@ define([
                                 func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
                             } else if (defined(parameter.semantic)) {
 // TODO: account for parameter.type with semantic
-                                // Map glTF semantic to Cesium automatic uniform
-                                func = gltfSemanticUniforms[parameter.semantic](context.getUniformState(), jointMatrices);
+                                if (parameter.semantic !== 'JOINT_MATRIX') {
+                                    // Map glTF semantic to Cesium automatic uniform
+                                    func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                                } else {
+                                    func = undefined;
+                                    jointMatrixUniformName = name;
+                                }
                             } else if (defined(parameter.source)) {
                                 func = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
@@ -1061,10 +1091,12 @@ define([
                                 func = gltfUniformFunctions[parameter.type](parameter.value, model);
                             }
 
-                            parameterValues[parameterName] = {
-                                uniformName : name,
-                                func : func
-                            };
+                            if (defined(func)) {
+                                parameterValues[parameterName] = {
+                                    uniformName : name,
+                                    func : func
+                                };
+                            }
                         }
                     }
                 }
@@ -1078,10 +1110,10 @@ define([
                     }
                 }
 
-                instanceTechnique.czm = {
-                    jointMatrices : jointMatrices
+                rendererUniformMaps[materialName] = {
+                    uniformMap : uniformMap,
+                    jointMatrixUniformName : jointMatrixUniformName
                 };
-                rendererUniformMaps[materialName] = uniformMap;
             }
         }
     }
@@ -1092,7 +1124,13 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, nodeCommands, context) {
+    function createJointMatricesFunction(runtimeNode) {
+        return function() {
+            return runtimeNode.jointMatrices;
+        };
+    }
+
+    function createCommand(model, gltfNode, runtimeNode, context) {
         var opaqueColorCommands = model._commandLists.opaqueList;
         var translucentColorCommands = model._commandLists.translucentList;
 
@@ -1147,7 +1185,16 @@ define([
                 var vertexArray = rendererVertexArrays[name + '.primitive.' + i];
                 var count = ix.count;
                 var offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.type));  // glTF has offset in bytes.  Cesium has offsets in indices
-                var uniformMap = rendererUniformMaps[primitive.material];
+
+                var um = rendererUniformMaps[primitive.material];
+                var uniformMap = um.uniformMap;
+                if (defined(um.jointMatrixUniformName)) {
+                    var jointUniformMap = {};
+                    jointUniformMap[um.jointMatrixUniformName] = createJointMatricesFunction(runtimeNode);
+
+                    uniformMap = combine([uniformMap, jointUniformMap], false, false);
+                }
+
                 var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
                 var rs = rendererRenderStates[instanceTechnique.technique];
                 var owner = {
@@ -1208,7 +1255,7 @@ define([
                     }
                 }
 
-                nodeCommands.push({
+                runtimeNode.commands.push({
                     command : command,
                     pickCommand : pickCommand,
                     boundingSphere : boundingSphere
@@ -1281,7 +1328,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes) || defined(gltfNode.instanceSkin)) {
-                    createCommand(model, gltfNode, runtimeNode.commands, context);
+                    createCommand(model, gltfNode, runtimeNode, context);
                 }
 
                 var children = gltfNode.children;
@@ -1411,74 +1458,54 @@ define([
             }
         }
 
-        // Compute bounding sphere around the model
-        var radiusSquared = 0;
-        var index = 0;
+        if (spheres.length > 0) {
+            // Compute bounding sphere around the model
+            var radiusSquared = 0;
+            var index = 0;
 
-        length = spheres.length;
-        Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
-        for (i = 0; i < length; ++i) {
-            var bbs = spheres[i];
-            var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
+            length = spheres.length;
+            Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
+            for (i = 0; i < length; ++i) {
+                var bbs = spheres[i];
+                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
 
-            if (r > radiusSquared) {
-                radiusSquared = r;
-                index = i;
+                if (r > radiusSquared) {
+                    radiusSquared = r;
+                    index = i;
+                }
             }
-        }
 
-        // TODO: world bounding sphere is wrong unless all nodes are dirty.
-        Cartesian3.clone(scratchSphereCenter, model.worldBoundingSphere.center);
-        model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
+            // TODO: world bounding sphere is wrong unless all nodes are dirty.
+            Cartesian3.clone(scratchSphereCenter, model.worldBoundingSphere.center);
+            model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
+        }
     }
 
     var scratchObjectSpace = new Matrix4();
 
     function applySkins(model) {
-        var gltf = model.gltf;
-        var skins = gltf.skins;
-        var nodes = gltf.nodes;
-        var meshes = gltf.meshes;
-        var materials = gltf.materials;
-        var techniques = gltf.techniques;
-
-        var skinnedNodes = model._skinnedNodes;
+        var skinnedNodes = model._runtime.skinnedNodes;
         var length = skinnedNodes.length;
 
         for (var i = 0; i < length; ++i) {
             var node = skinnedNodes[i];
 
-// TODO: use Matrix4.inverseTransformation
-            scratchObjectSpace = Matrix4.inverse(node.czm.transformToRoot);
+            scratchObjectSpace = Matrix4.inverseTransformation(node.transformToRoot, scratchObjectSpace);
 
-            var instanceSkin = skinnedNodes[i].instanceSkin;
-            var skin = skins[instanceSkin.skin];
-
-            var joints = skin.joints;
-            var bindShapeMatrix = skin.czm.bindShapeMatrix;
-            var inverseBindMatrices = skin.czm.inverseBindMatrices;
+            var jointMatrices = node.jointMatrices;
+            var joints = node.skeletons;                    // TODO: use what?
+            var skin = node.skin;
+            var bindShapeMatrix = skin.bindShapeMatrix;
+            var inverseBindMatrices = skin.inverseBindMatrices;
             var inverseBindMatricesLength = inverseBindMatrices.length;
 
-            var nodeNeshes = instanceSkin.sources;
-            var meshesLength = nodeNeshes.length;
-            for (var j = 0; j < meshesLength; ++j) {
-                var mesh = meshes[nodeNeshes[j]];
-
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var k = 0; k < primitivesLength; ++k) {
-                    var jointMatrices = materials[primitives[k].material].instanceTechnique.czm.jointMatrices;
-                    for (var m = 0; m < inverseBindMatricesLength; ++m) {
-// TODO: replace these with Matrix4.multiplyTransformation below
-
-                        // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
-                        jointMatrices[m] = Matrix4.multiply(scratchObjectSpace, nodes[joints[m]].czm.transformToRoot, jointMatrices[m]);
-                        jointMatrices[m] = Matrix4.multiply(jointMatrices[m], inverseBindMatrices[m], jointMatrices[m]);
-                        if (defined(bindShapeMatrix)) {
-                            // Optimization for when bind shape matrix is the identity.
-                            jointMatrices[m] = Matrix4.multiply(jointMatrices[m], bindShapeMatrix, jointMatrices[m]);
-                        }
-                    }
+            for (var m = 0; m < inverseBindMatricesLength; ++m) {
+                // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
+                jointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, jointMatrices[m]);
+                jointMatrices[m] = Matrix4.multiplyTransformation(jointMatrices[m], inverseBindMatrices[m], jointMatrices[m]);
+                if (defined(bindShapeMatrix)) {
+                    // Optimization for when bind shape matrix is the identity.
+                    jointMatrices[m] = Matrix4.multiplyTransformation(jointMatrices[m], bindShapeMatrix, jointMatrices[m]);
                 }
             }
         }
