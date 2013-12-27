@@ -271,7 +271,7 @@ define([
             var camera = viewModel._scene.getCamera();
             if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
                 var transform = Matrix4.inverseTransformation(camera.transform);
-                Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(camera.transform, camera.position), camera.position);
+                Matrix4.multiplyByPoint(camera.transform, camera.position, camera.position);
 
                 var rotation = Matrix4.getRotation(camera.transform);
                 Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);

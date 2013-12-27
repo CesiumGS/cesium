@@ -725,7 +725,7 @@ define([
             result = new BoundingSphere();
         }
 
-        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
         result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
                 Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
@@ -734,7 +734,23 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
+     * The transformation matrix is not verified to have a uniform scale of 1.
+     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
+     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     * @exception {DeveloperError} transform is required.
+     *
+     * @example
+     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
+     * var boundingSphere = new BoundingSphere();
+     * var newBoundingSphere = BoundingSphere.transformWithoutScale(boundingSphere, modelMatrix);
      */
     BoundingSphere.transformWithoutScale = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -745,13 +761,13 @@ define([
         if (!defined(transform)) {
             throw new DeveloperError('transform is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
         }
-        //>>includeEnd('debug');
 
-        result.center = Matrix4.multiplyByPoint2(transform, sphere.center, result.center);
+        result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
         result.radius = sphere.radius;
 
         return result;
@@ -989,20 +1005,6 @@ define([
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
-    };
-
-    /**
-     * Applies a 4x4 affine transformation matrix to this bounding sphere.
-     * @memberof BoundingSphere
-     *
-     * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} transform is required.
-     */
-    BoundingSphere.prototype.transform = function(transform, result) {
-        return BoundingSphere.transform(this, transform, result);
     };
 
     /**

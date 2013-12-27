@@ -395,14 +395,28 @@ defineSuite([
         var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
         var transform = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
         var expected = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 1.0);
-        expect(bs.transform(transform)).toEqual(expected);
+        expect(BoundingSphere.transform(bs, transform)).toEqual(expected);
     });
 
     it('applies scale transform', function() {
         var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
         var transform = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
-        var expected = new BoundingSphere(new Cartesian3(0.0, 0.0, 0.0), 3.0);
-        expect(bs.transform(transform)).toEqual(expected);
+        var expected = new BoundingSphere(Cartesian3.ZERO, 3.0);
+        expect(BoundingSphere.transform(bs, transform)).toEqual(expected);
+    });
+
+    it('applies transform without scale', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var transform = Matrix4.fromTranslation(new Cartesian3(1.0, 2.0, 3.0));
+        var expected = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 1.0);
+        expect(BoundingSphere.transformWithoutScale(bs, transform)).toEqual(expected);
+    });
+
+    it('transformWithoutScale ignores scale', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var transform = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+        var expected = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        expect(BoundingSphere.transformWithoutScale(bs, transform)).toEqual(expected);
     });
 
     it('finds distances', function() {
@@ -517,6 +531,19 @@ defineSuite([
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transform(sphere);
+        }).toThrowDeveloperError();
+    });
+
+    it('static transformWithoutScale throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.transformWithoutScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('static transformWithoutScale throws without a transform', function() {
+        var sphere = new BoundingSphere();
+        expect(function() {
+            BoundingSphere.transformWithoutScale(sphere);
         }).toThrowDeveloperError();
     });
 

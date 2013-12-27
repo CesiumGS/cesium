@@ -119,9 +119,31 @@ define([
         return result;
     };
 
-// TODO:
     /**
-     * DOC_TBA
+     * Creates a Matrix4 from 16 consecutive elements in an array.
+     * @memberof Matrix4
+     *
+     * @param {Array} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create the Matrix4:
+     * // [1.0, 2.0, 3.0, 4.0]
+     * // [1.0, 2.0, 3.0, 4.0]
+     * // [1.0, 2.0, 3.0, 4.0]
+     * // [1.0, 2.0, 3.0, 4.0]
+     *
+     * var v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+     * var m = Matrix4.fromArray(v);
+     *
+     * // Create same Matrix4 with using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
+     * var m2 = Matrix4.fromArray(v2, 2);
      */
     Matrix4.fromArray = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1352,7 +1374,27 @@ define([
     };
 
     /**
-     * DOC_TBA - Use doc similar to inverseTransformation
+     * Computes the product of two matrices assuming the matrices are
+     * affine transformation matrices, where the upper left 3x3 elements
+     * are a rotation matrix, and the upper three elements in the fourth
+     * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
+     * The matrix is not verified to be in the proper form.
+     * This method is faster than computing the product for general 4x4
+     * matrices using {@link #multiply}.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} left The first matrix.
+     * @param {Matrix4} right The second matrix.
+     * @param {Matrix4} [result] The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     *
+     * @exception {DeveloperError} left is required.
+     * @exception {DeveloperError} right is required.
+     *
+     * @example
+     * var m1 = new Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+     * var m2 = Transforms.eastNorthUpToFixedFrame(new Cartesian3(1.0, 1.0, 1.0));
+     * var m3 = Matrix4.multiplyTransformation(m1, m2);
      */
     Matrix4.multiplyTransformation = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1647,7 +1689,24 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of zero.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @param {Cartesian3} cartesian The point.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} cartesian is required.
+     * @exception {DeveloperError} matrix is required.
+     *
+     * @example
+     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
+     * Matrix4.multiplyByPointAsVector(matrix, p, result);
+     * // A shortcut for
+     * //   Cartesian3 p = ...
+     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 0.0), result);
      */
     Matrix4.multiplyByPointAsVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1676,47 +1735,9 @@ define([
         return result;
     };
 
-    var scratchPoint = new Cartesian4(0.0, 0.0, 0.0, 1.0);
-
     /**
-     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
-     * with a {@link Cartesian4} with a <code>w</code> component of one.
-     * @memberof Matrix4
-     *
-     * @param {Matrix4} matrix The matrix.
-     * @param {Cartesian3} cartesian The point.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} matrix is required.
-     *
-     * @example
-     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
-     * Matrix4.multiplyByPoint(matrix, p, result);
-     * // A shortcut for
-     * //   Cartesian3 p = ...
-     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
-     */
-    Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-        //>>includeEnd('debug');
-
-        scratchPoint.x = cartesian.x;
-        scratchPoint.y = cartesian.y;
-        scratchPoint.z = cartesian.z;
-        // scratchPoint.w is one.  See above.
-
-        return Matrix4.multiplyByVector(matrix, scratchPoint, result);
-    };
-
-
-    /**
-     * Computes the product of a matrix and a {@link Cartesian3}.  This is equivalent to calling {@link Matrix4.multiplyByVector}
-     * with a {@link Cartesian4} with a <code>w</code> component of one, but this returns a {@link Cartesian3}.
+     * Computes the product of a matrix and a {@link Cartesian3}. This is equivalent to calling {@link Matrix4.multiplyByVector}
+     * with a {@link Cartesian4} with a <code>w</code> component of 1, but returns a {@link Cartesian3} instead of a {@link Cartesian4}.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix.
@@ -1730,11 +1751,8 @@ define([
      * @example
      * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
      * Matrix4.multiplyByPoint(matrix, p, result);
-     * // A shortcut for
-     * //   Cartesian3 p = ...
-     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
      */
-    Matrix4.multiplyByPoint2 = function(matrix, cartesian, result) {
+    Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
