@@ -404,10 +404,10 @@ define([
         this.look(this._camera.direction, -amount);
     };
 
-    var appendTransformPosition = Cartesian4.clone(Cartesian4.UNIT_W);
-    var appendTransformUp = Cartesian4.clone(Cartesian4.ZERO);
-    var appendTransformRight = Cartesian4.clone(Cartesian4.ZERO);
-    var appendTransformDirection = Cartesian4.clone(Cartesian4.ZERO);
+    var appendTransformPosition = new Cartesian3();
+    var appendTransformUp = new Cartesian3();
+    var appendTransformRight = new Cartesian3();
+    var appendTransformDirection = new Cartesian3();
     function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
@@ -418,21 +418,21 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = Matrix4.multiply(transform, oldTransform);
+            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform);
 
             var invTransform = camera.inverseTransform;
-            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, position, position), camera.position);
-            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, up, up), camera.up);
-            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, right, right), camera.right);
-            Cartesian3.clone(Matrix4.multiplyByVector(invTransform, direction, direction), camera.direction);
+            Matrix4.multiplyByPoint(invTransform, position, camera.position);
+            Matrix4.multiplyByPointAsVector(invTransform, up, camera.up);
+            Matrix4.multiplyByPointAsVector(invTransform, right, camera.right);
+            Matrix4.multiplyByPointAsVector(invTransform, direction, camera.direction);
         }
         return oldTransform;
     }
 
-    var revertTransformPosition = Cartesian4.clone(Cartesian4.UNIT_W);
-    var revertTransformUp = Cartesian4.clone(Cartesian4.ZERO);
-    var revertTransformRight = Cartesian4.clone(Cartesian4.ZERO);
-    var revertTransformDirection = Cartesian4.clone(Cartesian4.ZERO);
+    var revertTransformPosition = new Cartesian3();
+    var revertTransformUp = new Cartesian3();
+    var revertTransformRight = new Cartesian3();
+    var revertTransformDirection = new Cartesian3();
     function revertTransform(controller, transform) {
         if (defined(transform)) {
             var camera = controller._camera;
@@ -444,10 +444,10 @@ define([
             camera.transform = transform;
             transform = camera.inverseTransform;
 
-            position = Cartesian3.clone(Matrix4.multiplyByVector(transform, position, position), camera.position);
-            up = Cartesian3.clone(Matrix4.multiplyByVector(transform, up, up), camera.up);
-            right = Cartesian3.clone(Matrix4.multiplyByVector(transform, right, right), camera.right);
-            direction = Cartesian3.clone(Matrix4.multiplyByVector(transform, direction, direction), camera.direction);
+            Matrix4.multiplyByPoint(transform, position, camera.position);
+            Matrix4.multiplyByPointAsVector(transform, up, camera.up);
+            Matrix4.multiplyByPointAsVector(transform, right, camera.right);
+            Matrix4.multiplyByPointAsVector(transform, direction, camera.direction);
         }
     }
 
@@ -989,33 +989,27 @@ define([
     }
 
     var viewExtentCVCartographic = new Cartographic();
-    var viewExtentCVNorthEast = Cartesian4.clone(Cartesian4.UNIT_W);
-    var viewExtentCVSouthWest = Cartesian4.clone(Cartesian4.UNIT_W);
-    var viewExtentCVTransform = new Matrix4();
+    var viewExtentCVNorthEast = new Cartesian3();
+    var viewExtentCVSouthWest = new Cartesian3();
     function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
         var north = extent.north;
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
-
-        var transform = Matrix4.clone(camera.transform, viewExtentCVTransform);
-        Matrix4.setColumn(transform, 3, Cartesian4.UNIT_W);
         var invTransform = camera.inverseTransform;
 
         var cart = viewExtentCVCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var position = projection.project(cart);
-        var northEast = Cartesian3.clone(position, viewExtentCVNorthEast);
-        Matrix4.multiplyByVector(transform, northEast, northEast);
-        Matrix4.multiplyByVector(invTransform, northEast, northEast);
+        var northEast = projection.project(cart, viewExtentCVNorthEast);
+        Matrix4.multiplyByPoint(camera.transform, northEast, northEast);
+        Matrix4.multiplyByPoint(invTransform, northEast, northEast);
 
         cart.longitude = west;
         cart.latitude = south;
-        position = projection.project(cart);
-        var southWest = Cartesian3.clone(position, viewExtentCVSouthWest);
-        Matrix4.multiplyByVector(transform, southWest, southWest);
-        Matrix4.multiplyByVector(invTransform, southWest, southWest);
+        var southWest = projection.project(cart, viewExtentCVSouthWest);
+        Matrix4.multiplyByPoint(camera.transform, southWest, southWest);
+        Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1380,8 +1374,7 @@ define([
         var camera = controller._camera;
         var updateCV = function(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time);
-            var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
-            camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, pos));
+            camera.position = Matrix4.multiplyByPoint(camera.inverseTransform, interp, camera.position);
         };
 
         return {
@@ -1397,23 +1390,25 @@ define([
         };
     }
 
+    var normalScratch = new Cartesian3();
+    var centerScratch = new Cartesian3();
+    var posScratch = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
     function createAnimationCV(controller, duration) {
         var camera = controller._camera;
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(camera.inverseTransform, Cartesian4.UNIT_X));
+        var normal = Matrix4.multiplyByPointAsVector(camera.inverseTransform, Cartesian3.UNIT_X, normalScratch);
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-        var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar));
-        center = new Cartesian4(center.x, center.y, center.z, 1.0);
-        var centerWC = Matrix4.multiplyByVector(camera.transform, center);
+        var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar, centerScratch), centerScratch);
+        center = Matrix4.multiplyByPoint(camera.transform, center, center);
 
-        var cameraPosition = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var positionWC = Matrix4.multiplyByVector(camera.transform, cameraPosition);
+        position = Matrix4.multiplyByPoint(camera.transform, camera.position, posScratch);
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
-        var distToC = Cartesian3.magnitude(Cartesian3.subtract(positionWC, centerWC));
+        var distToC = Cartesian3.magnitude(Cartesian3.subtract(position, center, scratchCartesian3));
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 
@@ -1423,11 +1418,11 @@ define([
         var maxX = Math.max(dWidth - mapWidth, mapWidth);
         var maxY = Math.max(dHeight - mapHeight, mapHeight);
 
-        if (positionWC.z < -maxX || positionWC.z > maxX || positionWC.y < -maxY || positionWC.y > maxY) {
-            var translateX = centerWC.y < -maxX || centerWC.y > maxX;
-            var translateY = centerWC.z < -maxY || centerWC.z > maxY;
+        if (position.z < -maxX || position.z > maxX || position.y < -maxY || position.y > maxY) {
+            var translateX = center.y < -maxX || center.y > maxX;
+            var translateY = center.z < -maxY || center.z > maxY;
             if (translateX || translateY) {
-                return createAnimationTemplateCV(controller, Cartesian3.fromCartesian4(positionWC), Cartesian3.fromCartesian4(centerWC), maxX, maxY, duration);
+                return createAnimationTemplateCV(controller, position, center, maxX, maxY, duration);
             }
         }
 
