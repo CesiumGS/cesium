@@ -142,6 +142,8 @@ define([
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesPoint = new Cartesian3();
+    var negateScratch = new Cartesian3();
+
     /**
      * Creates a culling volume for this frustum.
      *
@@ -216,7 +218,7 @@ define([
         plane.x = -right.x;
         plane.y = -right.y;
         plane.z = -right.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(right), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(right, negateScratch), point);
 
         // Bottom plane
         Cartesian3.multiplyByScalar(up, b, point);
@@ -242,7 +244,7 @@ define([
         plane.x = -up.x;
         plane.y = -up.y;
         plane.z = -up.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(up), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(up, negateScratch), point);
 
         // Near plane
         plane = planes[4];
@@ -265,7 +267,7 @@ define([
         plane.x = -direction.x;
         plane.y = -direction.y;
         plane.z = -direction.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(direction), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(direction, negateScratch), point);
 
         return this._cullingVolume;
     };

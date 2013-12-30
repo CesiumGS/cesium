@@ -180,6 +180,8 @@ define([
         return false;
     };
 
+    var occludeePositionScratch = new Cartesian3();
+
     /**
     * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
     *
@@ -199,7 +201,7 @@ define([
     * @see Occluder#getVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
-        var occludeePosition = Cartesian3.clone(occludee.center);
+        var occludeePosition = Cartesian3.clone(occludee.center, occludeePositionScratch);
         var occludeeRadius = occludee.radius;
 
         if (this._horizonDistance !== Number.MAX_VALUE) {
