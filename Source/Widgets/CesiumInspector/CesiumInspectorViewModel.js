@@ -309,10 +309,12 @@ define([
         this._doFilterPrimitive = createCommand(function() {
             if (that.filterPrimitive) {
                 that._scene.debugCommandFilter = function(command) {
-                    if (defined(that._primitive._billboardCollection)) {
-                        return command.owner === that._primitive._billboardCollection;
+                    if (defined(that._modelMatrixPrimitive) && command.owner === that._modelMatrixPrimitive._primitive) {
+                        return true;
+                    } else if (defined(that._primitive)) {
+                        return command.owner ===  that._primitive|| command.owner === that._primitive._billboardCollection;
                     }
-                    return command.owner === that._primitive;
+                    return false;
                 };
             } else {
                 that._scene.debugCommandFilter = undefined;
@@ -719,6 +721,9 @@ define([
                     }
                     if (that.performance) {
                         br.x = that._canvas.clientWidth - br.width - 10;
+                    }
+                    if (that.primitiveReferenceFrame) {
+                        that._modelMatrixPrimitive.modelMatrix = that._primitive.modelMatrix;
                     }
                 };
             }
