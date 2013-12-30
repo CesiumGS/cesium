@@ -105,9 +105,11 @@ define([
      * this.indices = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(numberOfVertices)) {
             throw new DeveloperError('numberOfVertices is required.');
         }
+        //>>includeEnd('debug');
 
         if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(indicesLengthOrArray);

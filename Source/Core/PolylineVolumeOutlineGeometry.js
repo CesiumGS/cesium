@@ -122,13 +122,16 @@ define([
     var PolylineVolumeOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
+        var shape = options.shapePositions;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('options.polylinePositions is required.');
         }
-        var shape = options.shapePositions;
         if (!defined(shape)) {
             throw new DeveloperError('options.shapePositions is required.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._shape = shape;
@@ -153,14 +156,18 @@ define([
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
         var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeOutlineGeometry._ellipsoid);
+        var shape2D = polylineVolumeOutlineGeometry._shape;
+        shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
+
+        //>>includeStart('debug', pragmas.debug);
         if (cleanPositions.length < 2) {
             throw new DeveloperError('Count of unique polyline positions must be greater than 1.');
         }
-        var shape2D = polylineVolumeOutlineGeometry._shape;
-        shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
         if (shape2D.length < 3) {
             throw new DeveloperError('Count of unique shape positions must be at least 3.');
         }
+        //>>includeEnd('debug');
+
         if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
             shape2D.reverse();
         }

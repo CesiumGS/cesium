@@ -131,9 +131,11 @@ define([
      * primitives.add(labels);
      */
     CompositePrimitive.prototype.add = function(primitive) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(primitive)) {
             throw new DeveloperError('primitive is required.');
         }
+        //>>includeEnd('debug');
 
         var external = (primitive._external = primitive._external || {});
         var composites = (external._composites = external._composites || {});
@@ -230,9 +232,11 @@ define([
     };
 
     function getPrimitiveIndex(compositePrimitive, primitive) {
+        //>>includeStart('debug', pragmas.debug);
         if (!compositePrimitive.contains(primitive)) {
             throw new DeveloperError('primitive is not in this composite.');
         }
+        //>>includeEnd('debug');
 
         return compositePrimitive._primitives.indexOf(primitive);
     }
@@ -363,9 +367,11 @@ define([
      * }
      */
     CompositePrimitive.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._primitives[index];
     };

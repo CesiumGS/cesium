@@ -560,11 +560,13 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-
         var polygonHierarchy = options.polygonHierarchy;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+        //>>includeEnd('debug');
 
         this._vertexFormat = vertexFormat;
         this._ellipsoid = ellipsoid;
@@ -612,9 +614,11 @@ define([
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.positions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        //>>includeEnd('debug');
 
         var newOptions = {
             polygonHierarchy : {

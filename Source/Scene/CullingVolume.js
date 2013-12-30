@@ -40,9 +40,11 @@ define([
      * @exception {DeveloperError} boundingVolume is required.
      */
     CullingVolume.prototype.getVisibility = function(boundingVolume) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingVolume)) {
             throw new DeveloperError('boundingVolume is required.');
         }
+        //>>includeEnd('debug');
 
         var planes = this.planes;
         var intersecting = false;

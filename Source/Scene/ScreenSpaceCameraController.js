@@ -55,13 +55,14 @@ define([
      * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
-
         if (!defined(cameraController)) {
             throw new DeveloperError('cameraController is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.

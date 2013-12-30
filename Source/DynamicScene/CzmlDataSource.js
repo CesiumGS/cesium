@@ -305,7 +305,7 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-            throw new DeveloperError(type);
+            throw (type);
         }
     }
 
@@ -1308,9 +1308,11 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.process = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
-            throw new DeveloperError('czml is required.');
+            throw ('czml is required.');
         }
+        //>>includeEnd('debug');
 
         this._clock = loadCzml(this, czml, source);
     };
@@ -1324,9 +1326,11 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.load = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
-            throw new DeveloperError('czml is required.');
+            throw ('czml is required.');
         }
+        //>>includeEnd('debug');
 
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
@@ -1343,9 +1347,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+            throw ('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {
@@ -1366,9 +1372,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+            throw ('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {

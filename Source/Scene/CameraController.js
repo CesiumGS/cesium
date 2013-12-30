@@ -50,9 +50,11 @@ define([
      * @exception {DeveloperError} camera is required.
      */
     var CameraController = function(camera) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(camera)) {
             throw new DeveloperError('camera is required.');
         }
+        //>>includeEnd('debug');
 
         this._camera = camera;
         this._mode = SceneMode.SCENE3D;
@@ -130,10 +132,13 @@ define([
 
         if (updateFrustum) {
             var frustum = this._frustum = this._camera.frustum.clone();
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(frustum.left) || !defined(frustum.right) ||
                !defined(frustum.top) || !defined(frustum.bottom)) {
                 throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
             }
+            //>>includeEnd('debug');
 
             var maxZoomOut = 2.0;
             var ratio = frustum.top / frustum.right;
@@ -181,9 +186,11 @@ define([
      * @see CameraController#moveDown
      */
     CameraController.prototype.move = function(direction, amount) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
+        //>>includeEnd('debug');
 
         var cameraPosition = this._camera.position;
         Cartesian3.multiplyByScalar(direction, amount, moveScratch);
@@ -359,9 +366,11 @@ define([
      * @see CameraController#lookRight
      */
     CameraController.prototype.look = function(axis, angle) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
             throw new DeveloperError('axis is required.');
         }
+        //>>includeEnd('debug');
 
         var turnAngle = defaultValue(angle, this.defaultLookAmount);
         var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, lookScratchQuaternion);
@@ -477,16 +486,16 @@ define([
      * controller.rotate(axis, angle, transform);
     */
     CameraController.prototype.rotate = function(axis, angle, transform) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
             throw new DeveloperError('axis is required.');
         }
+        //>>includeEnd('debug');
 
         var camera = this._camera;
-
         var turnAngle = defaultValue(angle, this.defaultRotateAmount);
         var quaternion = Quaternion.fromAxisAngle(axis, -turnAngle, rotateScratchQuaternion);
         var rotation = Matrix3.fromQuaternion(quaternion, rotateScratchMatrix);
-
         var oldTransform = appendTransform(this, transform);
         Matrix3.multiplyByVector(rotation, camera.position, camera.position);
         Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
@@ -610,9 +619,11 @@ define([
     function zoom2D(controller, amount) {
         var frustum = controller._camera.frustum;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
             throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
         }
+        //>>includeEnd('debug');
 
         amount = amount * 0.5;
         var newRight = frustum.right - amount;
@@ -741,9 +752,11 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     CameraController.prototype.setPositionCartographic = function(cartographic) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE2D) {
             setPositionCartographic2D(this, cartographic);
@@ -830,9 +843,12 @@ define([
             //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             //* @exception {DeveloperError} angle is required.
             set : function (angle) {
+
+                //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
                     throw new DeveloperError('angle is required.');
                 }
+                //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
                     setHeading2D(this, angle);
@@ -861,9 +877,12 @@ define([
             //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
             //* @exception {DeveloperError} angle is required.
             set : function(angle) {
+
+                //>>includeStart('debug', pragmas.debug);
                 if (!defined(angle)) {
                     throw new DeveloperError('angle is required.');
                 }
+                //>>includeEnd('debug');
 
                 if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
                     var camera = this._camera;
@@ -894,6 +913,7 @@ define([
      * @exception {DeveloperError} lookAt is not supported while morphing.
      */
     CameraController.prototype.lookAt = function(eye, target, up) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(eye)) {
             throw new DeveloperError('eye is required');
         }
@@ -909,6 +929,7 @@ define([
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('lookAt is not supported while morphing.');
         }
+        //>>includeEnd('debug');
 
         var camera = this._camera;
         camera.position = Cartesian3.clone(eye, camera.position);
@@ -1101,9 +1122,11 @@ define([
      * @exception {DeveloperError} extent is required.
      */
     CameraController.prototype.getExtentCameraCoordinates = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required');
         }
+        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE3D) {
             return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
@@ -1126,11 +1149,13 @@ define([
      * @exception {DeveloperError} extent is required.
      */
     CameraController.prototype.viewExtent = function(extent, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        //>>includeEnd('debug');
 
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         if (this._mode === SceneMode.SCENE3D) {
             extentCameraPosition3D(this._camera, extent, ellipsoid, this._camera.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
@@ -1197,9 +1222,11 @@ define([
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
     CameraController.prototype.pickEllipsoid = function(windowPosition, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Cartesian3();
@@ -1280,9 +1307,11 @@ define([
      * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     CameraController.prototype.getPickRay = function(windowPosition, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new Ray();
@@ -1437,9 +1466,11 @@ define([
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      */
     CameraController.prototype.createCorrectPositionAnimation = function(duration) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(duration)) {
             throw new DeveloperError('duration is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE2D) {
             return createAnimation2D(this, duration);

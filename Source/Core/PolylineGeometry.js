@@ -64,23 +64,22 @@ define([
      */
     var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var positions = options.positions;
         var colors = options.colors;
         var width = defaultValue(options.width, 1.0);
         var perVertex = defaultValue(options.colorsPerVertex, false);
 
+        //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-
         if (width < 1.0) {
             throw new DeveloperError('width must be greater than or equal to one.');
         }
-
         if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._colors = colors;

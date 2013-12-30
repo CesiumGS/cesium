@@ -83,12 +83,15 @@ define([
      * @exception {DeveloperError} referenceFrame is required.
      */
     ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         if (!defined(referenceFrame)) {
             throw new DeveloperError('referenceFrame is required.');
         }
+        //>>includeEnd('debug');
+
         var value = this._property.getValue(time, result);
         return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, value);
     };

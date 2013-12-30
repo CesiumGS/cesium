@@ -153,18 +153,19 @@ define([
      * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
+        hint = hint || MipmapHint.DONT_CARE;
+
+        //>>includeStart('debug', pragmas.debug);
         if ((this._size > 1) && !CesiumMath.isPowerOfTwo(this._size)) {
             throw new DeveloperError('width and height must be a power of two to call generateMipmap().');
         }
-
-        hint = hint || MipmapHint.DONT_CARE;
         if (!MipmapHint.validate(hint)) {
             throw new DeveloperError('hint is invalid.');
         }
+        //>>includeEnd('debug');
 
         var gl = this._gl;
         var target = this._textureTarget;
-
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);

@@ -87,17 +87,17 @@ define([
         var maximumHeights = options.maximumHeights;
         var minimumHeights = options.minimumHeights;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
             throw new DeveloperError('positions is required.');
         }
-
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and maximumHeights must have the same length.');
         }
-
         if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
+        //>>includeEnd('debug');
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -149,11 +149,13 @@ define([
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var positions = options.positions;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        //>>includeEnd('debug');
 
         var minHeights;
         var maxHeights;

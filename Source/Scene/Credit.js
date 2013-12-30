@@ -26,9 +26,12 @@ define([
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
         var hasText = (defined(text));
+
+        //>>includeStart('debug', pragmas.debug);
         if (!hasText && !hasImage && !hasLink) {
             throw new DeveloperError('text, imageUrl or link is required');
         }
+        //>>includeEnd('debug');
 
         if (!hasText && !hasImage) {
             text = link;

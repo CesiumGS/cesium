@@ -38,13 +38,14 @@ define([
      * var interval = new TimeInterval(JulianDate.fromTotalDays(1000), JulianDate.fromTotalDays(1001), true, false, Color.WHITE);
      */
     var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(start)) {
             throw new DeveloperError('start must be specified.');
         }
-
         if (!defined(stop)) {
             throw new DeveloperError('stop must be specified.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(isStartIncluded)) {
             isStartIncluded = true;
@@ -150,9 +151,11 @@ define([
      * @exception {DeveloperError} epsilon is required and must be number.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
+        //>>includeEnd('debug');
 
         return left === right ||
                defined(left) &&

@@ -127,8 +127,7 @@ define([
             (!defined(viewport.width)) ? context.getDrawingBufferWidth() : viewport.width,
             (!defined(viewport.height)) ? context.getDrawingBufferHeight() : viewport.height) : undefined;
 
-        // Validate
-
+        //>>includeStart('debug', pragmas.debug);
         if (!WindingOrder.validate(this.frontFace)) {
             throw new DeveloperError('Invalid renderState.frontFace.');
         }
@@ -247,6 +246,7 @@ define([
                 throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
             }
         }
+        //>>includeEnd('debug');
 
         this.id = 0;
         this._applyFunctions = [];

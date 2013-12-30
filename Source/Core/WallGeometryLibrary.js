@@ -115,9 +115,12 @@ define([
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
 
+        //>>includeStart('debug', pragmas.debug);
         if (wallPositions.length < 2) {
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
+        //>>includeEnd('debug');
+
         var hasMinHeights = (defined(minimumHeights));
 
         if (wallPositions.length >= 3) {

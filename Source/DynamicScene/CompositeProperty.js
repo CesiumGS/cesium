@@ -65,9 +65,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     CompositeProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {

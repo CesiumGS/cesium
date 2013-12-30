@@ -988,9 +988,11 @@ define([
      *
      */
     Scene.prototype.pick = function(windowPosition) {
+        //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var context = this._context;
         var us = this.getUniformState();
@@ -1044,9 +1046,12 @@ define([
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var pickedObjects = [];
 

@@ -84,9 +84,11 @@ define([
      * @exception {DeveloperError} This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(value) && (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration))) {

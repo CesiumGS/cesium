@@ -78,25 +78,23 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var slices = defaultValue(options.slices, 128);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0.');
         }
-
         if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0.');
         }
-
         if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
-
         if (bottomRadius === 0 && topRadius === 0) {
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
-
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
         }
+        //>>includeEnd('debug');
 
         this._length = length;
         this._topRadius = topRadius;

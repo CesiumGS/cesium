@@ -59,9 +59,11 @@ define([
      * @exception {DeveloperError} listener is required and must be a function.
      */
     Event.prototype.addEventListener = function(listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
+        //>>includeEnd('debug');
 
         this._listeners.push(listener);
         this._scopes.push(scope);
@@ -86,9 +88,11 @@ define([
      * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
+        //>>includeEnd('debug');
 
         var thisListeners = this._listeners;
         var thisScopes = this._scopes;

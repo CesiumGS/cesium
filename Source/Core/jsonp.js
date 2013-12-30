@@ -38,9 +38,11 @@ define([
      * });
      */
     var jsonp = function(url, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

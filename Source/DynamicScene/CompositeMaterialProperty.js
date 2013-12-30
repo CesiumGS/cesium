@@ -45,9 +45,11 @@ define([
      * @type {String} The type of material.
      */
     CompositeMaterialProperty.prototype.getType = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {
@@ -67,9 +69,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     CompositeMaterialProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {

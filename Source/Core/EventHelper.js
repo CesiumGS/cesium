@@ -45,9 +45,11 @@ define([
      * @exception {DeveloperError} listener is required and must be a function.
      */
     EventHelper.prototype.add = function(event, listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(event)) {
             throw new DeveloperError('event is required');
         }
+        //>>includeEnd('debug');
 
         this._removalFunctions.push(event.addEventListener(listener, scope));
     };

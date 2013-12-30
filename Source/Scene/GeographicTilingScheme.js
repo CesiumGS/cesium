@@ -131,9 +131,11 @@ define([
      * @exception {DeveloperError} <code>extent</code> is required.
      */
     GeographicTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
+        //>>includeEnd('debug');
 
         var west = CesiumMath.toDegrees(extent.west);
         var south = CesiumMath.toDegrees(extent.south);

@@ -138,9 +138,12 @@ define([
     TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             var upsampleDetails = this.upsampleDetails;
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(upsampleDetails)) {
                 throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
             }
+            //>>includeEnd('debug');
 
             var sourceData = upsampleDetails.data;
             var sourceX = upsampleDetails.x;

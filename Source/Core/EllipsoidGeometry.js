@@ -69,13 +69,14 @@ define([
         var slicePartitions = defaultValue(options.slicePartitions, 64);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (slicePartitions < 3) {
             throw new DeveloperError ('options.slicePartitions cannot be less than three.');
         }
-
         if (stackPartitions < 3) {
             throw new DeveloperError('options.stackPartitions cannot be less than three.');
         }
+        //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
         this._stackPartitions = stackPartitions;

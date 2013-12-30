@@ -48,14 +48,13 @@ define([
             // Throw if a texture and renderbuffer are attached to the same point.  This won't
             // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
+            //>>includeStart('debug', pragmas.debug);
             if (description.colorTexture && description.colorRenderbuffer) {
                 throw new DeveloperError('Cannot have both a color texture and color renderbuffer attachment.');
             }
-
             if (description.depthTexture && description.depthRenderbuffer) {
                 throw new DeveloperError('Cannot have both a depth texture and depth renderbuffer attachment.');
             }
-
             if (description.depthStencilTexture && description.depthStencilRenderbuffer) {
                 throw new DeveloperError('Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.');
             }
@@ -67,14 +66,13 @@ define([
             if (depthAttachment && depthStencilAttachment) {
                 throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
             }
-
             if (description.stencilRenderbuffer && depthStencilAttachment) {
                 throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
             }
-
             if (depthAttachment && description.stencilRenderbuffer) {
                 throw new DeveloperError('Cannot have both a depth and stencil attachment.');
             }
+            //>>includeEnd('debug');
 
             ///////////////////////////////////////////////////////////////////
 
@@ -160,9 +158,11 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setColorTexture = function(texture) {
+        //>>includeStart('debug', pragmas.debug);
         if (texture && !PixelFormat.isColorFormat(texture.getPixelFormat())) {
             throw new DeveloperError('The color-texture pixel-format must be a color format.');
         }
+        //>>includeEnd('debug');
 
         attachTexture(this, this._gl.COLOR_ATTACHMENT0, texture);
         destroyAttachment(this, this._colorTexture);
@@ -220,9 +220,11 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthTexture = function(texture) {
+        //>>includeStart('debug', pragmas.debug);
         if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT)) {
             throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
         }
+        //>>includeEnd('debug');
 
         attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
         destroyAttachment(this, this._depthTexture);
@@ -306,9 +308,11 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.setDepthStencilTexture = function(texture) {
+        //>>includeStart('debug', pragmas.debug);
         if (texture && (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL)) {
             throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
         }
+        //>>includeEnd('debug');
 
         attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
         destroyAttachment(this, this._depthStencilTexture);

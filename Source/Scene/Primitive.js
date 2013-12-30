@@ -491,6 +491,7 @@ define([
         // to match the shader program.
         var shaderAttributes = shaderProgram.getVertexAttributes();
 
+        //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {
             if (shaderAttributes.hasOwnProperty(name)) {
                 if (!defined(attributeIndices[name])) {
@@ -499,6 +500,7 @@ define([
                 }
             }
         }
+        //>>includeEnd('debug');
     }
 
     function createPickIds(context, primitive, instances) {
@@ -965,9 +967,11 @@ define([
 
     function createSetFunction(name, perInstanceAttributes, dirtyList) {
         return function (value) {
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
+            //>>includeEnd('debug');
 
             var attribute = perInstanceAttributes[name];
             attribute.value = value;
@@ -994,13 +998,14 @@ define([
      * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required');
         }
-
         if (!defined(this._perInstanceAttributeIndices)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
+        //>>includeEnd('debug');
 
         var index = -1;
         var lastIndex = this._lastPerInstanceAttributeIndex;

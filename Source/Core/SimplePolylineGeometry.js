@@ -60,13 +60,14 @@ define([
         var colors = options.colors;
         var perVertex = defaultValue(options.colorsPerVertex, false);
 
+        //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-
         if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._colors = colors;

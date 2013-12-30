@@ -3,6 +3,7 @@ define([
         './DeveloperError',
         './binarySearch',
         './defined',
+        './defaultValue',
         './TimeConstants',
         './LeapSecond',
         './TimeStandard',
@@ -12,6 +13,7 @@ define([
         DeveloperError,
         binarySearch,
         defined,
+        defaultValue,
         TimeConstants,
         LeapSecond,
         TimeStandard,
@@ -257,19 +259,19 @@ define([
         var secondsOfDay;
         //If any of the properties are defined, then we are constructing from components.
         if (defined(julianDayNumber) || defined(julianSecondsOfDay) || defined(timeStandard)) {
-            if (!defined(timeStandard)) {
-                timeStandard = TimeStandard.UTC;
-            } else if (timeStandard !== TimeStandard.UTC && timeStandard !== TimeStandard.TAI) {
+            timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
+
+            //>>includeStart('debug', pragmas.debug);
+            if (timeStandard !== TimeStandard.UTC && timeStandard !== TimeStandard.TAI) {
                 throw new DeveloperError('timeStandard is not a known TimeStandard.');
             }
-
             if (julianDayNumber === null || isNaN(julianDayNumber)) {
                 throw new DeveloperError('julianDayNumber is required.');
             }
-
             if (julianSecondsOfDay === null || isNaN(julianSecondsOfDay)) {
                 throw new DeveloperError('julianSecondsOfDay is required.');
             }
+            //>>includeEnd('debug');
 
             //coerce to integer
             wholeDays = julianDayNumber | 0;
@@ -339,9 +341,11 @@ define([
      * var julianDate = JulianDate.fromDate(date, TimeStandard.UTC);
      */
     JulianDate.fromDate = function(date, timeStandard) {
+        //>>includeStart('debug', pragmas.debug);
         if (!(date instanceof Date) || isNaN(date.getTime())) {
             throw new DeveloperError('date must be a valid JavaScript Date.');
         }
+        //>>includeEnd('debug');
 
         var components = computeJulianDateComponentsFromDate(date);
         return new JulianDate(components[0], components[1], timeStandard);
@@ -375,9 +379,11 @@ define([
      * var localDay = JulianDate.fromIso8601('2012-04-24T12:00-05:00');
      */
     JulianDate.fromIso8601 = function(iso8601String) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof iso8601String !== 'string') {
             throw new DeveloperError(iso8601ErrorMessage);
         }
+        //>>includeEnd('debug');
 
         //Comma and decimal point both indicate a fractional number according to ISO 8601,
         //start out by blanket replacing , with . which is the only valid such symbol in JS.
@@ -636,9 +642,12 @@ define([
      * var julianDate = JulianDate.fromTotalDays(2448257.75, TimeStandard.UTC);
      */
     JulianDate.fromTotalDays = function(totalDays, timeStandard) {
+        //>>includeStart('debug', pragmas.debug);
         if (totalDays === null || isNaN(totalDays)) {
             throw new DeveloperError('totalDays is required.');
         }
+        //>>includeEnd('debug');
+
         return new JulianDate(totalDays, 0, timeStandard);
     };
 
@@ -697,9 +706,12 @@ define([
      * @see JulianDate#equals
      */
     JulianDate.equalsEpsilon = function(left, right, epsilon) {
+        //>>includeStart('debug', pragmas.debug);
         if (epsilon === null || isNaN(epsilon)) {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
+        //>>includeEnd('debug');
+
         return Math.abs(left.getSecondsDifference(right)) <= epsilon;
     };
 
@@ -1000,9 +1012,12 @@ define([
      * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
      */
     JulianDate.prototype.addSeconds = function(seconds, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (seconds === null || isNaN(seconds)) {
             throw new DeveloperError('seconds is required and must be a number.');
         }
+        //>>includeEnd('debug');
+
         return setComponents(this._julianDayNumber, this._secondsOfDay + seconds, result);
     };
 
@@ -1030,9 +1045,12 @@ define([
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
     JulianDate.prototype.addMinutes = function(duration) {
+        //>>includeStart('debug', pragmas.debug);
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
+        //>>includeEnd('debug');
+
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
         return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
@@ -1061,9 +1079,12 @@ define([
      * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
      */
     JulianDate.prototype.addHours = function(duration) {
+        //>>includeStart('debug', pragmas.debug);
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
+        //>>includeEnd('debug');
+
         var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
         return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
@@ -1092,9 +1113,12 @@ define([
      * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
      */
     JulianDate.prototype.addDays = function(duration) {
+        //>>includeStart('debug', pragmas.debug);
         if (duration === null || isNaN(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
+        //>>includeEnd('debug');
+
         var newJulianDayNumber = this._julianDayNumber + duration;
         return new JulianDate(newJulianDayNumber, this._secondsOfDay, TimeStandard.TAI);
     };

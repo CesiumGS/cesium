@@ -371,13 +371,14 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
 

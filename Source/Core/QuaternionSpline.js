@@ -87,21 +87,20 @@ define([
         var firstInnerQuadrangle = options.firstInnerQuadrangle;
         var lastInnerQuadrangle = options.lastInnerQuadrangle;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points)) {
             throw new DeveloperError('points is required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         var innerQuadrangles = computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle);
 

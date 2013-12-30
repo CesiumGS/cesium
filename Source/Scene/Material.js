@@ -434,9 +434,12 @@ define([
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
     Material.fromType = function(type) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
+        //>>includeEnd('debug');
+
         return new Material({
             fabric : {
                 type : type

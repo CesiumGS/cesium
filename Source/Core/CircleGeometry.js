@@ -47,13 +47,14 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-
         if (radius <= 0.0) {
             throw new DeveloperError('radius must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
             center : options.center,

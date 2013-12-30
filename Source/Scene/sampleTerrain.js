@@ -45,6 +45,7 @@ define([
      * });
      */
     var sampleTerrain = function(terrainProvider, level, positions) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
         }
@@ -54,6 +55,7 @@ define([
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
+        //>>includeEnd('debug');
 
         var tilingScheme = terrainProvider.getTilingScheme();
 

@@ -68,9 +68,11 @@ define([
      * var splitValue = EncodedCartesian3.encode(value);
      */
     EncodedCartesian3.encode = function(value, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = {
@@ -117,13 +119,14 @@ define([
      * var encoded = EncodedCartesian3.fromCartesian(cart);
      */
     EncodedCartesian3.fromCartesian = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-
         if (!defined(result)) {
             result = new EncodedCartesian3();
         }
+        //>>includeEnd('debug');
 
         var high = result.high;
         var low = result.low;
@@ -173,17 +176,17 @@ define([
      * }
      */
     EncodedCartesian3.writeElements = function(cartesian, cartesianArray, index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-
         if (!defined(cartesianArray)) {
             throw new DeveloperError('cartesianArray is required');
         }
-
         if (typeof index !== 'number' || index < 0) {
             throw new DeveloperError('index must be a number greater than or equal to 0.');
         }
+        //>>includeEnd('debug');
 
         EncodedCartesian3.fromCartesian(cartesian, encodedP);
         var high = encodedP.high;

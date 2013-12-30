@@ -41,9 +41,11 @@ define([
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
     var EllipsoidTangentPlane = function(origin, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
+        //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -73,9 +75,11 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.fromPoints = function(cartesians, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         var box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
         return new EllipsoidTangentPlane(box.center, ellipsoid);
@@ -111,9 +115,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
 
         var ray = projectPointOntoPlaneRay;
         ray.origin = cartesian;
@@ -151,9 +157,11 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = [];
@@ -185,9 +193,11 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         var length = cartesians.length;
         if (!defined(result)) {

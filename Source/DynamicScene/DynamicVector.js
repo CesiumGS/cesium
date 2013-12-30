@@ -104,9 +104,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicVector.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.color = defaultValue(this.color, source.color);
         this.width = defaultValue(this.width, source.width);
         this.direction = defaultValue(this.direction, source.direction);

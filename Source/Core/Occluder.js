@@ -41,13 +41,14 @@ define([
      * var occluder = new Occluder(occluderBoundingSphere, cameraPosition);
      */
     var Occluder = function(occluderBoundingSphere, cameraPosition) {
+        //>>includeStart('debug', pragmas.debug);
         if (!occluderBoundingSphere) {
             throw new DeveloperError('occluderBoundingSphere is required.');
         }
-
         if (!cameraPosition) {
             throw new DeveloperError('camera position is required.');
         }
+        //>>includeEnd('debug');
 
         this._occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
         this._occluderRadius = occluderBoundingSphere.radius;
@@ -302,18 +303,17 @@ define([
      *
      */
     Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
-        // Validate input data
+        //>>includeStart('debug', pragmas.debug);
         if (!occluderBoundingSphere) {
             throw new DeveloperError('occluderBoundingSphere is required.');
         }
-
         if (!positions) {
             throw new DeveloperError('positions is required.');
         }
-
         if (positions.length === 0) {
             throw new DeveloperError('positions must contain at least one element');
         }
+        //>>includeEnd('debug');
 
         var occludeePos = Cartesian3.clone(occludeePosition);
         var occluderPosition = Cartesian3.clone(occluderBoundingSphere.center);
@@ -371,9 +371,11 @@ define([
      * which is a boolean value.
      */
     Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
+        //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var positions = extent.subsample(ellipsoid, 0.0, computeOccludeePointFromExtentScratch);

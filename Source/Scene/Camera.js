@@ -54,9 +54,11 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
     var Camera = function(context) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
@@ -366,9 +368,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.inverseTransform, cartesian, result);
     };
 
@@ -384,9 +389,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.transform, cartesian, result);
     };
 

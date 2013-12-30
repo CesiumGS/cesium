@@ -37,9 +37,11 @@ define([
      * var occluder = new EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
         }
+        //>>includeEnd('debug');
 
         this._ellipsoid = ellipsoid;
         this._cameraPosition = new Cartesian3();
@@ -163,17 +165,17 @@ define([
      * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPoint = function(directionToPoint, positions, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(directionToPoint)) {
             throw new DeveloperError('directionToPoint is required');
         }
         if (!defined(positions)) {
             throw new DeveloperError('positions is required');
         }
+        //>>includeEnd('debug');
 
         var ellipsoid = this._ellipsoid;
-
         var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
-
         var resultMagnitude = 0.0;
 
         for (var i = 0, len = positions.length; i < len; ++i) {
@@ -206,6 +208,7 @@ define([
      * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVertices = function(directionToPoint, vertices, stride, center, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(directionToPoint)) {
             throw new DeveloperError('directionToPoint is required');
         }
@@ -215,13 +218,11 @@ define([
         if (!defined(stride)) {
             throw new DeveloperError('stride is required');
         }
+        //>>includeEnd('debug');
 
         center = defaultValue(center, Cartesian3.ZERO);
-
         var ellipsoid = this._ellipsoid;
-
         var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
-
         var resultMagnitude = 0.0;
 
         for (var i = 0, len = vertices.length; i < len; i += stride) {
@@ -251,9 +252,11 @@ define([
      * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
      */
     EllipsoidalOccluder.prototype.computeHorizonCullingPointFromExtent = function(extent, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
+        //>>includeEnd('debug');
 
         var positions = extent.subsample(ellipsoid, 0.0, subsampleScratch);
         var bs = BoundingSphere.fromPoints(positions);

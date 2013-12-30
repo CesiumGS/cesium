@@ -43,9 +43,11 @@ define([
         y = defaultValue(y, 0.0);
         z = defaultValue(z, 0.0);
 
+        //>>includeStart('debug', pragmas.debug);
         if (x < 0.0 || y < 0.0 || z < 0.0) {
             throw new DeveloperError('All radii components must be greater than or equal to zero.');
         }
+        //>>includeEnd('debug');
 
         this._radii = new Cartesian3(x, y, z);
 
@@ -234,9 +236,11 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
+        //>>includeEnd('debug');
 
         var longitude = cartographic.longitude;
         var latitude = cartographic.latitude;
@@ -318,9 +322,11 @@ define([
      * var cartesianPositions = Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
      */
     Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographics)) {
             throw new DeveloperError('cartographics is required.');
         }
+        //>>includeEnd('debug');
 
         var length = cartographics.length;
         if (!defined(result)) {
@@ -396,9 +402,11 @@ define([
      * var cartographicPositions = Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         var length = cartesians.length;
         if (!defined(result)) {
@@ -428,9 +436,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
 
         var positionX = cartesian.x;
         var positionY = cartesian.y;
@@ -532,9 +542,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
 
         var positionX = cartesian.x;
         var positionY = cartesian.y;
