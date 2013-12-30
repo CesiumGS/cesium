@@ -93,7 +93,7 @@ defineSuite([
         );
         var viewModel = new CesiumInspectorViewModel(scene);
         scene.render();
-        viewModel.primitive = {primitive: p};
+        viewModel.primitive = p;
         viewModel.primitiveBoundingSphere = true;
         viewModel.showPrimitiveBoundingSphere();
         expect(p.debugShowBoundingVolume).toEqual(true);
@@ -102,30 +102,6 @@ defineSuite([
         viewModel.showPrimitiveBoundingSphere();
         scene.render();
         expect(p.debugShowBoundingVolume).toEqual(false);
-    });
-
-    it ('primitive reference frame', function() {
-        var p = scene.getPrimitives().add(new ExtentPrimitive({
-            extent : new Extent(
-                    CesiumMath.toRadians(-110.0),
-                    CesiumMath.toRadians(0.0),
-                    CesiumMath.toRadians(-90.0),
-                    CesiumMath.toRadians(20.0)),
-                rotation : CesiumMath.toRadians(45),
-                material : Material.fromType(Material.ColorType)
-            })
-        );
-        var viewModel = new CesiumInspectorViewModel(scene);
-        scene.render();
-        viewModel.primitive = {primitive: p};
-        viewModel.primitiveRefFrame = true;
-        viewModel.showPrimitiveRefFrame();
-        expect(scene.getPrimitives().getLength()).toEqual(2);
-
-        viewModel.primitiveRefFrame = false;
-        viewModel.showPrimitiveRefFrame();
-        scene.render();
-        expect(scene.getPrimitives().getLength()).toEqual(1);
     });
 
     it ('primitive filter', function() {
@@ -152,7 +128,7 @@ defineSuite([
 
         var viewModel = new CesiumInspectorViewModel(scene);
         scene.render();
-        viewModel.primitive = {primitive: p};
+        viewModel.primitive = p;
         viewModel.filterPrimitive = true;
         viewModel.doFilterPrimitive();
         expect(defined(scene.debugCommandFilter)).toEqual(true);
@@ -177,13 +153,13 @@ defineSuite([
         );
         var viewModel = new CesiumInspectorViewModel(scene);
         scene.render();
-        viewModel.primitive = {primitive: p};
-        viewModel.primitiveRefFrame = true;
-        viewModel.showPrimitiveRefFrame();
+        viewModel.primitive = p;
+        viewModel.primitiveReferenceFrame = true;
+        viewModel.showPrimitiveReferenceFrame();
         expect(scene.getPrimitives().getLength()).toEqual(2);
 
-        viewModel.primitiveRefFrame = false;
-        viewModel.showPrimitiveRefFrame();
+        viewModel.primitiveReferenceFrame = false;
+        viewModel.showPrimitiveReferenceFrame();
         scene.render();
         expect(scene.getPrimitives().getLength()).toEqual(1);
     });
@@ -214,12 +190,12 @@ defineSuite([
         var viewModel = new CesiumInspectorViewModel(scene);
         expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(0);
 
-        viewModel.tileCoords  = true;
-        viewModel.showTileCoords();
+        viewModel.tileCoordinates  = true;
+        viewModel.showTileCoordinates();
         expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(1);
 
-        viewModel.tileCoords = false;
-        viewModel.showTileCoords();
+        viewModel.tileCoordinates = false;
+        viewModel.showTileCoordinates();
         expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(0);
     });
 
