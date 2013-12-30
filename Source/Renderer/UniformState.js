@@ -225,6 +225,7 @@ define([
     };
 
     var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
 
     /**
      * Synchronizes frame state with the uniform state.  This is called
@@ -259,7 +260,7 @@ define([
 
         scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
         scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions);
+        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, undefined, scratchPixelSize);
         this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
         this._entireFrustum.x = camera.frustum.near;
