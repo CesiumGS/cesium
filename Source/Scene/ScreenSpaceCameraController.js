@@ -289,49 +289,62 @@ define([
     var inertiaMaxClickTimeThreshold = 0.4;
 
     function maintainInertia(aggregator, type, modifier, decayCoef, action, object, lastMovementName) {
+        var movementState = object[lastMovementName];
+        if (!defined(movementState)) {
+            movementState = object[lastMovementName] = {
+                startPosition : new Cartesian2(),
+                endPosition : new Cartesian2(),
+                motion : new Cartesian2(),
+                active : false
+            };
+        }
+
         var ts = aggregator.getButtonPressTime(type, modifier);
         var tr = aggregator.getButtonReleaseTime(type, modifier);
+
         var threshold = ts && tr && ((tr.getTime() - ts.getTime()) / 1000.0);
         var now = new Date();
         var fromNow = tr && ((now.getTime() - tr.getTime()) / 1000.0);
+
         if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
-            if (!defined(object[lastMovementName])) {
+            if (!movementState.active) {
                 var lastMovement = aggregator.getLastMovement(type, modifier);
                 if (!defined(lastMovement) || sameMousePosition(lastMovement)) {
                     return;
                 }
 
-                var motionX = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
-                var motionY = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
-                object[lastMovementName] = {
-                    startPosition : new Cartesian2(lastMovement.startPosition.x, lastMovement.startPosition.y),
-                    endPosition : new Cartesian2(lastMovement.startPosition.x + motionX * d, lastMovement.startPosition.y + motionY * d),
-                    motion : new Cartesian2(motionX, motionY)
-                };
+                movementState.motion.x = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
+                movementState.motion.y = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
+
+                Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                movementState.active = true;
             } else {
-                object[lastMovementName] = {
-                    startPosition : Cartesian2.clone(object[lastMovementName].endPosition),
-                    endPosition : new Cartesian2(
-                            object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
-                            object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
-                    motion : new Cartesian2()
-                };
+                Cartesian2.clone(movementState.endPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
             // the end coordinates may be NaN.
-            if (isNaN(object[lastMovementName].endPosition.x) || isNaN(object[lastMovementName].endPosition.y) || sameMousePosition(object[lastMovementName])) {
-                object[lastMovementName] = undefined;
+            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || sameMousePosition(movementState)) {
+                movementState.active = false;
                 return;
             }
 
             if (!aggregator.isButtonDown(type, modifier)) {
-                action(object, object[lastMovementName]);
+                action(object, movementState);
             }
         } else {
-            object[lastMovementName] = undefined;
+            movementState.active = false;
         }
     }
 
