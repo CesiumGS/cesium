@@ -499,7 +499,8 @@ define([
         reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
 
         if (!controller._aggregator.anyButtonDown() &&
-                !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+                (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                 !controller._animationCollection.contains(controller._animation)) {
             var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (defined(animation)) {
@@ -609,7 +610,8 @@ define([
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
             reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
 
-            if (!controller._aggregator.anyButtonDown() && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+            if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                    (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                     !controller._animationCollection.contains(controller._animation)) {
                 var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
