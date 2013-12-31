@@ -50,7 +50,6 @@ define([
         update[key] = true;
         isDown[key] = false;
 
-
         var movement = aggregator._movement[key];
         if (!defined(movement)) {
             movement = aggregator._movement[key] = {};

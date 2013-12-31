@@ -104,6 +104,16 @@ defineSuite([
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
 
+    it('getVisibility throws without a bounding sphere', function() {
+        var sphere = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
+        var cameraPosition = Cartesian3.ZERO;
+        var occluder = new Occluder(sphere, cameraPosition);
+
+        expect(function() {
+            occluder.getVisibility();
+        }).toThrow();
+    });
+
     it('can throw errors during getOccludeePoint (1 of 5)', function() {
         expect(function() {
             Occluder.getOccludeePoint();
@@ -266,5 +276,39 @@ defineSuite([
         var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions);
         var actual = Occluder.computeOccludeePointFromExtent(extent);
         expect(actual).toEqual(point);
+    });
+
+    it('fromBoundingSphere throws without a bounding sphere', function() {
+        expect(function() {
+            Occluder.fromBoundingSphere();
+        }).toThrow();
+    });
+
+    it('fromBoundingSphere throws without camera position', function() {
+        expect(function() {
+            Occluder.fromBoundingSphere(new BoundingSphere());
+        }).toThrow();
+    });
+
+    it('fromBoundingSphere without result parameter', function() {
+        var cameraPosition = new Cartesian3(3, 0, -8);
+        var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
+        var occluder0 = new Occluder(occluderBS, cameraPosition);
+        var occluder1 = Occluder.fromBoundingSphere(occluderBS, cameraPosition);
+
+        expect(occluder1.getPosition()).toEqual(occluder0.getPosition());
+        expect(occluder1.getRadius()).toEqual(occluder0.getRadius());
+    });
+
+    it('fromBoundingSphere with result parameter', function() {
+        var cameraPosition = new Cartesian3(3, 0, -8);
+        var occluderBS = new BoundingSphere(new Cartesian3(0, 0, -8), 2);
+        var occluder0 = new Occluder(occluderBS, cameraPosition);
+        var result = new Occluder(occluderBS, Cartesian3.ZERO);
+        var occluder1 = Occluder.fromBoundingSphere(occluderBS, cameraPosition, result);
+
+        expect(occluder1).toBe(result);
+        expect(occluder1.getPosition()).toEqual(occluder0.getPosition());
+        expect(occluder1.getRadius()).toEqual(occluder0.getRadius());
     });
 });
