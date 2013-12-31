@@ -432,11 +432,11 @@ define([
                 var dX = pos2.x - pos.x;
                 var dY = pos2.y - pos.y;
                 var dist = Math.sqrt(dX * dX + dY * dY) * 0.25;
-                var prevDX = screenSpaceEventHandler._lastTouch2X - screenSpaceEventHandler._lastMouseX;
-                var prevDY = screenSpaceEventHandler._lastTouch2Y - screenSpaceEventHandler._lastMouseY;
+                var prevDX = screenSpaceEventHandler._lastTouch2.x - screenSpaceEventHandler._lastMousePosition.x;
+                var prevDY = screenSpaceEventHandler._lastTouch2.y - screenSpaceEventHandler._lastMousePosition.y;
                 var prevDist = Math.sqrt(prevDX * prevDX + prevDY * prevDY) * 0.25;
                 var cY = (pos2.y + pos.y) * 0.125;
-                var prevCY = (screenSpaceEventHandler._lastTouch2Y + screenSpaceEventHandler._lastMouseY) * 0.125;
+                var prevCY = (screenSpaceEventHandler._lastTouch2.y + screenSpaceEventHandler._lastMousePosition.y) * 0.125;
                 var angle = Math.atan2(dY, dX);
                 var prevAngle = Math.atan2(prevDY, prevDX);
 
