@@ -45,7 +45,7 @@ define([
      * var camera = new Camera(context);
      * camera.position = new Cartesian3();
      * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-     * camera.up = Cartesian3.UNIT_Y;
+     * camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
      * camera.frustum.fovy = CesiumMath.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
