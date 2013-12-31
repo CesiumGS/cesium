@@ -1247,6 +1247,8 @@ define([
         return result;
     }
 
+    var scratchDirection = new Cartesian3();
+
     function getPickRayOrthographic(camera, windowPosition, result) {
         var width = camera._context._canvas.clientWidth;
         var height = camera._context._canvas.clientHeight;
@@ -1258,8 +1260,11 @@ define([
 
         var origin = result.origin;
         Cartesian3.clone(camera.position, origin);
-        origin.x += x;
-        origin.y += y;
+
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
