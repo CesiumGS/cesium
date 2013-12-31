@@ -33,8 +33,7 @@ define([
         this._rightMouseButtonDown = false;
         this._isPinching = false;
         this._seenAnyTouchEvents = false;
-        this._lastMouseX = 0;
-        this._lastMouseY = 0;
+        this._lastMousePosition = new Cartesian2();
         this._lastTouch2X = 0;
         this._lastTouch2Y = 0;
         this._totalPixels = 0;
@@ -50,19 +49,19 @@ define([
         register(this);
     };
 
+    var scratchPosition = new Cartesian2();
+
     function getPosition(screenSpaceEventHandler, event) {
         if (screenSpaceEventHandler._element === document) {
-            return {
-                x : event.clientX,
-                y : event.clientY
-            };
+            scratchPosition.x = event.clientX;
+            scratchPosition.y = event.clientY;
+            return scratchPosition;
         }
 
         var rect = screenSpaceEventHandler._element.getBoundingClientRect();
-        return {
-            x : event.clientX - rect.left,
-            y : event.clientY - rect.top
-        };
+        scratchPosition.x = event.clientX - rect.left;
+        scratchPosition.y = event.clientY - rect.top;
+        return scratchPosition;
     }
 
     function getMouseEventsKey(type, modifier) {
@@ -159,10 +158,14 @@ define([
         return undefined;
     }
 
+    var scratchMouseDownEvent = {
+        position : undefined
+    };
+
     function handleMouseDown(screenSpaceEventHandler, event) {
         var pos = getPosition(screenSpaceEventHandler, event);
-        screenSpaceEventHandler._lastMouseX = pos.x;
-        screenSpaceEventHandler._lastMouseY = pos.y;
+        screenSpaceEventHandler._lastMousePosition.x = pos.x;
+        screenSpaceEventHandler._lastMousePosition.y = pos.y;
         screenSpaceEventHandler._totalPixels = 0;
         if (screenSpaceEventHandler._seenAnyTouchEvents) {
             return;
@@ -187,12 +190,15 @@ define([
         }
 
         if (defined(action)) {
-            action({
-                position : new Cartesian2(pos.x, pos.y)
-            });
+            scratchMouseDownEvent.position = pos;
+            action(scratchMouseDownEvent);
         }
         event.preventDefault();
     }
+
+    var scratchMouseUpEvent = {
+        position : undefined
+    };
 
     function handleMouseUp(screenSpaceEventHandler, event) {
         var modifier = getModifier(event);
@@ -221,22 +227,25 @@ define([
 
         var pos = getPosition(screenSpaceEventHandler, event);
 
-        var xDiff = screenSpaceEventHandler._lastMouseX - pos.x;
-        var yDiff = screenSpaceEventHandler._lastMouseY - pos.y;
+        var xDiff = screenSpaceEventHandler._lastMousePosition.x - pos.x;
+        var yDiff = screenSpaceEventHandler._lastMousePosition.y - pos.y;
         screenSpaceEventHandler._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
         if (defined(action)) {
-            action({
-                position : new Cartesian2(pos.x, pos.y)
-            });
+            scratchMouseUpEvent.position = pos;
+            action(scratchMouseUpEvent);
         }
 
         if (defined(clickAction) && screenSpaceEventHandler._totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
-            clickAction({
-                position : new Cartesian2(pos.x, pos.y)
-            });
+            scratchMouseUpEvent.position = pos;
+            clickAction(scratchMouseUpEvent);
         }
     }
+
+    var scratchMouseMoveEvent = {
+        startPosition : undefined,
+        endPosition : undefined
+    };
 
     function handleMouseMove(screenSpaceEventHandler, event) {
         var pos = getPosition(screenSpaceEventHandler, event);
@@ -244,23 +253,21 @@ define([
             return;
         }
 
-        var xDiff = screenSpaceEventHandler._lastMouseX - pos.x;
-        var yDiff = screenSpaceEventHandler._lastMouseY - pos.y;
+        var xDiff = screenSpaceEventHandler._lastMousePosition.x - pos.x;
+        var yDiff = screenSpaceEventHandler._lastMousePosition.y - pos.y;
         screenSpaceEventHandler._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-        var movement = {
-            startPosition : new Cartesian2(screenSpaceEventHandler._lastMouseX, screenSpaceEventHandler._lastMouseY),
-            endPosition : new Cartesian2(pos.x, pos.y)
-        };
+        scratchMouseMoveEvent.startPosition = screenSpaceEventHandler._lastMousePosition;
+        scratchMouseMoveEvent.endPosition = pos;
 
         var modifier = getModifier(event);
         var action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
         if (defined(action)) {
-            action(movement);
+            action(scratchMouseMoveEvent);
         }
 
-        screenSpaceEventHandler._lastMouseX = movement.endPosition.x;
-        screenSpaceEventHandler._lastMouseY = movement.endPosition.y;
+        screenSpaceEventHandler._lastMousePosition.x = scratchMouseMoveEvent.endPosition.x;
+        screenSpaceEventHandler._lastMousePosition.y = scratchMouseMoveEvent.endPosition.y;
 
         if (screenSpaceEventHandler._leftMouseButtonDown || screenSpaceEventHandler._middleMouseButtonDown || screenSpaceEventHandler._rightMouseButtonDown) {
             event.preventDefault();
@@ -422,11 +429,11 @@ define([
                 var angle = Math.atan2(dY, dX);
                 var prevAngle = Math.atan2(prevDY, prevDX);
                 movement = {
-                    'distance' : {
+                    distance : {
                         startPosition : new Cartesian2(0, prevDist),
                         endPosition : new Cartesian2(0, dist)
                     },
-                    'angleAndHeight' : {
+                    angleAndHeight : {
                         startPosition : new Cartesian2(prevAngle, prevCY),
                         endPosition : new Cartesian2(angle, cY)
                     }
