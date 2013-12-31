@@ -121,7 +121,7 @@ define([
             frustum._bottom = frustum.bottom;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
-            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
+            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, frustum._orthographicMatrix);
         }
     }
 

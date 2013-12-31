@@ -408,6 +408,8 @@ define([
     var appendTransformUp = new Cartesian3();
     var appendTransformRight = new Cartesian3();
     var appendTransformDirection = new Cartesian3();
+    var appendTransformMatrix = new Matrix4();
+
     function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
@@ -418,7 +420,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform);
+            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform, appendTransformMatrix);
 
             var invTransform = camera.inverseTransform;
             Matrix4.multiplyByPoint(invTransform, position, camera.position);
@@ -433,6 +435,7 @@ define([
     var revertTransformUp = new Cartesian3();
     var revertTransformRight = new Cartesian3();
     var revertTransformDirection = new Cartesian3();
+
     function revertTransform(controller, transform) {
         if (defined(transform)) {
             var camera = controller._camera;

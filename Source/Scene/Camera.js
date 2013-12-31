@@ -139,8 +139,8 @@ define([
          */
         this.controller = new CameraController(this);
 
-        this._viewMatrix = undefined;
-        this._invViewMatrix = undefined;
+        this._viewMatrix = new Matrix4();
+        this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
 
         this._context = context;
@@ -152,12 +152,26 @@ define([
         var d = camera._direction;
         var e = camera._position;
 
-        var viewMatrix = new Matrix4( r.x,  r.y,  r.z, -Cartesian3.dot(r, e),
-                                      u.x,  u.y,  u.z, -Cartesian3.dot(u, e),
-                                     -d.x, -d.y, -d.z,  Cartesian3.dot(d, e),
-                                      0.0,  0.0,  0.0,      1.0);
-        camera._viewMatrix = Matrix4.multiply(viewMatrix, camera._invTransform);
-        camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
+        var viewMatrix = camera._viewMatrix;
+        viewMatrix[0] = r.x;
+        viewMatrix[1] = u.x;
+        viewMatrix[2] = -d.x;
+        viewMatrix[3] = 0.0;
+        viewMatrix[4] = r.y;
+        viewMatrix[5] = u.y;
+        viewMatrix[6] = -d.y;
+        viewMatrix[7] = 0.0;
+        viewMatrix[8] = r.z;
+        viewMatrix[9] = u.z;
+        viewMatrix[10] = -d.z;
+        viewMatrix[11] = 0.0;
+        viewMatrix[12] = -Cartesian3.dot(r, e);
+        viewMatrix[13] = -Cartesian3.dot(u, e);
+        viewMatrix[14] = Cartesian3.dot(d, e);
+        viewMatrix[15] = 1.0;
+
+        Matrix4.multiply(viewMatrix, camera._invTransform, camera._viewMatrix);
+        Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
     var scratchCartesian = new Cartesian3();
