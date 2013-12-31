@@ -250,8 +250,7 @@ define([
 
         var movement = {
             startPosition : new Cartesian2(screenSpaceEventHandler._lastMouseX, screenSpaceEventHandler._lastMouseY),
-            endPosition : new Cartesian2(pos.x, pos.y),
-            motion : new Cartesian2()
+            endPosition : new Cartesian2(pos.x, pos.y)
         };
 
         var modifier = getModifier(event);
@@ -384,8 +383,7 @@ define([
 
             movement = {
                 startPosition : new Cartesian2(screenSpaceEventHandler._lastMouseX, screenSpaceEventHandler._lastMouseY),
-                endPosition : new Cartesian2(pos.x, pos.y),
-                motion : new Cartesian2()
+                endPosition : new Cartesian2(pos.x, pos.y)
             };
 
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
@@ -426,13 +424,11 @@ define([
                 movement = {
                     'distance' : {
                         startPosition : new Cartesian2(0, prevDist),
-                        endPosition : new Cartesian2(0, dist),
-                        motion : new Cartesian2()
+                        endPosition : new Cartesian2(0, dist)
                     },
                     'angleAndHeight' : {
                         startPosition : new Cartesian2(prevAngle, prevCY),
-                        endPosition : new Cartesian2(angle, cY),
-                        motion : new Cartesian2()
+                        endPosition : new Cartesian2(angle, cY)
                     }
                 };
                 action(movement);

@@ -102,8 +102,7 @@ define([
             } else {
                 movement[key] = {
                     startPosition : new Cartesian2(),
-                    endPosition : new Cartesian2(0.0, arcLength),
-                    motion : new Cartesian2()
+                    endPosition : new Cartesian2(0.0, arcLength)
                 };
                 update[key] = false;
             }
