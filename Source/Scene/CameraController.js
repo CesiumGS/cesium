@@ -531,6 +531,7 @@ define([
     var rotateVertScratchP = new Cartesian3();
     var rotateVertScratchA = new Cartesian3();
     var rotateVertScratchTan = new Cartesian3();
+    var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
         var oldTransform = appendTransform(controller, transform);
@@ -539,7 +540,7 @@ define([
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(controller.constrainedAxis)) {
             var northParallel = Cartesian3.equalsEpsilon(p, controller.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(controller.constrainedAxis), CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(controller.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
 
@@ -549,7 +550,7 @@ define([
                     angle = angleToAxis;
                 }
 
-                dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis));
+                dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = Math.acos(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis;

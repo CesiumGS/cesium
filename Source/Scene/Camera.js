@@ -68,7 +68,7 @@ define([
          * @see Camera#inverseTransform
          */
         this.transform = Matrix4.clone(Matrix4.IDENTITY);
-        this._transform = Matrix4.clone(this.transform);
+        this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
@@ -79,20 +79,20 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.position = Cartesian3.clone(position);
-        this._position = position;
-        this._positionWC = position;
+        this.position = position;
+        this._position = Cartesian3.clone(position);
+        this._positionWC = Cartesian3.clone(position);
 
-        var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
+        var direction = Cartesian3.normalize(Cartesian3.negate(position));
 
         /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.direction = Cartesian3.clone(direction);
-        this._direction = direction;
-        this._directionWC = direction;
+        this.direction = direction;
+        this._direction = Cartesian3.clone(direction);
+        this._directionWC = Cartesian3.clone(direction);
 
         var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         var up = Cartesian3.cross(right, direction);
@@ -102,9 +102,9 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.up = Cartesian3.clone(up);
-        this._up = up;
-        this._upWC = up;
+        this.up = up;
+        this._up = Cartesian3.clone(up);
+        this._upWC = Cartesian3.clone(up);
 
         right = Cartesian3.cross(direction, up);
 
@@ -113,9 +113,9 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.right = Cartesian3.clone(right);
-        this._right = right;
-        this._rightWC = right;
+        this.right = right;
+        this._right = Cartesian3.clone(right);
+        this._rightWC = Cartesian3.clone(right);
 
         /**
          * The region of space in view.
@@ -160,37 +160,38 @@ define([
         camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
     }
 
+    var scratchCartesian = new Cartesian3();
+
     function update(camera) {
         var position = camera._position;
         var positionChanged = !Cartesian3.equals(position, camera.position);
         if (positionChanged) {
-            position = camera._position = Cartesian3.clone(camera.position);
+            position = Cartesian3.clone(camera.position, camera._position);
         }
 
         var direction = camera._direction;
         var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
-            direction = camera._direction = Cartesian3.clone(camera.direction);
+            direction = Cartesian3.clone(camera.direction, camera._direction);
         }
 
         var up = camera._up;
         var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
-            up = camera._up = Cartesian3.clone(camera.up);
+            up = Cartesian3.clone(camera.up, camera._up);
         }
 
         var right = camera._right;
         var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
-            right = camera._right = Cartesian3.clone(camera.right);
+            right = Cartesian3.clone(camera.right, camera._right);
         }
 
         var transform = camera._transform;
         var transformChanged = !Matrix4.equals(transform, camera.transform);
         if (transformChanged) {
-            transform = camera._transform = Matrix4.clone(camera.transform);
-
-            camera._invTransform = Matrix4.inverseTransformation(camera._transform);
+            transform = Matrix4.clone(camera.transform, camera._transform);
+            Matrix4.inverseTransformation(camera._transform, camera._invTransform);
         }
 
         if (positionChanged || transformChanged) {
@@ -198,20 +199,20 @@ define([
         }
 
         if (directionChanged || upChanged || rightChanged) {
-            var det = Cartesian3.dot(direction, Cartesian3.cross(up, right));
+            var det = Cartesian3.dot(direction, Cartesian3.cross(up, right, scratchCartesian));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
-                direction = camera._direction = Cartesian3.normalize(direction);
-                camera.direction = Cartesian3.clone(direction);
+                direction = Cartesian3.normalize(direction, camera._direction);
+                Cartesian3.clone(direction, camera.direction);
 
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = Cartesian3.dot(up, direction) * invUpMag;
-                var w0 = Cartesian3.multiplyByScalar(direction, scalar);
-                up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
-                camera.up = Cartesian3.clone(up);
+                var w0 = Cartesian3.multiplyByScalar(direction, scalar, scratchCartesian);
+                up = Cartesian3.normalize(Cartesian3.subtract(up, w0, camera._up), camera._up);
+                Cartesian3.clone(up, camera.up);
 
-                right = camera._right = Cartesian3.cross(direction, up);
-                camera.right = Cartesian3.clone(right);
+                right = Cartesian3.cross(direction, up, camera._right);
+                Cartesian3.clone(right, camera.right);
             }
         }
 

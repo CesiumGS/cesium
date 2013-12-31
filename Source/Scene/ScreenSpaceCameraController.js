@@ -781,7 +781,7 @@ define([
             if (Cartesian3.equalsEpsilon(basis0, cameraController._camera.position, CesiumMath.EPSILON2)) {
                 east = cameraController._camera.right;
             } else {
-                east = Cartesian3.cross(basis0, cameraController._camera.position);
+                east = Cartesian3.cross(basis0, cameraController._camera.position, pan3DTemp0);
             }
 
             var planeNormal = Cartesian3.cross(basis0, east, pan3DTemp0);
