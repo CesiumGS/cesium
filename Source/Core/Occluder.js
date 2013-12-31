@@ -220,7 +220,7 @@ define([
             // Prevent against the case where the occludee radius is larger than the occluder's; since this is
             // an uncommon case, the following code should rarely execute.
             if (temp > 0.0) {
-                tempVec = Cartesian3.subtract(occludeePosition, this._cameraPosition);
+                tempVec = Cartesian3.subtract(occludeePosition, this._cameraPosition, tempVec);
                 var tempVecMagnitudeSquared = Cartesian3.magnitudeSquared(tempVec);
                 var occluderRadiusSquared = this._occluderRadius * this._occluderRadius;
                 var occludeeRadiusSquared = occludeeRadius * occludeeRadius;

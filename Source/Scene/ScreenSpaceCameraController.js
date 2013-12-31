@@ -633,6 +633,10 @@ define([
     }
 
     var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
+    var rotate3DScratchCartesian3 = new Cartesian3();
+    var rotate3DNegateScratch = new Cartesian3();
+    var rotate3DInverseMatrixScratch = new Matrix4();
+
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
@@ -663,9 +667,9 @@ define([
 
         if (defined(cameraController.constrainedAxis) && !defined(transform)) {
             var camera = cameraController._camera;
-            var p = Cartesian3.normalize(camera.position);
-            var northParallel = Cartesian3.equalsEpsilon(p, cameraController.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
+            var positionNormal = Cartesian3.normalize(camera.position, rotate3DScratchCartesian3);
+            var northParallel = Cartesian3.equalsEpsilon(positionNormal, cameraController.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(positionNormal, Cartesian3.negate(cameraController.constrainedAxis, rotate3DNegateScratch), CesiumMath.EPSILON2);
 
             if (!northParallel && !southParallel) {
                 var up;
@@ -676,10 +680,11 @@ define([
                 }
 
                 var east;
-                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, Cartesian3.normalize(camera.position), CesiumMath.EPSILON2)) {
+                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, positionNormal, CesiumMath.EPSILON2)) {
                     east = camera.right;
                 } else {
-                    east = Cartesian3.normalize(Cartesian3.cross(cameraController.constrainedAxis, camera.position));
+                    east = Cartesian3.cross(cameraController.constrainedAxis, positionNormal, rotate3DScratchCartesian3);
+                    Cartesian3.normalize(east, east);
                 }
 
                 var rDotE = Cartesian3.dot(camera.right, east);
@@ -701,7 +706,7 @@ define([
 
         if (defined(restrictedAngle)) {
             var direction = Cartesian3.clone(cameraController._camera.directionWC, rotate3DRestrictedDirection);
-            var invTransform = Matrix4.inverseTransformation(transform);
+            var invTransform = Matrix4.inverseTransformation(transform, rotate3DInverseMatrixScratch);
             direction = Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
 
             var dot = -Cartesian3.dot(direction, constrainedAxis);
@@ -827,6 +832,7 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
     var tilt3DTransform = new Matrix4();
+
     function tilt3D(controller, movement) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
@@ -869,7 +875,7 @@ define([
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        var angle = (minHeight * 0.25) / Cartesian3.magnitude(Cartesian3.subtract(center, camera.position));
+        var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.setEllipsoid(oldEllipsoid);
