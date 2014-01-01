@@ -36,6 +36,7 @@ Beta Releases
 * Added `BoundingSphere.transformsWithoutScale`
 * Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
 * Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
+* Fix picking in 2D when the map is rotated.
 
 ### b23 - 2013-12-02
 
