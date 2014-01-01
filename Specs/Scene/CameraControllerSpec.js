@@ -820,6 +820,42 @@ defineSuite([
         expect(p).toBeUndefined();
     });
 
+    it('pick rotated map in 2D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var maxRadii = ellipsoid.getMaximumRadius();
+
+        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        var frustum = new OrthographicFrustum();
+        frustum.right = maxRadii * Math.PI;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.bottom = -frustum.top;
+        frustum.near = 0.01 * maxRadii;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+
+        controller._mode = SceneMode.SCENE2D;
+        controller._projection = projection;
+
+        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5 + 1.0);
+        var p = controller.pickEllipsoid(windowCoord);
+        var c = ellipsoid.cartesianToCartographic(p);
+        expect(c.longitude).toEqual(0.0);
+        expect(c.latitude).toBeLessThan(0.0);
+
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        p = controller.pickEllipsoid(windowCoord);
+        c = ellipsoid.cartesianToCartographic(p);
+        expect(c.latitude).toEqual(0.0);
+        expect(c.longitude).toBeGreaterThan(0.0);
+    });
+
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
