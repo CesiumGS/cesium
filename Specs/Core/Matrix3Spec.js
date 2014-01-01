@@ -110,6 +110,28 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('fromArray works without a result parameter', function() {
+        var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+        var matrix = Matrix3.fromArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0]);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a result parameter', function() {
+        var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromArray([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0], 0, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with an offset', function() {
+        var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+        var result = new Matrix3();
+        var matrix = Matrix3.fromArray([0.0, 0.0, 0.0, 1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0], 3, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var matrix = Matrix3.fromRowMajorArray([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
@@ -741,6 +763,12 @@ defineSuite([
     it('toString', function() {
         var matrix = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         expect(matrix.toString()).toEqual('(1, 2, 3)\n(4, 5, 6)\n(7, 8, 9)');
+    });
+
+    it('fromArray throws without an array', function() {
+        expect(function() {
+            Matrix3.fromArray();
+        }).toThrowDeveloperError();
     });
 
     it('fromRowMajorArray throws with undefined parameter', function() {
