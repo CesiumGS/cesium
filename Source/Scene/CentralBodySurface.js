@@ -527,7 +527,7 @@ define([
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
             BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
-            boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
+            Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
                 boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
@@ -799,6 +799,8 @@ define([
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
+    var southwestScratch = new Cartesian3();
+    var northeastScratch = new Cartesian3();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
         var viewMatrix = frameState.camera.viewMatrix;
@@ -834,8 +836,8 @@ define([
                 var oneOverMercatorHeight = 0.0;
 
                 if (frameState.mode !== SceneMode.SCENE3D) {
-                    var southwest = projection.project(tile.extent.getSouthwest());
-                    var northeast = projection.project(tile.extent.getNortheast());
+                    var southwest = projection.project(tile.extent.getSouthwest(), southwestScratch);
+                    var northeast = projection.project(tile.extent.getNortheast(), northeastScratch);
 
                     tileExtent.x = southwest.x;
                     tileExtent.y = southwest.y;
@@ -891,6 +893,7 @@ define([
                         command = new DrawCommand();
                         command.owner = tile;
                         command.cull = false;
+                        command.boundingVolume = new BoundingSphere();
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(centralBodyUniformMap);
                     }
@@ -1003,18 +1006,18 @@ define([
                         }
                     }
 
-                    var boundingVolume = tile.boundingSphere3D;
+                    var boundingVolume = command.boundingVolume;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        boundingVolume = BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight);
-                        boundingVolume.center = new Cartesian3(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y);
+                        BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                        Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                         if (frameState.mode === SceneMode.MORPHING) {
                             boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
                         }
+                    } else {
+                        BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
                     }
-
-                    command.boundingVolume = boundingVolume;
 
                 } while (imageryIndex < imageryLen);
             }

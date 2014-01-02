@@ -76,7 +76,7 @@ defineSuite([
 
         camera = new Camera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
@@ -144,7 +144,7 @@ defineSuite([
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
@@ -189,7 +189,7 @@ defineSuite([
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 

@@ -20,6 +20,14 @@ Beta Releases
                  alpha : true
                }
            });
+  * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
+  
+          camera.up = Cartesian3.UNIT_Z;
+          
+    should now look like:
+          
+          Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
+          
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
   * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
