@@ -150,8 +150,9 @@ define([
             timeVec.z = u;
             timeVec.y = u * u;
             timeVec.x = timeVec.y * u;
+            timeVec.w = 1;
 
-            var coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+            var coefs = Matrix4.multiplyByVector(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
 
             result = Cartesian3.multiplyByScalar(points[i], coefs.x, result);
             Cartesian3.multiplyByScalar(points[i + 1], coefs.y, scratchTemp);
