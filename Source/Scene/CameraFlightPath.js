@@ -143,7 +143,7 @@ define([
             times[k] = k * scalar;
         }
 
-        return new HermiteSpline({
+        return HermiteSpline.createNaturalCubic({
             points : points,
             times : times
         });
@@ -256,7 +256,7 @@ define([
             times[k] = k * scalar;
         }
 
-        return new HermiteSpline({
+        return HermiteSpline.createNaturalCubic({
             points : points,
             times : times
         });

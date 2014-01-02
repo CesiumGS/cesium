@@ -21,7 +21,7 @@ defineSuite([
         times = [0.0, 1.0, 2.0, 3.0];
     });
 
-    it('constructor throws without points', function() {
+    it('constructor throws without points or times', function() {
         expect(function() {
             return new LinearSpline();
         }).toThrow();
@@ -31,14 +31,6 @@ defineSuite([
         expect(function() {
             return new LinearSpline({
                 points : [Cartesian3.ZERO]
-            });
-        }).toThrow();
-    });
-
-    it('constructor throws without times', function() {
-        expect(function() {
-            return new LinearSpline({
-                points : points
             });
         }).toThrow();
     });
