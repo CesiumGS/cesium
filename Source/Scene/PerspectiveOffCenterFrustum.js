@@ -127,8 +127,8 @@ define([
             frustum._bottom = b;
             frustum._near = n;
             frustum._far = f;
-            frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f);
-            frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n);
+            frustum._perspectiveMatrix = Matrix4.computePerspectiveOffCenter(l, r, b, t, n, f, frustum._perspectiveMatrix);
+            frustum._infinitePerspective = Matrix4.computeInfinitePerspectiveOffCenter(l, r, b, t, n, frustum._infinitePerspective);
         }
     }
 
@@ -318,12 +318,12 @@ define([
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
-     *
-     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1
@@ -340,7 +340,7 @@ define([
      * var distance = Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
      */
-    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance) {
+    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
@@ -370,7 +370,13 @@ define([
         tanTheta = this.right * inverseNear;
         var pixelWidth = 2.0 * distance * tanTheta / width;
 
-        return new Cartesian2(pixelWidth, pixelHeight);
+        if (!defined(result)) {
+            return new Cartesian2(pixelWidth, pixelHeight);
+        }
+
+        result.x = pixelWidth;
+        result.y = pixelHeight;
+        return result;
     };
 
     /**

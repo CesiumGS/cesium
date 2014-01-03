@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### b24 - 2014-01-02
+### b24 - 2014-01-06
 
 * Breaking changes:
   * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
@@ -20,6 +20,14 @@ Beta Releases
                  alpha : true
                }
            });
+  * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
+  
+          camera.up = Cartesian3.UNIT_Z;
+          
+    should now look like:
+          
+          Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
+          
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
   * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
@@ -31,8 +39,8 @@ Beta Releases
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
 * The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
 * The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
-* Fix disabling `CentralBody.enableLighting`.
-* Fix geocoder flights when following an object.
+* Fixed disabling `CentralBody.enableLighting`.
+* Fixed geocoder flights when following an object.
 * Added `BoundingSphere.transformsWithoutScale`
 * Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
 * Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
