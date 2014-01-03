@@ -288,48 +288,55 @@ define([
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(centralBody, frameState) {
         var radii = centralBody._ellipsoid.getRadii();
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p);
+        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p, scratchCartesian1);
 
         var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = Cartesian3.normalize(q);
+        var qUnit = Cartesian3.normalize(q, scratchCartesian2);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q));
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit));
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3), scratchCartesian3);
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian4), scratchCartesian4);
 
         // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
 
         // Compute the center and offsets.
-        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude);
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian1);
         var scalar = wMagnitude / qMagnitude;
-        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar);
-        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar);
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.add(center, northOffset), eastOffset));
-        var upperRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.add(center, northOffset), eastOffset));
-        var lowerLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.subtract(center, northOffset), eastOffset));
-        var lowerRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.subtract(center, northOffset), eastOffset));
+        var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
+        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+        Cartesian3.pack(upperLeft, depthQuadScratch, 0);
 
-        depthQuadScratch[0] = upperLeft.x;
-        depthQuadScratch[1] = upperLeft.y;
-        depthQuadScratch[2] = upperLeft.z;
-        depthQuadScratch[3] = lowerLeft.x;
-        depthQuadScratch[4] = lowerLeft.y;
-        depthQuadScratch[5] = lowerLeft.z;
-        depthQuadScratch[6] = upperRight.x;
-        depthQuadScratch[7] = upperRight.y;
-        depthQuadScratch[8] = upperRight.z;
-        depthQuadScratch[9] = lowerRight.x;
-        depthQuadScratch[10] = lowerRight.y;
-        depthQuadScratch[11] = lowerRight.z;
+        var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
+        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+        Cartesian3.pack(lowerLeft, depthQuadScratch, 3);
+
+        var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+        Cartesian3.pack(upperRight, depthQuadScratch, 6);
+
+        var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.add(lowerRight, eastOffset, lowerRight);
+        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+        Cartesian3.pack(lowerRight, depthQuadScratch, 9);
+
         return depthQuadScratch;
     }
 

@@ -23,7 +23,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
     });
 
     afterAll(function() {

@@ -771,7 +771,7 @@ defineSuite([
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var frustum = new PerspectiveFrustum();
@@ -797,7 +797,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;

@@ -121,7 +121,7 @@ define([
             frustum._bottom = frustum.bottom;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
-            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far);
+            frustum._orthographicMatrix = Matrix4.computeOrthographicOffCenter(frustum.left, frustum.right, frustum.bottom, frustum.top, frustum.near, frustum.far, frustum._orthographicMatrix);
         }
     }
 
@@ -142,6 +142,8 @@ define([
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesPoint = new Cartesian3();
+    var negateScratch = new Cartesian3();
+
     /**
      * Creates a culling volume for this frustum.
      *
@@ -216,7 +218,7 @@ define([
         plane.x = -right.x;
         plane.y = -right.y;
         plane.z = -right.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(right), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(right, negateScratch), point);
 
         // Bottom plane
         Cartesian3.multiplyByScalar(up, b, point);
@@ -242,7 +244,7 @@ define([
         plane.x = -up.x;
         plane.y = -up.y;
         plane.z = -up.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(up), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(up, negateScratch), point);
 
         // Near plane
         plane = planes[4];
@@ -265,7 +267,7 @@ define([
         plane.x = -direction.x;
         plane.y = -direction.y;
         plane.z = -direction.z;
-        plane.w = -Cartesian3.dot(Cartesian3.negate(direction), point);
+        plane.w = -Cartesian3.dot(Cartesian3.negate(direction, negateScratch), point);
 
         return this._cullingVolume;
     };
@@ -276,19 +278,20 @@ define([
      * @memberof OrthographicFrustum
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
+     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
-     *
-     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
      * var pixelSize = camera.frustum.getPixelSize(new Cartesian2(canvas.clientWidth, canvas.clientHeight));
      */
-    OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions) {
+    OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);
 
         if (!defined(drawingBufferDimensions)) {
@@ -311,7 +314,13 @@ define([
         var pixelWidth = frustumWidth / width;
         var pixelHeight = frustumHeight / height;
 
-        return new Cartesian2(pixelWidth, pixelHeight);
+        if (!defined(result)) {
+            return new Cartesian2(pixelWidth, pixelHeight);
+        }
+
+        result.x = pixelWidth;
+        result.y = pixelHeight;
+        return result;
     };
 
     /**
