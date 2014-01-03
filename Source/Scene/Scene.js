@@ -40,6 +40,7 @@ define([
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
+        './CustomPostProcess',
         './CreditDisplay'
     ], function(
         CesiumMath,
@@ -82,6 +83,7 @@ define([
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
+        CustomPostProcess,
         CreditDisplay) {
     "use strict";
 
@@ -886,7 +888,19 @@ define([
 
         var passState = this._passState;
 
+        // HOOK: Post process external filter.
+        if (defined(this.customPostProcess)) {
+            passState.framebuffer = this.customPostProcess.update(context);
+            this.sun = undefined; // Disable the sun to avoid conflict with post processing.
+        } // END HOOK.
+
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
+
+        // HOOK: Post process external filter.
+        if (defined(this.customPostProcess)) {
+            this.customPostProcess.execute(context);
+        } // END HOOK.
+
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
         context.endFrame();
