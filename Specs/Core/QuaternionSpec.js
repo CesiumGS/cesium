@@ -626,6 +626,103 @@ defineSuite([
         expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON15);
     });
 
+    it('fastSlerp works without a result parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        expect(Quaternion.fastSlerp(start, end, 0.0)).toEqual(start);
+        expect(Quaternion.fastSlerp(start, end, 1.0)).toEqual(end);
+        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('fastSlerp works with a result parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        var result = new Quaternion();
+        var returnedResult = Quaternion.fastSlerp(start, end, 0.5, result);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+        expect(result).toBe(returnedResult);
+    });
+
+    it('fastSlerp works with a result parameter that is an input parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        var returnedResult = Quaternion.fastSlerp(start, end, 0.5, start);
+        expect(start).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+        expect(start).toBe(returnedResult);
+    });
+
+    it('fastSlerp works with obtuse angles', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, -1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, -Math.sin(Math.PI / 8.0), -Math.cos(Math.PI / 8.0));
+        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('fastSlerp uses lerp when dot product is close to 1', function() {
+        var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
+        var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
+        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
+        expect(Quaternion.fastSlerp(start, end, 0.0)).toEqual(start);
+        expect(Quaternion.fastSlerp(start, end, 1.0)).toEqual(end);
+        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqual(expected);
+    });
+
+    it('fastSlerp uses lerp when dot product is close to 1 and a result parameter', function() {
+        var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
+        var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
+        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
+
+        var result = new Quaternion();
+        var actual = Quaternion.fastSlerp(start, end, 0.0, result);
+        expect(actual).toBe(result);
+        expect(result).toEqual(start);
+    });
+
+    it('performance test', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var result = new Quaternion();
+
+        var limit = 100000;
+        var performance = window.performance;
+        var timeStart;
+        var timeEnd;
+
+        var i, j, t;
+
+        var time = 0.0;
+        for (i = 0; i < limit; ++i) {
+            timeStart = performance.now();
+            for (t = 0.0; t < 1.0; t += 0.001) {
+                Quaternion.slerp(start, end, t, result);
+            }
+            timeEnd = performance.now();
+            time += timeEnd - timeStart;
+        }
+
+        var fastTime = 0.0;
+        for (i = 0; i < limit; ++i) {
+            timeStart = performance.now();
+            for (t = 0.0; t < 1.0; t += 0.001) {
+                Quaternion.fastSlerp(start, end, t, result);
+            }
+            timeEnd = performance.now();
+            fastTime += timeEnd - timeStart;
+        }
+
+        time /= limit * 1000.0;
+        fastTime /= limit * 1000.0;
+
+        console.log('Quaternion.slerp avg time: ' + time);
+        console.log('Quaternion.fastSlerp avg time: ' + fastTime);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
