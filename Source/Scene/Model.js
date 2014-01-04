@@ -29,7 +29,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/DrawCommand',
-        '../Renderer/CommandLists',
+        '../Renderer/Pass',
         '../Renderer/createShaderSource',
         './ModelTypes',
         './ModelCache',
@@ -66,7 +66,7 @@ define([
         BufferUsage,
         BlendingState,
         DrawCommand,
-        CommandLists,
+        Pass,
         createShaderSource,
         ModelTypes,
         ModelCache,
@@ -273,7 +273,8 @@ define([
             uniformMaps : {}
         };
 
-        this._commandLists = new CommandLists();
+        this._renderCommands = [];
+        this._pickCommands = [];
         this._pickIds = [];
     };
 
@@ -1129,11 +1130,8 @@ define([
     }
 
     function createCommand(model, gltfNode, runtimeNode, context) {
-        var opaqueColorCommands = model._commandLists.opaqueList;
-        var translucentColorCommands = model._commandLists.translucentList;
-
-        var opaquePickCommands = model._commandLists.pickList.opaqueList;
-        var translucentPickCommands = model._commandLists.pickList.translucentList;
+        var commands = model._renderCommands;
+        var pickCommands = model._pickCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
 
@@ -1218,11 +1216,8 @@ define([
                 command.renderState = rs;
                 command.owner = owner;
                 command.debugShowBoundingVolume = debugShowBoundingVolume;
-                if (isTranslucent) {
-                    translucentColorCommands.push(command);
-                } else {
-                    opaqueColorCommands.push(command);
-                }
+                command.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                commands.push(command);
 
                 var pickCommand;
 
@@ -1246,11 +1241,8 @@ define([
                     pickCommand.uniformMap = pickUniformMap;
                     pickCommand.renderState = rs;
                     pickCommand.owner = owner;
-                    if (isTranslucent) {
-                        translucentPickCommands.push(pickCommand);
-                    } else {
-                        opaquePickCommands.push(pickCommand);
-                    }
+                    pickCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    pickCommands.push(pickCommand);
                 }
 
                 runtimeNode.commands.push({
@@ -1529,19 +1521,11 @@ define([
             // This assumes the original primitive was TRIANGLES and that the triangles
             // are connected for the wireframe to look perfect.
             var primitiveType = model.debugWireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
-            var opaqueCommands = model._commandLists.opaqueList;
-            var translucentCommands = model._commandLists.translucentList;
-            var i;
-            var length;
+            var commands = model._renderCommands;
+            var length = commands.length;
 
-            length = opaqueCommands.length;
-            for (i = 0; i < length; ++i) {
-                opaqueCommands[i].primitiveType = primitiveType;
-            }
-
-            length = translucentCommands.length;
-            for (i = 0; i < length; ++i) {
-                translucentCommands[i].primitiveType = primitiveType;
+            for (var i = 0; i < length; ++i) {
+                commands[i].primitiveType = primitiveType;
             }
         }
     }
@@ -1606,7 +1590,26 @@ define([
             });
         }
 
-        commandList.push(this._commandLists);
+// TODO: make this not so wasteful
+        var passes = frameState.passes;
+        var i;
+        var length;
+        var commands;
+        if (passes.render) {
+            commands = this._renderCommands;
+            length = commands.length;
+            for (i = 0; i < length; ++i) {
+                commandList.push(commands[i]);
+            }
+        }
+        if (passes.pick) {
+            commands = this._pickCommands;
+            length = commands.length;
+            for (i = 0; i < length; ++i) {
+                commandList.push(commands[i]);
+            }
+        }
+// END TODO
     };
 
     /**
