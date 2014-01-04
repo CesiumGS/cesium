@@ -104,7 +104,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
@@ -140,7 +140,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
@@ -185,7 +185,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
@@ -217,7 +217,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));

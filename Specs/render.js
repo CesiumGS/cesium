@@ -3,32 +3,17 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Core/Intersect',
-        'Core/Matrix4',
+        'Renderer/Pass',
         'Scene/SceneMode'
      ], function(
          defaultValue,
          defined,
          Intersect,
-         Matrix4,
+         Pass,
          SceneMode) {
     "use strict";
 
-    function executeOverlayCommands(context, commandLists) {
-        var commandsExecuted = 0;
-        var length = commandLists.length;
-        for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].overlayList;
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                commandList[j].execute(context);
-                commandsExecuted++;
-            }
-        }
-
-        return commandsExecuted;
-    }
-
-    function executeList(context, frameState, commandLists, listName) {
+    function executeCommands(context, frameState, commands) {
         var commandsExecuted = 0;
         var cullingVolume = frameState.cullingVolume;
         var occluder;
@@ -36,35 +21,47 @@ define([
             occluder = frameState.occluder;
         }
 
-        var length = commandLists.length;
+        var length = commands.length;
         for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i][listName];
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                var command = commandList[j];
-                var boundingVolume = command.boundingVolume;
-                if (defined(boundingVolume)) {
-                    if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
-                            (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
-                        continue;
-                    }
+            var command = commands[i];
+            var boundingVolume = command.boundingVolume;
+            if (defined(boundingVolume)) {
+                if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE ||
+                        (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume))) {
+                    continue;
                 }
-
-                command.execute(context);
-                commandsExecuted++;
             }
+
+            command.execute(context);
+            commandsExecuted++;
         }
 
         return commandsExecuted;
     }
 
-    function render(context, frameState, primitive, commandLists) {
-        commandLists = defaultValue(commandLists, []);
-        primitive.update(context, frameState, commandLists);
+    function render(context, frameState, primitive, commands) {
+        commands = defaultValue(commands, []);
+        primitive.update(context, frameState, commands);
 
-        var commandsExecuted = executeList(context, frameState, commandLists, 'opaqueList');
-        commandsExecuted += executeList(context, frameState, commandLists, 'translucentList');
-        commandsExecuted += executeOverlayCommands(context, commandLists);
+        var opaqueCommands = [];
+        var translucentCommands = [];
+        var overlayCommands = [];
+
+        var length = commands.length;
+        for (var i = 0; i < length; i++) {
+            var command = commands[i];
+            if (command.pass === Pass.OPAQUE) {
+                opaqueCommands.push(command);
+            } else if (command.pass === Pass.TRANSLUCENT) {
+                translucentCommands.push(command);
+            } else if (command.pass === Pass.OVERLAY) {
+                overlayCommands.push(command);
+            }
+        }
+
+        var commandsExecuted = executeCommands(context, frameState, opaqueCommands);
+        commandsExecuted += executeCommands(context, frameState, translucentCommands);
+        commandsExecuted += executeCommands(context, frameState, overlayCommands);
 
         return commandsExecuted;
     }
