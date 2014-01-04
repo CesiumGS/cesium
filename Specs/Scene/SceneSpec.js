@@ -8,8 +8,8 @@ defineSuite([
          'Core/Event',
          'Core/Extent',
          'Renderer/DrawCommand',
-         'Renderer/CommandLists',
          'Renderer/Context',
+         'Renderer/Pass',
          'Renderer/UniformState',
          'Scene/AnimationCollection',
          'Scene/Camera',
@@ -28,8 +28,8 @@ defineSuite([
          Event,
          Extent,
          DrawCommand,
-         CommandLists,
          Context,
+         Pass,
          UniformState,
          AnimationCollection,
          Camera,
@@ -117,9 +117,7 @@ defineSuite([
                 options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
                 if (defined(options.command)) {
-                    var commandLists = new CommandLists();
-                    commandLists.opaqueList.push(options.command);
-                    commandList.push(commandLists);
+                    commandList.push(options.command);
                 }
 
                 if (defined(options.event)) {
@@ -152,6 +150,7 @@ defineSuite([
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
+        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.getPrimitives().add(getMockPrimitive({
@@ -170,6 +169,7 @@ defineSuite([
     it('debugCommandFilter does not filter commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
+        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.getPrimitives().add(getMockPrimitive({
@@ -185,6 +185,7 @@ defineSuite([
     it('debugShowBoundingVolume draws a bounding sphere', function() {
         var c = new DrawCommand();
         c.execute = function() {};
+        c.pass = Pass.OPAQUE;
         c.debugShowBoundingVolume = true;
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
@@ -200,6 +201,7 @@ defineSuite([
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
+        c.pass = Pass.OPAQUE;
         c.shaderProgram = scene.getContext().getShaderCache().getShaderProgram(
             'void main() { gl_Position = vec4(1.0); }',
             'void main() { gl_FragColor = vec4(1.0); }');
