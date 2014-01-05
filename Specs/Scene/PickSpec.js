@@ -34,8 +34,8 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.03, 0.0, 0.0);
         camera.direction = new Cartesian3(-1.0, 0.0, 0.0);
-        camera.up = Cartesian3.UNIT_Z;
-        camera.right = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
 
         camera.frustum.near = 0.01;
         camera.frustum.far = 2.0;

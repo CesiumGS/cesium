@@ -151,9 +151,6 @@ defineSuite([
         frustum2.far = 2.0;
         frustum2.fovy = (Math.PI) / 3.0;
         frustum2.aspectRatio = 1.0;
-        frustum2.position = new Cartesian3();
-        frustum2.direction =  Cartesian3.negate(Cartesian3.UNIT_Z);
-        frustum2.up = Cartesian3.UNIT_Y;
         expect(frustum.equals(frustum2)).toEqual(true);
     });
 

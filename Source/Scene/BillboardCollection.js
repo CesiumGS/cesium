@@ -15,8 +15,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/VertexArrayFacade',
         '../Renderer/createShaderSource',
         './SceneMode',
@@ -40,8 +40,8 @@ define([
         BoundingSphere,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
+        Pass,
         VertexArrayFacade,
         createShaderSource,
         SceneMode,
@@ -90,7 +90,6 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
-    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -189,7 +188,6 @@ define([
 
         this._colorCommands = [];
         this._pickCommands = [];
-        this._commandLists = new CommandLists();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -1268,13 +1266,9 @@ define([
         var vaLength;
         var command;
         var j;
-        var commandLists = this._commandLists;
-        commandLists.opaqueList = emptyArray;
-        commandLists.pickList.opaqueList = emptyArray;
 
-        if (pass.color) {
+        if (pass.render) {
             var colorList = this._colorCommands;
-            commandLists.opaqueList = colorList;
 
             if (!defined(this._rs)) {
                 this._rs = context.createRenderState({
@@ -1325,14 +1319,17 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+                commandList.push(command);
             }
         }
 
+
         if (picking) {
             var pickList = this._pickCommands;
-            commandLists.pickList.opaqueList = pickList;
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
@@ -1378,12 +1375,11 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
-            }
-        }
 
-        if (!commandLists.empty()) {
-            commandList.push(commandLists);
+                commandList.push(command);
+            }
         }
     };
 
