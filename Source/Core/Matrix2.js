@@ -62,6 +62,50 @@ define([
     };
 
     /**
+     * Creates a Matrix2 from 4 consecutive elements in an array.
+     * @memberof Matrix2
+     *
+     * @param {Array} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+     * @param {Matrix2} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create the Matrix2:
+     * // [1.0, 2.0]
+     * // [1.0, 2.0]
+     *
+     * var v = [1.0, 1.0, 2.0, 2.0];
+     * var m = Matrix2.fromArray(v);
+     *
+     * // Create same Matrix2 with using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
+     * var m2 = Matrix2.fromArray(v2, 2);
+     */
+    Matrix2.fromArray = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix2();
+        }
+
+        result[0] = array[startingIndex];
+        result[1] = array[startingIndex + 1];
+        result[2] = array[startingIndex + 2];
+        result[3] = array[startingIndex + 3];
+        return result;
+    };
+
+    /**
      * Creates a Matrix2 instance from a column-major order array.
      * @memberof Matrix2
      * @function

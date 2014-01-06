@@ -26,10 +26,10 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/CommandLists',
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -70,10 +70,10 @@ define([
         Transforms,
         BufferUsage,
         ClearCommand,
-        CommandLists,
         DepthFunction,
         DrawCommand,
         createShaderSource,
+        Pass,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -132,19 +132,20 @@ define([
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.pass = Pass.OPAQUE;
         this._depthCommand.owner = this;
 
         this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._northPoleCommand.pass = Pass.OPAQUE;
         this._northPoleCommand.owner = this;
         this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand.pass = Pass.OPAQUE;
         this._southPoleCommand.owner = this;
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
-
-        this._commandLists = new CommandLists();
 
         /**
          * Determines the color of the north pole. If the day tile provider imagery does not
@@ -288,48 +289,55 @@ define([
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(centralBody, frameState) {
         var radii = centralBody._ellipsoid.getRadii();
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p);
+        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p, scratchCartesian1);
 
         var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = Cartesian3.normalize(q);
+        var qUnit = Cartesian3.normalize(q, scratchCartesian2);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q));
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit));
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3), scratchCartesian3);
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian4), scratchCartesian4);
 
         // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
 
         // Compute the center and offsets.
-        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude);
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian1);
         var scalar = wMagnitude / qMagnitude;
-        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar);
-        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar);
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.add(center, northOffset), eastOffset));
-        var upperRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.add(center, northOffset), eastOffset));
-        var lowerLeft = Cartesian3.multiplyComponents(radii, Cartesian3.subtract(Cartesian3.subtract(center, northOffset), eastOffset));
-        var lowerRight = Cartesian3.multiplyComponents(radii, Cartesian3.add(Cartesian3.subtract(center, northOffset), eastOffset));
+        var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
+        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+        Cartesian3.pack(upperLeft, depthQuadScratch, 0);
 
-        depthQuadScratch[0] = upperLeft.x;
-        depthQuadScratch[1] = upperLeft.y;
-        depthQuadScratch[2] = upperLeft.z;
-        depthQuadScratch[3] = lowerLeft.x;
-        depthQuadScratch[4] = lowerLeft.y;
-        depthQuadScratch[5] = lowerLeft.z;
-        depthQuadScratch[6] = upperRight.x;
-        depthQuadScratch[7] = upperRight.y;
-        depthQuadScratch[8] = upperRight.z;
-        depthQuadScratch[9] = lowerRight.x;
-        depthQuadScratch[10] = lowerRight.y;
-        depthQuadScratch[11] = lowerRight.z;
+        var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
+        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+        Cartesian3.pack(lowerLeft, depthQuadScratch, 3);
+
+        var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+        Cartesian3.pack(upperRight, depthQuadScratch, 6);
+
+        var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.add(lowerRight, eastOffset, lowerRight);
+        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+        Cartesian3.pack(lowerRight, depthQuadScratch, 9);
+
         return depthQuadScratch;
     }
 
@@ -738,20 +746,15 @@ define([
         this._projection = projection;
 
         var pass = frameState.passes;
-        var commandLists = this._commandLists;
-        commandLists.removeAll();
-
-        if (pass.color) {
-            var colorCommandList = commandLists.opaqueList;
-
+        if (pass.render) {
             // render quads to fill the poles
             if (mode === SceneMode.SCENE3D) {
                 if (this._drawNorthPole) {
-                    colorCommandList.push(this._northPoleCommand);
+                    commandList.push(this._northPoleCommand);
                 }
 
                 if (this._drawSouthPole) {
-                    colorCommandList.push(this._southPoleCommand);
+                    commandList.push(this._southPoleCommand);
                 }
             }
 
@@ -770,7 +773,7 @@ define([
             this._surface.setTerrainProvider(this.terrainProvider);
             this._surface.update(context,
                     frameState,
-                    colorCommandList,
+                    commandList,
                     this._drawUniforms,
                     this._surfaceShaderSet,
                     this._rsColor,
@@ -781,9 +784,9 @@ define([
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 if (!this.depthTestAgainstTerrain) {
-                    colorCommandList.push(this._clearDepthCommand);
+                    commandList.push(this._clearDepthCommand);
                     if (mode === SceneMode.SCENE3D) {
-                        colorCommandList.push(this._depthCommand);
+                        commandList.push(this._depthCommand);
                     }
                 }
             }
@@ -792,11 +795,7 @@ define([
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandLists.pickList.opaqueList.push(this._depthCommand);
-        }
-
-        if (!commandLists.empty()) {
-            commandList.push(commandLists);
+            commandList.push(this._depthCommand);
         }
     };
 

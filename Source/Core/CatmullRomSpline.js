@@ -48,6 +48,7 @@ define([
             timeVec.z = u;
             timeVec.y = u * u;
             timeVec.x = timeVec.y * u;
+            timeVec.w = 1.0;
 
             var p0, p1, p2, p3, coefs;
             if (i === 0) {
@@ -58,7 +59,7 @@ define([
                 p3 = Cartesian3.subtract(points[2], p0, scratchTemp0);
                 Cartesian3.multiplyByScalar(p3, 0.5, p3);
 
-                coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
             } else if (i === points.length - 2) {
                 p0 = points[i];
                 p1 = points[i + 1];
@@ -67,15 +68,14 @@ define([
                 p2 = Cartesian3.subtract(p1, points[i - 1], scratchTemp0);
                 Cartesian3.multiplyByScalar(p2, 0.5, p2);
 
-                coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
             } else {
                 p0 = points[i - 1];
                 p1 = points[i];
                 p2 = points[i + 1];
                 p3 = points[i + 2];
-                coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
             }
-
             result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
             Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
             Cartesian3.add(result, scratchTemp1, result);

@@ -614,7 +614,7 @@ define([
 
         var tmp = pointToWindowCoordinatesTemp;
 
-        Matrix4.multiplyByPoint(modelViewProjectionMatrix, point, tmp);
+        Matrix4.multiplyByVector(modelViewProjectionMatrix, Cartesian4.fromElements(point.x, point.y, point.z, 1, tmp), tmp);
         Cartesian4.multiplyByScalar(tmp, 1.0 / tmp.w, tmp);
         Matrix4.multiplyByVector(viewportTransformation, tmp, tmp);
         return Cartesian2.fromCartesian4(tmp, result);
