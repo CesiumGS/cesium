@@ -99,12 +99,12 @@ define([
         return (prev.x * next.y - prev.y * next.x >= 0.0) ? -angle : angle;
     }
 
-    var negativeX = new Cartesian4(-1, 0, 0, 0);
+    var negativeX = new Cartesian3(-1, 0, 0);
     var transform = new Matrix4();
     var translation = new Matrix4();
     var rotationZ = new Matrix3();
     var scaleMatrix = Matrix3.IDENTITY.clone();
-    var westScratch = new Cartesian4();
+    var westScratch = new Cartesian3();
     var finalPosScratch = new Cartesian4();
     var heightCartesian = new Cartesian3();
     function addPosition(center, left, shape, finalPositions, ellipsoid, height, xScalar, repeat) {
@@ -112,13 +112,13 @@ define([
         var finalPosition = finalPosScratch;
         transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, transform);
 
-        west = Matrix4.multiplyByVector(transform, negativeX, west);
+        west = Matrix4.multiplyByPointAsVector(transform, negativeX, west);
         west = Cartesian3.normalize(west, west);
         var angle = computeRotationAngle(west, left, center, ellipsoid);
         rotationZ = Matrix3.fromRotationZ(angle, rotationZ);
 
         heightCartesian.z = height;
-        transform = Matrix4.multiply(transform, Matrix4.fromRotationTranslation(rotationZ, heightCartesian, translation), transform);
+        transform = Matrix4.multiplyTransformation(transform, Matrix4.fromRotationTranslation(rotationZ, heightCartesian, translation), transform);
         var scale = scaleMatrix;
         scale[0] = xScalar;
 

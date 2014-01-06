@@ -939,16 +939,20 @@ define([
         return this._id;
     };
 
-    var tempCartesian4 = new Cartesian4();
+    var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
-        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian4);
-        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
+        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
+        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
+    var scracthMatrix4 = new Matrix4();
+    var scratchCartesian4 = new Cartesian4();
+    var scrachEyeOffset = new Cartesian3();
+    var scratchCartesian2 = new Cartesian2();
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = frameState.camera;
@@ -956,25 +960,25 @@ define([
         var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
-        var mv = Matrix4.multiply(view, modelMatrix);
-        var positionEC = Matrix4.multiplyByPoint(mv, position);
+        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scracthMatrix4);
+        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
 
         // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC));
+        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC, scrachEyeOffset), scrachEyeOffset);
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC);
+        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC, new Cartesian2());
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
-        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale());
+        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale(), scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, positionWC.y);
+        return positionWC;
     };
 
     /**

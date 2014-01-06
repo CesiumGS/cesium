@@ -70,7 +70,6 @@ defineSuite([
     });
 
     it('getMovement', function() {
-        expect(handler.getMovement(CameraEventType.LEFT_DRAG)).toBeUndefined();
         var startPosition = Cartesian2.ZERO;
         var endPosition = Cartesian2.UNIT_X;
 
@@ -200,7 +199,6 @@ defineSuite([
     });
 
     it('aggregates events', function() {
-        expect(handler.getMovement(CameraEventType.LEFT_DRAG)).toBeUndefined();
         var startPosition = Cartesian2.ZERO;
         var endPosition = Cartesian2.UNIT_X;
         var endPosition2 = Cartesian2.UNIT_Y;
