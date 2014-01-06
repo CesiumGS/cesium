@@ -275,6 +275,17 @@ defineSuite([
         }).toThrow();
     });
 
+    it('raises changed when loading CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(clockCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
     it('raises error when an error occurs in loadUrl', function() {
         var dataSource = new CzmlDataSource();
 
