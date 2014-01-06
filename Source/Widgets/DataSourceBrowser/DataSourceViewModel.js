@@ -17,7 +17,7 @@ define([
         knockout) {
     "use strict";
 
-    var DataSourceViewModel = function(name, dataSourceBrowserViewModel, dataSource) {
+    var DataSourceViewModel = function(dataSourceBrowserViewModel, dataSource) {
         if (!defined(dataSourceBrowserViewModel)) {
             throw new DeveloperError('dataSourceBrowserViewModel is required.');
         }
@@ -34,7 +34,7 @@ define([
          * Gets or sets the name of this data source.  This property is observable.
          * @type {String}
          */
-        this.name = name;
+        this.name = dataSource.getName();
         this.children = [];
         this.expanded = false;
         this._isLoading = false;
@@ -46,6 +46,9 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSource.getLoadingEvent(), function(isLoading) {
             that._isLoading = isLoading;
+        });
+        this._eventHelper.add(dataSource.getChangedEvent(), function(dataSource) {
+            that.name = dataSource.getName();
         });
 
         /**

@@ -341,7 +341,7 @@ define([
     }
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this, dataSource);
+        var dataSourceViewModel = new DataSourceViewModel(this, dataSource);
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         var dynamicObjectCollectionId = dynamicObjectCollection.id;
 
