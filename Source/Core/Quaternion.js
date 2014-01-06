@@ -972,13 +972,31 @@ define([
         return Quaternion.slerp(slerp0, slerp1, 2.0 * t * (1.0 - t), result);
     };
 
-    var opmu = 1.90110745351730037;
-    //var u = [1.0 / 3.0, 1.0 / (2.0 * 5.0), 1.0 / (3.0 * 7.0), 1.0 / (4.0 * 9.0), 1.0 / (5.0 * 11.0), 1.0 / (6.0 * 13.0), 1.0 / (7.0 * 15.0), opmu / (8.0 * 17.0)];
-    //var v = [1.0 / 3.0, 2.0 / 5.0, 3.0 / 7.0, 4.0 / 9.0, 5.0 / 11.0, 6.0 / 13.0, 7.0 / 15.0, opmu * 8.0 / 17.0];
-    //var bT = new Array(8);
-    //var bD = new Array(8);
     var fastSlerpScratchQuaternion = new Quaternion();
+    var opmu = 1.90110745351730037;
 
+    var u = new Array(8);
+    var v = new Array(8);
+    var bT = new Array(8);
+    var bD = new Array(8);
+    /*
+    var u = new Float32Array(8);
+    var v = new Float32Array(8);
+    var bT = new Float32Array(8);
+    var bD = new Float32Array(8);
+    */
+
+    for (var i = 0; i < 7; ++i) {
+        var s = i + 1.0;
+        var t = 2.0 * s + 1.0;
+        u[i] = 1.0 / (s * t);
+        v[i] = s / t;
+    }
+
+    u[7] = opmu / (8.0 * 17.0);
+    v[7] = opmu * 8.0 / 17.0;
+
+    /*
     var u_0 = 1.0 / (1.0 * 3.0);
     var u_1 = 1.0 / (2.0 * 5.0);
     var u_2 = 1.0 / (3.0 * 7.0);
@@ -996,6 +1014,7 @@ define([
     var v_5 = 6.0 / 13.0;
     var v_6 = 7.0 / 15.0;
     var v_7 = opmu * 8.0 / 17.0;
+    */
 
     Quaternion.fastSlerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1031,13 +1050,19 @@ define([
         var sqrT = t * t;
         var sqrD = d * d;
 
-        /*
         for (var i = 7; i >= 0; --i) {
             bT[i] = (u[i] * sqrT - v[i]) * xm1;
             bD[i] = (u[i] * sqrD - v[i]) * xm1;
         }
-        */
 
+        var cT = sign * t * (
+            1.0 + bT[0] * (1.0 + bT[1] * (1.0 + bT[2] * (1.0 + bT[3] * (
+            1.0 + bT[4] * (1.0 + bT[5] * (1.0 + bT[6] * (1.0 + bT[7]))))))));
+        var cD = d * (
+            1.0 + bD[0] * (1.0 + bD[1] * (1.0 + bD[2] * (1.0 + bD[3] * (
+            1.0 + bD[4] * (1.0 + bD[5] * (1.0 + bD[6] * (1.0 + bD[7]))))))));
+
+        /*
         var bT_0 = (u_0 * sqrT - v_0) * xm1;
         var bD_0 = (u_0 * sqrD - v_0) * xm1;
         var bT_1 = (u_1 * sqrT - v_1) * xm1;
@@ -1061,6 +1086,7 @@ define([
         var cD = d * (
             1.0 + bD_0 * (1.0 + bD_1 * (1.0 + bD_2 * (1.0 + bD_3 * (
             1.0 + bD_4 * (1.0 + bD_5 * (1.0 + bD_6 * (1.0 + bD_7))))))));
+        */
 
         var temp = Quaternion.multiplyByScalar(start, cD, fastSlerpScratchQuaternion);
         Quaternion.multiplyByScalar(end, cT, result);

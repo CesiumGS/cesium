@@ -684,6 +684,7 @@ defineSuite([
         expect(result).toEqual(start);
     });
 
+    /*
     it('performance test', function() {
         var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
@@ -719,9 +720,10 @@ defineSuite([
         time /= limit * 1000.0;
         fastTime /= limit * 1000.0;
 
-        console.log('Quaternion.slerp avg time: ' + time);
-        console.log('Quaternion.fastSlerp avg time: ' + fastTime);
+        console.log('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp avg time: ' + fastTime);
+        alert('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp avg time: ' + fastTime);
     });
+    */
 
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
