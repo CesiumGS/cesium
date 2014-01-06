@@ -145,7 +145,9 @@ defineSuite([
 
     it('gets antialias', function() {
         var c = createContext({
-            antialias : false
+            webgl : {
+                antialias : false
+            }
         });
         expect(c.getAntialias()).toEqual(false);
         destroyContext(c);
@@ -284,7 +286,7 @@ defineSuite([
     it('throws when creating a pick ID without an object', function() {
         expect(function() {
             context.createPickId(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('returns undefined when retrieving an object by unknown pick color', function() {
@@ -294,13 +296,13 @@ defineSuite([
     it('throws when getObjectByPickColor is called without a color', function() {
         expect(function() {
             context.getObjectByPickColor(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to construct (null canvas)', function() {
         expect(function() {
             return new Context();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isDestroyed', function() {

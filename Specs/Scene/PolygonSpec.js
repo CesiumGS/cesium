@@ -315,7 +315,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -402,7 +402,7 @@ defineSuite([
         polygon = createPolygon();
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
@@ -427,7 +427,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));

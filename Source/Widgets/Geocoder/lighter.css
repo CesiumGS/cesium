@@ -9,10 +9,11 @@
     box-shadow: 0 0 8px #fff;
 }
 
-.cesium-lighter .cesium-geocoder-goButton {
+.cesium-lighter .cesium-geocoder-searchButton {
+    background-color: #e2f0ff;
     fill: #111;
 }
 
-.cesium-lighter .cesium-geocoder-goButton:hover {
+.cesium-lighter .cesium-geocoder-searchButton:hover {
     background-color: #a6d2ff;
 }

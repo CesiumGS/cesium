@@ -1,7 +1,6 @@
 /*global define,console*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
@@ -28,7 +27,6 @@ define([
         '../getElement'
     ], function(
         buildModuleUrl,
-        Cartesian2,
         Cartesian3,
         Clock,
         DefaultProxy,
@@ -108,7 +106,7 @@ define([
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
+     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -426,22 +424,35 @@ define([
         errorHeader.textContent = title;
         content.appendChild(errorHeader);
 
+        var resizeCallback;
         if (defined(error)) {
+            var errorPanelScroller = document.createElement('div');
+            errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
+            content.appendChild(errorPanelScroller);
+            resizeCallback = function() {
+                errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
+            };
+            resizeCallback();
+            window.addEventListener('resize', resizeCallback, false);
+
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
             errorMessage.textContent = error;
-            content.appendChild(errorMessage);
+            errorPanelScroller.appendChild(errorMessage);
         }
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
         content.appendChild(buttonPanel);
 
-        var okButton = document.createElement('span');
-        okButton.className = 'cesium-widget-button';
+        var okButton = document.createElement('button');
+        okButton.type = 'button';
+        okButton.className = 'cesium-button';
         okButton.textContent = 'OK';
-        okButton.tabIndex = 100;
         okButton.onclick = function() {
+            if (defined(resizeCallback)) {
+                window.removeEventListener('resize', resizeCallback, false);
+            }
             element.removeChild(overlay);
         };
 

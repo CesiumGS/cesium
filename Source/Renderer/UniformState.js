@@ -225,6 +225,7 @@ define([
     };
 
     var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
 
     /**
      * Synchronizes frame state with the uniform state.  This is called
@@ -259,7 +260,7 @@ define([
 
         scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
         scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions);
+        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, undefined, scratchPixelSize);
         this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
         this._entireFrustum.x = camera.frustum.near;
@@ -267,7 +268,7 @@ define([
         this.updateFrustum(camera.frustum);
 
         this._frameState = frameState;
-        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time);
+        this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
     };
 
     /**
@@ -582,7 +583,7 @@ define([
         if (uniformState._modelViewDirty) {
             uniformState._modelViewDirty = false;
 
-            Matrix4.multiply(uniformState._view, uniformState._model, uniformState._modelView);
+            Matrix4.multiplyTransformation(uniformState._view, uniformState._model, uniformState._modelView);
         }
     }
 
@@ -604,7 +605,7 @@ define([
         if (uniformState._modelView3DDirty) {
             uniformState._modelView3DDirty = false;
 
-            Matrix4.multiply(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
+            Matrix4.multiplyTransformation(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
         }
     }
 
@@ -1094,9 +1095,9 @@ define([
     };
 
     var view2Dto3DPScratch = new Cartesian3();
-    var view2Dto3DRScratch = new Cartesian4();
-    var view2Dto3DUScratch = new Cartesian4();
-    var view2Dto3DDScratch = new Cartesian4();
+    var view2Dto3DRScratch = new Cartesian3();
+    var view2Dto3DUScratch = new Cartesian3();
+    var view2Dto3DDScratch = new Cartesian3();
     var view2Dto3DCartographicScratch = new Cartographic();
     var view2Dto3DCartesian3Scratch = new Cartesian3();
     var view2Dto3DMatrix4Scratch = new Matrix4();
@@ -1145,9 +1146,9 @@ define([
         var enuToFixed = Transforms.eastNorthUpToFixedFrame(position3D, ellipsoid, view2Dto3DMatrix4Scratch);
 
         // Transform each camera direction to the fixed axes.
-        Matrix4.multiplyByVector(enuToFixed, r, r);
-        Matrix4.multiplyByVector(enuToFixed, u, u);
-        Matrix4.multiplyByVector(enuToFixed, d, d);
+        Matrix4.multiplyByPointAsVector(enuToFixed, r, r);
+        Matrix4.multiplyByPointAsVector(enuToFixed, u, u);
+        Matrix4.multiplyByPointAsVector(enuToFixed, d, d);
 
         // Compute the view matrix based on the new fixed-frame camera position and directions.
         if (!defined(result)) {

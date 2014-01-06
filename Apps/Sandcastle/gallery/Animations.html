@@ -87,46 +87,30 @@ require(['Cesium'], function(Cesium) {
         primitives.add(sensors);
     }
 
-    function createButtons(scene) {
-        var toolbar = document.getElementById('toolbar');
-        
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            scene.getAnimations().removeAll();
-            resetExtentPropeties(extent);
-            addAlphaAnimation(extent, scene);
-            Sandcastle.highlight(addAlphaAnimation);
-        };
-        button.textContent = 'Alpha Animation';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            scene.getAnimations().removeAll();
-            resetExtentPropeties(extent);
-            addErosionAnimation(extent, scene);
-            Sandcastle.highlight(addErosionAnimation);
-        };
-        button.textContent = 'Erosion Animation';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            scene.getAnimations().removeAll();
-            addStripeAnimation(rectangularSensor, scene);
-            Sandcastle.highlight(addStripeAnimation);
-        };
-        button.textContent = 'Stripe Animation';
-        toolbar.appendChild(button);
-    }
-
     var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var scene = widget.scene;
 
     createPrimitives(widget);
-    createButtons(widget.scene);
+
+    Sandcastle.addToolbarButton('Alpha Animation', function() {
+        scene.getAnimations().removeAll();
+        resetExtentPropeties(extent);
+        addAlphaAnimation(extent, scene);
+        Sandcastle.highlight(addAlphaAnimation);
+    });
+
+    Sandcastle.addToolbarButton('Erosion Animation', function() {
+        scene.getAnimations().removeAll();
+        resetExtentPropeties(extent);
+        addErosionAnimation(extent, scene);
+        Sandcastle.highlight(addErosionAnimation);
+    });
+
+    Sandcastle.addToolbarButton('Stripe Animation', function() {
+        scene.getAnimations().removeAll();
+        addStripeAnimation(rectangularSensor, scene);
+        Sandcastle.highlight(addStripeAnimation);
+    });
 
     Sandcastle.finishedLoading();
 });

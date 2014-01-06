@@ -4,6 +4,51 @@ Change Log
 Beta Releases
 -------------
 
+### b24 - 2014-01-06
+
+* Breaking changes:
+  * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOptions` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+
+           var viewer = new Viewer('cesiumContainer', {
+               contextOptions : {
+                 alpha : true
+               }
+           });
+
+    should now look like:
+
+           var viewer = new Viewer('cesiumContainer', {
+               contextOptions : {
+                 webgl : {
+                   alpha : true
+                 }
+               }
+           });
+  * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
+  
+          camera.up = Cartesian3.UNIT_Z;
+          
+    should now look like:
+          
+          Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
+          
+  * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
+  * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
+  * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
+  * Removed prototype version of `BoundingSphere.transform`
+  * `Matrix4.multiplyByPoint` now returns a `Cartesian3` instead of a `Cartesian4`
+* The minified, combined `Cesium.js` file now omits certain `DeveloperError` checks, to increase performance and reduce file size.  When developing your application, we recommend using the unminified version locally for early error detection, then deploying the minified version to production.
+* Fixed disabling `CentralBody.enableLighting`.
+* Fixed `Geocoder` flights when following an object.
+* The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
+* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
+* Added `CentralBody.maximumScreenSpaceError`.
+* Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
+* Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
+* Added `BoundingSphere.transformsWithoutScale`
+* Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
+* Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
+
 ### b23 - 2013-12-02
 
 * Breaking changes:
@@ -192,7 +237,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
     * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take `scene` as their first parameter instead of `frameState`.
-    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
        * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
        * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.

@@ -997,17 +997,58 @@ defineSuite([
         expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
-    it('CZML Availability works.', function() {
-        var packet = {
+    it('CZML Availability works with a single interval.', function() {
+        var packet1 = {
+            id : 'testObject',
             availability : '2000-01-01/2001-01-01'
         };
 
         var dataSource = new CzmlDataSource();
-        dataSource.load(packet);
+        dataSource.process(packet1);
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
-        var interval = TimeInterval.fromIso8601(packet.availability);
-        expect(dynamicObject.availability).toEqual(interval);
+        var interval = TimeInterval.fromIso8601(packet1.availability);
+        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.get(0)).toEqual(interval);
+
+        var packet2 = {
+            id : 'testObject',
+            availability : '2000-02-02/2001-02-02'
+        };
+
+        dataSource.process(packet2);
+        interval = TimeInterval.fromIso8601(packet2.availability);
+        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.get(0)).toEqual(interval);
+    });
+
+    it('CZML Availability works with multiple intervals.', function() {
+        var packet1 = {
+            id : 'testObject',
+            availability : ['2000-01-01/2001-01-01', '2002-01-01/2003-01-01']
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.process(packet1);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+
+        var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
+        var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
+        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.get(0)).toEqual(interval1);
+        expect(dynamicObject.availability.get(1)).toEqual(interval2);
+
+        var packet2 = {
+            id : 'testObject',
+            availability : ['2003-01-01/2004-01-01', '2005-01-01/2006-01-01']
+        };
+        dataSource.process(packet2);
+
+        interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
+        interval2 = TimeInterval.fromIso8601(packet2.availability[1]);
+        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.get(0)).toEqual(interval1);
+        expect(dynamicObject.availability.get(1)).toEqual(interval2);
     });
 
     it('CZML adds data for infinite path.', function() {

@@ -46,10 +46,10 @@ require(['Cesium'], function(Cesium) {
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
-    
+
     function addOverlappingPolygons(scene, ellipsoid) {
         var primitives = scene.getPrimitives();
-        
+
         // Add primitives from bottom to top.
         var redPolygon = primitives.add(new Cesium.Polygon({
             positions : ellipsoid.cartographicArrayToCartesianArray([
@@ -80,18 +80,18 @@ require(['Cesium'], function(Cesium) {
             ])
         }));
         greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
-        
+
         // Give polygons identifiers for easy lookup later
         redPolygon.id = 0;
         bluePolygon.id = 1;
         greenPolygon.id = 2;
-        
+
         // simple flags used for multi-picking
         redPolygon.picked = false;
         bluePolygon.picked = false;
         greenPolygon.picked = false;
     }
-    
+
     function cleanup() {
         widget.scene.getPrimitives().removeAll();
         handler = handler && handler.destroy();
@@ -254,7 +254,7 @@ require(['Cesium'], function(Cesium) {
     function layerCompositePrimitive(scene, ellipsoid) {
         Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
         addOverlappingPolygons(scene, ellipsoid);
-        
+
         var primitives = scene.getPrimitives();
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
@@ -265,12 +265,12 @@ require(['Cesium'], function(Cesium) {
                 }
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
-    
+
     var originalColor= {};
     function multiPickPrimitives(scene, ellipsoid) {
         Sandcastle.declare(multiPickPrimitives);    // For highlighting in Sandcastle.
         addOverlappingPolygons(scene, ellipsoid);
-        
+
         var primitives = scene.getPrimitives();
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
@@ -281,13 +281,13 @@ require(['Cesium'], function(Cesium) {
                     var p = primitives.get(i);
                     p.processedPick = false;
                 }
-            
+
                 // get an array of all primitives at the mouse position
                 var pickedObjects = scene.drillPick(movement.endPosition);
                 if(Cesium.defined(pickedObjects)) {
                     for( i=0; i<pickedObjects.length; ++i) {
                         var polygon = pickedObjects[i].primitive;
-                        
+
                         if(polygon.picked === false) {
                             originalColor[polygon.id] = polygon.material.uniforms.color;
                             polygon.material.uniforms.color = {
@@ -298,15 +298,15 @@ require(['Cesium'], function(Cesium) {
                             };
                             polygon.picked = true;
                         }
-                        
+
                         polygon.processedPick = true;
                     }
                 }
-                
+
                 // return unpicked primitives to their original color
                 for (i = 0; i < numberOfPrimitves; ++i) {
                     var primitive = primitives.get(i);
-                    
+
                     if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
                         primitive.material.uniforms.color = originalColor[primitive.id];
                         primitive.picked = false;
@@ -315,10 +315,10 @@ require(['Cesium'], function(Cesium) {
             }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
     }
-    
+
     function drawExtent(scene, ellipsoid) {
         Sandcastle.declare(drawExtent);    // For highlighting in Sandcastle.
-        
+
         var DrawExtentHelper = function(scene, handler) {
             this._canvas = scene.getCanvas();
             this._scene = scene;
@@ -329,27 +329,27 @@ require(['Cesium'], function(Cesium) {
             this._extentPrimitive.asynchronous = false;
             this._scene.getPrimitives().add(this._extentPrimitive);
         };
-        
+
         DrawExtentHelper.prototype.enableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
-            
+
             controller.enableTranslate = true;
             controller.enableZoom = true;
             controller.enableRotate = true;
             controller.enableTilt = true;
             controller.enableLook = true;
         };
-        
+
         DrawExtentHelper.prototype.disableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
-            
+
             controller.enableTranslate = false;
             controller.enableZoom = false;
             controller.enableRotate = false;
             controller.enableTilt = false;
             controller.enableLook = false;
         };
-        
+
         DrawExtentHelper.prototype.getExtent = function(mn, mx) {
             var e = new Cesium.Extent();
 
@@ -372,18 +372,18 @@ require(['Cesium'], function(Cesium) {
 
             return e;
         };
-        
+
         DrawExtentHelper.prototype.setPolyPts = function(mn, mx) {
             this._extentPrimitive.extent = this.getExtent(mn, mx);
         };
-        
+
         DrawExtentHelper.prototype.setToDegrees = function(w, s, e, n) {
             var toRad = Cesium.Math.toRadians;
             var mn = new Cesium.Cartographic(toRad(w), toRad(s));
             var mx = new Cesium.Cartographic(toRad(e), toRad(n));
             this.setPolyPts(mn, mx);
         };
-        
+
         DrawExtentHelper.prototype.handleRegionStop = function(movement) {
             this.enableInput();
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.position,
@@ -395,7 +395,7 @@ require(['Cesium'], function(Cesium) {
 
             this._finishHandler(this.getExtent(this._click1, this._click2));
         };
-        
+
         DrawExtentHelper.prototype.handleRegionInter = function(movement) {
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.endPosition,
                     this._ellipsoid);
@@ -404,7 +404,7 @@ require(['Cesium'], function(Cesium) {
                 this.setPolyPts(this._click1, cartographic);
             }
         };
-        
+
         DrawExtentHelper.prototype.handleRegionStart = function(movement) {
             var cartesian = this._scene.getCamera().controller.pickEllipsoid(movement.position,
                     this._ellipsoid);
@@ -419,7 +419,7 @@ require(['Cesium'], function(Cesium) {
                 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
             }
         };
-        
+
         DrawExtentHelper.prototype.start = function() {
             this.disableInput();
 
@@ -430,13 +430,13 @@ require(['Cesium'], function(Cesium) {
                 that.handleRegionStart(movement);
             }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
         };
-        
+
         // Actual instantiation...
         var myHandler = function(e) {
             var labels = new Cesium.LabelCollection();
             label = labels.add();
             scene.getPrimitives().add(labels);
-            
+
             label.setShow(true);
             label.setText('(' +
                 Cesium.Math.toDegrees(e.west).toFixed(2) + ', ' +
@@ -451,86 +451,54 @@ require(['Cesium'], function(Cesium) {
         drawExtentHelper.start();
     }
 
-    function createButtons(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
-        var scene = widget.scene;
-        var toolbar = document.getElementById('toolbar');
-        
-        var button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            pickCartographicPosition(scene, ellipsoid);
-            Sandcastle.highlight(pickCartographicPosition);
-        };
-        button.textContent = 'Show Cartographic Position on Mouse Over';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            pickBillboard(scene, ellipsoid);
-            Sandcastle.highlight(pickBillboard);
-        };
-        button.textContent = 'Pick Billboard';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            animateBillboardOnPick(scene, ellipsoid);
-            Sandcastle.highlight(animateBillboardOnPick);
-        };
-        button.textContent = 'Animate Billboard on Pick';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            erodeSensorOnClick(scene, ellipsoid);
-            Sandcastle.highlight(erodeSensorOnClick);
-        };
-        button.textContent = 'Erode Sensor on Click';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            layerCompositePrimitive(scene, ellipsoid);
-            Sandcastle.highlight(layerCompositePrimitive);
-        };
-        button.textContent = 'Layer Primitives';
-        toolbar.appendChild(button);
-        
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            multiPickPrimitives(scene, ellipsoid);
-            Sandcastle.highlight(multiPickPrimitives);
-        };
-        button.textContent = 'Drill-Down Picking';
-        toolbar.appendChild(button);
-
-        button = document.createElement('button');
-        button.className = 'cesium-button';
-        button.onclick = function() {
-            cleanup();
-            drawExtent(scene, ellipsoid);
-            Sandcastle.highlight(drawExtent);
-        };
-        button.textContent = 'Drag to Draw Extent';
-        toolbar.appendChild(button);
-    }
-
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    createButtons(widget);
-    pickCartographicPosition(widget.scene, widget.centralBody.getEllipsoid());
+    var ellipsoid = widget.centralBody.getEllipsoid();
+    var scene = widget.scene;
+
+    pickCartographicPosition(scene, ellipsoid);
+
+    Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
+        cleanup();
+        pickCartographicPosition(scene, ellipsoid);
+        Sandcastle.highlight(pickCartographicPosition);
+    });
+
+    Sandcastle.addToolbarButton('Pick Billboard', function() {
+        cleanup();
+        pickBillboard(scene, ellipsoid);
+        Sandcastle.highlight(pickBillboard);
+    });
+
+    Sandcastle.addToolbarButton('Animate Billboard on Pick', function() {
+        cleanup();
+        animateBillboardOnPick(scene, ellipsoid);
+        Sandcastle.highlight(animateBillboardOnPick);
+    });
+
+    Sandcastle.addToolbarButton('Erode Sensor on Click', function() {
+        cleanup();
+        erodeSensorOnClick(scene, ellipsoid);
+        Sandcastle.highlight(erodeSensorOnClick);
+    });
+
+    Sandcastle.addToolbarButton('Layer Primitives', function() {
+        cleanup();
+        layerCompositePrimitive(scene, ellipsoid);
+        Sandcastle.highlight(layerCompositePrimitive);
+    });
+
+    Sandcastle.addToolbarButton('Drill-Down Picking', function() {
+        cleanup();
+        multiPickPrimitives(scene, ellipsoid);
+        Sandcastle.highlight(multiPickPrimitives);
+    });
+
+    Sandcastle.addToolbarButton('Drag to Draw Extent', function() {
+        cleanup();
+        drawExtent(scene, ellipsoid);
+        Sandcastle.highlight(drawExtent);
+    });
 
     Sandcastle.finishedLoading();
 });

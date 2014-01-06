@@ -108,13 +108,13 @@ defineSuite([
         sun.destroy();
     });
 
-    it('does not render without a color pass', function() {
+    it('does not render without a render pass', function() {
         var sun = new Sun();
 
         var context = scene.getContext();
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        frameState.passes.color = false;
+        frameState.passes.render = false;
         var us = context.getUniformState();
         us.update(context, frameState);
 
