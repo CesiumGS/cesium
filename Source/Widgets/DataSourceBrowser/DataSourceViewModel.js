@@ -59,7 +59,11 @@ define([
 
         this.displayName = undefined;
         knockout.defineProperty(this, 'displayName', function() {
-            return that.name.replace(/\//g, '/\u200b');
+            var name = that.name;
+            if (defined(name)) {
+                name = name.replace(/\//g, '/\u200b');
+            }
+            return name;
         });
 
         this.hasChildren = undefined;
