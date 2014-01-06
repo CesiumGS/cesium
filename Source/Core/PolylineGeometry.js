@@ -67,6 +67,8 @@ define([
 
         var positions = options.positions;
         var colors = options.colors;
+        var s = options.s;
+        var t = options.t;
         var width = defaultValue(options.width, 1.0);
         var perVertex = defaultValue(options.colorsPerVertex, false);
 
@@ -84,6 +86,8 @@ define([
 
         this._positions = positions;
         this._colors = colors;
+        this._s = s;
+        this._t = t;
         this._width = width;
         this._perVertex = perVertex;
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -104,6 +108,8 @@ define([
         var width = polylineGeometry._width;
         var vertexFormat = polylineGeometry._vertexFormat;
         var colors = polylineGeometry._colors;
+        var s = polylineGeometry._s;
+        var t = polylineGeometry._t;
         var perVertex = polylineGeometry._perVertex;
 
         var segments = PolylinePipeline.wrapLongitude(polylineGeometry._positions);
@@ -124,12 +130,12 @@ define([
         var prevPositions = new Float64Array(size * 3);
         var nextPositions = new Float64Array(size * 3);
         var expandAndWidth = new Float32Array(size * 2);
-        var st = vertexFormat.st ? new Float32Array(size * 2) : undefined;
+        var finalSt = vertexFormat.st ? new Float32Array(size * 2) : undefined;
         var finalColors = defined(colors) ? new Uint8Array(size * 4) : undefined;
 
         var positionIndex = 0;
         var expandAndWidthIndex = 0;
-        var stIndex = 0;
+        var finalStIndex = 0;
         var colorIndex = 0;
 
         var segmentLength;
@@ -197,8 +203,17 @@ define([
                 expandAndWidth[expandAndWidthIndex++] = direction * width;
 
                 if (vertexFormat.st) {
-                    st[stIndex++] = j / (positionsLength - 1);
-                    st[stIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
+                    if (defined(s)) { // If using custom assigned s values...
+                        finalSt[finalStIndex++] = s[j];
+                    } else {
+                        finalSt[finalStIndex++] = j / (positionsLength - 1);
+                    }
+
+                    if (defined(t)) { // If using custom assigned t values...
+                        finalSt[finalStIndex++] = t[j];
+                    } else {
+                        finalSt[finalStIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
+                    }
                 }
 
                 if (defined(finalColors)) {
@@ -242,7 +257,7 @@ define([
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
-                values : st
+                values : finalSt
             });
         }
 
