@@ -4,6 +4,10 @@ Change Log
 Beta Releases
 -------------
 
+### b25 - 2014-02-03
+* Breaking changes:
+  * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself. 
+  
 ### b24 - 2014-01-06
 
 * Breaking changes:
