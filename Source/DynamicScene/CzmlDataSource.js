@@ -1156,42 +1156,57 @@ define([
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
         CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
-        var availability = dynamicObjectCollection.computeAvailability();
 
-        var clock;
         var documentObject = dataSource._document;
-        if (defined(documentObject) && defined(documentObject.clock)) {
-            clock = new DynamicClock();
-            clock.startTime = documentObject.clock.startTime;
-            clock.stopTime = documentObject.clock.stopTime;
-            clock.clockRange = documentObject.clock.clockRange;
-            clock.clockStep = documentObject.clock.clockStep;
-            clock.multiplier = documentObject.clock.multiplier;
-            clock.currentTime = documentObject.clock.currentTime;
-        } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-            clock = new DynamicClock();
-            clock.startTime = availability.start;
-            clock.stopTime = availability.stop;
-            clock.clockRange = ClockRange.LOOP_STOP;
-            var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
-            var multiplier = Math.round(totalSeconds / 120.0);
-            clock.multiplier = multiplier;
-            clock.currentTime = clock.startTime;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+
+        var raiseChangedEvent = false;
+        var czmlClock;
+        if (defined(documentObject.clock)) {
+            czmlClock = documentObject.clock;
+        } else {
+            var availability = dynamicObjectCollection.computeAvailability();
+            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+                var startTime = availability.start;
+                var stopTime = availability.stop;
+                var totalSeconds = startTime.getSecondsDifference(stopTime);
+                var multiplier = Math.round(totalSeconds / 120.0);
+
+                czmlClock = new DynamicClock();
+                czmlClock.startTime = startTime;
+                czmlClock.stopTime = stopTime;
+                czmlClock.clockRange = ClockRange.LOOP_STOP;
+                czmlClock.multiplier = multiplier;
+                czmlClock.currentTime = startTime;
+                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            }
+        }
+
+        if (defined(czmlClock)) {
+            if (!defined(dataSource._clock)) {
+                dataSource._clock = new DynamicClock();
+                raiseChangedEvent = true;
+            }
+            if (!czmlClock.equals(dataSource._clock)) {
+                czmlClock.clone(dataSource._clock);
+                raiseChangedEvent = true;
+            }
         }
 
         var name;
-        if (defined(documentObject) && defined(documentObject.name)) {
+        if (defined(documentObject.name)) {
             name = documentObject.name;
-        }
-
-        if (!defined(name) && defined(sourceUri)) {
+        } else if (defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
 
-        dataSource._name = name;
-        dataSource._clock = clock;
-        dataSource._changed.raiseEvent(dataSource);
+        if (dataSource._name !== name) {
+            dataSource._name = name;
+            raiseChangedEvent = true;
+        }
+
+        if (raiseChangedEvent) {
+            dataSource._changed.raiseEvent(dataSource);
+        }
     }
 
     /**
