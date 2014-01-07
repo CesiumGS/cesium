@@ -103,8 +103,16 @@ define([
 
         // Try to load remaining parameters from XML
         loadXML(url + 'tilemapresource.xml').then(function(xml) {
+            var tileFormatRegex = /tileformat/i;
             // Allowing description properties to override XML values
-            var format = xml.getElementsByTagName('TileFormat')[0];
+            var format;
+            var nodeList = xml.childNodes[0].childNodes;
+            for (var i = 0; i < nodeList.length; i++){
+                if (tileFormatRegex.test(nodeList.item(i).nodeName)){
+                    format = nodeList.item(i);
+                    break;
+                }
+            }
             that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
             that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
             that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
