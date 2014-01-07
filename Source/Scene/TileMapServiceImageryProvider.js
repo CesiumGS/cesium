@@ -104,19 +104,30 @@ define([
         // Try to load remaining parameters from XML
         loadXML(url + 'tilemapresource.xml').then(function(xml) {
             var tileFormatRegex = /tileformat/i;
-            // Allowing description properties to override XML values
+            var tileSetRegex = /tileset/i;
+            var tileSetsRegex = /tilesets/i;
             var format;
+            var tilesets = []; //list of TileSets
+            // Allowing description properties to override XML values
             var nodeList = xml.childNodes[0].childNodes;
+            // Iterate XML Document nodes for properties
             for (var i = 0; i < nodeList.length; i++){
                 if (tileFormatRegex.test(nodeList.item(i).nodeName)){
                     format = nodeList.item(i);
-                    break;
+                } else if (tileSetsRegex.test(nodeList.item(i).nodeName)){
+                    var tileSetNodes = nodeList.item(i).childNodes;
+                    // Iterate the nodes to find all TileSets
+                    for(var j = 0; j < tileSetNodes.length; j++){
+                        if (tileSetRegex.test(tileSetNodes.item(j).nodeName)){
+                            // Add them to tilesets list
+                            tilesets.push(tileSetNodes.item(j));
+                        }
+                    }
                 }
             }
             that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
             that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
             that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
-            var tilesets = xml.getElementsByTagName('TileSet');
             that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesets[0].getAttribute('order'), 10));
             that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
