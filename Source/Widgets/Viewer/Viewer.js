@@ -113,6 +113,7 @@ define([
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+     * @param {Boolean} [options.automaticallyTrackFirstDataSourceClock=true] If true, this widget will automatically track the clock settings of the first DataSource that is added, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
@@ -336,17 +337,37 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         eventHelper.add(clock.onTick, updateDataSourceDisplay);
 
-        function setClockFromDataSource(dataSourceCollection, dataSource) {
-            if (dataSourceCollection.getLength() === 1) {
-                if (defined(dataSourceBrowser)) {
-                    dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
-                } else {
-                    trackDataSourceClock(dataSource);
-                }
-            }
-        }
+        if (defaultValue(options.automaticallyTrackFirstDataSourceClock, true)) {
+            var trackedDataSource;
+            var changedEventRemovalFunction;
 
-        eventHelper.add(dataSourceCollection.dataSourceAdded, setClockFromDataSource);
+            var onDataSourceAdded = function(dataSourceCollection, dataSource) {
+                if (dataSourceCollection.getLength() === 1) {
+                    if (defined(dataSourceBrowser)) {
+                        dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
+                    } else {
+                        onDataSourceChanged(dataSource);
+                        changedEventRemovalFunction = eventHelper.add(dataSource.getChangedEvent(), onDataSourceChanged);
+                        trackedDataSource = dataSource;
+                    }
+                }
+            };
+
+            var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
+                if (trackedDataSource === dataSource) {
+                    changedEventRemovalFunction();
+                    changedEventRemovalFunction = undefined;
+                    trackedDataSource = undefined;
+                }
+            };
+
+            var onDataSourceChanged = function(dataSource) {
+                trackDataSourceClock(dataSource);
+            };
+
+            eventHelper.add(dataSourceCollection.dataSourceAdded, onDataSourceAdded);
+            eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceAdded);
+        }
 
         this._container = container;
         this._element = viewerContainer;
