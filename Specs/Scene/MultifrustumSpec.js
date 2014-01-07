@@ -61,10 +61,10 @@ defineSuite([
         primitives = scene.getPrimitives();
 
         var camera = scene.getCamera();
-        camera.position = Cartesian3.ZERO;
+        camera.position = new Cartesian3();
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
-        camera.right = Cartesian3.UNIT_X;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
 
         camera.frustum.near = 1.0;
         camera.frustum.far = 1000000000.0;

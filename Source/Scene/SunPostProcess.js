@@ -85,6 +85,8 @@ define([
 
         this._uCenter = new Cartesian2();
         this._uRadius = undefined;
+
+        this._blurStep = new Cartesian2();
     };
 
     SunPostProcess.prototype.clear = function(context, color) {
@@ -288,6 +290,8 @@ define([
         var fbo = this._fbo;
         var colorTexture = fbo.getColorTexture();
         if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+            this._blurStep.x = this._blurStep.y = 1.0 / downSampleSize;
+
             fbo.setColorTexture(context.createTexture2D({
                 width : width,
                 height : height
@@ -334,7 +338,7 @@ define([
                 return that._downSampleFBO2.getColorTexture();
             };
             this._blurXCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
+                return that._blurStep;
             };
             this._blurXCommand.renderState = downSampleRenderState;
 
@@ -342,7 +346,7 @@ define([
                 return that._downSampleFBO1.getColorTexture();
             };
             this._blurYCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
+                return that._blurStep;
             };
             this._blurYCommand.renderState = downSampleRenderState;
 

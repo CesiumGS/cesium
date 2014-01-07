@@ -396,6 +396,7 @@ define([
     };
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
+    var scratchOccluder;
 
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
@@ -404,7 +405,8 @@ define([
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
-            return new Occluder(scratchOccluderBoundingSphere, scene._camera.positionWC);
+            scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
+            return scratchOccluder;
         }
 
         return undefined;
@@ -914,6 +916,9 @@ define([
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
+    var scratchBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
+
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var context = scene._context;
         var camera = scene._camera;
@@ -932,7 +937,10 @@ define([
         position.y += x;
         position.z += y;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
+        scratchBufferDimensions.x = drawingBufferWidth;
+        scratchBufferDimensions.y = drawingBufferHeight;
+
+        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
 
         var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -946,6 +954,7 @@ define([
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+
     function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
         var context = scene._context;
         var camera = scene._camera;
@@ -964,7 +973,10 @@ define([
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
+        scratchBufferDimensions.x = drawingBufferWidth;
+        scratchBufferDimensions.y = drawingBufferHeight;
+
+        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
@@ -992,6 +1004,7 @@ define([
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
+    var scratchPosition = new Cartesian2();
 
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
@@ -1016,7 +1029,7 @@ define([
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
