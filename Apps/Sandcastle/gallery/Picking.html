@@ -94,6 +94,7 @@ require(['Cesium'], function(Cesium) {
 
     function cleanup() {
         widget.scene.getPrimitives().removeAll();
+        widget.scene.getPrimitives().sortPrimitives = true;
         handler = handler && handler.destroy();
     }
 
@@ -256,6 +257,8 @@ require(['Cesium'], function(Cesium) {
         addOverlappingPolygons(scene, ellipsoid);
 
         var primitives = scene.getPrimitives();
+        primitives.sortPrimitives = false;
+        
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
             handler.setInputAction(function(movement) {
@@ -272,6 +275,8 @@ require(['Cesium'], function(Cesium) {
         addOverlappingPolygons(scene, ellipsoid);
 
         var primitives = scene.getPrimitives();
+        primitives.sortPrimitives = false;
+        
         // Move the primitive that the mouse is over to the top.
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
             handler.setInputAction(function(movement) {

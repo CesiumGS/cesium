@@ -720,6 +720,15 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    function createTranslucentCompareFunction(position) {
+        return function(a, b) {
+            if (defined(a.index) && defined(b.index)) {
+                return a.index - b.index;
+            }
+            return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
+        };
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -793,6 +802,7 @@ define([
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
+        var translucentCompare = createTranslucentCompareFunction(camera.positionWC);
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -815,6 +825,7 @@ define([
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
+            commands.sort(translucentCompare);
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
