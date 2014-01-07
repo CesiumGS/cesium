@@ -13,9 +13,9 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './Material',
         './SceneMode',
         '../Shaders/EllipsoidVS',
@@ -34,9 +34,9 @@ define([
         CullFace,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
         createShaderSource,
+        Pass,
         Material,
         SceneMode,
         EllipsoidVS,
@@ -218,7 +218,6 @@ define([
         this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
         this._pickCommand.owner = this;
-        this._commandLists = new CommandLists();
 
         var that = this;
         this._uniforms = {
@@ -332,9 +331,6 @@ define([
             BoundingSphere.transform(this._boundingSphere, this._computedModelMatrix, this._boundingSphere);
         }
 
-        var ellipsoidCommandLists = this._commandLists;
-        ellipsoidCommandLists.removeAll();
-
         var materialChanged = this._material !== this.material;
         this._material = this.material;
         this._material.update(context);
@@ -367,16 +363,13 @@ define([
 
         var passes = frameState.passes;
 
-        if (passes.color) {
+        if (passes.render) {
             colorCommand.boundingVolume = this._boundingSphere;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
             colorCommand.modelMatrix = this._computedModelMatrix;
+            colorCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-            if (translucent) {
-                ellipsoidCommandLists.translucentList.push(colorCommand);
-            } else {
-                ellipsoidCommandLists.opaqueList.push(colorCommand);
-            }
+            commandList.push(colorCommand);
         }
 
         if (passes.pick) {
@@ -415,15 +408,10 @@ define([
 
             pickCommand.boundingVolume = this._boundingSphere;
             pickCommand.modelMatrix = this._computedModelMatrix;
+            pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-            if (translucent) {
-                ellipsoidCommandLists.pickList.translucentList.push(pickCommand);
-            } else {
-                ellipsoidCommandLists.pickList.opaqueList.push(pickCommand);
-            }
+            commandList.push(pickCommand);
         }
-
-        commandList.push(ellipsoidCommandLists);
     };
 
     /**
