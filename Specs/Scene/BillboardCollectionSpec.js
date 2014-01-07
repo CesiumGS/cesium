@@ -1004,7 +1004,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -1269,7 +1269,7 @@ defineSuite([
 
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
 
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
@@ -1297,7 +1297,7 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [
@@ -1343,7 +1343,7 @@ defineSuite([
 
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
 
         camera.frustum = frustum;
         frameState.mode = mode;
