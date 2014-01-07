@@ -664,85 +664,21 @@ defineSuite([
         expect(Quaternion.fastSlerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
-    it('fastSlerp uses lerp when dot product is close to 1', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
-        var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
-        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
-        expect(Quaternion.fastSlerp(start, end, 0.0)).toEqual(start);
-        expect(Quaternion.fastSlerp(start, end, 1.0)).toEqual(end);
-        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqual(expected);
-    });
-
-    it('fastSlerp uses lerp when dot product is close to 1 and a result parameter', function() {
-        var start = new Quaternion(0.0, 0.0, 0.0, 1.0);
-        var end = new Quaternion(1.0, 2.0, 3.0, 1.0);
-        var expected = new Quaternion(0.5, 1.0, 1.5, 1.0);
-
-        var result = new Quaternion();
-        var actual = Quaternion.fastSlerp(start, end, 0.0, result);
-        expect(actual).toBe(result);
-        expect(result).toEqual(start);
-    });
-
-    it('performance test', function() {
+    it('fastSlerp vs slerp', function() {
         var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
-        var result = new Quaternion();
 
-        var limit = 100000;
-        var performance = window.performance;
-        var timeStart;
-        var timeEnd;
+        var expected = Quaternion.slerp(start, end, 0.25);
+        var actual = Quaternion.fastSlerp(start, end, 0.25);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
 
-        var i, j, t;
+        expected = Quaternion.slerp(start, end, 0.5);
+        actual = Quaternion.fastSlerp(start, end, 0.5);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
 
-        var time = 0.0;
-        for (i = 0; i < limit; ++i) {
-            timeStart = performance.now();
-            for (t = 0.0; t < 1.0; t += 0.001) {
-                Quaternion.slerp(start, end, t, result);
-            }
-            timeEnd = performance.now();
-            time += timeEnd - timeStart;
-        }
-
-        var fastTime = 0.0;
-        for (i = 0; i < limit; ++i) {
-            timeStart = performance.now();
-            for (t = 0.0; t < 1.0; t += 0.001) {
-                Quaternion.fastSlerp(start, end, t, result);
-            }
-            timeEnd = performance.now();
-            fastTime += timeEnd - timeStart;
-        }
-
-        var fastTime2 = 0.0;
-        for (i = 0; i < limit; ++i) {
-            timeStart = performance.now();
-            for (t = 0.0; t < 1.0; t += 0.001) {
-                Quaternion.fastSlerp2(start, end, t, result);
-            }
-            timeEnd = performance.now();
-            fastTime2 += timeEnd - timeStart;
-        }
-
-        var fastTime3 = 0.0;
-        for (i = 0; i < limit; ++i) {
-            timeStart = performance.now();
-            for (t = 0.0; t < 1.0; t += 0.001) {
-                Quaternion.fastSlerp3(start, end, t, result);
-            }
-            timeEnd = performance.now();
-            fastTime3 += timeEnd - timeStart;
-        }
-
-        time /= limit * 1000.0;
-        fastTime /= limit * 1000.0;
-        fastTime2 /= limit * 1000.0;
-        fastTime3 /= limit * 1000.0;
-
-        console.log('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp array avg time: ' + fastTime + ', Quaternion.fastSlerp typed array avg time: ' + fastTime2 + ', Quaternion.fastSlerp no avg time: ' + fastTime3);
-        //alert('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp array avg time: ' + fastTime + ', Quaternion.fastSlerp typed array avg time: ' + fastTime2 + ', Quaternion.fastSlerp no avg time: ' + fastTime3);
+        expected = Quaternion.slerp(start, end, 0.75);
+        actual = Quaternion.fastSlerp(start, end, 0.75);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('equals', function() {
