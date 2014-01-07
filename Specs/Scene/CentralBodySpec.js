@@ -53,8 +53,8 @@ defineSuite([
         // update until the load queue is empty.
         waitsFor(function() {
             cb._surface._debug.enableDebugOutput = true;
-            var commandLists = [];
-            cb.update(context, frameState, commandLists);
+            var commandList = [];
+            cb.update(context, frameState, commandList);
             return !defined(cb._surface._tileLoadQueue.head) && cb._surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
