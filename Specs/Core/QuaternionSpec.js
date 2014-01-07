@@ -681,6 +681,62 @@ defineSuite([
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
+    it('fastSquad works without a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+        var q4 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 0.0)).toEqualEpsilon(q1, CesiumMath.EPSILON6);
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(q2, CesiumMath.EPSILON6);
+
+        var s3 = Quaternion.innerQuadrangle(q2, q3, q4);
+        expect(Quaternion.fastSquad(q2, q3, s2, s3, 0.0)).toEqualEpsilon(q2, CesiumMath.EPSILON6);
+        expect(Quaternion.fastSquad(q2, q3, s2, s3, 1.0)).toEqualEpsilon(q3, CesiumMath.EPSILON6);
+
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(Quaternion.fastSquad(q2, q3, s2, s3, 0.0), CesiumMath.EPSILON6);
+    });
+
+    it('fastSquad works with a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+
+        var squadResult = new Quaternion();
+        var squad = Quaternion.fastSquad(q1, q2, s1, s2, 0.0, squadResult);
+        expect(squad).toBe(squadResult);
+        expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON6);
+    });
+
+    it('fastSquad vs squad', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+
+        var actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.25);
+        var expected = Quaternion.squad(q1, q2, s1, s2, 0.25);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.5);
+        expected = Quaternion.squad(q1, q2, s1, s2, 0.5);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.75);
+        expected = Quaternion.squad(q1, q2, s1, s2, 0.75);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
