@@ -9,20 +9,28 @@ Beta Releases
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 * Added `FrameState.previousTime`.
 
+### b25 - 2014-02-03
+* Breaking changes:
+  * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself. 
+  
 ### b24 - 2014-01-06
 
 * Breaking changes:
-  * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOption` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+  * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOptions` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
 
            var viewer = new Viewer('cesiumContainer', {
-               alpha : true
+               contextOptions : {
+                 alpha : true
+               }
            });
 
     should now look like:
 
            var viewer = new Viewer('cesiumContainer', {
-               webgl : {
-                 alpha : true
+               contextOptions : {
+                 webgl : {
+                   alpha : true
+                 }
                }
            });
   * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
@@ -39,13 +47,13 @@ Beta Releases
   * Removed prototype version of `BoundingSphere.transform`
   * `Matrix4.multiplyByPoint` now returns a `Cartesian3` instead of a `Cartesian4`
 * The minified, combined `Cesium.js` file now omits certain `DeveloperError` checks, to increase performance and reduce file size.  When developing your application, we recommend using the unminified version locally for early error detection, then deploying the minified version to production.
+* Fixed disabling `CentralBody.enableLighting`.
+* Fixed `Geocoder` flights when following an object.
+* The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
+* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
 * Added `CentralBody.maximumScreenSpaceError`.
 * Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
 * Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
-* The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
-* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
-* Fixed disabling `CentralBody.enableLighting`.
-* Fixed geocoder flights when following an object.
 * Added `BoundingSphere.transformsWithoutScale`
 * Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
 * Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
