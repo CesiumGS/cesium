@@ -684,7 +684,6 @@ defineSuite([
         expect(result).toEqual(start);
     });
 
-    /*
     it('performance test', function() {
         var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
         var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
@@ -717,13 +716,34 @@ defineSuite([
             fastTime += timeEnd - timeStart;
         }
 
+        var fastTime2 = 0.0;
+        for (i = 0; i < limit; ++i) {
+            timeStart = performance.now();
+            for (t = 0.0; t < 1.0; t += 0.001) {
+                Quaternion.fastSlerp2(start, end, t, result);
+            }
+            timeEnd = performance.now();
+            fastTime2 += timeEnd - timeStart;
+        }
+
+        var fastTime3 = 0.0;
+        for (i = 0; i < limit; ++i) {
+            timeStart = performance.now();
+            for (t = 0.0; t < 1.0; t += 0.001) {
+                Quaternion.fastSlerp3(start, end, t, result);
+            }
+            timeEnd = performance.now();
+            fastTime3 += timeEnd - timeStart;
+        }
+
         time /= limit * 1000.0;
         fastTime /= limit * 1000.0;
+        fastTime2 /= limit * 1000.0;
+        fastTime3 /= limit * 1000.0;
 
-        console.log('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp avg time: ' + fastTime);
-        alert('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp avg time: ' + fastTime);
+        console.log('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp array avg time: ' + fastTime + ', Quaternion.fastSlerp typed array avg time: ' + fastTime2 + ', Quaternion.fastSlerp no avg time: ' + fastTime3);
+        //alert('Quaternion.slerp avg time: ' + time + ', Quaternion.fastSlerp array avg time: ' + fastTime + ', Quaternion.fastSlerp typed array avg time: ' + fastTime2 + ', Quaternion.fastSlerp no avg time: ' + fastTime3);
     });
-    */
 
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
