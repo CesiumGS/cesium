@@ -17,6 +17,7 @@ define([
         '../Core/Queue',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         './ImageryLayer',
         './ImageryState',
         './SceneMode',
@@ -42,6 +43,7 @@ define([
         Queue,
         WebMercatorProjection,
         DrawCommand,
+        Pass,
         ImageryLayer,
         ImageryState,
         SceneMode,
@@ -121,11 +123,11 @@ define([
         };
     };
 
-    CentralBodySurface.prototype.update = function(context, frameState, colorCommandList, centralBodyUniformMap, shaderSet, renderState, projection) {
+    CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
-        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState);
+        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
     };
 
     CentralBodySurface.prototype.getTerrainProvider = function() {
@@ -802,7 +804,7 @@ define([
     var southwestScratch = new Cartesian3();
     var northeastScratch = new Cartesian3();
 
-    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState) {
+    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState) {
         var viewMatrix = frameState.camera.viewMatrix;
 
         var maxTextures = context.getMaximumTextureImageUnits();
@@ -990,13 +992,14 @@ define([
                     uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-                    colorCommandList.push(command);
+                    commandList.push(command);
 
                     command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
                     command.renderState = renderState;
                     command.primitiveType = PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;
                     command.uniformMap = uniformMap;
+                    command.pass = Pass.OPAQUE;
 
                     if (surface._debug.wireframe) {
                         createWireframeVertexArrayIfNecessary(context, surface, tile);
