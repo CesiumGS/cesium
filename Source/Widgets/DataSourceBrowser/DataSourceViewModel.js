@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/createGuid',
+        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
@@ -9,6 +10,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -62,9 +64,12 @@ define([
 
         this.displayName = undefined;
         knockout.defineProperty(this, 'displayName', function() {
-            var name = that.name;
-            if (defined(name)) {
-                name = name.replace(/\//g, '/\u200b');
+            var name = defaultValue(that.name, '');
+            // allow break after slash
+            name = name.replace(/\//g, '/\u200b');
+            // replace empty string with non-breaking space
+            if (name === '') {
+                name = '\xA0';
             }
             return name;
         });
