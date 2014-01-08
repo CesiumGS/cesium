@@ -332,12 +332,12 @@ require(['Cesium'], function(Cesium) {
 
         DrawExtentHelper.prototype.enableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
-            controller.enableAnyInputs = true;
+            controller.enableInputs = true;
         };
 
         DrawExtentHelper.prototype.disableInput = function() {
             var controller = this._scene.getScreenSpaceCameraController();
-            controller.enableAnyInputs = false;
+            controller.enableInputs = false;
         };
 
         DrawExtentHelper.prototype.getExtent = function(mn, mx) {

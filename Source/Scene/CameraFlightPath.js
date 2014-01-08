@@ -398,13 +398,13 @@ define([
         var duration = defaultValue(description.duration, 3000.0);
 
         var controller = scene.getScreenSpaceCameraController();
-        controller.enableAnyInputs = false;
+        controller.enableInputs = false;
         var wrapCallback = function(cb) {
             var wrapped = function() {
                 if (typeof cb === 'function') {
                     cb();
                 }
-                controller.enableAnyInputs = true;
+                controller.enableInputs = true;
             };
             return wrapped;
         };

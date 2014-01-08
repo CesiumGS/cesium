@@ -66,12 +66,16 @@ define([
         /**
          * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
          * enableRotate, enableTilt, and enableLook.  If false, all inputs are disabled.
-         * This flag is typically set to false during transient events such as camera flights and
-         * drag-selection of regions (see Picking demo), and set true on completion of such events.
+         *
+         * NOTE: This setting is for temporary use cases, such as camera flights and
+         * drag-selection of regions (see Picking demo).  It is typically set to false at the
+         * start of such events, and set true on completion.  To keep inputs disabled
+         * past the end of camera flights, you must use the other booleans (enableTranslate,
+         * enableZoom, enableRotate, enableTilt, and enableLook).
          * @type {Boolean}
          * @default true
          */
-        this.enableAnyInputs = true;
+        this.enableInputs = true;
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * This flag only applies in 2D and Columbus view modes.
@@ -379,7 +383,7 @@ define([
 
             var movement = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
 
-            if (controller.enableAnyInputs && enabled) {
+            if (controller.enableInputs && enabled) {
                 if (movement) {
                     action(controller, movement);
                 } else if (inertiaConstant < 1.0) {
