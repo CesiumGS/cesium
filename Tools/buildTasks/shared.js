@@ -4,20 +4,16 @@ importClass(java.io.FileReader); /*global FileReader*/
 importClass(java.io.FileWriter); /*global FileWriter*/
 importClass(Packages.org.apache.tools.ant.util.FileUtils); /*global FileUtils*/
 
-function forEachFile(filesetName, func) {
+function forEachFile(elementName, func) {
     "use strict";
 
-    var filesets = elements.get(filesetName);
-    for (var i = 0, filesetsLen = filesets.size(); i < filesetsLen; ++i) {
-        var fileset = filesets.get(i);
-        var basedir = fileset.getDir(project);
-        var filenames = fileset.getDirectoryScanner(project).getIncludedFiles();
-
-        for (var j = 0, filenamesLen = filenames.length; j < filenamesLen; ++j) {
-            var relativePath = filenames[j];
-            var file = new File(basedir, relativePath);
-
-            func(relativePath, file);
+    var resourceCollections = elements.get(elementName);
+    for (var i = 0, len = resourceCollections.size(); i < len; ++i) {
+        var resourceCollection = resourceCollections.get(i);
+        var iterator = resourceCollection.iterator();
+        while (iterator.hasNext()) {
+            var resource = iterator.next();
+            func(resource.getName(), resource.getFile());
         }
     }
 }
