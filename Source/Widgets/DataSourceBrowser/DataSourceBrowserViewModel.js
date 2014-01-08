@@ -131,15 +131,15 @@ define([
         });
 
         this.clockTrackedDataSource = undefined;
-        var clockTrackViewModel = knockout.observable();
+        var clockTrackedDataSource = knockout.observable();
         knockout.defineProperty(this, 'clockTrackedDataSource', {
             get : function() {
-                return clockTrackViewModel();
+                return clockTrackedDataSource();
             },
-            set : function(value) {
-                clockTrackViewModel(value);
-                if (defined(value)) {
-                    that._onClockSelected.raiseEvent(value);
+            set : function(dataSource) {
+                clockTrackedDataSource(dataSource);
+                if (defined(dataSource)) {
+                    that._onClockSelected.raiseEvent(dataSource);
                 }
             }
         });

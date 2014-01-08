@@ -314,8 +314,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        //DataSourceBrowser
-        function trackDataSourceClock(dataSource) {
+        function setClockFromDataSource(dataSource) {
             var dataSourceClock = dataSource.getClock();
             if (defined(dataSourceClock)) {
                 dataSourceClock.getValue(clock);
@@ -326,6 +325,24 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             }
         }
 
+        var trackedDataSource;
+        var trackedDataSourceChangedEventRemovalFunction;
+
+        function trackDataSourceClock(dataSource) {
+            if (defined(trackedDataSourceChangedEventRemovalFunction)) {
+                trackedDataSourceChangedEventRemovalFunction();
+                trackedDataSourceChangedEventRemovalFunction = undefined;
+            }
+            trackedDataSource = undefined;
+
+            if (defined(dataSource)) {
+                setClockFromDataSource(dataSource);
+                trackedDataSourceChangedEventRemovalFunction = eventHelper.add(dataSource.getChangedEvent(), setClockFromDataSource);
+                trackedDataSource = dataSource;
+            }
+        }
+
+        //DataSourceBrowser
         var dataSourceBrowser;
         if (!defined(options.dataSourceBrowser) || options.dataSourceBrowser !== false) {
             var dataSourceBrowserContainer = document.createElement('div');
@@ -336,31 +353,21 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (defaultValue(options.automaticallyTrackFirstDataSourceClock, true)) {
-            var trackedDataSource;
-            var changedEventRemovalFunction;
-
             var onDataSourceAdded = function(dataSourceCollection, dataSource) {
                 if (dataSourceCollection.getLength() === 1) {
                     if (defined(dataSourceBrowser)) {
                         dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
                     } else {
-                        onDataSourceChanged(dataSource);
-                        changedEventRemovalFunction = eventHelper.add(dataSource.getChangedEvent(), onDataSourceChanged);
-                        trackedDataSource = dataSource;
+                        trackDataSourceClock(dataSource);
                     }
                 }
             };
 
             var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
                 if (trackedDataSource === dataSource) {
-                    changedEventRemovalFunction();
-                    changedEventRemovalFunction = undefined;
-                    trackedDataSource = undefined;
+                    // stop tracking
+                    trackDataSourceClock(undefined);
                 }
-            };
-
-            var onDataSourceChanged = function(dataSource) {
-                trackDataSourceClock(dataSource);
             };
 
             eventHelper.add(dataSourceCollection.dataSourceAdded, onDataSourceAdded);
