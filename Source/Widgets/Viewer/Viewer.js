@@ -216,6 +216,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var clockViewModel = new ClockViewModel(clock);
         var eventHelper = new EventHelper();
 
+        eventHelper.add(clock.onTick, function(clock) {
+            dataSourceDisplay.update(clock.currentTime);
+        });
+
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
@@ -306,12 +310,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         } else if (defined(timeline)) {
             timeline.container.style.right = 0;
         }
-
-        function updateDataSourceDisplay(clock) {
-            dataSourceDisplay.update(clock.currentTime);
-        }
-
-        eventHelper.add(clock.onTick, updateDataSourceDisplay);
 
         if (defaultValue(options.automaticallyTrackFirstDataSourceClock, true)) {
             var trackedDataSource;
