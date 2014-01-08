@@ -106,8 +106,9 @@ define([
             var tileFormatRegex = /tileformat/i;
             var tileSetRegex = /tileset/i;
             var tileSetsRegex = /tilesets/i;
-            var format;
-            var tilesets = []; //list of TileSets
+            var bboxRegex = /boundingbox/i;
+            var format, bbox, tilesets;
+            var tilesetsList = []; //list of TileSets
             // Allowing description properties to override XML values
             var nodeList = xml.childNodes[0].childNodes;
             // Iterate XML Document nodes for properties
@@ -115,26 +116,28 @@ define([
                 if (tileFormatRegex.test(nodeList.item(i).nodeName)){
                     format = nodeList.item(i);
                 } else if (tileSetsRegex.test(nodeList.item(i).nodeName)){
+                    tilesets = nodeList.item(i); // Node list of TileSets
                     var tileSetNodes = nodeList.item(i).childNodes;
                     // Iterate the nodes to find all TileSets
                     for(var j = 0; j < tileSetNodes.length; j++){
                         if (tileSetRegex.test(tileSetNodes.item(j).nodeName)){
                             // Add them to tilesets list
-                            tilesets.push(tileSetNodes.item(j));
+                            tilesetsList.push(tileSetNodes.item(j));
                         }
                     }
+                } else if (bboxRegex.test(nodeList.item(i).nodeName)){
+                    bbox = nodeList.item(i);
                 }
             }
             that._fileExtension = defaultValue(description.fileExtension, format.getAttribute('extension'));
             that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
             that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
-            that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesets[0].getAttribute('order'), 10));
-            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
+            that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesetsList[0].getAttribute('order'), 10));
+            that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesetsList[tilesetsList.length - 1].getAttribute('order'), 10));
 
             // extent handling
             that._extent = description.extent;
             if (!defined(that._extent)) {
-                var bbox = xml.getElementsByTagName('BoundingBox')[0];
                 var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
                 var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
                 that._extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
@@ -145,7 +148,7 @@ define([
             // tiling scheme handling
             var tilingScheme = description.tilingScheme;
             if (!defined(tilingScheme)) {
-                var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
+                var tilingSchemeName = tilesets.getAttribute('profile');
                 tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
             }
 
