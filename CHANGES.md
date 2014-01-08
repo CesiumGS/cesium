@@ -8,6 +8,7 @@ Beta Releases
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself. 
 * Added `ScreenSpaceCameraController.enableAnyInputs` to fix issue with inputs not being restored after overlapping camera flights.
+* Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 
 ### b24 - 2014-01-06
 
