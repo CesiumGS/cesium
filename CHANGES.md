@@ -6,7 +6,7 @@ Beta Releases
 
 ### b25
 
-* TileMapServiceImageryProvider can now handle casing differences in XML documents
+* `TileMapServiceImageryProvider` can now handle casing differences in XML documents
 
 ### b24 - 2014-01-06
 
