@@ -743,15 +743,15 @@ define([
         }
 
         for (j = 0; j < rightLength; ++j) {
-            right[j] = array[middle + i + 1];
+            right[j] = array[middle + j + 1];
         }
 
         i = 0;
         j = 0;
-        for (var k = start; k < end; ++k) {
+        for (var k = start; k <= end; ++k) {
             var leftElement = left[i];
             var rightElement = right[j];
-            if (compare(leftElement, rightElement) <= 0) {
+            if (defined(leftElement) && (!defined(rightElement) || compare(leftElement, rightElement) <= 0)) {
                 array[k] = leftElement;
                 ++i;
             } else {
@@ -762,6 +762,9 @@ define([
     }
 
     function sort(array, compare, start, end) {
+        start = defaultValue(start, 0);
+        end = defaultValue(end, array.length - 1);
+
         if (start >= end) {
             return;
         }
@@ -868,7 +871,7 @@ define([
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
-            commands.sort(translucentCompare);
+            sort(commands, translucentCompare);
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
