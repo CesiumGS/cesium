@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         './PixelFormat'
     ], function(
+        defined,
         DeveloperError,
         destroyObject,
         PixelFormat) {
@@ -20,12 +22,14 @@ define([
      *
      * @internalConstructor
      */
-    var Framebuffer = function(gl, description) {
+    var Framebuffer = function(gl, drawBuffers, maximumColorAttachments, description) {
         this._gl = gl;
+        this._drawBuffers = drawBuffers;
+        this._maxAttachments = maximumColorAttachments;
         this._framebuffer = gl.createFramebuffer();
 
-        this._colorTexture = undefined;
-        this._colorRenderbuffer = undefined;
+        this._colorTextures = [];
+        this._colorRenderbuffers = [];
         this._depthTexture = undefined;
         this._depthRenderbuffer = undefined;
         this._stencilRenderbuffer = undefined;
@@ -48,8 +52,8 @@ define([
             // Throw if a texture and renderbuffer are attached to the same point.  This won't
             // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
-            if (description.colorTexture && description.colorRenderbuffer) {
-                throw new DeveloperError('Cannot have both a color texture and color renderbuffer attachment.');
+            if (description.colorTextures && description.colorRenderbuffers) {
+                throw new DeveloperError('Cannot have both color texture and color renderbuffer attachments.');
             }
 
             if (description.depthTexture && description.depthRenderbuffer) {
@@ -78,12 +82,33 @@ define([
 
             ///////////////////////////////////////////////////////////////////
 
-            if (description.colorTexture) {
-                this.setColorTexture(description.colorTexture);
+            var i;
+            var length;
+
+            if (description.colorTextures) {
+                var textures = description.colorTextures;
+                length = textures.length;
+
+                if (length > this._maxAttachments) {
+                    throw new DeveloperError('The number of color attachments exceeds the number supported.');
+                }
+
+                for (i = 0; i < length; ++i) {
+                    this.setColorTexture(i, textures[i]);
+                }
             }
 
-            if (description.colorRenderbuffer) {
-                this.setColorRenderbuffer(description.colorRenderbuffer);
+            if (description.colorRenderbuffers) {
+                var renderbuffers = description.colorRenderbuffers;
+                length = renderbuffers.length;
+
+                if (length > this._maxAttachments) {
+                    throw new DeveloperError('The number of color attachments exceeds the number supported.');
+                }
+
+                for (i = 0; i < length; ++i) {
+                    this.setColorRenderbuffer(i, renderbuffers[i]);
+                }
             }
 
             if (description.depthTexture) {
@@ -149,37 +174,47 @@ define([
     }
 
     /**
-     * Attaches a texture to the color attachment point.  When this framebuffer is passed to a draw
-     * or clear call, the texture is the target of color output, e.g., <code>gl_FragColor</code>.
+     * Attaches a texture to a color attachment point.  When this framebuffer is passed to a draw
+     * or clear call, the texture is the target of color output, e.g., <code>gl_FragColor</code> or <code>gl_FragData[index]</code>.
      *
      * @memberof Framebuffer
      *
+     * @param {Number} The index of the color attachment. Must be greater than or equal to 0 and less than or equal to the maximum number of supported solor attachments.
      * @param {Texture} The texture to attach.  <code>undefined</code> dettaches the current texture.
      *
+     * @exception {DeveloperError} index is required and must be between 0 and the maximum number of supported color attachments.
      * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
+     *
+     * @see Context#getMaximumColorAttachments
      */
-    Framebuffer.prototype.setColorTexture = function(texture) {
+    Framebuffer.prototype.setColorTexture = function(index, texture) {
+        if (!defined(index) || index < 0 || index > this._maxAttachments) {
+            throw new DeveloperError('index is required and must be between 0 and the maximum number of supported color attachments.');
+        }
+
         if (texture && !PixelFormat.isColorFormat(texture.getPixelFormat())) {
             throw new DeveloperError('The color-texture pixel-format must be a color format.');
         }
 
-        attachTexture(this, this._gl.COLOR_ATTACHMENT0, texture);
-        destroyAttachment(this, this._colorTexture);
-        this._colorTexture = texture;
+        attachTexture(this, this._gl.COLOR_ATTACHMENT0 + index, texture);
+        destroyAttachment(this, this._colorTextures[index]);
+        this._colorTextures[index] = texture;
     };
 
     /**
-     * Returns the color texture attached to this framebuffer.
+     * Returns a color texture attached to this framebuffer.
      *
      * @memberof Framebuffer
+     *
+     * @param {Number} index The index of the color texture attachment.
      *
      * @returns {Texture} The color texture attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
-    Framebuffer.prototype.getColorTexture = function() {
-        return this._colorTexture;
+    Framebuffer.prototype.getColorTexture = function(index) {
+        return this._colorTextures[index];
     };
 
     /**
@@ -187,25 +222,32 @@ define([
      *
      * @memberof Framebuffer
      *
+     * @exception {DeveloperError} index is required and must be between 0 and the maximum number of supported color attachments.
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
-    Framebuffer.prototype.setColorRenderbuffer = function(renderbuffer) {
-        attachRenderbuffer(this, this._gl.COLOR_ATTACHMENT0, renderbuffer);
-        destroyAttachment(this, this._colorRenderbuffer);
-        this._colorRenderbuffer = renderbuffer;
+    Framebuffer.prototype.setColorRenderbuffer = function(index, renderbuffer) {
+        if (!defined(index) || index < 0 || index > this._maxAttachments) {
+            throw new DeveloperError('index is required and must be between 0 and the maximum number of supported color attachments.');
+        }
+
+        attachRenderbuffer(this, this._gl.COLOR_ATTACHMENT0 + index, renderbuffer);
+        destroyAttachment(this, this._colorRenderbuffers[index]);
+        this._colorRenderbuffers[index] = renderbuffer;
     };
 
     /**
-     * Returns the color renderbuffer attached to this framebuffer.
+     * Returns a color renderbuffer attached to this framebuffer.
      *
      * @memberof Framebuffer
+     *
+     * @param {Number} index The index of the color renderbuffer attachment.
      *
      * @returns {Texture} The color renderbuffer attached to this framebuffer.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
-    Framebuffer.prototype.getColorRenderbuffer = function() {
-        return this._colorRenderbuffer;
+    Framebuffer.prototype.getColorRenderbuffer = function(index) {
+        return this._colorRenderbuffers[index];
     };
 
     /**
@@ -418,8 +460,25 @@ define([
     Framebuffer.prototype.destroy = function() {
         if (this.destroyAttachments) {
             // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.
-            this._colorTexture = this._colorTexture && this._colorTexture.destroy && this._colorTexture.destroy();
-            this._colorRenderbuffer = this._colorRenderbuffer && this._colorRenderbuffer.destroy();
+            var i = 0;
+            var textures = this._colorTextures;
+            var length = textures.length;
+            for (; i < length; ++i) {
+                var texture = textures[i];
+                if (defined(texture)) {
+                    texture.destroy();
+                }
+            }
+
+            var renderbuffers = this._colorRenderbuffers;
+            length = renderbuffers.length;
+            for (i = 0; i < length; ++i) {
+                var renderbuffer = renderbuffers[i];
+                if (defined(renderbuffer)) {
+                    renderbuffer.destroy();
+                }
+            }
+
             this._depthTexture = this._depthTexture && this._depthTexture.destroy();
             this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
             this._stencilRenderbuffer = this._stencilRenderbuffer && this._stencilRenderbuffer.destroy();

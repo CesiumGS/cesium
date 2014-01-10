@@ -270,6 +270,10 @@ define([
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
+        this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+        this._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
+        this._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
@@ -878,6 +882,45 @@ define([
      */
     Context.prototype.getFragmentDepth = function() {
         return !!this._fragDepth;
+    };
+
+    /**
+     * Returns <code>true</code> if the WEBGL_draw_buffers extension is supported. This
+     * extensions provides support for multiple render targets. The framebuffer object can have mutiple
+     * color attachments and the GLSL fragment shader can write to the built-in output array <code>gl_FragData</code>.
+     * A shader using this feature needs to explicitly enable the extension with
+     * <code>#extension GL_EXT_draw_buffers : enable</code>.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_draw_buffers is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/'>WEBGL_draw_buffers</a>
+     */
+    Context.prototype.getDrawBuffers = function() {
+        return !!this._drawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of simultaneous outputs that may be written in a fragment shader.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of draw buffers supported.
+     */
+    Context.prototype.getMaximumDrawBuffers = function() {
+        return this._maximumDrawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of color attachments supported.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of color attachments supported.
+     */
+    Context.prototype.getMaximumColorAttachments = function() {
+        return this._maximumColorAttachments;
     };
 
     /**
@@ -1713,15 +1756,15 @@ define([
     /**
      * Creates a framebuffer with optional initial color, depth, and stencil attachments.
      * Framebuffers are used for render-to-texture effects; they allow us to render to
-     * a texture in one pass, and read from it in a later pass.
+     * textures in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
      *
-     * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
      * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
@@ -1730,6 +1773,7 @@ define([
      * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
+     * @exception {DeveloperError} The number of color attachments exceeds the number supported.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
@@ -1739,7 +1783,7 @@ define([
      * // Example 1. Create a framebuffer with no initial attachments,
      * // and then add a color-texture attachment.
      * var framebuffer = context.createFramebuffer();
-     * framebuffer.setColorTexture(context.createTexture2D({
+     * framebuffer.setColorTexture(0, context.createTexture2D({
      *     width : 256,
      *     height : 256,
      * }));
@@ -1750,11 +1794,11 @@ define([
      * var width = context.getCanvas().clientWidth;
      * var height = context.getCanvas().clientHeight;
      * var framebuffer = context.createFramebuffer({
-     *   colorTexture : context.createTexture2D({
+     *   colorTextures : [context.createTexture2D({
      *     width : width,
      *     height : height,
      *     pixelFormat : PixelFormat.RGBA
-     *   }),
+     *   })],
      *   depthTexture : context.createTexture2D({
      *     width : width,
      *     height : height,
@@ -1764,7 +1808,7 @@ define([
      * });
      */
     Context.prototype.createFramebuffer = function(options) {
-        return new Framebuffer(this._gl, options);
+        return new Framebuffer(this._gl, this._drawBuffers, this._maximumColorAttachments, options);
     };
 
     /**
