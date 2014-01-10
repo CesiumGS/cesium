@@ -452,7 +452,7 @@ define([
      *
      * @example
      * var texture = context.createTexture2D({ width : 1, height : 1 });
-     * framebuffer = context.createFramebuffer({ colorTexture : texture });
+     * framebuffer = context.createFramebuffer({ colorTextures : [texture] });
      * // ...
      * framebuffer = framebuffer.destroy();
      * // texture is also destroyed.

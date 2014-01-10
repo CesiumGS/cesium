@@ -50,8 +50,8 @@ defineSuite([
         });
 
         framebuffer = context.createFramebuffer();
-        framebuffer.setColorTexture(colorTexture);
-        expect(framebuffer.getColorTexture()).toEqual(colorTexture);
+        framebuffer.setColorTexture(0, colorTexture);
+        expect(framebuffer.getColorTexture(0)).toEqual(colorTexture);
     });
 
     it('has a color renderbuffer attachment', function() {
@@ -60,11 +60,11 @@ defineSuite([
         });
 
         framebuffer = context.createFramebuffer();
-        framebuffer.setColorRenderbuffer(renderbuffer);
-        expect(framebuffer.getColorRenderbuffer()).toEqual(renderbuffer);
+        framebuffer.setColorRenderbuffer(0, renderbuffer);
+        expect(framebuffer.getColorRenderbuffer(0)).toEqual(renderbuffer);
 
-        framebuffer.setColorRenderbuffer(undefined);
-        expect(framebuffer.getColorRenderbuffer()).not.toBeDefined();
+        framebuffer.setColorRenderbuffer(0, undefined);
+        expect(framebuffer.getColorRenderbuffer(0)).not.toBeDefined();
     });
 
     it('has a depth texture attachment', function() {
@@ -149,7 +149,7 @@ defineSuite([
             height : 1
         });
         framebuffer = context.createFramebuffer({
-            colorTexture : colorTexture
+            colorTextures : [colorTexture]
         });
 
         var command = new ClearCommand();
@@ -194,7 +194,7 @@ defineSuite([
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = context.createFramebuffer({
-            colorTexture : cubeMap.getPositiveX()
+            colorTextures : [cubeMap.getPositiveX()]
         });
 
         var command = new ClearCommand();
@@ -202,7 +202,7 @@ defineSuite([
         command.framebuffer = framebuffer;
         command.execute(context);
 
-        framebuffer.setColorTexture(undefined);
+        framebuffer.setColorTexture(0, undefined);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -237,7 +237,7 @@ defineSuite([
             height : 1
         });
         framebuffer = context.createFramebuffer({
-            colorTexture : colorTexture
+            colorTextures : [colorTexture]
         });
 
         // 1 of 4.  Clear default color buffer to black.
@@ -334,10 +334,10 @@ defineSuite([
     it('draws to a depth texture attachment', function() {
         if (context.getDepthTexture()) {
             framebuffer = context.createFramebuffer({
-                colorTexture : context.createTexture2D({
+                colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1
-                }),
+                })],
                 depthTexture : context.createTexture2D({
                     width : 1,
                     height : 1,
@@ -353,10 +353,10 @@ defineSuite([
     it('draws to a depth-stencil texture attachment', function() {
         if (context.getDepthTexture()) {
             framebuffer = context.createFramebuffer({
-                colorTexture : context.createTexture2D({
+                colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1
-                }),
+                })],
                 depthStencilTexture : context.createTexture2D({
                     width : 1,
                     height : 1,
@@ -371,10 +371,10 @@ defineSuite([
 
     it('draws with a depth attachment', function() {
         framebuffer = context.createFramebuffer({
-            colorTexture : context.createTexture2D({
+            colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
-            }),
+            })],
             depthRenderbuffer : context.createRenderbuffer({
                 format : RenderbufferFormat.DEPTH_COMPONENT16,
                 width : 1,
@@ -447,8 +447,8 @@ defineSuite([
     it('throws when created with color texture and color renderbuffer attachments', function() {
         expect(function() {
             framebuffer = context.createFramebuffer({
-                colorTexture : 'not undefined',
-                colorRenderbuffer : 'not undefined'
+                colorTextures : 'not undefined',
+                colorRenderbuffers : 'not undefined'
             });
         }).toThrow();
     });
@@ -501,12 +501,12 @@ defineSuite([
     it('throws when created with a color texture with a non-color pixel format', function() {
         expect(function() {
             framebuffer = context.createFramebuffer({
-                colorTexture : context.createTexture2D({
+                colorTextures : [context.createTexture2D({
                     width : 1,
                     height : 1,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                })
+                })]
             });
         }).toThrow();
     });
@@ -535,10 +535,10 @@ defineSuite([
 
     it('throws when the depth test is enabled without an appropriate attachment', function() {
         framebuffer = context.createFramebuffer({
-            colorTexture : context.createTexture2D({
+            colorTextures : [context.createTexture2D({
                 width : 1,
                 height : 1
-            })
+            })]
         });
 
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
