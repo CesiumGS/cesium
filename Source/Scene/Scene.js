@@ -315,6 +315,26 @@ define([
          */
         this.debugFrustumStatistics = undefined;
 
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * A <code> PerformanceDisplay </code> that displays frames per second and time between frames.
+         * </p>
+         * <p>
+         * The default is <code>undefined</code>
+         * </p>
+         *
+         * @type PerformanceDisplay
+         *
+         * @default undefined
+         *
+         * @example
+         * // Do not execute any commands.
+         * scene.performanceDisplay = new PerformanceDisplay({container: 'cesiumContainer'});
+         *
+         */
+        this.performanceDisplay = undefined;
+
         this._debugSphere = undefined;
 
         // initial guess at frustums.
@@ -900,6 +920,11 @@ define([
         executeOverlayCommands(this, passState);
 
         frameState.creditDisplay.endFrame();
+
+        if (defined(this.performanceDisplay)) {
+            this.performanceDisplay.update();
+        }
+
         context.endFrame();
         executeEvents(frameState);
     };
