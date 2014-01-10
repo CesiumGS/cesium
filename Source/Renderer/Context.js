@@ -1808,7 +1808,7 @@ define([
      * });
      */
     Context.prototype.createFramebuffer = function(options) {
-        return new Framebuffer(this._gl, this._drawBuffers, this._maximumColorAttachments, options);
+        return new Framebuffer(this._gl, this._maximumColorAttachments, options);
     };
 
     /**
