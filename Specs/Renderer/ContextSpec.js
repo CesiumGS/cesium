@@ -243,6 +243,26 @@ defineSuite([
         }
     });
 
+    it('get the draw buffers extension', function() {
+        expect(context.getDrawBuffers()).toBeDefined();
+    });
+
+    it('get the maximum number of draw buffers', function() {
+        if (context.getDrawBuffers()) {
+            expect(context.getMaximumDrawBuffers()).toBeGreaterThanOrEqualTo(1.0);
+        } else {
+            expect(context.getMaximumDrawBuffers()).toEqual(1.0);
+        }
+    });
+
+    it('get the maximum number of color attachments', function() {
+        if (context.getDrawBuffers()) {
+            expect(context.getMaximumColorAttachments()).toBeGreaterThanOrEqualTo(4.0);
+        } else {
+            expect(context.getMaximumColorAttachments()).toEqual(1.0);
+        }
+    });
+
     it('sets shader program validation', function() {
         context.setValidateShaderProgram(false);
         expect(context.getValidateShaderProgram()).toEqual(false);
