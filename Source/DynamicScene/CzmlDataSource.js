@@ -305,7 +305,7 @@ define([
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
-            throw (type);
+            throw new DeveloperError (type);
         }
     }
 
@@ -1327,7 +1327,7 @@ define([
     CzmlDataSource.prototype.process = function(czml, source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
-            throw ('czml is required.');
+            throw new DeveloperError('czml is required.');
         }
         //>>includeEnd('debug');
 
@@ -1345,7 +1345,7 @@ define([
     CzmlDataSource.prototype.load = function(czml, source) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
-            throw ('czml is required.');
+            throw new DeveloperError('czml is required.');
         }
         //>>includeEnd('debug');
 
@@ -1366,7 +1366,7 @@ define([
     CzmlDataSource.prototype.processUrl = function(url) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
-            throw ('url is required.');
+            throw new DeveloperError('url is required.');
         }
         //>>includeEnd('debug');
 
@@ -1391,7 +1391,7 @@ define([
     CzmlDataSource.prototype.loadUrl = function(url) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
-            throw ('url is required.');
+            throw new DeveloperError('url is required.');
         }
         //>>includeEnd('debug');
 
