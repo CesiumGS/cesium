@@ -182,7 +182,7 @@ define([
             this._depthStencilRenderbuffer = renderbuffer;
         }
 
-        this._unbind();
+        this._unBind();
     };
 
     Framebuffer.prototype._bind = function() {
