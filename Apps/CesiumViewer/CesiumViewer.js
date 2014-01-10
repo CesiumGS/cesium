@@ -126,7 +126,8 @@ define([
         }
 
         if (endUserOptions.stats) {
-            scene.getPrimitives().add(new PerformanceDisplay());
+            var performanceDisplay = new PerformanceDisplay({container: 'cesiumContainer'});
+            scene.performanceDisplay = performanceDisplay;
         }
 
         var theme = endUserOptions.theme;
