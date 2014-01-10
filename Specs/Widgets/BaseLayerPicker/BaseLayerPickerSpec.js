@@ -70,18 +70,18 @@ defineSuite([
     it('constructor throws with no layer collection', function() {
         expect(function() {
             return new BaseLayerPicker(document.body, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no element', function() {
         expect(function() {
             return new BaseLayerPicker(undefined, new ImageryLayerCollection());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
             return new BaseLayerPicker('does not exist', new ImageryLayerCollection());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

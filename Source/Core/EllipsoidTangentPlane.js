@@ -48,11 +48,14 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
         origin = ellipsoid.scaleToGeodeticSurface(origin);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin must not be at the center of the ellipsoid.');
         }
+        //>>includeEnd('debug');
+
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
         this._origin = Cartesian3.clone(origin);

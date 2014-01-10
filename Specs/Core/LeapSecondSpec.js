@@ -15,13 +15,13 @@ defineSuite([
     it('throws an exception if constructed without a julian date', function() {
         expect(function() {
             return new LeapSecond();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception if constructed without an offset', function() {
         expect(function() {
             return new LeapSecond(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can get the TAI offset from UTC', function() {

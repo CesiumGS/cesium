@@ -1454,7 +1454,7 @@ defineSuite([
     it('throws when accessing without an index', function() {
         expect(function() {
             polylines.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes bounding sphere in 3D', function() {

@@ -105,9 +105,11 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (index === -1) {
             throw new DeveloperError('listener is not subscribed.');
         }
+        //>>includeEnd('debug');
 
         thisListeners.splice(index, 1);
         this._scopes.splice(index, 1);

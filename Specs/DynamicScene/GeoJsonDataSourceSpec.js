@@ -530,21 +530,21 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown geometry', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(unknownGeometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.loadUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl raises error with invalud url', function() {
@@ -569,7 +569,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithNullCrs);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown crs type', function() {
@@ -585,7 +585,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with undefined crs properties', function() {
@@ -600,7 +600,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown crs', function() {
@@ -618,7 +618,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown crs link', function() {
@@ -637,7 +637,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raises error when an error occurs in loadUrl', function() {

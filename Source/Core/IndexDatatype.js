@@ -68,7 +68,9 @@ define([
                 return Uint32Array.BYTES_PER_ELEMENT;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
+        //>>includeEnd('debug');
     };
 
     /**

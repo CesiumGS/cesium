@@ -48,7 +48,7 @@ defineSuite([
         function createWithoutUrl() {
             return new TileMapServiceImageryProvider({});
         }
-        expect(createWithoutUrl).toThrow();
+        expect(createWithoutUrl).toThrowDeveloperError();
     });
 
     it('supports a slash at the end of the URL', function() {

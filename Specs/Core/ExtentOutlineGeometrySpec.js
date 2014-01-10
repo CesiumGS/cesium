@@ -60,7 +60,7 @@ defineSuite([
     it('throws without extent', function() {
         expect(function() {
             return new ExtentOutlineGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if rotated extent is invalid', function() {
@@ -69,7 +69,23 @@ defineSuite([
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if east is less than west', function() {
+        expect(function() {
+            return new ExtentOutlineGeometry({
+                extent : new Extent(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if north is less than south', function() {
+        expect(function() {
+            return new ExtentOutlineGeometry({
+                extent : new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
+            });
+        }).toThrowDeveloperError();
     });
 
     it('computes positions extruded', function() {

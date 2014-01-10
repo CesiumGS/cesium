@@ -35,12 +35,12 @@ defineSuite([
     it('constructor throws if url is not provided', function() {
         expect(function() {
             return new ArcGisImageServerTerrainProvider();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new ArcGisImageServerTerrainProvider({
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('uses geographic tiling scheme by default', function() {

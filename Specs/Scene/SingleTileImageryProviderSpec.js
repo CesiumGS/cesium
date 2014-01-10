@@ -68,7 +68,7 @@ defineSuite([
         function constructWithoutUrl() {
             return new SingleTileImageryProvider({});
         }
-        expect(constructWithoutUrl).toThrow();
+        expect(constructWithoutUrl).toThrowDeveloperErrorDeveloperError();
     });
 
     it('requests the single image immediately upon construction', function() {

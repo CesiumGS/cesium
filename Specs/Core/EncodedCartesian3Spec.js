@@ -73,36 +73,36 @@ defineSuite([
     it('encode throws without a value', function() {
         expect(function() {
             EncodedCartesian3.encode();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromCartesian throws without a cartesian', function() {
         expect(function() {
             EncodedCartesian3.fromCartesian();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('writeElements throws without a cartesian', function() {
         expect(function() {
             EncodedCartesian3.writeElements();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('writeElements throws without a cartesianArray', function() {
       expect(function() {
           EncodedCartesian3.writeElements(new Cartesian3());
-      }).toThrow();
+      }).toThrowDeveloperError();
   });
 
     it('writeElements throws without an index', function() {
       expect(function() {
           EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6));
-      }).toThrow();
+      }).toThrowDeveloperError();
   });
 
     it('writeElements throws with a negative index', function() {
       expect(function() {
           EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6), -1);
-      }).toThrow();
+      }).toThrowDeveloperError();
   });
 });

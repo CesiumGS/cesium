@@ -35,24 +35,24 @@ defineSuite([
     it('throws without point', function() {
         expect(function() {
             pointInsideTriangle();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p0', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p1', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2(), new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p2', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2(), new Cartesian2(), new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

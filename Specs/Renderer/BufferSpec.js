@@ -64,7 +64,7 @@ defineSuite([
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
             buffer = context.createVertexBuffer({}, BufferUsage.STATIC_DRAW);
-        }).toThrowDeveloperError();
+        }).toThrowDeveloperErrorDeveloperError();
     });
 
     it('creates index buffer', function() {
@@ -105,7 +105,7 @@ defineSuite([
     it('only allows typed array or size when creating a vertex buffer', function() {
         expect(function() {
             buffer = context.createIndexBuffer({}, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        }).toThrowDeveloperError();
+        }).toThrowDeveloperErrorDeveloperError();
     });
 
     it('destroys', function() {
@@ -118,20 +118,20 @@ defineSuite([
     it('fails to create', function() {
         expect(function() {
             buffer = context.createVertexBuffer(0, BufferUsage.STATIC_DRAW);
-        }).toThrowDeveloperError();
+        }).toThrowDeveloperErrorDeveloperError();
     });
 
     it('fails to create again', function() {
         expect(function() {
             buffer = context.createVertexBuffer(4, 0);
-        }).toThrowDeveloperError();
+        }).toThrowDeveloperErrorDeveloperError();
     });
 
     it('fails to provide an array view', function() {
         buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
         expect(function() {
             buffer.copyFromArrayView();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy a large array view', function() {
@@ -140,7 +140,7 @@ defineSuite([
 
         expect(function() {
             buffer.copyFromArrayView(elements, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {
@@ -149,6 +149,6 @@ defineSuite([
 
         expect(function() {
             b.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

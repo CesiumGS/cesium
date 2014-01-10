@@ -134,38 +134,38 @@ defineSuite([
     it('addEventListener throws with undefined listener', function() {
         expect(function() {
             event.addEventListener(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addEventListener throws with null listener', function() {
         expect(function() {
             event.addEventListener(null);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addEventListener throws with non-function listener', function() {
         expect(function() {
             event.addEventListener({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeEventListener throws with undefined listener', function() {
         expect(function() {
             event.removeEventListener(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeEventListener throws with null listener', function() {
         expect(function() {
             event.removeEventListener(null);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeEventListener throws with non registered listener', function() {
         expect(function() {
             event.removeEventListener(function() {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeEventListener throws with registered listener of a different scope', function() {
@@ -176,6 +176,6 @@ defineSuite([
 
         expect(function() {
             event.removeEventListener(myFunc);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

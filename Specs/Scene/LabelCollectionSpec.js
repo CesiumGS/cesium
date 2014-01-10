@@ -698,7 +698,7 @@ defineSuite([
     it('throws when calling get without an index', function() {
         expect(function() {
             labels.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('should reuse canvases for letters, but only if other settings are the same', function() {
@@ -871,7 +871,7 @@ defineSuite([
             labels.remove(label);
             expect(function() {
                 label.setShow(false);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('can compute screen space position (1)', function() {
@@ -916,7 +916,7 @@ defineSuite([
 
             expect(function() {
                 label.computeScreenSpacePosition();
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('can equal another label', function() {
@@ -1394,105 +1394,105 @@ defineSuite([
         var label = labels.add();
         expect(function() {
             label.setShow(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setPosition throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setPosition(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setText throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setText(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setFont throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setFont(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setFillColor throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setFillColor(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setOutlineColor throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setOutlineColor(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setOutlineWidth throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setOutlineWidth(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setStyle throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setStyle(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setPixelOffset throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setPixelOffset(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setEyeOffset throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setEyeOffset(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setHorizontalOrigin throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setHorizontalOrigin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setVerticalOrigin throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setVerticalOrigin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setScale throws with undefined', function() {
         var label = labels.add();
         expect(function() {
             label.setScale(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.computeScreenSpacePosition throws with undefined context', function() {
         var label = labels.add();
         expect(function() {
             label.computeScreenSpacePosition(undefined, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.computeScreenSpacePosition throws with undefined frameState', function() {
         var label = labels.add();
         expect(function() {
             label.computeScreenSpacePosition(context, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setTranslucencyByDistance throws with nearDistance === farDistance', function() {
@@ -1500,7 +1500,7 @@ defineSuite([
         var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             label.setTranslucencyByDistance(translucency);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setPixelOffsetScaleByDistance throws with nearDistance === farDistance', function() {
@@ -1508,7 +1508,7 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             label.setPixelOffsetScaleByDistance(pixelOffsetScale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('new label throws with invalid translucencyByDistance (nearDistance === farDistance)', function() {
@@ -1517,7 +1517,7 @@ defineSuite([
             labels.add({
                 translucencyByDistance : translucency
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('new label throws with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)', function() {
@@ -1526,7 +1526,7 @@ defineSuite([
             labels.add({
                 pixelOffsetScaleByDistance : pixelOffsetScale
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.setTranslucencyByDistance throws with nearDistance > farDistance', function() {
@@ -1534,7 +1534,7 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             label.setTranslucencyByDistance(translucency);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Label.pixelOffsetScaleByDistance throws with nearDistance > farDistance', function() {
@@ -1542,7 +1542,7 @@ defineSuite([
         var pixelOffsetScale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             label.setPixelOffsetScaleByDistance(pixelOffsetScale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('destroys texture atlas when destroying', function() {

@@ -41,7 +41,7 @@ defineSuite([
         function defaultConstruct() {
             return new OpenStreetMapImageryProvider();
         }
-        expect(defaultConstruct).not.toThrow();
+        expect(defaultConstruct).not.toThrowDeveloperError();
     });
 
     it('supports a slash at the end of the URL', function() {

@@ -225,13 +225,13 @@ defineSuite([
     it('throws without a context', function() {
         expect(function() {
             loadCubeMap(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without urls', function() {
         expect(function() {
             loadCubeMap(context);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without positiveX', function() {
@@ -243,7 +243,7 @@ defineSuite([
                 positiveZ : 'any.image',
                 negativeZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without negativeX', function() {
@@ -255,7 +255,7 @@ defineSuite([
                 positiveZ : 'any.image',
                 negativeZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without positiveY', function() {
@@ -267,7 +267,7 @@ defineSuite([
                 positiveZ : 'any.image',
                 negativeZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without negativeY', function() {
@@ -279,7 +279,7 @@ defineSuite([
                 positiveZ : 'any.image',
                 negativeZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without positiveZ', function() {
@@ -291,7 +291,7 @@ defineSuite([
                 negativeY : 'any.image',
                 negativeZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without negativeZ', function() {
@@ -303,6 +303,6 @@ defineSuite([
                 negativeY : 'any.image',
                 positiveZ : 'any.image'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

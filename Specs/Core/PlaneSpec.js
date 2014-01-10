@@ -19,13 +19,13 @@ defineSuite([
     it('constructor throws without a normal', function() {
         expect(function() {
             return new Plane(undefined, 0.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without a distance', function() {
         expect(function() {
             return new Plane(Cartesian3.UNIT_X, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructs from a point and a normal', function() {
@@ -50,13 +50,13 @@ defineSuite([
     it('fromPointNormal throws without a point', function() {
         expect(function() {
             return Plane.fromPointNormal(undefined, Cartesian3.UNIT_X);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromPointNormal throws without a normal', function() {
         expect(function() {
             return Plane.fromPointNormal(Cartesian3.UNIT_X, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets the distance to a point', function() {
@@ -70,12 +70,12 @@ defineSuite([
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
             return plane.getPointDistance();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getPointDistance throws without a plane', function() {
         expect(function() {
             return Plane.getPointDistance(undefined, Cartesian3.UNIT_X);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });
