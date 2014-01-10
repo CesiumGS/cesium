@@ -2176,16 +2176,10 @@ define([
         if (defined(framebuffer)) {
             framebuffer._bind();
             validateFramebuffer(context, framebuffer);
-        }
 
-        // TODO: Need a way for a command to give what draw buffers are active.
-        //       Also, it seems drawBuffersWEBGL can only take temporary arrays; using
-        //       scratch arrays causes this to blow up.
-        if (context.getDrawBuffers()) {
-            if (defined(framebuffer)) {
+            // TODO: Need a way for a command to give what draw buffers are active.
+            if (context.getDrawBuffers()) {
                 context._drawBuffers.drawBuffersWEBGL(framebuffer._getActiveColorAttachments());
-            } else {
-                context._drawBuffers.drawBuffersWEBGL([context._gl.BACK]);
             }
         }
 
@@ -2241,9 +2235,15 @@ define([
         }
     }
 
-    function endDraw(framebuffer) {
+    var scratchBackBufferArray = [0x0405];
+
+    function endDraw(context, framebuffer) {
         if (defined(framebuffer)) {
             framebuffer._unBind();
+
+            if (context.getDrawBuffers()) {
+                context._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
+            }
         }
     }
 
@@ -2309,7 +2309,7 @@ define([
 
         beginDraw(this, framebuffer, drawCommand, passState);
         continueDraw(this, drawCommand);
-        endDraw(framebuffer);
+        endDraw(this, framebuffer);
     };
 
     /**

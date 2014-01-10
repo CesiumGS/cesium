@@ -202,9 +202,9 @@ defineSuite([
 
     it('gets maximum texture filter anisotropy', function() {
         if(context.getTextureFilterAnisotropic()) {
-            expect(context.getMaximumTextureFilterAnisotropy() >= 2.0).toEqual(true);
+            expect(context.getMaximumTextureFilterAnisotropy() >= 2).toEqual(true);
         } else {
-            expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1.0);
+            expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1);
         }
     });
 
@@ -249,17 +249,17 @@ defineSuite([
 
     it('get the maximum number of draw buffers', function() {
         if (context.getDrawBuffers()) {
-            expect(context.getMaximumDrawBuffers()).toBeGreaterThanOrEqualTo(1.0);
+            expect(context.getMaximumDrawBuffers()).toBeGreaterThanOrEqualTo(1);
         } else {
-            expect(context.getMaximumDrawBuffers()).toEqual(1.0);
+            expect(context.getMaximumDrawBuffers()).toEqual(1);
         }
     });
 
     it('get the maximum number of color attachments', function() {
         if (context.getDrawBuffers()) {
-            expect(context.getMaximumColorAttachments()).toBeGreaterThanOrEqualTo(4.0);
+            expect(context.getMaximumColorAttachments()).toBeGreaterThanOrEqualTo(4);
         } else {
-            expect(context.getMaximumColorAttachments()).toEqual(1.0);
+            expect(context.getMaximumColorAttachments()).toEqual(1);
         }
     });
 
