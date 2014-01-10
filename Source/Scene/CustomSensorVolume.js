@@ -14,10 +14,10 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/CullFace',
+        '../Renderer/Pass',
         './Material',
         '../Shaders/SensorVolume',
         '../Shaders/CustomSensorVolumeVS',
@@ -38,10 +38,10 @@ define([
         BoundingSphere,
         BufferUsage,
         BlendingState,
-        CommandLists,
         DrawCommand,
         createShaderSource,
         CullFace,
+        Pass,
         Material,
         ShadersSensorVolume,
         CustomSensorVolumeVS,
@@ -71,7 +71,6 @@ define([
         this._frontFaceColorCommand = new DrawCommand();
         this._backFaceColorCommand = new DrawCommand();
         this._pickCommand = new DrawCommand();
-        this._commandLists = new CommandLists();
 
         this._boundingSphere = new BoundingSphere();
         this._boundingSphereWC = new BoundingSphere();
@@ -409,6 +408,7 @@ define([
                 });
 
                 this._frontFaceColorCommand.renderState = rs;
+                this._frontFaceColorCommand.pass = Pass.TRANSLUCENT;
 
                 rs = context.createRenderState({
                     depthTest : {
@@ -423,6 +423,7 @@ define([
                 });
 
                 this._backFaceColorCommand.renderState = rs;
+                this._backFaceColorCommand.pass = Pass.TRANSLUCENT;
 
                 rs = context.createRenderState({
                     depthTest : {
@@ -440,6 +441,7 @@ define([
                     depthMask : true
                 });
                 this._frontFaceColorCommand.renderState = rs;
+                this._frontFaceColorCommand.pass = Pass.OPAQUE;
 
                 rs = context.createRenderState({
                     depthTest : {
@@ -471,7 +473,6 @@ define([
         }
 
         var pass = frameState.passes;
-        this._commandLists.removeAll();
 
         var modelMatrixChanged = !Matrix4.equals(this.modelMatrix, this._modelMatrix);
         if (modelMatrixChanged) {
@@ -490,7 +491,7 @@ define([
         this._material = this.material;
         this._material.update(context);
 
-        if (pass.color) {
+        if (pass.render) {
             var frontFaceColorCommand = this._frontFaceColorCommand;
             var backFaceColorCommand = this._backFaceColorCommand;
 
@@ -510,10 +511,9 @@ define([
             }
 
             if (translucent) {
-                this._commandLists.translucentList.push(this._backFaceColorCommand);
-                this._commandLists.translucentList.push(this._frontFaceColorCommand);
+                commandList.push(this._backFaceColorCommand, this._frontFaceColorCommand);
             } else {
-                this._commandLists.opaqueList.push(this._frontFaceColorCommand);
+                commandList.push(this._frontFaceColorCommand);
             }
         }
 
@@ -547,15 +547,8 @@ define([
                 }], false, false);
             }
 
-            if (translucent) {
-                this._commandLists.pickList.translucentList.push(pickCommand);
-            } else {
-                this._commandLists.pickList.opaqueList.push(pickCommand);
-            }
-        }
-
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+            pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+            commandList.push(pickCommand);
         }
     };
 

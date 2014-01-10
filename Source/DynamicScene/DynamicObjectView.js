@@ -239,7 +239,7 @@ define([
 
     /**
      * A utility object for tracking an object with the camera.
-     * @alias DynamicObject
+     * @alias DynamicObjectView
      * @constructor
      *
      * @param {DynamicObject} dynamicObject The object to track with the camera.

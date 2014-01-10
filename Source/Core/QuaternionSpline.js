@@ -42,7 +42,7 @@ define([
 
             return function(time, result) {
                 var u = (time - t0) * invSpan;
-                return Quaternion.slerp(q0, q1, u, result);
+                return Quaternion.fastSlerp(q0, q1, u, result);
             };
         }
 
@@ -56,7 +56,7 @@ define([
             var s0 = quads[i];
             var s1 = quads[i + 1];
 
-            return Quaternion.squad(q0, q1, s0, s1, u, result);
+            return Quaternion.fastSquad(q0, q1, s0, s1, u, result);
         };
     }
 
