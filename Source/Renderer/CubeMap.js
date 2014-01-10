@@ -3,6 +3,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/defaultValue',
         '../Core/Math',
         './MipmapHint',
         './PixelDatatype',
@@ -14,6 +15,7 @@ define([
         defined,
         DeveloperError,
         destroyObject,
+        defaultValue,
         CesiumMath,
         MipmapHint,
         PixelDatatype,
@@ -153,7 +155,7 @@ define([
      * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
-        hint = hint || MipmapHint.DONT_CARE;
+        hint = defaultValue(hint, MipmapHint.DONT_CARE);
 
         //>>includeStart('debug', pragmas.debug);
         if ((this._size > 1) && !CesiumMath.isPowerOfTwo(this._size)) {

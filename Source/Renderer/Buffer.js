@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/destroyObject'
     ], function(
         DeveloperError,
+        defaultValue,
         destroyObject) {
     "use strict";
 
@@ -37,7 +39,7 @@ define([
      * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
      */
     Buffer.prototype.copyFromArrayView = function(arrayView, offsetInBytes) {
-        offsetInBytes = offsetInBytes || 0;
+        offsetInBytes = defaultValue(offsetInBytes, 0);
 
         //>>includeStart('debug', pragmas.debug);
         if (!arrayView) {

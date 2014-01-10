@@ -311,10 +311,6 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('DynamicObjectView.scene is required.');
         }
-        if (scene !== this._lastScene) {
-            this._lastScene = scene;
-            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
-        }
         if (!defined(dynamicObject)) {
             throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
         }
@@ -325,6 +321,11 @@ define([
             throw new DeveloperError('dynamicObject.position is required.');
         }
         //>>includeEnd('debug');
+
+        if (scene !== this._lastScene) {
+            this._lastScene = scene;
+            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
+        }
 
         var positionProperty = dynamicObject.position;
         var objectChanged = dynamicObject !== this._lastDynamicObject;

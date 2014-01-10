@@ -123,10 +123,11 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new EncodedCartesian3();
         }
-        //>>includeEnd('debug');
 
         var high = result.high;
         var low = result.low;
