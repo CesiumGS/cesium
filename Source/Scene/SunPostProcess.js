@@ -288,11 +288,11 @@ define([
         downSampleViewport.height = downSampleSize;
 
         var fbo = this._fbo;
-        var colorTexture = fbo.getColorTexture();
+        var colorTexture = fbo.getColorTexture(0);
         if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
             this._blurStep.x = this._blurStep.y = 1.0 / downSampleSize;
 
-            fbo.setColorTexture(context.createTexture2D({
+            fbo.setColorTexture(0, context.createTexture2D({
                 width : width,
                 height : height
             }));
@@ -310,11 +310,11 @@ define([
                 }));
             }
 
-            this._downSampleFBO1.setColorTexture(context.createTexture2D({
+            this._downSampleFBO1.setColorTexture(0, context.createTexture2D({
                 width : downSampleSize,
                 height : downSampleSize
             }));
-            this._downSampleFBO2.setColorTexture(context.createTexture2D({
+            this._downSampleFBO2.setColorTexture(0, context.createTexture2D({
                 width : downSampleSize,
                 height : downSampleSize
             }));
@@ -325,17 +325,17 @@ define([
             var upSampleRenderState = context.createRenderState();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._downSampleCommand.renderState = downSampleRenderState;
 
             this._brightPassCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture();
+                return that._downSampleFBO1.getColorTexture(0);
             };
             this._brightPassCommand.renderState = downSampleRenderState;
 
             this._blurXCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO2.getColorTexture();
+                return that._downSampleFBO2.getColorTexture(0);
             };
             this._blurXCommand.uniformMap.u_step = function() {
                 return that._blurStep;
@@ -343,7 +343,7 @@ define([
             this._blurXCommand.renderState = downSampleRenderState;
 
             this._blurYCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture();
+                return that._downSampleFBO1.getColorTexture(0);
             };
             this._blurYCommand.uniformMap.u_step = function() {
                 return that._blurStep;
@@ -351,15 +351,15 @@ define([
             this._blurYCommand.renderState = downSampleRenderState;
 
             this._blendCommand.uniformMap.u_texture0 = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._blendCommand.uniformMap.u_texture1 = function() {
-                return that._downSampleFBO2.getColorTexture();
+                return that._downSampleFBO2.getColorTexture(0);
             };
             this._blendCommand.renderState = upSampleRenderState;
 
             this._fullScreenCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._fullScreenCommand.renderState = upSampleRenderState;
         }

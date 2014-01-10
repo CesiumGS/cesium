@@ -907,7 +907,7 @@ define([
         // understand exactly why this is.
         outputTexture.generateMipmap(MipmapHint.NICEST);
 
-        reproject.framebuffer.setColorTexture(outputTexture);
+        reproject.framebuffer.setColorTexture(0, outputTexture);
 
         var command = new ClearCommand();
         command.color = Color.BLACK;
