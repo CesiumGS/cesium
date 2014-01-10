@@ -2178,6 +2178,17 @@ define([
             validateFramebuffer(context, framebuffer);
         }
 
+        // TODO: Need a way for a command to give what draw buffers are active.
+        //       Also, it seems drawBuffersWEBGL can only take temporary arrays; using
+        //       scratch arrays causes this to blow up.
+        if (context.getDrawBuffers()) {
+            if (defined(framebuffer)) {
+                context._drawBuffers.drawBuffersWEBGL(framebuffer._getActiveColorAttachments());
+            } else {
+                context._drawBuffers.drawBuffersWEBGL([context._gl.BACK]);
+            }
+        }
+
         var sp = drawCommand.shaderProgram;
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);

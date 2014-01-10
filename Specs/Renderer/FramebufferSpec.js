@@ -437,6 +437,65 @@ defineSuite([
         })).toEqual([255, 255, 255, 255]);
     });
 
+    it('draws with multiple render targets', function() {
+        if (context.getDrawBuffers()) {
+            var colorTexture0 = context.createTexture2D({
+                width : 1,
+                height : 1
+            });
+            var colorTexture1 = context.createTexture2D({
+                width : 1,
+                height : 1
+            });
+            framebuffer = context.createFramebuffer({
+                colorTextures : [colorTexture0, colorTexture1]
+            });
+
+            // 1 of 4.  Clear default color buffer to black.
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            // 2 of 4.  Render red point into color attachment 0 and green point to color attachment 1.
+            var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
+            sp = context.createShaderProgram(vs, fs);
+
+            va = context.createVertexArray([{
+                index : sp.getVertexAttributes().position.index,
+                vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+                componentsPerAttribute : 4
+            }]);
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp,
+                vertexArray : va,
+                framebuffer : framebuffer
+            });
+
+            // 3 of 4.  Verify default color buffer is still black.
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            // 4 of 4.  Render yellow to default color buffer by reading from previous color attachments
+            var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+            var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = vec4(texture2D(u_texture0, vec2(0.0)).rgb + texture2D(u_texture1, vec2(0.0)).rgb, 1.0); }';
+            var sp2 = context.createShaderProgram(vs2, fs2, {
+                position : 0
+            });
+            sp2.getAllUniforms().u_texture0.value = colorTexture0;
+            sp2.getAllUniforms().u_texture1.value = colorTexture1;
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp2,
+                vertexArray : va
+            });
+            expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+
+            sp2 = sp2.destroy();
+        }
+    });
+
     it('destroys', function() {
         var f = context.createFramebuffer();
         expect(f.isDestroyed()).toEqual(false);
@@ -564,6 +623,52 @@ defineSuite([
                 })
             });
         }).toThrowDeveloperError();
+    });
+
+    it('throws when the number of color texture exceeds the number color attachments supported', function() {
+        expect(function() {
+            context.createFramebuffer({
+                colorTextures : new Array(context.getMaximumColorAttachments() + 1)
+            });
+        }).toThrow();
+    });
+
+    it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
+        expect(function() {
+            context.createFramebuffer({
+                colorRenderbuffers : new Array(context.getMaximumColorAttachments() + 1)
+            });
+        }).toThrow();
+    });
+
+    it('throws when the index to setColorTexture is out of bounds', function(){
+        framebuffer = context.createFramebuffer();
+        expect(function() {
+            framebuffer.setColorTexture();
+        }).toThrow();
+
+        expect(function() {
+            framebuffer.setColorTexture(-1);
+        }).toThrow();
+
+        expect(function() {
+            framebuffer.setColorTexture(context.getMaximumColorAttachments() + 1);
+        }).toThrow();
+    });
+
+    it('throws when the index to setColorRenderbuffer is out of bounds', function(){
+        framebuffer = context.createFramebuffer();
+        expect(function() {
+            framebuffer.setColorRenderbuffer();
+        }).toThrow();
+
+        expect(function() {
+            framebuffer.setColorRenderbuffer(-1);
+        }).toThrow();
+
+        expect(function() {
+            framebuffer.setColorRenderbuffer(context.getMaximumColorAttachments() + 1);
+        }).toThrow();
     });
 
     it('fails to destroy', function() {

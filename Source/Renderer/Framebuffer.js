@@ -143,6 +143,18 @@ define([
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
+    Framebuffer.prototype._getActiveColorAttachments = function() {
+        var active = [];
+        var attachments = (this._colorTextures.length > 0) ? this._colorTextures : this._colorRenderbuffers;
+        var length = attachments.length;
+        for (var i = 0; i < length; ++i) {
+            if (defined(attachments[i])) {
+                active.push(this._gl.COLOR_ATTACHMENT0 + i);
+            }
+        }
+        return active;
+    };
+
     function attachTexture(framebuffer, attachment, texture) {
         framebuffer._bind();
         var gl = framebuffer._gl;
