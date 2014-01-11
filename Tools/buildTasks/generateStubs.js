@@ -35,7 +35,7 @@ contents += '})();';
 var paths = '\
 /*global define*/\n\
 define(function() {\n\
-    "use strict";\
+    "use strict";\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
     };\n\
 });';

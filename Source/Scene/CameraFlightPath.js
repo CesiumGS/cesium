@@ -348,30 +348,6 @@ define([
         return update;
     }
 
-    function disableInput(controller) {
-      var backup = {
-          enableTranslate: controller.enableTranslate,
-          enableZoom: controller.enableZoom,
-          enableRotate: controller.enableRotate,
-          enableTilt: controller.enableTilt,
-          enableLook: controller.enableLook
-      };
-      controller.enableTranslate = false;
-      controller.enableZoom = false;
-      controller.enableRotate = false;
-      controller.enableTilt = false;
-      controller.enableLook = false;
-      return backup;
-    }
-
-    function restoreInput(controller, backup) {
-      controller.enableTranslate = backup.enableTranslate;
-      controller.enableZoom = backup.enableZoom;
-      controller.enableRotate = backup.enableRotate;
-      controller.enableTilt = backup.enableTilt;
-      controller.enableLook = backup.enableLook;
-    }
-
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be in the current camera reference frame.
@@ -422,13 +398,13 @@ define([
         var duration = defaultValue(description.duration, 3000.0);
 
         var controller = scene.getScreenSpaceCameraController();
-        var backup = disableInput(controller);
+        controller.enableInputs = false;
         var wrapCallback = function(cb) {
             var wrapped = function() {
                 if (typeof cb === 'function') {
                     cb();
                 }
-                restoreInput(controller, backup);
+                controller.enableInputs = true;
             };
             return wrapped;
         };
