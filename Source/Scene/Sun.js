@@ -125,51 +125,6 @@ define([
         textureCoordinates : 1
     };
 
-    function getVertexArray(context) {
-        // Per-context cache for viewport quads
-        var vertexArray = context.cache.viewportQuad_vertexArray;
-
-        if (defined(vertexArray)) {
-            return vertexArray;
-        }
-
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                       -1.0, -1.0,
-                        1.0, -1.0,
-                        1.0,  1.0,
-                       -1.0,  1.0
-                    ]
-                }),
-
-                textureCoordinates : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        vertexArray = context.createVertexArrayFromGeometry({
-            geometry : geometry,
-            attributeIndices : viewportAttributeIndices,
-            bufferUsage : BufferUsage.STATIC_DRAW
-        });
-
-        context.cache.viewportQuad_vertexArray = vertexArray;
-        return vertexArray;
-    }
-
     var scratchPositionWC = new Cartesian2();
     var scratchLimbWC = new Cartesian2();
     var scratchPositionEC = new Cartesian4();
@@ -225,7 +180,7 @@ define([
             var drawCommand = new DrawCommand();
             drawCommand.owner = this;
             drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-            drawCommand.vertexArray = getVertexArray(context);
+            drawCommand.vertexArray = context.getViewportQuadVertexArray();
             drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeIndices);
             drawCommand.framebuffer = fbo;
             drawCommand.renderState = context.createRenderState({

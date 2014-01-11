@@ -22,10 +22,15 @@ define([
         '../Core/GeometryPipeline',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/PrimitiveType',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
+        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/Pass',
+        '../Renderer/PixelFormat',
+        '../Renderer/PixelDatatype',
+        '../Renderer/RenderbufferFormat',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',
@@ -41,7 +46,8 @@ define([
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
-        './CreditDisplay'
+        './CreditDisplay',
+        '../Shaders/ViewportQuadVS'
     ], function(
         CesiumMath,
         Color,
@@ -65,10 +71,15 @@ define([
         GeometryPipeline,
         ColorGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
+        PrimitiveType,
         Context,
         ClearCommand,
+        DrawCommand,
         PassState,
         Pass,
+        PixelFormat,
+        PixelDatatype,
+        RenderbufferFormat,
         Camera,
         ScreenSpaceCameraController,
         CompositePrimitive,
@@ -84,7 +95,8 @@ define([
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
-        CreditDisplay) {
+        CreditDisplay,
+        ViewportQuadVS) {
     "use strict";
 
     /**
@@ -316,6 +328,11 @@ define([
         this.debugFrustumStatistics = undefined;
 
         this._debugSphere = undefined;
+
+        this._opaqueFBO = undefined;
+        this._translucentFBO = undefined;
+
+        this._compositeCommand = undefined;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -797,14 +814,15 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
-            clearDepthStencil.execute(context, passState);
-
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
             us.updateFrustum(frustum);
+
+            passState.framebuffer = scene._opaqueFBO;
+            clearDepthStencil.execute(context, passState);
 
             var j;
             var commands = frustumCommands.opaqueCommands;
@@ -813,11 +831,16 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
+            passState.frameBuffer = scene._translucentFBO;
+
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
+
+            passState.frameBuffer = undefined;
+            scene._compositeCommand.execute(context, passState);
         }
     }
 
@@ -827,6 +850,88 @@ define([
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             commandList[i].execute(context, passState);
+        }
+    }
+
+    var attributeIndices = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    function updateFramebuffers(scene) {
+        var context = scene._context;
+        var canvas = scene._canvas;
+
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        var opaqueFBO = scene._opaqueFBO;
+        var colorTexture = (defined(opaqueFBO) && opaqueFBO.getColorTexture(0)) || undefined;
+        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+            var opaqueTexture = context.createTexture2D({
+                width : width,
+                height : height
+            });
+            var translucentTexture = context.createTexture2D({
+                width : width,
+                height : height
+            });
+
+            var depthTexture;
+            var depthRenderbuffer;
+            if (context.getDepthTexture()) {
+                depthTexture = context.createTexture2D({
+                    width : width,
+                    height : height,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                });
+            } else {
+                depthRenderbuffer = context.createRenderbuffer({
+                    format : RenderbufferFormat.DEPTH_COMPONENT16
+                });
+            }
+
+            scene._opaqueFBO = context.createFramebuffer({
+                colorTextures : [opaqueTexture],
+                depthTexture : depthTexture,
+                depthRenderbuffer : depthRenderbuffer
+            });
+            scene._translucentFBO = context.createFramebuffer({
+                colorTextures : [translucentTexture],
+                depthTexture : depthTexture,
+                depthRenderbuffer : depthRenderbuffer
+            });
+        }
+
+        if (!defined(scene._compositeCommand)) {
+            var fs = 'uniform sampler2D u_opaque;\n' +
+                    'uniform sampler2D u_translucent;\n' +
+                    'varying vec2 v_textureCoordinates;\n' +
+                    'void main()\n' +
+                    '{\n' +
+                    '    vec4 opaque = texture2D(u_opaque, v_textureCoordinates);\n' +
+                    '    vec4 transparent = texture2D(u_translucent, v_textureCoordinates);\n' +
+                    //'    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
+                    //'    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
+                    '    gl_FragColor = opaque;\n' +
+                    '}\n';
+
+            var command = new DrawCommand();
+            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            command.vertexArray = context.getViewportQuadVertexArray();
+            command.renderState = context.createRenderState();
+            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
+            command.uniformMap = {
+                u_opaque : function() {
+                    return scene._opaqueFBO.getColorTexture(0);
+                },
+                u_translucent : function() {
+                    return scene._translucentFBO.getColorTexture(0);
+                }
+            };
+
+            scene._compositeCommand = command;
         }
     }
 
@@ -891,6 +996,7 @@ define([
         this._commandList.length = 0;
         this._overlayCommandList.length = 0;
 
+        updateFramebuffers(this);
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
 

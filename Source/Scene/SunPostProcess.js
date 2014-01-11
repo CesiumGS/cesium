@@ -113,51 +113,6 @@ define([
         textureCoordinates : 1
     };
 
-    function getVertexArray(context) {
-        // Per-context cache for viewport quads
-        var vertexArray = context.cache.viewportQuad_vertexArray;
-
-        if (defined(vertexArray)) {
-            return vertexArray;
-        }
-
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                       -1.0, -1.0,
-                        1.0, -1.0,
-                        1.0,  1.0,
-                       -1.0,  1.0
-                    ]
-                }),
-
-                textureCoordinates : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        vertexArray = context.createVertexArrayFromGeometry({
-            geometry : geometry,
-            attributeIndices : attributeIndices,
-            bufferUsage : BufferUsage.STATIC_DRAW
-        });
-
-        context.cache.viewportQuad_vertexArray = vertexArray;
-        return vertexArray;
-    }
-
     var viewportBoundingRectangle  = new BoundingRectangle();
     var downSampleViewportBoundingRectangle = new BoundingRectangle();
     var sunPositionECScratch = new Cartesian4();
@@ -178,7 +133,7 @@ define([
             this._clearFBO2Command.color = new Color();
 
             var primitiveType = PrimitiveType.TRIANGLE_FAN;
-            var vertexArray = getVertexArray(context);
+            var vertexArray = context.getViewportQuadVertexArray();
 
             var downSampleCommand = this._downSampleCommand = new DrawCommand();
             downSampleCommand.owner = this;

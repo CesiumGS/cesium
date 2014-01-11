@@ -11,6 +11,7 @@ define([
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
         '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/createGuid',
         '../Core/Matrix4',
         '../Core/Math',
@@ -48,6 +49,7 @@ define([
         RuntimeError,
         PrimitiveType,
         Geometry,
+        GeometryAttribute,
         createGuid,
         Matrix4,
         CesiumMath,
@@ -2637,6 +2639,56 @@ define([
         }
 
         return this.createVertexArray(vaAttributes, indexBuffer);
+    };
+
+    var attributeIndices = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    Context.prototype.getViewportQuadVertexArray = function() {
+        // Per-context cache for viewport quads
+        var vertexArray = this.cache.viewportQuad_vertexArray;
+
+        if (defined(vertexArray)) {
+            return vertexArray;
+        }
+
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                       -1.0, -1.0,
+                        1.0, -1.0,
+                        1.0,  1.0,
+                       -1.0,  1.0
+                    ]
+                }),
+
+                textureCoordinates : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0
+                    ]
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        vertexArray = this.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : attributeIndices,
+            bufferUsage : BufferUsage.STATIC_DRAW
+        });
+
+        this.cache.viewportQuad_vertexArray = vertexArray;
+        return vertexArray;
     };
 
     /**
