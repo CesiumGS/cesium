@@ -44,97 +44,89 @@ defineSuite([
     });
 
     it('has a color texture attachment', function() {
-        var colorTexture = context.createTexture2D({
-            width : 1,
-            height : 1
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })]
         });
-
-        framebuffer = context.createFramebuffer();
-        framebuffer.setColorTexture(0, colorTexture);
-        expect(framebuffer.getColorTexture(0)).toEqual(colorTexture);
+        expect(framebuffer.getColorTexture(0)).toBeDefined();
     });
 
     it('has a color renderbuffer attachment', function() {
-        var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.RGBA4
+        framebuffer = context.createFramebuffer({
+            colorRenderbuffers : [context.createRenderbuffer({
+                format : RenderbufferFormat.RGBA4
+            })]
         });
-
-        framebuffer = context.createFramebuffer();
-        framebuffer.setColorRenderbuffer(0, renderbuffer);
-        expect(framebuffer.getColorRenderbuffer(0)).toEqual(renderbuffer);
-
-        framebuffer.setColorRenderbuffer(0, undefined);
-        expect(framebuffer.getColorRenderbuffer(0)).not.toBeDefined();
+        expect(framebuffer.getColorRenderbuffer(0)).toBeDefined();
     });
 
     it('has a depth texture attachment', function() {
         if (context.getDepthTexture()) {
-            var depthTexture = context.createTexture2D({
-                width : 1,
-                height : 1,
-                pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+            framebuffer = context.createFramebuffer({
+                depthTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                })
             });
-
-            framebuffer = context.createFramebuffer();
-            framebuffer.setDepthTexture(depthTexture);
-            expect(framebuffer.getDepthTexture()).toEqual(depthTexture);
+            expect(framebuffer.getDepthTexture()).toBeDefined();
         }
     });
 
     it('has a depth renderbuffer attachment', function() {
-        var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.DEPTH_COMPONENT16
+        framebuffer = context.createFramebuffer({
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16
+            })
         });
-
-        framebuffer = context.createFramebuffer();
-        framebuffer.setDepthRenderbuffer(renderbuffer);
-        expect(framebuffer.getDepthRenderbuffer()).toEqual(renderbuffer);
+        expect(framebuffer.getDepthRenderbuffer()).toBeDefined();
     });
 
     it('has a stencil renderbuffer attachment', function() {
-        var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.STENCIL_INDEX8
+        framebuffer = context.createFramebuffer({
+            stencilRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.STENCIL_INDEX8
+            })
         });
-
-        framebuffer = context.createFramebuffer();
-        framebuffer.setStencilRenderbuffer(renderbuffer);
-        expect(framebuffer.getStencilRenderbuffer()).toEqual(renderbuffer);
+        expect(framebuffer.getStencilRenderbuffer()).toBeDefined();
     });
 
     it('has a depth-stencil texture attachment', function() {
         if (context.getDepthTexture()) {
-            var texture = context.createTexture2D({
-                width : 1,
-                height : 1,
-                pixelFormat : PixelFormat.DEPTH_STENCIL,
-                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+            framebuffer = context.createFramebuffer({
+                depthStencilTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_STENCIL,
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
+                })
             });
-
-            framebuffer = context.createFramebuffer();
-            framebuffer.setDepthStencilTexture(texture);
-            expect(framebuffer.getDepthStencilTexture()).toEqual(texture);
+            expect(framebuffer.getDepthStencilTexture()).toBeDefined();
         }
     });
 
     it('has a depth-stencil renderbuffer attachment', function() {
-        var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.DEPTH_STENCIL
+        framebuffer = context.createFramebuffer({
+            depthStencilRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_STENCIL
+            })
         });
-
-        framebuffer = context.createFramebuffer();
-        framebuffer.setDepthStencilRenderbuffer(renderbuffer);
-        expect(framebuffer.getDepthStencilRenderbuffer()).toEqual(renderbuffer);
+        expect(framebuffer.getDepthStencilRenderbuffer()).toBeDefined();
     });
 
     it('has a depth attachment', function() {
         framebuffer = context.createFramebuffer();
         expect(framebuffer.hasDepthAttachment()).toEqual(false);
+        framebuffer.destroy();
 
-        var renderbuffer = context.createRenderbuffer({
-            format : RenderbufferFormat.DEPTH_COMPONENT16
+        framebuffer = context.createFramebuffer({
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16
+            })
         });
-        framebuffer.setDepthRenderbuffer(renderbuffer);
         expect(framebuffer.hasDepthAttachment()).toEqual(true);
     });
 
@@ -196,13 +188,12 @@ defineSuite([
         framebuffer = context.createFramebuffer({
             colorTextures : [cubeMap.getPositiveX()]
         });
+        framebuffer.destroyAttachments = false;
 
         var command = new ClearCommand();
         command.color = new Color (0.0, 1.0, 0.0, 1.0);
         command.framebuffer = framebuffer;
         command.execute(context);
-
-        framebuffer.setColorTexture(0, undefined);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

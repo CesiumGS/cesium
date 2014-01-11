@@ -1760,7 +1760,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+     * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
      *
@@ -1780,17 +1780,7 @@ define([
      * @see Context#createRenderbuffer
      *
      * @example
-     * // Example 1. Create a framebuffer with no initial attachments,
-     * // and then add a color-texture attachment.
-     * var framebuffer = context.createFramebuffer();
-     * framebuffer.setColorTexture(0, context.createTexture2D({
-     *     width : 256,
-     *     height : 256,
-     * }));
-     *
-     * //////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * // Create a framebuffer with color and depth texture attachments.
      * var width = context.getCanvas().clientWidth;
      * var height = context.getCanvas().clientHeight;
      * var framebuffer = context.createFramebuffer({
