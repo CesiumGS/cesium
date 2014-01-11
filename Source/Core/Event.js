@@ -94,7 +94,7 @@ define([
         var thisScopes = this._scopes;
 
         var index = -1;
-        for ( var i = 0; i < thisListeners.length; i++) {
+        for (var i = 0; i < thisListeners.length; i++) {
             if (thisListeners[i] === listener && thisScopes[i] === scope) {
                 index = i;
                 break;
