@@ -275,6 +275,97 @@ defineSuite([
         }).toThrow();
     });
 
+    it('raises changed event when loading CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(clockCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('raises changed event when name changes in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var originalCzml = {
+            id : 'document',
+            name : 'czmlName'
+        };
+        dataSource.load(originalCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        var newCzml = {
+            id : 'document',
+            name : 'newCzmlName'
+        };
+        dataSource.load(newCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('does not raise changed event when name does not change in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.load(nameCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(nameCzml);
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('raises changed event when clock changes in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var originalCzml = {
+            id : 'document',
+            clock : {
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+        dataSource.load(originalCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        var newCzml = {
+            id : 'document',
+            clock : {
+                interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+        dataSource.load(newCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('does not raise changed event when clock does not change in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.load(clockCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(clockCzml);
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
     it('raises error when an error occurs in loadUrl', function() {
         var dataSource = new CzmlDataSource();
 
