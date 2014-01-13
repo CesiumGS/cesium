@@ -74,6 +74,7 @@ define([
         ClearCommand,
         PassState) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -290,6 +291,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
@@ -2152,6 +2154,8 @@ define([
         }
     };
 
+    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
@@ -2163,13 +2167,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            validateFramebuffer(context, framebuffer);
+        if (framebuffer !== context._currentFamebuffer) {
+            context._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
 
-            // TODO: Need a way for a command to give what draw buffers are active.
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(context, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            }
+
             if (context.getDrawBuffers()) {
-                context._drawBuffers.drawBuffersWEBGL(framebuffer._getActiveColorAttachments());
+                context._drawBuffers.drawBuffersWEBGL(buffers);
             }
         }
 
@@ -2225,15 +2236,9 @@ define([
         }
     }
 
-    var scratchBackBufferArray = [0x0405];
-
     function endDraw(context, framebuffer) {
         if (defined(framebuffer)) {
             framebuffer._unBind();
-
-            if (context.getDrawBuffers()) {
-                context._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
-            }
         }
     }
 
