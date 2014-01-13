@@ -11,6 +11,7 @@ Beta Releases
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
+* Fix picking in 2D with rotated map. [#1337](https://github.com/AnalyticalGraphicsInc/cesium/issues/1337)
 
 ### b24 - 2014-01-06
 
@@ -56,7 +57,6 @@ Beta Releases
 * Added `BoundingSphere.transformsWithoutScale`
 * Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
 * Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
-* Fix picking in 2D when the map is rotated.
 
 ### b23 - 2013-12-02
 
