@@ -16,8 +16,8 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
-         'Renderer/CommandLists',
          'Renderer/DrawCommand',
+         'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection'
@@ -38,8 +38,8 @@ defineSuite([
          PrimitiveType,
          BlendingState,
          BufferUsage,
-         CommandLists,
          DrawCommand,
+         Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection) {
@@ -49,6 +49,11 @@ defineSuite([
     var scene;
     var context;
     var primitives;
+    var atlas;
+
+    var greenImage;
+    var blueImage;
+    var whiteImage;
 
     beforeEach(function() {
         scene = createScene();
@@ -56,26 +61,16 @@ defineSuite([
         primitives = scene.getPrimitives();
 
         var camera = scene.getCamera();
-        camera.position = Cartesian3.ZERO;
+        camera.position = new Cartesian3();
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
-        camera.right = Cartesian3.UNIT_X;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
 
         camera.frustum.near = 1.0;
         camera.frustum.far = 1000000000.0;
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
-    });
 
-    afterEach(function() {
-        destroyScene();
-    });
-
-    var greenImage;
-    var blueImage;
-    var whiteImage;
-
-    it('initialize billboard image for multi-frustum tests', function() {
         greenImage = new Image();
         greenImage.src = './Data/Images/Green.png';
 
@@ -90,12 +85,17 @@ defineSuite([
         }, 'Load .png file(s) for billboard collection test.', 3000);
     });
 
+    afterEach(function() {
+        atlas = atlas && atlas.destroy();
+        destroyScene(scene);
+    });
+
     var billboard0;
     var billboard1;
     var billboard2;
 
     function createBillboards() {
-        var atlas = context.createTextureAtlas({
+        atlas = context.createTextureAtlas({
             images : [greenImage, blueImage, whiteImage],
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
@@ -109,6 +109,7 @@ defineSuite([
 
         var billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard0 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50.0),
             imageIndex : 0
@@ -117,6 +118,7 @@ defineSuite([
 
         billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard1 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000.0),
             imageIndex : 1
@@ -125,6 +127,7 @@ defineSuite([
 
         billboards = new BillboardCollection();
         billboards.setTextureAtlas(atlas);
+        billboards.setDestroyTextureAtlas(false);
         billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
             imageIndex : 2
@@ -219,7 +222,7 @@ defineSuite([
             };
         };
 
-        Primitive.prototype.update = function(context, frameState, commandLists) {
+        Primitive.prototype.update = function(context, frameState, commandList) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -264,10 +267,9 @@ defineSuite([
             command.modelMatrix = this._modelMatrix;
             command.executeInClosestFrustum = closestFrustum;
             command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
+            command.pass = Pass.OPAQUE;
 
-            var commandList = new CommandLists();
-            commandList.opaqueList.push(command);
-            commandLists.push(commandList);
+            commandList.push(command);
         };
 
         Primitive.prototype.destroy = function() {
@@ -321,8 +323,8 @@ defineSuite([
     });
 
     it('render without a central body or any primitives', function() {
+        scene.initializeFrame();
         expect(function() {
-            scene.initializeFrame();
             scene.render();
         }).not.toThrow();
     });
@@ -333,8 +335,8 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1e12);
 
         createBillboards();
+        scene.initializeFrame();
         expect(function() {
-            scene.initializeFrame();
             scene.render();
         }).not.toThrow();
     });

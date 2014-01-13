@@ -1,5 +1,5 @@
 /*global define*/
-define(['require',
+define([
         '../BaseLayerPicker/ImageryProviderViewModel',
         '../../Core/buildModuleUrl',
         '../../Core/FeatureDetection',
@@ -9,24 +9,23 @@ define(['require',
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
         '../../Scene/TileMapServiceImageryProvider'
-        ], function (
-                require,
-                ImageryProviderViewModel,
-                buildModuleUrl,
-                FeatureDetection,
-                DefaultProxy,
-                BingMapsImageryProvider,
-                BingMapsStyle,
-                ArcGisMapServerImageryProvider,
-                OpenStreetMapImageryProvider,
-                TileMapServiceImageryProvider) {
+    ], function(
+        ImageryProviderViewModel,
+        buildModuleUrl,
+        FeatureDetection,
+        DefaultProxy,
+        BingMapsImageryProvider,
+        BingMapsStyle,
+        ArcGisMapServerImageryProvider,
+        OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider) {
     "use strict";
 
     /**
      * @private
      */
     function createDefaultBaseLayers() {
-        var proxy = new DefaultProxy('http://cesium.agi.com/proxy/');
+        var proxy = new DefaultProxy('http://cesiumjs.org/proxy/');
         //While some sites have CORS on, not all browsers implement it properly, so a proxy is needed anyway;
         var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
 
@@ -180,7 +179,7 @@ map of the world.\nhttp://www.openstreetmap.org',
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
                 return new TileMapServiceImageryProvider({
-                    url : 'http://cesium.agi.com/blackmarble',
+                    url : 'http://cesiumjs.org/blackmarble',
                     maximumLevel : 8,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory',
                     proxy : proxyIfNeeded

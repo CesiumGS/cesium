@@ -145,10 +145,12 @@ defineSuite([
 
     it('gets antialias', function() {
         var c = createContext({
-            antialias : false
+            webgl : {
+                antialias : false
+            }
         });
         expect(c.getAntialias()).toEqual(false);
-        c.destroy();
+        destroyContext(c);
     });
 
     it('gets the standard derivatives extension', function() {
@@ -284,7 +286,7 @@ defineSuite([
     it('throws when creating a pick ID without an object', function() {
         expect(function() {
             context.createPickId(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('returns undefined when retrieving an object by unknown pick color', function() {
@@ -294,25 +296,19 @@ defineSuite([
     it('throws when getObjectByPickColor is called without a color', function() {
         expect(function() {
             context.getObjectByPickColor(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to construct (null canvas)', function() {
         expect(function() {
             return new Context();
-        }).toThrow();
-    });
-
-    it('continueDraw throws without arguments', function() {
-        expect(function() {
-            context.continueDraw();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isDestroyed', function() {
         var c = createContext();
         expect(c.isDestroyed()).toEqual(false);
-        c.destroy();
+        destroyContext(c);
         expect(c.isDestroyed()).toEqual(true);
     });
 
@@ -320,7 +316,7 @@ defineSuite([
         var c = createContext();
         var destroyableObject = jasmine.createSpyObj('destroyableObject', ['destroy']);
         c.cache.foo = destroyableObject;
-        c.destroy();
+        destroyContext(c);
         expect(destroyableObject.destroy).toHaveBeenCalled();
     });
 
@@ -328,16 +324,18 @@ defineSuite([
         var c = createContext();
         var nonDestroyableObject = {};
         c.cache.foo = nonDestroyableObject;
-        c.destroy();
+        destroyContext(c);
     });
 
     it('returns the underling drawingBufferWidth', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.getDrawingBufferWidth()).toBe(1024);
+        destroyContext(c);
     });
 
     it('returns the underling drawingBufferHeight', function() {
         var c = createContext(undefined, 1024, 768);
         expect(c.getDrawingBufferHeight()).toBe(768);
+        destroyContext(c);
     });
 }, 'WebGL');

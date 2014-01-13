@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
-        '../Core/combine',
         '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -18,9 +17,9 @@ define([
         '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './Material',
         './SceneMode',
         './Polyline',
@@ -32,7 +31,6 @@ define([
         defined,
         DeveloperError,
         Color,
-        combine,
         destroyObject,
         Cartesian3,
         Cartesian4,
@@ -46,9 +44,9 @@ define([
         Intersect,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
         createShaderSource,
+        Pass,
         Material,
         SceneMode,
         Polyline,
@@ -130,7 +128,7 @@ define([
      *     width:4
      * });
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
     var PolylineCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -166,11 +164,8 @@ define([
         this._opaqueRS = undefined;
         this._translucentRS = undefined;
 
-        this._commandLists = new CommandLists();
         this._colorCommands = [];
-        this._translucentList = [];
-        this._pickOpaqueCommands = [];
-        this._pickTranslucentCommands = [];
+        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -390,8 +385,6 @@ define([
         return this._polylines.length;
     };
 
-    var emptyArray = [];
-
     /**
      * @private
      */
@@ -462,11 +455,6 @@ define([
 
         var pass = frameState.passes;
         var useDepthTest = (frameState.morphTime !== 0.0);
-        var commandLists = this._commandLists;
-        commandLists.opaqueList = emptyArray;
-        commandLists.translucentList = emptyArray;
-        commandLists.pickList.opaqueList = emptyArray;
-        commandLists.pickList.translucentList = emptyArray;
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
             this._opaqueRS = context.createRenderState({
@@ -487,36 +475,21 @@ define([
             });
         }
 
-        if (pass.color) {
-            var opaqueList = this._colorCommands;
-            commandLists.opaqueList = opaqueList;
-            createCommandLists(this, context, frameState, opaqueList, modelMatrix, true, false);
-
-            var translucentList = this._translucentList;
-            commandLists.translucentList = translucentList;
-            createCommandLists(this, context, frameState, translucentList, modelMatrix, true, true);
+        if (pass.render) {
+            var colorList = this._colorCommands;
+            createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
         }
 
         if (pass.pick) {
-            var pickList = this._pickOpaqueCommands;
-            commandLists.pickList.opaqueList = pickList;
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, false);
-
-            var size = pickList.length;
-            pickList = this._pickTranslucentCommands;
-            commandLists.pickList.translucentList = pickList;
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, true);
-        }
-
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+            var pickList = this._pickCommands;
+            createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass, translucentPass) {
+    function createCommandLists(polylineCollection, context, frameState, commands, commandList, modelMatrix, renderPass) {
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
@@ -534,7 +507,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = colorPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
+                var sp = renderPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -548,33 +521,36 @@ define([
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
                         if (defined(currentId) && count > 0) {
-                            if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
-                                if (commandIndex >= commandsLength) {
-                                    command = new DrawCommand();
-                                    command.owner = polylineCollection;
-                                    commands.push(command);
-                                } else {
-                                    command = commands[commandIndex];
-                                }
+                            var translucent = currentMaterial.isTranslucent();
 
-                                ++commandIndex;
-
-                                command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
-                                command.modelMatrix = modelMatrix;
-                                command.primitiveType = PrimitiveType.TRIANGLES;
-                                command.shaderProgram = sp;
-                                command.vertexArray = va.va;
-                                command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
-                                command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
-
-                                command.uniformMap = currentMaterial._uniforms;
-                                command.count = count;
-                                command.offset = offset;
+                            if (commandIndex >= commandsLength) {
+                                command = new DrawCommand();
+                                command.owner = polylineCollection;
+                                commands.push(command);
+                            } else {
+                                command = commands[commandIndex];
                             }
+
+                            ++commandIndex;
+
+                            command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
+                            command.modelMatrix = modelMatrix;
+                            command.primitiveType = PrimitiveType.TRIANGLES;
+                            command.shaderProgram = sp;
+                            command.vertexArray = va.va;
+                            command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                            command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                            command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+
+                            command.uniformMap = currentMaterial._uniforms;
+                            command.count = count;
+                            command.offset = offset;
 
                             offset += count;
                             count = 0;
                             cloneBoundingSphere = true;
+
+                            commandList.push(command);
                         }
 
                         currentMaterial = polyline._material;
@@ -593,7 +569,7 @@ define([
 
                     var boundingVolume;
                     if (frameState.mode === SceneMode.SCENE3D) {
-                        boundingVolume = polyline._boundingVolume;
+                        boundingVolume = polyline._boundingVolumeWC;
                     } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
                         boundingVolume = polyline._boundingVolume2D;
                     } else if (frameState.mode === SceneMode.SCENE2D) {
@@ -601,8 +577,8 @@ define([
                             boundingVolume = BoundingSphere.clone(polyline._boundingVolume2D, boundingSphereScratch2);
                             boundingVolume.center.x = 0.0;
                         }
-                    } else if (defined(polyline._boundingVolume) && defined(polyline._boundingVolume2D)) {
-                        boundingVolume = BoundingSphere.union(polyline._boundingVolume, polyline._boundingVolume2D, boundingSphereScratch2);
+                    } else if (defined(polyline._boundingVolumeWC) && defined(polyline._boundingVolume2D)) {
+                        boundingVolume = BoundingSphere.union(polyline._boundingVolumeWC, polyline._boundingVolume2D, boundingSphereScratch2);
                     }
 
                     if (cloneBoundingSphere) {
@@ -614,31 +590,32 @@ define([
                 }
 
                 if (defined(currentId) && count > 0) {
-                    if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
-                        if (commandIndex >= commandsLength) {
-                            command = new DrawCommand();
-                            command.owner = polylineCollection;
-                            commands.push(command);
-                        } else {
-                            command = commands[commandIndex];
-                        }
-
-                        ++commandIndex;
-
-                        command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.TRIANGLES;
-                        command.shaderProgram = sp;
-                        command.vertexArray = va.va;
-                        command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
-                        command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
-
-                        command.uniformMap = currentMaterial._uniforms;
-                        command.count = count;
-                        command.offset = offset;
+                    if (commandIndex >= commandsLength) {
+                        command = new DrawCommand();
+                        command.owner = polylineCollection;
+                        commands.push(command);
+                    } else {
+                        command = commands[commandIndex];
                     }
 
+                    ++commandIndex;
+
+                    command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
+                    command.shaderProgram = sp;
+                    command.vertexArray = va.va;
+                    command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                    command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+
+                    command.uniformMap = currentMaterial._uniforms;
+                    command.count = count;
+                    command.offset = offset;
+
                     cloneBoundingSphere = true;
+
+                    commandList.push(command);
                 }
 
                 currentId = undefined;
@@ -1407,7 +1384,7 @@ define([
         for ( var n = 0; n < length; ++n) {
             position = positions[n];
             p = Matrix4.multiplyByPoint(modelMatrix, position);
-            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
+            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p)));
         }
 
         if (newPositions.length > 0) {

@@ -103,11 +103,11 @@ defineSuite([
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
 
                 // Just return any old file, as long as its big enough
-                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
             var terrainProvider = new CesiumTerrainProvider({
@@ -130,9 +130,9 @@ defineSuite([
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 // Just return any old file, as long as its big enough
-                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, headers, deferred);
+                return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
             var terrainProvider = new CesiumTerrainProvider({
@@ -160,7 +160,7 @@ defineSuite([
 
             var deferreds = [];
 
-            loadWithXhr.load = function(url, responseType, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };

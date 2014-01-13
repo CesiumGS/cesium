@@ -3,7 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
         '../Core/combine',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -14,9 +13,9 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './Material',
         './SceneMode',
         '../Shaders/EllipsoidVS',
@@ -25,7 +24,6 @@ define([
         defaultValue,
         BoxGeometry,
         Cartesian3,
-        Cartesian4,
         combine,
         defined,
         DeveloperError,
@@ -36,9 +34,9 @@ define([
         CullFace,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
         createShaderSource,
+        Pass,
         Material,
         SceneMode,
         EllipsoidVS,
@@ -83,7 +81,7 @@ define([
      * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -100,6 +98,7 @@ define([
          * @see EllipsoidPrimitive#modelMatrix
          */
         this.center = Cartesian3.clone(defaultValue(options.center, Cartesian3.ZERO));
+        this._center = new Cartesian3();
 
         /**
          * The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
@@ -142,6 +141,7 @@ define([
          * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this._modelMatrix = new Matrix4();
         this._computedModelMatrix = new Matrix4();
 
         /**
@@ -218,7 +218,6 @@ define([
         this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
         this._pickCommand.owner = this;
-        this._commandLists = new CommandLists();
 
         var that = this;
         this._uniforms = {
@@ -303,6 +302,8 @@ define([
             this._va = getVertexArray(context);
         }
 
+        var boundingSphereDirty = false;
+
         var radii = this.radii;
         if (!Cartesian3.equals(this._radii, radii)) {
             Cartesian3.clone(radii, this._radii);
@@ -312,14 +313,23 @@ define([
             r.y = 1.0 / (radii.y * radii.y);
             r.z = 1.0 / (radii.z * radii.z);
 
-            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+            boundingSphereDirty = true;
         }
 
-        // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
-        Matrix4.multiplyByTranslation(this.modelMatrix, this.center, this._computedModelMatrix);
+        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix) || !Cartesian3.equals(this.center, this._center)) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
+            Cartesian3.clone(this.center, this._center);
 
-        var ellipsoidCommandLists = this._commandLists;
-        ellipsoidCommandLists.removeAll();
+            // Translate model coordinates used for rendering such that the origin is the center of the ellipsoid.
+            Matrix4.multiplyByTranslation(this.modelMatrix, this.center, this._computedModelMatrix);
+            boundingSphereDirty = true;
+        }
+
+        if (boundingSphereDirty) {
+            Cartesian3.clone(Cartesian3.ZERO, this._boundingSphere.center);
+            this._boundingSphere.radius = Cartesian3.getMaximumComponent(radii);
+            BoundingSphere.transform(this._boundingSphere, this._computedModelMatrix, this._boundingSphere);
+        }
 
         var materialChanged = this._material !== this.material;
         this._material = this.material;
@@ -353,16 +363,13 @@ define([
 
         var passes = frameState.passes;
 
-        if (passes.color) {
+        if (passes.render) {
             colorCommand.boundingVolume = this._boundingSphere;
             colorCommand.debugShowBoundingVolume = this.debugShowBoundingVolume;
             colorCommand.modelMatrix = this._computedModelMatrix;
+            colorCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-            if (translucent) {
-                ellipsoidCommandLists.translucentList.push(colorCommand);
-            } else {
-                ellipsoidCommandLists.opaqueList.push(colorCommand);
-            }
+            commandList.push(colorCommand);
         }
 
         if (passes.pick) {
@@ -401,15 +408,10 @@ define([
 
             pickCommand.boundingVolume = this._boundingSphere;
             pickCommand.modelMatrix = this._computedModelMatrix;
+            pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-            if (translucent) {
-                ellipsoidCommandLists.pickList.translucentList.push(pickCommand);
-            } else {
-                ellipsoidCommandLists.pickList.opaqueList.push(pickCommand);
-            }
+            commandList.push(pickCommand);
         }
-
-        commandList.push(ellipsoidCommandLists);
     };
 
     /**

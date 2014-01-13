@@ -34,15 +34,15 @@ define([
             };
         case gl.FLOAT_VEC2:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR2;
+                return UniformDatatype.FLOAT_VEC2;
             };
         case gl.FLOAT_VEC3:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR3;
+                return UniformDatatype.FLOAT_VEC3;
             };
         case gl.FLOAT_VEC4:
             return function() {
-                return UniformDatatype.FLOAT_VECTOR4;
+                return UniformDatatype.FLOAT_VEC4;
             };
         case gl.INT:
             return function() {
@@ -50,15 +50,15 @@ define([
             };
         case gl.INT_VEC2:
             return function() {
-                return UniformDatatype.INT_VECTOR2;
+                return UniformDatatype.INT_VEC2;
             };
         case gl.INT_VEC3:
             return function() {
-                return UniformDatatype.INT_VECTOR3;
+                return UniformDatatype.INT_VEC3;
             };
         case gl.INT_VEC4:
             return function() {
-                return UniformDatatype.INT_VECTOR4;
+                return UniformDatatype.INT_VEC4;
             };
         case gl.BOOL:
             return function() {
@@ -66,27 +66,27 @@ define([
             };
         case gl.BOOL_VEC2:
             return function() {
-                return UniformDatatype.BOOL_VECTOR2;
+                return UniformDatatype.BOOL_VEC2;
             };
         case gl.BOOL_VEC3:
             return function() {
-                return UniformDatatype.BOOL_VECTOR3;
+                return UniformDatatype.BOOL_VEC3;
             };
         case gl.BOOL_VEC4:
             return function() {
-                return UniformDatatype.BOOL_VECTOR4;
+                return UniformDatatype.BOOL_VEC4;
             };
         case gl.FLOAT_MAT2:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX2;
+                return UniformDatatype.FLOAT_MAT2;
             };
         case gl.FLOAT_MAT3:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX3;
+                return UniformDatatype.FLOAT_MAT3;
             };
         case gl.FLOAT_MAT4:
             return function() {
-                return UniformDatatype.FLOAT_MATRIX4;
+                return UniformDatatype.FLOAT_MAT4;
             };
         case gl.SAMPLER_2D:
             return function() {
@@ -108,20 +108,6 @@ define([
         scratchUniformMatrix2 = new Float32Array(4);
         scratchUniformMatrix3 = new Float32Array(9);
         scratchUniformMatrix4 = new Float32Array(16);
-    }
-
-    function getAutomaticUniformDeclaration(uniforms, uniform) {
-        var automaticUniform = uniforms[uniform];
-        var declaration = 'uniform ' + automaticUniform.getDatatype().getGLSL() + ' ' + uniform;
-
-        var size = automaticUniform.getSize();
-        if (size === 1) {
-            declaration += ';';
-        } else {
-            declaration += '[' + size.toString() + '];';
-        }
-
-        return declaration;
     }
 
     /**
@@ -243,7 +229,7 @@ define([
      *
      * var mvp = sp.getAllUniforms().u_mvp;
      * console.log(mvp.getName());           // 'u_mvp'
-     * console.log(mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
+     * console.log(mvp.getDatatype().name);  // 'FLOAT_MAT4'
      * mvp.value = Matrix4.IDENTITY;
      *
      * //////////////////////////////////////////////////////////////////////
@@ -331,7 +317,7 @@ define([
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MATRIX4'
+         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MAT4'
          */
         this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
 
@@ -463,27 +449,27 @@ define([
             switch (activeUniform.type) {
             case _gl.FLOAT:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniform1f(_locations[i], this.value[i]);
                     }
                 };
             case _gl.FLOAT_VEC2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform2f(_locations[i], v.x, v.y);
                     }
                 };
             case _gl.FLOAT_VEC3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform3f(_locations[i], v.x, v.y, v.z);
                     }
                 };
             case _gl.FLOAT_VEC4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
                         if (defined(v.red)) {
@@ -498,7 +484,7 @@ define([
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var value = this.value[i];
                         var index = this.textureUnitIndex + i;
                         _gl.activeTexture(_gl.TEXTURE0 + index);
@@ -508,14 +494,14 @@ define([
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniform1i(_locations[i], this.value[i]);
                     }
                 };
             case _gl.INT_VEC2:
             case _gl.BOOL_VEC2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform2i(_locations[i], v.x, v.y);
                     }
@@ -523,7 +509,7 @@ define([
             case _gl.INT_VEC3:
             case _gl.BOOL_VEC3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform3i(_locations[i], v.x, v.y, v.z);
                     }
@@ -531,26 +517,26 @@ define([
             case _gl.INT_VEC4:
             case _gl.BOOL_VEC4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
                         _gl.uniform4i(_locations[i], v.x, v.y, v.z, v.w);
                     }
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i], scratchUniformMatrix2));
                     }
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i], scratchUniformMatrix3));
                     }
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    for ( var i = 0; i < _locations.length; ++i) {
+                    for (var i = 0; i < _locations.length; ++i) {
                         _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i], scratchUniformMatrix4));
                     }
                 };
@@ -563,7 +549,7 @@ define([
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
 
-                for ( var i = 0; i < _locations.length; ++i) {
+                for (var i = 0; i < _locations.length; ++i) {
                     var index = textureUnitIndex + i;
                     _gl.uniform1i(_locations[i], index);
                 }
@@ -647,14 +633,17 @@ define([
     ShaderProgram._czmBuiltinsAndUniforms = {};
 
     // combine automatic uniforms and Cesium built-ins
-    for ( var builtin in CzmBuiltins) {
-        if (CzmBuiltins.hasOwnProperty(builtin)) {
-            ShaderProgram._czmBuiltinsAndUniforms[builtin] = CzmBuiltins[builtin];
+    for ( var builtinName in CzmBuiltins) {
+        if (CzmBuiltins.hasOwnProperty(builtinName)) {
+            ShaderProgram._czmBuiltinsAndUniforms[builtinName] = CzmBuiltins[builtinName];
         }
     }
-    for ( var uniform in AutomaticUniforms) {
-        if (AutomaticUniforms.hasOwnProperty(uniform)) {
-            ShaderProgram._czmBuiltinsAndUniforms[uniform] = getAutomaticUniformDeclaration(AutomaticUniforms, uniform);
+    for ( var uniformName in AutomaticUniforms) {
+        if (AutomaticUniforms.hasOwnProperty(uniformName)) {
+            var uniform = AutomaticUniforms[uniformName];
+            if (typeof uniform.getDeclaration === 'function') {
+                ShaderProgram._czmBuiltinsAndUniforms[uniformName] = uniform.getDeclaration(uniformName);
+            }
         }
     }
 
@@ -693,7 +682,7 @@ define([
         var dependencyNode;
 
         // check if already loaded
-        for ( var i = 0; i < nodes.length; ++i) {
+        for (var i = 0; i < nodes.length; ++i) {
             if (nodes[i].name === name) {
                 dependencyNode = nodes[i];
             }
@@ -710,7 +699,7 @@ define([
                     // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
                     var numberOfLines = commentBlock.match(/\n/gm).length;
                     var modifiedComment = '';
-                    for ( var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
+                    for (var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
                         if (lineNumber === 0) {
                             modifiedComment += '// Comment replaced to prevent problems when determining dependencies on built-in functions\n';
                         } else {
@@ -782,7 +771,7 @@ define([
 
             dependencyNodes.push(currentNode);
 
-            for ( var i = 0; i < currentNode.dependsOn.length; ++i) {
+            for (var i = 0; i < currentNode.dependsOn.length; ++i) {
                 // remove the edge from the graph
                 var referencedNode = currentNode.dependsOn[i];
                 var index = referencedNode.requiredBy.indexOf(currentNode);
@@ -797,7 +786,7 @@ define([
 
         // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
         var badNodes = [];
-        for ( var j = 0; j < allNodes.length; ++j) {
+        for (var j = 0; j < allNodes.length; ++j) {
             if (allNodes[j].requiredBy.length !== 0) {
                 badNodes.push(allNodes[j]);
             }
@@ -815,13 +804,13 @@ define([
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes, ShaderProgram._czmBuiltinsAndUniforms);
+        generateDependencies(root, dependencyNodes);
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
         // Iterate in reverse so that dependent items are declared before they are used.
         var builtinsSource = '';
-        for ( var i = dependencyNodes.length - 1; i >= 0; --i) {
+        for (var i = dependencyNodes.length - 1; i >= 0; --i) {
             builtinsSource = builtinsSource + dependencyNodes[i].glslSource + '\n';
         }
 
@@ -840,39 +829,26 @@ define([
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsSource = vsSourceVersioned.version + getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) + '\n#line 0\n' + vsSourceVersioned.source;
-        var fsSource = fsSourceVersioned.version + getFragmentShaderPrecision() + getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) + '\n#line 0\n' + fsSourceVersioned.source;
+        var vsSource =
+                vsSourceVersioned.version +
+                getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) +
+                '\n#line 0\n' +
+                vsSourceVersioned.source;
+        var fsSource =
+                fsSourceVersioned.version +
+                getFragmentShaderPrecision() +
+                getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) +
+                '\n#line 0\n' +
+                fsSourceVersioned.source;
+        var log;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
         gl.compileShader(vertexShader);
-        var vsLog = gl.getShaderInfoLog(vertexShader);
-
-        if (logShaderCompilation && vsLog && vsLog.length) {
-            console.log('[GL] Vertex shader compile log: ' + vsLog);
-        }
-
-        if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
-            gl.deleteShader(vertexShader);
-            console.error('[GL] Vertex shader compile log: ' + vsLog);
-            throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + vsLog);
-        }
 
         var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(fragmentShader, fsSource);
         gl.compileShader(fragmentShader);
-        var fsLog = gl.getShaderInfoLog(fragmentShader);
-
-        if (logShaderCompilation && fsLog && fsLog.length) {
-            console.log('[GL] Fragment shader compile log: ' + fsLog);
-        }
-
-        if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
-            gl.deleteShader(vertexShader);
-            gl.deleteShader(fragmentShader);
-            console.error('[GL] Fragment shader compile log: ' + fsLog);
-            throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + fsLog);
-        }
 
         var program = gl.createProgram();
         gl.attachShader(program, vertexShader);
@@ -890,16 +866,48 @@ define([
         }
 
         gl.linkProgram(program);
-        var linkLog = gl.getProgramInfoLog(program);
-
-        if (logShaderCompilation && linkLog && linkLog.length) {
-            console.log('[GL] Shader program link log: ' + linkLog);
-        }
 
         if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            // For performance, only check compile errors if there is a linker error.
+            if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+                log = gl.getShaderInfoLog(fragmentShader);
+                gl.deleteProgram(program);
+                console.error('[GL] Fragment shader compile log: ' + log);
+                throw new RuntimeError('Fragment shader failed to compile.  Compile log: ' + log);
+            }
+
+            if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+                log = gl.getShaderInfoLog(vertexShader);
+                gl.deleteProgram(program);
+                console.error('[GL] Vertex shader compile log: ' + log);
+                throw new RuntimeError('Vertex shader failed to compile.  Compile log: ' + log);
+            }
+
+            log = gl.getProgramInfoLog(program);
             gl.deleteProgram(program);
-            console.error('[GL] Shader program link log: ' + linkLog);
-            throw new RuntimeError('Program failed to link.  Link log: ' + linkLog);
+            console.error('[GL] Shader program link log: ' + log);
+            throw new RuntimeError('Program failed to link.  Link log: ' + log);
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getShaderInfoLog(vertexShader);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Vertex shader compile log: ' + log);
+            }
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getShaderInfoLog(fragmentShader);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Fragment shader compile log: ' + log);
+            }
+        }
+
+        if (logShaderCompilation) {
+            log = gl.getProgramInfoLog(program);
+            if (defined(log) && (log.length > 0)) {
+                console.log('[GL] Shader program link log: ' + log);
+            }
         }
 
         return program;
@@ -907,7 +915,7 @@ define([
 
     function findVertexAttributes(gl, program, numberOfAttributes) {
         var attributes = {};
-        for ( var i = 0; i < numberOfAttributes; ++i) {
+        for (var i = 0; i < numberOfAttributes; ++i) {
             var attr = gl.getActiveAttrib(program, i);
             var location = gl.getAttribLocation(program, attr.name);
 
@@ -928,7 +936,7 @@ define([
 
         var numberOfUniforms = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
 
-        for ( var i = 0; i < numberOfUniforms; ++i) {
+        for (var i = 0; i < numberOfUniforms; ++i) {
             var activeUniform = gl.getActiveUniform(program, i);
             var suffix = '[0]';
             var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ? activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;

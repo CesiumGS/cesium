@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/writeTextToCanvas',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './Credit'
@@ -13,7 +12,6 @@ define([
         defined,
         DeveloperError,
         Event,
-        writeTextToCanvas,
         ImageryProvider,
         WebMercatorTilingScheme,
         Credit) {

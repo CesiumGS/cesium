@@ -15,8 +15,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/VertexArrayFacade',
         '../Renderer/createShaderSource',
         './SceneMode',
@@ -40,8 +40,8 @@ define([
         BoundingSphere,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
+        Pass,
         VertexArrayFacade,
         createShaderSource,
         SceneMode,
@@ -64,6 +64,7 @@ define([
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX;
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX;
+    var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -71,7 +72,7 @@ define([
     var attributeIndices = {
         positionHigh : 0,
         positionLow : 1,
-        pixelOffset : 2,
+        pixelOffsetAndTranslate : 2,
         eyeOffsetAndScale : 3,
         textureCoordinatesAndImageSize : 4,
         originAndShow : 5,
@@ -80,7 +81,8 @@ define([
         color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
         rotationAndAlignedAxis : 8,
         scaleByDistance : 9,
-        translucencyByDistance : 10
+        translucencyByDistance : 10,
+        pixelOffsetScaleByDistance : 11
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -88,7 +90,6 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
-    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -136,7 +137,7 @@ define([
      *   imageIndex : 1
      * });
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -167,6 +168,10 @@ define([
         this._compiledShaderTranslucencyByDistance = false;
         this._compiledShaderTranslucencyByDistancePick = false;
 
+        this._shaderPixelOffsetScaleByDistance = false;
+        this._compiledShaderPixelOffsetScaleByDistance = false;
+        this._compiledShaderPixelOffsetScaleByDistancePick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -176,12 +181,13 @@ define([
         this._allHorizontalCenter = true;
 
         this._baseVolume = new BoundingSphere();
+        this._baseVolumeWC = new BoundingSphere();
         this._baseVolume2D = new BoundingSphere();
         this._boundingVolume = new BoundingSphere();
+        this._boundingVolumeDirty = false;
 
         this._colorCommands = [];
         this._pickCommands = [];
-        this._commandLists = new CommandLists();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -237,7 +243,8 @@ define([
                               BufferUsage.STATIC_DRAW, // ROTATION_INDEX
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
                           ];
 
         var that = this;
@@ -660,8 +667,8 @@ define([
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[POSITION_INDEX]
         }, {
-            index : attributeIndices.pixelOffset,
-            componentsPerAttribute : 2,
+            index : attributeIndices.pixelOffsetAndTranslate,
+            componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[PIXEL_OFFSET_INDEX]
         }, {
@@ -714,6 +721,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[TRANSLUCENCY_BY_DISTANCE_INDEX]
+        }, {
+            index : attributeIndices.pixelOffsetScaleByDistance,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -732,6 +744,7 @@ define([
 
         if (billboardCollection._mode === SceneMode.SCENE3D) {
             billboardCollection._baseVolume.expand(position, billboardCollection._baseVolume);
+            billboardCollection._boundingVolumeDirty = true;
         }
 
         EncodedCartesian3.fromCartesian(position, writePositionScratch);
@@ -752,17 +765,18 @@ define([
         positionLowWriter(i + 3, low.x, low.y, low.z);
     }
 
-    function writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+    function writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
         var pixelOffset = billboard.getPixelOffset();
-        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x, pixelOffset.y);
-
+        var translate = billboard._translate;
+        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x + translate.x, pixelOffset.y + translate.y);
         var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeIndices.pixelOffset];
-        writer(i + 0, pixelOffset.x, pixelOffset.y);
-        writer(i + 1, pixelOffset.x, pixelOffset.y);
-        writer(i + 2, pixelOffset.x, pixelOffset.y);
-        writer(i + 3, pixelOffset.x, pixelOffset.y);
+
+        var writer = allPurposeWriters[attributeIndices.pixelOffsetAndTranslate];
+        writer(i + 0, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
+        writer(i + 1, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
+        writer(i + 2, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
+        writer(i + 3, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -951,9 +965,38 @@ define([
         writer(i + 3, near, nearValue, far, farValue);
     }
 
+    function writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.pixelOffsetScaleByDistance];
+        var near = 0.0;
+        var nearValue = 1.0;
+        var far = 1.0;
+        var farValue = 1.0;
+
+        var pixelOffsetScale = billboard.getPixelOffsetScaleByDistance();
+        if (defined(pixelOffsetScale)) {
+            near = pixelOffsetScale.near;
+            nearValue = pixelOffsetScale.nearValue;
+            far = pixelOffsetScale.far;
+            farValue = pixelOffsetScale.farValue;
+
+            if (nearValue !== 1.0 || farValue !== 1.0) {
+                // pixelOffsetScale by distance calculation in shader need not be enabled
+                // until a billboard with near and far !== 1.0 is found
+                billboardCollection._shaderPixelOffsetScaleByDistance = true;
+            }
+        }
+
+        writer(i + 0, near, nearValue, far, farValue);
+        writer(i + 1, near, nearValue, far, farValue);
+        writer(i + 2, near, nearValue, far, farValue);
+        writer(i + 3, near, nearValue, far, farValue);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
-        writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writePixelOffsetAndTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -962,12 +1005,14 @@ define([
         writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTranslucencyByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writePixelOffsetScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
         var boundingVolume;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingVolume = billboardCollection._baseVolume;
+            billboardCollection._boundingVolumeDirty = true;
         } else {
             boundingVolume = billboardCollection._baseVolume2D;
         }
@@ -1123,7 +1168,7 @@ define([
                 }
 
                 if (properties[PIXEL_OFFSET_INDEX]) {
-                    writers.push(writePixelOffset);
+                    writers.push(writePixelOffsetAndTranslate);
                 }
 
                 if (properties[EYE_OFFSET_INDEX] || properties[SCALE_INDEX]) {
@@ -1152,6 +1197,10 @@ define([
 
                 if (properties[TRANSLUCENCY_BY_DISTANCE_INDEX]) {
                     writers.push(writeTranslucencyByDistance);
+                }
+
+                if (properties[PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX]) {
+                    writers.push(writePixelOffsetScaleByDistance);
                 }
 
                 vafWriters = this._vaf.writers;
@@ -1198,11 +1247,16 @@ define([
             return;
         }
 
+        if (this._boundingVolumeDirty) {
+            this._boundingVolumeDirty = false;
+            BoundingSphere.transform(this._baseVolume, this.modelMatrix, this._baseVolumeWC);
+        }
+
         var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
         if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
-            boundingVolume = BoundingSphere.clone(this._baseVolume, this._boundingVolume);
+            boundingVolume = BoundingSphere.clone(this._baseVolumeWC, this._boundingVolume);
         } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
@@ -1212,13 +1266,9 @@ define([
         var vaLength;
         var command;
         var j;
-        var commandLists = this._commandLists;
-        commandLists.opaqueList = emptyArray;
-        commandLists.pickList.opaqueList = emptyArray;
 
-        if (pass.color) {
+        if (pass.render) {
             var colorList = this._colorCommands;
-            commandLists.opaqueList = colorList;
 
             if (!defined(this._rs)) {
                 this._rs = context.createRenderState({
@@ -1232,13 +1282,15 @@ define([
             if (!defined(this._sp) ||
                     (this._shaderRotation && !this._compiledShaderRotation) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
+                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                     this._sp,
                     createShaderSource({
                         defines : [this._shaderRotation ? 'ROTATION' : '',
                                    this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : '',
-                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : ''],
+                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : '',
+                                   this._shaderPixelOffsetScaleByDistance ? 'EYE_DISTANCE_PIXEL_OFFSET' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     BillboardCollectionFS,
@@ -1246,6 +1298,7 @@ define([
                 this._compiledShaderRotation = this._shaderRotation;
                 this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistance = this._shaderTranslucencyByDistance;
+                this._compiledShaderPixelOffsetScaleByDistance = this._shaderPixelOffsetScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1266,26 +1319,31 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+                commandList.push(command);
             }
         }
 
+
         if (picking) {
             var pickList = this._pickCommands;
-            commandLists.pickList.opaqueList = pickList;
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
-                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick)) {
+                    (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
+                    (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
                     this._spPick,
                     createShaderSource({
                         defines : ['RENDER_FOR_PICK',
                                    this._shaderRotation ? 'ROTATION' : '',
                                    this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : '',
-                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : ''],
+                                   this._shaderTranslucencyByDistance ? 'EYE_DISTANCE_TRANSLUCENCY' : '',
+                                   this._shaderPixelOffsetScaleByDistance ? 'EYE_DISTANCE_PIXEL_OFFSET' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     createShaderSource({
@@ -1296,6 +1354,7 @@ define([
                 this._compiledShaderRotationPick = this._shaderRotation;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
                 this._compiledShaderTranslucencyByDistancePick = this._shaderTranslucencyByDistance;
+                this._compiledShaderPixelOffsetScaleByDistancePick = this._shaderPixelOffsetScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];
@@ -1316,12 +1375,11 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
-            }
-        }
 
-        if (!commandLists.empty()) {
-            commandList.push(commandLists);
+                commandList.push(command);
+            }
         }
     };
 

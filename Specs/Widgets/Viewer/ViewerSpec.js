@@ -281,7 +281,7 @@ defineSuite([
     });
 
     it('can set contextOptions', function() {
-        var contextOptions = {
+        var webglOptions = {
             alpha : true,
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
@@ -289,13 +289,25 @@ defineSuite([
             premultipliedAlpha : false,
             preserveDrawingBuffer : true
         };
+        var contextOptions = {
+            allowTextureFilterAnisotropic : false,
+            webgl : webglOptions
+        };
 
         viewer = new Viewer(container, {
             contextOptions : contextOptions
         });
 
-        var contextAttributes = viewer.scene.getContext()._gl.getContextAttributes();
-        expect(contextAttributes).toEqual(contextOptions);
+        var context = viewer.scene.getContext();
+        var contextAttributes = context._gl.getContextAttributes();
+
+        expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
+        expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
+        expect(contextAttributes.depth).toEqual(webglOptions.depth);
+        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
+        expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
+        expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
     });
 
     it('can set scene mode', function() {
@@ -378,12 +390,12 @@ defineSuite([
         }).toThrow();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('raises renderLoopError and stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
         var spyListener = jasmine.createSpy('listener');
-        viewer.onRenderLoopError.addEventListener(spyListener);
+        viewer.renderLoopError.addEventListener(spyListener);
 
         var error = 'foo';
         viewer.render = function() {
@@ -438,7 +450,7 @@ defineSuite([
             expect(viewer._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
 
             // click the OK button to dismiss the panel
-            EventHelper.fireClick(viewer._element.querySelector('.cesium-widget-button'));
+            EventHelper.fireClick(viewer._element.querySelector('.cesium-button'));
 
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });

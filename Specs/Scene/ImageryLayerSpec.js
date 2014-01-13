@@ -69,8 +69,8 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -137,8 +137,8 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
         var provider = new BingMapsImageryProvider({

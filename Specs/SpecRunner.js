@@ -9,6 +9,13 @@
 var defineSuite;
 
 /**
+ * Defines a test suite that is skipped.
+ *
+ * @see defineSuite
+ */
+var xdefineSuite;
+
+/**
  * Registers a function that is called before running all tests.
  *
  * @param {Function} beforeAllFunction The function to run before all tests.
@@ -169,16 +176,74 @@ var afterAll;
     var readyToCreateTests = false;
     var createTests;
 
+    var built = getQueryParameter('built');
+    var release = getQueryParameter('release');
+    var loadTests = true;
+
     require.config({
-        baseUrl : getQueryParameter('baseUrl') || '../Source',
-        paths : {
-            'Specs' : '../Specs'
-        },
         waitSeconds : 30
     });
 
-    //start loading all of Cesium early, so it's all available for code coverage calculations.
-    require(['Cesium']);
+    // set up require for AMD, combined or minified and
+    // start loading all of Cesium early, so it's all available for code coverage calculations.
+    if (built) {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Build/Cesium',
+            paths : {
+                'Stubs' : '../Stubs'
+            },
+            shim : {
+                'Cesium' : {
+                    exports : 'Cesium'
+                }
+            }
+        });
+
+        require(['Cesium', 'Stubs/paths'], function(BuiltCesium, paths) {
+            paths.Specs = '../../Specs';
+
+            require.config({
+                paths : paths
+            });
+
+            requireTests();
+        });
+
+        loadTests = false;
+    } else {
+        require.config({
+            baseUrl : getQueryParameter('baseUrl') || '../Source',
+            paths : {
+                'Specs' : '../Specs'
+            }
+        });
+
+        require(['Cesium']);
+    }
+
+    function allTestsReady() {
+        return tests.every(function(test) {
+            return !!test.f;
+        });
+    }
+
+    function createTestsIfReady() {
+        if (readyToCreateTests && allTestsReady()) {
+            tests.sort(function(a, b) {
+                return a.name.toUpperCase().localeCompare(b.name.toUpperCase());
+            });
+
+            tests.forEach(function(test, i) {
+                //calling the function registers the test with Jasmine
+                var suite = test.f();
+
+                //keep track of the index of the test in the suite so the sort later is stable.
+                suite.index = i;
+            });
+
+            createTests();
+        }
+    }
 
     defineSuite = function(deps, name, suite, categories) {
         if (typeof suite === 'object' || typeof suite === 'string') {
@@ -209,63 +274,48 @@ var afterAll;
         });
     };
 
-    function createTestsIfReady() {
-        if (readyToCreateTests && allTestsReady()) {
-            tests.sort(function(a, b) {
-                return a.name.toUpperCase().localeCompare(b.name.toUpperCase());
-            });
+    xdefineSuite = function(deps, name, suite, categories) {
+    };
 
-            tests.forEach(function(test, i) {
-                //calling the function registers the test with Jasmine
-                var suite = test.f();
+    function requireTests() {
+        //specs is an array defined by SpecList.js
+        require([
+                 'Specs/addDefaultMatchers',
+                 'Specs/equalsMethodEqualityTester'
+             ].concat(specs), function(
+                 addDefaultMatchers,
+                 equalsMethodEqualityTester) {
+            var env = jasmine.getEnv();
 
-                //keep track of the index of the test in the suite so the sort later is stable.
-                suite.index = i;
-            });
+            env.beforeEach(addDefaultMatchers(!release));
+            env.addEqualityTester(equalsMethodEqualityTester);
 
-            createTests();
-        }
-    }
+            createTests = function() {
+                var reporter = new jasmine.HtmlReporter();
+                var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
+                var suites = jasmine.getEnv().currentRunner().suites();
 
-    function allTestsReady() {
-        return tests.every(function(test) {
-            return !!test.f;
+                for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
+                    var suite = suites[i];
+                    if (isSuiteFocused(suite)) {
+                        suites.splice(i, 1);
+                        suites.splice(insertPoint, 0, suite);
+                        insertPoint++;
+                        i--;
+                    }
+                }
+
+                env.addReporter(reporter);
+                env.specFilter = reporter.specFilter;
+                env.execute();
+            };
+
+            readyToCreateTests = true;
+            createTestsIfReady();
         });
     }
 
-    //specs is an array defined by SpecList.js
-    require([
-             'Specs/addDefaultMatchers',
-             'Specs/equalsMethodEqualityTester'
-         ].concat(specs), function(
-             addDefaultMatchers,
-             equalsMethodEqualityTester) {
-        var env = jasmine.getEnv();
-
-        env.beforeEach(addDefaultMatchers);
-        env.addEqualityTester(equalsMethodEqualityTester);
-
-        createTests = function() {
-            var reporter = new jasmine.HtmlReporter();
-            var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
-            var suites = jasmine.getEnv().currentRunner().suites();
-
-            for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
-                var suite = suites[i];
-                if (isSuiteFocused(suite)) {
-                    suites.splice(i, 1);
-                    suites.splice(insertPoint, 0, suite);
-                    insertPoint++;
-                    i--;
-                }
-            }
-
-            env.addReporter(reporter);
-            env.specFilter = reporter.specFilter;
-            env.execute();
-        };
-
-        readyToCreateTests = true;
-        createTestsIfReady();
-    });
+    if (loadTests) {
+        requireTests();
+    }
 }());

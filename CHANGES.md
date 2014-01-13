@@ -4,11 +4,65 @@ Change Log
 Beta Releases
 -------------
 
+### b25 - 2014-02-03
+* Breaking changes:
+  * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
+* Added `ScreenSpaceCameraController.enableInputs` to fix issue with inputs not being restored after overlapping camera flights.
+* Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
+* `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
+* `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
+
+### b24 - 2014-01-06
+
+* Breaking changes:
+  * Added `allowTextureFilterAnisotropic` (default: `true`) and `failIfMajorPerformanceCaveat` (default: `true`) properties to the `contextOptions` property passed to `Viewer`, `CesiumWidget`, and `Scene` constructors and moved the existing properties to a new `webgl` sub-property.  For example, code that looked like:
+
+           var viewer = new Viewer('cesiumContainer', {
+               contextOptions : {
+                 alpha : true
+               }
+           });
+
+    should now look like:
+
+           var viewer = new Viewer('cesiumContainer', {
+               contextOptions : {
+                 webgl : {
+                   alpha : true
+                 }
+               }
+           });
+  * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
+
+          camera.up = Cartesian3.UNIT_Z;
+
+    should now look like:
+
+          Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
+
+  * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
+  * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
+  * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.
+  * Removed prototype version of `BoundingSphere.transform`
+  * `Matrix4.multiplyByPoint` now returns a `Cartesian3` instead of a `Cartesian4`
+* The minified, combined `Cesium.js` file now omits certain `DeveloperError` checks, to increase performance and reduce file size.  When developing your application, we recommend using the unminified version locally for early error detection, then deploying the minified version to production.
+* Fixed disabling `CentralBody.enableLighting`.
+* Fixed `Geocoder` flights when following an object.
+* The `Viewer` widget now clears `Geocoder` input when the user clicks the home button.
+* The `Geocoder` input type has been changed to `search`, which improves usability (particularly on mobile devices).  There were also some other minor styling improvements.
+* Added `CentralBody.maximumScreenSpaceError`.
+* Added `translateEventTypes`, `zoomEventTypes`, `rotateEventTypes`, `tiltEventTypes`, and `lookEventTypes` properties to `ScreenSpaceCameraController` to change the default mouse inputs.
+* Added `Billboard.setPixelOffsetScaleByDistance`, `Label.setPixelOffsetScaleByDistance`, `DynamicBillboard.pixelOffsetScaleByDistance`, and `DynamicLabel.pixelOffsetScaleByDistance` to control minimum/maximum pixelOffset scaling based on camera distance.
+* Added `BoundingSphere.transformsWithoutScale`
+* Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
+* Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
+* Fix picking in 2D when the map is rotated.
+
 ### b23 - 2013-12-02
 
 * Breaking changes:
   * Changed the `CatmulRomSpline` and `HermiteSpline` constructors from taking an array of structures to a structure of arrays. For example, code that looked like:
-    
+
            var controlPoints = [
                { point: new Cartesian3(1235398.0, -4810983.0, 4146266.0), time: 0.0},
                { point: new Cartesian3(1372574.0, -5345182.0, 4606657.0), time: 1.5},
@@ -17,9 +71,9 @@ Beta Releases
                { point: new Cartesian3(-2539788.0, -4724797.0, 3620093.0), time: 6.0}
            ];
            var spline = new HermiteSpline(controlPoints);
-           
+
     should now look like:
-    
+
            var spline = new HermiteSpline({
                times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
                points : [
@@ -30,17 +84,32 @@ Beta Releases
                    new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
                ]
            });
-           
-* Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
-* Added `LinearSpline` and `QuaternionSpline`.
+  * `loadWithXhr` now takes an options object, and allows specifying HTTP method and data to send with the request.
+  * Renamed `SceneTransitioner.onTransitionStart` to `SceneTransitioner.transitionStart`.
+  * Renamed `SceneTransitioner.onTransitionComplete` to `SceneTransitioner.transitionComplete`.
+  * Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
+  * Renamed `SceneModePickerViewModel.onTransitionStart` to `SceneModePickerViewModel.transitionStart`.
+  * Renamed `Viewer.onRenderLoopError` to `Viewer.renderLoopError`.
+  * Renamed `Viewer.onDropError` to `Viewer.dropError`.
+  * Renamed `CesiumViewer.onDropError` to `CesiumViewer.dropError`.
+  * Renamed `viewerDragDropMixin.onDropError` to `viewerDragDropMixin.dropError`.
+  * Renamed `viewerDynamicObjectMixin.onObjectTracked` to `viewerDynamicObjectMixin.objectTracked`.
+  * `PixelFormat`, `PrimitiveType`, `IndexDatatype`, `TextureWrap`, `TextureMinificationFilter`, and `TextureMagnificationFilter` properties are now JavaScript numbers, not `Enumeration` instances.
+  * Replaced `sizeInBytes` properties on `IndexDatatype` with `IndexDatatype.getSizeInBytes`.
 * Added `perPositionHeight` option to `PolygonGeometry` and `PolygonOutlineGeometry`.
+* Added `QuaternionSpline` and `LinearSpline`.
+* Added `Quaternion.log`, `Quaternion.exp`, `Quaternion.innerQuadrangle`, and `Quaternion.squad`.
+* Added `Matrix3.inverse` and `Matrix3.determinant`.
+* Added `ObjectOrientedBoundingBox`.
+* Added `Ellipsoid.transformPositionFromScaledSpace`.
 * Added `Math.nextPowerOfTwo`.
-           
+* Renamed our main website from [cesium.agi.com](http://cesium.agi.com/) to [cesiumjs.org](http://cesiumjs.org/).
+
 ### b22 - 2013-11-01
 
 * Breaking changes:
   * Reversed the rotation direction of `Matrix3.fromQuaternion` to be consistent with graphics conventions. Mirrored change in `Quaternion.fromRotationMatrix`.
-  * The following prototype functions were removed
+  * The following prototype functions were removed:
     * From `Matrix2`, `Matrix3`, and `Matrix4`: `toArray`, `getColumn`, `setColumn`, `getRow`, `setRow`, `multiply`, `multiplyByVector`, `multiplyByScalar`, `negate`, and `transpose`.
     * From `Matrix4`: `getTranslation`, `getRotation`, `inverse`, `inverseTransformation`, `multiplyByTranslation`, `multiplyByUniformScale`, `multiplyByPoint`. For example, code that previously looked like `matrix.toArray();` should now look like `Matrix3.toArray(matrix);`.
   * Replaced `DynamicPolyline` `color`, `outlineColor`, and `outlineWidth` properties with a single `material` property.
@@ -177,7 +246,6 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
     * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take `scene` as their first parameter instead of `frameState`.
-    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
        * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
        * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
@@ -400,7 +468,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
-   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
+   * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This option is no longer needed due to overall LabelCollection visualization improvements.
    * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
    * `destroyObject` no longer deletes properties from the object being destroyed.
    * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
@@ -434,7 +502,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
    * Removed `CesiumViewerWidget.fullScreenElement`, instead use the `CesiumViewerWidget.fullscreen.viewModel.fullScreenElement` observable property.
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
    * Renamed `ImageryProviderError` to `TileProviderError`.
-* Added support for global terrain visualization via `CesiumTerrainProvider`, `ArcGisImageServerTerrainProvider`, and `VRTheWorldTerrainProvider`.  See the [Terrain Tutorial](http://cesium.agi.com/2013/02/15/Cesium-Terrain-Tutorial/) for more information.
+* Added support for global terrain visualization via `CesiumTerrainProvider`, `ArcGisImageServerTerrainProvider`, and `VRTheWorldTerrainProvider`.  See the [Terrain Tutorial](http://cesiumjs.org/2013/02/15/Cesium-Terrain-Tutorial/) for more information.
 * Added `FullscreenWidget` which is a simple, single-button widget that toggles fullscreen mode of the specified element.
 * Added interactive extent drawing to the `Picking` Sandcastle example.
 * Added `HeightmapTessellator` to create a mesh from a heightmap.

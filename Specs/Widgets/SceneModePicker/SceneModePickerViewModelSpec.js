@@ -14,24 +14,24 @@ defineSuite([
         this.scene = {
             mode : SceneMode.SCENE3D
         };
-        this.onTransitionStart = new Event();
+        this.transitionStart = new Event();
     };
 
     MockTransitioner.prototype.morphTo2D = function() {
         this.scene.mode = SceneMode.MORPHING;
-        this.onTransitionStart.raiseEvent(this, this.scene.mode, SceneMode.SCENE2D, true);
+        this.transitionStart.raiseEvent(this, this.scene.mode, SceneMode.SCENE2D, true);
         this.scene.mode = SceneMode.SCENE2D;
     };
 
     MockTransitioner.prototype.morphTo3D = function() {
         this.scene.mode = SceneMode.MORPHING;
-        this.onTransitionStart.raiseEvent(this, this.scene.mode, SceneMode.SCENE3D, true);
+        this.transitionStart.raiseEvent(this, this.scene.mode, SceneMode.SCENE3D, true);
         this.scene.mode = SceneMode.SCENE3D;
     };
 
     MockTransitioner.prototype.morphToColumbusView = function() {
         this.scene.mode = SceneMode.MORPHING;
-        this.onTransitionStart.raiseEvent(this, this.scene.mode, SceneMode.COLUMBUS_VIEW, true);
+        this.transitionStart.raiseEvent(this, this.scene.mode, SceneMode.COLUMBUS_VIEW, true);
         this.scene.mode = SceneMode.COLUMBUS_VIEW;
     };
 
@@ -43,11 +43,11 @@ defineSuite([
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
         expect(viewModel.sceneTransitioner).toBe(mockTransitioner);
-        expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(1);
+        expect(mockTransitioner.transitionStart.getNumberOfListeners()).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
         expect(viewModel.isDestroyed()).toEqual(true);
-        expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(0);
+        expect(mockTransitioner.transitionStart.getNumberOfListeners()).toEqual(0);
     });
 
     it('dropDownVisible and toggleDropDown work', function() {

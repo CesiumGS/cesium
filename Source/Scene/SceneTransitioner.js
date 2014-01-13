@@ -79,14 +79,14 @@ define([
          * @type {Event}
          * @default Event()
          */
-        this.onTransitionStart = new Event();
+        this.transitionStart = new Event();
 
         /**
          * Gets the event fired at the completion of a transition.
          * @type {Event}
          * @default Event()
          */
-        this.onTransitionComplete = new Event();
+        this.transitionComplete = new Event();
 
         this._scene = scene;
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -179,7 +179,7 @@ define([
 
         this._previousMode = this._scene.mode;
         if (this._previousMode !== SceneMode.SCENE2D) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, false);
+            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, false);
             complete2DCallback(this);
         }
     };
@@ -197,7 +197,7 @@ define([
         this._previousMode = scene.mode;
 
         if (this._previousMode !== SceneMode.COLUMBUS_VIEW) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, false);
+            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, false);
             completeColumbusViewCallback(this);
         }
     };
@@ -215,7 +215,7 @@ define([
         this._previousMode = scene.mode;
 
         if (scene.mode !== SceneMode.SCENE3D) {
-            this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, false);
+            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, false);
             complete3DCallback(this);
         }
     };
@@ -248,7 +248,7 @@ define([
         if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
+        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -276,7 +276,7 @@ define([
         if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
+        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -304,7 +304,7 @@ define([
         if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
+        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -346,18 +346,21 @@ define([
         return destroyObject(this);
     };
 
+    var scratchPos = new Cartesian3();
+    var scratchDir = new Cartesian3();
+    var scratchUp = new Cartesian3();
     function setCameraTransform(camera, transform) {
-        var pos = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var dir = new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0);
-        var up = new Cartesian4(camera.up.x, camera.up.y, camera.up.z, 0.0);
+        var pos = Cartesian3.clone(camera.position, scratchPos);
+        var dir = Cartesian3.clone(camera.direction, scratchDir);
+        var up = Cartesian3.clone(camera.up, scratchUp);
 
         var frame = Matrix4.multiply(Matrix4.inverseTransformation(transform), camera.transform);
         camera.transform = Matrix4.clone(transform);
 
-        camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, pos));
-        camera.direction = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, dir));
-        camera.up = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, up));
-        camera.right = Cartesian3.cross(camera.direction, camera.up);
+        Matrix4.multiplyByPoint(frame, pos, camera.position);
+        Matrix4.multiplyByPointAsVector(frame, dir, camera.direction);
+        Matrix4.multiplyByPointAsVector(frame, up, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
     }
 
     function createMorphHandler(transitioner, completeMorphFunction) {
@@ -766,7 +769,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
     function complete2DCallback(transitioner) {
@@ -788,7 +791,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
+        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
     function completeColumbusViewCallback(transitioner) {
@@ -814,7 +817,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
+        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 
     return SceneTransitioner;

@@ -26,6 +26,28 @@ defineSuite([
         expect(matrix[Matrix2.COLUMN1ROW1]).toEqual(4.0);
     });
 
+    it('fromArray works without a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var matrix = Matrix2.fromArray([1.0, 3.0, 2.0, 4.0]);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a result parameter', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromArray([1.0, 3.0, 2.0, 4.0], 0, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
+    it('fromArray works with a starting index', function() {
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var matrix = Matrix2.fromArray([0.0, 0.0, 0.0, 1.0, 3.0, 2.0, 4.0], 3, result);
+        expect(matrix).toBe(result);
+        expect(matrix).toEqual(expected);
+    });
+
     it('fromRowMajorArray works without a result parameter', function() {
         var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var matrix = Matrix2.fromRowMajorArray([1.0, 2.0, 3.0, 4.0]);
@@ -108,7 +130,7 @@ defineSuite([
     it('fromRotation throws without angle', function() {
         expect(function() {
             Matrix2.fromRotation();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clone works without a result parameter', function() {
@@ -375,6 +397,45 @@ defineSuite([
         expect(matrix).toEqual(expected);
     });
 
+    it('abs throws without a matrix', function() {
+        expect(function() {
+            return Matrix2.abs();
+        }).toThrowDeveloperError();
+    });
+
+    it('abs works without a result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+
+        matrix = new Matrix2(1.0, -2.0, -3.0, 4.0);
+        returnedResult = Matrix2.abs(matrix);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('abs works with a result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var result = new Matrix2();
+        var returnedResult = Matrix2.abs(matrix, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
+
+    it('abs works with a result parameter that is an input result parameter', function() {
+        var matrix = new Matrix2(-1.0, -2.0, -3.0, -4.0);
+        var expected = new Matrix2(1.0, 2.0, 3.0, 4.0);
+        var returnedResult = Matrix2.abs(matrix, matrix);
+        expect(matrix).toBe(returnedResult);
+        expect(matrix).toEqual(expected);
+    });
+
     it('equals works in all cases', function() {
         var left = new Matrix2(1.0, 2.0, 3.0, 4.0);
         var right = new Matrix2(1.0, 2.0, 3.0, 4.0);
@@ -440,28 +501,34 @@ defineSuite([
         expect(matrix.toString()).toEqual('(1, 2)\n(3, 4)');
     });
 
+    it('fromArray throws without an array', function() {
+        expect(function() {
+            Matrix2.fromArray();
+        }).toThrowDeveloperError();
+    });
+
     it('fromRowMajorArray throws with undefined parameter', function() {
         expect(function() {
             Matrix2.fromRowMajorArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromColumnMajorArray throws with undefined parameter', function() {
         expect(function() {
             Matrix2.fromColumnMajorArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static fromScale throws without scale parameter', function() {
         expect(function() {
             Matrix2.fromScale(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static fromUniformScale throws without scale parameter', function() {
         expect(function() {
             Matrix2.fromUniformScale(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static clone returns undefined without matrix parameter', function() {
@@ -471,13 +538,13 @@ defineSuite([
     it('static toArray throws without matrix parameter', function() {
         expect(function() {
             Matrix2.toArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getColumn throws without matrix parameter', function() {
         expect(function() {
             Matrix2.getColumn(undefined, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getElement throws without row parameter', function() {
@@ -485,7 +552,7 @@ defineSuite([
         var col = 0.0;
         expect(function() {
             Matrix2.getElementIndex(col, row);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getElement throws without column parameter', function() {
@@ -493,28 +560,28 @@ defineSuite([
         var col;
         expect(function() {
             Matrix2.getElementIndex(col, row);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getColumn throws without of range index parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.getColumn(matrix, 2);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without matrix parameter', function() {
         var cartesian = new Cartesian2();
         expect(function() {
             Matrix2.setColumn(undefined, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without cartesian parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.setColumn(matrix, 1, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setColumn throws without of range index parameter', function() {
@@ -522,34 +589,34 @@ defineSuite([
         var cartesian = new Cartesian2();
         expect(function() {
             Matrix2.setColumn(matrix, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getRow throws without matrix parameter', function() {
         expect(function() {
             Matrix2.getRow(undefined, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getRow throws without of range index parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.getRow(matrix, 2);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without matrix parameter', function() {
         var cartesian = new Cartesian2();
         expect(function() {
             Matrix2.setRow(undefined, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without cartesian parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.setRow(matrix, 1, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static setRow throws without of range index parameter', function() {
@@ -557,65 +624,65 @@ defineSuite([
         var cartesian = new Cartesian2();
         expect(function() {
             Matrix2.setRow(matrix, 2, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no left parameter', function() {
         var right = new Matrix2();
         expect(function() {
             Matrix2.multiply(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no right parameter', function() {
         var left = new Matrix2();
         expect(function() {
             Matrix2.multiply(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByVector throws with no matrix parameter', function() {
         var cartesian = new Cartesian2();
         expect(function() {
             Matrix2.multiplyByVector(undefined, cartesian);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByVector throws with no cartesian parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.multiplyByVector(matrix, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no matrix parameter', function() {
         expect(function() {
             Matrix2.multiplyByScalar(undefined, 2);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with non-numeric scalar parameter', function() {
         var matrix = new Matrix2();
         expect(function() {
             Matrix2.multiplyByScalar(matrix, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static negate throws with matrix parameter', function() {
         expect(function() {
             Matrix2.negate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static transpose throws with matrix parameter', function() {
         expect(function() {
             Matrix2.transpose(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static equalsEpsilon throws with non-number parameter', function() {
         expect(function() {
             Matrix2.equalsEpsilon(new Matrix2(), new Matrix2(), {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

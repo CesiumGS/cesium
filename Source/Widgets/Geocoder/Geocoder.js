@@ -4,9 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../SvgPath/SvgPath',
         '../getElement',
-        '../subscribeAndEvaluate',
         './GeocoderViewModel',
         '../../ThirdParty/knockout'
     ], function(
@@ -14,9 +12,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        SvgPath,
         getElement,
-        subscribeAndEvaluate,
         GeocoderViewModel,
         knockout) {
     "use strict";
@@ -56,33 +52,39 @@ define([
         }
 
         var container = getElement(description.container);
+
+        var viewModel = new GeocoderViewModel(description);
+
+        viewModel._startSearchPath = startSearchPath;
+        viewModel._stopSearchPath = stopSearchPath;
+
         var form = document.createElement('form');
         form.setAttribute('data-bind', 'submit: search');
 
         var textBox = document.createElement('input');
-        textBox.type = 'text';
+        textBox.type = 'search';
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
-        textBox.setAttribute('data-bind', 'value: searchText, valueUpdate: "afterkeydown", css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+        textBox.setAttribute('data-bind', '\
+value: searchText,\
+valueUpdate: "afterkeydown",\
+css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
         form.appendChild(textBox);
 
-        var goButton = document.createElement('span');
-        goButton.className = 'cesium-geocoder-goButton';
-        goButton.setAttribute('data-bind', 'click: search');
-        form.appendChild(goButton);
+        var searchButton = document.createElement('span');
+        searchButton.className = 'cesium-geocoder-searchButton';
+        searchButton.setAttribute('data-bind', '\
+click: search,\
+cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, width: 32, height: 32 }');
+        form.appendChild(searchButton);
 
         container.appendChild(form);
 
-        this._container = container;
-        this._viewModel = new GeocoderViewModel(description);
-        this._form = form;
-        this._svgPath = new SvgPath(goButton, 32, 32, startSearchPath);
-        knockout.applyBindings(this._viewModel, this._container);
+        knockout.applyBindings(viewModel, form);
 
-        var that = this;
-        this._subscription = subscribeAndEvaluate(this._viewModel, 'isSearchInProgress', function(isSearchInProgress) {
-            that._svgPath.path = isSearchInProgress ? stopSearchPath : startSearchPath;
-        });
+        this._container = container;
+        this._viewModel = viewModel;
+        this._form = form;
 
         this._onInputBegin = function(e) {
             if (!container.contains(e.target)) {
@@ -148,11 +150,10 @@ define([
         document.removeEventListener('mouseup', this._onInputEnd, true);
         document.removeEventListener('touchstart', this._onInputBegin, true);
         document.removeEventListener('touchend', this._onInputEnd, true);
-        this._subscription.dispose();
 
-        var container = this._container;
-        knockout.cleanNode(container);
-        container.removeChild(this._form);
+        knockout.cleanNode(this._form);
+        this._container.removeChild(this._form);
+
         return destroyObject(this);
     };
 

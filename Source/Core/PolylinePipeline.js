@@ -35,10 +35,10 @@ define([
     var PolylinePipeline = {};
 
     var wrapLongitudeInversMatrix = new Matrix4();
-    var wrapLongitudeOrigin = new Cartesian4();
-    var wrapLongitudeXZNormal = new Cartesian4();
+    var wrapLongitudeOrigin = new Cartesian3();
+    var wrapLongitudeXZNormal = new Cartesian3();
     var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
-    var wrapLongitudeYZNormal = new Cartesian4();
+    var wrapLongitudeYZNormal = new Cartesian3();
     var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
@@ -127,9 +127,9 @@ define([
             var inverseModelMatrix = Matrix4.inverseTransformation(modelMatrix, wrapLongitudeInversMatrix);
 
             var origin = Matrix4.multiplyByPoint(inverseModelMatrix, Cartesian3.ZERO, wrapLongitudeOrigin);
-            var xzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_Y, wrapLongitudeXZNormal);
+            var xzNormal = Matrix4.multiplyByPointAsVector(inverseModelMatrix, Cartesian3.UNIT_Y, wrapLongitudeXZNormal);
             var xzPlane = Plane.fromPointNormal(origin, xzNormal, wrapLongitudeXZPlane);
-            var yzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_X, wrapLongitudeYZNormal);
+            var yzNormal = Matrix4.multiplyByPointAsVector(inverseModelMatrix, Cartesian3.UNIT_X, wrapLongitudeYZNormal);
             var yzPlane = Plane.fromPointNormal(origin, yzNormal, wrapLongitudeYZPlane);
 
             var count = 1;

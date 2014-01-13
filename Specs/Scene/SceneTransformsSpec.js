@@ -25,6 +25,7 @@ defineSuite([
     afterAll(function() {
         destroyScene(scene);
     });
+
     it('throws an exception without scene', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));

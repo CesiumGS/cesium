@@ -5,12 +5,14 @@ define([
         defaultValue) {
     "use strict";
 
+    var canvasCount = 0;
+
     function createCanvas(width, height) {
         width = defaultValue(width, 1);
         height = defaultValue(height, 1);
 
         var canvas = document.createElement('canvas');
-        canvas.id = 'glCanvas';
+        canvas.id = 'canvas' + canvasCount++;
         canvas.setAttribute('width', width);
         canvas.setAttribute('clientWidth', width);
         canvas.setAttribute('height', height);

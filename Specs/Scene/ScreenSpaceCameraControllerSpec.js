@@ -6,14 +6,17 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/GeographicProjection',
          'Core/IntersectionTests',
+         'Core/KeyboardEventModifier',
          'Core/Math',
          'Core/Matrix4',
          'Core/Ray',
          'Scene/Camera',
          'Scene/CameraColumbusViewMode',
+         'Scene/CameraEventType',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
-         'ThirdParty/Tween'
+         'ThirdParty/Tween',
+         'Specs/MockCanvas'
      ], function(
          ScreenSpaceCameraController,
          Cartesian2,
@@ -21,14 +24,17 @@ defineSuite([
          Ellipsoid,
          GeographicProjection,
          IntersectionTests,
+         KeyboardEventModifier,
          CesiumMath,
          Matrix4,
          Ray,
          Camera,
          CameraColumbusViewMode,
+         CameraEventType,
          OrthographicFrustum,
          SceneMode,
-         Tween) {
+         Tween,
+         MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,86 +42,10 @@ defineSuite([
     var camera;
     var controller;
 
-    // create a mock canvas object to add events to so they are callable.
-    var MockCanvas = function() {
-        this._callbacks = {
-            keydown : [],
-            mousemove : [],
-            mouseup : [],
-            mousedown : [],
-            dblclick : [],
-            mousewheel : [],
-            touchstart : [],
-            touchmove : [],
-            touchend : []
-        };
-        this.disableRootEvents = true;
-        this.clientWidth = 1024;
-        this.clientHeight = 768;
-    };
-
-    MockCanvas.prototype.getBoundingClientRect = function() {
-        return {
-            left : 0,
-            top : 0,
-            width : 0,
-            height : 0
-        };
-    };
-
-    MockCanvas.prototype.addEventListener = function(name, callback, bubble) {
-        if (name === 'DOMMouseScroll') {
-            name = 'mousewheel';
-        }
-
-        if (this._callbacks[name]) {
-            this._callbacks[name].push(callback);
-        }
-    };
-
-    MockCanvas.prototype.removeEventListener = function(name, callback) {
-        if (name === 'DOMMouseScroll') {
-            name = 'mousewheel';
-        }
-
-        var callbacks = this._callbacks[name];
-        var index = -1;
-        for ( var i = 0; i < callbacks.length; i++) {
-            if (callbacks[i] === callback) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index !== -1) {
-            callbacks.splice(index, 1);
-        }
-    };
-
-    function emptyStub() {
-    }
-
-    MockCanvas.prototype.fireEvents = function(name, args) {
-        var callbacks = this._callbacks[name];
-        if (!callbacks) {
-            return;
-        }
-
-        args.preventDefault = emptyStub;
-        for ( var i = 0; i < callbacks.length; i++) {
-            if (callbacks[i]) {
-                callbacks[i](args);
-            }
-        }
-    };
-
-    var MouseButtons = {
-            LEFT : 0,
-            MIDDLE : 1,
-            RIGHT : 2
-    };
+    var MouseButtons = MockCanvas.MouseButtons;
 
     beforeEach(function() {
+        // create a mock canvas object to add events to so they are callable.
         canvas = new MockCanvas();
         camera = new Camera({
             _canvas: canvas,
@@ -150,20 +80,6 @@ defineSuite([
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
         expect(controller.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
     });
-
-    function moveMouse(button, startPosition, endPosition, shiftKey) {
-        var args = {
-            button : button,
-            clientX : startPosition.x,
-            clientY : startPosition.y,
-            shiftKey : shiftKey
-        };
-        canvas.fireEvents('mousedown', args);
-        args.clientX = endPosition.x;
-        args.clientY = endPosition.y;
-        canvas.fireEvents('mousemove', args);
-        canvas.fireEvents('mouseup', args);
-    }
 
     function updateController(frameState) {
         camera.controller.update(frameState.mode, frameState.scene2D);
@@ -207,7 +123,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeLessThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -220,7 +136,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeGreaterThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -233,7 +149,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.y).toBeGreaterThan(camera.position.y);
         expect(position.x).toEqual(camera.position.x);
@@ -246,10 +162,26 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.y).toBeLessThan(camera.position.y);
         expect(position.x).toEqual(camera.position.x);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
+    it('translate in rotated 2D', function() {
+        var frameState = setUp2D();
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toBeGreaterThan(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
     });
 
@@ -260,7 +192,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -275,7 +207,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -327,7 +259,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -342,7 +274,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -365,7 +297,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -391,7 +323,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(camera.frustum.right).toEqualEpsilon(maxZoom * 0.5, CesiumMath.EPSILON10);
         expect(camera.frustum.left).toEqual(-camera.frustum.right);
@@ -405,7 +337,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -422,7 +354,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -439,7 +371,7 @@ defineSuite([
         var startPosition = new Cartesian2(3 * canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -459,7 +391,7 @@ defineSuite([
         var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeGreaterThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -497,7 +429,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeLessThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -510,7 +442,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeGreaterThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -523,7 +455,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.y).toBeGreaterThan(camera.position.y);
         expect(position.x).toEqual(camera.position.x);
@@ -536,7 +468,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.y).toBeLessThan(camera.position.y);
         expect(position.x).toEqual(camera.position.x);
@@ -549,7 +481,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition, true);
         updateController(frameState);
         expect(camera.position).toEqual(position);
         expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
@@ -564,7 +496,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -577,7 +509,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -615,7 +547,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, 3 * canvas.clientHeight / 8);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(Cartesian3.dot(Cartesian3.normalize(camera.position), Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
         expect(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z)).toBeLessThan(0.0);
@@ -631,7 +563,7 @@ defineSuite([
         var startPosition = new Cartesian2(0, 0);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
@@ -648,7 +580,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toEqual(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -679,7 +611,7 @@ defineSuite([
         var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(4.0 * canvas.clientWidth, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(position.x).toBeGreaterThan(camera.position.x);
         expect(position.y).toEqual(camera.position.y);
@@ -706,7 +638,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, 3 * canvas.clientHeight / 8);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
@@ -721,7 +653,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(0, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).toEqual(position);
@@ -734,7 +666,7 @@ defineSuite([
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, canvas.clientHeight / 2);
         camera.controller.constrainedAxis = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
@@ -749,7 +681,7 @@ defineSuite([
         var startPosition = new Cartesian2(0, 0);
         var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
@@ -764,7 +696,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
     });
@@ -775,7 +707,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
         expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
     });
@@ -794,7 +726,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight * 50);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
-        moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
 
         var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position).height;
@@ -829,7 +761,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
         expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
@@ -852,7 +784,7 @@ defineSuite([
         var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
         expect(intersection).not.toBeDefined();
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
         expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
@@ -866,7 +798,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, 3 * canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
@@ -884,7 +816,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, 0);
 
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
 
         var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position).height;
@@ -899,7 +831,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition, true);
         updateController(frameState);
         expect(camera.position).toEqual(position);
         expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
@@ -921,7 +853,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(Cartesian3.dot(camera.position, axis)).toBeGreaterThan(0.0);
         expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
@@ -938,7 +870,7 @@ defineSuite([
         var startPosition = new Cartesian2(0.0, 0.0);
         var endPosition = new Cartesian2(0.0, canvas.clientHeight);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).toEqualEpsilon(Cartesian3.multiplyByScalar(axis, Cartesian3.magnitude(camera.position)), CesiumMath.EPSILON8);
@@ -960,7 +892,7 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.25);
         var endPosition = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.75);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
@@ -982,7 +914,7 @@ defineSuite([
         var startPosition = new Cartesian2(0.0, 0.0);
         var endPosition = new Cartesian2(0.0, canvas.clientHeight);
 
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
@@ -1002,7 +934,7 @@ defineSuite([
         var endPosition = new Cartesian2(canvas.clientWidth, canvas.clientHeight);
 
         controller.enableRotate = false;
-        moveMouse(MouseButtons.LEFT, startPosition, endPosition);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
         expect(camera.position).toEqual(position);
@@ -1017,6 +949,62 @@ defineSuite([
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
+    });
+
+    it('can set input type to undefined', function() {
+        var frameState = setUp3D();
+        controller.zoomEventTypes = undefined;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.RIGHT, startPosition, endPosition);
+        updateController(frameState);
+        expect(camera.position).toEqual(position);
+    });
+
+    it('can change default input', function() {
+        var frameState = setUp3D();
+        controller.translateEventTypes = undefined;
+        controller.rotateEventTypes = undefined;
+        controller.tiltEventTypes = undefined;
+        controller.lookEventTypes = undefined;
+
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        controller.zoomEventTypes = CameraEventType.LEFT_DRAG;
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeLessThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        controller.zoomEventTypes = {
+            eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.SHIFT
+        };
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, endPosition, startPosition, true);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        controller.zoomEventTypes = [
+            CameraEventType.MIDDLE_DRAG,
+            {
+                eventType : CameraEventType.LEFT_DRAG,
+                modifier : KeyboardEventModifier.SHIFT
+            }
+        ];
+        MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeLessThan(Cartesian3.magnitude(position));
+
+        position = Cartesian3.clone(camera.position);
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, endPosition, startPosition, true);
+        updateController(frameState);
+        expect(Cartesian3.magnitude(camera.position)).toBeGreaterThan(Cartesian3.magnitude(position));
     });
 
     it('is destroyed', function() {

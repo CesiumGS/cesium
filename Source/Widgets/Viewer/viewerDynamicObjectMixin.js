@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView'
     ], function(
-        defaultValue,
         defined,
         DeveloperError,
         defineProperties,
@@ -50,12 +48,12 @@ define([
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('onObjectTracked')) {
-            throw new DeveloperError('onObjectTracked is already defined by another mixin.');
+        if (viewer.hasOwnProperty('objectTracked')) {
+            throw new DeveloperError('objectTracked is already defined by another mixin.');
         }
 
         var eventHelper = new EventHelper();
-        var onObjectTracked = new Event();
+        var objectTracked = new Event();
         var trackedObject;
         var dynamicObjectView;
 
@@ -82,6 +80,12 @@ define([
         //clear the trackedObject when it is clicked.
         if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+        }
+
+        //Subscribe to the geocoder search if it exists, so that we can
+        //clear the trackedObject when it is clicked.
+        if (defined(viewer.geocoder)) {
+            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearTrackedObject);
         }
 
         //We need to subscribe to the data sources and collections so that we can clear the
@@ -149,7 +153,7 @@ define([
                     if (trackedObject !== value) {
                         trackedObject = value;
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
-                        onObjectTracked.raiseEvent(viewer, value);
+                        objectTracked.raiseEvent(viewer, value);
                     }
                 }
             },
@@ -161,9 +165,9 @@ define([
              * @memberof viewerDynamicObjectMixin.prototype
              * @type {Event}
              */
-            onObjectTracked : {
+            objectTracked : {
                 get : function() {
-                    return onObjectTracked;
+                    return objectTracked;
                 }
             }
         });

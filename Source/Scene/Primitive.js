@@ -15,14 +15,13 @@ define([
         '../Core/ComponentDatatype',
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
-        '../Core/Queue',
         '../Core/clone',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/CullFace',
+        '../Renderer/Pass',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -43,14 +42,13 @@ define([
         ComponentDatatype,
         TaskProcessor,
         GeographicProjection,
-        Queue,
         clone,
         BufferUsage,
         VertexLayout,
-        CommandLists,
         DrawCommand,
         createShaderSource,
         CullFace,
+        Pass,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -218,6 +216,7 @@ define([
          * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = new Matrix4();
 
         /**
          * Determines if the primitive will be shown.  This affects all geometry
@@ -296,7 +295,6 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-        this._debugShowBoundingVolume = false;
 
         this._translucent = undefined;
 
@@ -306,9 +304,9 @@ define([
         this._vaAttributes = undefined;
         this._error = undefined;
 
-        // When true, geometry is transformed to world coordinates even if there is a single
-        // geometry or all geometries are in the same reference frame.
         this._boundingSphere = undefined;
+        this._boundingSphereWC = undefined;
+        this._boundingSphereCV = undefined;
         this._boundingSphere2D = undefined;
         this._perInstanceAttributeIndices = undefined;
         this._instanceIds = [];
@@ -327,16 +325,8 @@ define([
         this._pickSP = undefined;
         this._pickIds = [];
 
-        this._commandLists = new CommandLists();
-
-        this._colorCommands = this._commandLists.opaqueList;
-        this._pickCommands = this._commandLists.pickList;
-
-        this._commandLists.opaqueList = EMPTY_ARRAY;
-        this._commandLists.translucentList = EMPTY_ARRAY;
-        this._commandLists.pickList.opaqueList = EMPTY_ARRAY;
-        this._commandLists.pickList.translucentList = EMPTY_ARRAY;
-        this._commandLists.overlayList = EMPTY_ARRAY;
+        this._colorCommands = [];
+        this._pickCommands = [];
     };
 
     function cloneAttribute(attribute) {
@@ -534,7 +524,7 @@ define([
             (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
-            (!frameState.passes.color && !frameState.passes.pick)) {
+            (!frameState.passes.render && !frameState.passes.pick)) {
             return;
         }
 
@@ -699,9 +689,6 @@ define([
             var vaAttributes = this._vaAttributes;
 
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
-            if (!this.allow3DOnly && defined(this._boundingSphere)) {
-                this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
-            }
 
             var va = [];
             length = geometries.length;
@@ -827,6 +814,7 @@ define([
 
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
+            var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
             colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
             pickCommands.length = this._va.length;
@@ -846,6 +834,7 @@ define([
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
+                    colorCommand.pass = pass;
 
                     ++i;
                 }
@@ -860,6 +849,7 @@ define([
                 colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
+                colorCommand.pass = pass;
 
                 pickCommand = pickCommands[m];
                 if (!defined(pickCommand)) {
@@ -871,6 +861,7 @@ define([
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
+                pickCommand.pass = pass;
                 ++m;
 
                 ++vaIndex;
@@ -909,47 +900,48 @@ define([
             attributes.length = 0;
         }
 
-        var boundingSphere;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            boundingSphere = this._boundingSphere;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingSphere = this._boundingSphere2D;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSphere = BoundingSphere.clone(this._boundingSphere2D);
-            boundingSphere.center.x = 0.0;
-        } else if (defined(this._boundingSphere) && defined(this._boundingSphere2D)) {
-            boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
-        }
-
-        // modelMatrix can change from frame to frame
-        length = colorCommands.length;
-        for (i = 0; i < length; ++i) {
-            colorCommands[i].modelMatrix = this.modelMatrix;
-            colorCommands[i].boundingVolume = boundingSphere;
-        }
-
-        length = pickCommands.length;
-        for (i = 0; i < length; ++i) {
-            pickCommands[i].modelMatrix = this.modelMatrix;
-            pickCommands[i].boundingVolume = boundingSphere;
-        }
-
-        if (this._debugShowBoundingVolume !== this.debugShowBoundingVolume) {
-            this._debugShowBoundingVolume = this.debugShowBoundingVolume;
-
-            length = colorCommands.length;
-            for (i = 0; i < length; ++i) {
-                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+        if (!Matrix4.equals(this.modelMatrix, this._modelMatrix)) {
+            Matrix4.clone(this.modelMatrix, this._modelMatrix);
+            this._boundingSphereWC = BoundingSphere.transform(this._boundingSphere, this.modelMatrix, this._boundingSphereWC);
+            if (!this.allow3DOnly && defined(this._boundingSphere)) {
+                this._boundingSphereCV = BoundingSphere.projectTo2D(this._boundingSphereWC, projection, this._boundingSphereCV);
+                this._boundingSphere2D = BoundingSphere.clone(this._boundingSphereCV, this._boundingSphere2D);
+                this._boundingSphere2D.center.x = 0.0;
             }
         }
 
-        var pass = frameState.passes;
-        this._commandLists.opaqueList = (pass.color && !translucent) ? colorCommands : EMPTY_ARRAY;
-        this._commandLists.translucentList = (pass.color && translucent) ? colorCommands : EMPTY_ARRAY;
-        this._commandLists.pickList.opaqueList = (pass.pick && !translucent) ? pickCommands : EMPTY_ARRAY;
-        this._commandLists.pickList.translucentList = (pass.pick && translucent) ? pickCommands : EMPTY_ARRAY;
+        var boundingSphere;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSphere = this._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSphere = this._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
+            boundingSphere = this._boundingSphere2D;
+        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
+            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
+        }
 
-        commandList.push(this._commandLists);
+        var passes = frameState.passes;
+        if (passes.render) {
+            length = colorCommands.length;
+            for (i = 0; i < length; ++i) {
+                colorCommands[i].modelMatrix = this.modelMatrix;
+                colorCommands[i].boundingVolume = boundingSphere;
+                colorCommands[i].debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+                commandList.push(colorCommands[i]);
+            }
+        }
+
+        if (passes.pick) {
+            length = pickCommands.length;
+            for (i = 0; i < length; ++i) {
+                pickCommands[i].modelMatrix = this.modelMatrix;
+                pickCommands[i].boundingVolume = boundingSphere;
+
+                commandList.push(pickCommands[i]);
+            }
+        }
     };
 
     function createGetFunction(name, perInstanceAttributes) {
