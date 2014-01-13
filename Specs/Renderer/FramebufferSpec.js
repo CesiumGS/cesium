@@ -442,11 +442,11 @@ defineSuite([
                 colorTextures : [colorTexture0, colorTexture1]
             });
 
-            // 1 of 4.  Clear default color buffer to black.
+            // 1 of 5.  Clear default color buffer to black.
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            // 2 of 4.  Render red point into color attachment 0 and green point to color attachment 1.
+            // 2 of 5.  Render red point into color attachment 0 and green point to color attachment 1.
             var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
             var fs = '#extension GL_EXT_draw_buffers : enable \n void main() { gl_FragData[0] = vec4(1.0, 0.0, 0.0, 1.0); gl_FragData[1] = vec4(0.0, 1.0, 0.0, 1.0); }';
             sp = context.createShaderProgram(vs, fs);
@@ -464,12 +464,12 @@ defineSuite([
                 framebuffer : framebuffer
             });
 
-            // 3 of 4.  Verify default color buffer is still black.
+            // 3 of 5.  Verify default color buffer is still black.
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            // 4 of 4.  Render yellow to default color buffer by reading from previous color attachments
+            // 4 of 5.  Render yellow to default color buffer by reading from previous color attachments
             var vs2 = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
-            var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = vec4(texture2D(u_texture0, vec2(0.0)).rgb + texture2D(u_texture1, vec2(0.0)).rgb, 1.0); }';
+            var fs2 = 'uniform sampler2D u_texture0; uniform sampler2D u_texture1; void main() { gl_FragColor = texture2D(u_texture0, vec2(0.0)) + texture2D(u_texture1, vec2(0.0)); }';
             var sp2 = context.createShaderProgram(vs2, fs2, {
                 position : 0
             });
@@ -482,6 +482,19 @@ defineSuite([
                 vertexArray : va
             });
             expect(context.readPixels()).toEqual([255, 255, 0, 255]);
+
+            // 5 of 5. Verify clearing multiple color attachments
+            var command = new ClearCommand();
+            command.color = new Color (0.0, 0.0, 0.0, 0.0);
+            command.framebuffer = framebuffer;
+            command.execute(context);
+
+            context.draw({
+                primitiveType : PrimitiveType.POINTS,
+                shaderProgram : sp2,
+                vertexArray : va
+            });
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             sp2 = sp2.destroy();
         }
