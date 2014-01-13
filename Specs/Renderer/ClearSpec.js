@@ -105,7 +105,7 @@ defineSuite([
             height : 1
         });
         var framebuffer = context.createFramebuffer({
-            colorTexture : colorTexture
+            colorTextures : [colorTexture]
         });
 
         var command = new ClearCommand();
