@@ -23,6 +23,7 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/PrimitiveType',
+        '../Renderer/BlendingState',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
@@ -31,6 +32,8 @@ define([
         '../Renderer/PixelFormat',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',
@@ -72,6 +75,7 @@ define([
         ColorGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         PrimitiveType,
+        BlendingState,
         Context,
         ClearCommand,
         DrawCommand,
@@ -80,6 +84,8 @@ define([
         PixelFormat,
         PixelDatatype,
         RenderbufferFormat,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
         Camera,
         ScreenSpaceCameraController,
         CompositePrimitive,
@@ -154,11 +160,17 @@ define([
         this._clearColorCommand.color = new Color();
         this._clearColorCommand.owner = true;
 
-        var clearDepthStencilCommand = new ClearCommand();
-        clearDepthStencilCommand.depth = 1.0;
-        clearDepthStencilCommand.stencil = 1.0;
-        clearDepthStencilCommand.owner = this;
-        this._clearDepthStencilCommand = clearDepthStencilCommand;
+        var opaqueClearCommand = new ClearCommand();
+        opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
+        opaqueClearCommand.depth = 1.0;
+        opaqueClearCommand.stencil = 1.0;
+        opaqueClearCommand.owner = this;
+        this._opaqueClearCommand = opaqueClearCommand;
+
+        var translucentClearCommand = new ClearCommand();
+        translucentClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
+        translucentClearCommand.owner = this;
+        this._translucentClearCommand = translucentClearCommand;
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -809,7 +821,8 @@ define([
             }
         }
 
-        var clearDepthStencil = scene._clearDepthStencilCommand;
+        var clearOpaque = scene._opaqueClearCommand;
+        var clearTranslucent = scene._translucentClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -822,7 +835,7 @@ define([
             us.updateFrustum(frustum);
 
             passState.framebuffer = scene._opaqueFBO;
-            clearDepthStencil.execute(context, passState);
+            clearOpaque.execute(context, passState);
 
             var j;
             var commands = frustumCommands.opaqueCommands;
@@ -831,7 +844,8 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            passState.frameBuffer = scene._translucentFBO;
+            passState.framebuffer = scene._translucentFBO;
+            clearTranslucent.execute(context, passState);
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
@@ -839,7 +853,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            passState.frameBuffer = undefined;
+            passState.framebuffer = undefined;
             scene._compositeCommand.execute(context, passState);
         }
     }
@@ -868,14 +882,20 @@ define([
         var opaqueFBO = scene._opaqueFBO;
         var colorTexture = (defined(opaqueFBO) && opaqueFBO.getColorTexture(0)) || undefined;
         if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+            var sampler = context.createSampler({
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            });
             var opaqueTexture = context.createTexture2D({
                 width : width,
                 height : height
             });
+            opaqueTexture.setSampler(sampler);
             var translucentTexture = context.createTexture2D({
                 width : width,
                 height : height
             });
+            translucentTexture.setSampler(sampler);
 
             var depthTexture;
             var depthRenderbuffer;
@@ -912,15 +932,16 @@ define([
                     '{\n' +
                     '    vec4 opaque = texture2D(u_opaque, v_textureCoordinates);\n' +
                     '    vec4 transparent = texture2D(u_translucent, v_textureCoordinates);\n' +
-                    //'    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
-                    //'    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
-                    '    gl_FragColor = opaque;\n' +
+                    '    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
+                    '    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
                     '}\n';
 
             var command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
-            command.renderState = context.createRenderState();
+            command.renderState = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
             command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
             command.uniformMap = {
                 u_opaque : function() {
