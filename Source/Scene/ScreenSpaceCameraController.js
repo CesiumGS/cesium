@@ -432,13 +432,22 @@ define([
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
+    var scratchTranslateP0 = new Cartesian3();
+    var scratchTranslateP1 = new Cartesian3();
+
     function translate2D(controller, movement) {
         var cameraController = controller._cameraController;
         var start = cameraController.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = cameraController.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        cameraController.moveRight(start.x - end.x);
-        cameraController.moveUp(start.y - end.y);
+        var position = cameraController._camera.position;
+        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
+        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
+        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var distance = Cartesian3.magnitude(direction);
+        Cartesian3.normalize(direction, direction);
+
+        cameraController.move(direction, distance);
     }
 
     function zoom2D(controller, movement) {
