@@ -1218,6 +1218,7 @@ define([
      */
     var CzmlDataSource = function(name) {
         this._name = name;
+        this._show = true;
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
@@ -1314,6 +1315,31 @@ define([
      */
     CzmlDataSource.prototype.getIsTimeVarying = function() {
         return this._timeVarying;
+    };
+
+    /**
+     * Gets a value indicating if the objects in this data source are shown.  If the return value of
+     * this function changes, the changed event will be raised.
+     * @memberof CzmlDataSource
+     *
+     * @returns {Boolean} True if the objects in this data source are shown, false otherwise.
+     */
+    CzmlDataSource.prototype.getIsShown = function() {
+        return this._show;
+    };
+
+    /**
+     * Hides or reveals the contents of this data source.  If the value of this flag changes,
+     * the changed event will be raised.
+     * @memberof CzmlDataSource
+     *
+     * @param {Boolean} newValue True if the objects in this data source are to be shown, false otherwise.
+     */
+    CzmlDataSource.prototype.show = function(newValue) {
+        if (this._show !== newValue) {
+            this._show = newValue;
+            this._changed.raiseEvent(this);
+        }
     };
 
     /**

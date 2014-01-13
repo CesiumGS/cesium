@@ -75,5 +75,23 @@ define([
      */
     DataSource.prototype.getIsTimeVarying = throwInstantiationError;
 
+    /**
+     * Gets a value indicating if the objects in this data source are shown.  If the return value of
+     * this function changes, the changed event will be raised.
+     * @memberof DataSource
+     *
+     * @returns {Boolean} True if the objects in this data source are shown, false otherwise.
+     */
+    DataSource.prototype.getIsShown = throwInstantiationError;
+
+    /**
+     * Hides or reveals the contents of this data source.  If the value of this flag changes,
+     * the changed event will be raised.
+     * @memberof DataSource
+     *
+     * @param {Boolean} newValue True if the objects in this data source are to be shown, false otherwise.
+     */
+    DataSource.prototype.show = throwInstantiationError;
+
     return DataSource;
 });

@@ -178,17 +178,24 @@ define([
         }
     };
 
-    DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizerTypes = this._visualizersTypes;
+    function createVisualizerCollection(dataSource, visualizerTypes, scene) {
         var length = visualizerTypes.length;
         var visualizers = new Array(length);
-        var scene = this._scene;
         for ( var i = 0; i < length; i++) {
             visualizers[i] = new visualizerTypes[i](scene);
         }
 
         var vCollection = new VisualizerCollection(visualizers, dataSource.getDynamicObjectCollection());
         dataSource._visualizerCollection = vCollection;
+    }
+
+    function destroyVisualizerCollection(dataSource) {
+        dataSource._visualizerCollection.destroy();
+        dataSource._visualizerCollection = undefined;
+    }
+
+    DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
+        createVisualizerCollection(dataSource, this._visualizersTypes, this._scene);
         dataSource.getChangedEvent().addEventListener(this._onDataSourceChanged, this);
         this._onDataSourceChanged(dataSource);
     };
@@ -206,26 +213,42 @@ define([
             this._staticSourcesToUpdate.splice(staticIndex, 1);
         }
 
-        dataSource._visualizerCollection.destroy();
-        dataSource._visualizerCollection = undefined;
+        destroyVisualizerCollection(dataSource);
     };
 
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
         var timeVaryingIndex = this._timeVaryingSources.indexOf(dataSource);
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
-        if (dataSource.getIsTimeVarying()) {
-            if (timeVaryingIndex === -1) {
-                this._timeVaryingSources.push(dataSource);
+        if (!dataSource.getIsShown()) {
+            if (timeVaryingIndex !== -1) {
+                this._timeVaryingSources.splice(timeVaryingIndex, 1);
             }
             if (staticIndex !== -1) {
                 this._staticSourcesToUpdate.splice(staticIndex, 1);
             }
-        } else {
-            if (staticIndex === -1) {
-                this._staticSourcesToUpdate.push(dataSource);
+
+            if (defined(dataSource._visualizerCollection)) {
+                destroyVisualizerCollection(dataSource);
             }
-            if (timeVaryingIndex !== -1) {
-                this._timeVaryingSources.splice(staticIndex, 1);
+        } else {
+            if (!defined(dataSource._visualizerCollection)) {
+                createVisualizerCollection(dataSource, this._visualizersTypes, this._scene);
+            }
+
+            if (dataSource.getIsTimeVarying()) {
+                if (timeVaryingIndex === -1) {
+                    this._timeVaryingSources.push(dataSource);
+                }
+                if (staticIndex !== -1) {
+                    this._staticSourcesToUpdate.splice(staticIndex, 1);
+                }
+            } else {
+                if (staticIndex === -1) {
+                    this._staticSourcesToUpdate.push(dataSource);
+                }
+                if (timeVaryingIndex !== -1) {
+                    this._timeVaryingSources.splice(staticIndex, 1);
+                }
             }
         }
     };
