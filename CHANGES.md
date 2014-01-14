@@ -7,6 +7,7 @@ Beta Releases
 ### b25 - 2014-02-03
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
+  * The `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials have been removed. See the [Cesium Materials Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack) for details.
 * Added `ScreenSpaceCameraController.enableInputs` to fix issue with inputs not being restored after overlapping camera flights.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
