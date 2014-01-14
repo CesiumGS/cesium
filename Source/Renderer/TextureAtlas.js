@@ -136,7 +136,7 @@ define([
 
             // Copy old texture into new using an fbo.
             var framebuffer = textureAtlas._context.createFramebuffer({
-                colorTexture : textureAtlas._texture
+                colorTextures : [textureAtlas._texture]
             });
             framebuffer._bind();
             newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasWidth, oldAtlasHeight);

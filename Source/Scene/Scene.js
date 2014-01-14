@@ -905,6 +905,8 @@ define([
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
+    var scratchOrigin = new Cartesian3();
+    var scratchDirection = new Cartesian3();
     var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
 
@@ -921,10 +923,13 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
-        var position = camera.position;
-        position = new Cartesian3(position.z, position.x, position.y);
-        position.y += x;
-        position.z += y;
+        var origin = Cartesian3.clone(camera.position, scratchOrigin);
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+
+        Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
         scratchBufferDimensions.x = drawingBufferWidth;
         scratchBufferDimensions.y = drawingBufferHeight;
@@ -939,7 +944,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
+        return ortho.computeCullingVolume(origin, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
