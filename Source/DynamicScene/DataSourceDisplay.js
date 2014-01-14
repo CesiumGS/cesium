@@ -219,7 +219,7 @@ define([
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {
         var timeVaryingIndex = this._timeVaryingSources.indexOf(dataSource);
         var staticIndex = this._staticSourcesToUpdate.indexOf(dataSource);
-        if (!dataSource.getIsShown()) {
+        if (!dataSource.getShow()) {
             if (timeVaryingIndex !== -1) {
                 this._timeVaryingSources.splice(timeVaryingIndex, 1);
             }

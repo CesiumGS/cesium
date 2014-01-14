@@ -82,7 +82,7 @@ define([
      *
      * @returns {Boolean} True if the objects in this data source are shown, false otherwise.
      */
-    DataSource.prototype.getIsShown = throwInstantiationError;
+    DataSource.prototype.getShow = throwInstantiationError;
 
     /**
      * Hides or reveals the contents of this data source.  If the value of this flag changes,
@@ -91,7 +91,7 @@ define([
      *
      * @param {Boolean} newValue True if the objects in this data source are to be shown, false otherwise.
      */
-    DataSource.prototype.show = throwInstantiationError;
+    DataSource.prototype.setShow = throwInstantiationError;
 
     return DataSource;
 });

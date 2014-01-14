@@ -1324,7 +1324,7 @@ define([
      *
      * @returns {Boolean} True if the objects in this data source are shown, false otherwise.
      */
-    CzmlDataSource.prototype.getIsShown = function() {
+    CzmlDataSource.prototype.getShow = function() {
         return this._show;
     };
 
@@ -1335,7 +1335,7 @@ define([
      *
      * @param {Boolean} newValue True if the objects in this data source are to be shown, false otherwise.
      */
-    CzmlDataSource.prototype.show = function(newValue) {
+    CzmlDataSource.prototype.setShow = function(newValue) {
         if (this._show !== newValue) {
             this._show = newValue;
             this._changed.raiseEvent(this);
