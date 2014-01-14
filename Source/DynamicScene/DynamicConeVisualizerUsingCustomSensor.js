@@ -227,7 +227,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 
