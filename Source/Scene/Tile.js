@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/defined',
         '../Core/DeveloperError',
         './ImageryState',
@@ -18,6 +19,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         defined,
         DeveloperError,
         ImageryState,
@@ -404,6 +406,9 @@ define([
     var cartesian3Scratch2 = new Cartesian3();
     var southeastScratch = new Cartesian3();
     var northwestScratch = new Cartesian3();
+    var westernMidpointScratch = new Cartesian3();
+    var easternMidpointScratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
 
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var upsampleTileDetails = getUpsampleTileDetails(tile);
@@ -427,26 +432,38 @@ define([
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
-        var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
-        var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        Cartesian3.negate(tile.southwestCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(Cartesian3.UNIT_Z, cartesian3Scratch, cartesian3Scratch);
+        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
+        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+
+        // The middle latitude on the western edge.
+        cartographicScratch.longitude = extent.west;
+        cartographicScratch.latitude = (extent.south + extent.north) * 0.5;
+        cartographicScratch.height = 0.0;
+        var westernMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, westernMidpointScratch);
+
+        // Compute the normal of the plane on the western edge of the tile.
+        Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, tile.westNormal);
 
-        Cartesian3.negate(tile.northeastCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch, Cartesian3.UNIT_Z, cartesian3Scratch);
+        // The middle latitude on the eastern edge.
+        cartographicScratch.longitude = extent.east;
+        var easternMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, easternMidpointScratch);
+
+        // Compute the normal of the plane on the eastern edge of the tile.
+        Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, tile.eastNormal);
 
+        var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
+        var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
+
         ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch);
+        Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
         Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, tile.southNormal);
 
         ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(tile.northeastCornerCartesian, northwestCornerCartesian, cartesian3Scratch);
+        Cartesian3.subtract(easternMidpointCartesian, westernMidpointCartesian, cartesian3Scratch);
         Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
         Cartesian3.normalize(cartesian3Scratch, tile.northNormal);
     }
