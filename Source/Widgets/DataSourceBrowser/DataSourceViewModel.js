@@ -40,8 +40,9 @@ define([
         this.children = [];
         this.expanded = false;
         this._isLoading = false;
+        this._uiShow = true;
 
-        knockout.track(this, ['name', 'children', 'expanded', '_isLoading']);
+        knockout.track(this, ['name', 'children', 'expanded', '_isLoading', '_uiShow']);
 
         var that = this;
 
@@ -72,6 +73,16 @@ define([
                 name = '\xA0';
             }
             return name;
+        });
+
+        this.uiShow = undefined;
+        knockout.defineProperty(this, 'uiShow', {
+            get: function () {
+                return that._uiShow;
+            },
+            set: function (newValue) {
+                that._uiShow = newValue;
+            }
         });
 
         this.hasChildren = undefined;
@@ -209,6 +220,24 @@ define([
             }
         }
     });
+
+    // TODO: refactor.
+    DataSourceViewModel.prototype.setUiShow = function(newValue) {
+        this.uiShow = newValue;
+        var len = this.children.length;
+        for (var i = 0; i < len; ++i) {
+            this.children[i].setUiShow(newValue);
+        }
+    };
+
+    // TODO: Make uiShow not need any thrashing.
+    DataSourceViewModel.prototype.thrashUiShow = function() {
+        this.uiShow = !this.uiShow;
+        var that = this;
+        window.setTimeout(function () {
+            that.setUiShow(!that.uiShow);
+        }, 1);
+    };
 
     DataSourceViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

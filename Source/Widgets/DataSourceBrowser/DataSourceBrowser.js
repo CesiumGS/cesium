@@ -147,6 +147,7 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
                         \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <label data-bind="click: thrashUiShow, clickBubble: false"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
     <span data-bind="html: expandIndicator"></span>\
     <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
@@ -169,6 +170,7 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
                       \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+    <label data-bind="click: thrashUiShow, clickBubble: false"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
     <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
         <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
