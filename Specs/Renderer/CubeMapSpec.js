@@ -1167,7 +1167,7 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 }));
             }).toThrowDeveloperError();
@@ -1183,7 +1183,7 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 }));
             }).toThrowDeveloperError();
