@@ -57,16 +57,20 @@ data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut },
 <!-- ko if: hasChildren -->\
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
 <span class="cesium-dataSourceBrowser-item" \
-    data-bind="click: toggleExpanded, css: { \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <span data-bind="html: expandIndicator"></span>\
-    <span data-bind="text: displayName"></span></span>\
+    data-bind="click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <label data-bind="click: thrashUiShow"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+    <span data-bind="html: expandIndicator, click: toggleExpanded"></span>\
+    <span data-bind="text: displayName, attr: { title: displayName }"></span></span>\
 <ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
+<div>\
 <span class="cesium-dataSourceBrowser-item" \
-    data-bind="text: displayName, click: select, css: { \
-    \'cesium-dataSourceBrowser-item-selected\': isSelected }"></span>\
+    data-bind="click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <label data-bind="click: thrashUiShow"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+    <span data-bind="text: displayName, attr: { title: displayName }"></span>\
+</span>\
+</div>\
 <!-- /ko -->';
         element.appendChild(templateElement);
 

@@ -33,8 +33,9 @@ define([
         this.name = name;
         this.children = [];
         this.expanded = false;
+        this.uiShow = true;
 
-        knockout.track(this, ['name', 'children', 'expanded']);
+        knockout.track(this, ['name', 'children', 'expanded', 'uiShow']);
 
         this.displayName = undefined;
         knockout.defineProperty(this, 'displayName', function() {
@@ -57,6 +58,18 @@ define([
         knockout.defineProperty(this, 'isSelected', function() {
             return rootViewModel.selectedItem === that;
         });
+
+        /* not working, added as knockout.track (above) instead.
+        this.uiShow = undefined;
+        knockout.defineProperty(this, 'uiShow', {
+            get: function () {
+                return that.dynamicObject.uiShow;
+            },
+            set: function (newValue) {
+                that.dynamicObject.uiShow = newValue;
+            }
+        });
+        */
 
         this.isFilteredOut = undefined;
         knockout.defineProperty(this, 'isFilteredOut', function() {
@@ -122,6 +135,24 @@ define([
 
     DataSourceItemViewModel.prototype.toggleExpanded = function() {
         this.expanded = !this.expanded;
+    };
+
+    // TODO: refactor.
+    DataSourceItemViewModel.prototype.setUiShow = function(newValue) {
+        this.dynamicObject.uiShow = this.uiShow = newValue;
+        var len = this.children.length;
+        for (var i = 0; i < len; ++i) {
+            this.children[i].setUiShow(newValue);
+        }
+    };
+
+    // TODO: Make uiShow not need any thrashing.
+    DataSourceItemViewModel.prototype.thrashUiShow = function() {
+        this.uiShow = !this.uiShow;
+        var that = this;
+        window.setTimeout(function () {
+            that.setUiShow(!that.uiShow);
+        }, 1);
     };
 
     return DataSourceItemViewModel;
