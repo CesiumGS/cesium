@@ -231,14 +231,14 @@ require(['Cesium'], function(Cesium) {
         });
         scene.getPrimitives().add(sensors);
 
-        // If the mouse is over the sensor, change start the erosion animation.
+        // If the mouse is over the sensor, change start the alpha animation.
         var eroding = false;
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.position);
                 if (!eroding && Cesium.defined(pickedObject) && (pickedObject.primitive === sensor)) {
-                    // Prevent multiple erosions
+                    // Prevent multiple animations
                     eroding = true;
                     scene.getAnimations().addAlpha(sensor.material, sensor.material.uniforms.color.alpha, 0.0, {
                         onComplete : function() {
