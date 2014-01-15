@@ -166,7 +166,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPolylineVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         this._scene.getPrimitives().remove(this._polylineCollection);
         return destroyObject(this);
     };
