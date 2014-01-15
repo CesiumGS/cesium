@@ -4,12 +4,6 @@ define([
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
-        'Scene/CustomPostProcess',
-        'Shaders/PostProcessFilters/BlackAndWhite',
-        'Shaders/PostProcessFilters/NightVision',
-        'Shaders/PostProcessFilters/Toon',
-        'Shaders/PostProcessFilters/Lomo',
-        'Shaders/PostProcessFilters/Retro',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -20,12 +14,6 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
-        CustomPostProcess,
-        BlackAndWhite,
-        NightVision,
-        Toon,
-        Lomo,
-        Retro,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -98,30 +86,6 @@ define([
             context.setLogShaderCompilation(true);
             context.setThrowOnWebGLError(true);
         }
-
-        // 4 Example post process filters with custom uniforms. Use one at a time.
-        scene.customPostProcess = new CustomPostProcess(Lomo, { temperatureGamma : function() { return 0.6; },
-                                                                colorTemperatureBottom : function() { return 3000.0; },
-                                                                colorTemperatureTop : function() { return 15000.0; },
-                                                                vignetteAmount : function() { return 1.0; },
-                                                                vignetteGamma : function() { return 4.0; },
-                                                                saturation : function() { return 0.7; },
-                                                                finalMultiplier : function() { return 1.2; } });
-
-//        scene.customPostProcess = new CustomPostProcess(Retro, {vignetteAmount : function() { return 0.65; },
-//                                                                vignetteGamma : function() { return 4.0; },
-//                                                                colorTemperatureInner : function() { return 3500.0; },
-//                                                                colorTemperatureOuter : function() { return 12000.0; },
-//                                                                saturation : function() { return 0.5; },
-//                                                                postSaturation : function() { return 0.5; },
-//                                                                finalMultiplier : function() { return 1.2; },
-//                                                                tintColorBottom : function() { return { x : 1.1, y : 0.85, z : 0.95 }; },
-//                                                                tintColorTop : function() { return { x : 1.1, y : 0.77, z : 0.55 }; } });
-
-//      scene.customPostProcess = new CustomPostProcess(NightVision, { frequency : function() { return 0.001; } });
-
-//      scene.customPostProcess = new CustomPostProcess(BlackAndWhite);
-
 
         if (defined(endUserOptions.source)) {
             var source;

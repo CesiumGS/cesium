@@ -136,8 +136,8 @@ define([
 
         // Setup the framebuffer if not defined, and the colortexture.
         if (!defined(this.framebuffer) ||
-                this.framebuffer.getColorTexture().getWidth() !== width ||
-                this.framebuffer.getColorTexture().getHeight() !== height ) {
+                this.framebuffer.getColorTexture(0).getWidth() !== width ||
+                this.framebuffer.getColorTexture(0).getHeight() !== height ) {
 //            this.freeResources();
 
             var colorTexture = context.createTexture2D({
@@ -163,7 +163,7 @@ define([
 
             // Only depthTexture or depthRenderbuffer will be defined
             this.framebuffer = context.createFramebuffer({
-                colorTexture : colorTexture,
+                colorTextures : [colorTexture],
                 depthTexture : depthTexture,
                 depthRenderbuffer : depthRenderbuffer,
                 destroyAttachments : false

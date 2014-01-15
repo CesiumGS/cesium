@@ -22,7 +22,6 @@ define(function() {
          * </p>
          *
          * @type {Object}
-         *
          * @default undefined
          *
          * @see DrawCommand#debugShowBoundingVolume
@@ -34,7 +33,6 @@ define(function() {
          * If the command was already culled, set this to <code>false</code> for a performance improvement.
          *
          * @type {Boolean}
-         *
          * @default true
          */
         this.cull = true;
@@ -46,7 +44,6 @@ define(function() {
          * </p>
          *
          * @type {Matrix4}
-         *
          * @default undefined
          */
         this.modelMatrix = undefined;
@@ -55,7 +52,6 @@ define(function() {
          * The type of geometry in the vertex array.
          *
          * @type {PrimitiveType}
-         *
          * @default undefined
          */
         this.primitiveType = undefined;
@@ -64,7 +60,6 @@ define(function() {
          * The vertex array.
          *
          * @type {VertexArray}
-         *
          * @default undefined
          */
         this.vertexArray = undefined;
@@ -73,7 +68,6 @@ define(function() {
          * The number of vertices to draw in the vertex array.
          *
          * @type {Number}
-         *
          * @default undefined
          */
         this.count = undefined;
@@ -82,7 +76,6 @@ define(function() {
          * The offset to start drawing in the vertex array.
          *
          * @type {Number}
-         *
          * @default undefined
          */
         this.offset = 0;
@@ -91,7 +84,6 @@ define(function() {
          * The shader program to apply.
          *
          * @type {ShaderProgram}
-         *
          * @default undefined
          */
         this.shaderProgram = undefined;
@@ -101,7 +93,6 @@ define(function() {
          * and return values to set those uniforms.
          *
          * @type {Object}
-         *
          * @default undefined
          */
         this.uniformMap = undefined;
@@ -110,7 +101,6 @@ define(function() {
          * The render state.
          *
          * @type {RenderState}
-         *
          * @default undefined
          *
          * @see Context#createRenderState
@@ -121,17 +111,23 @@ define(function() {
          * The framebuffer to draw to.
          *
          * @type {Framebuffer}
-         *
          * @default undefined
          */
         this.framebuffer = undefined;
+
+        /**
+         * The pass when to render.
+         *
+         * @type {Pass}
+         * @default undefined
+         */
+        this.pass = undefined;
 
         /**
          * Specifies if this command is only to be executed in the frustum closest
          * to the eye containing the bounding volume. Defaults to <code>false</code>.
          *
          * @type {Boolean}
-         *
          * @default false
          */
         this.executeInClosestFrustum = false;
@@ -143,7 +139,6 @@ define(function() {
          * with {@link Scene#debugCommandFilter}.
          *
          * @type {Object}
-         *
          * @default undefined
          *
          * @see Scene#debugCommandFilter
@@ -157,7 +152,6 @@ define(function() {
          * </p>
          *
          * @type {Boolean}
-         *
          * @default false
          *
          * @see DrawCommand#boundingVolume
