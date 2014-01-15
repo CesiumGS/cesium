@@ -1654,18 +1654,6 @@ defineSuite([
         expect(object.arrayData.getValue()).toEqual(arrayPacket.array);
     });
 
-    var CollectionListener = function() {
-        this.timesCalled = 0;
-        this.added = undefined;
-        this.removed = undefined;
-    };
-
-    CollectionListener.prototype.onCollectionChanged = function(collection, added, removed) {
-        this.timesCalled++;
-        this.added = added.slice(0);
-        this.removed = removed.slice(0);
-    };
-
     it('CZML load suspends events.', function() {
         var packets = [{
             point : {
@@ -1683,11 +1671,12 @@ defineSuite([
             }
         }];
 
-        var listener = new CollectionListener();
+        var spy = jasmine.createSpy('changedEvent');
+
         var dataSource = new CzmlDataSource();
-        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(listener.onCollectionChanged, listener);
+        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(spy);
         dataSource.load(packets);
-        expect(listener.timesCalled).toEqual(1);
-        dataSource.getDynamicObjectCollection().collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+
+        expect(spy.callCount).toEqual(1);
     });
 });
