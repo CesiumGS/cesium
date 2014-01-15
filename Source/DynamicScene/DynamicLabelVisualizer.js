@@ -198,7 +198,7 @@ define([
         var label;
         var showProperty = dynamicLabel._show;
         var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else

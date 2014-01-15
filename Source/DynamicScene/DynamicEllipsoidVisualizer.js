@@ -207,7 +207,7 @@ define([
         var ellipsoid;
         var showProperty = dynamicEllipsoid._show;
         var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else

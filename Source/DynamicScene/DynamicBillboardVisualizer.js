@@ -218,7 +218,7 @@ define([
         var billboard;
         var showProperty = dynamicBillboard._show;
         var billboardVisualizerIndex = dynamicObject._billboardVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else

@@ -185,7 +185,7 @@ define([
         var positionProperty = dynamicObject._position;
         var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
         var hasVertexPostions = defined(vertexPositionsProperty);
         if (!show || //
            (!hasVertexPostions && //

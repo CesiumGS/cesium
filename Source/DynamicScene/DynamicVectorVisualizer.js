@@ -183,7 +183,7 @@ define([
         var directionProperty = dynamicVector._direction;
         var lengthProperty = dynamicVector._length;
         var vectorVisualizerIndex = dynamicObject._vectorVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show || !defined(directionProperty) || !defined(positionProperty) || !defined(lengthProperty)) {
             //Remove the existing primitive if we have one

@@ -726,6 +726,10 @@ define([
         dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
     }
 
+    function processUiShow(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        dynamicObject.uiShow = defaultValue(packet.uiShow, dynamicObject.uiShow);
+    }
+
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
@@ -1241,6 +1245,7 @@ define([
     processCone, //
     processLabel, //
     processName, //
+    processUiShow, //
     processPath, //
     processPoint, //
     processPolygon, //

@@ -233,7 +233,7 @@ define([
         var sampleStop;
         var showProperty = dynamicPath._show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = !defined(showProperty) || showProperty.getValue(time);
+        var show = dynamicObject.uiShow && (!defined(showProperty) || showProperty.getValue(time));
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
