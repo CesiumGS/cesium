@@ -183,7 +183,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicEllipsoidVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 

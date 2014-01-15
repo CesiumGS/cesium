@@ -175,7 +175,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         this._scene.getPrimitives().remove(this._labelCollection);
         return destroyObject(this);
     };

@@ -1155,6 +1155,8 @@ define([
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
+        dynamicObjectCollection.suspendEvents();
+
         CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
 
         var documentObject = dataSource._document;
@@ -1204,6 +1206,7 @@ define([
             raiseChangedEvent = true;
         }
 
+        dynamicObjectCollection.resumeEvents();
         if (raiseChangedEvent) {
             dataSource._changed.raiseEvent(dataSource);
         }

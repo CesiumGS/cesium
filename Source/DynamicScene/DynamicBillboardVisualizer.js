@@ -195,7 +195,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         this._scene.getPrimitives().remove(this._billboardCollection);
         return destroyObject(this);
     };
