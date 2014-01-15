@@ -184,7 +184,7 @@ define([
         var positionProperty = dynamicObject._position;
         var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
         var context = dynamicPolylineVisualizer._scene.getContext();
 
         if (!show || //

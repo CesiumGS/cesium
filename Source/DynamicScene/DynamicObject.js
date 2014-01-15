@@ -62,6 +62,7 @@ define(['../Core/createGuid',
         this._vertexPositions = undefined;
         this._vector = undefined;
         this._viewFrom = undefined;
+        this._uiShow = true;
 
         this._propertyChanged = new Event();
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
@@ -116,6 +117,26 @@ define(['../Core/createGuid',
                 if (oldValue !== value) {
                     this._name = value;
                     this._propertyChanged.raiseEvent(this, 'name', value, oldValue);
+                }
+            }
+        },
+        /**
+         * Gets or sets a boolean value indicating if the object should be displayed.
+         * This is a constant value to be used by the UI and when false, overrides
+         * any value specifed by the show property.
+         * @memberof DynamicObject.prototype
+         * @type {Boolean}
+         */
+        uiShow : {
+            configurable : false,
+            get : function() {
+                return this._uiShow;
+            },
+            set : function(value) {
+                var oldValue = this._uiShow;
+                if (oldValue !== value) {
+                    this._uiShow = value;
+                    this._propertyChanged.raiseEvent(this, 'uiShow', value, oldValue);
                 }
             }
         },

@@ -210,7 +210,7 @@ define([
         var pyramid;
         var showProperty = dynamicPyramid._show;
         var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else

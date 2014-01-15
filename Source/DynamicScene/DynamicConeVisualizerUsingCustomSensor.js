@@ -252,7 +252,7 @@ define([
         var cone;
         var showProperty = dynamicCone._show;
         var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show) {
             //don't bother creating or updating anything else
