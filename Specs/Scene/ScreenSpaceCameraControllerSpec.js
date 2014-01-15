@@ -169,6 +169,22 @@ defineSuite([
         expect(position.z).toEqual(camera.position.z);
     });
 
+    it('translate in rotated 2D', function() {
+        var frameState = setUp2D();
+        var position = Cartesian3.clone(camera.position);
+        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
+        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
+        updateController(frameState);
+        expect(position.x).toBeGreaterThan(camera.position.x);
+        expect(position.y).toEqual(camera.position.y);
+        expect(position.z).toEqual(camera.position.z);
+    });
+
     it('zoom in 2D', function() {
         var frameState = setUp2D();
         var position = Cartesian3.clone(camera.position);
