@@ -35,8 +35,8 @@ defineSuite([
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
-        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqual(expectedNWCorner);
-        expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqual(expectedSECorner);
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
+        expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
     });
 
     it('computes all attributes', function() {
