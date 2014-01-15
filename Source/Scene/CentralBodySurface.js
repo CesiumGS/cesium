@@ -546,7 +546,8 @@ define([
                 return true;
             }
 
-            return surface._ellipsoidalOccluder.isScaledSpacePointVisible(occludeePointInScaledSpace);
+            //return surface._ellipsoidalOccluder.isScaledSpacePointVisible(occludeePointInScaledSpace);
+            return true;
         }
 
         return true;
