@@ -1653,4 +1653,30 @@ defineSuite([
         expect(object.arrayData).toBeDefined();
         expect(object.arrayData.getValue()).toEqual(arrayPacket.array);
     });
+
+    it('CZML load suspends events.', function() {
+        var packets = [{
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }, {
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }];
+
+        var spy = jasmine.createSpy('changedEvent');
+
+        var dataSource = new CzmlDataSource();
+        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(spy);
+        dataSource.load(packets);
+
+        expect(spy.callCount).toEqual(1);
+    });
 });
