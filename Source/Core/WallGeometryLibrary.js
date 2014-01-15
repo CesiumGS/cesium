@@ -65,7 +65,7 @@ define([
 
         var length = positions.length;
         if (length < 2) {
-            return positions.slice(0);
+            return { positions: positions };
         }
 
         var v0 = positions[0];
