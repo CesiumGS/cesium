@@ -571,7 +571,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })]
             });
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {
@@ -626,7 +626,7 @@ defineSuite([
                     }
                 })
             });
-        }).toThrowDeveloperErrorDeveloperError();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the number of color texture exceeds the number color attachments supported', function() {

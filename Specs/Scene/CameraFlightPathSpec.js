@@ -102,7 +102,7 @@ defineSuite([
             CameraFlightPath.createAnimationExtent(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('create animation with extent throws without a destination', function() {

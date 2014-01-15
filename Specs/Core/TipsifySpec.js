@@ -23,7 +23,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : null,
                                    maximumIndex : 1,
                                    cacheSize : 3});
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('throws when calculating ACMR (2 of 4)', function() {
@@ -55,7 +55,7 @@ defineSuite([
             Tipsify.tipsify({indices : null,
                              maximumIndex : 1,
                              cacheSize : 3});
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('throws when executing Tipsify (2 of 5)', function() {

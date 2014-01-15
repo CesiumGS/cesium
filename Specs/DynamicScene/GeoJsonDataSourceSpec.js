@@ -569,7 +569,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithNullCrs);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('load throws with unknown crs type', function() {
@@ -585,7 +585,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('load throws with undefined crs properties', function() {
@@ -600,7 +600,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('load throws with unknown crs', function() {
@@ -618,7 +618,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('load throws with unknown crs link', function() {
@@ -637,7 +637,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('raises error when an error occurs in loadUrl', function() {

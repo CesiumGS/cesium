@@ -23,7 +23,7 @@ defineSuite([
 
         expect(function() {
             return spline.evaluate();
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('findTimeInterval throws without a time', function() {

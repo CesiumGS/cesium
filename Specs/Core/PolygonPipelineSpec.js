@@ -566,6 +566,6 @@ defineSuite([
         var positions = PolygonPipeline.eliminateHoles(outer, [inner], ellipsoid);
         expect(function() {
             PolygonPipeline.removeDuplicates(positions);
-        }).not.toThrowDeveloperError();
+        }).not.toThrow();
     });
 });

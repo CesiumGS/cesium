@@ -98,10 +98,11 @@ define([
         if (!defined(spherical)) {
             throw new DeveloperError('spherical is required');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Spherical(spherical.clock, spherical.cone, 1.0);
         }
-        //>>includeEnd('debug');
 
         result.clock = spherical.clock;
         result.cone = spherical.cone;

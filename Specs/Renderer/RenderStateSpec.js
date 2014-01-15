@@ -399,7 +399,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.getMinimumAliasedLineWidth() - 1
             });
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('fails to create (large lineWidth)', function() {
@@ -407,7 +407,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.getMaximumAliasedLineWidth() + 1
             });
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('fails to create (negative scissorTest.rectangle.width)', function() {

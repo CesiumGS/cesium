@@ -97,7 +97,7 @@ defineSuite([
     it('update throws in 2D mode without an orthographic frustum', function() {
         expect(function() {
             controller.update(SceneMode.SCENE2D);
-        }).toThrowDeveloperError();
+        }).toThrow();
     });
 
     it('move throws without an axis', function() {

@@ -92,7 +92,7 @@ defineSuite([
                     }
                 }
             });
-        }).not.toThrowDeveloperError();
+        }).not.toThrow();
 
         expect(function() {
             return new Tile({
