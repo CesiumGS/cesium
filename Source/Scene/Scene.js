@@ -346,6 +346,8 @@ define([
 
         this._compositeCommand = undefined;
 
+        this._translucentRenderStateCache = {};
+
         // initial guess at frustums.
         var near = this._camera.frustum.near;
         var far = this._camera.frustum.far;
@@ -749,6 +751,27 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    function getTranslucentRenderState(scene, renderState) {
+        var cache = scene._translucentRenderStateCache;
+
+        var translucentState = cache[renderState.id];
+        if (!defined(translucentState)) {
+            var depthMask = renderState.depthMask;
+            var blending = renderState.blending;
+
+            renderState.depthMask = false;
+            renderState.blending = BlendingState.ADDITIVE_BLEND;
+
+            translucentState = scene._context.createRenderState(renderState);
+            cache[renderState.id] = translucentState;
+
+            renderState.depthMask = depthMask;
+            renderState.blending = blending;
+        }
+
+        return translucentState;
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
@@ -850,7 +873,17 @@ define([
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
             for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
+                var command = commands[j];
+                var renderState = command.renderState;
+                //var shaderProgram = command.shaderProgram;
+
+                command.renderState = getTranslucentRenderState(scene, renderState);
+                //command.shaderProgram = getTranslucentShaderProgram(scene, shaderProgram);
+
+                executeCommand(command, scene, context, passState);
+
+                command.renderState = renderState;
+                //command.shaderProgram = shaderProgram;
             }
 
             passState.framebuffer = undefined;
