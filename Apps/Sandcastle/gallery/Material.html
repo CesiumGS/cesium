@@ -48,7 +48,7 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
-    // Brick Wall
+    // Striped Wall
     scene.getPrimitives().add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.WallGeometry({
@@ -59,7 +59,7 @@ require(['Cesium'], function(Cesium) {
             })
         }),
         appearance : new Cesium.MaterialAppearance({
-            material : Cesium.Material.fromType('Brick'),
+            material : Cesium.Material.fromType('Stripe'),
             faceForward : true
         })
     }));
