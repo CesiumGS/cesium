@@ -1,5 +1,5 @@
 /*global define*/
-define([
+define(['../../Core/BoundingSphere',
         '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -14,6 +14,7 @@ define([
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
+        BoundingSphere,
         Cartesian2,
         defaultValue,
         defined,
@@ -89,6 +90,9 @@ define([
         }
         knockout.getObservable(balloonViewModel, 'userClosed').subscribe(balloonClosed);
 
+        var scratchVertexPositions;
+        var scratchBoundingSphere;
+
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
@@ -100,12 +104,12 @@ define([
             if (showBalloon) {
                 if (defined(balloonedObject.position)) {
                     balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
+                } else if (defined(balloonedObject.vertexPositions)) {
+                    scratchVertexPositions = balloonedObject.vertexPositions.getValue(time, scratchVertexPositions);
+                    scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
+                    balloonViewModel.position = scratchBoundingSphere.center;
                 } else {
                     balloonViewModel.position = undefined;
-                    balloonViewModel.defaultPosition = {
-                            x : 415,
-                            y : viewer._lastHeight - 10
-                        };
                 }
 
                 var content;
