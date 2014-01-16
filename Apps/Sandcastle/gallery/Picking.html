@@ -214,8 +214,8 @@ require(['Cesium'], function(Cesium) {
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
-    function erodeSensorOnClick(scene, ellipsoid) {
-        Sandcastle.declare(erodeSensorOnClick); // For highlighting in Sandcastle.
+    function fadeSensorOnClick(scene, ellipsoid) {
+        Sandcastle.declare(fadeSensorOnClick); // For highlighting in Sandcastle.
 
         // Setup - Add the sensor.
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
@@ -227,20 +227,20 @@ require(['Cesium'], function(Cesium) {
             xHalfAngle : Cesium.Math.toRadians(40.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
             showIntersection : false,
-            material : Cesium.Material.fromType('Erosion')
+            material : Cesium.Material.fromType('Color')
         });
         scene.getPrimitives().add(sensors);
 
-        // If the mouse is over the sensor, change start the erosion animation.
+        // If the mouse is over the sensor, change start the alpha animation.
         var eroding = false;
         handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.position);
                 if (!eroding && Cesium.defined(pickedObject) && (pickedObject.primitive === sensor)) {
-                    // Prevent multiple erosions
+                    // Prevent multiple animations
                     eroding = true;
-                    scene.getAnimations().addProperty(sensor.material.uniforms, 'time', 1.0, 0.0, {
+                    scene.getAnimations().addAlpha(sensor.material, sensor.material.uniforms.color.alpha, 0.0, {
                         onComplete : function() {
                             if (!sensors.isDestroyed()) {
                                 sensors.remove(sensor);
@@ -466,10 +466,10 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(animateBillboardOnPick);
     });
 
-    Sandcastle.addToolbarButton('Erode Sensor on Click', function() {
+    Sandcastle.addToolbarButton('Fade Sensor on Click', function() {
         cleanup();
-        erodeSensorOnClick(scene, ellipsoid);
-        Sandcastle.highlight(erodeSensorOnClick);
+        fadeSensorOnClick(scene, ellipsoid);
+        Sandcastle.highlight(fadeSensorOnClick);
     });
 
     Sandcastle.addToolbarButton('Layer Primitives', function() {
