@@ -164,10 +164,7 @@ define([
         this._position = undefined;
         this._updateContent = false;
         this._timerRunning = false;
-        this._defaultPosition = {
-            x : this._container.clientWidth,
-            y : this._container.clientHeight / 2
-        };
+        this._defaultPosition = new Cartesian2(this._container.clientWidth, this._container.clientHeight / 2);
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
@@ -431,8 +428,7 @@ define([
                 return this._defaultPosition;
             },
             set : function(value) {
-                this._defaultPosition.x = value.x;
-                this._defaultPosition.y = value.y;
+                this._defaultPosition = Cartesian2.clone(value, this._defaultPosition);
             }
         },
         /**
