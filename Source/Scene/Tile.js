@@ -404,8 +404,6 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
-    var southeastScratch = new Cartesian3();
-    var northwestScratch = new Cartesian3();
     var westernMidpointScratch = new Cartesian3();
     var easternMidpointScratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
@@ -443,29 +441,27 @@ define([
         var westernMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, westernMidpointScratch);
 
         // Compute the normal of the plane on the western edge of the tile.
-        Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.westNormal);
+        var westNormal = Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
+        Cartesian3.normalize(westNormal, tile.westNormal);
 
         // The middle latitude on the eastern edge.
         cartographicScratch.longitude = extent.east;
         var easternMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, easternMidpointScratch);
 
         // Compute the normal of the plane on the eastern edge of the tile.
-        Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.eastNormal);
+        var eastNormal = Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
+        Cartesian3.normalize(eastNormal, tile.eastNormal);
 
-        var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
-        var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
+        // Compute the normal of the plane bounding the southern edge of the tile.
+        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getSoutheast(), cartesian3Scratch2);
+        var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
+        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
+        Cartesian3.normalize(southNormal, tile.southNormal);
 
-        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.southNormal);
-
-        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(easternMidpointCartesian, westernMidpointCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.northNormal);
+        // Compute the normal of the plane bounding the northern edge of the tile.
+        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getNorthwest(), cartesian3Scratch2);
+        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
+        Cartesian3.normalize(northNormal, tile.northNormal);
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
