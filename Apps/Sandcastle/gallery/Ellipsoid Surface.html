@@ -56,7 +56,7 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
-    // Grass Material
+    // Checkerboard Material
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.ExtentGeometry({
@@ -65,11 +65,11 @@ require(['Cesium'], function(Cesium) {
             })
         }),
         appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Grass')
+            material : Cesium.Material.fromType('Checkerboard')
         })
     }));
     
-    // Wood Material    
+    // Grid Material    
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.ExtentGeometry({
@@ -78,7 +78,7 @@ require(['Cesium'], function(Cesium) {
             })
         }),
         appearance : new Cesium.EllipsoidSurfaceAppearance({
-            material : Cesium.Material.fromType('Wood')
+            material : Cesium.Material.fromType('Grid')
         })
     }));
     

@@ -52,21 +52,6 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function applyAsphaltMaterial(primitive, scene) {
-        Sandcastle.declare(applyAsphaltMaterial);   // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Asphalt');
-    }
-
-    function applyBlobMaterial(primitive, scene) {
-        Sandcastle.declare(applyBlobMaterial);  // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Blob');
-    }
-
-    function applyBrickMaterial(primitive, scene) {
-        Sandcastle.declare(applyBrickMaterial); // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Brick');
-    }
-
     function applyBumpMapMaterial(primitive, scene) {
         Sandcastle.declare(applyBumpMapMaterial);   // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
@@ -95,11 +80,6 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function applyCementMaterial(primitive, scene) {
-        Sandcastle.declare(applyCementMaterial);    // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Cement');
-    }
-
     function applyCheckerboardMaterial(primitive, scene) {
         Sandcastle.declare(applyCheckerboardMaterial);  // For highlighting in Sandcastle.
         primitive.material = Cesium.Material.fromType('Checkerboard');
@@ -110,40 +90,8 @@ require(['Cesium'], function(Cesium) {
         primitive.material = Cesium.Material.fromType('Color');
     }
 
-    function applyCompositeMaterial1(primitive, scene) {
-        Sandcastle.declare(applyCompositeMaterial1);    // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material({
-            fabric: {
-                materials : {
-                    grass : {
-                        type : 'Grass'
-                    },
-                    asphalt : {
-                        type : 'Asphalt'
-                    },
-                    cement : {
-                        type : 'Cement'
-                    }
-                },
-                source :
-                    'czm_material czm_getMaterial(czm_materialInput materialInput) {' +
-                        'czm_material material = czm_getDefaultMaterial(materialInput);' +
-                        'float distanceFromCenter = abs(materialInput.st - vec2(0.5)).x;' +
-                        'if (distanceFromCenter > 0.3) { ' +
-                            'material.diffuse = grass.diffuse;' +
-                        '} else if (distanceFromCenter > 0.2) { ' +
-                            'material.diffuse = cement.diffuse;' +
-                        '} else {' +
-                            'material.diffuse = asphalt.diffuse;' +
-                        '}' +
-                        'return material;' +
-                    '}'
-            }
-        });
-    }
-
-    function applyCompositeMaterial2(primitive, scene) {
-        Sandcastle.declare(applyCompositeMaterial2);    // For highlighting in Sandcastle.
+    function applyCompositeMaterial(primitive, scene) {
+        Sandcastle.declare(applyCompositeMaterial);    // For highlighting in Sandcastle.
         primitive.material = new Cesium.Material({
                 fabric: {
                     uniforms : {
@@ -220,11 +168,6 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function applyFacetMaterial(primitive, scene) {
-        Sandcastle.declare(applyFacetMaterial); // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Facet');
-    }
-
     function applyWaterMaterial(primitive, scene) {
         Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
 
@@ -288,11 +231,6 @@ require(['Cesium'], function(Cesium) {
                 }
             }
         });
-    }
-
-    function applyGrassMaterial(primitive, scene) {
-        Sandcastle.declare(applyGrassMaterial); // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Grass');
     }
 
     function applyGridMaterial(primitive, scene) {
@@ -421,24 +359,6 @@ require(['Cesium'], function(Cesium) {
         primitive.material = Cesium.Material.fromType('Stripe');
     }
 
-    function applyTieDyeMaterial(primitive, scene) {
-        Sandcastle.declare(applyTieDyeMaterial);    // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('TieDye');
-    }
-
-    function applyWoodMaterial(primitive, scene) {
-        Sandcastle.declare(applyWoodMaterial);  // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Wood');
-    }
-
-    function applyErosionMaterial(primitive, scene) {
-        Sandcastle.declare(applyErosionMaterial);  // For highlighting in Sandcastle.
-        primitive.material = Cesium.Material.fromType('Erosion');
-        scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
-            duration : 1500
-        });
-    }
-
     function applyRimLightingMaterial(primitive, scene) {
         Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
         primitive.material = Cesium.Material.fromType('RimLighting');
@@ -518,34 +438,6 @@ require(['Cesium'], function(Cesium) {
         var proceduralTextureOptions = [{
             text : 'Procedural textures'
         }, {
-            text : 'Asphalt',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyAsphaltMaterial(extent, scene);
-                Sandcastle.highlight(applyAsphaltMaterial);
-            }
-        }, {
-            text : 'Blob',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyBlobMaterial(extent, scene);
-                Sandcastle.highlight(applyBlobMaterial);
-            }
-        }, {
-            text : 'Brick',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyBrickMaterial(extent, scene);
-                Sandcastle.highlight(applyBrickMaterial);
-            }
-        }, {
-            text : 'Cement',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyCementMaterial(extent, scene);
-                Sandcastle.highlight(applyCementMaterial);
-            }
-        }, {
             text : 'Checkerboard',
             onselect : function() {
                 toggleExtentVisibility();
@@ -560,20 +452,6 @@ require(['Cesium'], function(Cesium) {
                 Sandcastle.highlight(applyDotMaterial);
             }
         }, {
-            text : 'Facet',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyFacetMaterial(extent, scene);
-                Sandcastle.highlight(applyFacetMaterial);
-            }
-        }, {
-            text : 'Grass',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyGrassMaterial(extent, scene);
-                Sandcastle.highlight(applyGrassMaterial);
-            }
-        }, {
             text : 'Grid',
             onselect : function() {
                 toggleExtentVisibility(extent, worldExtent);
@@ -586,20 +464,6 @@ require(['Cesium'], function(Cesium) {
                 toggleExtentVisibility();
                 applyStripeMaterial(extent, scene);
                 Sandcastle.highlight(applyStripeMaterial);
-            }
-        }, {
-            text : 'TieDye',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyTieDyeMaterial(extent, scene);
-                Sandcastle.highlight(applyTieDyeMaterial);
-            }
-        }, {
-            text : 'Wood',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyWoodMaterial(extent, scene);
-                Sandcastle.highlight(applyWoodMaterial);
             }
         }];
 
@@ -681,13 +545,6 @@ require(['Cesium'], function(Cesium) {
         var miscMaterialOptions = [{
             text : 'Misc materials'
         }, {
-            text : 'Erosion',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyErosionMaterial(extent, scene);
-                Sandcastle.highlight(applyErosionMaterial);
-            }
-        }, {
             text : 'Rim Lighting',
             onselect : function() {
                 toggleWorldExtentVisibility();
@@ -710,18 +567,11 @@ require(['Cesium'], function(Cesium) {
         var compositeMaterialOptions = [{
             text : 'Example composite materials'
         }, {
-            text : 'Composite Example 1',
-            onselect : function() {
-                toggleExtentVisibility();
-                applyCompositeMaterial1(extent, scene);
-                Sandcastle.highlight(applyCompositeMaterial1);
-            }
-        }, {
-            text : 'Composite Example 2',
+            text : 'Composite Example',
             onselect : function() {
                 toggleWorldExtentVisibility();
-                applyCompositeMaterial2(worldExtent, scene);
-                Sandcastle.highlight(applyCompositeMaterial2);
+                applyCompositeMaterial(worldExtent, scene);
+                Sandcastle.highlight(applyCompositeMaterial);
             }
         }];
 
