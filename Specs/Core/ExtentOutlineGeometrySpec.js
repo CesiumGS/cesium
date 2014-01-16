@@ -30,7 +30,7 @@ defineSuite([
         expect(m.indices.length).toEqual(8 * 2);
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
-        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqual(expectedNWCorner);
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
     it('compute positions with rotation', function() {
