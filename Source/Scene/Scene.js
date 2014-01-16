@@ -23,6 +23,7 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/PrimitiveType',
+        '../Renderer/BlendFunction',
         '../Renderer/BlendingState',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
@@ -75,6 +76,7 @@ define([
         ColorGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         PrimitiveType,
+        BlendFunction,
         BlendingState,
         Context,
         ClearCommand,
@@ -347,6 +349,7 @@ define([
         this._compositeCommand = undefined;
 
         this._translucentRenderStateCache = {};
+        this._translucentShaderCache = {};
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -751,6 +754,13 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    var translucentBlend = {
+        functionSourceRgb : BlendFunction.ONE,
+        functionDestinationRgb : BlendFunction.ONE,
+        functionSourceAlpha : BlendFunction.ZERO,
+        functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+    };
+
     function getTranslucentRenderState(scene, renderState) {
         var cache = scene._translucentRenderStateCache;
 
@@ -760,7 +770,8 @@ define([
             var blending = renderState.blending;
 
             renderState.depthMask = false;
-            renderState.blending = BlendingState.ADDITIVE_BLEND;
+            //renderState.blending = BlendingState.ADDITIVE_BLEND;
+            renderState.blending = translucentBlend;
 
             translucentState = scene._context.createRenderState(renderState);
             cache[renderState.id] = translucentState;
@@ -770,6 +781,42 @@ define([
         }
 
         return translucentState;
+    }
+
+    function getTranslucentShaderProgram(scene, shaderProgram) {
+        var cache = scene._translucentShaderCache;
+        var attributeLocations = shaderProgram._attributeLocations;
+        var vs = shaderProgram.vertexShaderSource;
+        var fs = shaderProgram.fragmentShaderSource;
+        var key = vs + fs + JSON.stringify(attributeLocations);
+
+        var shader = cache[key];
+        if (!defined(shader)) {
+            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+
+            var source = '#extension GL_EXT_draw_buffers : enable \n' +
+                'vec4 czm_gl_FragColor;\n' +
+                renamedFS + '\n\n' +
+                'float weight(float depth, float alpha)\n' +
+                '{\n' +
+                '    return 1.0;\n' +
+                '}\n\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
+                '    float ai = czm_gl_FragColor.a;\n' +
+                '    float wzi = weight(gl_FragCoord.z, ai);\n' +
+                '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
+                '    gl_FragData[1] = vec4(ai * wzi);' +
+                '}\n';
+
+            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
+            cache[key] = shader;
+        }
+
+        return shader;
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
@@ -875,15 +922,15 @@ define([
             for (j = 0; j < length; ++j) {
                 var command = commands[j];
                 var renderState = command.renderState;
-                //var shaderProgram = command.shaderProgram;
+                var shaderProgram = command.shaderProgram;
 
                 command.renderState = getTranslucentRenderState(scene, renderState);
-                //command.shaderProgram = getTranslucentShaderProgram(scene, shaderProgram);
+                command.shaderProgram = getTranslucentShaderProgram(scene, shaderProgram);
 
                 executeCommand(command, scene, context, passState);
 
                 command.renderState = renderState;
-                //command.shaderProgram = shaderProgram;
+                command.shaderProgram = shaderProgram;
             }
 
             passState.framebuffer = undefined;
@@ -924,11 +971,16 @@ define([
                 height : height
             });
             opaqueTexture.setSampler(sampler);
-            var translucentTexture = context.createTexture2D({
+            var accumulationTexture = context.createTexture2D({
                 width : width,
                 height : height
             });
-            translucentTexture.setSampler(sampler);
+            accumulationTexture.setSampler(sampler);
+            var revealageTexture = context.createTexture2D({
+                width : width,
+                height : height
+            });
+            revealageTexture.setSampler(sampler);
 
             var depthTexture;
             var depthRenderbuffer;
@@ -951,7 +1003,7 @@ define([
                 depthRenderbuffer : depthRenderbuffer
             });
             scene._translucentFBO = context.createFramebuffer({
-                colorTextures : [translucentTexture],
+                colorTextures : [accumulationTexture, revealageTexture],
                 depthTexture : depthTexture,
                 depthRenderbuffer : depthRenderbuffer
             });
@@ -959,14 +1011,20 @@ define([
 
         if (!defined(scene._compositeCommand)) {
             var fs = 'uniform sampler2D u_opaque;\n' +
-                    'uniform sampler2D u_translucent;\n' +
+                    'uniform sampler2D u_accumulation;\n' +
+                    'uniform sampler2D u_revealage;\n' +
                     'varying vec2 v_textureCoordinates;\n' +
                     'void main()\n' +
                     '{\n' +
                     '    vec4 opaque = texture2D(u_opaque, v_textureCoordinates);\n' +
-                    '    vec4 transparent = texture2D(u_translucent, v_textureCoordinates);\n' +
+                    //'    vec4 transparent = texture2D(u_translucent, v_textureCoordinates);\n' +
+                    '    vec4 accum = texture2D(u_accumulation, v_textureCoordinates);\n' +
+                    '    float r = accum.a;\n' +
+                    '    accum.a = texture2D(u_revealage, v_textureCoordinates).r;\n' +
+                    '    vec4 transparent = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), r);\n' +
                     '    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
                     '    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
+                    //'    gl_FragColor = transparent;\n' +
                     '}\n';
 
             var command = new DrawCommand();
@@ -980,8 +1038,11 @@ define([
                 u_opaque : function() {
                     return scene._opaqueFBO.getColorTexture(0);
                 },
-                u_translucent : function() {
+                u_accumulation : function() {
                     return scene._translucentFBO.getColorTexture(0);
+                },
+                u_revealage : function() {
+                    return scene._translucentFBO.getColorTexture(1);
                 }
             };
 
