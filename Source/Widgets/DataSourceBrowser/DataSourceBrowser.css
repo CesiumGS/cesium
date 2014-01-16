@@ -239,6 +239,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
 
 .cesium-dataSourceBrowser-dataSource {
     margin-right: 40px;
+    overflow: visible;
 }
 
 .cesium-dataSourceBrowser .cesium-dataSourceBrowser-layerButton {
