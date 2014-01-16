@@ -180,7 +180,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPyramidVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 

@@ -408,7 +408,7 @@
 
 	<target name="combineJavaScript.combineCesium.check">
 		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
-			<srcfiles refid="cesiumJsFiles" />
+			<srcresources refid="cesiumJsFiles" />
 		</uptodate>
 	</target>
 
