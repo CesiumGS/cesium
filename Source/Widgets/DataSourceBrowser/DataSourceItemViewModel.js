@@ -23,8 +23,6 @@ define([
             throw new DeveloperError('dataSource is required.');
         }
 
-        var that = this;
-
         this._dataSource = dataSource;
         this._rootViewModel = rootViewModel;
         this._dynamicObject = dynamicObject;
@@ -32,14 +30,14 @@ define([
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
         this.name = name;
         this.children = [];
-        this.expanded = false;
-        this.uiShow = true;
+        this.expanded = true;
+        this._uiShow = true;
 
-        knockout.track(this, ['name', 'children', 'expanded', 'uiShow']);
+        knockout.track(this, ['name', 'children', 'expanded', '_uiShow']);
 
         this.displayName = undefined;
         knockout.defineProperty(this, 'displayName', function() {
-            var name = defaultValue(that.name, '');
+            var name = defaultValue(this.name, '');
             // allow break after slash
             name = name.replace(/\//g, '/\u200b');
             // replace empty string with non-breaking space
@@ -51,29 +49,32 @@ define([
 
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
-            return that.children.length > 0;
+            return this.children.length > 0;
         });
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return rootViewModel.selectedItem === that;
+            return rootViewModel.selectedItem === this;
         });
 
-        /* not working, added as knockout.track (above) instead.
         this.uiShow = undefined;
         knockout.defineProperty(this, 'uiShow', {
-            get: function () {
-                return that.dynamicObject.uiShow;
+            get : function() {
+                return this._uiShow;
             },
-            set: function (newValue) {
-                that.dynamicObject.uiShow = newValue;
+            set : function(newValue) {
+                this.dynamicObject.uiShow = newValue;
+                this._uiShow = newValue;
+                var len = this.children.length;
+                for (var i = 0; i < len; ++i) {
+                    this.children[i].uiShow = newValue;
+                }
             }
         });
-        */
 
         this.isFilteredOut = undefined;
         knockout.defineProperty(this, 'isFilteredOut', function() {
-            return rootViewModel.isNodeFiltered(that);
+            return rootViewModel.isNodeFiltered(this);
         });
 
         knockout.getObservable(this, 'isFilteredOut').extend({
@@ -86,7 +87,7 @@ define([
          */
         this.expandIndicator = undefined;
         knockout.defineProperty(this, 'expandIndicator', function() {
-            return that.expanded ? '&#9660;' : '&#9658;';
+            return this.expanded ? '&#9660;' : '&#9658;';
         });
     };
 
@@ -125,7 +126,9 @@ define([
         }
     });
 
-    DataSourceItemViewModel.prototype.doubleClick = function(){
+    //TODO What happens when we double click on an item not being displayed?
+    //Or not available at the current time?
+    DataSourceItemViewModel.prototype.doubleClick = function() {
         this._rootViewModel.onObjectDoubleClick.raiseEvent(this._dynamicObject);
     };
 
@@ -135,24 +138,6 @@ define([
 
     DataSourceItemViewModel.prototype.toggleExpanded = function() {
         this.expanded = !this.expanded;
-    };
-
-    // TODO: refactor.
-    DataSourceItemViewModel.prototype.setUiShow = function(newValue) {
-        this.dynamicObject.uiShow = this.uiShow = newValue;
-        var len = this.children.length;
-        for (var i = 0; i < len; ++i) {
-            this.children[i].setUiShow(newValue);
-        }
-    };
-
-    // TODO: Make uiShow not need any thrashing.
-    DataSourceItemViewModel.prototype.thrashUiShow = function() {
-        this.uiShow = !this.uiShow;
-        var that = this;
-        window.setTimeout(function () {
-            that.setUiShow(!that.uiShow);
-        }, 1);
     };
 
     return DataSourceItemViewModel;

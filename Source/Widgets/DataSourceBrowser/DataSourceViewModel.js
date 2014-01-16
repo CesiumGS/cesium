@@ -38,21 +38,11 @@ define([
          */
         this.name = dataSource.getName();
         this.children = [];
-        this.expanded = false;
+        this.expanded = true;
         this._isLoading = false;
         this._uiShow = true;
 
         knockout.track(this, ['name', 'children', 'expanded', '_isLoading', '_uiShow']);
-
-        var that = this;
-
-        this._eventHelper = new EventHelper();
-        this._eventHelper.add(dataSource.getLoadingEvent(), function(isLoading) {
-            that._isLoading = isLoading;
-        });
-        this._eventHelper.add(dataSource.getChangedEvent(), function(dataSource) {
-            that.name = dataSource.getName();
-        });
 
         /**
          * Gets whether the data source is currently loading.  This property is observable.
@@ -60,12 +50,12 @@ define([
          */
         this.isLoading = undefined;
         knockout.defineProperty(this, 'isLoading', function() {
-            return that._isLoading;
+            return this._isLoading;
         });
 
         this.displayName = undefined;
         knockout.defineProperty(this, 'displayName', function() {
-            var name = defaultValue(that.name, '');
+            var name = defaultValue(this.name, '');
             // allow break after slash
             name = name.replace(/\//g, '/\u200b');
             // replace empty string with non-breaking space
@@ -77,27 +67,31 @@ define([
 
         this.uiShow = undefined;
         knockout.defineProperty(this, 'uiShow', {
-            get: function () {
-                return that._uiShow;
+            get : function() {
+                return this._uiShow;
             },
-            set: function (newValue) {
-                that._uiShow = newValue;
+            set : function(newValue) {
+                this._uiShow = newValue;
+                var len = this.children.length;
+                for (var i = 0; i < len; ++i) {
+                    this.children[i].uiShow = newValue;
+                }
             }
         });
 
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
-            return that.children.length > 0;
+            return this.children.length > 0;
         });
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return that._dataSourceBrowserViewModel.selectedItem === that;
+            return this._dataSourceBrowserViewModel.selectedItem === this;
         });
 
         this.isFilteredOut = undefined;
         knockout.defineProperty(this, 'isFilteredOut', function() {
-            return dataSourceBrowserViewModel.isNodeFiltered(that);
+            return dataSourceBrowserViewModel.isNodeFiltered(this);
         });
 
         knockout.getObservable(this, 'isFilteredOut').extend({
@@ -110,7 +104,7 @@ define([
          */
         this.expandIndicator = undefined;
         knockout.defineProperty(this, 'expandIndicator', function() {
-            return that.expanded ? '&#9660;' : '&#9658;';
+            return this.expanded ? '&#9660;' : '&#9658;';
         });
 
         /**
@@ -119,7 +113,7 @@ define([
          */
         this.clockTracking = undefined;
         knockout.defineProperty(this, 'clockTracking', function() {
-            return that._dataSourceBrowserViewModel.clockTrackedDataSource === that._dataSource;
+            return this._dataSourceBrowserViewModel.clockTrackedDataSource === this._dataSource;
         });
 
         /**
@@ -128,8 +122,8 @@ define([
          */
         this.isSoleSource = undefined;
         knockout.defineProperty(this, 'isSoleSource', function() {
-            var dataSourceBrowserViewModel = that._dataSourceBrowserViewModel;
-            return dataSourceBrowserViewModel.dataSourcesLength === 1 && dataSourceBrowserViewModel.dataSources.get(0) === that._dataSource;
+            var dataSourceBrowserViewModel = this._dataSourceBrowserViewModel;
+            return dataSourceBrowserViewModel.dataSourcesLength === 1 && dataSourceBrowserViewModel.dataSources.get(0) === this._dataSource;
         });
 
         /**
@@ -138,10 +132,19 @@ define([
          */
         this.isConfiguring = undefined;
         knockout.defineProperty(this, 'isConfiguring', function() {
-            var dataSourceConfigurationPanelViewModel = that._dataSourceBrowserViewModel.dataSourceConfigurationPanelViewModel;
-            return defined(that._dataSource.getConfigurationPanel) &&
+            var dataSourceConfigurationPanelViewModel = this._dataSourceBrowserViewModel.dataSourceConfigurationPanelViewModel;
+            return defined(this._dataSource.getConfigurationPanel) &&
                    dataSourceConfigurationPanelViewModel.visible &&
-                   dataSourceConfigurationPanelViewModel.activeDataSourceConfigurationPanel === that._dataSource.getConfigurationPanel();
+                   dataSourceConfigurationPanelViewModel.activeDataSourceConfigurationPanel === this._dataSource.getConfigurationPanel();
+        });
+
+        var that = this;
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(dataSource.getLoadingEvent(), function(isLoading) {
+            that._isLoading = isLoading;
+        });
+        this._eventHelper.add(dataSource.getChangedEvent(), function(dataSource) {
+            that.name = dataSource.getName();
         });
 
         this._trackClock = createCommand(function() {
@@ -220,24 +223,6 @@ define([
             }
         }
     });
-
-    // TODO: refactor.
-    DataSourceViewModel.prototype.setUiShow = function(newValue) {
-        this.uiShow = newValue;
-        var len = this.children.length;
-        for (var i = 0; i < len; ++i) {
-            this.children[i].setUiShow(newValue);
-        }
-    };
-
-    // TODO: Make uiShow not need any thrashing.
-    DataSourceViewModel.prototype.thrashUiShow = function() {
-        this.uiShow = !this.uiShow;
-        var that = this;
-        window.setTimeout(function () {
-            that.setUiShow(!that.uiShow);
-        }, 1);
-    };
 
     DataSourceViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

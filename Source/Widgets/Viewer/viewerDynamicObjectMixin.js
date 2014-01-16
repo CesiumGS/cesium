@@ -92,11 +92,11 @@ define([
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
-            if (defined(dynamicObjectView)) {
+            if (defined(dynamicObjectView) && trackedObject.uiShow) {
                 dynamicObjectView.update(time);
             }
 
-            var showBalloon = defined(balloonedObject) && balloonedObject.isAvailable(time);
+            var showBalloon = defined(balloonedObject) && balloonedObject.isAvailable(time) && balloonedObject.uiShow;
             if (showBalloon) {
                 if (defined(balloonedObject.position)) {
                     balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);

@@ -53,22 +53,20 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         templateElement.type = 'text/html';
         templateElement.id = templateID;
         templateElement.textContent = '<li \
-data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }, event: { dblclick: doubleClick}">\
+data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <!-- ko if: hasChildren -->\
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
-<span class="cesium-dataSourceBrowser-item" \
-    data-bind="click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <label data-bind="click: thrashUiShow"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+<span class="cesium-dataSourceBrowser-item">\
+    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
     <span data-bind="html: expandIndicator, click: toggleExpanded"></span>\
-    <span data-bind="text: displayName, attr: { title: displayName }"></span></span>\
+    <span data-bind="event: { dblclick: doubleClick}, click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }, text: displayName, attr: { title: displayName }"></span></span>\
 <ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <div>\
-<span class="cesium-dataSourceBrowser-item" \
-    data-bind="click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <label data-bind="click: thrashUiShow"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="text: displayName, attr: { title: displayName }"></span>\
+<span class="cesium-dataSourceBrowser-item">\
+    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+    <span data-bind="event: { dblclick: doubleClick}, click: select, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }, text: displayName, attr: { title: displayName }"></span>\
 </span>\
 </div>\
 <!-- /ko -->';
@@ -146,10 +144,10 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
 <div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded,\
                         \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
-    data-bind="click: toggleExpanded, css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <label data-bind="click: thrashUiShow, clickBubble: false"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="html: expandIndicator"></span>\
-    <span data-bind="text: displayName"></span>\
+    data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
+    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+    <span data-bind="click: toggleExpanded, html: expandIndicator"></span>\
+    <span data-bind="click: toggleExpanded, text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
         <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
             data-bind="visible: !isSoleSource || !clockTracking, \
@@ -170,7 +168,7 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
     data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
                       \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
-    <label data-bind="click: thrashUiShow, clickBubble: false"><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
     <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
         <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
