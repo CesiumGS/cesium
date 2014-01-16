@@ -285,8 +285,8 @@ defineSuite([
                     for ( var k = 0; k < 9; k++) {
                         testDiff[k] = t[k] - expectedMtx[k];
                     }
-                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
                 }
             });
         });
@@ -328,8 +328,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 
@@ -353,8 +353,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 
@@ -377,8 +377,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 

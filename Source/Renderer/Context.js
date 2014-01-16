@@ -212,6 +212,8 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        // TODO: WebGL default is false. This works around a bug in Canary and can be removed when fixed: https://code.google.com/p/chromium/issues/detail?id=335273
+        webglOptions.stencil = defaultValue(webglOptions.stencil, false);
         webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
         this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
