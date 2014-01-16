@@ -13,6 +13,7 @@ Beta Releases
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
 * Fix picking in 2D with rotated map. [#1337](https://github.com/AnalyticalGraphicsInc/cesium/issues/1337)
+* The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
 
 ### b24 - 2014-01-06
 
