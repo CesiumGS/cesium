@@ -584,24 +584,22 @@ define([
      * @see Context#createShaderProgram
      */
     var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
-        var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-        var uniforms = findUniforms(gl, program);
-        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
-
         this._gl = gl;
-        this._program = program;
-        this._numberOfVertexAttributes = numberOfVertexAttributes;
-        this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
-        this._uniformsByName = uniforms.uniformsByName;
-        this._uniforms = uniforms.uniforms;
-        this._automaticUniforms = partitionedUniforms.automaticUniforms;
-        this._manualUniforms = partitionedUniforms.manualUniforms;
+        this._logShaderCompilation = logShaderCompilation;
+        this._attributeLocations = attributeLocations;
+
+        this._program = undefined;
+        this._numberOfVertexAttributes = undefined;
+        this._vertexAttributes = undefined;
+        this._uniformsByName = undefined;
+        this._uniforms = undefined;
+        this._automaticUniforms = undefined;
+        this._manualUniforms = undefined;
 
         /**
          * @private
          */
-        this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+        this.maximumTextureUnitIndex = undefined;
 
         /**
          * GLSL source for the shader program's vertex shader.  This is the version of
@@ -1088,6 +1086,25 @@ define([
     };
 
     ShaderProgram.prototype._bind = function() {
+        var gl = this._gl;
+
+        if (!defined(this._program)) {
+            var program = createAndLinkProgram(gl, this._logShaderCompilation, this.vertexShaderSource, this.fragmentShaderSource, this._attributeLocations);
+            var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+            var uniforms = findUniforms(gl, program);
+            var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
+
+            this._program = program;
+            this._numberOfVertexAttributes = numberOfVertexAttributes;
+            this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
+            this._uniformsByName = uniforms.uniformsByName;
+            this._uniforms = uniforms.uniforms;
+            this._automaticUniforms = partitionedUniforms.automaticUniforms;
+            this._manualUniforms = partitionedUniforms.manualUniforms;
+
+            this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+        }
+
         this._gl.useProgram(this._program);
     };
 
