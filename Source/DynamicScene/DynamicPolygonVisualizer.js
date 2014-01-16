@@ -168,7 +168,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPolygonVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 
