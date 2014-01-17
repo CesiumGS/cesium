@@ -126,7 +126,13 @@ define([
         }
 
         if (endUserOptions.stats) {
-            var performanceDisplay = new PerformanceDisplay({container: 'cesiumContainer'});
+            var performanceContainer = document.createElement('div');
+            performanceContainer.style.position = 'absolute';
+            performanceContainer.style.top = '10px';
+            performanceContainer.style.left = '10px';
+            var container = document.getElementById('cesiumContainer');
+            container.appendChild(performanceContainer);
+            var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
             scene.performanceDisplay = performanceDisplay;
         }
 

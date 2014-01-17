@@ -47,7 +47,7 @@ define([
         this._fpsColor = defaultValue(description.fpsColor, defaultFpsColor).toCssColorString();
         this._frameTimeColor = defaultValue(description.frameTimeColor, defaultFrameTimeColor).toCssColorString();
         this._backgroundColor = defaultValue(description.backgroundColor, defaultBackgroundColor).toCssColorString();
-        this._font = defaultValue(description.font, 'bold 14px Helvetica,Arial,sans-serif');
+        this._font = defaultValue(description.font, 'bold 12px Helvetica,Arial,sans-serif');
 
         var display = document.createElement('div');
         this._fpsElement = document.createElement('div');
