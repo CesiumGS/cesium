@@ -963,12 +963,23 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraRF.direction);
-        Cartesian3.negate(direction, direction);
-        Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraRF.right);
+        cart.longitude = east;
+        cart.latitude = (north + south) * 0.5;
+        var midEast = ellipsoid.cartographicToCartesian(cart, cameraRF.direction);
+        cart.longitude = west;
+        var right = ellipsoid.cartographicToCartesian(cart, cameraRF.right);
+        Cartesian3.subtract(midEast, right, right);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction, cameraRF.up);
+
+        cart.longitude = (east + west) * 0.5;
+        cart.latitude = north;
+        var midNorth = ellipsoid.cartographicToCartesian(cart, cameraRF.direction);
+        cart.latitude = south;
+        var up = ellipsoid.cartographicToCartesian(cart, cameraRF.up);
+        Cartesian3.subtract(midNorth, up, up);
+        Cartesian3.normalize(up, up);
+
+        var direction = Cartesian3.cross(up, right, cameraRF.direction);
 
         var height = Math.max(
           Math.abs(Cartesian3.dot(up, northWest)),
@@ -987,9 +998,13 @@ define([
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var scalar = Cartesian3.magnitude(center) + d;
-        Cartesian3.normalize(center, center);
-        return Cartesian3.multiplyByScalar(center, scalar, result);
+        Cartesian3.negate(direction, result);
+        return Cartesian3.multiplyByScalar(result, scalar, result);
     }
 
     var viewExtentCVCartographic = new Cartographic();
@@ -1251,6 +1266,8 @@ define([
         return result;
     }
 
+    var scratchDirection = new Cartesian3();
+
     function getPickRayOrthographic(camera, windowPosition, result) {
         var width = camera._context._canvas.clientWidth;
         var height = camera._context._canvas.clientHeight;
@@ -1262,8 +1279,11 @@ define([
 
         var origin = result.origin;
         Cartesian3.clone(camera.position, origin);
-        origin.x += x;
-        origin.y += y;
+
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
 
         Cartesian3.clone(camera.directionWC, result.direction);
 

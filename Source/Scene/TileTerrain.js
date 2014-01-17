@@ -69,9 +69,9 @@ define([
         Cartesian3.clone(mesh.center, tile.center);
         tile.minimumHeight = mesh.minimumHeight;
         tile.maximumHeight = mesh.maximumHeight;
-        BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
+        tile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
 
-        Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
+        tile.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
 
         // Free the tile's existing vertex array, if any.
         tile.freeVertexArray();

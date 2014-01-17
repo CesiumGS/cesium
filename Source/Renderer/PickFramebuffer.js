@@ -50,10 +50,10 @@ define([
 
             this._fb = this._fb && this._fb.destroy();
             this._fb = context.createFramebuffer({
-                colorTexture : context.createTexture2D({
+                colorTextures : [context.createTexture2D({
                     width : width,
                     height : height
-                }),
+                })],
                 depthRenderbuffer : context.createRenderbuffer({
                     format : RenderbufferFormat.DEPTH_COMPONENT16
                 })
