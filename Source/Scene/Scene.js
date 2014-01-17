@@ -329,8 +329,8 @@ define([
          * @default undefined
          *
          * @example
-         * // Do not execute any commands.
-         * scene.performanceDisplay = new PerformanceDisplay({container: 'cesiumContainer'});
+         * //var performanceContainer = a DOM element to contain the performance display
+         * scene.performanceDisplay = new PerformanceDisplay({container: performanceContainer});
          *
          */
         this.performanceDisplay = undefined;
