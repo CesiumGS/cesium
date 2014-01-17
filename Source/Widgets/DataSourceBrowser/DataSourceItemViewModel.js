@@ -31,7 +31,7 @@ define([
         this.name = name;
         this.children = [];
         this.expanded = true;
-        this._uiShow = true;
+        this._uiShow = dynamicObject.uiShow;
 
         knockout.track(this, ['name', 'children', 'expanded', '_uiShow']);
 
