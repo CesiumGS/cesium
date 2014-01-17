@@ -170,7 +170,7 @@ define([
         this._opaqueClearCommand = opaqueClearCommand;
 
         var translucentClearCommand = new ClearCommand();
-        translucentClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
+        translucentClearCommand.color = new Color(0.0, 0.0, 0.0, 1.0);
         translucentClearCommand.owner = this;
         this._translucentClearCommand = translucentClearCommand;
 
@@ -759,6 +759,8 @@ define([
         functionDestinationRgb : BlendFunction.ONE,
         functionSourceAlpha : BlendFunction.ZERO,
         functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+        //functionSourceAlpha : BlendFunction.ONE,
+        //functionDestinationAlpha : BlendFunction.ONE
     };
 
     function getTranslucentRenderState(scene, renderState) {
@@ -798,18 +800,25 @@ define([
             var source = '#extension GL_EXT_draw_buffers : enable \n' +
                 'vec4 czm_gl_FragColor;\n' +
                 renamedFS + '\n\n' +
-                'float weight(float depth, float alpha)\n' +
+                'float weight(float z, float a)\n' +
                 '{\n' +
-                '    return 1.0;\n' +
+                //'    return 1.0;\n' +
+                '   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 100.0 / (1e-5 + pow(abs(z) / 5.0, 2.0) + pow(abs(z) / 200.0, 6.0))));\n' + // (7)
+                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 100.0 / (1e-5 + pow(abs(z) / 10.0, 3.0) + pow(abs(z) / 200.0, 6.0))));\n' + // (8)
+                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 0.3 / (1e-5 + pow(abs(z) / 200.0, 4.0))));\n' + // (9)
+                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 1e10 * pow(1.0 - z, 3.0)));\n' + // (10)
                 '}\n\n' +
                 'void main()\n' +
                 '{\n' +
                 '    czm_translucent_main();\n' +
                 '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
-                '    float wzi = weight(gl_FragCoord.z, ai);\n' +
+                //'    float wzi = weight(gl_FragCoord.z, ai);\n' +
+                '    float wzi = weight(czm_windowToEyeCoordinates(gl_FragCoord).z, ai);\n' +
                 '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
                 '    gl_FragData[1] = vec4(ai * wzi);' +
+                //'    gl_FragData[0] = vec4(Ci, ai);\n' +
+                //'    gl_FragData[1] = vec4(1.0);' +
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
@@ -973,12 +982,16 @@ define([
             opaqueTexture.setSampler(sampler);
             var accumulationTexture = context.createTexture2D({
                 width : width,
-                height : height
+                height : height,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT
             });
             accumulationTexture.setSampler(sampler);
             var revealageTexture = context.createTexture2D({
                 width : width,
-                height : height
+                height : height,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.FLOAT
             });
             revealageTexture.setSampler(sampler);
 
@@ -1017,11 +1030,12 @@ define([
                     'void main()\n' +
                     '{\n' +
                     '    vec4 opaque = texture2D(u_opaque, v_textureCoordinates);\n' +
-                    //'    vec4 transparent = texture2D(u_translucent, v_textureCoordinates);\n' +
                     '    vec4 accum = texture2D(u_accumulation, v_textureCoordinates);\n' +
                     '    float r = accum.a;\n' +
                     '    accum.a = texture2D(u_revealage, v_textureCoordinates).r;\n' +
                     '    vec4 transparent = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), r);\n' +
+                    //'    float n = max(1.0, texture2D(u_revealage, v_textureCoordinates).r);\n' +
+                    //'    vec4 transparent = vec4(accum.rgb / max(accum.a, 0.0001), pow(max(0.0, 1.0 - accum.a / n), n));\n' +
                     '    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
                     '    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
                     //'    gl_FragColor = transparent;\n' +
