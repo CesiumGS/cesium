@@ -150,9 +150,9 @@ define([
      * @example
      * polyline.setPositions(
      *   ellipsoid.cartographicArrayToCartesianArray([
-     *     new Cartographic3(...),
-     *     new Cartographic3(...),
-     *     new Cartographic3(...)
+     *     new Cesium.Cartographic(...),
+     *     new Cesium.Cartographic(...),
+     *     new Cesium.Cartographic(...)
      *   ])
      * );
      */

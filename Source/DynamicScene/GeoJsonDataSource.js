@@ -203,11 +203,11 @@ define([
      *
      * @example
      * //Use a billboard instead of a point.
-     * var dataSource = new GeoJsonDataSource();
+     * var dataSource = new Cesium.GeoJsonDataSource();
      * var defaultPoint = dataSource.defaulPoint;
      * defaultPoint.point = undefined;
-     * var billboard = new DynamicBillboard();
-     * billboard.image = new ConstantProperty('image.png');
+     * var billboard = new Cesium.DynamicBillboard();
+     * billboard.image = new Cesium.ConstantProperty('image.png');
      * defaultPoint.billboard = billboard;
      * dataSource.loadUrl('sample.geojson');
      */

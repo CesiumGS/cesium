@@ -29,7 +29,7 @@ define([
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
      * @example
-     * loadCubeMap(context, {
+     * Cesium.loadCubeMap(context, {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
      *     positiveY : 'skybox_py.png',

@@ -52,7 +52,7 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = widget.centralBody.getEllipsoid();
-     * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
@@ -101,7 +101,7 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = widget.centralBody.getEllipsoid();
-     * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));

@@ -17,7 +17,7 @@ define([
      * @exception {DeveloperError} year is required and must be a number.
      *
      * @example
-     * var leapYear = isLeapYear(2000); // true
+     * var leapYear = Cesium.isLeapYear(2000); // true
      */
     function isLeapYear(year) {
         if (year === null || isNaN(year)) {

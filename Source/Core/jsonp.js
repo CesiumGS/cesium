@@ -31,7 +31,7 @@ define([
      *
      * @example
      * // load a data asynchronously
-     * jsonp('some/webservice').then(function(data) {
+     * Cesium.jsonp('some/webservice').then(function(data) {
      *     // use the loaded data
      * }, function() {
      *     // an error occurred

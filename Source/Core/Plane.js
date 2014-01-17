@@ -33,7 +33,7 @@ define([
      *
      * @example
      * // The plane x=0
-     * var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+     * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
      */
     var Plane = function(normal, distance) {
         if (!defined(normal))  {
@@ -76,9 +76,9 @@ define([
      * @exception {DeveloperError} normal is required.
      *
      * @example
-     * var point = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+     * var point = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 40.0));
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
-     * var tangentPlane = Plane.fromPointNormal(point, normal);
+     * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
      */
     Plane.fromPointNormal = function(point, normal, result) {
         if (!defined(point)) {

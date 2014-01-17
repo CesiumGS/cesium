@@ -73,10 +73,10 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * var bing = new BingMapsImageryProvider({
+     * var bing = new Cesium.BingMapsImageryProvider({
      *     url : 'http://dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
-     *     mapStyle : BingMapsStyle.AERIAL
+     *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
      */
     var BingMapsImageryProvider = function BingMapsImageryProvider(description) {

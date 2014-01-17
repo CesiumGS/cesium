@@ -167,7 +167,7 @@ define([
      *
      * @example
      * // Example 1. Set a label's position using a Cartesian3.
-     * l.setPosition(new Cartesian3(1.0, 2.0, 3.0));
+     * l.setPosition(new Cesium.Cartesian3(1.0, 2.0, 3.0));
      *
      * //////////////////////////////////////////////////////////////////
      *
@@ -502,7 +502,7 @@ define([
      * // Set a label's translucencyByDistance to 1.0 when the
      * // camera is 1500 meters from the label and disappear as
      * // the camera distance approaches 8.0e6 meters.
-     * text.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     * text.setTranslucencyByDistance(new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
      *
      * // Example 2.
      * // disable translucency by distance
@@ -559,8 +559,8 @@ define([
      * // Set a label's pixel offset scale to 0.0 when the
      * // camera is 1500 meters from the label and scale pixel offset to 10.0 pixels
      * // in the y direction the camera distance approaches 8.0e6 meters.
-     * text.setPixelOffset(new Cartesian2(0.0, 1.0);
-     * text.setPixelOffsetScaleByDistance(new NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
+     * text.setPixelOffset(new Cesium.Cartesian2(0.0, 1.0);
+     * text.setPixelOffsetScaleByDistance(new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
      *
      * // Example 2.
      * // disable pixel offset by distance
@@ -676,8 +676,8 @@ define([
      *
      * @example
      * // Use a top, right origin
-     * l.setHorizontalOrigin(HorizontalOrigin.RIGHT);
-     * l.setVerticalOrigin(VerticalOrigin.TOP);
+     * l.setHorizontalOrigin(Cesium.HorizontalOrigin.RIGHT);
+     * l.setVerticalOrigin(Cesium.VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
         if (!defined(value)) {
@@ -722,8 +722,8 @@ define([
      *
      * @example
      * // Use a top, right origin
-     * l.setHorizontalOrigin(HorizontalOrigin.RIGHT);
-     * l.setVerticalOrigin(VerticalOrigin.TOP);
+     * l.setHorizontalOrigin(Cesium.HorizontalOrigin.RIGHT);
+     * l.setVerticalOrigin(Cesium.VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
         if (!defined(value)) {

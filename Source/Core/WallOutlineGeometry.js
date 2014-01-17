@@ -60,18 +60,18 @@ define([
      *
      * @example
      * var positions = [
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall outline that spans from ground level to 10000 meters
-     * var wall = new WallOutlineGeometry({
+     * var wall = new Cesium.WallOutlineGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
-     * var geometry = WallOutlineGeometry.createGeometry(wall);
+     * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */
     var WallOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -122,20 +122,20 @@ define([
      *
      * @example
      * var positions = [
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = WallOutlineGeometry.fromConstantHeights({
+     * var wall = Cesium.WallOutlineGeometry.fromConstantHeights({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
      *     minimumHeight : 20000.0,
      *     maximumHeight : 10000.0
      * });
-     * var geometry = WallOutlineGeometry.createGeometry(wall);
+     * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */
     WallOutlineGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -65,7 +65,7 @@ define([
      *
      * @example
      * // Compute an axis aligned bounding box enclosing two points.
-     * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
+     * var box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      */
     AxisAlignedBoundingBox.fromPoints = function(positions, result) {
         if (!defined(result)) {

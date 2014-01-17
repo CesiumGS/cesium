@@ -55,11 +55,11 @@ define([
      * @see EllipsoidGeometry#createGeometry
      *
      * @example
-     * var ellipsoid = new EllipsoidGeometry({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0)
+     * var ellipsoid = new Cesium.EllipsoidGeometry({
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+     *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0)
      * });
-     * var geometry = EllipsoidGeometry.createGeometry(ellipsoid);
+     * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

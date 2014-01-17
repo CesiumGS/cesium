@@ -45,14 +45,14 @@ define([
      *
      * @example
      * // A polyline with two connected line segments
-     * var polyline = new SimplePolylineGeometry({
+     * var polyline = new Cesium.SimplePolylineGeometry({
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *     Cartographic.fromDegrees(0.0, 0.0),
-     *     Cartographic.fromDegrees(5.0, 0.0),
-     *     Cartographic.fromDegrees(5.0, 5.0)
+     *     Cesium.Cartographic.fromDegrees(0.0, 0.0),
+     *     Cesium.Cartographic.fromDegrees(5.0, 0.0),
+     *     Cesium.Cartographic.fromDegrees(5.0, 5.0)
      *   ])
      * });
-     * var geometry = SimplePolylineGeometry.createGeometry(polyline);
+     * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);
      */
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

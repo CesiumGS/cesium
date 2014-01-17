@@ -212,11 +212,11 @@ define([
      * @example
      * // Create a Cartesian3 with (1.0, 2.0, 3.0)
      * var v = [1.0, 2.0, 3.0];
-     * var p = Cartesian3.fromArray(v);
+     * var p = Cesium.Cartesian3.fromArray(v);
      *
      * // Create a Cartesian3 with (1.0, 2.0, 3.0) using an offset into an array
      * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0];
-     * var p2 = Cartesian3.fromArray(v2, 2);
+     * var p2 = Cesium.Cartesian3.fromArray(v2, 2);
      */
     Cartesian3.fromArray = Cartesian3.unpack;
 
@@ -370,7 +370,7 @@ define([
      *
      * @example
      * // Returns 1.0
-     * var d = Cartesian3.distance(new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0));
+     * var d = Cesium.Cartesian3.distance(new Cesium.Cartesian3(1.0, 0.0, 0.0), new Cesium.Cartesian3(2.0, 0.0, 0.0));
      */
     Cartesian3.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);

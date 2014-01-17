@@ -27,11 +27,11 @@ define([
      *
      * @example
      * // Returns true
-     * var p = new Cartesian2(0.25, 0.25);
-     * var b = pointInsideTriangle(p,
-     *   new Cartesian2(0.0, 0.0),
-     *   new Cartesian2(1.0, 0.0),
-     *   new Cartesian2(0.0, 1.0));
+     * var p = new Cesium.Cartesian2(0.25, 0.25);
+     * var b = Cesium.pointInsideTriangle(p,
+     *   new Cesium.Cartesian2(0.0, 0.0),
+     *   new Cesium.Cartesian2(1.0, 0.0),
+     *   new Cesium.Cartesian2(0.0, 1.0));
      */
     var pointInsideTriangle = function(point, p0, p1, p2) {
         barycentricCoordinates(point, p0, p1, p2, coords);

@@ -42,14 +42,14 @@ define([
      * var diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
      * var upperDiagonal = [1.0, 1.0, 1.0, 1.0];
      * var rightHandSide = [
-     *     new Cartesian3(410757.0, -1595711.0, 1375302.0),
-     *     new Cartesian3(-5986705.0, -2190640.0, 1099600.0),
-     *     new Cartesian3(-12593180.0, 288588.0, -1755549.0),
-     *     new Cartesian3(-5349898.0, 2457005.0, -2685438.0),
-     *     new Cartesian3(845820.0, 1573488.0, -1205591.0)
+     *     new Cesium.Cartesian3(410757.0, -1595711.0, 1375302.0),
+     *     new Cesium.Cartesian3(-5986705.0, -2190640.0, 1099600.0),
+     *     new Cesium.Cartesian3(-12593180.0, 288588.0, -1755549.0),
+     *     new Cesium.Cartesian3(-5349898.0, 2457005.0, -2685438.0),
+     *     new Cesium.Cartesian3(845820.0, 1573488.0, -1205591.0)
      * ];
      *
-     * var solution = TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
+     * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
         if (!defined(lower) || !(lower instanceof Array)) {

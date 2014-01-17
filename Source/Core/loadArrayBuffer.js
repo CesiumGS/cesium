@@ -23,7 +23,7 @@ define([
      *
      * @example
      * // load a single URL asynchronously
-     * loadArrayBuffer('some/url').then(function(arrayBuffer) {
+     * Cesium.loadArrayBuffer('some/url').then(function(arrayBuffer) {
      *     // use the data
      * }, function() {
      *     // an error occurred

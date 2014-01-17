@@ -103,7 +103,7 @@ define([
      *
      * @example
      * // Create scene without anisotropic texture filtering
-     * var scene = new Scene(canvas, {
+     * var scene = new Cesium.Scene(canvas, {
      *   allowTextureFilterAnisotropic : false
      * });
      */
@@ -255,7 +255,7 @@ define([
          * };
          *
          * // Execute only the billboard's commands.  That is, only draw the billboard.
-         * var billboards = new BillboardCollection();
+         * var billboards = new Cesium.BillboardCollection();
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
@@ -1065,7 +1065,7 @@ define([
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
-     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead

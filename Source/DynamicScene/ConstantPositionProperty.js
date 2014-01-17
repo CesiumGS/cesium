@@ -35,7 +35,7 @@ define([
      *
      * @example
      * //Create a constant position in the inertial frame.
-     * var constantProperty = new ConstantPositionProperty(new Cartesian3(-4225824.0, 1261219.0, -5148934.0), ReferenceFrame.INERTIAL);
+     * var constantProperty = new Cesium.ConstantPositionProperty(new Cesium.Cartesian3(-4225824.0, 1261219.0, -5148934.0), Cesium.ReferenceFrame.INERTIAL);
      */
     var ConstantPositionProperty = function(value, referenceFrame) {
         this._property = new ConstantProperty(value);

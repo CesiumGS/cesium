@@ -476,7 +476,7 @@ define([
      * @example
      * // Rotate about a point on the earth.
      * var center = ellipsoid.cartographicToCartesian(cartographic);
-     * var transform = Matrix4.fromTranslation(center);
+     * var transform = Cesium.Matrix4.fromTranslation(center);
      * controller.rotate(axis, angle, transform);
     */
     CameraController.prototype.rotate = function(axis, angle, transform) {

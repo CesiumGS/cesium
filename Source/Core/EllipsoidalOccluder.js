@@ -32,9 +32,9 @@ define([
      *
      * @example
      * // Construct an ellipsoidal occluder with radii 1.0, 1.1, and 0.9.
-     * var cameraPosition = new Cartesian3(5.0, 6.0, 7.0);
-     * var occluderEllipsoid = new Ellipsoid(1.0, 1.1, 0.9);
-     * var occluder = new EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
+     * var cameraPosition = new Cesium.Cartesian3(5.0, 6.0, 7.0);
+     * var occluderEllipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
+     * var occluder = new Cesium.EllipsoidalOccluder(occluderEllipsoid, cameraPosition);
      */
     var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
         if (!defined(ellipsoid)) {
@@ -104,10 +104,10 @@ define([
      * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
-     * var cameraPosition = new Cartesian3(0, 0, 2.5);
-     * var ellipsoid = new Ellipsoid(1.0, 1.1, 0.9);
-     * var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
-     * var point = new Cartesian3(0, -3, -3);
+     * var cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
+     * var ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
+     * var occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
+     * var point = new Cesium.Cartesian3(0, -3, -3);
      * occluder.isPointVisible(point); //returns true
      */
     EllipsoidalOccluder.prototype.isPointVisible = function(occludee) {
@@ -128,10 +128,10 @@ define([
      * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
-     * var cameraPosition = new Cartesian3(0, 0, 2.5);
-     * var ellipsoid = new Ellipsoid(1.0, 1.1, 0.9);
-     * var occluder = new EllipsoidalOccluder(ellipsoid, cameraPosition);
-     * var point = new Cartesian3(0, -3, -3);
+     * var cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
+     * var ellipsoid = new Cesium.Ellipsoid(1.0, 1.1, 0.9);
+     * var occluder = new Cesium.EllipsoidalOccluder(ellipsoid, cameraPosition);
+     * var point = new Cesium.Cartesian3(0, -3, -3);
      * var scaledSpacePoint = ellipsoid.transformPositionToScaledSpace(point);
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */

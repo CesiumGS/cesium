@@ -20,7 +20,7 @@ define([
      * }
      *
      * var myObjectInstance = new MyObject();
-     * var evt = new Event();
+     * var evt = new Cesium.Event();
      * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
      * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
