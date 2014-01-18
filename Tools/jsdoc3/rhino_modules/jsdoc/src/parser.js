@@ -138,7 +138,7 @@ exports.Parser.prototype._parseSourceCode = function(sourceCode, sourceName) {
 }
 
 function pretreat(code, sourceFile){
-    sourceFileName = (sourceFile.split("/").pop()).match(/([A-z_0-9]*)/).pop();
+    var sourceFileName = (sourceFile.split("/").pop()).match(/([A-z_0-9]*)/).pop();
     return code
         // make starbangstar comments look like real jsdoc comments
         .replace(/\/\*\!\*/g, '/**')
