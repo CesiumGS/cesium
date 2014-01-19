@@ -64,6 +64,19 @@ define([
         }
 
         /**
+         * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
+         * enableRotate, enableTilt, and enableLook.  If false, all inputs are disabled.
+         *
+         * NOTE: This setting is for temporary use cases, such as camera flights and
+         * drag-selection of regions (see Picking demo).  It is typically set to false at the
+         * start of such events, and set true on completion.  To keep inputs disabled
+         * past the end of camera flights, you must use the other booleans (enableTranslate,
+         * enableZoom, enableRotate, enableTilt, and enableLook).
+         * @type {Boolean}
+         * @default true
+         */
+        this.enableInputs = true;
+        /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * This flag only applies in 2D and Columbus view modes.
          * @type {Boolean}
@@ -289,49 +302,62 @@ define([
     var inertiaMaxClickTimeThreshold = 0.4;
 
     function maintainInertia(aggregator, type, modifier, decayCoef, action, object, lastMovementName) {
+        var movementState = object[lastMovementName];
+        if (!defined(movementState)) {
+            movementState = object[lastMovementName] = {
+                startPosition : new Cartesian2(),
+                endPosition : new Cartesian2(),
+                motion : new Cartesian2(),
+                active : false
+            };
+        }
+
         var ts = aggregator.getButtonPressTime(type, modifier);
         var tr = aggregator.getButtonReleaseTime(type, modifier);
+
         var threshold = ts && tr && ((tr.getTime() - ts.getTime()) / 1000.0);
         var now = new Date();
         var fromNow = tr && ((now.getTime() - tr.getTime()) / 1000.0);
+
         if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
-            if (!defined(object[lastMovementName])) {
+            if (!movementState.active) {
                 var lastMovement = aggregator.getLastMovement(type, modifier);
                 if (!defined(lastMovement) || sameMousePosition(lastMovement)) {
                     return;
                 }
 
-                var motionX = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
-                var motionY = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
-                object[lastMovementName] = {
-                    startPosition : new Cartesian2(lastMovement.startPosition.x, lastMovement.startPosition.y),
-                    endPosition : new Cartesian2(lastMovement.startPosition.x + motionX * d, lastMovement.startPosition.y + motionY * d),
-                    motion : new Cartesian2(motionX, motionY)
-                };
+                movementState.motion.x = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
+                movementState.motion.y = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
+
+                Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                movementState.active = true;
             } else {
-                object[lastMovementName] = {
-                    startPosition : Cartesian2.clone(object[lastMovementName].endPosition),
-                    endPosition : new Cartesian2(
-                            object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
-                            object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
-                    motion : new Cartesian2()
-                };
+                Cartesian2.clone(movementState.endPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
             // the end coordinates may be NaN.
-            if (isNaN(object[lastMovementName].endPosition.x) || isNaN(object[lastMovementName].endPosition.y) || sameMousePosition(object[lastMovementName])) {
-                object[lastMovementName] = undefined;
+            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || sameMousePosition(movementState)) {
+                movementState.active = false;
                 return;
             }
 
             if (!aggregator.isButtonDown(type, modifier)) {
-                action(object, object[lastMovementName]);
+                action(object, movementState);
             }
         } else {
-            object[lastMovementName] = undefined;
+            movementState.active = false;
         }
     }
 
@@ -355,11 +381,11 @@ define([
             var type = defined(eventType.eventType) ? eventType.eventType : eventType;
             var modifier = eventType.modifier;
 
-            var moving = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
+            var movement = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
 
-            if (enabled) {
-                if (moving) {
-                    action(controller, aggregator.getMovement(type, modifier));
+            if (controller.enableInputs && enabled) {
+                if (movement) {
+                    action(controller, movement);
                 } else if (inertiaConstant < 1.0) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
@@ -406,13 +432,22 @@ define([
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
+    var scratchTranslateP0 = new Cartesian3();
+    var scratchTranslateP1 = new Cartesian3();
+
     function translate2D(controller, movement) {
         var cameraController = controller._cameraController;
         var start = cameraController.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = cameraController.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        cameraController.moveRight(start.x - end.x);
-        cameraController.moveUp(start.y - end.y);
+        var position = cameraController._camera.position;
+        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
+        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
+        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var distance = Cartesian3.magnitude(direction);
+        Cartesian3.normalize(direction, direction);
+
+        cameraController.move(direction, distance);
     }
 
     function zoom2D(controller, movement) {
@@ -486,7 +521,8 @@ define([
         reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
 
         if (!controller._aggregator.anyButtonDown() &&
-                !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+                (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                 !controller._animationCollection.contains(controller._animation)) {
             var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (defined(animation)) {
@@ -596,7 +632,8 @@ define([
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
             reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
 
-            if (!controller._aggregator.anyButtonDown() && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+            if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                    (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                     !controller._animationCollection.contains(controller._animation)) {
                 var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
@@ -618,6 +655,10 @@ define([
     }
 
     var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
+    var rotate3DScratchCartesian3 = new Cartesian3();
+    var rotate3DNegateScratch = new Cartesian3();
+    var rotate3DInverseMatrixScratch = new Matrix4();
+
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
@@ -648,9 +689,9 @@ define([
 
         if (defined(cameraController.constrainedAxis) && !defined(transform)) {
             var camera = cameraController._camera;
-            var p = Cartesian3.normalize(camera.position);
-            var northParallel = Cartesian3.equalsEpsilon(p, cameraController.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
+            var positionNormal = Cartesian3.normalize(camera.position, rotate3DScratchCartesian3);
+            var northParallel = Cartesian3.equalsEpsilon(positionNormal, cameraController.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(positionNormal, Cartesian3.negate(cameraController.constrainedAxis, rotate3DNegateScratch), CesiumMath.EPSILON2);
 
             if (!northParallel && !southParallel) {
                 var up;
@@ -661,10 +702,11 @@ define([
                 }
 
                 var east;
-                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, Cartesian3.normalize(camera.position), CesiumMath.EPSILON2)) {
+                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, positionNormal, CesiumMath.EPSILON2)) {
                     east = camera.right;
                 } else {
-                    east = Cartesian3.normalize(Cartesian3.cross(cameraController.constrainedAxis, camera.position));
+                    east = Cartesian3.cross(cameraController.constrainedAxis, positionNormal, rotate3DScratchCartesian3);
+                    Cartesian3.normalize(east, east);
                 }
 
                 var rDotE = Cartesian3.dot(camera.right, east);
@@ -686,7 +728,7 @@ define([
 
         if (defined(restrictedAngle)) {
             var direction = Cartesian3.clone(cameraController._camera.directionWC, rotate3DRestrictedDirection);
-            var invTransform = Matrix4.inverseTransformation(transform);
+            var invTransform = Matrix4.inverseTransformation(transform, rotate3DInverseMatrixScratch);
             direction = Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
 
             var dot = -Cartesian3.dot(direction, constrainedAxis);
@@ -766,7 +808,7 @@ define([
             if (Cartesian3.equalsEpsilon(basis0, cameraController._camera.position, CesiumMath.EPSILON2)) {
                 east = cameraController._camera.right;
             } else {
-                east = Cartesian3.cross(basis0, cameraController._camera.position);
+                east = Cartesian3.cross(basis0, cameraController._camera.position, pan3DTemp0);
             }
 
             var planeNormal = Cartesian3.cross(basis0, east, pan3DTemp0);
@@ -812,6 +854,7 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
     var tilt3DTransform = new Matrix4();
+
     function tilt3D(controller, movement) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
@@ -854,7 +897,7 @@ define([
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        var angle = (minHeight * 0.25) / Cartesian3.magnitude(Cartesian3.subtract(center, camera.position));
+        var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.setEllipsoid(oldEllipsoid);

@@ -209,7 +209,7 @@ defineSuite([
     it('looks left', function() {
         controller.lookLeft(turnAmount);
         expect(camera.position).toEqual(position);
-        expect(camera.up).toEqual(up);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(right), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(dir, CesiumMath.EPSILON15);
     });
@@ -217,7 +217,7 @@ defineSuite([
     it('looks right', function() {
         controller.lookRight(turnAmount);
         expect(camera.position).toEqual(position);
-        expect(camera.up).toEqual(up);
+        expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(Cartesian3.negate(dir), CesiumMath.EPSILON15);
     });
@@ -225,7 +225,7 @@ defineSuite([
     it('looks up', function() {
         controller.lookUp(turnAmount);
         expect(camera.position).toEqual(position);
-        expect(camera.right).toEqual(right);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(up, CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(Cartesian3.negate(dir), CesiumMath.EPSILON15);
     });
@@ -233,7 +233,7 @@ defineSuite([
     it('looks down', function() {
         controller.lookDown(turnAmount);
         expect(camera.position).toEqual(position);
-        expect(camera.right).toEqual(right);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(up), CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
     });
@@ -241,7 +241,7 @@ defineSuite([
     it('twists left', function() {
         controller.twistLeft(CesiumMath.PI_OVER_TWO);
         expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(dir);
+        expect(camera.direction).toEqualEpsilon(dir, CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(Cartesian3.negate(right), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(up, CesiumMath.EPSILON15);
     });
@@ -249,7 +249,7 @@ defineSuite([
     it('twists right', function() {
         controller.twistRight(CesiumMath.PI_OVER_TWO);
         expect(camera.position).toEqual(position);
-        expect(camera.direction).toEqual(dir);
+        expect(camera.direction).toEqualEpsilon(dir, CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(right, CesiumMath.EPSILON14);
         expect(camera.right).toEqualEpsilon(Cartesian3.negate(up), CesiumMath.EPSILON15);
     });
@@ -548,10 +548,10 @@ defineSuite([
                 Math.PI,
                 CesiumMath.PI_OVER_TWO);
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X), CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y), CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
     });
 
     it('views extent in 3D across IDL', function() {
@@ -561,10 +561,10 @@ defineSuite([
                 -0.1,
                 CesiumMath.PI_OVER_TWO);
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X), CesiumMath.EPSILON10);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON10);
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON10);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON10);
+        expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y), CesiumMath.EPSILON10);
     });
 
     it('views extent in 2D with larger longitude', function() {
@@ -663,7 +663,7 @@ defineSuite([
         var right = Cartesian3.clone(camera.right);
         controller._mode = SceneMode.SCENE3D;
         controller.getExtentCameraCoordinates(extent, position);
-        expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
@@ -681,7 +681,7 @@ defineSuite([
         var right = Cartesian3.clone(camera.right);
         controller._mode = SceneMode.SCENE3D;
         position = controller.getExtentCameraCoordinates(extent);
-        expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
         expect(camera.direction).toEqual(direction);
         expect(camera.up).toEqual(up);
         expect(camera.right).toEqual(right);
@@ -771,7 +771,7 @@ defineSuite([
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var frustum = new PerspectiveFrustum();
@@ -797,7 +797,7 @@ defineSuite([
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -818,6 +818,42 @@ defineSuite([
 
         p = controller.pickEllipsoid(Cartesian2.ZERO);
         expect(p).toBeUndefined();
+    });
+
+    it('pick rotated map in 2D', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var maxRadii = ellipsoid.getMaximumRadius();
+
+        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        var frustum = new OrthographicFrustum();
+        frustum.right = maxRadii * Math.PI;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.bottom = -frustum.top;
+        frustum.near = 0.01 * maxRadii;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+
+        controller._mode = SceneMode.SCENE2D;
+        controller._projection = projection;
+
+        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5 + 1.0);
+        var p = controller.pickEllipsoid(windowCoord);
+        var c = ellipsoid.cartesianToCartographic(p);
+        expect(c.longitude).toEqual(0.0);
+        expect(c.latitude).toBeLessThan(0.0);
+
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_Y);
+
+        p = controller.pickEllipsoid(windowCoord);
+        c = ellipsoid.cartesianToCartographic(p);
+        expect(c.latitude).toEqual(0.0);
+        expect(c.longitude).toBeGreaterThan(0.0);
     });
 
     it('pick map in columbus view', function() {

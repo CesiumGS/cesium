@@ -31,18 +31,39 @@ define([
         return key;
     }
 
+    function clonePinchMovement(pinchMovement, result) {
+        Cartesian2.clone(pinchMovement.distance.startPosition, result.distance.startPosition);
+        Cartesian2.clone(pinchMovement.distance.endPosition, result.distance.endPosition);
+
+        Cartesian2.clone(pinchMovement.angleAndHeight.startPosition, result.angleAndHeight.startPosition);
+        Cartesian2.clone(pinchMovement.angleAndHeight.endPosition, result.angleAndHeight.endPosition);
+    }
+
     function listenToPinch(aggregator, modifier, canvas) {
         var key = getKey(CameraEventType.PINCH, modifier);
 
         var update = aggregator._update;
-        var movement = aggregator._movement;
-        var lastMovement = aggregator._lastMovement;
         var isDown = aggregator._isDown;
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
         update[key] = true;
         isDown[key] = false;
+
+        var movement = aggregator._movement[key];
+        if (!defined(movement)) {
+            movement = aggregator._movement[key] = {};
+        }
+
+        movement.distance = {
+            startPosition : new Cartesian2(),
+            endPosition : new Cartesian2()
+        };
+        movement.angleAndHeight = {
+            startPosition : new Cartesian2(),
+            endPosition : new Cartesian2()
+        };
+        movement.prevAngle = 0.0;
 
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown++;
@@ -60,16 +81,16 @@ define([
             if (isDown[key]) {
                 // Aggregate several input events into a single animation frame.
                 if (!update[key]) {
-                    movement[key].distance.endPosition = Cartesian2.clone(mouseMovement.distance.endPosition);
-                    movement[key].angleAndHeight.endPosition = Cartesian2.clone(mouseMovement.angleAndHeight.endPosition);
+                    Cartesian2.clone(mouseMovement.distance.endPosition, movement.distance.endPosition);
+                    Cartesian2.clone(mouseMovement.angleAndHeight.endPosition, movement.angleAndHeight.endPosition);
                 } else {
-                    movement[key] = mouseMovement;
+                    clonePinchMovement(mouseMovement, movement);
                     update[key] = false;
-                    movement[key].prevAngle = movement[key].angleAndHeight.startPosition.x;
+                    movement.prevAngle = movement.angleAndHeight.startPosition.x;
                 }
                 // Make sure our aggregation of angles does not "flip" over 360 degrees.
-                var angle = movement[key].angleAndHeight.endPosition.x;
-                var prevAngle = movement[key].prevAngle;
+                var angle = movement.angleAndHeight.endPosition.x;
+                var prevAngle = movement.prevAngle;
                 var TwoPI = Math.PI * 2;
                 while (angle >= (prevAngle + Math.PI)) {
                     angle -= TwoPI;
@@ -77,8 +98,8 @@ define([
                 while (angle < (prevAngle - Math.PI)) {
                     angle += TwoPI;
                 }
-                movement[key].angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
-                movement[key].angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
+                movement.angleAndHeight.endPosition.x = -angle * canvas.clientWidth / 12;
+                movement.angleAndHeight.startPosition.x = -prevAngle * canvas.clientWidth / 12;
             }
         }, ScreenSpaceEventType.PINCH_MOVE, modifier);
     }
@@ -87,24 +108,25 @@ define([
         var key = getKey(CameraEventType.WHEEL, modifier);
 
         var update = aggregator._update;
-        var movement = aggregator._movement;
-        var lastMovement = aggregator._lastMovement;
-        var pressTime = aggregator._pressTime;
-        var releaseTime = aggregator._releaseTime;
-
         update[key] = true;
+
+        var movement = aggregator._movement[key];
+        if(!defined(movement)) {
+            movement = aggregator._movement[key] = {};
+        }
+
+        movement.startPosition = new Cartesian2();
+        movement.endPosition = new Cartesian2();
 
         aggregator._eventHandler.setInputAction(function(delta) {
             // TODO: magic numbers
             var arcLength = 15.0 * CesiumMath.toRadians(delta);
             if (!update[key]) {
-                movement[key].endPosition.y = movement[key].endPosition.y + arcLength;
+                movement.endPosition.y = movement.endPosition.y + arcLength;
             } else {
-                movement[key] = {
-                    startPosition : new Cartesian2(),
-                    endPosition : new Cartesian2(0.0, arcLength),
-                    motion : new Cartesian2()
-                };
+                Cartesian2.clone(Cartesian2.ZERO, movement.startPosition);
+                movement.endPosition.x = 0.0;
+                movement.endPosition.y = arcLength;
                 update[key] = false;
             }
         }, ScreenSpaceEventType.WHEEL, modifier);
@@ -113,12 +135,20 @@ define([
     function listenMouseButtonDownUp(aggregator, modifier, type) {
         var key = getKey(type, modifier);
 
-        var lastMovement = aggregator._lastMovement;
         var isDown = aggregator._isDown;
         var pressTime = aggregator._pressTime;
         var releaseTime = aggregator._releaseTime;
 
         isDown[key] = false;
+
+        var lastMovement = aggregator._lastMovement[key];
+        if (!defined(lastMovement)) {
+            lastMovement = aggregator._lastMovement[key] = {
+                startPosition : new Cartesian2(),
+                endPosition : new Cartesian2(),
+                valid : false
+            };
+        }
 
         var down;
         var up;
@@ -135,7 +165,7 @@ define([
 
         aggregator._eventHandler.setInputAction(function() {
             aggregator._buttonsDown++;
-            lastMovement[key] = undefined;
+            lastMovement.valid = false;
             isDown[key] = true;
             pressTime[key] = new Date();
         }, down, modifier);
@@ -145,6 +175,11 @@ define([
             isDown[key] = false;
             releaseTime[key] = new Date();
         }, up, modifier);
+    }
+
+    function cloneMouseMovement(mouseMovement, result) {
+        Cartesian2.clone(mouseMovement.startPosition, result.startPosition);
+        Cartesian2.clone(mouseMovement.endPosition, result.endPosition);
     }
 
     function listenMouseMove(aggregator, modifier) {
@@ -159,6 +194,21 @@ define([
                 if (defined(type.name)) {
                     var key = getKey(type, modifier);
                     update[key] = true;
+
+                    if (!defined(aggregator._lastMovement[key])) {
+                        aggregator._lastMovement[key] = {
+                            startPosition : new Cartesian2(),
+                            endPosition : new Cartesian2(),
+                            valid : false
+                        };
+                    }
+
+                    if (!defined(aggregator._movement[key])) {
+                        aggregator._movement[key] = {
+                            startPosition : new Cartesian2(),
+                            endPosition : new Cartesian2()
+                        };
+                    }
                 }
             }
         }
@@ -171,10 +221,11 @@ define([
                         var key = getKey(type, modifier);
                         if (isDown[key]) {
                             if (!update[key]) {
-                                movement[key].endPosition = Cartesian2.clone(mouseMovement.endPosition);
+                                Cartesian2.clone(mouseMovement.endPosition, movement[key].endPosition);
                             } else {
-                                lastMovement[key] = movement[key];
-                                movement[key] = mouseMovement;
+                                cloneMouseMovement(movement[key], lastMovement[key]);
+                                lastMovement[key].valid = true;
+                                cloneMouseMovement(mouseMovement, movement[key]);
                                 update[key] = false;
                             }
                         }
@@ -291,7 +342,12 @@ define([
         }
 
         var key = getKey(type, modifier);
-        return this._lastMovement[key];
+        var lastMovement = this._lastMovement[key];
+        if (lastMovement.valid) {
+            return lastMovement;
+        }
+
+        return undefined;
     };
 
     /**

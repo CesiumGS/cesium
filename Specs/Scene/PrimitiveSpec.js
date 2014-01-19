@@ -206,15 +206,15 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.passes.color = false;
+        frameState.passes.render = false;
         frameState.passes.pick = false;
 
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
 
-        frameState.passes.color = true;
-        frameState.passes.pick = true;
+        frameState.passes.render = true;
+        frameState.passes.pick = false;
 
         primitive = primitive && primitive.destroy();
     });
@@ -277,8 +277,7 @@ defineSuite([
 
         var commands = [];
         primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].translucentList.length).toEqual(2);
+        expect(commands.length).toEqual(2);
 
         primitive = primitive && primitive.destroy();
     });

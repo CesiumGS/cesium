@@ -408,6 +408,8 @@ define([
     var appendTransformUp = new Cartesian3();
     var appendTransformRight = new Cartesian3();
     var appendTransformDirection = new Cartesian3();
+    var appendTransformMatrix = new Matrix4();
+
     function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
@@ -418,7 +420,7 @@ define([
             var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
 
             oldTransform = camera.transform;
-            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform);
+            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform, appendTransformMatrix);
 
             var invTransform = camera.inverseTransform;
             Matrix4.multiplyByPoint(invTransform, position, camera.position);
@@ -433,6 +435,7 @@ define([
     var revertTransformUp = new Cartesian3();
     var revertTransformRight = new Cartesian3();
     var revertTransformDirection = new Cartesian3();
+
     function revertTransform(controller, transform) {
         if (defined(transform)) {
             var camera = controller._camera;
@@ -531,6 +534,7 @@ define([
     var rotateVertScratchP = new Cartesian3();
     var rotateVertScratchA = new Cartesian3();
     var rotateVertScratchTan = new Cartesian3();
+    var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(controller, angle, transform) {
         var camera = controller._camera;
         var oldTransform = appendTransform(controller, transform);
@@ -539,7 +543,7 @@ define([
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(controller.constrainedAxis)) {
             var northParallel = Cartesian3.equalsEpsilon(p, controller.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(controller.constrainedAxis), CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(controller.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
 
@@ -549,7 +553,7 @@ define([
                     angle = angleToAxis;
                 }
 
-                dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis));
+                dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = Math.acos(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis;
@@ -959,12 +963,23 @@ define([
         Cartesian3.subtract(northEast, center, northEast);
         Cartesian3.subtract(southWest, center, southWest);
 
-        var direction = ellipsoid.geodeticSurfaceNormal(center, cameraRF.direction);
-        Cartesian3.negate(direction, direction);
-        Cartesian3.normalize(direction, direction);
-        var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, cameraRF.right);
+        cart.longitude = east;
+        cart.latitude = (north + south) * 0.5;
+        var midEast = ellipsoid.cartographicToCartesian(cart, cameraRF.direction);
+        cart.longitude = west;
+        var right = ellipsoid.cartographicToCartesian(cart, cameraRF.right);
+        Cartesian3.subtract(midEast, right, right);
         Cartesian3.normalize(right, right);
-        var up = Cartesian3.cross(right, direction, cameraRF.up);
+
+        cart.longitude = (east + west) * 0.5;
+        cart.latitude = north;
+        var midNorth = ellipsoid.cartographicToCartesian(cart, cameraRF.direction);
+        cart.latitude = south;
+        var up = ellipsoid.cartographicToCartesian(cart, cameraRF.up);
+        Cartesian3.subtract(midNorth, up, up);
+        Cartesian3.normalize(up, up);
+
+        var direction = Cartesian3.cross(up, right, cameraRF.direction);
 
         var height = Math.max(
           Math.abs(Cartesian3.dot(up, northWest)),
@@ -983,9 +998,13 @@ define([
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var scalar = Cartesian3.magnitude(center) + d;
-        Cartesian3.normalize(center, center);
-        return Cartesian3.multiplyByScalar(center, scalar, result);
+        Cartesian3.negate(direction, result);
+        return Cartesian3.multiplyByScalar(result, scalar, result);
     }
 
     var viewExtentCVCartographic = new Cartographic();
@@ -1247,6 +1266,8 @@ define([
         return result;
     }
 
+    var scratchDirection = new Cartesian3();
+
     function getPickRayOrthographic(camera, windowPosition, result) {
         var width = camera._context._canvas.clientWidth;
         var height = camera._context._canvas.clientHeight;
@@ -1258,8 +1279,11 @@ define([
 
         var origin = result.origin;
         Cartesian3.clone(camera.position, origin);
-        origin.x += x;
-        origin.y += y;
+
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
 
         Cartesian3.clone(camera.directionWC, result.direction);
 
