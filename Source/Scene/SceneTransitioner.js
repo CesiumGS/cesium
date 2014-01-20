@@ -696,7 +696,7 @@ define([
                 camera.position = endPos;
                 camera.direction = endDir;
                 camera.up = endUp;
-                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
+                camera.right = Cartesian3.cross(endDir, endUp, camera.right);
             }
         });
         transitioner._currentAnimations.push(animation);
