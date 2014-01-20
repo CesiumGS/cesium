@@ -77,7 +77,7 @@ defineSuite([
     it('throws with undefined viewer', function() {
         expect(function() {
             viewerDynamicObjectMixin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if dropTarget property already added by another mixin.', function() {
@@ -85,7 +85,7 @@ defineSuite([
         viewer.trackedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('adds objectTracked event', function() {

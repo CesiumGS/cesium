@@ -32,7 +32,7 @@ defineSuite([
         var dynamicObject = new DynamicObject('someId');
         expect(function() {
             dynamicObject.isAvailable();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor creates a unique id if one is not provided.', function() {
@@ -92,7 +92,7 @@ defineSuite([
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can add and remove custom properties.', function() {
@@ -108,21 +108,21 @@ defineSuite([
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.addProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addProperty throws with no property specified.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.addProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeProperty throws with no property specified.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.removeProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addProperty throws when adding an existing property.', function() {
@@ -130,27 +130,27 @@ defineSuite([
         dynamicObject.addProperty('bob');
         expect(function() {
             dynamicObject.addProperty('bob');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeProperty throws when non-existent property.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.removeProperty('bob');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addProperty throws with reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.addProperty('merge');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeProperty throws with reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.removeProperty('merge');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

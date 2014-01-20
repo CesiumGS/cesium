@@ -66,13 +66,13 @@ defineSuite([
     it('constructor throws without a canvas', function() {
         expect(function() {
             return new ScreenSpaceCameraController();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without a camera', function() {
         expect(function() {
             return new ScreenSpaceCameraController(new MockCanvas());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get/set ellipsoid', function() {

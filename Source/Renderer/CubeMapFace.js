@@ -58,31 +58,26 @@ define([
      * });
      */
     CubeMapFace.prototype.copyFrom = function(source, xOffset, yOffset) {
-        if (!source) {
-            throw new DeveloperError('source is required.');
-        }
-
         xOffset = defaultValue(xOffset, 0);
         yOffset = defaultValue(yOffset, 0);
 
-        var width = source.width;
-        var height = source.height;
-
+        //>>includeStart('debug', pragmas.debug);
+        if (!source) {
+            throw new DeveloperError('source is required.');
+        }
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
         }
-
         if (yOffset < 0) {
             throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
-
-        if (xOffset + width > this._size) {
+        if (xOffset + source.width > this._size) {
             throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
         }
-
-        if (yOffset + height > this._size) {
+        if (yOffset + source.height > this._size) {
             throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
         }
+        //>>includeEnd('debug');
 
         var gl = this._gl;
         var target = this._textureTarget;
@@ -95,7 +90,7 @@ define([
 
         //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
         if (source.arrayBufferView) {
-            gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, width, height, this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
+            gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, +this._pixelDatatype, source.arrayBufferView);
         } else {
             gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, this._pixelFormat, +this._pixelDatatype, source);
         }
@@ -137,33 +132,29 @@ define([
         width = defaultValue(width, this._size);
         height = defaultValue(height, this._size);
 
+        //>>includeStart('debug', pragmas.debug);
         if (xOffset < 0) {
             throw new DeveloperError('xOffset must be greater than or equal to zero.');
         }
-
         if (yOffset < 0) {
             throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
-
         if (framebufferXOffset < 0) {
             throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
         }
-
         if (framebufferYOffset < 0) {
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
-
         if (xOffset + width > this._size) {
             throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
         }
-
         if (yOffset + height > this._size) {
             throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
         }
-
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
         }
+        //>>includeEnd('debug');
 
         var gl = this._gl;
         var target = this._textureTarget;

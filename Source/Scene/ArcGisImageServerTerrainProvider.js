@@ -62,9 +62,11 @@ define([
      * centralBody.terrainProvider = terrainProvider;
      */
     var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = description.url;
         this._token = description.token;

@@ -31,20 +31,21 @@ define([
      *
      * @example
      * // Query the terrain height of two Cartographic positions
-     * var terrainProvider = new CesiumTerrainProvider({
+     * var terrainProvider = new Cesium.CesiumTerrainProvider({
      *     url : 'http://cesiumjs.org/smallterrain'
      * });
      * var positions = [
-     *     Cartographic.fromDegrees(86.925145, 27.988257),
-     *     Cartographic.fromDegrees(87.0, 28.0)
+     *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
+     *     Cesium.Cartographic.fromDegrees(87.0, 28.0)
      * ];
-     * var promise = sampleTerrain(terrainProvider, 11, positions);
-     * when(promise, function(updatedPositions) {
+     * var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+     * Cesium.when(promise, function(updatedPositions) {
      *     // positions[0].height and positions[1].height have been updated.
      *     // updatedPositions is just a reference to positions.
      * });
      */
     var sampleTerrain = function(terrainProvider, level, positions) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
         }
@@ -54,6 +55,7 @@ define([
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
+        //>>includeEnd('debug');
 
         var tilingScheme = terrainProvider.getTilingScheme();
 

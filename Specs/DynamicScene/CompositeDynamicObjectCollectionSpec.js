@@ -595,7 +595,7 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addCollection throws if negative index', function() {
@@ -603,7 +603,7 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(collection, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addCollection throws if index greater than length', function() {
@@ -611,14 +611,14 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(collection, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getCollection throws with undefined index', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.getCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollection throws if collection not in composite', function() {
@@ -626,7 +626,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.raiseCollection(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollectionToTop throws if collection not in composite', function() {
@@ -634,7 +634,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.raiseCollectionToTop(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollection throws if collection not in composite', function() {
@@ -642,7 +642,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.lowerCollection(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollectionToBottom throws if collection not in composite', function() {
@@ -650,48 +650,48 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.lowerCollectionToBottom(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollection throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.raiseCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollectionToTop throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.raiseCollectionToTop(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollection throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.lowerCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollectionToBottom throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.lowerCollectionToBottom(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('resumeEvents throws if no matching suspendEvents', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.resumeEvents();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.getById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

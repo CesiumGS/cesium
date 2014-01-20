@@ -98,6 +98,6 @@ defineSuite([
         var target = new DynamicPyramid();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

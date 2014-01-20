@@ -230,18 +230,18 @@ define([
      * var mvp = sp.getAllUniforms().u_mvp;
      * console.log(mvp.getName());           // 'u_mvp'
      * console.log(mvp.getDatatype().name);  // 'FLOAT_MAT4'
-     * mvp.value = Matrix4.IDENTITY;
+     * mvp.value = Cesium.Matrix4.IDENTITY;
      *
      * //////////////////////////////////////////////////////////////////////
      *
      * // Example 2. Setting values for a GLSL array uniform
      * // GLSL:  uniform float u_float[2];
-     * sp.getAllUniforms().u_float.value = new Cartesian2(1.0, 2.0);
+     * sp.getAllUniforms().u_float.value = new Cesium.Cartesian2(1.0, 2.0);
      *
      * // GLSL:  uniform vec4 u_vec4[2];
      * sp.getAllUniforms().u_vec4.value = [
-     *   Cartesian4.UNIT_X,
-     *   Cartesian4.UNIT_Y
+     *   Cesium.Cartesian4.UNIT_X,
+     *   Cesium.Cartesian4.UNIT_Y
      * ];
      *
      * //////////////////////////////////////////////////////////////////////
@@ -267,26 +267,26 @@ define([
          * sp.getAllUniforms().u_float.value = 1.0;
          *
          * // GLSL:  uniform vec4 u_vec4;
-         * sp.getAllUniforms().u_vec4.value = Cartesian4.ZERO;
+         * sp.getAllUniforms().u_vec4.value = Cesium.Cartesian4.ZERO;
          *
          * // GLSL:  uniform bvec4 u_bvec4;
-         * sp.getAllUniforms().u_bvec4.value = new Cartesian4(true, true, true, true);
+         * sp.getAllUniforms().u_bvec4.value = new Cesium.Cartesian4(true, true, true, true);
          *
          * // GLSL:  uniform mat4 u_mat4;
-         * sp.getAllUniforms().u_mat4.value = Matrix4.IDENTITY;
+         * sp.getAllUniforms().u_mat4.value = Cesium.Matrix4.IDENTITY;
          *
          * // GLSL:  uniform sampler2D u_texture;
          * sp.getAllUniforms().u_texture.value = context.createTexture2D(...);
          *
          * // GLSL:  uniform vec2 u_vec2[2];
          * sp.getAllUniforms().u_vec2.value = [
-         *   new Cartesian2(1.0, 2.0),
-         *   new Cartesian2(3.0, 4.0)
+         *   new Cesium.Cartesian2(1.0, 2.0),
+         *   new Cesium.Cartesian2(3.0, 4.0)
          * ];
          *
          * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
          * sp.getAllUniforms()['u_struct.f'].value = 1.0;
-         * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+         * sp.getAllUniforms()['u_struct.v'].value = new Cesium.Cartesian4(1.0, 2.0, 3.0, 4.0);
          */
         this.value = uniformValue;
 

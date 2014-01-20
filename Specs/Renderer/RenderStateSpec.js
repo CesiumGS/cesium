@@ -381,7 +381,7 @@ defineSuite([
             context.createRenderState({
                 frontFace : 'invalid value'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (cull.face)', function() {
@@ -391,7 +391,7 @@ defineSuite([
                     face : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (small lineWidth)', function() {
@@ -422,7 +422,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (negative scissorTest.rectangle.height)', function() {
@@ -437,7 +437,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (near > far)', function() {
@@ -448,7 +448,7 @@ defineSuite([
                     far : 0.25
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (near < 0)', function() {
@@ -458,7 +458,7 @@ defineSuite([
                     near : -1
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (far > 1)', function() {
@@ -468,7 +468,7 @@ defineSuite([
                     far : 2
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (depthTest.func)', function() {
@@ -478,7 +478,7 @@ defineSuite([
                     func : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blending.color < 0)', function() {
@@ -493,7 +493,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blending.color > 1)', function() {
@@ -508,7 +508,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.equationRgb)', function() {
@@ -518,7 +518,7 @@ defineSuite([
                     equationRgb : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.equationAlpha)', function() {
@@ -528,7 +528,7 @@ defineSuite([
                     equationAlpha : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.functionSourceRgb)', function() {
@@ -538,7 +538,7 @@ defineSuite([
                     functionSourceRgb : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.functionSourceAlpha)', function() {
@@ -548,7 +548,7 @@ defineSuite([
                     functionSourceAlpha : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.functionDestinationRgb)', function() {
@@ -558,7 +558,7 @@ defineSuite([
                     functionDestinationRgb : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (blend.functionDestinationAlpha)', function() {
@@ -568,7 +568,7 @@ defineSuite([
                     functionDestinationAlpha : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.frontFunction)', function() {
@@ -578,7 +578,7 @@ defineSuite([
                     frontFunction : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.backFunction)', function() {
@@ -588,7 +588,7 @@ defineSuite([
                     backFunction : 'invalid value'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.frontOperation.fail)', function() {
@@ -600,7 +600,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.frontOperation.zFail)', function() {
@@ -612,7 +612,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.frontOperation.zPass)', function() {
@@ -624,7 +624,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.backOperation.fail)', function() {
@@ -636,7 +636,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.backOperation.zFail)', function() {
@@ -648,7 +648,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (stencilTest.backOperation.zPass)', function() {
@@ -660,6 +660,6 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

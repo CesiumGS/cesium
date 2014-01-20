@@ -53,10 +53,10 @@ define([
      * @exception {DeveloperError} description.level is required.
      */
     var Tile = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description)) {
             throw new DeveloperError('description is required.');
         }
-
         if (!defined(description.x) || !defined(description.y)) {
             if (!defined(description.extent)) {
                 throw new DeveloperError('Either description.extent is required or description.x and description.y are required.');
@@ -64,14 +64,13 @@ define([
         } else if (description.x < 0 || description.y < 0) {
             throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
         }
-
         if (!defined(description.level) || description.zoom < 0) {
             throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
         }
-
         if (!defined(description.tilingScheme)) {
             throw new DeveloperError('description.tilingScheme is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The tiling scheme used to tile the surface.

@@ -81,9 +81,11 @@ define([
      * @see Context#createTexture2D
      */
     TexturePool.prototype.createTexture2D = function(context, description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!description) {
             throw new DeveloperError('description is required.');
         }
+        //>>includeEnd('debug');
 
         var source = description.source;
         var width = defined(source) ? source.width : description.width;

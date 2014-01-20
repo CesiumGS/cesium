@@ -195,20 +195,20 @@ defineSuite([
     it('constructor throws if scene undefined', function() {
         expect(function(){
             return new DataSourceDisplay(undefined, dataSourceCollection, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if dataSourceCollection undefined', function() {
         expect(function(){
             return new DataSourceDisplay(scene, undefined, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws if time undefined', function() {
         var display = new DataSourceDisplay(scene, dataSourceCollection);
         expect(function(){
             return display.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
         display.destroy();
     });
 }, 'WebGL');

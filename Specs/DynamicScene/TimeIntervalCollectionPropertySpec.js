@@ -71,7 +71,7 @@ defineSuite([
         var property = new TimeIntervalCollectionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works for differing basic type intervals', function() {
