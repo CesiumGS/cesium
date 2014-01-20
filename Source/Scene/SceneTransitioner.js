@@ -696,6 +696,7 @@ define([
                 camera.position = endPos;
                 camera.direction = endDir;
                 camera.up = endUp;
+                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
             }
         });
         transitioner._currentAnimations.push(animation);
@@ -770,6 +771,7 @@ define([
             camera.position = Cartesian3.clone(transitioner._camera3D.position);
             camera.direction = Cartesian3.clone(transitioner._camera3D.direction);
             camera.up = Cartesian3.clone(transitioner._camera3D.up);
+            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);
@@ -793,6 +795,7 @@ define([
         camera.position = Cartesian3.clone(transitioner._camera2D.position);
         camera.direction = Cartesian3.clone(transitioner._camera2D.direction);
         camera.up = Cartesian3.clone(transitioner._camera2D.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
@@ -817,7 +820,7 @@ define([
             camera.position = Cartesian3.clone(transitioner._cameraCV.position);
             camera.direction = Cartesian3.clone(transitioner._cameraCV.direction);
             camera.up = Cartesian3.clone(transitioner._cameraCV.up);
-            camera.right = Cartesian3.cross(camera.direction, camera.up);
+            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);
