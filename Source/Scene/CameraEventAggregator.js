@@ -380,13 +380,17 @@ define([
     };
 
     /**
-     * Gets whether any mouse button is down or a touch has started.
+     * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
      * @memberof CameraEventAggregator
      *
-     * @returns {Boolean} Whether any mouse button is down or a touch has started.
+     * @returns {Boolean} Whether any mouse button is down, a touch has started, or the wheel has been moved.
      */
     CameraEventAggregator.prototype.anyButtonDown = function() {
-        return this._buttonsDown > 0;
+        var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
+        return this._buttonsDown > 0 || wheelMoved;
     };
 
     /**
