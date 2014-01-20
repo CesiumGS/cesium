@@ -50,7 +50,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
      * @example
-     * scene.skyBox = new SkyBox({
+     * scene.skyBox = new Cesium.SkyBox({
      *   sources : {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',

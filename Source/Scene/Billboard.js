@@ -211,7 +211,7 @@ define([
      *
      * @example
      * // Example 1. Set a billboard's position using a Cartesian3.
-     * b.setPosition(new Cartesian3(1.0, 2.0, 3.0));
+     * b.setPosition(new Cesium.Cartesian3(1.0, 2.0, 3.0));
      *
      * // Example 2. Set a billboard's position using an object literal.
      * b.setPosition({
@@ -342,7 +342,7 @@ define([
      * // Set a billboard's scaleByDistance to scale by 1.5 when the
      * // camera is 1500 meters from the billboard and disappear as
      * // the camera distance approaches 8.0e6 meters.
-     * b.setScaleByDistance(new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
+     * b.setScaleByDistance(new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
      *
      * // Example 2.
      * // disable scaling by distance
@@ -395,7 +395,7 @@ define([
      * // Set a billboard's translucency to 1.0 when the
      * // camera is 1500 meters from the billboard and disappear as
      * // the camera distance approaches 8.0e6 meters.
-     * b.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     * b.setTranslucencyByDistance(new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
      *
      * // Example 2.
      * // disable translucency by distance
@@ -452,8 +452,8 @@ define([
      * // Set a billboard's pixel offset scale to 0.0 when the
      * // camera is 1500 meters from the billboard and scale pixel offset to 10.0 pixels
      * // in the y direction the camera distance approaches 8.0e6 meters.
-     * b.setPixelOffset(new Cartesian2(0.0, 1.0);
-     * b.setPixelOffsetScaleByDistance(new NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
+     * b.setPixelOffset(new Cesium.Cartesian2(0.0, 1.0);
+     * b.setPixelOffsetScaleByDistance(new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
      *
      * // Example 2.
      * // disable pixel offset by distance
@@ -562,8 +562,8 @@ define([
      *
      * @example
      * // Use a bottom, left origin
-     * b.setHorizontalOrigin(HorizontalOrigin.LEFT);
-     * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
+     * b.setHorizontalOrigin(Cesium.HorizontalOrigin.LEFT);
+     * b.setVerticalOrigin(Cesium.VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setHorizontalOrigin = function(value) {
         if (!defined(value)) {
@@ -608,8 +608,8 @@ define([
      *
      * @example
      * // Use a bottom, left origin
-     * b.setHorizontalOrigin(HorizontalOrigin.LEFT);
-     * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
+     * b.setHorizontalOrigin(Cesium.HorizontalOrigin.LEFT);
+     * b.setVerticalOrigin(Cesium.VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setVerticalOrigin = function(value) {
         if (!defined(value)) {
@@ -839,7 +839,7 @@ define([
      * @example
      * // Example 1.
      * // Have the billboard up vector point north
-     * billboard.setAlignedAxis(Cartesian3.UNIT_Z);
+     * billboard.setAlignedAxis(Cesium.Cartesian3.UNIT_Z);
      *
      * // Example 2.
      * // Have the billboard point east.
@@ -848,7 +848,7 @@ define([
      *
      * // Example 3.
      * // Reset the aligned axis
-     * billboard.setAlignedAxis(Cartesian3.ZERO);
+     * billboard.setAlignedAxis(Cesium.Cartesian3.ZERO);
      */
     Billboard.prototype.setAlignedAxis = function(value) {
         if (!defined(value)) {

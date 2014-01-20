@@ -112,11 +112,11 @@ define([
      * @see PolylineCollection
      *
      * @example
-     * var polylines = new PolylineCollection();
+     * var polylines = new Cesium.PolylineCollection();
      * var polyline = polylines.add(...);
      * var positions = polyline.getPositions();
      * var modelMatrix = polylines.modelMatrix;
-     * var segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
+     * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */
     PolylinePipeline.wrapLongitude = function(positions, modelMatrix) {
         var cartesians = [];
@@ -189,10 +189,10 @@ define([
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var positions = [
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(2.0, 2.0, 2.0)];
-     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = Cesium.PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
         if (!defined(positions )) {
@@ -234,12 +234,12 @@ define([
      *
      * @example
      * var positions = ellipsoid.cartographicArrayToCartesianArray([
-     *      Cartographic.fromDegrees(-105.0, 40.0),
-     *      Cartographic.fromDegrees(-100.0, 38.0),
-     *      Cartographic.fromDegrees(-105.0, 35.0),
-     *      Cartographic.fromDegrees(-100.0, 32.0)
+     *      Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+     *      Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+     *      Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+     *      Cesium.Cartographic.fromDegrees(-100.0, 32.0)
      * ]));
-     * var surfacePositions = PolylinePipeline.scaleToSurface(positions);
+     * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
         if (!defined(positions)) {
@@ -288,7 +288,7 @@ define([
      * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
      * var heights = [1000, 1000, 2000, 2000];
      *
-     * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
+     * var raisedPositions = Cesium.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
      PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
         if (!defined(positions)) {

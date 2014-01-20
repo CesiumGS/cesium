@@ -298,7 +298,7 @@ define([
      * // Destroying the vertex array implicitly calls destroy for each of its vertex
      * // buffers and its index buffer.
      * var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
-     *     BufferUsage.STATIC_DRAW);
+     *     Cesium.BufferUsage.STATIC_DRAW);
      * var vertexArray = context.createVertexArray({
      *     vertexBuffer : vertexBuffer,
      *     componentsPerAttribute : 3

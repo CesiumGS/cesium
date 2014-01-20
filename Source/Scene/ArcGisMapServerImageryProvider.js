@@ -67,7 +67,7 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * var esri = new ArcGisMapServerImageryProvider({
+     * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url: 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */

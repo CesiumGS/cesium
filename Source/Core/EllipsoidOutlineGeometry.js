@@ -47,12 +47,12 @@ define([
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
      * @example
-     * var ellipsoid = new EllipsoidOutlineGeometry({
-     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0),
+     * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
+     *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
      *   stackPartitions: 6,
      *   slicePartitions: 5
      * });
-     * var geometry = EllipsoidOutlineGeometry.createGeometry(ellipsoid);
+     * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

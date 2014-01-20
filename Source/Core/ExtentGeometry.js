@@ -644,22 +644,22 @@ define([
      *
      * @example
      * // 1. create an extent
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      *
      * // 2. create an extruded extent without a top
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -61,7 +61,7 @@ define([
      *
      * @example
      * // TileMapService tile provider
-     * var tms = new TileMapServiceImageryProvider({
+     * var tms = new Cesium.TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,

@@ -88,7 +88,7 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * var google = new GoogleEarthImageryProvider({
+     * var google = new Cesium.GoogleEarthImageryProvider({
      *     url : 'http://earth.localdomain',
      *     channel : 1008
      * });

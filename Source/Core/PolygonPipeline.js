@@ -1127,7 +1127,7 @@ define([
          *
          * @example
          * // Simplifying a polygon with multiple holes.
-         * outerRing = PolygonPipeline.eliminateHoles(outerRing, innerRings);
+         * outerRing = Cesium.PolygonPipeline.eliminateHoles(outerRing, innerRings);
          * polygon.setPositions(outerRing);
          */
         eliminateHoles : function(outerRing, innerRings, ellipsoid) {

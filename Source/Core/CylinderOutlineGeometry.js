@@ -55,12 +55,12 @@ define([
      *
      * @example
      * // create cylinder geometry
-     * var cylinder = new CylinderOutlineGeometry({
+     * var cylinder = new Cesium.CylinderOutlineGeometry({
      *     length: 200000,
      *     topRadius: 80000,
      *     bottomRadius: 200000,
      * });
-     * var geometry = CylinderOutlineGeometry.createGeometry(cylinder);
+     * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
     var CylinderOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

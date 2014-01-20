@@ -146,7 +146,7 @@ define([
      * @constructor
      *
      * @example
-     * var CreditDisplay = new CreditDisplay(creditContainer);
+     * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
 
     var CreditDisplay = function(container, delimiter) {

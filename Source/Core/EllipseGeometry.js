@@ -594,15 +594,15 @@ define([
      *
      * @example
      * // Create an ellipse.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var ellipse = new EllipseGeometry({
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var ellipse = new Cesium.EllipseGeometry({
      *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : CesiumMath.toRadians(60.0)
+     *   rotation : Cesium.Math.toRadians(60.0)
      * });
-     * var geometry = EllipseGeometry.createGeometry(ellipse);
+     * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -641,11 +641,11 @@ define([
      * @see CorridorGeometry#createGeometry
      *
      * @example
-     * var corridor = new CorridorGeometry({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
+     * var corridor = new Cesium.CorridorGeometry({
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0)
+     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
      *     ]),
      *   width : 100000
      * });

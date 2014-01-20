@@ -39,7 +39,7 @@ define([
      * @exception {DeveloperError} options.geometry.attributes.position is required.
      *
      * @example
-     * scene.getPrimitives().add(createTangentSpaceDebugPrimitive({
+     * scene.getPrimitives().add(Cesium.createTangentSpaceDebugPrimitive({
      *    geometry : instance.geometry,
      *    length : 100000.0,
      *    modelMatrix : instance.modelMatrix

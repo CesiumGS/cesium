@@ -160,15 +160,15 @@ define([
      * @see EllipseOutlineGeometry#createGeometry
      *
      * @example
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var ellipse = new EllipseOutlineGeometry({
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var ellipse = new Cesium.EllipseOutlineGeometry({
      *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : CesiumMath.toRadians(60.0)
+     *   rotation : Cesium.Math.toRadians(60.0)
      * });
-     * var geometry = EllipseOutlineGeometry.createGeometry(ellipse);
+     * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
      */
     var EllipseOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

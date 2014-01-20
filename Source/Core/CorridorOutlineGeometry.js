@@ -320,10 +320,10 @@ define([
      * @see CorridorOutlineGeometry#createGeometry
      *
      * @example
-     * var corridor = new CorridorOutlineGeometry({
+     * var corridor = new Cesium.CorridorOutlineGeometry({
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0)
+     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
      *     ]),
      *   width : 100000
      * });

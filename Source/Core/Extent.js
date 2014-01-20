@@ -76,7 +76,7 @@ define([
      * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      *
      * @example
-     * var extent = Extent.fromDegrees(0.0, 20.0, 10.0, 30.0);
+     * var extent = Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0);
      */
     Extent.fromDegrees = function(west, south, east, north, result) {
         west = CesiumMath.toRadians(defaultValue(west, 0.0));

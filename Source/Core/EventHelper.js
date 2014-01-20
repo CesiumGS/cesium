@@ -18,7 +18,7 @@ define([
      * @see Event
      *
      * @example
-     * var helper = new EventHelper();
+     * var helper = new Cesium.EventHelper();
      *
      * helper.add(someObject.event, listener1, this);
      * helper.add(otherObject.event, listener2, this);

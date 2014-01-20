@@ -42,11 +42,11 @@ define([
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Camera(context);
-     * camera.position = new Cartesian3();
-     * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-     * camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = CesiumMath.PI_OVER_THREE;
+     * var camera = new Cesium.Camera(context);
+     * camera.position = new Cesium.Cartesian3();
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
+     * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
+     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
