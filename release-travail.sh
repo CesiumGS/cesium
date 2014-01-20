@@ -1,2 +1,6 @@
 # Copy across to travail dir
-cp -R ./Build/Cesium/Cesium.js ./Build/Cesium/Assets ./Build/Cesium/Workers ../travail-2/app/assets/javascripts/.
+SRC=./Build/Cesium
+DST=../travail-2/app/assets/javascripts/.
+echo Copying files to $DST
+cp -R $SRC/Cesium.js $SRC/Assets $SRC/Workers $DST
+
