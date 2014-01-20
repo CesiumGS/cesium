@@ -46,9 +46,12 @@ define([
 
     function createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
+
+        //>>includeStart('debug', pragmas.debug);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
         }
+        //>>includeEnd('debug');
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
@@ -106,9 +109,12 @@ define([
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, perPositionHeight) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
+
+        //>>includeStart('debug', pragmas.debug);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
         }
+        //>>includeEnd('debug');
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
@@ -281,11 +287,13 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-
         var polygonHierarchy = options.polygonHierarchy;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+        //>>includeEnd('debug');
 
         this._ellipsoid = ellipsoid;
         this._granularity = granularity;
@@ -329,9 +337,11 @@ define([
     PolygonOutlineGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.positions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        //>>includeEnd('debug');
 
         var newOptions = {
             polygonHierarchy : {

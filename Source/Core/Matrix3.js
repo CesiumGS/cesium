@@ -1090,9 +1090,11 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.determinant = function(matrix) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         var m11 = matrix[0];
         var m21 = matrix[3];
@@ -1119,9 +1121,11 @@ define([
      * @exception {DeveloperError} matrix is not invertible.
      */
     Matrix3.inverse = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         var m11 = matrix[0];
         var m21 = matrix[1];

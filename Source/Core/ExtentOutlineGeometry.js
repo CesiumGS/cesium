@@ -299,11 +299,18 @@ define([
         var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = options.rotation;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-
         extent.validate();
+        if (extent.east < extent.west) {
+            throw new DeveloperError('options.extent.east must be greater than options.extent.west');
+        }
+        if (extent.north < extent.south) {
+            throw new DeveloperError('options.extent.north must be greater than options.extent.south');
+        }
+        //>>includeEnd('debug');
 
         this._extent = extent;
         this._granularity = granularity;

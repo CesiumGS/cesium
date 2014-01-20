@@ -109,13 +109,13 @@ defineSuite([
         var collection = new DataSourceCollection();
         expect(function(){
             collection.get(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws if passed undefined', function() {
         var collection = new DataSourceCollection();
         expect(function(){
             collection.add(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

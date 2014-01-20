@@ -63,9 +63,11 @@ define([
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.geometry)) {
             throw new DeveloperError('options.geometry is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The geometry being instanced.

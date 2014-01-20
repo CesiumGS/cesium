@@ -55,9 +55,11 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var GeocoderViewModel = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
@@ -109,9 +111,12 @@ define([
                 return this._searchText;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof value !== 'string') {
                     throw new DeveloperError('value must be a valid string.');
                 }
+                //>>includeEnd('debug');
+
                 this._searchText = value;
             }
         });
@@ -129,9 +134,12 @@ define([
                 return this._flightDuration;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
+                //>>includeEnd('debug');
+
                 this._flightDuration = value;
             }
         });

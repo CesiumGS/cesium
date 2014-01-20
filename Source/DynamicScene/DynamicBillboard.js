@@ -201,9 +201,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicBillboard.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.color = defaultValue(this._color, source._color);
         this.eyeOffset = defaultValue(this._eyeOffset, source._eyeOffset);
         this.horizontalOrigin = defaultValue(this._horizontalOrigin, source._horizontalOrigin);

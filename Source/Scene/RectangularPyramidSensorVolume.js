@@ -196,9 +196,11 @@ define([
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
     RectangularPyramidSensorVolume.prototype.update = function(context, frameState, commandList) {
+        //>>includeStart('debug', pragmas.debug)
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
+        //>>includeEnd('debug');
 
         var s = this._customSensor;
 

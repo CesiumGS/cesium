@@ -71,7 +71,7 @@ defineSuite([
             return new Geocoder({
                 container : document.body
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no element', function() {
@@ -79,7 +79,7 @@ defineSuite([
             return new Geocoder({
                 scene : scene
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
@@ -88,6 +88,6 @@ defineSuite([
                 container : 'does not exist',
                 scene : scene
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

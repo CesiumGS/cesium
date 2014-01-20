@@ -115,9 +115,11 @@ define([
      * });
      */
     ColorGeometryInstanceAttribute.fromColor = function(color) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
+        //>>includeEnd('debug');
 
         return new ColorGeometryInstanceAttribute(color.red, color.green, color.blue, color.alpha);
     };
@@ -137,9 +139,11 @@ define([
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
      */
     ColorGeometryInstanceAttribute.toValue = function(color, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Uint8Array(color.toBytes());

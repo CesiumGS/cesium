@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './barycentricCoordinates',
-        './Cartesian3',
-        './DeveloperError'
+        './Cartesian3'
     ], function(
         barycentricCoordinates,
-        Cartesian3,
-        DeveloperError) {
+        Cartesian3) {
     "use strict";
 
     var coords = new Cartesian3();

@@ -39,9 +39,12 @@ define([
      *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
      */
     var barycentricCoordinates = function(point, p0, p1, p2, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(point) || !defined(p0) || !defined(p1) || !defined(p2)) {
             throw new DeveloperError('point, p0, p1, and p2 are required.');
         }
+        //>>includeEnd('debug');
+
 
         if (!defined(result)) {
             result = new Cartesian3();

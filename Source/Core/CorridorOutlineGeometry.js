@@ -331,13 +331,16 @@ define([
     var CorridorOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
+        var width = options.width;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
-        var width = options.width;
         if (!defined(width)) {
             throw new DeveloperError('options.width is required.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._width = width;
@@ -365,9 +368,13 @@ define([
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+
+        //>>includeStart('debug', pragmas.debug);
         if (cleanPositions.length < 2) {
             throw new DeveloperError('Count of unique positions must be greater than 1.');
         }
+        //>>includeEnd('debug');
+
         var ellipsoid = corridorOutlineGeometry._ellipsoid;
         var params = {
             ellipsoid : ellipsoid,

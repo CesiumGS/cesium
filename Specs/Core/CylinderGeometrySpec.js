@@ -11,7 +11,7 @@ defineSuite([
     it('constructor throws with no length', function() {
         expect(function() {
             return new CylinderGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with length less than 0', function() {
@@ -19,7 +19,7 @@ defineSuite([
             return new CylinderGeometry({
                 length: -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no topRadius', function() {
@@ -27,7 +27,7 @@ defineSuite([
             return new CylinderGeometry({
                 length: 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with topRadius less than 0', function() {
@@ -36,7 +36,7 @@ defineSuite([
                 length: 1,
                 topRadius: -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no bottomRadius', function() {
@@ -45,7 +45,7 @@ defineSuite([
                 length: 1,
                 topRadius: 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with bottomRadius less than 0', function() {
@@ -55,7 +55,7 @@ defineSuite([
                 topRadius: 1,
                 bottomRadius: -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if top and bottom radius are 0', function() {
@@ -65,7 +65,7 @@ defineSuite([
                 topRadius: 0,
                 bottomRadius: 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if slices is less than 3', function() {
@@ -76,7 +76,7 @@ defineSuite([
                 bottomRadius: 1,
                 slices: 2
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

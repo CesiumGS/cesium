@@ -68,7 +68,9 @@ define([
                 return Uint32Array.BYTES_PER_ELEMENT;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
+        //>>includeEnd('debug');
     };
 
     /**
@@ -105,9 +107,11 @@ define([
      * this.indices = Cesium.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(numberOfVertices)) {
             throw new DeveloperError('numberOfVertices is required.');
         }
+        //>>includeEnd('debug');
 
         if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(indicesLengthOrArray);

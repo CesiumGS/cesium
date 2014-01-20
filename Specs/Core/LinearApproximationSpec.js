@@ -58,7 +58,7 @@ defineSuite([
 
         expect(function() {
             LinearApproximation.interpolateOrderZero(2.3, xTable, yTable, 3);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('should throw when yStride equals zero indicating that there are no dependent variables for interpolation', function() {
@@ -67,7 +67,7 @@ defineSuite([
 
         expect(function() {
             LinearApproximation.interpolateOrderZero(6.0, xTable, yTable, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getRequiredDataPoints returns 2', function() {
@@ -77,6 +77,6 @@ defineSuite([
     it('getRequiredDataPoints throws if other than 1', function() {
         expect(function() {
             LinearApproximation.getRequiredDataPoints(2);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

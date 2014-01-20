@@ -447,9 +447,11 @@ define([
      * }
      */
     BillboardCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         removeBillboards(this);
         return this._billboards[index];
@@ -861,9 +863,13 @@ define([
         var index = billboard.getImageIndex();
         if (index !== -1) {
             var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(imageRectangle)) {
                 throw new DeveloperError('Invalid billboard image index: ' + index);
             }
+            //>>includeEnd('debug');
+
             bottomLeftX = imageRectangle.x;
             bottomLeftY = imageRectangle.y;
             width = imageRectangle.width;

@@ -166,18 +166,18 @@ define([
      * @exception {DeveloperError} this.rectangle must be defined.
      */
     ViewportQuad.prototype.update = function(context, frameState, commandList) {
-        if (!this.show)
-        {
+        if (!this.show) {
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
-
         if (!defined(this.rectangle)) {
             throw new DeveloperError('this.rectangle must be defined.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(this._va)) {
             this._va = getVertexArray(context);

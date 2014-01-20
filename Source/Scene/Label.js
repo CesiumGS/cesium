@@ -59,6 +59,7 @@ define([
     var Label = function(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(options.translucencyByDistance) &&
                 options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
@@ -67,6 +68,7 @@ define([
                 options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
+        //>>includeEnd('debug');
 
         this._text = defaultValue(options.text, '');
         this._show = defaultValue(options.show, true);
@@ -119,9 +121,11 @@ define([
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (value !== this._show) {
             this._show = value;
@@ -179,9 +183,11 @@ define([
      * });
      */
     Label.prototype.setPosition = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var position = this._position;
         if (!Cartesian3.equals(position, value)) {
@@ -220,9 +226,11 @@ define([
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (value !== this._text) {
             this._text = value;
@@ -257,9 +265,11 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles'>HTML canvas 2D context text styles</a>
      */
     Label.prototype.setFont = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._font !== value) {
             this._font = value;
@@ -294,9 +304,11 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setFillColor = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var fillColor = this._fillColor;
         if (!Color.equals(fillColor, value)) {
@@ -332,9 +344,11 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setOutlineColor = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var outlineColor = this._outlineColor;
         if (!Color.equals(outlineColor, value)) {
@@ -370,9 +384,11 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setOutlineWidth = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._outlineWidth !== value) {
             this._outlineWidth = value;
@@ -405,9 +421,11 @@ define([
      * @see Label#setFillColor
      */
     Label.prototype.setStyle = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._style !== value) {
             this._style = value;
@@ -457,9 +475,11 @@ define([
      * @see Billboard#setPixelOffset
      */
     Label.prototype.setPixelOffset = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var pixelOffset = this._pixelOffset;
         if (!Cartesian2.equals(pixelOffset, value)) {
@@ -513,9 +533,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (value.far <= value.near) {
             throw new DeveloperError('far distance must be greater than near distance.');
         }
+        //>>includeEnd('debug');
 
         this._translucencyByDistance = NearFarScalar.clone(value, this._translucencyByDistance);
         rebindAllGlyphs(this);
@@ -571,9 +593,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (value.far <= value.near) {
             throw new DeveloperError('far distance must be greater than near distance.');
         }
+        //>>includeEnd('debug');
 
         this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, this._pixelOffsetScaleByDistance);
         rebindAllGlyphs(this);
@@ -626,9 +650,11 @@ define([
      * @see Label#getEyeOffset
      */
     Label.prototype.setEyeOffset = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var eyeOffset = this._eyeOffset;
         if (!Cartesian3.equals(eyeOffset, value)) {
@@ -680,9 +706,11 @@ define([
      * l.setVerticalOrigin(Cesium.VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
@@ -726,9 +754,11 @@ define([
      * l.setVerticalOrigin(Cesium.VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._verticalOrigin !== value) {
             this._verticalOrigin = value;
@@ -785,9 +815,11 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setScale = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._scale !== value) {
             this._scale = value;
@@ -826,13 +858,14 @@ define([
      * console.log(l.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
     Label.prototype.computeScreenSpacePosition = function(context, frameState) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
-
         if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
+        //>>includeEnd('debug');
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;

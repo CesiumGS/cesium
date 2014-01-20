@@ -343,9 +343,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     GeoJsonDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(geoJson) {
@@ -373,9 +375,11 @@ define([
      * @exception {RuntimeError} Unknown crs type.
      */
     GeoJsonDataSource.prototype.load = function(geoJson, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(geoJson)) {
             throw new DeveloperError('geoJson is required.');
         }
+        //>>includeEnd('debug');
 
         this._name = undefined;
         if (defined(source)) {

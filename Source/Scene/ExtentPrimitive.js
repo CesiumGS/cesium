@@ -193,17 +193,17 @@ define([
      * @private
      */
     ExtentPrimitive.prototype.update = function(context, frameState, commandList) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
-
         if (this.granularity < 0.0) {
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         if (!this.show || (!defined(this.extent))) {
             return;

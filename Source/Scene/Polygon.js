@@ -191,9 +191,13 @@ define([
         this._createPrimitive = false;
         this._primitive = undefined;
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(options.positions) && defined(options.polygonHierarchy)) {
             throw new DeveloperError('Either options.positions or options.polygonHierarchy can be provided, but not both.');
-        } else if (defined(options.positions)) {
+        }
+        //>>includeEnd('debug');
+
+        if (defined(options.positions)) {
             this.setPositions(options.positions);
         } else if (defined(options.polygonHierarchy)) {
             this.configureFromPolygonHierarchy(options.polygonHierarchy);
@@ -235,9 +239,13 @@ define([
      */
     Polygon.prototype.setPositions = function(positions) {
         // positions can be undefined
+
+        //>>includeStart('debug', pragmas.debug);
         if (defined(positions) && (positions.length < 3)) {
             throw new DeveloperError('At least three positions are required.');
         }
+        //>>includeEnd('debug');
+
         this._positions = positions;
         this._polygonHierarchy = undefined;
         this._createPrimitive = true;
@@ -301,17 +309,17 @@ define([
      * @private
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
-
         if (this.granularity < 0.0) {
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         if (!this.show) {
             return;

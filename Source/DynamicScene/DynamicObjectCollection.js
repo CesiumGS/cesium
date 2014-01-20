@@ -75,9 +75,11 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
      */
     DynamicObjectCollection.prototype.resumeEvents = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (this._suspendCount === 0) {
             throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
         }
+        //>>includeEnd('debug');
 
         this._suspendCount--;
         fireChangedEvent(this);
@@ -166,9 +168,12 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} An object with <dynamicObject.id> already exists in this collection.
      */
     DynamicObjectCollection.prototype.add = function(dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required.');
         }
+        //>>includeEnd('debug');
+
         var id = dynamicObject.id;
         var hash = this._hash;
         if (defined(hash[id])) {
@@ -204,9 +209,12 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} dynamicObject is required.
      */
     DynamicObjectCollection.prototype.remove = function(dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required');
         }
+        //>>includeEnd('debug');
+
         return this.removeById(dynamicObject.id);
     };
 
@@ -220,9 +228,12 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.removeById = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
+        //>>includeEnd('debug');
+
         var hash = this._hash;
         var array = this._array;
         var dynamicObject = hash[id];
@@ -292,9 +303,12 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getById = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
+        //>>includeEnd('debug');
+
         return this._hash[id];
     };
 
@@ -319,9 +333,12 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getOrCreateObject = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
+        //>>includeEnd('debug');
+
         var dynamicObject = this._hash[id];
         if (!defined(dynamicObject)) {
             dynamicObject = new DynamicObject(id);

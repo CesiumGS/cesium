@@ -59,13 +59,14 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
+        //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
@@ -108,6 +109,7 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToDrawingBufferCoordinates = function(scene, position, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -115,6 +117,7 @@ define([
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
+        //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);

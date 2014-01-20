@@ -52,31 +52,28 @@ define([
      * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(lower) || !(lower instanceof Array)) {
             throw new DeveloperError('The array lower is required.');
         }
-
         if (!defined(diagonal) || !(diagonal instanceof Array)) {
             throw new DeveloperError('The array diagonal is required.');
         }
-
         if (!defined(upper) || !(upper instanceof Array)) {
             throw new DeveloperError('The array upper is required.');
         }
-
         if (!defined(right) || !(right instanceof Array)) {
             throw new DeveloperError('The array right is required.');
         }
-
         if (diagonal.length !== right.length) {
             throw new DeveloperError('diagonal and right must have the same lengths.');
         }
-
         if (lower.length !== upper.length) {
             throw new DeveloperError('lower and upper must have the same lengths.');
         } else if (lower.length !== diagonal.length - 1) {
             throw new DeveloperError('lower and upper must be one less than the length of diagonal.');
         }
+        //>>includeEnd('debug');
 
         var c = [], d = [], x = [];
         c.length = upper.length;

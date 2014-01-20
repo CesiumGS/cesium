@@ -96,14 +96,14 @@ defineSuite([
 
         expect(function() {
             sampleTerrain(undefined, 11, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             sampleTerrain(terrainProvider, undefined, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             sampleTerrain(terrainProvider, 11, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

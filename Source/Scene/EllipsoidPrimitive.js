@@ -270,9 +270,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;

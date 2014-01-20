@@ -250,9 +250,11 @@ define([
      * @see ScreenSpaceEventHandler
      */
     var CameraEventAggregator = function(canvas) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
+        //>>includeEnd('debug');
 
         this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
@@ -298,9 +300,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isMoving = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return !this._update[key];
@@ -317,9 +321,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getMovement = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         var movement = this._movement[key];
@@ -337,9 +343,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getLastMovement = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         var lastMovement = this._lastMovement[key];
@@ -361,9 +369,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isButtonDown = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._isDown[key];
@@ -390,9 +400,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonPressTime = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._pressTime[key];
@@ -409,9 +421,11 @@ define([
      * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonReleaseTime = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._releaseTime[key];

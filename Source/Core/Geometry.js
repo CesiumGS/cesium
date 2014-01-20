@@ -70,13 +70,14 @@ define([
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.attributes)) {
             throw new DeveloperError('options.attributes is required.');
         }
-
         if (!defined(options.primitiveType)) {
             throw new DeveloperError('options.primitiveType is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
@@ -174,9 +175,11 @@ define([
      * var numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);
      */
     Geometry.computeNumberOfVertices = function(geometry) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(geometry)) {
             throw new DeveloperError('geometry is required.');
         }
+        //>>includeEnd('debug');
 
         var numberOfVertices = -1;
         for ( var property in geometry.attributes) {

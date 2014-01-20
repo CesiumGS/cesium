@@ -55,21 +55,21 @@ define([
      */
     var TextureAtlas = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-
         var context = description.context;
+        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
+        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
-
-        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
-
-        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
         if (initialSize.x < 1 || initialSize.y < 1) {
             throw new DeveloperError('initialSize must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         this._context = context;
         this._pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
@@ -218,12 +218,13 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     function addImage(textureAtlas, image, index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(image)) {
             throw new DeveloperError('image is required.');
         }
+        //>>includeEnd('debug');
 
         var node = findNode(textureAtlas, textureAtlas._root, image);
-
         // Found a node that can hold the image.
         if (defined(node)) {
             node.imageIndex = index;
@@ -290,10 +291,11 @@ define([
      *
      */
     TextureAtlas.prototype.addImages = function(images) {
-        // Check if image array is valid.
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(images) || (images.length < 1)) {
             throw new DeveloperError('images is required and must have length greater than zero.');
         }
+        //>>includeEnd('debug');
 
         // Store images in containers that have an index.
         var i;

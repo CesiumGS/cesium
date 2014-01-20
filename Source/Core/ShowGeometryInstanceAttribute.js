@@ -100,9 +100,11 @@ define([
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
      */
     ShowGeometryInstanceAttribute.toValue = function(show, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(show)) {
             throw new DeveloperError('show is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Uint8Array([show]);

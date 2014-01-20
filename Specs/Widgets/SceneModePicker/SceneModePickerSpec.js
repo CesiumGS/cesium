@@ -80,18 +80,18 @@ defineSuite([
     it('constructor throws with no transitioner', function() {
         expect(function() {
             return new SceneModePicker(document.body, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no element', function() {
         expect(function() {
             return new SceneModePicker(undefined, new SceneTransitioner(scene));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
             return new SceneModePicker('does not exist', new SceneTransitioner(scene));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

@@ -187,9 +187,11 @@ define([
      * var box = Cesium.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
      */
     ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingRectangle)) {
             throw new DeveloperError('boundingRectangle is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
@@ -287,12 +289,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        //>>includeEnd('debug');
 
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);

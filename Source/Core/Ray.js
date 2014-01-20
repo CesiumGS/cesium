@@ -54,9 +54,11 @@ define([
      * var point = ray.getPoint(intersection.start);
      */
     Ray.prototype.getPoint = function(t, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof t !== 'number') {
             throw new DeveloperError('t is a required number');
         }
+        //>>includeEnd('debug');
 
         result = Cartesian3.multiplyByScalar(this.direction, t, result);
         return Cartesian3.add(this.origin, result, result);

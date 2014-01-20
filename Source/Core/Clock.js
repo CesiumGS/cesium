@@ -80,9 +80,11 @@ define([
             startTime = JulianDate.clone(currentTime);
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (startTime.greaterThan(stopTime)) {
             throw new DeveloperError('startTime must come before stopTime.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The start time of the clock.

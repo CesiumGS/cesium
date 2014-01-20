@@ -93,27 +93,29 @@ define([
     };
 
     function update(frustum) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(frustum.right) || !defined(frustum.left) ||
             !defined(frustum.top) || !defined(frustum.bottom) ||
             !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
+        //>>includeEnd('debug');
 
         if (frustum.top !== frustum._top || frustum.bottom !== frustum._bottom ||
                 frustum.left !== frustum._left || frustum.right !== frustum._right ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
 
+            //>>includeStart('debug', pragmas.debug);
             if (frustum.left > frustum.right) {
                 throw new DeveloperError('right must be greater than left.');
             }
-
             if (frustum.bottom > frustum.top) {
                 throw new DeveloperError('top must be greater than bottom.');
             }
-
             if (frustum.near <= 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
+            //>>includeEnd('debug');
 
             frustum._left = frustum.left;
             frustum._right = frustum.right;
@@ -165,20 +167,19 @@ define([
      * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
     OrthographicFrustum.prototype.computeCullingVolume = function(position, direction, up) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
-
         if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
-
         if (!defined(up)) {
             throw new DeveloperError('up is required.');
         }
+        //>>includeEnd('debug');
 
         var planes = this._cullingVolume.planes;
-
         var t = this.top;
         var b = this.bottom;
         var r = this.right;
@@ -187,7 +188,6 @@ define([
         var f = this.far;
 
         var right = Cartesian3.cross(direction, up, getPlanesRight);
-
         var nearCenter = getPlanesNearCenter;
         Cartesian3.multiplyByScalar(direction, n, nearCenter);
         Cartesian3.add(position, nearCenter, nearCenter);
@@ -294,25 +294,22 @@ define([
     OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(drawingBufferDimensions)) {
             throw new DeveloperError('drawingBufferDimensions is required.');
         }
-
-        var width = drawingBufferDimensions.x;
-        var height = drawingBufferDimensions.y;
-
-        if (width <= 0) {
+        if (drawingBufferDimensions.x <= 0) {
             throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
         }
-
-        if (height <= 0) {
+        if (drawingBufferDimensions.y <= 0) {
             throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var frustumWidth = this.right - this.left;
         var frustumHeight = this.top - this.bottom;
-        var pixelWidth = frustumWidth / width;
-        var pixelHeight = frustumHeight / height;
+        var pixelWidth = frustumWidth / drawingBufferDimensions.x;
+        var pixelHeight = frustumHeight / drawingBufferDimensions.y;
 
         if (!defined(result)) {
             return new Cartesian2(pixelWidth, pixelHeight);

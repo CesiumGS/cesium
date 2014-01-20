@@ -108,25 +108,23 @@ define([
      * });
      */
     HeightmapTessellator.computeVertices = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.heightmap)) {
             throw new DeveloperError('description.heightmap is required.');
         }
-
         if (!defined(description.width) || !defined(description.height)) {
             throw new DeveloperError('description.width and description.height are required.');
         }
-
         if (!defined(description.vertices)) {
             throw new DeveloperError('description.vertices is required.');
         }
-
         if (!defined(description.nativeExtent)) {
             throw new DeveloperError('description.nativeExtent is required.');
         }
-
         if (!defined(description.skirtHeight)) {
             throw new DeveloperError('description.skirtHeight is required.');
         }
+        //>>includeEnd('debug');
 
         // This function tends to be a performance hotspot for terrain rendering,
         // so it employs a lot of inlining and unrolling as an optimization.

@@ -52,9 +52,11 @@ define([
      * @see SceneMode
      */
     var SceneTransitioner = function(scene, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Gets or sets the amount of time, in milliseconds, for
@@ -227,9 +229,12 @@ define([
      * @exception {DeveloperError} completeMorph can only be called during a transition.
      */
     SceneTransitioner.prototype.completeMorph = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._completeMorph)) {
             throw new DeveloperError('completeMorph can only be called while morphing');
         }
+        //>>includeEnd('debug');
+
         this._completeMorph();
     };
 

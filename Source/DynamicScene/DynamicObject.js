@@ -238,9 +238,11 @@ define(['../Core/createGuid',
      * @returns true if the object should have data during the provided time, false otherwise.
      */
     DynamicObject.prototype.isAvailable = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
 
         var availability = this._availability;
         return !defined(availability) || availability.contains(time);
@@ -259,20 +261,21 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} "propertyName" is already a registered property.
      */
     DynamicObject.prototype.addProperty = function(propertyName) {
+        var propertyNames = this._propertyNames;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-
-        var propertyNames = this._propertyNames;
         if (propertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is already a registered property.');
         }
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
+        //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-
         Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName, true));
     };
 
@@ -287,17 +290,19 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} "propertyName" is not a registered property.
      */
     DynamicObject.prototype.removeProperty = function(propertyName) {
+        var propertyNames = this._propertyNames;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-
-        var propertyNames = this._propertyNames;
         if (reservedPropertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         if (propertyNames.indexOf(propertyName) === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
+        //>>includeEnd('debug');
 
         this._propertyNames.push(propertyName);
         delete this[propertyName];
@@ -312,9 +317,11 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} source is required.
      */
     DynamicObject.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
 
         //Name and availability are not Property objects and are currently handled differently.
         this.name = defaultValue(this.name, source.name);

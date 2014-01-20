@@ -36,13 +36,14 @@ define([
      * var leapSecond = new LeapSecond(date, 25.0);
      */
     var LeapSecond = function(date, offset) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
-
         if (offset === null || isNaN(offset)) {
             throw new DeveloperError('offset is required and must be a number.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The Julian date at which this leap second occurs.
@@ -78,9 +79,12 @@ define([
      *                           ]);
      */
     LeapSecond.setLeapSeconds = function(leapSeconds) {
+        //>>includeStart('debug', pragmas.debug);
         if (!Array.isArray(leapSeconds)) {
             throw new DeveloperError("leapSeconds is required and must be an array.");
         }
+        //>>includeEnd('debug');
+
         LeapSecond._leapSeconds = leapSeconds;
         LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
     };

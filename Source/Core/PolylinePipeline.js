@@ -195,9 +195,11 @@ define([
      * var nonDuplicatePositions = Cesium.PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions )) {
             throw new DeveloperError('positions is required.');
         }
+        //>>includeEnd('debug');
 
         var length = positions.length;
         if (length < 2) {
@@ -242,9 +244,12 @@ define([
      * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('positions is required');
         }
+        //>>includeEnd('debug');
+
         granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -290,15 +295,17 @@ define([
      *
      * var raisedPositions = Cesium.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
+    PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
         if (!defined(height)) {
             throw new DeveloperError('height must be defined');
         }
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        //>>includeEnd('debug');
 
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var length = positions.length;
         var i;
         var p = scaleP;

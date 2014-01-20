@@ -21,19 +21,19 @@ defineSuite([
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {
             return new Occluder();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception during construction (2 of 3)', function() {
         expect(function() {
             return new Occluder(new BoundingSphere(new Cartesian3(0, 0, 0)));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception during construction (3 of 3)', function() {
         expect(function() {
             return new Occluder(new Cartesian3(0, 0, 0));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can entirely eclipse a smaller occludee', function() {
@@ -111,13 +111,13 @@ defineSuite([
 
         expect(function() {
             occluder.getVisibility();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (1 of 5)', function() {
         expect(function() {
             Occluder.getOccludeePoint();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (2 of 5)', function() {
@@ -127,7 +127,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (3 of 5)', function() {
@@ -136,7 +136,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -3), positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (4 of 5)', function() {
@@ -144,7 +144,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -3));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (5 of 5)', function() {
@@ -152,7 +152,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -5), new Cartesian3(0, 0, -3));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can compute an occludee point', function() {
@@ -259,7 +259,7 @@ defineSuite([
     it('compute occludee point from extent throws without an extent', function() {
         expect(function() {
             return Occluder.computeOccludeePointFromExtent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('compute invalid occludee point from extent', function() {
@@ -281,13 +281,13 @@ defineSuite([
     it('fromBoundingSphere throws without a bounding sphere', function() {
         expect(function() {
             Occluder.fromBoundingSphere();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromBoundingSphere throws without camera position', function() {
         expect(function() {
             Occluder.fromBoundingSphere(new BoundingSphere());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromBoundingSphere without result parameter', function() {
