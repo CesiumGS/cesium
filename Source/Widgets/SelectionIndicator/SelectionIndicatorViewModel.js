@@ -131,7 +131,7 @@ define([
      */
     SelectionIndicatorViewModel.prototype.update = function() {
         var pos;
-        if (this.showBalloon) {
+        if (this.showSelection) {
             if (defined(this._position)) {
                 pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
                 pos.x = Math.round(pos.x);
