@@ -170,13 +170,13 @@ defineSuite([
     it('throws if no container provided', function() {
         expect(function() {
             return new CesiumWidget(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raises onRenderLoopError and stops the render loop when render throws', function() {

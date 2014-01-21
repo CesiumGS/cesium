@@ -49,7 +49,7 @@ defineSuite([
             return new Geometry({
                 attributes : {}
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without attributes', function() {
@@ -57,7 +57,7 @@ defineSuite([
             return new Geometry({
                 primitiveType : PrimitiveType.TRIANGLES
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeNumberOfVertices', function() {
@@ -132,7 +132,7 @@ defineSuite([
     it('computeNumberOfVertices throws without geometry', function() {
         expect(function() {
             Geometry.computeNumberOfVertices();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

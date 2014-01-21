@@ -1454,7 +1454,7 @@ defineSuite([
     it('throws when accessing without an index', function() {
         expect(function() {
             polylines.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes bounding sphere in 3D', function() {
@@ -1547,7 +1547,9 @@ defineSuite([
         expect(two._boundingVolume2D.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON8);
         expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
+        var expected = one._boundingVolume2D.union(two._boundingVolume2D);
+        expect(boundingVolume.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
+        expect(boundingVolume.radius).toEqualEpsilon(expected.radius, CesiumMath.EPSILON8);
     }
 
     it('computes bounding sphere in Columbus view', function() {

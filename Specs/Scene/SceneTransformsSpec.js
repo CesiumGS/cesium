@@ -31,13 +31,13 @@ defineSuite([
         var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
         expect(function() {
             SceneTransforms.wgs84ToWindowCoordinates(undefined, position);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception without position', function() {
         expect(function() {
             SceneTransforms.wgs84ToWindowCoordinates(scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('returns correct window position', function() {

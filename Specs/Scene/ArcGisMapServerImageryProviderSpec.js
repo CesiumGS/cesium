@@ -46,7 +46,7 @@ defineSuite([
         function constructWithoutUrl() {
             return new ArcGisMapServerImageryProvider({});
         }
-        expect(constructWithoutUrl).toThrow();
+        expect(constructWithoutUrl).toThrowDeveloperError();
     });
 
     it('supports tiled servers in web mercator projection', function() {

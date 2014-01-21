@@ -391,7 +391,7 @@ defineSuite([
                 startTime : start,
                 stopTime : stop
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('system clock multiplier clock step works fine', function() {

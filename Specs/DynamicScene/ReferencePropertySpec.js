@@ -35,44 +35,44 @@ defineSuite([
     it('constructor throws if missing dynamicObjectCollection parameter', function() {
         expect(function() {
             return new ReferenceProperty(undefined, 'object', 'property');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if missing targetObjectId parameter', function() {
         expect(function() {
             return new ReferenceProperty(new DynamicObjectCollection(), undefined, 'property');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if missing targetPropertyName parameter', function() {
         expect(function() {
             return new ReferenceProperty(new DynamicObjectCollection(), 'object', undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromString throws if missing dynamicObjectCollection parameter', function() {
         expect(function() {
             return ReferenceProperty.fromString(undefined, 'object.property');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromString throws if missing string parameter', function() {
         expect(function() {
             return ReferenceProperty.fromString(new DynamicObjectCollection(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromString throws if invalid string parameter', function() {
         expect(function() {
             return ReferenceProperty.fromString(new DynamicObjectCollection(), 'a.b.c');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getValue throws with undefined time', function() {
         var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getValue returned undefined for unresolved property', function() {

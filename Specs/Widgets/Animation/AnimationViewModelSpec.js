@@ -583,28 +583,28 @@ defineSuite([
     it('throws when constructed without arguments', function() {
         expect(function() {
             return new AnimationViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting timeFormatter throws with non-function', function() {
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.timeFormatter = {};
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting dateFormatter throws with non-function', function() {
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.dateFormatter = {};
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting shuttleRingTicks throws with undefined', function() {
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.setShuttleRingTicks(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('returns a copy of shuttleRingTicks when getting', function() {

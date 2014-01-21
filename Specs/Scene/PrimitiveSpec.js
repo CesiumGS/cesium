@@ -614,7 +614,7 @@ defineSuite([
 
         expect(function() {
             primitive.update(context, frameState, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('shader validation', function() {
@@ -629,7 +629,7 @@ defineSuite([
 
         expect(function() {
             primitive.update(context, frameState, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
@@ -645,7 +645,7 @@ defineSuite([
 
         expect(function() {
             attributes.color = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });
@@ -662,7 +662,7 @@ defineSuite([
 
         expect(function() {
             primitive.getGeometryInstanceAttributes();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });
@@ -677,7 +677,7 @@ defineSuite([
 
         expect(function() {
             primitive.getGeometryInstanceAttributes('extent1');
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });

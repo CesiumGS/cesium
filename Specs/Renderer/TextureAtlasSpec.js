@@ -995,31 +995,31 @@ defineSuite([
        expect(function() {
            atlas = context.createTextureAtlas();
            atlas.addImage();
-       }).toThrow();
+       }).toThrowDeveloperError();
     });
 
     it('throws without images', function() {
         expect(function() {
             atlas = context.createTextureAtlas();
             atlas.addImages([]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative borderWidthInPixels', function() {
         expect(function() {
             atlas = context.createTextureAtlas({borderWidthInPixels : -1});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a initialSize less than one', function() {
         expect(function() {
             atlas = context.createTextureAtlas({initialSize : new Cartesian2(0, 0)});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without context', function() {
         expect(function() {
             return new TextureAtlas();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

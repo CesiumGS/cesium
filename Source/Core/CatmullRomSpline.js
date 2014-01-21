@@ -112,14 +112,14 @@ define([
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = new CatmullRomSpline({
+     * var spline = new Cesium.CatmullRomSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      */
@@ -131,21 +131,20 @@ define([
         var firstTangent = options.firstTangent;
         var lastTangent = options.lastTangent;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points)) {
             throw new DeveloperError('points is required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         if (points.length > 2) {
             if (!defined(firstTangent)) {
@@ -234,14 +233,14 @@ define([
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = new CatmullRomSpline({
+     * var spline = new Cesium.CatmullRomSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      *

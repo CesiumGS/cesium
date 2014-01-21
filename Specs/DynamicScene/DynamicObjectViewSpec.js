@@ -52,14 +52,14 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
             view.update(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without dynamicObject property', function() {
         var view = new DynamicObjectView(undefined, scene);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
 
     });
 
@@ -69,7 +69,7 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, undefined);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without ellipsoid property', function() {
@@ -79,7 +79,7 @@ defineSuite([
         view.ellipsoid = undefined;
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without dynamicObject.position property.', function() {
@@ -87,6 +87,6 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

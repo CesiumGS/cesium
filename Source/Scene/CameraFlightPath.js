@@ -378,25 +378,23 @@ define([
         var direction = description.direction;
         var up = description.up;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
-
         if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
             throw new DeveloperError('If either direction or up is given, then both are required.');
         }
-
-        var frameState = scene.getFrameState();
-        if (frameState.mode === SceneMode.MORPHING) {
+        if (scene.getFrameState().mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
+        //>>includeEnd('debug');
 
         var duration = defaultValue(description.duration, 3000.0);
-
+        var frameState = scene.getFrameState();
         var controller = scene.getScreenSpaceCameraController();
         controller.enableInputs = false;
         var wrapCallback = function(cb) {
@@ -529,12 +527,14 @@ define([
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         if (!defined(destination)) {
             throw new DeveloperError('description.destination is required.');
         }
+        //>>includeEnd('debug');
 
         var frameState = scene.getFrameState();
         var projection = frameState.scene2D.projection;
@@ -574,6 +574,8 @@ define([
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.destination;
         var frameState = scene.getFrameState();
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
@@ -583,6 +585,7 @@ define([
         if (frameState.mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
+        //>>includeEnd('debug');
 
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;

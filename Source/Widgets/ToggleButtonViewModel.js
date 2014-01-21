@@ -24,9 +24,11 @@ define([
      * @param {String|Observable} [options.tooltip=''] A string, or observable, containing the button's tooltip.
      */
     var ToggleButtonViewModel = function(command, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(command)) {
             throw new DeveloperError('command is required.');
         }
+        //>>includeEnd('debug');
 
         this._command = command;
 
