@@ -88,7 +88,7 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      *
      * @example
-     * var google = new GoogleEarthImageryProvider({
+     * var google = new Cesium.GoogleEarthImageryProvider({
      *     url : 'http://earth.localdomain',
      *     channel : 1008
      * });
@@ -96,12 +96,14 @@ define([
     var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(description) {
         description = defaultValue(description, {});
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
         if (!defined(description.channel)) {
             throw new DeveloperError('description.channel is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = description.url;
         this._path = defaultValue(description.path, '/default_map');
@@ -272,9 +274,12 @@ define([
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getTileWidth = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileWidth;
     };
 
@@ -289,9 +294,12 @@ define([
      * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getTileHeight = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileHeight;
     };
 
@@ -306,9 +314,12 @@ define([
      * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getMaximumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._maximumLevel;
     };
 
@@ -323,9 +334,12 @@ define([
      * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getMinimumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return 0;
     };
 
@@ -342,9 +356,12 @@ define([
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getTilingScheme = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tilingScheme;
     };
 
@@ -361,9 +378,12 @@ define([
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getTilingScheme = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tilingScheme;
     };
 
@@ -378,9 +398,12 @@ define([
      * @exception {DeveloperError} <code>getVersion</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getVersion = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getVersion must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._version;
     };
 
@@ -395,9 +418,12 @@ define([
      * @exception {DeveloperError} <code>getRequestType</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getRequestType = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getRequestType must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._requestType;
     };
 
@@ -412,9 +438,12 @@ define([
      * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getExtent = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tilingScheme.getExtent();
     };
 
@@ -434,9 +463,12 @@ define([
      * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.getTileDiscardPolicy = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileDiscardPolicy;
     };
 
@@ -482,9 +514,12 @@ define([
      * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     GoogleEarthImageryProvider.prototype.requestImage = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };

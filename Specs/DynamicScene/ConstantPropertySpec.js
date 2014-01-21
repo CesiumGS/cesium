@@ -40,7 +40,7 @@ defineSuite([
     it('constructor throws with undefined value', function() {
         expect(function() {
             return new ConstantProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined clone function on non-basic type', function() {
@@ -50,7 +50,7 @@ defineSuite([
                     return true;
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined equals function on non-basic type', function() {
@@ -60,7 +60,7 @@ defineSuite([
                     return {};
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works for object types', function() {

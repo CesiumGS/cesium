@@ -300,35 +300,34 @@ define([
     * @exception {DeveloperError} DynamicObjectView.dynamicObject.position is required.
     */
     DynamicObjectView.prototype.update = function(time) {
+        var scene = this.scene;
+        var dynamicObject = this.dynamicObject;
+        var ellipsoid = this.ellipsoid;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
-
-        var scene = this.scene;
         if (!defined(scene)) {
             throw new DeveloperError('DynamicObjectView.scene is required.');
         }
+        if (!defined(dynamicObject)) {
+            throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
+        }
+        if (!defined(ellipsoid)) {
+            throw new DeveloperError('DynamicObjectView.ellipsoid is required.');
+        }
+        if (!defined(dynamicObject.position)) {
+            throw new DeveloperError('dynamicObject.position is required.');
+        }
+        //>>includeEnd('debug');
 
         if (scene !== this._lastScene) {
             this._lastScene = scene;
             this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
         }
 
-        var dynamicObject = this.dynamicObject;
-        if (!defined(dynamicObject)) {
-            throw new DeveloperError('DynamicObjectView.dynamicObject is required.');
-        }
-
-        var ellipsoid = this.ellipsoid;
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('DynamicObjectView.ellipsoid is required.');
-        }
-
-        var positionProperty = this.dynamicObject.position;
-        if (!defined(positionProperty)) {
-            throw new DeveloperError('dynamicObject.position is required.');
-        }
-
+        var positionProperty = dynamicObject.position;
         var objectChanged = dynamicObject !== this._lastDynamicObject;
 
         //Determine what the current camera offset should be, this is used

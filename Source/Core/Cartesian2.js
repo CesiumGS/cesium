@@ -183,11 +183,11 @@ define([
      * @example
      * // Create a Cartesian2 with (1.0, 2.0)
      * var v = [1.0, 2.0];
-     * var p = Cartesian2.fromArray(v);
+     * var p = Cesium.Cartesian2.fromArray(v);
      *
      * // Create a Cartesian2 with (1.0, 2.0) using an offset into an array
      * var v2 = [0.0, 0.0, 1.0, 2.0];
-     * var p2 = Cartesian2.fromArray(v2, 2);
+     * var p2 = Cesium.Cartesian2.fromArray(v2, 2);
      */
     Cartesian2.fromArray = Cartesian2.unpack;
 
@@ -339,7 +339,7 @@ define([
      *
      * @example
      * // Returns 1.0
-     * var d = Cartesian2.distance(new Cartesian2(1.0, 0.0), new Cartesian2(2.0, 0.0));
+     * var d = Cesium.Cartesian2.distance(new Cesium.Cartesian2(1.0, 0.0), new Cesium.Cartesian2(2.0, 0.0));
      */
     Cartesian2.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);

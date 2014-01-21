@@ -26,7 +26,7 @@ defineSuite([
     it('constructor throws without points', function() {
         expect(function() {
             return new HermiteSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 3', function() {
@@ -34,7 +34,7 @@ defineSuite([
             return new HermiteSpline({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without times', function() {
@@ -42,7 +42,7 @@ defineSuite([
             return new HermiteSpline({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -51,7 +51,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate fails with undefined time', function() {
@@ -61,7 +61,7 @@ defineSuite([
         });
         expect(function() {
             hs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate fails with time out of range', function() {
@@ -71,7 +71,7 @@ defineSuite([
         });
         expect(function() {
             hs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     // returns a function for a hermite curve between points p and q

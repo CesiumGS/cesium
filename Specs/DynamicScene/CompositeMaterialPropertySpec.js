@@ -83,13 +83,13 @@ defineSuite([
         var property = new CompositeMaterialProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getType throws with no time parameter', function() {
         var property = new CompositeMaterialProperty();
         expect(function() {
             property.getType(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

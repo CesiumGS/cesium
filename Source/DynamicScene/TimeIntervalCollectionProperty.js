@@ -31,11 +31,11 @@ define([
      * @example
      * //Create a Cartesian2 interval property which contains data on August 1st, 2012
      * //and uses a different value every 6 hours.
-     * var composite = new TimeIntervalCollectionProperty();
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z', true, false, new Cartesian2(2.0, 3.4)));
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, new Cartesian2(12.0, 2.7)));
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-01T18:00:00.00Z', true, false, new Cartesian2(5.0, 12.4)));
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T18:00:00.00Z/2012-08-02T00:00:00.00Z', true, true, new Cartesian2(85.0, 4.1)));
+     * var composite = new Cesium.TimeIntervalCollectionProperty();
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z', true, false, new Cesium.Cartesian2(2.0, 3.4)));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, new Cesium.Cartesian2(12.0, 2.7)));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-01T18:00:00.00Z', true, false, new Cesium.Cartesian2(5.0, 12.4)));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T18:00:00.00Z/2012-08-02T00:00:00.00Z', true, true, new Cesium.Cartesian2(85.0, 4.1)));
      *
      * @example
      * //Create a TimeIntervalCollectionProperty that contains user-defined objects.
@@ -50,9 +50,9 @@ define([
      *         value : value.value
      *     };
      * }
-     * var composite = new TimeIntervalCollectionProperty(cloneMyObject);
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z', true, false, myObject));
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, myObject2));
+     * var composite = new Cesium.TimeIntervalCollectionProperty(cloneMyObject);
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z', true, false, myObject));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, myObject2));
      */
     var TimeIntervalCollectionProperty = function() {
         this._intervals = new TimeIntervalCollection();
@@ -84,9 +84,11 @@ define([
      * @exception {DeveloperError} This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(value) && (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration))) {

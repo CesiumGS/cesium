@@ -54,6 +54,7 @@ define(['../../Core/BoundingSphere',
      */
 
     var viewerDynamicObjectMixin = function(viewer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -66,6 +67,7 @@ define(['../../Core/BoundingSphere',
         if (viewer.hasOwnProperty('balloonedObject')) {
             throw new DeveloperError('balloonedObject is already defined by another mixin.');
         }
+        //>>includeEnd('debug');
 
         //Balloon
         var balloonContainer = document.createElement('div');

@@ -214,6 +214,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, ellipsoid);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

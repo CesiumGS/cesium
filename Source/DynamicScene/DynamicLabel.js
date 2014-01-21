@@ -188,9 +188,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicLabel.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.text = defaultValue(this.text, source.text);
         this.font = defaultValue(this.font, source.font);
         this.show = defaultValue(this.show, source.show);

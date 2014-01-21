@@ -507,7 +507,7 @@ defineSuite([
                              'return material;\n}\n'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Material({
@@ -519,7 +519,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with duplicate names in materials and uniforms', function () {
@@ -536,7 +536,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid template type', function() {
@@ -547,7 +547,7 @@ defineSuite([
                     invalid : 3.0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid component type', function () {
@@ -560,7 +560,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid uniform type', function() {
@@ -579,7 +579,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Material({
@@ -590,7 +590,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with unused channels', function() {
@@ -603,7 +603,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused uniform strings are ignored.
         var material = new Material({
@@ -632,7 +632,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused uniforms are ignored.
         var material = new Material({
@@ -663,7 +663,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused materials are ignored.
         var material = new Material({
@@ -683,7 +683,7 @@ defineSuite([
     it('throws with invalid type sent to fromType', function() {
         expect(function() {
             return Material.fromType('Nothing');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('destroys material with texture', function() {

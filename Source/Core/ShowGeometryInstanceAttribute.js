@@ -20,16 +20,16 @@ define([
      * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
      *
      * @example
-     * var instance = new GeometryInstance({
-     *   geometry : new BoxGeometry({
-     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.BoxGeometry({
+     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *     show : new ShowGeometryInstanceAttribute(false)
+     *     show : new Cesium.ShowGeometryInstanceAttribute(false)
      *   }
      * });
      *
@@ -97,12 +97,14 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
      */
     ShowGeometryInstanceAttribute.toValue = function(show, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(show)) {
             throw new DeveloperError('show is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Uint8Array([show]);

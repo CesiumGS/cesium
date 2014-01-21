@@ -957,7 +957,7 @@ defineSuite([
                     height : 16,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1003,7 +1003,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveX().copyFrom();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (xOffset)', function() {
@@ -1015,7 +1015,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveY().copyFrom(image, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (yOffset)', function() {
@@ -1027,7 +1027,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveZ().copyFrom(image, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (width)', function() {
@@ -1040,7 +1040,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeX().copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (height)', function() {
@@ -1053,7 +1053,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeY().copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (invalid data type)', function() {
@@ -1066,7 +1066,7 @@ defineSuite([
 
             expect(function() {
                 cubeMap.getPositiveX().copyFromFramebuffer();
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1078,7 +1078,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveX().copyFromFramebuffer(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (yOffset)', function() {
@@ -1089,7 +1089,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveY().copyFromFramebuffer(0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (framebufferXOffset)', function() {
@@ -1100,7 +1100,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveZ().copyFromFramebuffer(0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (framebufferYOffset)', function() {
@@ -1111,7 +1111,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeX().copyFromFramebuffer(0, 0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (width)', function() {
@@ -1122,7 +1122,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeY().copyFromFramebuffer(0, 0, 0, 0, cubeMap.getWidth() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (height)', function() {
@@ -1133,7 +1133,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeZ().copyFromFramebuffer(0, 0, 0, 0, 0, cubeMap.getHeight() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to generate mipmaps (width)', function() {
@@ -1144,7 +1144,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.generateMipmap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to generate mipmaps (hint)', function() {
@@ -1155,7 +1155,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.generateMipmap('invalid hint');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
@@ -1167,10 +1167,10 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 }));
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1183,10 +1183,10 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 }));
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1199,6 +1199,6 @@ defineSuite([
 
         expect(function() {
             c.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

@@ -234,7 +234,7 @@ defineSuite([
 
         expect(function() {
             extent.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when updated/rendered without an invalid granularity', function() {
@@ -243,7 +243,7 @@ defineSuite([
 
         expect(function() {
             extent.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
@@ -252,6 +252,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, extent);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

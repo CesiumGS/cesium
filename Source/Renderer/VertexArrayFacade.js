@@ -32,21 +32,19 @@ define([
      * @exception {DeveloperError} Index n is used by more than one attribute.
      */
     var VertexArrayFacade = function(context, attributes, sizeInVertices) {
+        //>>includeStart('debug', pragmas.debug);
         if (!context) {
             throw new DeveloperError('context is required.');
         }
-
         if (!attributes || (attributes.length === 0)) {
             throw new DeveloperError('At least one attribute is required.');
         }
+        //>>includeEnd('debug');
 
         var attrs = VertexArrayFacade._verifyAttributes(attributes);
-
         sizeInVertices = sizeInVertices || 0;
-
         var attributesByPurposeAndUsage = {};
         var precreatedAttributes = [];
-
         var attributesByUsage;
         var attributesForUsage;
         var purpose;
@@ -489,16 +487,16 @@ define([
      * @memberof VertexArrayFacade
      */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
+        //>>includeStart('debug', pragmas.debug);
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
             throw new DeveloperError('offsetInVertices must be greater than or equal to zero and less than the vertex array size.');
         }
-
         if (offsetInVertices + lengthInVertices > this._size) {
             throw new DeveloperError('offsetInVertices + lengthInVertices cannot exceed the vertex array size.');
         }
+        //>>includeEnd('debug');
 
         var allBuffers = this._allBuffers;
-
         for (var i = 0, len = allBuffers.length; i < len; ++i) {
             subCommit(allBuffers[i], offsetInVertices, lengthInVertices);
         }

@@ -114,9 +114,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicPoint.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.color = defaultValue(this.color, source.color);
         this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
