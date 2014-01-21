@@ -164,9 +164,11 @@ define([
      * @memberof ModelAnimationCollection
      */
     ModelAnimationCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._scheduledAnimations[index];
     };

@@ -85,9 +85,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicModel.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.show = defaultValue(this.show, source.show);
         this.scale = defaultValue(this.scale, source.scale);
         this.uri = defaultValue(this.uri, source.uri);
