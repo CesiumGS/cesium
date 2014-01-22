@@ -6,7 +6,8 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Scene/SceneTransforms',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../../ThirdParty/Tween'
     ], function(
         Cartesian2,
         defaultValue,
@@ -14,7 +15,8 @@ define([
         defineProperties,
         DeveloperError,
         SceneTransforms,
-        knockout) {
+        knockout,
+        Tween) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
@@ -169,6 +171,35 @@ define([
             }
             shiftPosition(this, pos);
         }
+    };
+
+    /**
+     * Animate the triangles to draw attention to the selection.
+     * @memberof SelectionIndicatorViewModel
+     */
+    SelectionIndicatorViewModel.prototype.animateTriangles = function() {
+        var viewModel = this;
+        var duration = 1500;
+        var easingFunction = Tween.Easing.Bounce.Out;
+
+        var value = {
+            offset : 60
+        };
+        var tween = new Tween.Tween(value);
+        tween.to({
+            offset : 20
+        }, duration);
+        tween.easing(easingFunction);
+        tween.onUpdate(function() {
+            viewModel.triangleDistance = value.offset;
+        });
+        /*tween.onComplete(function() {
+            tween.to({
+                offset : material.uniforms.offset + 1.0
+            }, duration);
+            tween.start();
+        });*/
+        tween.start();
     };
 
     defineProperties(SelectionIndicatorViewModel.prototype, {

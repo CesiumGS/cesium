@@ -121,16 +121,15 @@ define(['../../Core/BoundingSphere',
             }
         }
 
-        function showSelection(dynamicObject) {
-            if (defined(dynamicObject)) {
-                viewer.selectedObject = dynamicObject;
-            }
-        }
-
         function pickAndShowSelection(e) {
-            var p = viewer.scene.pick(e.position);
-            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject)) {
-                viewer.selectedObject = p.primitive.dynamicObject;
+            var picked = viewer.scene.pick(e.position);
+            if (defined(picked) &&
+                defined(picked.primitive) &&
+                defined(picked.primitive.dynamicObject)) {
+                viewer.selectedObject = picked.primitive.dynamicObject;
+                selectionIndicatorViewModel.animateTriangles();
+            } else {
+                viewer.selectedObject = undefined;
             }
         }
 
