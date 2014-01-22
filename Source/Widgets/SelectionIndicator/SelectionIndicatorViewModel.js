@@ -30,16 +30,16 @@ define([
         var posX = 0;
         var posY = 0;
         var container = viewModel._container;
-        var containerWidth = container.clientWidth;
-        var containerHeight = container.clientHeight;
+        var containerWidth = container.parentNode.clientWidth;
+        var containerHeight = container.parentNode.clientHeight;
 
         var selectionIndicatorElement = viewModel._selectionIndicatorElement;
         var width = selectionIndicatorElement.offsetWidth;
         var height = selectionIndicatorElement.offsetHeight;
 
         var posMin = width * -0.8;
-        var posMaxY = containerHeight + posMin;
-        var posMaxX = containerWidth + posMin;
+        var posMaxY = containerHeight - (width * 0.2);
+        var posMaxX = containerWidth - (width * 0.2);
         var offset = width * 0.5;
 
         posX = Math.min(Math.max(position.x - (width * 0.5), posMin), posMaxX);

@@ -71,7 +71,6 @@ define(['../../Core/BoundingSphere',
 
         //SelectionIndicator
         var selectionIndicatorContainer = document.createElement('div');
-        selectionIndicatorContainer.className = 'cesium-viewer-selectionIndicatorContainer';
         viewer.container.appendChild(selectionIndicatorContainer);
 
         var selectionIndicator = new SelectionIndicator(selectionIndicatorContainer, viewer.scene);
