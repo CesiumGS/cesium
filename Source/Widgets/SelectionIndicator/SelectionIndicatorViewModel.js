@@ -37,13 +37,12 @@ define([
         var width = selectionIndicatorElement.offsetWidth;
         var height = selectionIndicatorElement.offsetHeight;
 
-        var posMin = width * -0.8;
-        var posMaxY = containerHeight - (width * 0.2);
-        var posMaxX = containerWidth - (width * 0.2);
-        var offset = width * 0.5;
+        var posMin = width * -0.5;
+        var posMaxY = containerHeight + posMin;
+        var posMaxX = containerWidth + posMin;
 
-        posX = Math.min(Math.max(position.x - (width * 0.5), posMin), posMaxX);
-        posY = Math.min(Math.max(position.y - (height * 0.5), posMin), posMaxY);
+        posX = Math.min(Math.max(position.x + posMin, posMin), posMaxX);
+        posY = Math.min(Math.max(position.y + posMin, posMin), posMaxY);
 
         var positionXPx = toPx(posX);
         if (viewModel._positionX !== positionXPx) {
@@ -106,6 +105,14 @@ define([
         this._positionY = '0';
 
         /**
+         * The distance from the center to the triangle tips.
+         * @memberof SelectionIndicatorViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this.triangleDistance = 20;
+
+        /**
          * Determines the visibility of the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
          *
@@ -122,7 +129,28 @@ define([
             }
         });
 
-        knockout.track(this, ['_positionX', '_positionY']);
+        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance']);
+
+        knockout.defineProperty(this, '_transform0', {
+            get : function() {
+                return 'translate(0,' + (-this.triangleDistance) + ')';
+            }
+        });
+        knockout.defineProperty(this, '_transform1', {
+            get : function() {
+                return 'rotate(90) translate(0,' + (-this.triangleDistance) + ')';
+            }
+        });
+        knockout.defineProperty(this, '_transform2', {
+            get : function() {
+                return 'rotate(180) translate(0,' + (-this.triangleDistance) + ')';
+            }
+        });
+        knockout.defineProperty(this, '_transform3', {
+            get : function() {
+                return 'rotate(270) translate(0,' + (-this.triangleDistance) + ')';
+            }
+        });
     };
 
     /**
@@ -134,8 +162,8 @@ define([
         if (this.showSelection) {
             if (defined(this._position)) {
                 pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
-                pos.x = Math.round(pos.x);
-                pos.y = Math.round(pos.y);
+                pos.x = Math.floor(pos.x);
+                pos.y = Math.floor(pos.y);
             } else {
                 pos = this._defaultPosition;
             }

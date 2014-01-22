@@ -16,8 +16,13 @@
 
 .cesium-selection-wrapper {
     position: absolute;
-    background-color: #fff;
-    color: #000;
+    /* background-color: #fff; */
     width: 160px;
     height: 160px;
+}
+
+.cesium-selection-wrapper svg {
+    fill: #2e2;
+    stroke: #000;
+    stroke-width: 1.5px;
 }

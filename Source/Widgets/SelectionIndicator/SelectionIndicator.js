@@ -44,6 +44,27 @@ define([
         el.setAttribute('data-bind', 'style: { "bottom" : _positionY, "left" : _positionX}');
         this._element = el;
 
+        var svgNS = 'http://www.w3.org/2000/svg';
+        var trianglePath = 'm -10,-40 20,0 -10,40 z';
+
+        var svg = document.createElementNS(svgNS, 'svg:svg');
+        svg.setAttribute('width', 160);
+        svg.setAttribute('height', 160);
+        svg.setAttribute('viewBox', '0 0 160 160');
+
+        var group = document.createElementNS(svgNS, 'g');
+        group.setAttribute('transform', 'translate(80,80) rotate(45)');
+        svg.appendChild(group);
+
+        for (var i = 0; i < 4; ++i) {
+            var pathElement = document.createElementNS(svgNS, 'path');
+            pathElement.setAttribute('data-bind', 'attr: { transform: _transform' + i + ' }');
+            pathElement.setAttribute('d', trianglePath);
+            group.appendChild(pathElement);
+        }
+
+        el.appendChild(svg);
+
         var viewModel = new SelectionIndicatorViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
 
