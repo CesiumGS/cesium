@@ -1,22 +1,16 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Ellipsoid',
-        '../Core/EllipsoidalOccluder',
         '../Core/Extent',
-        '../Core/HeightmapTessellator',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
-        BoundingSphere,
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        EllipsoidalOccluder,
         Extent,
-        HeightmapTessellator,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";

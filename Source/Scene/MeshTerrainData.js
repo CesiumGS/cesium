@@ -261,195 +261,7 @@ define([
         });
     };
 
-    /**
-     * Computes the terrain height at a specified longitude and latitude.
-     *
-     * @memberof HeightmapTerrainData
-     *
-     * @param {Extent} extent The extent covered by this terrain data.
-     * @param {Number} longitude The longitude in radians.
-     * @param {Number} latitude The latitude in radians.
-     * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the extent.
-     */
-    MeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
-        //var width = this._width;
-        //var height = this._height;
-
-        var heightSample = 0.0;
-
-        var structure = this._structure;
-        var stride = structure.stride;
-        if (stride > 1) {
-            //var elementsPerHeight = structure.elementsPerHeight;
-            //var elementMultiplier = structure.elementMultiplier;
-            //var isBigEndian = structure.isBigEndian;
-
-//            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
-        } else {
-//            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
-        }
-
-        return heightSample * structure.heightScale + structure.heightOffset;
-    };
-
-
-    function Vertex() {
-        this.vertexBuffer = undefined;
-        this.index = undefined;
-        this.first = undefined;
-        this.second = undefined;
-        this.ratio = undefined;
-    }
-
-    Vertex.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
-            result = new Vertex();
-        }
-
-        result.vertexBuffer = this.vertexBuffer;
-        result.index = this.index;
-        result.first = this.first;
-        result.second = this.second;
-        result.ratio = this.ratio;
-
-        return result;
-    };
-
-    Vertex.prototype.initializeIndexed = function(vertexBuffer, index) {
-        this.vertexBuffer = vertexBuffer;
-        this.index = index;
-        this.first = undefined;
-        this.second = undefined;
-        this.ratio = undefined;
-    };
-
-    Vertex.prototype.initializeInterpolated = function(first, second, ratio) {
-        this.vertexBuffer = undefined;
-        this.index = undefined;
-        this.newIndex = undefined;
-        this.first = first;
-        this.second = second;
-        this.ratio = ratio;
-    };
-
-    Vertex.prototype.initializeFromClipResult = function(clipResult, index, vertices) {
-        var nextIndex = index + 1;
-
-        if (clipResult[index] !== -1) {
-            vertices[clipResult[index]].clone(this);
-        } else {
-            this.vertexBuffer = undefined;
-            this.index = undefined;
-            this.first = vertices[clipResult[nextIndex]];
-            ++nextIndex;
-            this.second = vertices[clipResult[nextIndex]];
-            ++nextIndex;
-            this.ratio = clipResult[nextIndex];
-            ++nextIndex;
-        }
-
-        return nextIndex;
-    };
-
-    Vertex.prototype.getKey = function() {
-        if (this.isIndexed()) {
-            return this.index;
-        }
-        return JSON.stringify({
-            first : this.first.getKey(),
-            second : this.second.getKey(),
-            ratio : this.ratio
-        });
-    };
-
-    Vertex.prototype.isIndexed = function() {
-        return typeof this.index !== 'undefined';
-    };
-
-    Vertex.prototype.getH = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + hIndex];
-        }
-        return CesiumMath.lerp(this.first.getH(), this.second.getH(), this.ratio);
-    };
-
-    Vertex.prototype.getU = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + uIndex];
-        }
-        return CesiumMath.lerp(this.first.getU(), this.second.getU(), this.ratio);
-    };
-
-    Vertex.prototype.getV = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + vIndex];
-        }
-        return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
-    };
-
-    var polygonVertices = [];
-    polygonVertices.push(new Vertex());
-    polygonVertices.push(new Vertex());
-    polygonVertices.push(new Vertex());
-    polygonVertices.push(new Vertex());
-
-    function addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices, ellipsoid, extent, center) {
-        if (clipped.length === 0) {
-            return;
-        }
-
-        var numVertices = 0;
-        var clippedIndex = 0;
-        while (clippedIndex < clipped.length) {
-            clippedIndex = polygonVertices[numVertices++].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-        }
-
-        for (var i = 0; i < numVertices; ++i) {
-            var polygonVertex = polygonVertices[i];
-            if (!polygonVertex.isIndexed()) {
-                var key = polygonVertex.getKey();
-                if (typeof vertexMap[key] !== 'undefined') {
-                    polygonVertex.newIndex = vertexMap[key];
-                } else {
-                    var newIndex = vertices.length / vertexStride;
-                    vertices.push(undefined);
-                    vertices.push(undefined);
-                    vertices.push(undefined);
-                    vertices.push(polygonVertex.getH());
-                    vertices.push(polygonVertex.getU());
-                    vertices.push(polygonVertex.getV());
-                    polygonVertex.newIndex = newIndex;
-                    vertexMap[key] = newIndex;
-                }
-            } else {
-                polygonVertex.newIndex = vertexMap[polygonVertex.index];
-                polygonVertex.vertexBuffer = vertices;
-            }
-        }
-
-        if (numVertices === 3) {
-            // A triangle.
-            indices.push(polygonVertices[0].newIndex);
-            indices.push(polygonVertices[1].newIndex);
-            indices.push(polygonVertices[2].newIndex);
-        } else if (numVertices === 4){
-            // A quad - two triangles.
-            indices.push(polygonVertices[0].newIndex);
-            indices.push(polygonVertices[1].newIndex);
-            indices.push(polygonVertices[2].newIndex);
-
-            indices.push(polygonVertices[0].newIndex);
-            indices.push(polygonVertices[2].newIndex);
-            indices.push(polygonVertices[3].newIndex);
-        }
-    }
-
-    var clipScratch = [];
-    var clipScratch2 = [];
-    var verticesScratch = [];
-    var indicesScratch = [];
+    var upsampleTaskProcessor = new TaskProcessor('upsampleQuantizedTerrainMesh');
 
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
@@ -497,182 +309,91 @@ define([
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
         }
 
-        var ellipsoid = tilingScheme.getEllipsoid();
-        var extent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
-
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
-        var minU = isEastChild ? 0.5 : 0.0;
-        var maxU = isEastChild ? 1.0 : 0.5;
-        var minV = isNorthChild ? 0.5 : 0.0;
-        var maxV = isNorthChild ? 1.0 : 0.5;
+        var ellipsoid = tilingScheme.getEllipsoid();
+        var childExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
 
-        var vertices = verticesScratch;
-        vertices.length = 0;
-        var indices = indicesScratch;
-        indices.length = 0;
-        var vertexMap = {};
-
-        var parentVertices = this._vertexBuffer;
-        var parentIndices = this._indexBuffer;
-
-        var vertexCount = 0;
-        var i, u, v;
-        for (i = 0; i < parentVertices.length; i += vertexStride) {
-            u = parentVertices[i + uIndex];
-            v = parentVertices[i + vIndex];
-            if ((isEastChild && u >= 0.5 || !isEastChild && u <= 0.5) &&
-                (isNorthChild && v >= 0.5 || !isNorthChild && v <= 0.5)) {
-
-                vertexMap[i / 6] = vertexCount;
-                vertices.push(parentVertices[i + xIndex]);
-                vertices.push(parentVertices[i + yIndex]);
-                vertices.push(parentVertices[i + zIndex]);
-                vertices.push(parentVertices[i + hIndex]);
-                vertices.push(parentVertices[i + uIndex]);
-                vertices.push(parentVertices[i + vIndex]);
-                ++vertexCount;
-            }
-        }
-
-        var triangleVertices = [];
-        triangleVertices.push(new Vertex());
-        triangleVertices.push(new Vertex());
-        triangleVertices.push(new Vertex());
-
-        var clippedTriangleVertices = [];
-        clippedTriangleVertices.push(new Vertex());
-        clippedTriangleVertices.push(new Vertex());
-        clippedTriangleVertices.push(new Vertex());
-
-        var clippedIndex;
-        var clipped2;
-
-        for (i = 0; i < parentIndices.length; i += 3) {
-            var i0 = parentIndices[i];
-            var i1 = parentIndices[i + 1];
-            var i2 = parentIndices[i + 2];
-
-            var u0 = parentVertices[i0 * vertexStride + uIndex];
-            var u1 = parentVertices[i1 * vertexStride + uIndex];
-            var u2 = parentVertices[i2 * vertexStride + uIndex];
-
-            triangleVertices[0].initializeIndexed(parentVertices, i0);
-            triangleVertices[1].initializeIndexed(parentVertices, i1);
-            triangleVertices[2].initializeIndexed(parentVertices, i2);
-
-            // Clip triangle on the east-west boundary.
-            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isEastChild, u0, u1, u2, clipScratch);
-
-            // Get the first clipped triangle, if any.
-            clippedIndex = 0;
-
-            if (clippedIndex >= clipped.length) {
-                continue;
-            }
-            clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-
-            if (clippedIndex >= clipped.length) {
-                continue;
-            }
-            clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-
-            if (clippedIndex >= clipped.length) {
-                continue;
-            }
-            clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-
-            // Clip the triangle against the North-south boundary.
-            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-            addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices, ellipsoid, extent, this._center);
-
-            // If there's another vertex in the original clipped result,
-            // it forms a second triangle.  Clip it as well.
-            if (clippedIndex < clipped.length) {
-                clippedTriangleVertices[2].clone(clippedTriangleVertices[1]);
-                clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-
-                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices, ellipsoid, extent, this._center);
-            }
-        }
-
-        var uOffset = isEastChild ? -1.0 : 0.0;
-        var vOffset = isNorthChild ? -1.0 : 0.0;
-
-        var center = this._center; // TODO: use a better center?
-
-        var westVertices = [];
-        var southVertices = [];
-        var eastVertices = [];
-        var northVertices = [];
-
-        var minimumHeight = Number.MAX_VALUE;
-        var maximumHeight = -minimumHeight;
-
-        for (i = 0; i < vertices.length; i += vertexStride) {
-            u = vertices[i + uIndex];
-            if (u <= minU) {
-                westVertices.push(i / vertexStride);
-                u = 0.0;
-            } else if (u >= maxU) {
-                eastVertices.push(i / vertexStride);
-                u = 1.0;
-            } else {
-                u = u * 2.0 + uOffset;
-            }
-
-            vertices[i + uIndex] = u;
-
-            v = vertices[i + vIndex];
-            if (v <= minV) {
-                southVertices.push(i / vertexStride);
-                v = 0.0;
-            } else if (v >= maxV) {
-                northVertices.push(i / vertexStride);
-                v = 1.0;
-            } else {
-                v = v * 2.0 + vOffset;
-            }
-
-            vertices[i + vIndex] = v;
-
-            var height = vertices[i + hIndex];
-            if (height < minimumHeight) {
-                minimumHeight = height;
-            }
-            if (height > maximumHeight) {
-                maximumHeight = height;
-            }
-
-            if (typeof vertices[i + xIndex] === 'undefined') {
-                cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
-                cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
-                cartographicScratch.height = vertices[i + hIndex];
-
-                var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-                Cartesian3.subtract(position, center, position);
-
-                vertices[i + xIndex] = position.x;
-                vertices[i + yIndex] = position.y;
-                vertices[i + zIndex] = position.z;
-            }
-        }
-
-        return new MeshTerrainData({
-            center : this._center,
-            minimumHeight : minimumHeight,
-            maximumHeight : maximumHeight,
-            vertexBuffer : new Float32Array(vertices),
-            indexBuffer : new Uint16Array(indices),
-            createdByUpsampling : true,
-            westVertices : westVertices,
-            southVertices : southVertices,
-            eastVertices : eastVertices,
-            northVertices: northVertices,
-            childTileMask: 0
+        var upsamplePromise = upsampleTaskProcessor.scheduleTask({
+            vertices : this._quantizedVertices,
+            indices : this._indices,
+            minimumHeight : this._minimumHeight,
+            maximumHeight : this._maximumHeight,
+            isEastChild : isEastChild,
+            isNorthChild : isNorthChild,
+            childExtent : childExtent,
+            ellipsoid : ellipsoid
         });
+
+        if (!defined(upsamplePromise)) {
+            // Postponed
+            return undefined;
+        }
+
+        var shortestSkirt = Math.min(this._westSkirtHeight, this._eastSkirtHeight);
+        shortestSkirt = Math.min(shortestSkirt, this._southSkirtHeight);
+        shortestSkirt = Math.min(shortestSkirt, this._northSkirtHeight);
+
+        var westSkirtHeight = isEastChild ? (shortestSkirt * 0.5) : this._westSkirtHeight;
+        var southSkirtHeight = isNorthChild ? (shortestSkirt * 0.5) : this._southSkirtHeight;
+        var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
+        var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
+
+        var that = this;
+        return when(upsamplePromise, function(result) {
+            return new MeshTerrainData({
+                quantizedVertices : result.vertices,
+                indices : result.indices,
+                minimumHeight : result.minimumHeight,
+                maximumHeight : result.maximumHeight,
+                boundingSphere : BoundingSphere.clone(result.boundingSphere),
+                horizonOcclusionPoint : Cartesian3.clone(result.horizonOcclusionPoint),
+                westIndices : result.westIndices,
+                southIndices : result.southIndices,
+                eastIndices : result.eastIndices,
+                northIndices : result.northIndices,
+                westSkirtHeight : westSkirtHeight,
+                southSkirtHeight : southSkirtHeight,
+                eastSkirtHeight : eastSkirtHeight,
+                northSkirtHeight : northSkirtHeight,
+                childTileMask : 0,
+                createdByUpsampling : true
+            });
+        });
+    };
+
+    /**
+     * Computes the terrain height at a specified longitude and latitude.
+     *
+     * @memberof HeightmapTerrainData
+     *
+     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Number} longitude The longitude in radians.
+     * @param {Number} latitude The latitude in radians.
+     * @returns {Number} The terrain height at the specified position.  If the position
+     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the extent.
+     */
+    MeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+        //var width = this._width;
+        //var height = this._height;
+
+        var heightSample = 0.0;
+
+        var structure = this._structure;
+        var stride = structure.stride;
+        if (stride > 1) {
+            //var elementsPerHeight = structure.elementsPerHeight;
+            //var elementMultiplier = structure.elementMultiplier;
+            //var isBigEndian = structure.isBigEndian;
+
+//            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
+        } else {
+//            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+        }
+
+        return heightSample * structure.heightScale + structure.heightOffset;
     };
 
     /**
