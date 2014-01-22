@@ -226,63 +226,41 @@ define([
             }
 
             // Decode the vertex buffer.
-            var extent = that._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
-            var ellipsoid = that._tilingScheme.getEllipsoid();
-
             var uBuffer = encodedVertexBuffer.subarray(0, vertexCount);
             var vBuffer = encodedVertexBuffer.subarray(vertexCount, 2 * vertexCount);
             var heightBuffer = encodedVertexBuffer.subarray(vertexCount * 2, 3 * vertexCount);
 
-            var vertexBuffer = new Float32Array(vertexCount * vertexElements);
-
-            var lastU = 0;
-            var lastV = 0;
-            var lastHeight = 0;
-            var maxShort = 32767;
+            var i;
+            var u = 0;
+            var v = 0;
+            var height = 0;
 
             function zigZagDecode(value) {
                 return (value >> 1) ^ (-(value & 1));
             }
 
-            for (var i = 0; i < vertexCount; ++i) {
-                var uShort = zigZagDecode(uBuffer[i]) + lastU;
-                var vShort = zigZagDecode(vBuffer[i]) + lastV;
-                var heightShort = zigZagDecode(heightBuffer[i]) + lastHeight;
+            for (i = 0; i < vertexCount; ++i) {
+                u += zigZagDecode(uBuffer[i]);
+                v += zigZagDecode(vBuffer[i]);
+                height += zigZagDecode(heightBuffer[i]);
 
-                lastU = uShort;
-                lastV = vShort;
-                lastHeight = heightShort;
-
-                var u = uShort / maxShort;
-                var v = vShort / maxShort;
-
-                cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
-                cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
-                cartographicScratch.height = CesiumMath.lerp(minimumHeight, maximumHeight, heightShort / maxShort);
-
-                ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-
-                var index = i * 6;
-                vertexBuffer[index++] = cartesian3Scratch.x - center.x;
-                vertexBuffer[index++] = cartesian3Scratch.y - center.y;
-                vertexBuffer[index++] = cartesian3Scratch.z - center.z;
-                vertexBuffer[index++] = cartographicScratch.height;
-                vertexBuffer[index++] = u;
-                vertexBuffer[index++] = v;
+                uBuffer[i] = u;
+                vBuffer[i] = v;
+                heightBuffer[i] = height;
             }
 
             var triangleCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var indexBuffer = new Uint16Array(buffer, pos, triangleCount * triangleElements);
+            var indices = new Uint16Array(buffer, pos, triangleCount * triangleElements);
             pos += triangleCount * triangleLength;
 
             // High water mark decoding based on decompressIndices_ in webgl-loader's loader.js.
             // https://code.google.com/p/webgl-loader/source/browse/trunk/samples/loader.js?r=99#55
             // Copyright 2012 Google Inc., Apache 2.0 license.
             var highest = 0;
-            for (var i = 0; i < indexBuffer.length; ++i) {
-                var code = indexBuffer[i];
-                indexBuffer[i] = highest - code;
+            for (i = 0; i < indices.length; ++i) {
+                var code = indices[i];
+                indices[i] = highest - code;
                 if (code === 0) {
                     ++highest;
                 }
@@ -290,23 +268,25 @@ define([
 
             var westVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var westVertices = new Uint16Array(buffer, pos, westVertexCount);
+            var westIndices = new Uint16Array(buffer, pos, westVertexCount);
             pos += westVertexCount * uint16Length;
 
             var southVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var southVertices = new Uint16Array(buffer, pos, southVertexCount);
+            var southIndices = new Uint16Array(buffer, pos, southVertexCount);
             pos += southVertexCount * uint16Length;
 
             var eastVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var eastVertices = new Uint16Array(buffer, pos, eastVertexCount);
+            var eastIndices = new Uint16Array(buffer, pos, eastVertexCount);
             pos += eastVertexCount * uint16Length;
 
             var northVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var northVertices = new Uint16Array(buffer, pos, northVertexCount);
+            var northIndices = new Uint16Array(buffer, pos, northVertexCount);
             pos += northVertexCount * uint16Length;
+
+            var skirtHeight = that.getLevelMaximumGeometricError(level) * 2.0;
 
             return new MeshTerrainData({
                 center : center,
@@ -314,12 +294,16 @@ define([
                 maximumHeight : maximumHeight,
                 boundingSphere : boundingSphere,
                 horizonOcclusionPoint : horizonOcclusionPoint,
-                vertexBuffer : vertexBuffer,
-                indexBuffer : indexBuffer,
-                westVertices : westVertices,
-                southVertices : southVertices,
-                eastVertices : eastVertices,
-                northVertices: northVertices,
+                quantizedVertices : encodedVertexBuffer,
+                indices : indices,
+                westIndices : westIndices,
+                southIndices : southIndices,
+                eastIndices : eastIndices,
+                northIndices : northIndices,
+                westSkirtHeight : skirtHeight,
+                southSkirtHeight : skirtHeight,
+                eastSkirtHeight : skirtHeight,
+                northSkirtHeight : skirtHeight,
                 childTileMask: getChildMaskForTile(that, level, x, tmsY)
             });
         });

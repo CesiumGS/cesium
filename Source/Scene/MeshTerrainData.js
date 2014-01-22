@@ -109,41 +109,77 @@ define([
      * });
      */
     var MeshTerrainData = function MeshTerrainData(description) {
-        if (typeof description === 'undefined' || typeof description.vertexBuffer === 'undefined') {
-            throw new DeveloperError('description.vertexBuffer is required.');
+        if (!defined(description) || !defined(description.quantizedVertices)) {
+            throw new DeveloperError('description.quantizedVertices is required.');
         }
-        if (typeof description.indexBuffer === 'undefined') {
-            throw new DeveloperError('description.indexBuffer is required.');
+        if (!defined(description.indices)) {
+            throw new DeveloperError('description.indices is required.');
         }
-        if (typeof description.center === 'undefined') {
-            throw new DeveloperError('description.center is required.');
+        if (!defined(description.minimumHeight)) {
+            throw new DeveloperError('description.minimumHeight is required.');
+        }
+        if (!defined(description.maximumHeight)) {
+            throw new DeveloperError('description.maximumHeight is required.');
+        }
+        if (!defined(description.maximumHeight)) {
+            throw new DeveloperError('description.maximumHeight is required.');
+        }
+        if (!defined(description.boundingSphere)) {
+            throw new DeveloperError('description.boundingSphere is required.');
+        }
+        if (!defined(description.horizonOcclusionPoint)) {
+            throw new DeveloperError('description.horizonOcclusionPoint is required.');
+        }
+        if (!defined(description.westIndices)) {
+            throw new DeveloperError('description.westIndices is required.');
+        }
+        if (!defined(description.southIndices)) {
+            throw new DeveloperError('description.southIndices is required.');
+        }
+        if (!defined(description.eastIndices)) {
+            throw new DeveloperError('description.eastIndices is required.');
+        }
+        if (!defined(description.northIndices)) {
+            throw new DeveloperError('description.northIndices is required.');
+        }
+        if (!defined(description.westSkirtHeight)) {
+            throw new DeveloperError('description.westSkirtHeight is required.');
+        }
+        if (!defined(description.southSkirtHeight)) {
+            throw new DeveloperError('description.southSkirtHeight is required.');
+        }
+        if (!defined(description.eastSkirtHeight)) {
+            throw new DeveloperError('description.eastSkirtHeight is required.');
+        }
+        if (!defined(description.northSkirtHeight)) {
+            throw new DeveloperError('description.northSkirtHeight is required.');
+        }
+        if (!defined(description.childTileMask)) {
+            throw new DeveloperError('description.childTileMask is required.');
         }
 
-        this._center = description.center;
-        this._minimumHeight = defaultValue(description.minimumHeight, -1000.0);
-        this._maximumHeight = defaultValue(description.maximumHeight, 10000.0);
+        this._quantizedVertices = description.quantizedVertices;
+        this._indices = description.indices;
+        this._minimumHeight = description.minimumHeight;
+        this._maximumHeight = description.maximumHeight;
         this._boundingSphere = description.boundingSphere;
         this._horizonOcclusionPoint = description.horizonOcclusionPoint;
-        this._vertexBuffer = description.vertexBuffer;
-        this._indexBuffer = description.indexBuffer;
-        this._westVertices = toArray(description.westVertices);
-        this._southVertices = toArray(description.southVertices);
-        this._eastVertices = toArray(description.eastVertices);
-        this._northVertices = toArray(description.northVertices);
 
-        this._childTileMask = defaultValue(description.childTileMask, 15);
+        // TODO: these toArray calls are not necessary if we can count on the edge vertices being sorted.
+        this._westIndices = toArray(description.westIndices);
+        this._southIndices = toArray(description.southIndices);
+        this._eastIndices = toArray(description.eastIndices);
+        this._northIndices = toArray(description.northIndices);
+
+        this._westSkirtHeight = description.westSkirtHeight;
+        this._southSkirtHeight = description.southSkirtHeight;
+        this._eastSkirtHeight = description.eastSkirtHeight;
+        this._northSkirtHeight = description.northSkirtHeight;
+
+        this._childTileMask = description.childTileMask;
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
-
-        if (!defined(this._boundingSphere)) {
-            this._boundingSphere = BoundingSphere.fromVertices(this._vertexBuffer, this._center, 6);
-        }
-
-        if (!defined(this._horizonOcclusionPoint)) {
-            var occluder = new EllipsoidalOccluder(Ellipsoid.WGS84);
-            this._horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(this._center, this._vertexBuffer, 6, this._center);
-        }
     };
 
     function toArray(typedArray) {
@@ -156,6 +192,8 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
+
+    var createMeshTaskProcessor = new TaskProcessor('createVerticesFromQuantizedTerrainMesh');
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
@@ -184,120 +222,44 @@ define([
             throw new DeveloperError('level is required.');
         }
 
-        var edgeVertices = this._westVertices.length + this._eastVertices.length +
-                           this._southVertices.length + this._northVertices.length;
-        var vertexBuffer = new Float32Array(this._vertexBuffer.length + edgeVertices * vertexStride);
-        vertexBuffer.set(this._vertexBuffer, 0);
-
-        var edgeTriangles = (edgeVertices - 4) * 2;
-        var indexBuffer = new Uint16Array(this._indexBuffer.length + edgeTriangles * 3);
-        indexBuffer.set(this._indexBuffer, 0);
-
         var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 
-        // TODO: for a heightmap?
-        var approximateTileWidth = 65;
-        var position1Cartographic = new Cartographic(0.0, 0.0, -11500.0);
-        var position2Cartographic = new Cartographic(0.5 * Math.PI / (approximateTileWidth - 1), 0.0, 9000.0);
-        var position1 = ellipsoid.cartographicToCartesian(position1Cartographic);
-        var position2 = ellipsoid.cartographicToCartesian(position2Cartographic);
-
-        var levelZeroMaxError = Cartesian3.magnitude(Cartesian3.subtract(position1, position2));
-        var thisLevelMaxError = levelZeroMaxError / (1 << level);
-
-        thisLevelMaxError *= 2.0;
-
-        this._westVertices.sort(function(a, b) {
-            return vertexBuffer[a * vertexStride + vIndex] - vertexBuffer[b * vertexStride + vIndex];
+        var verticesPromise = createMeshTaskProcessor.scheduleTask({
+            minimumHeight : this._minimumHeight,
+            maximumHeight : this._maximumHeight,
+            quantizedVertices : this._quantizedVertices,
+            indices : this._indices,
+            westIndices : this._westIndices,
+            southIndices : this._southIndices,
+            eastIndices : this._eastIndices,
+            northIndices : this._northIndices,
+            westSkirtHeight : this._westSkirtHeight,
+            southSkirtHeight : this._southSkirtHeight,
+            eastSkirtHeight : this._eastSkirtHeight,
+            northSkirtHeight : this._northSkirtHeight,
+            extent : extent,
+            relativeToCenter : this._boundingSphere.center,
+            ellipsoid : ellipsoid
         });
 
-        this._southVertices.sort(function(a, b) {
-            return vertexBuffer[a * vertexStride + uIndex] - vertexBuffer[b * vertexStride + uIndex];
+        if (!defined(verticesPromise)) {
+            // Postponed
+            return undefined;
+        }
+
+        var that = this;
+        return when(verticesPromise, function(result) {
+            return new TerrainMesh(
+                    that._boundingSphere.center,
+                    new Float32Array(result.vertices),
+                    new Uint16Array(result.indices),
+                    that._minimumHeight,
+                    that._maximumHeight,
+                    that._boundingSphere,
+                    that._horizonOcclusionPoint);
         });
-
-        this._eastVertices.sort(function(a, b) {
-            return vertexBuffer[a * vertexStride + vIndex] - vertexBuffer[b * vertexStride + vIndex];
-        });
-
-        this._northVertices.sort(function(a, b) {
-            return vertexBuffer[a * vertexStride + uIndex] - vertexBuffer[b * vertexStride + uIndex];
-        });
-
-        var vertexBufferIndex = this._vertexBuffer.length;
-        var indexBufferIndex = this._indexBuffer.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._westVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
-        vertexBufferIndex += this._westVertices.length * 6;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._southVertices, this._center, ellipsoid, extent, thisLevelMaxError, false);
-        vertexBufferIndex += this._southVertices.length * 6;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._eastVertices, this._center, ellipsoid, extent, thisLevelMaxError, false);
-        vertexBufferIndex += this._eastVertices.length * 6;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._northVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
-        vertexBufferIndex += this._northVertices.length * 6;
-
-        return new TerrainMesh(
-                this._center,
-                vertexBuffer,
-                indexBuffer,
-                this._minimumHeight,
-                this._maximumHeight,
-                this._boundingSphere,
-                this._horizonOcclusionPoint);
     };
-
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, extent, skirtLength, isWestOrNorthEdge) {
-        var start, end, increment;
-        if (isWestOrNorthEdge) {
-            start = edgeVertices.length - 1;
-            end = -1;
-            increment = -1;
-        } else {
-            start = 0;
-            end = edgeVertices.length;
-            increment = 1;
-        }
-
-        var previousIndex = -1;
-
-        var vertexIndex = vertexBufferIndex / vertexStride;
-
-        for (var i = start; i !== end; i += increment) {
-            var index = edgeVertices[i];
-            var offset = index * vertexStride;
-            var u = vertexBuffer[offset + uIndex];
-            var v = vertexBuffer[offset + vIndex];
-            var h = vertexBuffer[offset + hIndex];
-
-            cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
-            cartographicScratch.height = h - skirtLength;
-
-            var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-            Cartesian3.subtract(position, center, position);
-
-            vertexBuffer[vertexBufferIndex++] = position.x;
-            vertexBuffer[vertexBufferIndex++] = position.y;
-            vertexBuffer[vertexBufferIndex++] = position.z;
-            vertexBuffer[vertexBufferIndex++] = cartographicScratch.height;
-            vertexBuffer[vertexBufferIndex++] = u;
-            vertexBuffer[vertexBufferIndex++] = v;
-
-            if (previousIndex !== -1) {
-                indexBuffer[indexBufferIndex++] = previousIndex;
-                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
-                indexBuffer[indexBufferIndex++] = index;
-
-                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
-                indexBuffer[indexBufferIndex++] = vertexIndex;
-                indexBuffer[indexBufferIndex++] = index;
-            }
-
-            previousIndex = index;
-            ++vertexIndex;
-        }
-
-        return indexBufferIndex;
-    }
 
     /**
      * Computes the terrain height at a specified longitude and latitude.

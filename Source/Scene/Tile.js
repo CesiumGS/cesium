@@ -454,7 +454,7 @@ define([
     function processTerrainStateMachine(tile, context, terrainProvider) {
         var loaded = tile.loadedTerrain;
         var upsampled = tile.upsampledTerrain;
-        var suspendUpsampling = false;
+        var suspendUpsampling = true;
 
         if (defined(loaded)) {
             loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
