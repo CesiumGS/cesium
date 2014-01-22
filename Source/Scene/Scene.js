@@ -51,6 +51,7 @@ define([
         './PerInstanceColorAppearance',
         './SunPostProcess',
         './CreditDisplay',
+        '../Shaders/CompositeOITFS',
         '../Shaders/ViewportQuadVS'
     ], function(
         CesiumMath,
@@ -104,6 +105,7 @@ define([
         PerInstanceColorAppearance,
         SunPostProcess,
         CreditDisplay,
+        CompositeOITFS,
         ViewportQuadVS) {
     "use strict";
 
@@ -1024,35 +1026,13 @@ define([
         }
 
         if (!defined(scene._compositeCommand)) {
-            var fs = 'uniform sampler2D u_opaque;\n' +
-                    'uniform sampler2D u_accumulation;\n' +
-                    'uniform sampler2D u_revealage;\n' +
-                    'varying vec2 v_textureCoordinates;\n' +
-                    'void main()\n' +
-                    '{\n' +
-                    '    vec4 opaque = texture2D(u_opaque, v_textureCoordinates);\n' +
-                    '    vec4 accum = texture2D(u_accumulation, v_textureCoordinates);\n' +
-                    '    float r = accum.a;\n' +
-                    '    accum.a = texture2D(u_revealage, v_textureCoordinates).r;\n' +
-                    '    vec4 transparent = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), r);\n' +
-                    //'    float n = max(1.0, texture2D(u_revealage, v_textureCoordinates).r);\n' +
-                    //'    vec4 transparent = vec4(accum.rgb / max(accum.a, 0.0001), pow(max(0.0, 1.0 - accum.a / n), n));\n' +
-                    //'    gl_FragColor.rgb = transparent.a * transparent.rgb + (1.0 - transparent.a) * opaque.rgb;\n' +
-                    //'    gl_FragColor.a = transparent.a * transparent.a + (1.0 - transparent.a) * opaque.a;\n' +
-                    //'    gl_FragColor = transparent;\n' +
-                    //'    gl_FragColor = transparent.a * transparent + (1.0 - transparent.a) * opaque;\n' +
-                    //'    gl_FragColor = opaque;\n' +
-                    //'    gl_FragColor = vec4(transparent.a * transparent.rgb + opaque.rgb, 1.0);\n' +
-                    '    gl_FragColor = vec4((1.0 - transparent.a) * transparent.rgb + transparent.a * opaque.rgb, 1.0);\n' +
-                    '}\n';
-
             var command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
-            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, CompositeOITFS, attributeIndices);
             command.uniformMap = {
                 u_opaque : function() {
                     return scene._opaqueFBO.getColorTexture(0);
