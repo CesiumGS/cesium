@@ -221,10 +221,9 @@ define(['../../Core/BoundingSphere',
 
                     if (trackedObject !== value) {
                         trackedObject = value;
+                        selectedObject = value;
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                         objectTracked.raiseEvent(viewer, value);
-                        //Hide the selection if it's not the object we are following.
-                        selectionIndicatorViewModel.showSelection = selectedObject === trackedObject;
                     }
                 }
             },

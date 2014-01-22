@@ -193,12 +193,6 @@ define([
         tween.onUpdate(function() {
             viewModel.triangleDistance = value.offset;
         });
-        /*tween.onComplete(function() {
-            tween.to({
-                offset : material.uniforms.offset + 1.0
-            }, duration);
-            tween.start();
-        });*/
         tween.start();
     };
 
