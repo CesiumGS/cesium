@@ -18,7 +18,7 @@ define([
      * @see Event
      *
      * @example
-     * var helper = new EventHelper();
+     * var helper = new Cesium.EventHelper();
      *
      * helper.add(someObject.event, listener1, this);
      * helper.add(otherObject.event, listener2, this);
@@ -39,17 +39,29 @@ define([
      * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
      * pointer in which the listener function will execute.
      *
+     * @returns {Function} A function that will remove this event listener when invoked.
+     *
      * @see Event#addEventListener
      *
      * @exception {DeveloperError} event is required and must be a function.
      * @exception {DeveloperError} listener is required and must be a function.
      */
     EventHelper.prototype.add = function(event, listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(event)) {
             throw new DeveloperError('event is required');
         }
+        //>>includeEnd('debug');
 
-        this._removalFunctions.push(event.addEventListener(listener, scope));
+        var removalFunction = event.addEventListener(listener, scope);
+        this._removalFunctions.push(removalFunction);
+
+        var that = this;
+        return function() {
+            removalFunction();
+            var removalFunctions = that._removalFunctions;
+            removalFunctions.splice(removalFunctions.indexOf(removalFunction), 1);
+        };
     };
 
     /**
@@ -60,7 +72,7 @@ define([
      */
     EventHelper.prototype.removeAll = function() {
         var removalFunctions = this._removalFunctions;
-        for ( var i = 0, len = removalFunctions.length; i < len; ++i) {
+        for (var i = 0, len = removalFunctions.length; i < len; ++i) {
             removalFunctions[i]();
         }
         removalFunctions.length = 0;

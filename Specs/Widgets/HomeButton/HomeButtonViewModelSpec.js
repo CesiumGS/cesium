@@ -44,7 +44,7 @@ defineSuite([
     it('throws if scene is undefined', function() {
         expect(function() {
             return new HomeButtonViewModel(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     //These remaining tests are sanity checks to make sure the code executes

@@ -57,7 +57,7 @@ defineSuite([
             renderbuffer = context.createRenderbuffer({
                 format : 'invalid format'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (small width)', function() {
@@ -65,7 +65,7 @@ defineSuite([
             renderbuffer = context.createRenderbuffer({
                 width : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large width)', function() {
@@ -73,7 +73,7 @@ defineSuite([
             renderbuffer = context.createRenderbuffer({
                 width : context.getMaximumRenderbufferSize() + 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (small height)', function() {
@@ -81,7 +81,7 @@ defineSuite([
             renderbuffer = context.createRenderbuffer({
                 height : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large height)', function() {
@@ -89,7 +89,7 @@ defineSuite([
             renderbuffer = context.createRenderbuffer({
                 height : context.getMaximumRenderbufferSize() + 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {

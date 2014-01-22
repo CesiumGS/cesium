@@ -4,12 +4,14 @@ defineSuite([
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
+         'Core/TimeIntervalCollection',
          'DynamicScene/DynamicObject'
      ], function(
          DynamicObjectCollection,
          JulianDate,
          Iso8601,
          TimeInterval,
+         TimeIntervalCollection,
          DynamicObject) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -244,8 +246,10 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/2012-08-02');
-        dynamicObject2.availability = TimeInterval.fromIso8601('2012-08-05/2012-08-06');
+        dynamicObject.availability = new TimeIntervalCollection();
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
+        dynamicObject2.availability = new TimeIntervalCollection();
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
@@ -260,8 +264,10 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z');
-        dynamicObject2.availability = TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06');
+        dynamicObject.availability = new TimeIntervalCollection();
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject2.availability = new TimeIntervalCollection();
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
@@ -273,14 +279,14 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.resumeEvents();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws with undefined DynamicObject', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.add(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws for DynamicObject with same id', function() {
@@ -298,27 +304,27 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.remove(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeById throws for undefined id', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.removeById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getOrCreateObject throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getOrCreateObject(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

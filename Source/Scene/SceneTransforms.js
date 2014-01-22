@@ -30,7 +30,7 @@ define([
      */
     var SceneTransforms = {};
 
-    var actualPosition = new Cartesian3();
+    var actualPosition = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
 
     /**
@@ -52,20 +52,21 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = widget.centralBody.getEllipsoid();
-     * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
+        //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
@@ -77,7 +78,7 @@ define([
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        Matrix4.multiplyByPoint(viewProjection, actualPosition, positionCC);
+        Matrix4.multiplyByVector(viewProjection, actualPosition, positionCC);
 
         return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
     };
@@ -101,13 +102,14 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = widget.centralBody.getEllipsoid();
-     * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
+     * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToDrawingBufferCoordinates = function(scene, position, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -115,18 +117,18 @@ define([
         if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
+        //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
 
         if (!defined(actualPosition)) {
-            result = undefined;
             return undefined;
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
         var viewProjection = scene.getUniformState().getViewProjection();
-        Matrix4.multiplyByPoint(viewProjection, actualPosition, positionCC);
+        Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene.getContext(), positionCC, result);
     };
@@ -171,7 +173,7 @@ define([
     };
 
     var positionNDC = new Cartesian3();
-    var positionWC = new Cartesian4();
+    var positionWC = new Cartesian3();
     var viewport = new BoundingRectangle();
     var viewportTransform = new Matrix4();
 
@@ -192,7 +194,7 @@ define([
         // Viewport transform to transform from clip coordinates to window coordinates
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
-        return Cartesian2.fromCartesian4(positionWC, result);
+        return Cartesian2.fromCartesian3(positionWC, result);
     };
 
     /**
@@ -210,7 +212,7 @@ define([
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
-        return Cartesian2.fromCartesian4(positionWC, result);
+        return Cartesian2.fromCartesian3(positionWC, result);
     };
 
     /**

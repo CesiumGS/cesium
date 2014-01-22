@@ -54,7 +54,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicBillboardVisualizer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor sets expected parameters and adds collection to scene.', function() {
@@ -71,7 +71,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {

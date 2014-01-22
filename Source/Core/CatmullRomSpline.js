@@ -48,6 +48,7 @@ define([
             timeVec.z = u;
             timeVec.y = u * u;
             timeVec.x = timeVec.y * u;
+            timeVec.w = 1.0;
 
             var p0, p1, p2, p3, coefs;
             if (i === 0) {
@@ -58,7 +59,7 @@ define([
                 p3 = Cartesian3.subtract(points[2], p0, scratchTemp0);
                 Cartesian3.multiplyByScalar(p3, 0.5, p3);
 
-                coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
             } else if (i === points.length - 2) {
                 p0 = points[i];
                 p1 = points[i + 1];
@@ -67,15 +68,14 @@ define([
                 p2 = Cartesian3.subtract(p1, points[i - 1], scratchTemp0);
                 Cartesian3.multiplyByScalar(p2, 0.5, p2);
 
-                coefs = Matrix4.multiplyByPoint(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(HermiteSpline.hermiteCoefficientMatrix, timeVec, timeVec);
             } else {
                 p0 = points[i - 1];
                 p1 = points[i];
                 p2 = points[i + 1];
                 p3 = points[i + 2];
-                coefs = Matrix4.multiplyByPoint(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
+                coefs = Matrix4.multiplyByVector(CatmullRomSpline.catmullRomCoefficientMatrix, timeVec, timeVec);
             }
-
             result = Cartesian3.multiplyByScalar(p0, coefs.x, result);
             Cartesian3.multiplyByScalar(p1, coefs.y, scratchTemp1);
             Cartesian3.add(result, scratchTemp1, result);
@@ -112,14 +112,14 @@ define([
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = new CatmullRomSpline({
+     * var spline = new Cesium.CatmullRomSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      */
@@ -131,21 +131,20 @@ define([
         var firstTangent = options.firstTangent;
         var lastTangent = options.lastTangent;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points)) {
             throw new DeveloperError('points is required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         if (points.length > 2) {
             if (!defined(firstTangent)) {
@@ -234,14 +233,14 @@ define([
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
-     * var spline = new CatmullRomSpline({
+     * var spline = new Cesium.CatmullRomSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      *

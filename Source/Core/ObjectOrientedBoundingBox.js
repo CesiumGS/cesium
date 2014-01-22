@@ -30,11 +30,11 @@ define([
      *
      * @example
      * // Create an ObjectOrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
-     * var rotation = Matrix3.clone(Matrix3.IDENTITY);
-     * var translation = new Cartesian3(1,0,0);
-     * var scale = new Cartesian3(0,5,0);
+     * var rotation = Cesium.Matrix3.clone(Cesium.Matrix3.IDENTITY);
+     * var translation = new Cesium.Cartesian3(1,0,0);
+     * var scale = new Cesium.Cartesian3(0,5,0);
      *
-     * var oobb = new ObjectOrientedBoundingBox(rotation, translation, scale);
+     * var oobb = new Cesium.ObjectOrientedBoundingBox(rotation, translation, scale);
      *
      * @see ObjectOrientedBoundingBox.fromPoints
      * @see ObjectOrientedBoundingBox.fromBoundingRectangle
@@ -85,7 +85,7 @@ define([
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = ObjectOrientedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
+     * var box = Cesium.ObjectOrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      */
     ObjectOrientedBoundingBox.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -184,12 +184,14 @@ define([
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
+     * var box = Cesium.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
      */
     ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingRectangle)) {
             throw new DeveloperError('boundingRectangle is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
@@ -287,12 +289,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        //>>includeEnd('debug');
 
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);

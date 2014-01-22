@@ -495,76 +495,76 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.get(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get throws with NaN', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.get(NaN);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get throws with non-number', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.get({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findIntervalContainingDate throws with undefined date', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.findIntervalContainingDate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findDataForIntervalContainingDate throws with undefined date', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.findDataForIntervalContainingDate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('contains throws with undefined date', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.contains(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('indexOf throws with undefined date', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.indexOf(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addInterval throws with undefined interval', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.addInterval(undefined, TestObject.equals);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeInterval throws with undefined', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.removeInterval(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('intersect throws with undefined interval', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.intersect(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('intersectInterval throws with undefined interval', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.intersectInterval(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

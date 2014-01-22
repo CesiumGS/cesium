@@ -73,8 +73,8 @@ defineSuite([
         // update until the load queue is empty.
         waitsFor(function() {
             surface._debug.enableDebugOutput = true;
-            var commandLists = [];
-            cb.update(context, frameState, commandLists);
+            var commandList = [];
+            cb.update(context, frameState, commandList);
             return !defined(cb._surface._tileLoadQueue.head) && surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
@@ -122,7 +122,7 @@ defineSuite([
                     imageryLayerCollection : new ImageryLayerCollection()
                 });
             }
-            expect(constructWithoutTerrainProvider).toThrow();
+            expect(constructWithoutTerrainProvider).toThrowDeveloperError();
         });
 
         it('throws if a ImageryLayerCollection is not provided', function() {
@@ -131,7 +131,7 @@ defineSuite([
                     terrainProvider : new EllipsoidTerrainProvider()
                 });
             }
-            expect(constructWithoutImageryLayerCollection).toThrow();
+            expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
         });
     }, 'WebGL');
 
@@ -387,31 +387,27 @@ defineSuite([
         updateUntilDone(cb);
 
         runs(function() {
-            var commandLists = [];
-            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+            var commandList = [];
+            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
-            for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].opaqueList;
-                var commandListLength = commandList.length;
-                for (var j = 0; j < commandListLength; ++j) {
-                    var command = commandList[j];
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
 
-                    var uniforms = command.uniformMap;
-                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
-                        continue;
-                    }
-
-                    ++tileCommandCount;
-
-                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
-                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
-                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
-                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
                 }
+
+                ++tileCommandCount;
+
+                expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+                expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
+                expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
+                expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
@@ -446,31 +442,27 @@ defineSuite([
         updateUntilDone(cb);
 
         runs(function() {
-            var commandLists = [];
-            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+            var commandList = [];
+            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
-            for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].opaqueList;
-                var commandListLength = commandList.length;
-                for (var j = 0; j < commandListLength; ++j) {
-                    var command = commandList[j];
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
 
-                    var uniforms = command.uniformMap;
-                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
-                        continue;
-                    }
-
-                    ++tileCommandCount;
-
-                    expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
-                    expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
-                    expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
-                    expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
-                    expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
                 }
+
+                ++tileCommandCount;
+
+                expect(uniforms.u_dayTextureAlpha()).toEqual([0.123]);
+                expect(uniforms.u_dayTextureBrightness()).toEqual([0.456]);
+                expect(uniforms.u_dayTextureContrast()).toEqual([0.654]);
+                expect(uniforms.u_dayTextureOneOverGamma()).toEqual([1.0/0.321]);
+                expect(uniforms.u_dayTextureSaturation()).toEqual([0.123]);
+                expect(uniforms.u_dayTextureHue()).toEqual([0.456]);
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
@@ -489,26 +481,22 @@ defineSuite([
         updateUntilDone(cb);
 
         runs(function() {
-            var commandLists = [];
-            expect(render(context, frameState, cb, commandLists)).toBeGreaterThan(0);
+            var commandList = [];
+            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
-            for (var i = 0; i < commandLists.length; ++i) {
-                var commandList = commandLists[i].opaqueList;
-                var commandListLength = commandList.length;
-                for (var j = 0; j < commandListLength; ++j) {
-                    var command = commandList[j];
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
 
-                    var uniforms = command.uniformMap;
-                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
-                        continue;
-                    }
-
-                    ++tileCommandCount;
-
-                    expect(uniforms.u_dayTextureAlpha()).toEqual([]);
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
                 }
+
+                ++tileCommandCount;
+
+                expect(uniforms.u_dayTextureAlpha()).toEqual([]);
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);

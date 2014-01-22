@@ -42,6 +42,7 @@ define([
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -51,6 +52,7 @@ define([
         if (viewer.hasOwnProperty('objectTracked')) {
             throw new DeveloperError('objectTracked is already defined by another mixin.');
         }
+        //>>includeEnd('debug');
 
         var eventHelper = new EventHelper();
         var objectTracked = new Event();
@@ -80,6 +82,12 @@ define([
         //clear the trackedObject when it is clicked.
         if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+        }
+
+        //Subscribe to the geocoder search if it exists, so that we can
+        //clear the trackedObject when it is clicked.
+        if (defined(viewer.geocoder)) {
+            eventHelper.add(viewer.geocoder.viewModel.search.beforeExecute, clearTrackedObject);
         }
 
         //We need to subscribe to the data sources and collections so that we can clear the

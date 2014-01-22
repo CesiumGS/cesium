@@ -9,6 +9,8 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Extent',
         '../../Core/jsonp',
+        '../../Core/Matrix3',
+        '../../Core/Matrix4',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../createCommand',
@@ -24,6 +26,8 @@ define([
         Ellipsoid,
         Extent,
         jsonp,
+        Matrix3,
+        Matrix4,
         CameraFlightPath,
         SceneMode,
         createCommand,
@@ -51,9 +55,11 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var GeocoderViewModel = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
@@ -105,9 +111,12 @@ define([
                 return this._searchText;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof value !== 'string') {
                     throw new DeveloperError('value must be a valid string.');
                 }
+                //>>includeEnd('debug');
+
                 this._searchText = value;
             }
         });
@@ -125,9 +134,12 @@ define([
                 return this._flightDuration;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
+                //>>includeEnd('debug');
+
                 this._flightDuration = value;
             }
         });
@@ -263,6 +275,20 @@ define([
                 up : up,
                 direction : direction
             };
+
+            var camera = viewModel._scene.getCamera();
+            if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
+                var transform = Matrix4.inverseTransformation(camera.transform);
+                Matrix4.multiplyByPoint(camera.transform, camera.position, camera.position);
+
+                var rotation = Matrix4.getRotation(camera.transform);
+                Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
+                Matrix3.multiplyByVector(rotation, camera.up, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+                camera.transform = Matrix4.IDENTITY;
+                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
+            }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
             viewModel._scene.getAnimations().add(flight);

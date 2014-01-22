@@ -48,8 +48,8 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @example
-     * var extentPrimitive = new ExtentPrimitive({
-     *   extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var extentPrimitive = new Cesium.ExtentPrimitive({
+     *   extent : Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
      * });
      * primitives.add(extentPrimitive);
      */
@@ -143,10 +143,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * extent.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * extent.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * extent.material = Material.fromType(Material.StripeType);
+         * extent.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -193,17 +193,17 @@ define([
      * @private
      */
     ExtentPrimitive.prototype.update = function(context, frameState, commandList) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
-
         if (this.granularity < 0.0) {
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         if (!this.show || (!defined(this.extent))) {
             return;

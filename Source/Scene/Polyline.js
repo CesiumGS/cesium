@@ -113,9 +113,11 @@ define([
      * @see Polyline#getShow
      */
     Polyline.prototype.setShow = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (value !== this._show) {
             this._show = value;
@@ -150,16 +152,18 @@ define([
      * @example
      * polyline.setPositions(
      *   ellipsoid.cartographicArrayToCartesianArray([
-     *     new Cartographic3(...),
-     *     new Cartographic3(...),
-     *     new Cartographic3(...)
+     *     new Cesium.Cartographic(...),
+     *     new Cesium.Cartographic(...),
+     *     new Cesium.Cartographic(...)
      *   ])
      * );
      */
     Polyline.prototype.setPositions = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._positions.length !== value.length || this._positions.length !== this._length) {
             makeDirty(this, POSITION_SIZE_INDEX);
@@ -234,9 +238,12 @@ define([
      * @see Polyline#getMaterial
      */
     Polyline.prototype.setMaterial = function(material) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
+        //>>includeEnd('debug');
+
         if (this._material !== material) {
             this._material = material;
             makeDirty(this, MATERIAL_INDEX);
@@ -276,9 +283,11 @@ define([
      * var width = polyline.getWidth(); // 5.0
      */
     Polyline.prototype.setWidth = function(value) {
+        //>>includeStart('debug', pragmas.debug)
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var width = this._width;
         if (value !== width) {

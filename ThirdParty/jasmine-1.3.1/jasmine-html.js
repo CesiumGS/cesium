@@ -1,3 +1,12 @@
+function getQueryParameter(name) {
+    var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+
+    if (match) {
+        return decodeURIComponent(match[1].replace(/\+/g, ' '));
+    }
+    return null;
+}
+
 jasmine.HtmlReporterHelpers = {};
 
 jasmine.HtmlReporterHelpers.createDom = function(type, attrs, childrenVarArgs) {
@@ -175,6 +184,14 @@ jasmine.HtmlReporter = function(_doc) {
     doc.body.appendChild(dom.reporter);
     setExceptionHandling();
 
+    var params = '';
+    if (getQueryParameter('built')) {
+        params += '&built=true';
+    }
+    if (getQueryParameter('release')) {
+        params += '&release=true';
+    }
+
     var runButton = document.getElementById('runButton');
     runButton.onclick = function() {
       if (document.getElementById('no_try_catch').checked) {
@@ -184,10 +201,10 @@ jasmine.HtmlReporter = function(_doc) {
 
 	  var select = document.getElementById('categorySelect');
       if (document.getElementById('categoryException').checked) {
-        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value);
+        top.location.href = '?category=All&not=' + encodeURIComponent(select.options[select.selectedIndex].value) + params;
         return false;
       }
-      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value);
+      top.location.href = '?category=' + encodeURIComponent(select.options[select.selectedIndex].value) + params;
       return false;
     }
 
@@ -198,10 +215,10 @@ jasmine.HtmlReporter = function(_doc) {
 
       var select = document.getElementById('categorySelect');
 	  if (document.getElementById('categoryException').checked) {
-        top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=All&not=' + select.options[select.selectedIndex].value);
+        top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=All&not=' + select.options[select.selectedIndex].value) + params;
         return false;
       }
-      top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=' + select.options[select.selectedIndex].value);
+      top.location.href = baseInstrumentUrl + window.encodeURIComponent('&category=' + select.options[select.selectedIndex].value) + params;
 	  return false;
     }
 
@@ -444,6 +461,12 @@ jasmine.HtmlReporter.sectionLink = function(sectionName) {
   if (!jasmine.CATCH_EXCEPTIONS) {
     params.push("catch=false");
   }
+  if (getQueryParameter('built')) {
+      params.push('built=true');
+  }
+  if (getQueryParameter('release')) {
+      params.push('release=true');
+  }
   if (params.length > 0) {
     link += params.join("&");
   }
@@ -589,11 +612,19 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       specView.summary.className += " specSkipped";
     }
 
+    var params = '';
+    if (getQueryParameter('built')) {
+        params += '&built=true';
+    }
+    if (getQueryParameter('release')) {
+        params += '&release=true';
+    }
+
     specView.summary.appendChild(this.createDom('span', {className: 'specTime'},
-        this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + params, target: '_top'}, 'run'),
         this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
-            window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
-        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name, target: '_top'}, 'debug'),
+            window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name) + params, target: '_top' }, "coverage"),
+        this.createDom('a', {className: 'run_spec', href: '?spec=' + name + '&debug=' + name + params, target: '_top'}, 'debug'),
         runTime));
 
     switch (status) {
@@ -631,11 +662,19 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
       runTime = ' (' + (suite.runTime / 1000) + 's)';
     }
 
+    var params = '';
+    if (getQueryParameter('built')) {
+        params += '&built=true';
+    }
+    if (getQueryParameter('release')) {
+        params += '&release=true';
+    }
+
 	var name = encodeURIComponent(suite.getFullName());
 	suiteView.element.insertBefore(this.createDom('span', {className: 'suiteTime'},
-      this.createDom('a', {className: 'run_spec', href: '?spec=' + name, target: '_top'}, 'run'),
+      this.createDom('a', {className: 'run_spec', href: '?spec=' + name + params, target: '_top'}, 'run'),
 	  this.createDom('a', {className: 'run_spec', href: '../Instrumented/jscoverage.html?../Specs/SpecRunner.html' +
-                window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
+                window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name) + params, target: '_top' }, "coverage"),
 	runTime), suiteView.element.getElementsByTagName('a')[2].nextSibling);
 
 	if (suite.beforeSpec_ && !suite.beforeSpec_.results().passed()) {

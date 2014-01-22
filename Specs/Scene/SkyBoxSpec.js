@@ -113,7 +113,7 @@ defineSuite([
         expect(command).not.toBeDefined();
     });
 
-    it('does not render without a color pass', function() {
+    it('does not render without a render pass', function() {
         var s = new SkyBox({
             sources : {
                 positiveX : './Data/Images/Blue.png',
@@ -128,7 +128,7 @@ defineSuite([
         var us = context.getUniformState();
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
-        frameState.passes.color = false;
+        frameState.passes.render = false;
         us.update(context, frameState);
 
         var command = s.update(context, frameState);
@@ -186,7 +186,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeX', function() {
@@ -203,7 +203,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without positiveY', function() {
@@ -220,7 +220,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeY', function() {
@@ -237,7 +237,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without positiveZ', function() {
@@ -254,7 +254,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without negativeZ', function() {
@@ -271,7 +271,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveX is a different type', function() {
@@ -289,7 +289,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeX is a different type', function() {
@@ -307,7 +307,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveY is a different type', function() {
@@ -325,7 +325,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeY is a different type', function() {
@@ -343,7 +343,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when positiveZ is a different type', function() {
@@ -361,7 +361,7 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed when negativeZ is a different type', function() {
@@ -379,6 +379,6 @@ defineSuite([
 
         expect(function() {
             return skyBox.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

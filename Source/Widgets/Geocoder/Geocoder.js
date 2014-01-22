@@ -44,15 +44,16 @@ define([
      * @exception {DeveloperError} description.scene is required.
      */
     var Geocoder = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.container)) {
             throw new DeveloperError('description.container is required.');
         }
         if (!defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
         var container = getElement(description.container);
-
         var viewModel = new GeocoderViewModel(description);
 
         viewModel._startSearchPath = startSearchPath;
@@ -62,7 +63,7 @@ define([
         form.setAttribute('data-bind', 'submit: search');
 
         var textBox = document.createElement('input');
-        textBox.type = 'text';
+        textBox.type = 'search';
         textBox.className = 'cesium-geocoder-input';
         textBox.setAttribute('placeholder', 'Enter an address or landmark...');
         textBox.setAttribute('data-bind', '\

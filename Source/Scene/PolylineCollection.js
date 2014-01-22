@@ -17,9 +17,9 @@ define([
         '../Core/Intersect',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/Pass',
         './Material',
         './SceneMode',
         './Polyline',
@@ -44,9 +44,9 @@ define([
         Intersect,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
         createShaderSource,
+        Pass,
         Material,
         SceneMode,
         Polyline,
@@ -111,20 +111,20 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new PolylineCollection(undefined);
+     * var polylines = new Cesium.PolylineCollection(undefined);
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-75.10, 39.57),
-     *     new Cartographic2(-77.02, 38.53),
-     *     new Cartographic2(-80.50, 35.14),
-     *     new Cartographic2(-80.12, 25.46)]),
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53),
+     *     new Cesium.Cartographic2(-80.50, 35.14),
+     *     new Cesium.Cartographic2(-80.12, 25.46)]),
      *     width:2
      *     });
      *
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-73.10, 37.57),
-     *     new Cartographic2(-75.02, 36.53),
-     *     new Cartographic2(-78.50, 33.14),
-     *     new Cartographic2(-78.12, 23.46)]),
+     *     new Cesium.Cartographic2(-73.10, 37.57),
+     *     new Cesium.Cartographic2(-75.02, 36.53),
+     *     new Cesium.Cartographic2(-78.50, 33.14),
+     *     new Cesium.Cartographic2(-78.12, 23.46)]),
      *     width:4
      * });
      *
@@ -164,11 +164,8 @@ define([
         this._opaqueRS = undefined;
         this._translucentRS = undefined;
 
-        this._commandLists = new CommandLists();
         this._colorCommands = [];
-        this._translucentList = [];
-        this._pickOpaqueCommands = [];
-        this._pickTranslucentCommands = [];
+        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -218,8 +215,8 @@ define([
      * var p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-75.10, 39.57),
-     *     new Cartographic2(-77.02, 38.53)]),
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53)]),
      *     width : 1
      * });
      *
@@ -350,9 +347,11 @@ define([
      * }
      */
     PolylineCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         removePolylines(this);
         return this._polylines[index];
@@ -387,8 +386,6 @@ define([
         removePolylines(this);
         return this._polylines.length;
     };
-
-    var emptyArray = [];
 
     /**
      * @private
@@ -460,11 +457,6 @@ define([
 
         var pass = frameState.passes;
         var useDepthTest = (frameState.morphTime !== 0.0);
-        var commandLists = this._commandLists;
-        commandLists.opaqueList = emptyArray;
-        commandLists.translucentList = emptyArray;
-        commandLists.pickList.opaqueList = emptyArray;
-        commandLists.pickList.translucentList = emptyArray;
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
             this._opaqueRS = context.createRenderState({
@@ -485,35 +477,21 @@ define([
             });
         }
 
-        if (pass.color) {
-            var opaqueList = this._colorCommands;
-            commandLists.opaqueList = opaqueList;
-            createCommandLists(this, context, frameState, opaqueList, modelMatrix, true, false);
-
-            var translucentList = this._translucentList;
-            commandLists.translucentList = translucentList;
-            createCommandLists(this, context, frameState, translucentList, modelMatrix, true, true);
+        if (pass.render) {
+            var colorList = this._colorCommands;
+            createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
         }
 
         if (pass.pick) {
-            var pickList = this._pickOpaqueCommands;
-            commandLists.pickList.opaqueList = pickList;
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, false);
-
-            pickList = this._pickTranslucentCommands;
-            commandLists.pickList.translucentList = pickList;
-            createCommandLists(this, context, frameState, pickList, modelMatrix, false, true);
-        }
-
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
+            var pickList = this._pickCommands;
+            createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, modelMatrix, colorPass, translucentPass) {
+    function createCommandLists(polylineCollection, context, frameState, commands, commandList, modelMatrix, renderPass) {
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
@@ -531,7 +509,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = colorPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
+                var sp = renderPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -545,33 +523,36 @@ define([
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
                         if (defined(currentId) && count > 0) {
-                            if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
-                                if (commandIndex >= commandsLength) {
-                                    command = new DrawCommand();
-                                    command.owner = polylineCollection;
-                                    commands.push(command);
-                                } else {
-                                    command = commands[commandIndex];
-                                }
+                            var translucent = currentMaterial.isTranslucent();
 
-                                ++commandIndex;
-
-                                command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
-                                command.modelMatrix = modelMatrix;
-                                command.primitiveType = PrimitiveType.TRIANGLES;
-                                command.shaderProgram = sp;
-                                command.vertexArray = va.va;
-                                command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
-                                command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
-
-                                command.uniformMap = currentMaterial._uniforms;
-                                command.count = count;
-                                command.offset = offset;
+                            if (commandIndex >= commandsLength) {
+                                command = new DrawCommand();
+                                command.owner = polylineCollection;
+                                commands.push(command);
+                            } else {
+                                command = commands[commandIndex];
                             }
+
+                            ++commandIndex;
+
+                            command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
+                            command.modelMatrix = modelMatrix;
+                            command.primitiveType = PrimitiveType.TRIANGLES;
+                            command.shaderProgram = sp;
+                            command.vertexArray = va.va;
+                            command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                            command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                            command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+
+                            command.uniformMap = currentMaterial._uniforms;
+                            command.count = count;
+                            command.offset = offset;
 
                             offset += count;
                             count = 0;
                             cloneBoundingSphere = true;
+
+                            commandList.push(command);
                         }
 
                         currentMaterial = polyline._material;
@@ -611,31 +592,32 @@ define([
                 }
 
                 if (defined(currentId) && count > 0) {
-                    if (!(currentMaterial.isTranslucent() ^ translucentPass)) {
-                        if (commandIndex >= commandsLength) {
-                            command = new DrawCommand();
-                            command.owner = polylineCollection;
-                            commands.push(command);
-                        } else {
-                            command = commands[commandIndex];
-                        }
-
-                        ++commandIndex;
-
-                        command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
-                        command.modelMatrix = modelMatrix;
-                        command.primitiveType = PrimitiveType.TRIANGLES;
-                        command.shaderProgram = sp;
-                        command.vertexArray = va.va;
-                        command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
-                        command.debugShowBoundingVolume = colorPass ? debugShowBoundingVolume : false;
-
-                        command.uniformMap = currentMaterial._uniforms;
-                        command.count = count;
-                        command.offset = offset;
+                    if (commandIndex >= commandsLength) {
+                        command = new DrawCommand();
+                        command.owner = polylineCollection;
+                        commands.push(command);
+                    } else {
+                        command = commands[commandIndex];
                     }
 
+                    ++commandIndex;
+
+                    command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
+                    command.shaderProgram = sp;
+                    command.vertexArray = va.va;
+                    command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
+                    command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+
+                    command.uniformMap = currentMaterial._uniforms;
+                    command.count = count;
+                    command.offset = offset;
+
                     cloneBoundingSphere = true;
+
+                    commandList.push(command);
                 }
 
                 currentId = undefined;
@@ -1404,7 +1386,7 @@ define([
         for ( var n = 0; n < length; ++n) {
             position = positions[n];
             p = Matrix4.multiplyByPoint(modelMatrix, position);
-            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(Cartesian3.fromCartesian4(p))));
+            newPositions.push(projection.project(ellipsoid.cartesianToCartographic(p)));
         }
 
         if (newPositions.length > 0) {

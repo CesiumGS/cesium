@@ -28,7 +28,7 @@ defineSuite([
     it('constructor throws without points', function() {
         expect(function() {
             return new QuaternionSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 2', function() {
@@ -36,7 +36,7 @@ defineSuite([
             return new QuaternionSpline({
                 points : [Quaternion.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without times', function() {
@@ -44,7 +44,7 @@ defineSuite([
             return new QuaternionSpline({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -53,7 +53,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws without time', function() {
@@ -64,7 +64,7 @@ defineSuite([
 
         expect(function() {
             qs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws when time is out of range', function() {
@@ -75,7 +75,7 @@ defineSuite([
 
         expect(function() {
             qs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate without result parameter', function() {
@@ -90,7 +90,9 @@ defineSuite([
         var t = (time - times[1]) / (times[2] - times[1]);
 
         var quads = qs.innerQuadrangles;
-        expect(qs.evaluate(time)).toEqual(Quaternion.squad(points[1], points[2], quads[1], quads[2], t));
+        var actual = qs.evaluate(time);
+        var expected = Quaternion.squad(points[1], points[2], quads[1], quads[2], t);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('evaluate with result parameter', function() {
@@ -115,7 +117,9 @@ defineSuite([
         });
 
         var t = (times[0] + times[1]) * 0.5;
-        expect(qs.evaluate(t)).toEqual(Quaternion.slerp(points[0], points[1], t));
+        var actual = qs.evaluate(t);
+        var expected = Quaternion.slerp(points[0], points[1], t);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
     it('spline with 2 control points defaults to slerp and result parameter', function() {
@@ -130,7 +134,8 @@ defineSuite([
         var t = (times[0] + times[1]) * 0.5;
         var result = new Cartesian3();
         var actual = qs.evaluate(t, result);
+        var expected = Quaternion.slerp(points[0], points[1], t);
         expect(actual).toBe(result);
-        expect(actual).toEqual(Quaternion.slerp(points[0], points[1], t));
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 });

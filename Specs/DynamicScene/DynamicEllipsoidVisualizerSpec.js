@@ -52,7 +52,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicEllipsoidVisualizer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor sets expected parameters.', function() {
@@ -67,7 +67,7 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {

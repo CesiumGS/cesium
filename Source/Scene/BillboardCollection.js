@@ -15,8 +15,8 @@ define([
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         '../Renderer/VertexArrayFacade',
         '../Renderer/createShaderSource',
         './SceneMode',
@@ -40,8 +40,8 @@ define([
         BoundingSphere,
         BlendingState,
         BufferUsage,
-        CommandLists,
         DrawCommand,
+        Pass,
         VertexArrayFacade,
         createShaderSource,
         SceneMode,
@@ -90,7 +90,6 @@ define([
     var allPassPurpose = 'all';
     var colorPassPurpose = 'color';
     var pickPassPurpose = 'pick';
-    var emptyArray = [];
 
     /**
      * A renderable collection of billboards.  Billboards are viewport-aligned
@@ -126,7 +125,7 @@ define([
      *
      * @example
      * // Create a billboard collection with two billboards
-     * var billboards = new BillboardCollection();
+     * var billboards = new Cesium.BillboardCollection();
      * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
      * billboards.add({
@@ -189,7 +188,6 @@ define([
 
         this._colorCommands = [];
         this._pickCommands = [];
-        this._commandLists = new CommandLists();
 
         /**
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
@@ -205,12 +203,12 @@ define([
          * @see czm_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
-         * billboards.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
-         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 0.0) }); // center
-         * billboards.add({ imageIndex: 0, position : new Cartesian3(1000000.0, 0.0, 0.0) }); // east
-         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 1000000.0, 0.0) }); // north
-         * billboards.add({ imageIndex: 0, position : new Cartesian3(0.0, 0.0, 1000000.0) }); // up
+         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
+         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
+         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
+         * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -282,20 +280,20 @@ define([
      * // Example 1:  Add a billboard, specifying all the default values.
      * var b = billboards.add({
      *   show : true,
-     *   position : Cartesian3.ZERO,
-     *   pixelOffset : Cartesian2.ZERO,
-     *   eyeOffset : Cartesian3.ZERO,
-     *   horizontalOrigin : HorizontalOrigin.CENTER,
-     *   verticalOrigin : VerticalOrigin.CENTER,
+     *   position : Cesium.Cartesian3.ZERO,
+     *   pixelOffset : Cesium.Cartesian2.ZERO,
+     *   eyeOffset : Cesium.Cartesian3.ZERO,
+     *   horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+     *   verticalOrigin : Cesium.VerticalOrigin.CENTER,
      *   scale : 1.0,
      *   imageIndex : 0,
-     *   color : Color.WHITE,
+     *   color : Cesium.Color.WHITE,
      *   id : undefined
      * });
      *
      * // Example 2:  Specify only the billboard's cartographic position.
      * var b = billboards.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cartographic(longitude, latitude, height))
+     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height))
      * });
      */
     BillboardCollection.prototype.add = function(billboard) {
@@ -449,9 +447,11 @@ define([
      * }
      */
     BillboardCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         removeBillboards(this);
         return this._billboards[index];
@@ -515,7 +515,7 @@ define([
      * // Assigns a texture atlas with two images to a billboard collection.
      * // Two billboards, each referring to one of the images, are then
      * // added to the collection.
-     * var billboards = new BillboardCollection();
+     * var billboards = new Cesium.BillboardCollection();
      * var images = [image0, image1];
      * var atlas = context.createTextureAtlas({images : images});
      * billboards.setTextureAtlas(atlas);
@@ -863,9 +863,13 @@ define([
         var index = billboard.getImageIndex();
         if (index !== -1) {
             var imageRectangle = textureAtlasCoordinates[index];
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(imageRectangle)) {
                 throw new DeveloperError('Invalid billboard image index: ' + index);
             }
+            //>>includeEnd('debug');
+
             bottomLeftX = imageRectangle.x;
             bottomLeftY = imageRectangle.y;
             width = imageRectangle.width;
@@ -1268,13 +1272,9 @@ define([
         var vaLength;
         var command;
         var j;
-        var commandLists = this._commandLists;
-        commandLists.opaqueList = emptyArray;
-        commandLists.pickList.opaqueList = emptyArray;
 
-        if (pass.color) {
+        if (pass.render) {
             var colorList = this._colorCommands;
-            commandLists.opaqueList = colorList;
 
             if (!defined(this._rs)) {
                 this._rs = context.createRenderState({
@@ -1325,14 +1325,17 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+                commandList.push(command);
             }
         }
 
+
         if (picking) {
             var pickList = this._pickCommands;
-            commandLists.pickList.opaqueList = pickList;
 
             if (!defined(this._spPick) ||
                     (this._shaderRotation && !this._compiledShaderRotationPick) ||
@@ -1378,12 +1381,11 @@ define([
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
+                command.pass = Pass.OPAQUE;
                 command.owner = this;
-            }
-        }
 
-        if (!commandLists.empty()) {
-            commandList.push(commandLists);
+                commandList.push(command);
+            }
         }
     };
 

@@ -135,7 +135,7 @@ defineSuite([
                     ])
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('construction throws with less than three positions', function() {
@@ -143,7 +143,7 @@ defineSuite([
             return new Polygon({
                 positions : []
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets default show', function() {
@@ -170,7 +170,7 @@ defineSuite([
 
         expect(function() {
             polygon.setPositions([new Cartesian3()]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('configure polygon from hierarchy', function() {
@@ -245,7 +245,7 @@ defineSuite([
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets the default color', function() {
@@ -315,7 +315,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -342,7 +342,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without hierarchy positions due to duplicates', function() {
@@ -369,7 +369,7 @@ defineSuite([
 
         expect(function () {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -402,7 +402,7 @@ defineSuite([
         polygon = createPolygon();
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
@@ -427,7 +427,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
@@ -457,7 +457,7 @@ defineSuite([
 
         expect(function() {
             polygon.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when updated/rendered without an invalid granularity', function() {
@@ -466,7 +466,7 @@ defineSuite([
 
         expect(function() {
             polygon.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
@@ -475,6 +475,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');
