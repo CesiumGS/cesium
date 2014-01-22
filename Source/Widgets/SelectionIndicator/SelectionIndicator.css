@@ -24,5 +24,9 @@
 .cesium-selection-wrapper svg {
     fill: #2e2;
     stroke: #000;
-    stroke-width: 1.5px;
+    stroke-width: 1.1px;
+}
+
+.cesium-selection-wrapper .cesium-selection-circle {
+    opacity: 0.9;
 }

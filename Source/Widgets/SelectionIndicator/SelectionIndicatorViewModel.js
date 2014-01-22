@@ -115,6 +115,14 @@ define([
         this.triangleDistance = 20;
 
         /**
+         * The rotation angle offset for the triangles, in degrees.
+         * @memberof SelectionIndicatorViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this.triangleRotation = 45;
+
+        /**
          * Determines the visibility of the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
          *
@@ -131,26 +139,26 @@ define([
             }
         });
 
-        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance']);
+        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation']);
 
         knockout.defineProperty(this, '_transform0', {
             get : function() {
-                return 'translate(0,' + (-this.triangleDistance) + ')';
+                return 'rotate(' + (this.triangleRotation) + ') translate(0,' + (-this.triangleDistance) + ')';
             }
         });
         knockout.defineProperty(this, '_transform1', {
             get : function() {
-                return 'rotate(90) translate(0,' + (-this.triangleDistance) + ')';
+                return 'rotate(' + (this.triangleRotation + 90) + ') translate(0,' + (-this.triangleDistance) + ')';
             }
         });
         knockout.defineProperty(this, '_transform2', {
             get : function() {
-                return 'rotate(180) translate(0,' + (-this.triangleDistance) + ')';
+                return 'rotate(' + (this.triangleRotation + 180) + ') translate(0,' + (-this.triangleDistance) + ')';
             }
         });
         knockout.defineProperty(this, '_transform3', {
             get : function() {
-                return 'rotate(270) translate(0,' + (-this.triangleDistance) + ')';
+                return 'rotate(' + (this.triangleRotation + 270) + ') translate(0,' + (-this.triangleDistance) + ')';
             }
         });
     };
@@ -174,24 +182,53 @@ define([
     };
 
     /**
-     * Animate the triangles to draw attention to the selection.
+     * Animate the indicator to draw attention to the selection.
      * @memberof SelectionIndicatorViewModel
      */
-    SelectionIndicatorViewModel.prototype.animateTriangles = function() {
+    SelectionIndicatorViewModel.prototype.animateAppear = function() {
         var viewModel = this;
-        var duration = 1500;
-        var easingFunction = Tween.Easing.Bounce.Out;
+        var duration = 800;
+        var easingFunction = Tween.Easing.Exponential.Out;
 
         var value = {
-            offset : 60
+            distance : 60,
+            rotation: 0
         };
         var tween = new Tween.Tween(value);
         tween.to({
-            offset : 20
+            distance : 20,
+            rotation: 45
         }, duration);
         tween.easing(easingFunction);
         tween.onUpdate(function() {
-            viewModel.triangleDistance = value.offset;
+            viewModel.triangleDistance = value.distance;
+            viewModel.triangleRotation = value.rotation;
+        });
+        tween.start();
+    };
+
+    /**
+     * Animate the indicator to release the selection.
+     * @memberof SelectionIndicatorViewModel
+     */
+    SelectionIndicatorViewModel.prototype.animateDepart = function() {
+        var viewModel = this;
+        var duration = 800;
+        var easingFunction = Tween.Easing.Exponential.Out;
+
+        var value = {
+            distance : viewModel.triangleDistance,
+            rotation: viewModel.triangleRotation
+        };
+        var tween = new Tween.Tween(value);
+        tween.to({
+            distance : 60,
+            rotation: 25
+        }, duration);
+        tween.easing(easingFunction);
+        tween.onUpdate(function() {
+            viewModel.triangleDistance = value.distance;
+            viewModel.triangleRotation = value.rotation;
         });
         tween.start();
     };

@@ -127,7 +127,6 @@ define(['../../Core/BoundingSphere',
                 defined(picked.primitive) &&
                 defined(picked.primitive.dynamicObject)) {
                 viewer.selectedObject = picked.primitive.dynamicObject;
-                selectionIndicatorViewModel.animateTriangles();
             } else {
                 viewer.selectedObject = undefined;
             }
@@ -250,7 +249,14 @@ define(['../../Core/BoundingSphere',
                     return selectedObject;
                 },
                 set : function(value) {
-                    selectedObject = value;
+                    if (selectedObject !== value) {
+                        selectedObject = value;
+                        if (defined(value)) {
+                            selectionIndicatorViewModel.animateAppear();
+                        } else {
+                            selectionIndicatorViewModel.animateDepart();
+                        }
+                    }
                 }
             }
         });

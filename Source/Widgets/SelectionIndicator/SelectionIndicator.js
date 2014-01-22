@@ -54,10 +54,11 @@ define([
         svg.setAttribute('viewBox', '0 0 160 160');
 
         var group = document.createElementNS(svgNS, 'g');
-        group.setAttribute('transform', 'translate(80,80) rotate(45)');
+        group.setAttribute('transform', 'translate(80,80)');
         svg.appendChild(group);
 
         var circlePathElement = document.createElementNS(svgNS, 'path');
+        circlePathElement.setAttribute('class', 'cesium-selection-circle');
         circlePathElement.setAttribute('d', circlePath);
         group.appendChild(circlePathElement);
 
