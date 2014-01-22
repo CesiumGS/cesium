@@ -77,27 +77,25 @@ define([
             vertexBuffer[bufferIndex + vIndex] = v;
         }
 
-        //var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var edgeTriangleCount = 0;
+        var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
         var indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
         indexBuffer.set(parameters.indices, 0);
-        //var indexBuffer = parameters.indices;
 
         // TODO: ensure vertices are sorted on the server, and remove this.
-        /*parameters.westIndices.sort(function(a, b) {
-            return quantizedVertices[a * quantizedStride + 1] - quantizedVertices[b * quantizedStride + 1];
+        parameters.westIndices.sort(function(a, b) {
+            return vBuffer[a] - vBuffer[b];
         });
 
         parameters.southIndices.sort(function(a, b) {
-            return quantizedVertices[a * quantizedStride] - quantizedVertices[b * quantizedStride];
+            return uBuffer[a] - uBuffer[b];
         });
 
         parameters.eastIndices.sort(function(a, b) {
-            return quantizedVertices[a * quantizedStride + 1] - quantizedVertices[b * quantizedStride + 1];
+            return vBuffer[a] - vBuffer[b];
         });
 
         parameters.northIndices.sort(function(a, b) {
-            return quantizedVertices[a * quantizedStride] - quantizedVertices[b * quantizedStride];
+            return uBuffer[a] - uBuffer[b];
         });
 
         // Add skirts.
@@ -110,7 +108,10 @@ define([
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, center, ellipsoid, extent, parameters.eastSkirtHeight, false);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, extent, parameters.northSkirtHeight, true);
-        vertexBufferIndex += parameters.northIndices.length * vertexStride;*/
+        vertexBufferIndex += parameters.northIndices.length * vertexStride;
+
+        transferableObjects.push(vertexBuffer.buffer);
+        transferableObjects.push(indexBuffer.buffer);
 
         return {
             vertices : vertexBuffer.buffer,
