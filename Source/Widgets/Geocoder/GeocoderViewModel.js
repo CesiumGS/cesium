@@ -207,6 +207,11 @@ define([
         }
     });
 
+    var transform2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -253,7 +258,8 @@ define([
             var east = bbox[3];
             var extent = Extent.fromDegrees(west, south, east, north);
 
-            var position = viewModel._scene.getCamera().controller.getExtentCameraCoordinates(extent);
+            var camera = viewModel._scene.getCamera();
+            var position = camera.controller.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;
@@ -276,18 +282,23 @@ define([
                 direction : direction
             };
 
-            var camera = viewModel._scene.getCamera();
             if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
                 var transform = Matrix4.inverseTransformation(camera.transform);
-                Matrix4.multiplyByPoint(camera.transform, camera.position, camera.position);
+                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
 
-                var rotation = Matrix4.getRotation(camera.transform);
+                if (viewModel._scene.mode !== SceneMode.SCENE3D) {
+                    Matrix4.clone(transform2D, camera.transform);
+                    Matrix4.multiply(transform2D, transform, transform);
+                } else {
+                    Matrix4.clone(Matrix4.IDENTITY, camera.transform);
+                }
+
+                Matrix4.multiplyByPoint(transform, camera.position, camera.position);
+
+                var rotation = Matrix4.getRotation(transform);
                 Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
                 Matrix3.multiplyByVector(rotation, camera.up, camera.up);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
-
-                camera.transform = Matrix4.IDENTITY;
-                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
             }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
