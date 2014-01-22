@@ -46,6 +46,7 @@ define([
 
         var svgNS = 'http://www.w3.org/2000/svg';
         var trianglePath = 'm -10,-40 20,0 -10,40 z';
+        var circlePath = 'm 0,-35 c -19.329966,0 -35,15.67003 -35,35 0,19.32997 15.670034,35 35,35 C 19.329966,35 35,19.32997 35,0 35,-19.32997 19.329966,-35 0,-35 z m 0,5 c 16.568542,0 30,13.43146 30,30 0,16.56854 -13.431458,30 -30,30 -16.568542,0 -30,-13.43146 -30,-30 0,-16.56854 13.431458,-30 30,-30 z';
 
         var svg = document.createElementNS(svgNS, 'svg:svg');
         svg.setAttribute('width', 160);
@@ -55,6 +56,10 @@ define([
         var group = document.createElementNS(svgNS, 'g');
         group.setAttribute('transform', 'translate(80,80) rotate(45)');
         svg.appendChild(group);
+
+        var circlePathElement = document.createElementNS(svgNS, 'path');
+        circlePathElement.setAttribute('d', circlePath);
+        group.appendChild(circlePathElement);
 
         for (var i = 0; i < 4; ++i) {
             var pathElement = document.createElementNS(svgNS, 'path');
