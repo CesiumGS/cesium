@@ -162,8 +162,8 @@ define([
         if (this.showSelection) {
             if (defined(this._position)) {
                 pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
-                pos.x = Math.floor(pos.x);
-                pos.y = Math.floor(pos.y);
+                pos.x = Math.floor(pos.x + 0.25);
+                pos.y = Math.floor(pos.y + 0.25);
             } else {
                 pos = this._defaultPosition;
             }
