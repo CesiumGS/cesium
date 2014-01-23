@@ -211,6 +211,8 @@ define([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 1.0);
+    var inverseTransform2D = Matrix4.inverseTransformation(transform2D);
+    var scratchTransform = new Matrix4();
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
@@ -265,30 +267,18 @@ define([
                 return;
             }
 
-            var up;
-            var direction;
-            if (viewModel._scene.mode === SceneMode.SCENE3D) {
-                up = Cartesian3.UNIT_Z;
-                direction = Cartesian3.negate(viewModel._ellipsoid.geodeticSurfaceNormal(position));
-            } else {
-                up = Cartesian3.UNIT_Y;
-                direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-            }
-
             var description = {
                 destination : position,
-                duration : viewModel._flightDuration,
-                up : up,
-                direction : direction
+                duration : viewModel._flightDuration
             };
 
             if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-                var transform = Matrix4.inverseTransformation(camera.transform);
+                var transform = Matrix4.clone(camera.transform, scratchTransform);
                 viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
 
                 if (viewModel._scene.mode !== SceneMode.SCENE3D) {
                     Matrix4.clone(transform2D, camera.transform);
-                    Matrix4.multiply(transform2D, transform, transform);
+                    Matrix4.multiply(inverseTransform2D, transform, transform);
                 } else {
                     Matrix4.clone(Matrix4.IDENTITY, camera.transform);
                 }
