@@ -10,7 +10,6 @@ define(['../../Core/BoundingSphere',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
-        '../Balloon/Balloon',
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
@@ -25,7 +24,6 @@ define(['../../Core/BoundingSphere',
         ScreenSpaceEventType,
         wrapFunction,
         SceneMode,
-        Balloon,
         DynamicObjectView,
         knockout) {
     "use strict";
@@ -42,7 +40,6 @@ define(['../../Core/BoundingSphere',
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
-     * @exception {DeveloperError} balloonedObject is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -50,7 +47,6 @@ define(['../../Core/BoundingSphere',
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
-     * viewer.balloonedObject = object; //Balloon will now appear over object
      */
 
     var viewerDynamicObjectMixin = function(viewer) {
@@ -63,32 +59,11 @@ define(['../../Core/BoundingSphere',
         if (viewer.hasOwnProperty('objectTracked')) {
             throw new DeveloperError('objectTracked is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('balloonedObject')) {
-            throw new DeveloperError('balloonedObject is already defined by another mixin.');
-        }
-
-        //Balloon
-        var balloonContainer = document.createElement('div');
-        balloonContainer.className = 'cesium-viewer-balloonContainer';
-        viewer.container.appendChild(balloonContainer);
-
-        var balloon = new Balloon(balloonContainer, viewer.scene);
-
-        var balloonViewModel = balloon.viewModel;
-        viewer._balloon = balloon;
 
         var eventHelper = new EventHelper();
         var objectTracked = new Event();
         var trackedObject;
         var dynamicObjectView;
-        var balloonedObject;
-
-        function balloonClosed(value) {
-            if (!value) {
-                balloonedObject = undefined;
-            }
-        }
-        knockout.getObservable(balloonViewModel, 'userClosed').subscribe(balloonClosed);
 
         var scratchVertexPositions;
         var scratchBoundingSphere;
@@ -99,35 +74,6 @@ define(['../../Core/BoundingSphere',
             if (defined(dynamicObjectView) && trackedObject.uiShow) {
                 dynamicObjectView.update(time);
             }
-
-            var showBalloon = defined(balloonedObject) && balloonedObject.isAvailable(time) && balloonedObject.uiShow;
-            if (showBalloon) {
-                if (defined(balloonedObject.position)) {
-                    balloonViewModel.position = balloonedObject.position.getValue(time, balloonViewModel.position);
-                } else if (defined(balloonedObject.vertexPositions)) {
-                    scratchVertexPositions = balloonedObject.vertexPositions.getValue(time, scratchVertexPositions);
-                    scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
-                    balloonViewModel.position = scratchBoundingSphere.center;
-                } else {
-                    balloonViewModel.position = undefined;
-                }
-
-                var content;
-                if (defined(balloonedObject.balloon)) {
-                    content = balloonedObject.balloon.getValue(time);
-                }
-
-                var heading = balloonedObject.name;
-                if (defined(content) && defined(heading)) {
-                    content = '<h3>' + heading + '</h3>' + content;
-                } else if (!defined(content)) {
-                    content = '<h3>' + defaultValue(heading, balloonedObject.id) + '</h3>';
-                }
-                balloonViewModel.content = content;
-            }
-
-            balloonViewModel.update();
-            balloonViewModel.showBalloon = showBalloon;
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
@@ -146,26 +92,12 @@ define(['../../Core/BoundingSphere',
             }
         }
 
-        function showBalloon(dynamicObject) {
-            if (defined(dynamicObject)) {
-                viewer.balloonedObject = dynamicObject;
-            }
-        }
-
-        function pickAndShowBalloon(e) {
-            var p = viewer.scene.pick(e.position);
-            if (defined(p) && defined(p.primitive) && defined(p.primitive.dynamicObject)) {
-                viewer.balloonedObject = p.primitive.dynamicObject;
-            }
-        }
-
         function clearObjects() {
             viewer.trackedObject = undefined;
-            viewer.balloonedObject = undefined;
         }
 
         //Subscribe to the home button beforeExecute event if it exists,
-        // so that we can clear the trackedObject and balloon.
+        // so that we can clear the trackedObject.
         if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearObjects);
         }
@@ -185,9 +117,6 @@ define(['../../Core/BoundingSphere',
                 if (viewer.trackedObject === removedObject) {
                     viewer.homeButton.viewModel.command();
                 }
-                if (viewer.balloonedObject === removedObject) {
-                    viewer.balloonedObject = undefined;
-                }
             }
         }
 
@@ -201,11 +130,6 @@ define(['../../Core/BoundingSphere',
             if (defined(trackedObject)) {
                 if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
                     viewer.homeButton.viewModel.command();
-                }
-            }
-            if (defined(balloonedObject)) {
-                if (dataSource.getDynamicObjectCollection().getById(viewer.balloonedObject.id) === viewer.balloonedObject) {
-                    viewer.balloonedObject = undefined;
                 }
             }
         }
@@ -222,11 +146,9 @@ define(['../../Core/BoundingSphere',
         eventHelper.add(viewer.dataSources.dataSourceRemoved, dataSourceRemoved);
 
         //Subscribe to left clicks and zoom to the picked object.
-        viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
-        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
 
         if (defined(viewer.dataSourceBrowser)) {
-            eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectSelected, showBalloon);
             eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectDoubleClick, trackObject);
         }
 
@@ -254,8 +176,6 @@ define(['../../Core/BoundingSphere',
                         trackedObject = value;
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                         objectTracked.raiseEvent(viewer, value);
-                        //Hide the balloon if it's not the object we are following.
-                        balloonViewModel.showBalloon = balloonedObject === trackedObject;
                     }
                 }
             },
@@ -271,26 +191,12 @@ define(['../../Core/BoundingSphere',
                 get : function() {
                     return objectTracked;
                 }
-            },
-            /**
-             * Gets or sets the object instance for which to display a balloon
-             * @memberof viewerDynamicObjectMixin.prototype
-             * @type {DynamicObject}
-             */
-            balloonedObject : {
-                get : function() {
-                    return balloonedObject;
-                },
-                set : function(value) {
-                    balloonedObject = value;
-                }
             }
         });
 
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
             eventHelper.removeAll();
-            balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
