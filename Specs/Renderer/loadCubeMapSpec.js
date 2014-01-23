@@ -55,7 +55,7 @@ defineSuite([
             var fs =
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
-                'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+                'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
             var sp = context.createShaderProgram(vs, fs, {
                 position : 0
             });

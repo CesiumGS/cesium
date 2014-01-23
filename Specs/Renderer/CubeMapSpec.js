@@ -188,7 +188,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -254,7 +254,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -307,7 +307,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -389,7 +389,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -480,7 +480,7 @@ defineSuite([
             var fs =
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
-                'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+                'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
             sp = context.createShaderProgram(vs, fs, {
                 position : 0
             });
@@ -555,7 +555,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -613,7 +613,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -701,7 +701,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
