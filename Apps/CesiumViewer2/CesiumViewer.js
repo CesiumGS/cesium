@@ -170,6 +170,8 @@ define([
 
         var numHorizontal = 5;
         var numVertical = 3;
+        
+        var alpha = 1.0;
 
         var minHeight = 1000.0;
         var maxHeight = 1000000.0;
@@ -183,7 +185,9 @@ define([
             for (var j = 0; j < numHorizontal; ++j) {
                 var west = westernmost + j * (width + gap);
                 var east = west + width;
-
+                
+                var color = new Color(CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), alpha);
+                
                 var primitive = primitives.add(new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : new ExtentGeometry({
@@ -192,14 +196,17 @@ define([
                             extrudedHeight : CesiumMath.nextRandomNumber() * (maxHeight - minHeight) + minHeight
                         }),
                         attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(new Color(CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber()))
+                            color: ColorGeometryInstanceAttribute.fromColor(color)
                         }
                     }),
                     appearance : new PerInstanceColorAppearance({
                         closed : true,
-                        translucent : true
+                        translucent : alpha < 1.0,
+                        faceforward : true
                     })
                 }));
+                
+                alpha -= 1.0 / (numHorizontal * numVertical);
             }
         }
     }
