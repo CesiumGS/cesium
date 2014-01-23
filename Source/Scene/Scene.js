@@ -803,25 +803,14 @@ define([
             var source = '#extension GL_EXT_draw_buffers : enable \n' +
                 'vec4 czm_gl_FragColor;\n' +
                 renamedFS + '\n\n' +
-                'float weight(float z, float a)\n' +
-                '{\n' +
-                //'    return 1.0;\n' +
-                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 100.0 / (1e-5 + pow(abs(z) / 5.0, 2.0) + pow(abs(z) / 200.0, 6.0))));\n' + // (7)
-                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 100.0 / (1e-5 + pow(abs(z) / 10.0, 3.0) + pow(abs(z) / 200.0, 6.0))));\n' + // (8)
-                //'   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 0.3 / (1e-5 + pow(abs(z) / 200.0, 4.0))));\n' + // (9)
-                '   return pow(a + 0.01, 4.0) + max(1e-2, min(3.0 * 1e3, 1e10 * pow(1.0 - z, 3.0)));\n' + // (10)
-                '}\n\n' +
                 'void main()\n' +
                 '{\n' +
                 '    czm_translucent_main();\n' +
                 '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
-                '    float wzi = weight(gl_FragCoord.z, ai);\n' +
-                //'    float wzi = weight(czm_windowToEyeCoordinates(gl_FragCoord).z, ai);\n' +
+                '    float wzi = czm_alphaWeight(ai);' +
                 '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
                 '    gl_FragData[1] = vec4(ai * wzi);' +
-                //'    gl_FragData[0] = vec4(Ci, ai);\n' +
-                //'    gl_FragData[1] = vec4(1.0);' +
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);

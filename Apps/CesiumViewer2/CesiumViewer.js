@@ -13,6 +13,7 @@ define([
         'Core/Extent',
         'Core/ExtentGeometry',
         'Core/GeometryInstance',
+        'Core/Math',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
@@ -31,6 +32,7 @@ define([
         Extent,
         ExtentGeometry,
         GeometryInstance,
+        CesiumMath,
         Material,
         PerInstanceColorAppearance,
         Primitive) {
@@ -158,20 +160,21 @@ define([
         }
 
         var primitives = viewer.scene.getPrimitives();
-        var DEGREES_TO_RADIANS = Math.PI / 180.0;
 
-        var northernmost = 50.0 * DEGREES_TO_RADIANS;
-        var westernmost = -120.0 * DEGREES_TO_RADIANS;
+        var northernmost = CesiumMath.toRadians(50.0);
+        var westernmost = CesiumMath.toRadians(-120.0);
 
-        var width = 5.0 * DEGREES_TO_RADIANS;
-        var height = 5.0 * DEGREES_TO_RADIANS;
-        var gap = 1.0 * DEGREES_TO_RADIANS;
+        var width = CesiumMath.toRadians(5.0);
+        var height = CesiumMath.toRadians(5.0);
+        var gap = CesiumMath.toRadians(1.0);
 
         var numHorizontal = 5;
         var numVertical = 3;
 
         var minHeight = 1000.0;
         var maxHeight = 1000000.0;
+        
+        CesiumMath.setRandomNumberSeed(5);
 
         for (var i = 0; i < numVertical; ++i) {
             var north = northernmost - i * (height + gap);
@@ -186,10 +189,10 @@ define([
                         geometry : new ExtentGeometry({
                             extent : new Extent(west, south, east, north),
                             vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
-                            extrudedHeight : Math.random() * (maxHeight - minHeight) + minHeight
+                            extrudedHeight : CesiumMath.nextRandomNumber() * (maxHeight - minHeight) + minHeight
                         }),
                         attributes: {
-                            color: ColorGeometryInstanceAttribute.fromColor(new Color(Math.random(), Math.random(), Math.random(), Math.random()))
+                            color: ColorGeometryInstanceAttribute.fromColor(new Color(CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber()))
                         }
                     }),
                     appearance : new PerInstanceColorAppearance({

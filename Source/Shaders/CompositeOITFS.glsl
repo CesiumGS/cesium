@@ -15,13 +15,11 @@ void main()
     if (all(equal(transparent, vec4(0.0, 0.0, 0.0, 1.0))))
     {
         gl_FragColor = opaque;
-        //discard;
     }
     else
     {
-        //gl_FragColor = transparent;
-        //gl_FragColor = vec4(transparent.rgb, 1.0);
         gl_FragColor = transparent.a * transparent + (1.0 - transparent.a) * opaque;
+        
         //gl_FragColor = transparent.a * transparent + opaque;
         //gl_FragColor = vec4(transparent.a * transparent.rgb + opaque.rgb, 1.0);
     }
