@@ -84,6 +84,12 @@ define(['../../Core/BoundingSphere',
         var dynamicObjectView;
         var selectedObject;
 
+        function selectionInfoClosed() {
+            viewer.selectedObject = undefined;
+        }
+
+        eventHelper.add(selectionIndicatorViewModel.onCloseInfo, selectionInfoClosed);
+
         var scratchVertexPositions;
         var scratchBoundingSphere;
 
@@ -132,15 +138,19 @@ define(['../../Core/BoundingSphere',
             }
         }
 
+        function clearTrackedObject() {
+            viewer.trackedObject = undefined;
+        }
+
         function clearObjects() {
             viewer.trackedObject = undefined;
             viewer.selectedObject = undefined;
         }
 
         //Subscribe to the home button beforeExecute event if it exists,
-        // so that we can clear the trackedObject and selection.
+        // so that we can clear the trackedObject.
         if (defined(viewer.homeButton)) {
-            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearObjects);
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
         }
 
         //Subscribe to the geocoder search if it exists, so that we can
@@ -220,7 +230,9 @@ define(['../../Core/BoundingSphere',
 
                     if (trackedObject !== value) {
                         trackedObject = value;
-                        selectedObject = value;
+                        if (defined(value)) {
+                            selectedObject = value;
+                        }
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                         objectTracked.raiseEvent(viewer, value);
                     }
@@ -252,8 +264,11 @@ define(['../../Core/BoundingSphere',
                     if (selectedObject !== value) {
                         selectedObject = value;
                         if (defined(value)) {
+                            selectionIndicatorViewModel.titleText = defined(selectedObject.name) ? selectedObject.name : '';
                             selectionIndicatorViewModel.animateAppear();
                         } else {
+                            // Removing the text here prevents the exit animation.
+                            //selectionIndicatorViewModel.titleText = '';
                             selectionIndicatorViewModel.animateDepart();
                         }
                     }

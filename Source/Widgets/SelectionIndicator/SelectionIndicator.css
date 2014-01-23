@@ -1,17 +1,17 @@
 .cesium-selection-container {
     visibility: hidden;
     opacity: 0;
-    transition: visibility 0s 0.2s, opacity 0.2s ease-in;
     -webkit-transition: visibility 0s 0.2s, opacity 0.2s ease-in;
     -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in;
+    transition: visibility 0s 0.2s, opacity 0.2s ease-in;
 }
 
 .cesium-selection-container-visible {
     visibility: visible;
     opacity: 1;
-    transition: opacity 0.2s ease-out;
     -webkit-transition: opacity 0.2s ease-out;
     -moz-transition: opacity 0.2s ease-out;
+    transition: opacity 0.2s ease-out;
 }
 
 .cesium-selection-wrapper {
@@ -29,4 +29,77 @@
 
 .cesium-selection-wrapper .cesium-selection-circle {
     opacity: 0.9;
+}
+
+.cesium-selection-info {
+    display: block;
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background: rgba(38, 38, 38, 0.95);
+    color: #edffff;
+    border: 1px solid #444;
+    border-right: none;
+    border-top-left-radius: 7px;
+    border-bottom-left-radius: 7px;
+    -webkit-transform: translate(100%, 0);
+    -moz-transform: translate(100%, 0);
+    transform: translate(100%, 0);
+    visibility: hidden;
+    opacity: 0;
+    -webkit-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -webkit-transform 0.2s ease-in;
+    -moz-transition: visibility 0s 0.2s, opacity 0.2s ease-in, -moz-transform 0.2s ease-in;
+    transition: visibility 0s 0.2s, opacity 0.2s ease-in, transform 0.2s ease-in;
+}
+
+.cesium-selection-info-visible {
+    -webkit-transform: translate(0, 0);
+    -moz-transform: translate(0, 0);
+    transform: translate(0, 0);
+    visibility: visible;
+    opacity: 1;
+    -webkit-transition: opacity 0.2s ease-out, -webkit-transform 0.2s ease-out;
+    -moz-transition: opacity 0.2s ease-out, -moz-transform 0.2s ease-out;
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.cesium-selection-info-title {
+    display: block;
+    height: 20px;
+    padding: 5px 30px;
+}
+
+button.cesium-selection-info-close {
+    display: block;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    height: 20px;
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    font-weight: bold;
+    font-size:16px;
+    padding: 0 5px;
+    margin: 0;
+    color: #edffff;
+}
+
+button.cesium-selection-info-close:focus {
+    background: rgba(238, 136, 0, 0.44);
+    outline: none;
+}
+
+button.cesium-selection-info-close:hover {
+    background: #888;
+    color: #000;
+}
+
+button.cesium-selection-info-close:active {
+    background: #a00;
+    color: #000;
+}
+
+.cesium-selection-info-description {
+    border-top: 1px solid #333;
 }

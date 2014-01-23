@@ -38,10 +38,9 @@ define([
         container.setAttribute('data-bind', 'css: { "cesium-selection-container" : true, "cesium-selection-container-visible" : showSelection }');
 
         var el = document.createElement('div');
-        this._element = el;
         el.className = 'cesium-selection-wrapper';
+        el.setAttribute('data-bind', 'style: { "bottom" : _positionY, "left" : _positionX }');
         container.appendChild(el);
-        el.setAttribute('data-bind', 'style: { "bottom" : _positionY, "left" : _positionX}');
         this._element = el;
 
         var svgNS = 'http://www.w3.org/2000/svg';
@@ -70,6 +69,25 @@ define([
         }
 
         el.appendChild(svg);
+
+        var infoElement = document.createElement('div');
+        infoElement.className = 'cesium-selection-info';
+        infoElement.setAttribute('data-bind', 'css: { "cesium-selection-info-visible" : showSelection }');
+        container.appendChild(infoElement);
+        this._infoElement = infoElement;
+
+        var titleElement = document.createElement('div');
+        titleElement.className = 'cesium-selection-info-title';
+        titleElement.setAttribute('data-bind', 'text: titleText');
+        infoElement.appendChild(titleElement);
+        this._titleElement = titleElement;
+
+        var closeElement = document.createElement('button');
+        closeElement.type = 'button';
+        closeElement.className = 'cesium-selection-info-close';
+        closeElement.setAttribute('data-bind', 'click: function () { onCloseInfo.raiseEvent(); }');
+        closeElement.innerHTML = '&times;';
+        infoElement.appendChild(closeElement);
 
         var viewModel = new SelectionIndicatorViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;

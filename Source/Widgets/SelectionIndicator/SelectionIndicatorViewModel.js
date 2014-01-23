@@ -5,6 +5,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../Scene/SceneTransforms',
         '../../ThirdParty/knockout',
         '../../ThirdParty/Tween'
@@ -14,6 +15,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         SceneTransforms,
         knockout,
         Tween) {
@@ -85,6 +87,9 @@ define([
         this._position = undefined;
         this._updateContent = false;
         this._timerRunning = false;
+        this._showSelection = false;
+        this._titleText = '';
+        this._onCloseInfo = new Event();
         this._defaultPosition = new Cartesian2(this._container.clientWidth, this._container.clientHeight / 2);
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
@@ -122,6 +127,8 @@ define([
          */
         this.triangleRotation = 45;
 
+        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation', '_showSelection', '_titleText']);
+
         /**
          * Determines the visibility of the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
@@ -129,17 +136,30 @@ define([
          * @type {Boolean}
          */
         this.showSelection = undefined;
-        var showSelection = knockout.observable();
         knockout.defineProperty(this, 'showSelection', {
             get : function() {
-                return showSelection();
+                return this._showSelection;
             },
             set : function(value) {
-                showSelection(value);
+                this._showSelection = value;
             }
         });
 
-        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation']);
+        /**
+         * The title text in the info box.
+         * @memberof SelectionIndicatorViewModel.prototype
+         *
+         * @type {String}
+         */
+        this.titleText = undefined;
+        knockout.defineProperty(this, 'titleText', {
+            get : function() {
+                return this._titleText;
+            },
+            set : function(value) {
+                this._titleText = value;
+            }
+        });
 
         knockout.defineProperty(this, '_transform0', {
             get : function() {
@@ -329,6 +349,14 @@ define([
             },
             set : function(value) {
                 this._position = value;
+            }
+        },
+        /**
+         * Gets an {@link Event} that is fired when the user closes the selection info window.
+         */
+        onCloseInfo : {
+            get : function() {
+                return this._onCloseInfo;
             }
         }
     });
