@@ -12,7 +12,7 @@ void main()
     vec4 transparent = vec4(accum.rgb / clamp(r, 1e-4, 5e4), accum.a);
     transparent.a = 1.0 - transparent.a;
     
-    if (transparent.a == 1.0)
+    if (all(equal(transparent, vec4(0.0, 0.0, 0.0, 1.0))))
     {
         gl_FragColor = opaque;
         //discard;
@@ -24,6 +24,5 @@ void main()
         gl_FragColor = transparent.a * transparent + (1.0 - transparent.a) * opaque;
         //gl_FragColor = transparent.a * transparent + opaque;
         //gl_FragColor = vec4(transparent.a * transparent.rgb + opaque.rgb, 1.0);
-        //gl_FragColor = vec4((1.0 - transparent.a) * transparent.rgb + transparent.a * opaque.rgb, 1.0);
     }
 }
