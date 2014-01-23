@@ -62,11 +62,12 @@ define(['../Core/createGuid',
         this._vertexPositions = undefined;
         this._vector = undefined;
         this._viewFrom = undefined;
+        this._description = undefined;
 
         this._propertyChanged = new Event();
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
-                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
+                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -226,7 +227,13 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {DynamicVector}
          */
-        vector : createDynamicPropertyDescriptor('vector', '_vector')
+        vector : createDynamicPropertyDescriptor('vector', '_vector'),
+        /**
+         * Gets or sets the description.
+         * @memberof DynamicObject.prototype
+         * @type {Property}
+         */
+        description : createDynamicPropertyDescriptor('description', '_description')
     });
 
     /**
