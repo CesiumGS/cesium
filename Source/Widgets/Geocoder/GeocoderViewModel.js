@@ -11,6 +11,7 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix3',
         '../../Core/Matrix4',
+        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../createCommand',
@@ -28,6 +29,7 @@ define([
         jsonp,
         Matrix3,
         Matrix4,
+        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         createCommand,
@@ -269,12 +271,16 @@ define([
 
             var description = {
                 destination : position,
-                duration : viewModel._flightDuration
+                duration : viewModel._flightDuration,
+                onComplete : function() {
+                    var screenSpaceCameraController = viewModel._scene.getScreenSpaceCameraController();
+                    screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
+                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
+                }
             };
 
             if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
                 var transform = Matrix4.clone(camera.transform, scratchTransform);
-                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
 
                 if (viewModel._scene.mode !== SceneMode.SCENE3D) {
                     Matrix4.clone(transform2D, camera.transform);
