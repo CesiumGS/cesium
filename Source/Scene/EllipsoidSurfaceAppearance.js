@@ -37,15 +37,15 @@ define([
      * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
      *
      * @example
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new PolygonGeometry({
-     *       vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.PolygonGeometry({
+     *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
      *       // ...
      *     })
      *   }),
-     *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType('Stripe')
+     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
+     *     material : Cesium.Material.fromType('Stripe')
      *   })
      * });
      *

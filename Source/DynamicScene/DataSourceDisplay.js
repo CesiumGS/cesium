@@ -59,12 +59,14 @@ define([
      * @exception {DeveloperError} dataSourceCollection is required.
      */
     var DataSourceDisplay = function(scene, dataSourceCollection, visualizerTypes) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+        //>>includeEnd('debug');
 
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
@@ -159,9 +161,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DataSourceDisplay.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
 
         var result = true;
         var timeVaryingSources = this._timeVaryingSources;

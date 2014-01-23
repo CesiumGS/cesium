@@ -185,11 +185,11 @@ define([
      * @example
      * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0)
      * var v = [1.0, 2.0, 3.0, 4.0];
-     * var p = Cartesian4.fromArray(v);
+     * var p = Cesium.Cartesian4.fromArray(v);
      *
      * // Create a Cartesian4 with (1.0, 2.0, 3.0, 4.0) using an offset into an array
      * var v2 = [0.0, 0.0, 1.0, 2.0, 3.0, 4.0];
-     * var p2 = Cartesian4.fromArray(v2, 2);
+     * var p2 = Cesium.Cartesian4.fromArray(v2, 2);
      */
     Cartesian4.fromArray = Cartesian4.unpack;
 
@@ -346,7 +346,7 @@ define([
      *
      * @example
      * // Returns 1.0
-     * var d = Cartesian4.distance(new Cartesian4(1.0, 0.0, 0.0, 0.0), new Cartesian4(2.0, 0.0, 0.0, 0.0));
+     * var d = Cesium.Cartesian4.distance(new Cesium.Cartesian4(1.0, 0.0, 0.0, 0.0), new Cesium.Cartesian4(2.0, 0.0, 0.0, 0.0));
      */
     Cartesian4.distance = function(left, right) {
         //>>includeStart('debug', pragmas.debug);

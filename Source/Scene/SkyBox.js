@@ -50,7 +50,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
      * @example
-     * scene.skyBox = new SkyBox({
+     * scene.skyBox = new Cesium.SkyBox({
      *   sources : {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
@@ -115,6 +115,7 @@ define([
             this._sources = this.sources;
             var sources = this.sources;
 
+            //>>includeStart('debug', pragmas.debug);
             if ((!defined(sources.positiveX)) ||
                 (!defined(sources.negativeX)) ||
                 (!defined(sources.positiveY)) ||
@@ -131,6 +132,7 @@ define([
                 (typeof sources.positiveX !== typeof sources.negativeZ)) {
                 throw new DeveloperError('sources properties must all be the same type.');
             }
+            //>>includeEnd('debug');
 
             if (typeof sources.positiveX === 'string') {
                 // Given urls for cube-map images.  Load them.

@@ -50,6 +50,7 @@ define(['../../Core/BoundingSphere',
      */
 
     var viewerDynamicObjectMixin = function(viewer) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -59,6 +60,7 @@ define(['../../Core/BoundingSphere',
         if (viewer.hasOwnProperty('objectTracked')) {
             throw new DeveloperError('objectTracked is already defined by another mixin.');
         }
+        //>>includeEnd('debug');
 
         var eventHelper = new EventHelper();
         var objectTracked = new Event();

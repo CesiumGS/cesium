@@ -108,16 +108,15 @@ define([
      * @see Animation
      */
     var AnimationViewModel = function(clockViewModel) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
         }
+        //>>includeEnd('debug');
 
         var that = this;
-
         this._clockViewModel = clockViewModel;
-
         this._allShuttleRingTicks = [];
-
         this._dateFormatter = AnimationViewModel.defaultDateFormatter;
         this._timeFormatter = AnimationViewModel.defaultTimeFormatter;
 
@@ -427,9 +426,11 @@ define([
      * @exception {DeveloperError} positiveTicks is required.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positiveTicks)) {
             throw new DeveloperError('positiveTicks is required.');
         }
+        //>>includeEnd('debug');
 
         var i;
         var len;
@@ -557,9 +558,12 @@ define([
                 return this._dateFormatter;
             },
             set : function(dateFormatter) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof dateFormatter !== 'function') {
                     throw new DeveloperError('dateFormatter must be a function');
                 }
+                //>>includeEnd('debug');
+
                 this._dateFormatter = dateFormatter;
             }
         },
@@ -578,9 +582,12 @@ define([
                 return this._timeFormatter;
             },
             set : function(timeFormatter) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof timeFormatter !== 'function') {
                     throw new DeveloperError('timeFormatter must be a function');
                 }
+                //>>includeEnd('debug');
+
                 this._timeFormatter = timeFormatter;
             }
         }

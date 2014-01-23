@@ -116,7 +116,7 @@ defineSuite([
     it('create throws with undefined transitioner', function() {
         expect(function() {
             return new SceneModePickerViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

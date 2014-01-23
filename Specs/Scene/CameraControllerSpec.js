@@ -91,7 +91,7 @@ defineSuite([
     it('constructor throws without a camera', function() {
         expect(function() {
             return new CameraController();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws in 2D mode without an orthographic frustum', function() {
@@ -103,7 +103,7 @@ defineSuite([
     it('move throws without an axis', function() {
         expect(function() {
             expect(controller.move());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('moves', function() {
@@ -195,7 +195,7 @@ defineSuite([
     it('look throws without an axis', function() {
         expect(function() {
             expect(controller.look());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('looks', function() {
@@ -257,7 +257,7 @@ defineSuite([
     it('rotate throws without an axis', function() {
         expect(function() {
             expect(controller.rotate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rotates up', function() {
@@ -463,7 +463,7 @@ defineSuite([
         camera.frustum = new OrthographicFrustum();
         expect(function () {
             controller.zoomIn(zoomAmount);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lookAt', function() {
@@ -489,7 +489,7 @@ defineSuite([
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(undefined, target, up);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lookAt throws with no target parameter', function() {
@@ -498,7 +498,7 @@ defineSuite([
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(eye, undefined, up);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lookAt throws with no up parameter', function() {
@@ -507,7 +507,7 @@ defineSuite([
         var tempCamera = camera.clone();
         expect(function() {
             tempCamera.controller.lookAt(eye, target, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lookAt throws in 2D mode', function() {
@@ -524,7 +524,7 @@ defineSuite([
 
         expect(function() {
             controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lookAt throws when morphing', function() {
@@ -532,13 +532,13 @@ defineSuite([
 
         expect(function() {
             controller.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('viewExtent throws without extent', function() {
         expect(function () {
             controller.viewExtent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('views extent in 3D', function() {
@@ -648,7 +648,7 @@ defineSuite([
     it('getExtentCameraCoordinates throws without extent', function() {
         expect(function () {
             controller.getExtentCameraCoordinates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getExtentCameraCoordinates extent in 3D', function() {
@@ -762,7 +762,7 @@ defineSuite([
     it('pick ellipsoid thows without a position', function() {
         expect(function() {
             controller.pickEllipsoid();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pick ellipsoid', function() {
@@ -893,7 +893,7 @@ defineSuite([
     it('set position cartographic throws without a cartographic', function() {
         expect(function() {
             controller.setPositionCartographic();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('set position cartographic in 2D', function() {
@@ -992,7 +992,7 @@ defineSuite([
     it('set heading throws without angle', function() {
         expect(function() {
             controller.heading = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('set heading in 2D', function() {
@@ -1058,7 +1058,7 @@ defineSuite([
     it('set tilt throws without angle', function() {
         expect(function() {
             controller.tilt = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('set tilt in CV', function() {
@@ -1091,7 +1091,7 @@ defineSuite([
     it('get pick ray throws without a position', function() {
         expect(function () {
             controller.getPickRay();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get pick ray perspective', function() {
@@ -1155,7 +1155,7 @@ defineSuite([
     it('create animation throws without a duration', function() {
         expect(function() {
             controller.createCorrectPositionAnimation();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('does not animate in 3D', function() {

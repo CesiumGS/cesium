@@ -34,7 +34,7 @@ defineSuite([
         function createOccluderWithoutEllipsoid() {
             return new EllipsoidalOccluder(undefined, new Cartesian3(1.0, 2.0, 3.0));
         }
-        expect(createOccluderWithoutEllipsoid).toThrow();
+        expect(createOccluderWithoutEllipsoid).toThrowDeveloperError();
     });
 
     it('isPointVisible example works as claimed', function() {
@@ -99,11 +99,11 @@ defineSuite([
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPoint(undefined, positions);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('returns point on ellipsoid when single position is on center line', function() {
@@ -212,15 +212,15 @@ defineSuite([
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(undefined, vertices, 7);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, undefined, 7);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('produces same answers as computeHorizonCullingPoint', function() {

@@ -28,15 +28,15 @@ defineSuite([
     it('constructor throws without points', function() {
         expect(function() {
             return new CatmullRomSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('constructor throws when control points length is less than 3', function() {
+    it('constructor throws when control points length is less than 2', function() {
         expect(function() {
             return new CatmullRomSpline({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without times', function() {
@@ -44,7 +44,7 @@ defineSuite([
             return new CatmullRomSpline({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -53,7 +53,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('sets start and end tangents', function() {

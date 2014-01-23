@@ -35,7 +35,7 @@ define([
      * @exception {DeveloperError} url is required.
      *
      * @example
-     * loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
+     * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
      *     //Do something with the JSON object
      * }, function() {
      *     // an error occurred
@@ -46,9 +46,11 @@ define([
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadJson = function loadJson(url, headers) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(headers)) {
             headers = defaultHeaders;

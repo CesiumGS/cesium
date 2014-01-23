@@ -55,12 +55,12 @@ define([
      *
      * @example
      * // create cylinder geometry
-     * var cylinder = new CylinderOutlineGeometry({
+     * var cylinder = new Cesium.CylinderOutlineGeometry({
      *     length: 200000,
      *     topRadius: 80000,
      *     bottomRadius: 200000,
      * });
-     * var geometry = CylinderOutlineGeometry.createGeometry(cylinder);
+     * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
     var CylinderOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -71,25 +71,23 @@ define([
         var slices = defaultValue(options.slices, 128);
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0.');
         }
-
         if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0.');
         }
-
         if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
-
         if (bottomRadius === 0 && topRadius === 0) {
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
-
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
-        }
+       }
+        //>>includeEnd('debug');
 
         this._length = length;
         this._topRadius = topRadius;

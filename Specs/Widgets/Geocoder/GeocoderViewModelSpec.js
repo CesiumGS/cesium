@@ -51,7 +51,7 @@ defineSuite([
 
         expect(function() {
             viewModel.flightDuration = -123;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws is searchText is not a string', function() {
@@ -60,7 +60,7 @@ defineSuite([
         });
         expect(function() {
             viewModel.searchText = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('moves camera when search command invoked', function() {
@@ -83,6 +83,6 @@ defineSuite([
     it('constructor throws without scene', function() {
         expect(function() {
             return new GeocoderViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

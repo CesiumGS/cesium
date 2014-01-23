@@ -77,7 +77,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, viewportQuad);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered with without a material', function() {
@@ -85,7 +85,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, viewportQuad);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('does not render when show is false', function() {

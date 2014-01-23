@@ -88,12 +88,14 @@ define([
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(action)) {
             throw new DeveloperError('action is required.');
         }
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         this._mouseEvents[key] = action;
@@ -114,9 +116,11 @@ define([
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         return this._mouseEvents[key];
@@ -137,9 +141,11 @@ define([
      * @see ScreenSpaceEventHandler#setInputAction
      */
     ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         delete this._mouseEvents[key];

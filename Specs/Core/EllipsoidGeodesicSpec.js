@@ -16,28 +16,28 @@ defineSuite([
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
             return elGeo.interpolateUsingSurfaceDistance(0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without end', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic(new Cartographic(Math.PI, Math.PI));
             return elGeo.interpolateUsingSurfaceDistance(0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without unique position', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic(new Cartographic(Math.PI, Math.PI), new Cartographic(0, Math.PI));
             return elGeo.interpolateUsingSurfaceDistance(0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setEndPoints throws without start', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
             elGeo.setEndPoints();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setEndPoints throws without end', function() {
@@ -46,28 +46,28 @@ defineSuite([
             var elGeo = new EllipsoidGeodesic();
             elGeo.setEndPoints(start);
             return elGeo.interpolateUsingSurfaceDistance(0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getSurfaceDistance throws if start or end never defined', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
             return elGeo.getSurfaceDistance();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getStartHeading throws if start or end never defined', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
             return elGeo.getStartHeading();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getEndHeading throws if start or end never defined', function() {
         expect(function() {
             var elGeo = new EllipsoidGeodesic();
             return elGeo.getEndHeading();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('works with two points', function() {

@@ -513,7 +513,7 @@ defineSuite([
                 colorTextures : 'not undefined',
                 colorRenderbuffers : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with depth texture and depth renderbuffer attachments', function() {
@@ -522,7 +522,7 @@ defineSuite([
                 depthTexture : 'not undefined',
                 depthRenderbuffer : 'not undefined'
             });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with depth-stencil texture and depth-stencil renderbuffer attachments', function() {
@@ -531,7 +531,7 @@ defineSuite([
                 depthStencilTexture : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with depth and depth-stencil attachments', function() {
@@ -540,7 +540,7 @@ defineSuite([
                 depthRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with stencil and depth-stencil attachments', function() {
@@ -549,7 +549,7 @@ defineSuite([
                 stencilRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with depth and stencil attachments', function() {
@@ -558,7 +558,7 @@ defineSuite([
                 depthRenderbuffer : 'not undefined',
                 stencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with a color texture with a non-color pixel format', function() {
@@ -582,7 +582,7 @@ defineSuite([
                   height : 1
               })
           });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with a depth-stencil texture without a DEPTH_STENCIL pixel format', function() {
@@ -593,7 +593,7 @@ defineSuite([
                   height : 1
               })
           });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when the depth test is enabled without an appropriate attachment', function() {
@@ -681,6 +681,6 @@ defineSuite([
 
         expect(function() {
             f.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

@@ -39,7 +39,7 @@ defineSuite([
     it('throws with no url', function() {
         expect(function() {
             loadArrayBuffer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates and sends request without any custom headers', function() {

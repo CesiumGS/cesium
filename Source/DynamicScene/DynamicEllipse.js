@@ -98,9 +98,12 @@ define(['../Core/Cartesian3',
      * @exception {DeveloperError} source is required.
      */
     DynamicEllipse.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.rotation = defaultValue(this.rotation, source.rotation);
         this.semiMajorAxis = defaultValue(this.semiMajorAxis, source.semiMajorAxis);
         this.semiMinorAxis = defaultValue(this.semiMinorAxis, source.semiMinorAxis);

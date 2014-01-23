@@ -232,41 +232,41 @@ defineSuite([
         var right = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.union(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static union throws with no right parameter', function() {
         var left = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.union(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static expand throws with no rectangle parameter', function() {
         var point = new Cartesian2();
         expect(function() {
             BoundingRectangle.expand(undefined, point);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static expand throws with no point parameter', function() {
         var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.expand(rectangle, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static intersect throws with no left parameter', function() {
         var right = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.intersect(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static intersect  throws with no right parameter', function() {
         var left = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.intersect(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

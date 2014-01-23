@@ -86,8 +86,8 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
-         * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
@@ -142,10 +142,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Material.fromType(Material.StripeType);
+         * sensor.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -196,9 +196,11 @@ define([
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
     RectangularPyramidSensorVolume.prototype.update = function(context, frameState, commandList) {
+        //>>includeStart('debug', pragmas.debug)
         if ((this.xHalfAngle > CesiumMath.PI_OVER_TWO) || (this.yHalfAngle > CesiumMath.PI_OVER_TWO)) {
             throw new DeveloperError('this.xHalfAngle and this.yHalfAngle must each be less than or equal to 90 degrees.');
         }
+        //>>includeEnd('debug');
 
         var s = this._customSensor;
 

@@ -34,21 +34,20 @@ define([
      * @see ImageryProvider
      */
     var ImageryProviderViewModel = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description.name)) {
             throw new DeveloperError('description.name is required.');
         }
-
         if (!defined(description.tooltip)) {
             throw new DeveloperError('description.tooltip is required.');
         }
-
         if (!defined(description.iconUrl)) {
             throw new DeveloperError('description.iconUrl is required.');
         }
-
         if (typeof description.creationFunction !== 'function') {
             throw new DeveloperError('description.creationFunction is required.');
         }
+        //>>includeEnd('debug');
 
         var creationCommand = description.creationFunction;
         if (!defined(creationCommand.canExecute)) {
