@@ -107,34 +107,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('adds objectTracked event', function() {
-        viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.hasOwnProperty('objectTracked')).toEqual(true);
-    });
-
-    it('objectTracked is raised by trackObject', function() {
-        viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-
-        var spyListener = jasmine.createSpy('listener');
-        viewer.objectTracked.addEventListener(spyListener);
-
-        viewer.trackedObject = dynamicObject;
-
-        waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, dynamicObject);
-
-            viewer.objectTracked.removeEventListener(spyListener);
-        });
-    });
     it('throws if selectedObject property already added by another mixin.', function() {
         var viewer = new Viewer(container);
         viewer.selectedObject = true;
