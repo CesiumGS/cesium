@@ -129,7 +129,13 @@ define([
          */
         this.triangleRotation = 45;
 
-        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation', '_showSelection', '_titleText', '_descriptionText']);
+        /**
+         * Gets or sets the maximum height of the info box in pixels.  This property is observable.
+         * @type {Number}
+         */
+        this.maxHeight = 500;
+
+        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation', '_showSelection', '_titleText', '_descriptionText', 'maxHeight']);
 
         /**
          * Determines the visibility of the selection indicator.
@@ -182,6 +188,16 @@ define([
                 }
             }
         });
+
+        /**
+         * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
+         * @param {Number} offset The offset in pixels.
+         * @memberof SelectionIndicatorViewModel.prototype
+         * @returns {String}
+         */
+        SelectionIndicatorViewModel.prototype.maxHeightOffset = function(offset) {
+            return toPx(this.maxHeight - offset);
+        };
 
         knockout.defineProperty(this, '_transform0', {
             get : function() {

@@ -74,11 +74,13 @@
 .cesium-selection-info-title {
     display: block;
     height: 20px;
-    padding: 5px 30px;
+    padding: 5px 30px 5px 8px;
     background: rgba(84, 84, 84, 0.8);
     border-top-left-radius: 7px;
     text-align: center;
-    letter-spacing: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 button.cesium-selection-info-close {
@@ -114,6 +116,7 @@ button.cesium-selection-info-close:active {
 
 .cesium-selection-info-body {
     padding: 4px 10px;
+    margin-right: 4px;
     overflow: auto;
 }
 
