@@ -56,13 +56,13 @@ defineSuite([
             CameraFlightPath.createAnimation(undefined, {
                 destination : new Cartesian3(1e9, 1e9, 1e9)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws without a destination', function() {
         expect(function() {
             CameraFlightPath.createAnimation(scene, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws with just up and no direction', function() {
@@ -71,7 +71,7 @@ defineSuite([
                 destination : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Z
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws with just direction and no up', function() {
@@ -80,7 +80,7 @@ defineSuite([
                 destination : Cartesian3.ZERO,
                 direction : Cartesian3.UNIT_X
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with cartographic throws without a scene', function() {
@@ -88,13 +88,13 @@ defineSuite([
             CameraFlightPath.createAnimationCartographic(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with cartographic throws without a destination', function() {
         expect(function() {
             CameraFlightPath.createAnimationCartographic(scene, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with extent throws without a scene', function() {
@@ -108,7 +108,7 @@ defineSuite([
     it('create animation with extent throws without a destination', function() {
         expect(function() {
             CameraFlightPath.createAnimationExtent(scene, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates an animation', function() {
@@ -196,7 +196,7 @@ defineSuite([
             CameraFlightPath.createAnimation(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createAnimationCartographic throws if mode is morphing', function() {
@@ -206,7 +206,7 @@ defineSuite([
             CameraFlightPath.createAnimationCartographic(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createAnimationExtent throws if mode is morphing', function() {
@@ -216,7 +216,7 @@ defineSuite([
             CameraFlightPath.createAnimationExtent(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates an animation in 3d', function() {

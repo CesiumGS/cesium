@@ -288,7 +288,7 @@ defineSuite([
     it('constructor throws without type parameter.', function() {
         expect(function() {
             return new SampledProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works when interpolators differ', function() {

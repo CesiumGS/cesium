@@ -167,11 +167,14 @@ define([
         var i;
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
+
+        //>>includeStart('debug', pragmas.debug);
         for (i = 1; i < length; ++i) {
             if (instances[i].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
+        //>>includeEnd('debug');
 
         // Unify to world coordinates before combining.
         transformToWorldCoordinates(instances, modelMatrix, allow3DOnly);

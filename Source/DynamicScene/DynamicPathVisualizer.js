@@ -405,9 +405,12 @@ define([
      *
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
         this._scene = scene;
         this._updaters = {};
         this._dynamicObjectCollection = undefined;
@@ -460,9 +463,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DynamicPathVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is requied.');
         }
+        //>>includeEnd('debug');
 
         if (defined(this._dynamicObjectCollection)) {
             var updaters = this._updaters;
@@ -574,7 +579,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPathVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 

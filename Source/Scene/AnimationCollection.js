@@ -33,9 +33,11 @@ define([
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.duration)) {
             throw new DeveloperError('duration is required.');
         }
+        //>>includeEnd('debug');
 
         if (options.duration > 0) {
             var delayDuration = defaultValue(options.delayDuration, 0);
@@ -73,9 +75,11 @@ define([
      * @exception {DeveloperError} material has no properties with alpha components.
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
+        //>>includeEnd('debug');
 
         var properties = [];
 
@@ -87,9 +91,11 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (properties.length === 0) {
             throw new DeveloperError('material has no properties with alpha components.');
         }
+        //>>includeEnd('debug');
 
         // Default to fade in
         start = defaultValue(start, 0.0);
@@ -132,17 +138,17 @@ define([
      * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
-
         if (!defined(property)) {
             throw new DeveloperError('property is required.');
         }
-
         if (!defined(object[property])) {
             throw new DeveloperError('object must have the specified property.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
@@ -177,13 +183,14 @@ define([
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
-
         if (!defined(material.uniforms.offset)) {
             throw new DeveloperError('material must have an offset property.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);

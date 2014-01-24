@@ -265,19 +265,24 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
     CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
+        var hasIndex = defined(index);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(collection)) {
             throw new DeveloperError('collection is required.');
         }
-
-        if (!defined(index)) {
-            index = this._collections.length;
-            this._collections.push(collection);
-        } else {
+        if (hasIndex) {
             if (index < 0) {
                 throw new DeveloperError('index must be greater than or equal to zero.');
             } else if (index > this._collections.length) {
                 throw new DeveloperError('index must be less than or equal to the number of collections.');
             }
+        }
+        //>>includeEnd('debug');
+
+        if (!hasIndex) {
+            index = this._collections.length;
+            this._collections.push(collection);
+        } else {
             this._collections.splice(index, 0, collection);
         }
 
@@ -343,9 +348,11 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} index is required.
      */
     CompositeDynamicObjectCollection.prototype.getCollection = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.', 'index');
         }
+        //>>includeEnd('debug');
 
         return this._collections[index];
     };
@@ -359,14 +366,19 @@ define(['../Core/createGuid',
     };
 
     function getCollectionIndex(collections, collection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(collection)) {
             throw new DeveloperError('collection is required.');
         }
+        //>>includeEnd('debug');
 
         var index = collections.indexOf(collection);
+
+        //>>includeStart('debug', pragmas.debug);
         if (index === -1) {
             throw new DeveloperError('collection is not in this composite.');
         }
+        //>>includeEnd('debug');
 
         return index;
     }

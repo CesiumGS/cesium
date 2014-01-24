@@ -96,11 +96,9 @@ define([
         if (!defined(points) || !defined(times)) {
             throw new DeveloperError('points and times are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }

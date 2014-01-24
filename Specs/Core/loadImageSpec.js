@@ -47,7 +47,7 @@ defineSuite([
     it('throws with if url is missing', function() {
         expect(function() {
             loadImage();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('sets the crossOrigin property for cross-origin images', function() {

@@ -43,6 +43,6 @@ defineSuite([
         var viewModel = new FullscreenButtonViewModel();
         expect(function() {
             viewModel.fullscreenElement = {};
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

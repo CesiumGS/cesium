@@ -1155,6 +1155,8 @@ define([
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
+        dynamicObjectCollection.suspendEvents();
+
         CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
 
         var documentObject = dataSource._document;
@@ -1204,6 +1206,7 @@ define([
             raiseChangedEvent = true;
         }
 
+        dynamicObjectCollection.resumeEvents();
         if (raiseChangedEvent) {
             dataSource._changed.raiseEvent(dataSource);
         }
@@ -1325,9 +1328,11 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.process = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
+        //>>includeEnd('debug');
 
         loadCzml(this, czml, source);
     };
@@ -1341,9 +1346,11 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.load = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
+        //>>includeEnd('debug');
 
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
@@ -1360,9 +1367,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {
@@ -1383,9 +1392,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {

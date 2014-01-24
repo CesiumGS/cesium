@@ -147,6 +147,6 @@ defineSuite([
         var target = new DynamicCone();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

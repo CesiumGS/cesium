@@ -151,7 +151,7 @@ define([
      *
      * @example
      * // Create a G<sup>1</sup> continuous Hermite spline
-     * var spline = new HermiteSpline({
+     * var spline = new Cesium.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
      *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
@@ -247,8 +247,6 @@ define([
      * @exception {DeveloperError} times, points and tangents must have the same length.
      *
      * @example
-     * // Create a Catmull-Rom spline above the earth from Philadelphia to Los Angeles.
-     * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
      * var points = [
      *     new Cartesian3(1235398.0, -4810983.0, 4146266.0),
      *     new Cartesian3(1372574.0, -5345182.0, 4606657.0),
@@ -281,11 +279,9 @@ define([
         if (!defined(points) || !defined(times) || !defined(tangents)) {
             throw new DeveloperError('points, times and tangents are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length || times.length !== tangents.length) {
             throw new DeveloperError('times, points and tangents must have the same length.');
         }
@@ -340,7 +336,6 @@ define([
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }

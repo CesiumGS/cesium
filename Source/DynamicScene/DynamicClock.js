@@ -139,9 +139,12 @@ define(['../Core/Clock',
      * @exception {DeveloperError} source is required.
      */
     DynamicClock.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.startTime = defaultValue(this.startTime, source.startTime);
         this.stopTime = defaultValue(this.stopTime, source.stopTime);
         this.currentTime = defaultValue(this.currentTime, source.currentTime);

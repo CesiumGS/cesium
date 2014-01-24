@@ -60,6 +60,6 @@ defineSuite([
         var target = new DynamicEllipse();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

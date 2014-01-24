@@ -103,7 +103,7 @@ define([
      *
      * @example
      * // Create scene without anisotropic texture filtering
-     * var scene = new Scene(canvas, {
+     * var scene = new Cesium.Scene(canvas, {
      *   allowTextureFilterAnisotropic : false
      * });
      */
@@ -255,7 +255,7 @@ define([
          * };
          *
          * // Execute only the billboard's commands.  That is, only draw the billboard.
-         * var billboards = new BillboardCollection();
+         * var billboards = new Cesium.BillboardCollection();
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
@@ -905,6 +905,8 @@ define([
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
+    var scratchOrigin = new Cartesian3();
+    var scratchDirection = new Cartesian3();
     var scratchBufferDimensions = new Cartesian2();
     var scratchPixelSize = new Cartesian2();
 
@@ -921,10 +923,13 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
-        var position = camera.position;
-        position = new Cartesian3(position.z, position.x, position.y);
-        position.y += x;
-        position.z += y;
+        var origin = Cartesian3.clone(camera.position, scratchOrigin);
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+
+        Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
 
         scratchBufferDimensions.x = drawingBufferWidth;
         scratchBufferDimensions.y = drawingBufferHeight;
@@ -939,7 +944,7 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
+        return ortho.computeCullingVolume(origin, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
@@ -1010,9 +1015,11 @@ define([
      *
      */
     Scene.prototype.pick = function(windowPosition) {
+        //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var context = this._context;
         var us = this.getUniformState();
@@ -1060,15 +1067,18 @@ define([
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
-     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var pickedObjects = [];
 

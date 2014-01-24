@@ -29,6 +29,7 @@ define([
      * @exception {DeveloperError} c is a required number.
      */
     QuadraticRealPolynomial.discriminant = function(a, b, c) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -38,6 +39,7 @@ define([
         if (typeof c !== 'number') {
             throw new DeveloperError('c is a required number.');
         }
+        //>>includeEnd('debug');
 
         var discriminant = b * b - 4.0 * a * c;
         return discriminant;
@@ -67,6 +69,7 @@ define([
      * @exception {DeveloperError} c is a required number.
      */
     QuadraticRealPolynomial.realRoots = function(a, b, c) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -76,6 +79,7 @@ define([
         if (typeof c !== 'number') {
             throw new DeveloperError('c is a required number.');
         }
+        //>>includeEnd('debug');
 
         var ratio;
         if (a === 0.0) {

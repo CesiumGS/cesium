@@ -86,12 +86,14 @@ define([
      * @exception {DeveloperError} referenceFrame is required.
      */
     CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         if (!defined(referenceFrame)) {
             throw new DeveloperError('referenceFrame is required.');
         }
+        //>>includeEnd('debug');
 
         var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {

@@ -43,9 +43,12 @@ define([
      * @exception {DeveloperError} dataSource is required.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dataSource)) {
             throw new DeveloperError('dataSource is required.');
         }
+        //>>includeEnd('debug');
+
         this._dataSources.push(dataSource);
         this.dataSourceAdded.raiseEvent(this, dataSource);
     };
@@ -128,9 +131,11 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     DataSourceCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._dataSources[index];
     };

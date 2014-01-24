@@ -26,7 +26,7 @@ defineSuite([
     it('constructor throws without points, times or tangents', function() {
         expect(function() {
             return new HermiteSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 2', function() {
@@ -34,7 +34,14 @@ defineSuite([
             return new HermiteSpline({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
+    });
+
+        expect(function() {
+            return new HermiteSpline({
+                points : points
+            });
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -42,10 +49,6 @@ defineSuite([
             return new HermiteSpline({
                 points : points,
                 times : [0.0, 1.0]
-            });
-        }).toThrow();
-    });
-
     it('constructor throws when inTangents or outTangents length is not equal to points.length - 1', function() {
         expect(function() {
             return new HermiteSpline({
@@ -54,7 +57,7 @@ defineSuite([
                 inTangents : [Cartesian3.ZERO],
                 outTangents : [Cartesian3.UNIT_X]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     // returns a function for a hermite curve between points p and q

@@ -13,7 +13,7 @@ defineSuite([
     it('contructor throws', function() {
         expect(function() {
             return new Spline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws', function() {
@@ -34,7 +34,7 @@ defineSuite([
 
         expect(function() {
             spline.findTimeInterval();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval throws when time is out of range', function() {
@@ -45,7 +45,7 @@ defineSuite([
 
         expect(function() {
             spline.findTimeInterval(4.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval', function() {

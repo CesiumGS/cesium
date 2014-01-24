@@ -114,9 +114,11 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         flightDuration = defaultValue(flightDuration, 1500);
@@ -205,9 +207,12 @@ define([
                 return this._flightDuration;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
+                //>>includeEnd('debug');
+
                 this._flightDuration = value;
             }
         }
