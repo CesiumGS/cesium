@@ -176,6 +176,12 @@ define([
         translucentClearCommand.owner = this;
         this._translucentClearCommand = translucentClearCommand;
 
+        var depthStencilClearCommand = new ClearCommand();
+        depthStencilClearCommand.depth = 1.0;
+        depthStencilClearCommand.stencil = 1.0;
+        depthStencilClearCommand.owner = this;
+        this._depthStencilClearCommand = depthStencilClearCommand;
+
         /**
          * The {@link SkyBox} used to draw the stars.
          *
@@ -892,8 +898,12 @@ define([
             }
         }
 
-        var clearOpaque = scene._opaqueClearCommand;
-        var clearTranslucent = scene._translucentClearCommand;
+        passState.framebuffer = scene._opaqueFBO;
+        scene._opaqueClearCommand.execute(context, passState);
+        passState.framebuffer = scene._translucentFBO;
+        scene._translucentClearCommand.execute(context, passState);
+
+        var clearDepthStencil = scene._depthStencilClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -906,7 +916,7 @@ define([
             us.updateFrustum(frustum);
 
             passState.framebuffer = scene._opaqueFBO;
-            clearOpaque.execute(context, passState);
+            clearDepthStencil.execute(context, passState);
 
             var j;
             var commands = frustumCommands.opaqueCommands;
@@ -916,7 +926,6 @@ define([
             }
 
             passState.framebuffer = scene._translucentFBO;
-            clearTranslucent.execute(context, passState);
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
@@ -933,10 +942,10 @@ define([
                 command.renderState = renderState;
                 command.shaderProgram = shaderProgram;
             }
-
-            passState.framebuffer = undefined;
-            scene._compositeCommand.execute(context, passState);
         }
+
+        passState.framebuffer = undefined;
+        scene._compositeCommand.execute(context, passState);
     }
 
     function executeOverlayCommands(scene, passState) {
