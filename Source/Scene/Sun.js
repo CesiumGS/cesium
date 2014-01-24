@@ -188,7 +188,7 @@ define([
             return undefined;
         }
 
-        if (!frameState.passes.color) {
+        if (!frameState.passes.render) {
             return undefined;
         }
 
@@ -214,7 +214,7 @@ define([
             });
 
             var fbo = context.createFramebuffer({
-                colorTexture : this._texture
+                colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;
 
