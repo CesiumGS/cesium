@@ -19,8 +19,5 @@ void main()
     else
     {
         gl_FragColor = transparent.a * transparent + (1.0 - transparent.a) * opaque;
-        
-        //gl_FragColor = transparent.a * transparent + opaque;
-        //gl_FragColor = vec4(transparent.a * transparent.rgb + opaque.rgb, 1.0);
     }
 }

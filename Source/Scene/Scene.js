@@ -768,8 +768,6 @@ define([
         functionDestinationRgb : BlendFunction.ONE,
         functionSourceAlpha : BlendFunction.ZERO,
         functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-        //functionSourceAlpha : BlendFunction.ONE,
-        //functionDestinationAlpha : BlendFunction.ONE
     };
 
     function getTranslucentRenderState(scene, renderState) {
@@ -781,7 +779,6 @@ define([
             var blending = renderState.blending;
 
             renderState.depthMask = false;
-            //renderState.blending = BlendingState.ADDITIVE_BLEND;
             renderState.blending = translucentBlend;
 
             translucentState = scene._context.createRenderState(renderState);
