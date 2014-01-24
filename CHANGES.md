@@ -16,6 +16,7 @@ Beta Releases
 * Fixed picking in 2D with rotated map. [#1337](https://github.com/AnalyticalGraphicsInc/cesium/issues/1337)
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
+* Upgraded Tween.js to version r12.
 
 ### b24 - 2014-01-06
 
