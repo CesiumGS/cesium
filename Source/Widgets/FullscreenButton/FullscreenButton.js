@@ -35,9 +35,12 @@ define([
      * @see Fullscreen
      */
     var FullscreenButton = function(container, fullscreenElement) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
+        //>>includeEnd('debug');
+
 
         container = getElement(container);
 

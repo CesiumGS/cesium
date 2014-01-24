@@ -99,12 +99,12 @@ defineSuite([
     it('static toString throws without cartographic parameter', function() {
         expect(function() {
             Cartographic.toString(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equalsEpsilon throws without numeric epsilon', function() {
         expect(function() {
             Cartographic.equalsEpsilon(new Cartographic(), new Cartographic(), {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

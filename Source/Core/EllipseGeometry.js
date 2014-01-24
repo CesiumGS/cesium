@@ -594,15 +594,15 @@ define([
      *
      * @example
      * // Create an ellipse.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var ellipse = new EllipseGeometry({
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var ellipse = new Cesium.EllipseGeometry({
      *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : CesiumMath.toRadians(60.0)
+     *   rotation : Cesium.Math.toRadians(60.0)
      * });
-     * var geometry = EllipseGeometry.createGeometry(ellipse);
+     * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -615,29 +615,26 @@ define([
         var extrudedHeight = options.extrudedHeight;
         var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {
             throw new DeveloperError('center is required.');
         }
-
         if (!defined(semiMajorAxis)) {
             throw new DeveloperError('semiMajorAxis is required.');
         }
-
         if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
-
         if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
-
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
-
         if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;

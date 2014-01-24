@@ -62,7 +62,7 @@ defineSuite([
     });
 
     it('constructs with a material', function() {
-        var material = Material.fromType(Material.ErosionType);
+        var material = Material.fromType(Material.StripeType);
         var quad = new ViewportQuad(undefined, material);
         expect(quad.material.type).toEqual(material.type);
     });
@@ -77,7 +77,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, viewportQuad);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered with without a material', function() {
@@ -85,7 +85,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, viewportQuad);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('does not render when show is false', function() {

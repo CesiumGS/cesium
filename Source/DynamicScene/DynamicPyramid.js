@@ -123,9 +123,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicPyramid.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.show = defaultValue(this.show, source.show);
         this.directions = defaultValue(this.directions, source.directions);
         this.radius = defaultValue(this.radius, source.radius);

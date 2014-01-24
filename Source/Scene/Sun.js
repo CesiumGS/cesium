@@ -214,7 +214,7 @@ define([
             });
 
             var fbo = context.createFramebuffer({
-                colorTexture : this._texture
+                colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;
 

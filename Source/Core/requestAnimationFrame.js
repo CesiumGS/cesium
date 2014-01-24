@@ -49,7 +49,7 @@ define(['./defined'], function(defined) {
      * // tick callback function is called for every animation frame.
      * function tick() {
      *   scene.render();
-     *   requestAnimationFrame(tick);
+     *   Cesium.requestAnimationFrame(tick);
      * }
      * tick();
      *

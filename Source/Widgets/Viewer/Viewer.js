@@ -171,14 +171,18 @@ define([
      * });
      */
     var Viewer = function(container, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
+
+        //>>includeStart('debug', pragmas.debug);
 
         //If using BaseLayerPicker, imageryProvider is an invalid option
         if (createBaseLayerPicker && defined(options.imageryProvider)) {
@@ -191,6 +195,7 @@ Either specify options.selectedImageryProviderViewModel instead or set options.b
             throw new DeveloperError('options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
 Either specify options.imageryProvider instead or set options.baseLayerPicker to true.');
         }
+        //>>includeEnd('debug')
 
         var viewerContainer = document.createElement('div');
         viewerContainer.className = 'cesium-viewer';
@@ -624,9 +629,12 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @see viewerDynamicObjectMixin
      */
     Viewer.prototype.extend = function(mixin, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(mixin)) {
             throw new DeveloperError('mixin is required.');
         }
+        //>>includeEnd('debug')
+
         mixin(this, options);
     };
 

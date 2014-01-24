@@ -49,7 +49,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
      *
      * @example
-     * scene.skyAtmosphere = new SkyAtmosphere();
+     * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
      * @see Scene.skyAtmosphere
      */

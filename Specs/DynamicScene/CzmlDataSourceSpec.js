@@ -251,28 +251,28 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.process(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with undefined CZML', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.load(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('processUrl throws with undefined Url', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.processUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.loadUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raises changed event when loading CZML', function() {
@@ -1652,5 +1652,31 @@ defineSuite([
 
         expect(object.arrayData).toBeDefined();
         expect(object.arrayData.getValue()).toEqual(arrayPacket.array);
+    });
+
+    it('CZML load suspends events.', function() {
+        var packets = [{
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }, {
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }];
+
+        var spy = jasmine.createSpy('changedEvent');
+
+        var dataSource = new CzmlDataSource();
+        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(spy);
+        dataSource.load(packets);
+
+        expect(spy.callCount).toEqual(1);
     });
 });

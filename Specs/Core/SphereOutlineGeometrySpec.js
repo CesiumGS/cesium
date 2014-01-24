@@ -10,7 +10,7 @@ defineSuite([
             return new SphereOutlineGeometry({
                 stackPartitions: 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if slicePartitions less than 0', function() {
@@ -18,7 +18,7 @@ defineSuite([
             return new SphereOutlineGeometry({
                 slicePartitions: -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if subdivisions less than 0', function() {
@@ -26,7 +26,7 @@ defineSuite([
             return new SphereOutlineGeometry({
                 subdivisions: -2
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

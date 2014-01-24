@@ -32,6 +32,6 @@ defineSuite([
             -0.022608671404182448, -0.41183090094261243, 0.91097977859342938);
 
         var mtx = axes.evaluate(date);
-        expect(mtx).toEqualEpsilon(expectedMatrix, CesiumMath.EPSILON16);
+        expect(mtx).toEqualEpsilon(expectedMatrix, CesiumMath.EPSILON13);
     });
 });

@@ -111,20 +111,20 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new PolylineCollection(undefined);
+     * var polylines = new Cesium.PolylineCollection(undefined);
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-75.10, 39.57),
-     *     new Cartographic2(-77.02, 38.53),
-     *     new Cartographic2(-80.50, 35.14),
-     *     new Cartographic2(-80.12, 25.46)]),
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53),
+     *     new Cesium.Cartographic2(-80.50, 35.14),
+     *     new Cesium.Cartographic2(-80.12, 25.46)]),
      *     width:2
      *     });
      *
      * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-73.10, 37.57),
-     *     new Cartographic2(-75.02, 36.53),
-     *     new Cartographic2(-78.50, 33.14),
-     *     new Cartographic2(-78.12, 23.46)]),
+     *     new Cesium.Cartographic2(-73.10, 37.57),
+     *     new Cesium.Cartographic2(-75.02, 36.53),
+     *     new Cesium.Cartographic2(-78.50, 33.14),
+     *     new Cesium.Cartographic2(-78.12, 23.46)]),
      *     width:4
      * });
      *
@@ -215,8 +215,8 @@ define([
      * var p = polylines.add({
      *   show : true,
      *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cartographic2(-75.10, 39.57),
-     *     new Cartographic2(-77.02, 38.53)]),
+     *     new Cesium.Cartographic2(-75.10, 39.57),
+     *     new Cesium.Cartographic2(-77.02, 38.53)]),
      *     width : 1
      * });
      *
@@ -347,9 +347,11 @@ define([
      * }
      */
     PolylineCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         removePolylines(this);
         return this._polylines[index];

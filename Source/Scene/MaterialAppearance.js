@@ -45,15 +45,15 @@ define([
      * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
      *
      * @example
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new WallGeometry({
-            materialSupport :  MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.WallGeometry({
+            materialSupport :  Cesium.MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
      *       // ...
      *     })
      *   }),
-     *   appearance : new MaterialAppearance({
-     *     material : Material.fromType('Color'),
+     *   appearance : new Cesium.MaterialAppearance({
+     *     material : Cesium.Material.fromType('Color'),
      *     faceForward : true
      *   })
      * });

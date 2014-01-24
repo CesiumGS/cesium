@@ -61,7 +61,7 @@ define([
      *
      * @example
      * // TileMapService tile provider
-     * var tms = new TileMapServiceImageryProvider({
+     * var tms = new Cesium.TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,
@@ -75,9 +75,11 @@ define([
     var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(description) {
         description = defaultValue(description, {});
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
+        //>>includeEnd('debug');
 
         var url = description.url;
 
@@ -87,10 +89,8 @@ define([
 
         this._url = url;
         this._ready = false;
-
         this._proxy = description.proxy;
         this._tileDiscardPolicy = description.tileDiscardPolicy;
-
         this._errorEvent = new Event();
 
         var credit = description.credit;
@@ -237,9 +237,12 @@ define([
      * @returns {Number} The width.
      */
     TileMapServiceImageryProvider.prototype.getTileWidth = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileWidth;
     };
 
@@ -252,9 +255,12 @@ define([
      * @returns {Number} The height.
      */
     TileMapServiceImageryProvider.prototype.getTileHeight = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileHeight;
     };
 
@@ -267,9 +273,12 @@ define([
      * @returns {Number} The minimum level.
      */
     TileMapServiceImageryProvider.prototype.getMinimumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._minimumLevel;
     };
 
@@ -282,9 +291,12 @@ define([
      * @returns {Number} The maximum level.
      */
     TileMapServiceImageryProvider.prototype.getMaximumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._maximumLevel;
     };
 
@@ -299,9 +311,12 @@ define([
      * @see GeographicTilingScheme
      */
     TileMapServiceImageryProvider.prototype.getTilingScheme = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tilingScheme;
     };
 
@@ -314,9 +329,12 @@ define([
      * @returns {Extent} The extent.
      */
     TileMapServiceImageryProvider.prototype.getExtent = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._extent;
     };
 
@@ -334,9 +352,12 @@ define([
      * @see NeverTileDiscardPolicy
      */
     TileMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileDiscardPolicy;
     };
 
@@ -380,9 +401,12 @@ define([
      *          Image or a Canvas DOM object.
      */
     TileMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };
