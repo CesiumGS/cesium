@@ -8,7 +8,7 @@
     height: 32px;
     margin: 0;
     padding: 0 32px 0 0;
-    border-radius: 5px;
+    border-radius: 0;
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     -webkit-transition: width ease-in-out 0.25s, background-color 0.2s ease-in-out;
@@ -37,7 +37,6 @@
 
 .cesium-geocoder-searchButton {
     background-color: #303336;
-    border-radius: 4px;
     display: inline-block;
     position: absolute;
     cursor: pointer;
@@ -49,14 +48,6 @@
     fill: #edffff;
 }
 
-.cesium-viewer-geocoderContainer:hover .cesium-geocoder-searchButton {
+.cesium-geocoder-searchButton:hover {
     background-color: #48b;
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
 }
-
-.cesium-viewer-geocoderContainer .cesium-geocoder-input:focus + .cesium-geocoder-goButton{
-    border-top-left-radius: 0px;
-    border-bottom-left-radius: 0px;
-}
-
