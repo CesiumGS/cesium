@@ -54,7 +54,7 @@ define([
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return rootViewModel.selectedItem === this;
+            return rootViewModel.selectedViewModel === this;
         });
 
         this.uiShow = undefined;
@@ -133,7 +133,7 @@ define([
     };
 
     DataSourceItemViewModel.prototype.select = function() {
-        this._rootViewModel.selectedItem = this;
+        this._rootViewModel.selectedViewModel = this;
     };
 
     DataSourceItemViewModel.prototype.toggleExpanded = function() {

@@ -99,9 +99,9 @@ define([
         knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels',
                               'maxHeight', 'visible', '_dataSourcesLength', 'searchText']);
 
-        this.selectedItem = undefined;
+        this.selectedViewModel = undefined;
         var selectedViewModel = knockout.observable();
-        knockout.defineProperty(this, 'selectedItem', {
+        knockout.defineProperty(this, 'selectedViewModel', {
             get : function() {
                 return selectedViewModel();
             },
@@ -291,6 +291,14 @@ define([
      */
     DataSourceBrowserViewModel.prototype.toggleVisibility = function() {
         this.visible = !this.visible;
+    };
+
+    DataSourceBrowserViewModel.prototype.selectViewModelById = function(id) {
+        var viewModel = this._dataSourceViewModelHash[id];
+        if (!defined(viewModel)) {
+            throw new DeveloperError('Item with id: ' + id + ' does not exist.');
+        }
+        this.selectedViewModel = viewModel;
     };
 
     DataSourceBrowserViewModel.prototype.destroy = function() {

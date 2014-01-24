@@ -86,7 +86,7 @@ define([
 
         this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return this._dataSourceBrowserViewModel.selectedItem === this;
+            return this._dataSourceBrowserViewModel.selectedViewModel === this;
         });
 
         this.isFilteredOut = undefined;
@@ -156,7 +156,7 @@ define([
         });
 
         this._select = createCommand(function() {
-            that._dataSourceBrowserViewModel.selectedItem = that;
+            that._dataSourceBrowserViewModel.selectedViewModel = that;
         });
 
         this._remove = createCommand(function() {
