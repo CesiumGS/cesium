@@ -76,9 +76,9 @@ define(['../../Core/BoundingSphere',
         viewer._selectionIndicator = selectionIndicator;
 
         var eventHelper = new EventHelper();
+        var selectedObjectObservable = knockout.observable();
         var trackedObjectObservable = knockout.observable();
         var dynamicObjectView;
-        var selectedObject;
 
         function selectionInfoClosed() {
             viewer.selectedObject = undefined;
@@ -96,6 +96,7 @@ define(['../../Core/BoundingSphere',
                 dynamicObjectView.update(time);
             }
 
+            var selectedObject = viewer.selectedObject;
             var showSelection = defined(selectedObject) && selectedObject.isAvailable(time);
             if (showSelection) {
                 if (defined(selectedObject.position)) {
@@ -122,18 +123,14 @@ define(['../../Core/BoundingSphere',
 
         function pickAndTrackObject(e) {
             var picked = viewer.scene.pick(e.position);
-            if (defined(picked) &&
-                defined(picked.primitive) &&
-                defined(picked.primitive.dynamicObject)) {
+            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
                 viewer.trackedObject = picked.primitive.dynamicObject;
             }
         }
 
         function pickAndShowSelection(e) {
             var picked = viewer.scene.pick(e.position);
-            if (defined(picked) &&
-                defined(picked.primitive) &&
-                defined(picked.primitive.dynamicObject)) {
+            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
                 viewer.selectedObject = picked.primitive.dynamicObject;
             } else {
                 viewer.selectedObject = undefined;
@@ -188,7 +185,7 @@ define(['../../Core/BoundingSphere',
                     viewer.homeButton.viewModel.command();
                 }
             }
-            if (defined(selectedObject)) {
+            if (defined(viewer.selectedObject)) {
                 if (dataSource.getDynamicObjectCollection().getById(viewer.selectedObject.id) === viewer.selectedObject) {
                     viewer.selectedObject = undefined;
                 }
@@ -235,28 +232,30 @@ define(['../../Core/BoundingSphere',
                     dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     trackedObjectObservable(value);
                 }
+            }
+        });
+
+        /**
+         * Gets or sets the object instance for which to display a selection indicator
+         * @memberof viewerDynamicObjectMixin.prototype
+         * @type {DynamicObject}
+         */
+        viewer.selectedObject = undefined;
+        knockout.defineProperty(viewer, 'selectedObject', {
+            get : function() {
+                return selectedObjectObservable();
             },
-            /**
-             * Gets or sets the object instance for which to display a selection indicator
-             * @memberof viewerDynamicObjectMixin.prototype
-             * @type {DynamicObject}
-             */
-            selectedObject : {
-                get : function() {
-                    return selectedObject;
-                },
-                set : function(value) {
-                    if (selectedObject !== value) {
-                        selectedObject = value;
-                        if (defined(value)) {
-                            selectionIndicatorViewModel.titleText = defined(selectedObject.name) ? selectedObject.name : '';
-                            selectionIndicatorViewModel.animateAppear();
-                        } else {
-                            // Removing the text here prevents the exit animation.
-                            //selectionIndicatorViewModel.titleText = '';
-                            selectionIndicatorViewModel.animateDepart();
-                        }
+            set : function(value) {
+                if (selectedObjectObservable() !== value) {
+                    if (defined(value)) {
+                        selectionIndicatorViewModel.titleText = defined(value.name) ? value.name : '';
+                        selectionIndicatorViewModel.animateAppear();
+                    } else {
+                        // Removing the text here prevents the exit animation.
+                        //selectionIndicatorViewModel.titleText = '';
+                        selectionIndicatorViewModel.animateDepart();
                     }
+                    selectedObjectObservable(value);
                 }
             }
         });
