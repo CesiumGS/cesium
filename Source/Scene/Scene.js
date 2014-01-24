@@ -882,7 +882,7 @@ define([
                 '    float ai = czm_gl_FragColor.a;\n' +
                 '    float wzi = czm_alphaWeight(ai);' +
                 '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
-                '    gl_FragData[1] = vec4(ai * wzi);' +
+                '    gl_FragData[1] = vec4(ai * wzi);\n' +
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
@@ -940,7 +940,7 @@ define([
                 '{\n' +
                 '    czm_translucent_main();\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
-                '    gl_FragColor = vec4(ai);' +
+                '    gl_FragColor = vec4(ai);\n' +
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
@@ -1054,31 +1054,58 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            passState.framebuffer = scene._translucentFBO;
+            var command;
+            var renderState;
+            var shaderProgram;
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
-            for (j = 0; j < length; ++j) {
-                var command = commands[j];
-                var renderState = command.renderState;
-                var shaderProgram = command.shaderProgram;
 
-                if (context.getDrawBuffers()) {
+            if (context.getDrawBuffers()) {
+                passState.framebuffer = scene._translucentFBO;
+
+                for (j = 0; j < length; ++j) {
+                    command = commands[j];
+                    renderState = command.renderState;
+                    shaderProgram = command.shaderProgram;
+
                     command.renderState = getTranslucentMRTRenderState(scene, renderState);
                     command.shaderProgram = getTranslucentMRTShaderProgram(scene, shaderProgram);
                     executeCommand(command, scene, context, passState);
-                } else {
+
+                    command.renderState = renderState;
+                    command.shaderProgram = shaderProgram;
+                }
+            } else {
+                passState.framebuffer = scene._translucentFBO;
+
+                for (j = 0; j < length; ++j) {
+                    command = commands[j];
+                    renderState = command.renderState;
+                    shaderProgram = command.shaderProgram;
+
                     command.renderState = getTranslucentColorRenderState(scene, renderState);
                     command.shaderProgram = getTranslucentColorShaderProgram(scene, shaderProgram);
                     executeCommand(command, scene, context, passState);
-                    passState.framebuffer = scene._alphaFBO;
+
+                    command.renderState = renderState;
+                    command.shaderProgram = shaderProgram;
+                }
+
+                passState.framebuffer = scene._alphaFBO;
+
+                for (j = 0; j < length; ++j) {
+                    command = commands[j];
+                    renderState = command.renderState;
+                    shaderProgram = command.shaderProgram;
+
                     command.renderState = getTranslucentAlphaRenderState(scene, renderState);
                     command.shaderProgram = getTranslucentAlphaShaderProgram(scene, shaderProgram);
                     executeCommand(command, scene, context, passState);
-                }
 
-                command.renderState = renderState;
-                command.shaderProgram = shaderProgram;
+                    command.renderState = renderState;
+                    command.shaderProgram = shaderProgram;
+                }
             }
         }
 

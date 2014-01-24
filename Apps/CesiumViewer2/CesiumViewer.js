@@ -159,6 +159,8 @@ define([
             }
         }
 
+        viewer.scene.moon = undefined;
+        
         var primitives = viewer.scene.getPrimitives();
 
         var northernmost = CesiumMath.toRadians(50.0);
