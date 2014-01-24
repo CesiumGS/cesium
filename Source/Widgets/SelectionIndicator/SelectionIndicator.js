@@ -89,6 +89,15 @@ define([
         closeElement.innerHTML = '&times;';
         infoElement.appendChild(closeElement);
 
+        var infoBodyElement = document.createElement('div');
+        infoBodyElement.className = 'cesium-selection-info-body';
+        infoElement.appendChild(infoBodyElement);
+
+        var descriptionElement = document.createElement('div');
+        descriptionElement.className = 'cesium-selection-info-description';
+        descriptionElement.setAttribute('data-bind', 'html: descriptionText');
+        infoBodyElement.appendChild(descriptionElement);
+
         var viewModel = new SelectionIndicatorViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
 
