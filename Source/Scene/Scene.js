@@ -178,6 +178,15 @@ define([
         translucentClearCommand.owner = this;
         this._translucentClearCommand = translucentClearCommand;
 
+        if (!context.getDrawBuffers()) {
+            translucentClearCommand.color.alpha = 0.0;
+
+            var alphaClearCommand = new ClearCommand();
+            alphaClearCommand.color = new Color(1.0, 1.0, 1.0, 1.0);
+            alphaClearCommand.owner = this;
+            this._alphaClearCommand = alphaClearCommand;
+        }
+
         var depthStencilClearCommand = new ClearCommand();
         depthStencilClearCommand.depth = 1.0;
         depthStencilClearCommand.stencil = 1.0;
@@ -1029,7 +1038,7 @@ define([
 
         if (!context.getDrawBuffers()) {
             passState.framebuffer = scene._alphaFBO;
-            scene._translucentClearCommand.execute(context, passState);
+            scene._alphaClearCommand.execute(context, passState);
         }
 
         var clearDepthStencil = scene._depthStencilClearCommand;
