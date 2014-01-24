@@ -81,6 +81,7 @@ define([
         }
 
         this._scene = scene;
+        this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
         this._content = '';
@@ -228,24 +229,22 @@ define([
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
         var viewModel = this;
-        var duration = 800;
-        var easingFunction = Tween.Easing.Exponential.Out;
-
-        var value = {
-            distance : 60,
-            rotation: 0
-        };
-        var tween = new Tween.Tween(value);
-        tween.to({
-            distance : 20,
-            rotation: 45
-        }, duration);
-        tween.easing(easingFunction);
-        tween.onUpdate(function() {
-            viewModel.triangleDistance = value.distance;
-            viewModel.triangleRotation = value.rotation;
+        this._animationCollection.add({
+            startValue : {
+                distance : 60,
+                rotation: 0
+            },
+            stopValue : {
+                distance : 20,
+                rotation: 45
+            },
+            duration : 800,
+            easingFunction : Tween.Easing.Exponential.Out,
+            onUpdate : function (value) {
+                viewModel.triangleDistance = value.distance;
+                viewModel.triangleRotation = value.rotation;
+            }
         });
-        tween.start();
     };
 
     /**
@@ -254,24 +253,22 @@ define([
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
         var viewModel = this;
-        var duration = 800;
-        var easingFunction = Tween.Easing.Exponential.Out;
-
-        var value = {
-            distance : viewModel.triangleDistance,
-            rotation: viewModel.triangleRotation
-        };
-        var tween = new Tween.Tween(value);
-        tween.to({
-            distance : 60,
-            rotation: 25
-        }, duration);
-        tween.easing(easingFunction);
-        tween.onUpdate(function() {
-            viewModel.triangleDistance = value.distance;
-            viewModel.triangleRotation = value.rotation;
+        this._animationCollection.add({
+            startValue : {
+                distance : viewModel.triangleDistance,
+                rotation: viewModel.triangleRotation
+            },
+            stopValue : {
+                distance : 60,
+                rotation: 25
+            },
+            duration : 800,
+            easingFunction : Tween.Easing.Exponential.Out,
+            onUpdate : function (value) {
+                viewModel.triangleDistance = value.distance;
+                viewModel.triangleRotation = value.rotation;
+            }
         });
-        tween.start();
     };
 
     defineProperties(SelectionIndicatorViewModel.prototype, {
