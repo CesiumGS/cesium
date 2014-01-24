@@ -1518,6 +1518,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
+        this._animations.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

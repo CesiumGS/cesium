@@ -16,8 +16,12 @@ define([
      * @alias Spline
      * @constructor
      *
-     * @see CatmullRomSpline
+     * @see BSpline
+     * @see BezierSpline
      * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see LinearSpline
+     * @see QuaternionSpline
      */
     var Spline = function() {
         /**
