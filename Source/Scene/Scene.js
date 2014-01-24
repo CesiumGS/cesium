@@ -23,6 +23,7 @@ define([
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/PrimitiveType',
+        '../Renderer/createShaderSource',
         '../Renderer/BlendFunction',
         '../Renderer/BlendingState',
         '../Renderer/Context',
@@ -77,6 +78,7 @@ define([
         ColorGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         PrimitiveType,
+        createShaderSource,
         BlendFunction,
         BlendingState,
         Context,
@@ -364,7 +366,9 @@ define([
         this._compositeCommand = undefined;
 
         this._translucentRenderStateCache = {};
+        this._alphaRenderStateCache = {};
         this._translucentShaderCache = {};
+        this._alphaShaderCache = {};
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -769,7 +773,7 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
-    var translucentBlend = {
+    var translucentMRTBlend = {
         enabled : true,
         functionSourceRgb : BlendFunction.ONE,
         functionDestinationRgb : BlendFunction.ONE,
@@ -777,7 +781,23 @@ define([
         functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
     };
 
-    function getTranslucentRenderState(scene, renderState) {
+    var translucentColorBlend = {
+        enabled : true,
+        functionSourceRgb : BlendFunction.ONE,
+        functionDestinationRgb : BlendFunction.ONE,
+        functionSourceAlpha : BlendFunction.ONE,
+        functionDestinationAlpha : BlendFunction.ONE
+    };
+
+    var translucentAlphaBlend = {
+        enabled : true,
+        functionSourceRgb : BlendFunction.ZERO,
+        functionDestinationRgb : BlendFunction.ZERO,
+        functionSourceAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+        functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
+    };
+
+    function getTranslucentMRTRenderState(scene, renderState) {
         var cache = scene._translucentRenderStateCache;
 
         var translucentState = cache[renderState.id];
@@ -786,7 +806,7 @@ define([
             var blending = renderState.blending;
 
             renderState.depthMask = false;
-            renderState.blending = translucentBlend;
+            renderState.blending = translucentMRTBlend;
 
             translucentState = scene._context.createRenderState(renderState);
             cache[renderState.id] = translucentState;
@@ -798,7 +818,49 @@ define([
         return translucentState;
     }
 
-    function getTranslucentShaderProgram(scene, shaderProgram) {
+    function getTranslucentColorRenderState(scene, renderState) {
+        var cache = scene._translucentRenderStateCache;
+
+        var translucentState = cache[renderState.id];
+        if (!defined(translucentState)) {
+            var depthMask = renderState.depthMask;
+            var blending = renderState.blending;
+
+            renderState.depthMask = false;
+            renderState.blending = translucentColorBlend;
+
+            translucentState = scene._context.createRenderState(renderState);
+            cache[renderState.id] = translucentState;
+
+            renderState.depthMask = depthMask;
+            renderState.blending = blending;
+        }
+
+        return translucentState;
+    }
+
+    function getTranslucentAlphaRenderState(scene, renderState) {
+        var cache = scene._alphaRenderStateCache;
+
+        var translucentState = cache[renderState.id];
+        if (!defined(translucentState)) {
+            var depthMask = renderState.depthMask;
+            var blending = renderState.blending;
+
+            renderState.depthMask = false;
+            renderState.blending = translucentAlphaBlend;
+
+            translucentState = scene._context.createRenderState(renderState);
+            cache[renderState.id] = translucentState;
+
+            renderState.depthMask = depthMask;
+            renderState.blending = blending;
+        }
+
+        return translucentState;
+    }
+
+    function getTranslucentMRTShaderProgram(scene, shaderProgram) {
         var cache = scene._translucentShaderCache;
         var attributeLocations = shaderProgram._attributeLocations;
         var vs = shaderProgram.vertexShaderSource;
@@ -821,6 +883,64 @@ define([
                 '    float wzi = czm_alphaWeight(ai);' +
                 '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
                 '    gl_FragData[1] = vec4(ai * wzi);' +
+                '}\n';
+
+            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
+            cache[key] = shader;
+        }
+
+        return shader;
+    }
+
+    function getTranslucentColorShaderProgram(scene, shaderProgram) {
+        var cache = scene._translucentShaderCache;
+        var attributeLocations = shaderProgram._attributeLocations;
+        var vs = shaderProgram.vertexShaderSource;
+        var fs = shaderProgram.fragmentShaderSource;
+        var key = vs + fs + JSON.stringify(attributeLocations);
+
+        var shader = cache[key];
+        if (!defined(shader)) {
+            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+
+            var source = 'vec4 czm_gl_FragColor;\n' +
+                renamedFS + '\n\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
+                '    float ai = czm_gl_FragColor.a;\n' +
+                '    float wzi = czm_alphaWeight(ai);' +
+                '    gl_FragColor = vec4(Ci, ai) * wzi;\n' +
+                '}\n';
+
+            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
+            cache[key] = shader;
+        }
+
+        return shader;
+    }
+
+    function getTranslucentAlphaShaderProgram(scene, shaderProgram) {
+        var cache = scene._alphaShaderCache;
+        var attributeLocations = shaderProgram._attributeLocations;
+        var vs = shaderProgram.vertexShaderSource;
+        var fs = shaderProgram.fragmentShaderSource;
+        var key = vs + fs + JSON.stringify(attributeLocations);
+
+        var shader = cache[key];
+        if (!defined(shader)) {
+            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+
+            var source = 'vec4 czm_gl_FragColor;\n' +
+                renamedFS + '\n\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    float ai = czm_gl_FragColor.a;\n' +
+                '    gl_FragColor = vec4(ai);' +
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
@@ -907,6 +1027,11 @@ define([
         passState.framebuffer = scene._translucentFBO;
         scene._translucentClearCommand.execute(context, passState);
 
+        if (!context.getDrawBuffers()) {
+            passState.framebuffer = scene._alphaFBO;
+            scene._translucentClearCommand.execute(context, passState);
+        }
+
         var clearDepthStencil = scene._depthStencilClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -938,10 +1063,19 @@ define([
                 var renderState = command.renderState;
                 var shaderProgram = command.shaderProgram;
 
-                command.renderState = getTranslucentRenderState(scene, renderState);
-                command.shaderProgram = getTranslucentShaderProgram(scene, shaderProgram);
-
-                executeCommand(command, scene, context, passState);
+                if (context.getDrawBuffers()) {
+                    command.renderState = getTranslucentMRTRenderState(scene, renderState);
+                    command.shaderProgram = getTranslucentMRTShaderProgram(scene, shaderProgram);
+                    executeCommand(command, scene, context, passState);
+                } else {
+                    command.renderState = getTranslucentColorRenderState(scene, renderState);
+                    command.shaderProgram = getTranslucentColorShaderProgram(scene, shaderProgram);
+                    executeCommand(command, scene, context, passState);
+                    passState.framebuffer = scene._alphaFBO;
+                    command.renderState = getTranslucentAlphaRenderState(scene, renderState);
+                    command.shaderProgram = getTranslucentAlphaShaderProgram(scene, shaderProgram);
+                    executeCommand(command, scene, context, passState);
+                }
 
                 command.renderState = renderState;
                 command.shaderProgram = shaderProgram;
@@ -1011,13 +1145,18 @@ define([
         var context = scene._context;
 
         if (!defined(scene._compositeCommand)) {
+            var fs = createShaderSource({
+                defines : [context.getDrawBuffers() ? 'MRT' : ''],
+                sources : [CompositeOITFS]
+            });
+
             var command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
-            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, CompositeOITFS, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
 
             scene._compositeCommand = command;
         }
@@ -1051,11 +1190,25 @@ define([
                 depthTexture : scene._depthTexture,
                 depthRenderbuffer : scene._depthRenderbuffer
             });
-            scene._translucentFBO = context.createFramebuffer({
-                colorTextures : [scene._accumulationTexture, scene._revealageTexture],
-                depthTexture : scene._depthTexture,
-                depthRenderbuffer : scene._depthRenderbuffer
-            });
+
+            if (context.getDrawBuffers()) {
+                scene._translucentFBO = context.createFramebuffer({
+                    colorTextures : [scene._accumulationTexture, scene._revealageTexture],
+                    depthTexture : scene._depthTexture,
+                    depthRenderbuffer : scene._depthRenderbuffer
+                });
+            } else {
+                scene._translucentFBO = context.createFramebuffer({
+                    colorTextures : [scene._accumulationTexture],
+                    depthTexture : scene._depthTexture,
+                    depthRenderbuffer : scene._depthRenderbuffer
+                });
+                scene._alphaFBO = context.createFramebuffer({
+                    colorTextures : [scene._revealageTexture],
+                    depthTexture : scene._depthTexture,
+                    depthRenderbuffer : scene._depthRenderbuffer
+                });
+            }
 
             updateCompositeCommand(scene);
         }
