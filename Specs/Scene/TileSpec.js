@@ -32,7 +32,7 @@ defineSuite([
     it('throws without a description', function() {
         expect(function() {
             return new Tile();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without description.extent', function() {
@@ -41,7 +41,7 @@ defineSuite([
                 x : 0,
                 y : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without description.level', function() {
@@ -56,7 +56,7 @@ defineSuite([
                 x : 0,
                 y : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with negative x or y properties', function() {
@@ -66,7 +66,7 @@ defineSuite([
                 y : -1.0,
                 level : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates extent on construction', function() {
@@ -79,7 +79,7 @@ defineSuite([
     it('throws if constructed improperly', function() {
         expect(function() {
             return new Tile();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Tile({
@@ -104,7 +104,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Tile({
@@ -116,7 +116,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Tile({
@@ -128,7 +128,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Tile({
@@ -136,7 +136,7 @@ defineSuite([
                 y : 0,
                 level : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     describe('processStateMachine', function() {

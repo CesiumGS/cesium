@@ -168,6 +168,6 @@ defineSuite([
         var target = new DynamicBillboard();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

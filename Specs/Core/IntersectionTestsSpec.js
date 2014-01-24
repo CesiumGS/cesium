@@ -48,25 +48,25 @@ defineSuite([
     it('rayPlane throws without ray', function() {
         expect(function() {
             IntersectionTests.rayPlane();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayPlane throws without plane', function() {
         expect(function() {
             IntersectionTests.rayPlane(new Ray(new Cartesian3(), new Cartesian3()));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid throws without ray', function() {
         expect(function() {
             IntersectionTests.rayEllipsoid();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid throws without ellipsoid', function() {
         expect(function() {
             IntersectionTests.rayEllipsoid(new Ray(new Cartesian3(), new Cartesian3()));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid outside intersections', function() {
@@ -190,13 +190,13 @@ defineSuite([
     it('grazingAltitudeLocation throws without ray', function() {
         expect(function() {
             IntersectionTests.grazingAltitudeLocation();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('grazingAltitudeLocation throws without ellipsoid', function() {
         expect(function() {
             IntersectionTests.grazingAltitudeLocation(new Ray());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('grazingAltitudeLocation is origin of ray', function() {
@@ -225,7 +225,7 @@ defineSuite([
         var ray = new Ray(origin, direction);
         var expected = new Cartesian3(628106.8386515155, -6327836.936616249, 493230.07552381355);
         var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
-        expect(actual).toEqual(expected);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON8);
     });
 
     it('grazingAltitudeLocation outside ellipsoid 3', function() {
@@ -300,19 +300,19 @@ defineSuite([
     it('lineSegmentPlane throws without endPoint0', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lineSegmentPlane throws without endPoint1', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lineSegmentPlane throws without plane', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('triangle is front of a plane', function() {
@@ -413,7 +413,7 @@ defineSuite([
     it('trianglePlaneIntersection throws without p0', function() {
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without p1', function() {
@@ -421,7 +421,7 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without p2', function() {
@@ -429,7 +429,7 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p, p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without plane', function() {
@@ -437,6 +437,6 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p, p, p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -17,26 +17,17 @@ define([
         '../Core/Matrix4',
         '../Renderer/Texture',
         '../Renderer/CubeMap',
-        '../Shaders/Materials/AsphaltMaterial',
-        '../Shaders/Materials/BlobMaterial',
-        '../Shaders/Materials/BrickMaterial',
         '../Shaders/Materials/BumpMapMaterial',
-        '../Shaders/Materials/CementMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
-        '../Shaders/Materials/FacetMaterial',
         '../Shaders/Materials/FresnelMaterial',
-        '../Shaders/Materials/GrassMaterial',
         '../Shaders/Materials/GridMaterial',
         '../Shaders/Materials/NormalMapMaterial',
         '../Shaders/Materials/ReflectionMaterial',
         '../Shaders/Materials/RefractionMaterial',
         '../Shaders/Materials/StripeMaterial',
-        '../Shaders/Materials/TieDyeMaterial',
         '../Shaders/Materials/Water',
-        '../Shaders/Materials/WoodMaterial',
         '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/ErosionMaterial',
         '../Shaders/Materials/FadeMaterial',
         '../Shaders/Materials/PolylineArrowMaterial',
         '../Shaders/Materials/PolylineGlowMaterial',
@@ -59,26 +50,17 @@ define([
         Matrix4,
         Texture,
         CubeMap,
-        AsphaltMaterial,
-        BlobMaterial,
-        BrickMaterial,
         BumpMapMaterial,
-        CementMaterial,
         CheckerboardMaterial,
         DotMaterial,
-        FacetMaterial,
         FresnelMaterial,
-        GrassMaterial,
         GridMaterial,
         NormalMapMaterial,
         ReflectionMaterial,
         RefractionMaterial,
         StripeMaterial,
-        TieDyeMaterial,
         WaterMaterial,
-        WoodMaterial,
         RimLightingMaterial,
-        ErosionMaterial,
         FadeMaterial,
         PolylineArrowMaterial,
         PolylineGlowMaterial,
@@ -182,40 +164,6 @@ define([
      *      <li><code>reflection</code>:  Reflection Material.</li>
      *      <li><code>refraction</code>:  Refraction Material.</li>
      *  </ul>
-     *  <li>Brick</li>
-     *  <ul>
-     *      <li><code>brickColor</code>:  rgba color object for the brick color.</li>
-     *      <li><code>mortarColor</code>:  rgba color object for the mortar color.</li>
-     *      <li><code>brickSize</code>:  Number between 0.0 and 1.0 where 0.0 is many small bricks and 1.0 is one large brick.</li>
-     *      <li><code>brickPct</code>:  Number for the ratio of brick to mortar where 0.0 is all mortar and 1.0 is all brick.</li>
-     *      <li><code>brickRoughness</code>:  Number between 0.0 and 1.0 representing how rough the brick looks.</li>
-     *      <li><code>mortarRoughness</code>:  Number between 0.0 and 1.0 representing how rough the mortar looks.</li>
-     *  </ul>
-     *  <li>Wood</li>
-     *  <ul>
-     *      <li><code>lightWoodColor</code>:  rgba color object for the wood's base color.</li>
-     *      <li><code>darkWoodColor</code>:  rgba color object for the color of rings in the wood.</li>
-     *      <li><code>ringFrequency</code>:  Number for the frequency of rings in the wood.</li>
-     *      <li><code>noiseScale</code>:  Object with x and y values specifying the noisiness of the ring patterns in both directions.</li>
-     *  </ul>
-     *  <li>Asphalt</li>
-     *  <ul>
-     *      <li><code>asphaltColor</code>:  rgba color object for the asphalt's color.</li>
-     *      <li><code>bumpSize</code>:  Number for the size of the asphalt's bumps.</li>
-     *      <li><code>roughness</code>:  Number that controls how rough the asphalt looks.</li>
-     *  </ul>
-     *  <li>Cement</li>
-     *  <ul>
-     *  <li><code>cementColor</code>:  rgba color object for the cement's color. </li>
-     *  <li><code>grainScale</code>:  Number for the size of rock grains in the cement. </li>
-     *  <li><code>roughness</code>:  Number that controls how rough the cement looks.</li>
-     *  </ul>
-     *  <li>Grass</li>
-     *  <ul>
-     *      <li><code>grassColor</code>:  rgba color object for the grass' color. </li>
-     *      <li><code>dirtColor</code>:  rgba color object for the dirt's color. </li>
-     *      <li><code>patchiness</code>:  Number that controls the size of the color patches in the grass.</li>
-     *  </ul>
      *  <li>Grid</li>
      *  <ul>
      *      <li><code>color</code>:  rgba color object for the whole material.</li>
@@ -243,24 +191,6 @@ define([
      *      <li><code>darkColor</code>:  rgba color object for the background color.</li>
      *      <li><code>repeat</code>:  Object with x and y values specifying the number of columns and rows of dots respectively.</li>
      *  </ul>
-     *  <li>TieDye</li>
-     *  <ul>
-     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
-     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
-     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
-     *  </ul>
-     *  <li>Facet</li>
-     *  <ul>
-     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
-     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
-     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
-     *  </ul>
-     *  <li>Blob</li>
-     *  <ul>
-     *      <li><code>lightColor</code>:  rgba color object for the light color.</li>
-     *      <li><code>darkColor</code>:  rgba color object for the dark color.</li>
-     *      <li><code>frequency</code>:  Number that controls the frequency of the pattern.</li>
-     *  </ul>
      *  <li>Water</li>
      *  <ul>
      *      <li><code>baseWaterColor</code>:  rgba color object base color of the water.</li>
@@ -278,11 +208,6 @@ define([
      *      <li><code>color</code>:  diffuse color and alpha.</li>
      *      <li><code>rimColor</code>:  diffuse color and alpha of the rim.</li>
      *      <li><code>width</code>:  Number that determines the rim's width.</li>
-     *  </ul>
-     *  <li>Erosion</li>
-     *  <ul>
-     *      <li><code>color</code>:  diffuse color and alpha.</li>
-     *      <li><code>time</code>:  Time of erosion.  1.0 is no erosion; 0.0 is fully eroded.</li>
      *  </ul>
      *  <li>Fade</li>
      *  <ul>
@@ -331,18 +256,18 @@ define([
      *
      * @example
      * // Create a color material with fromType:
-     * polygon.material = Material.fromType('Color');
-     * polygon.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+     * polygon.material = Cesium.Material.fromType('Color');
+     * polygon.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
      *
      * // Create the default material:
-     * polygon.material = new Material();
+     * polygon.material = new Cesium.Material();
      *
      * // Create a color material with full Fabric notation:
-     * polygon.material = new Material({
+     * polygon.material = new Cesium.Material({
      *     fabric : {
      *         type : 'Color',
      *         uniforms : {
-     *             color : new Color(1.0, 1.0, 0.0, 1.0)
+     *             color : new Cesium.Color(1.0, 1.0, 0.0, 1.0)
      *         }
      *     }
      * });
@@ -430,13 +355,16 @@ define([
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Material.fromType('Color');
+     * var material = Cesium.Material.fromType('Color');
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
     Material.fromType = function(type) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
+        //>>includeEnd('debug');
+
         return new Material({
             fabric : {
                 type : type
@@ -1232,94 +1160,6 @@ define([
         translucent : false
     });
 
-    Material.BrickType = 'Brick';
-    Material._materialCache.addMaterial(Material.BrickType, {
-        fabric : {
-            type : Material.BrickType,
-            uniforms : {
-                brickColor : new Color(0.6, 0.3, 0.1, 1.0),
-                mortarColor : new Color(0.8, 0.8, 0.7, 1.0),
-                brickSize : new Cartesian2(0.3, 0.15),
-                brickPct : new Cartesian2(0.9, 0.85),
-                brickRoughness : 0.2,
-                mortarRoughness : 0.1
-            },
-            source : BrickMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.brickColor.alpha < 1.0) || (uniforms.mortarColor.alpha < 1.0);
-        }
-    });
-
-    Material.WoodType = 'Wood';
-    Material._materialCache.addMaterial(Material.WoodType, {
-        fabric : {
-            type : Material.WoodType,
-            uniforms : {
-                lightWoodColor : new Color(0.6, 0.3, 0.1, 1.0),
-                darkWoodColor : new Color(0.4, 0.2, 0.07, 1.0),
-                ringFrequency : 3.0,
-                noiseScale : new Cartesian2(0.7, 0.5),
-                grainFrequency : 27.0
-            },
-            source : WoodMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.lightWoodColor.alpha < 1.0) || (uniforms.darkWoodColor.alpha < 1.0);
-        }
-    });
-
-    Material.AsphaltType = 'Asphalt';
-    Material._materialCache.addMaterial(Material.AsphaltType, {
-        fabric : {
-            type : Material.AsphaltType,
-            uniforms : {
-                asphaltColor : new Color(0.15, 0.15, 0.15, 1.0),
-                bumpSize : 0.02,
-                roughness : 0.2
-            },
-            source : AsphaltMaterial
-        },
-        translucent : function(material) {
-            return material.uniforms.asphaltColor.alpha < 1.0;
-        }
-    });
-
-    Material.CementType = 'Cement';
-    Material._materialCache.addMaterial(Material.CementType, {
-        fabric : {
-            type : Material.CementType,
-            uniforms : {
-                cementColor : new Color(0.95, 0.95, 0.85, 1.0),
-                grainScale : 0.01,
-                roughness : 0.3
-            },
-            source : CementMaterial
-        },
-        translucent : function(material) {
-            return material.uniforms.cementColor.alpha < 1.0;
-        }
-    });
-
-    Material.GrassType = 'Grass';
-    Material._materialCache.addMaterial(Material.GrassType, {
-        fabric : {
-            type : Material.GrassType,
-            uniforms : {
-                grassColor : new Color(0.25, 0.4, 0.1, 1.0),
-                dirtColor : new Color(0.1, 0.1, 0.1, 1.0),
-                patchiness : 1.5
-            },
-            source : GrassMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.grassColor.alpha < 1.0) || (uniforms.dirtColor.alpha < 1.0);
-        }
-    });
-
     Material.GridType = 'Grid';
     Material._materialCache.addMaterial(Material.GridType, {
         fabric : {
@@ -1391,57 +1231,6 @@ define([
         }
     });
 
-    Material.TyeDyeType = 'TieDye';
-    Material._materialCache.addMaterial(Material.TyeDyeType, {
-        fabric : {
-            type : Material.TyeDyeType,
-            uniforms : {
-                lightColor : new Color(1.0, 1.0, 0.0, 0.75),
-                darkColor : new Color(1.0, 0.0, 0.0, 0.75),
-                frequency : 5.0
-            },
-            source : TieDyeMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
-        }
-    });
-
-    Material.FacetType = 'Facet';
-    Material._materialCache.addMaterial(Material.FacetType, {
-        fabric : {
-            type : Material.FacetType,
-            uniforms : {
-                lightColor : new Color(0.25, 0.25, 0.25, 0.75),
-                darkColor : new Color(0.75, 0.75, 0.75, 0.75),
-                frequency : 10.0
-            },
-            source : FacetMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
-        }
-    });
-
-    Material.BlobType = 'Blob';
-    Material._materialCache.addMaterial(Material.BlobType, {
-        fabric : {
-            type : Material.BlobType,
-            uniforms : {
-                lightColor : new Color(1.0, 1.0, 1.0, 0.5),
-                darkColor : new Color(0.0, 0.0, 1.0, 0.5),
-                frequency : 10.0
-            },
-            source : BlobMaterial
-        },
-        translucent : function(material) {
-            var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
-        }
-    });
-
     Material.WaterType = 'Water';
     Material._materialCache.addMaterial(Material.WaterType, {
         fabric : {
@@ -1479,21 +1268,6 @@ define([
         translucent : function(material) {
             var uniforms = material.uniforms;
             return (uniforms.color.alpha < 1.0) || (uniforms.rimColor.alpha < 0.0);
-        }
-    });
-
-    Material.ErosionType = 'Erosion';
-    Material._materialCache.addMaterial(Material.ErosionType, {
-        fabric : {
-            type : Material.ErosionType,
-            uniforms : {
-                color : new Color(1.0, 0.0, 0.0, 0.5),
-                time : 1.0
-            },
-            source : ErosionMaterial
-        },
-        translucent : function(material) {
-            return material.uniforms.color.alpha < 1.0;
         }
     });
 

@@ -357,13 +357,13 @@ defineSuite([
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with non-existant string container', function() {
         expect(function() {
             return new Viewer('doesNotExist');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if using selectedImageryProviderViewModel with BaseLayerPicker disabled', function() {
@@ -372,7 +372,7 @@ defineSuite([
                 baseLayerPicker : false,
                 selectedImageryProviderViewModel : testProviderViewModel
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if using imageryProvider with BaseLayerPicker enabled', function() {
@@ -380,14 +380,14 @@ defineSuite([
             return new Viewer(container, {
                 imageryProvider : testProvider
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('extend throws with undefined mixin', function() {
         viewer = new Viewer(container);
         expect(function() {
             return viewer.extend(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raises renderLoopError and stops the render loop when render throws', function() {

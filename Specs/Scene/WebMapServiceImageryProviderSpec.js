@@ -45,7 +45,7 @@ defineSuite([
                 layers : 'someLayer'
             });
         }
-        expect(createWithoutUrl).toThrow();
+        expect(createWithoutUrl).toThrowDeveloperError();
     });
 
     it('requires the layers to be specified', function() {
@@ -54,7 +54,7 @@ defineSuite([
                 url : 'made/up/wms/server'
             });
         }
-        expect(createWithoutUrl).toThrow();
+        expect(createWithoutUrl).toThrowDeveloperError();
     });
 
     it('includes specified parameters in URL', function() {

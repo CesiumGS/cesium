@@ -65,7 +65,7 @@ define([
      *
      * @example
      * // Compute an axis aligned bounding box enclosing two points.
-     * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
+     * var box = Cesium.AxisAlignedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      */
     AxisAlignedBoundingBox.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -176,13 +176,14 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(box)) {
             throw new DeveloperError('box is required.');
         }
-
         if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
+        //>>includeEnd('debug');
 
         intersectScratch = Cartesian3.subtract(box.maximum, box.minimum, intersectScratch);
         var h = Cartesian3.multiplyByScalar(intersectScratch, 0.5, intersectScratch); //The positive half diagonal

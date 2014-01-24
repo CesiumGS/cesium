@@ -34,7 +34,7 @@ define([
      *
      * @example
      * // 1. Prepend #defines to a shader
-     * var source = createShaderSource({
+     * var source = Cesium.createShaderSource({
      *   defines : ['WHITE'],
      *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
      * });

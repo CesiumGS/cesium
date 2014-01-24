@@ -29,7 +29,7 @@ define([
      *         value2 : 11
      *     }
      * }
-     * var final = combine([object1,object2, object3], true, true);
+     * var final = Cesium.combine([object1,object2, object3], true, true);
      *
      * // final === {
      * //     one : 1,

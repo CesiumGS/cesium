@@ -283,12 +283,12 @@ define([
      * @see ExtentOutlineGeometry#createGeometry
      *
      * @example
-     * var extent = new ExtentOutlineGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentOutlineGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = ExtentOutlineGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentOutlineGeometry.createGeometry(extent);
      */
     var ExtentOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -299,11 +299,18 @@ define([
         var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = options.rotation;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-
         extent.validate();
+        if (extent.east < extent.west) {
+            throw new DeveloperError('options.extent.east must be greater than options.extent.west');
+        }
+        if (extent.north < extent.south) {
+            throw new DeveloperError('options.extent.north must be greater than options.extent.south');
+        }
+        //>>includeEnd('debug');
 
         this._extent = extent;
         this._granularity = granularity;

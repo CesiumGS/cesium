@@ -14,6 +14,6 @@ defineSuite(['Core/getFilenameFromUri'], function(getFilenameFromUri) {
     it('throws with undefined parameter', function() {
         expect(function() {
             getFilenameFromUri(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

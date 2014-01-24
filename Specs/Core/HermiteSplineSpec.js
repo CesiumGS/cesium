@@ -26,7 +26,7 @@ defineSuite([
     it('constructor throws without points, times or tangents', function() {
         expect(function() {
             return new HermiteSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 2', function() {
@@ -34,7 +34,7 @@ defineSuite([
             return new HermiteSpline({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -43,7 +43,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when inTangents or outTangents length is not equal to points.length - 1', function() {
@@ -54,7 +54,7 @@ defineSuite([
                 inTangents : [Cartesian3.ZERO],
                 outTangents : [Cartesian3.UNIT_X]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     // returns a function for a hermite curve between points p and q
@@ -114,7 +114,7 @@ defineSuite([
     it('createC1 throws without points', function() {
         expect(function() {
             return HermiteSpline.createC1();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createC1 throws when control points length is less than 2', function() {
@@ -122,7 +122,7 @@ defineSuite([
             return HermiteSpline.createC1({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createC1 throws without times', function() {
@@ -130,7 +130,7 @@ defineSuite([
             return HermiteSpline.createC1({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createC1 throws when times.length is not equal to points.length', function() {
@@ -139,7 +139,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createC1 throws without tangents', function() {
@@ -148,7 +148,7 @@ defineSuite([
                 points : points,
                 times : times
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createC1 throws when tangents.length is not equal to times.length', function() {
@@ -158,7 +158,7 @@ defineSuite([
                 times : times,
                 tangents : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('C1 spline', function() {
@@ -194,7 +194,7 @@ defineSuite([
     it('createNaturalCubic throws without points', function() {
         expect(function() {
             return HermiteSpline.createNaturalCubic();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createNaturalCubic throws when control points length is less than 2', function() {
@@ -202,7 +202,7 @@ defineSuite([
             return HermiteSpline.createNaturalCubic({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createNaturalCubic throws without times', function() {
@@ -210,7 +210,7 @@ defineSuite([
             return HermiteSpline.createNaturalCubic({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createNaturalCubic throws when times.length is not equal to points.length', function() {
@@ -219,7 +219,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('natural cubic spline', function() {
@@ -248,7 +248,7 @@ defineSuite([
     it('createClampedCubic throws without points', function() {
         expect(function() {
             return HermiteSpline.createClampedCubic();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createClampedCubic throws when control points length is less than 2', function() {
@@ -256,7 +256,7 @@ defineSuite([
             return HermiteSpline.createClampedCubic({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createClampedCubic throws without times', function() {
@@ -264,7 +264,7 @@ defineSuite([
             return HermiteSpline.createClampedCubic({
                 points : points
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createClampedCubic throws when times.length is not equal to points.length', function() {
@@ -273,7 +273,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createClampedCubic throws without firstTangent', function() {
@@ -282,7 +282,7 @@ defineSuite([
                 points : points,
                 times : times
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createClampedCubic throws without lastTangent', function() {
@@ -292,7 +292,7 @@ defineSuite([
                 times : times,
                 firstTangent : Cartesian3.ZERO
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clamped cubic spline', function() {
@@ -330,7 +330,7 @@ defineSuite([
         });
         expect(function() {
             hs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate fails with time out of range', function() {
@@ -340,7 +340,7 @@ defineSuite([
         });
         expect(function() {
             hs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate with result parameter', function() {

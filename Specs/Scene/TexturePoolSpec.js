@@ -114,7 +114,7 @@ defineSuite([
     it('createTexture2D throws if description is not supplied', function() {
         expect(function() {
             pool.createTexture2D(fakeContext);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is destroyable', function() {

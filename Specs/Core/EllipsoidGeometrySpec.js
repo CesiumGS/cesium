@@ -17,7 +17,7 @@ defineSuite([
             return new EllipsoidGeometry({
                 slicePartitions : -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with invalid stackPartitions', function() {
@@ -25,7 +25,7 @@ defineSuite([
             return new EllipsoidGeometry({
                 stackPartitions : -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

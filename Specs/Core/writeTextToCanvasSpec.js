@@ -17,7 +17,7 @@ defineSuite([
     it('throws when text is undefined', function() {
         expect(function() {
             writeTextToCanvas();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('sizes the canvas to fit the text', function() {
