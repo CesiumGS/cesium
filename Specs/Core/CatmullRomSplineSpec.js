@@ -25,7 +25,7 @@ defineSuite([
         times = [0.0, 1.0, 2.0, 3.0];
     });
 
-    it('constructor throws without points', function() {
+    it('constructor throws without points or times', function() {
         expect(function() {
             return new CatmullRomSpline();
         }).toThrowDeveloperError();
@@ -35,14 +35,6 @@ defineSuite([
         expect(function() {
             return new CatmullRomSpline({
                 points : [Cartesian3.ZERO]
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws without times', function() {
-        expect(function() {
-            return new CatmullRomSpline({
-                points : points
             });
         }).toThrowDeveloperError();
     });
@@ -126,7 +118,7 @@ defineSuite([
         }
         tangents.push(crs.lastTangent);
 
-        var hs = new HermiteSpline({
+        var hs = HermiteSpline.createC1({
             points : points,
             tangents : tangents,
             times : times

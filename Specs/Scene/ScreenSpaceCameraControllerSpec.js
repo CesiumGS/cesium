@@ -383,9 +383,6 @@ defineSuite([
     });
 
     it('adds an animation to correct position or zoom in 2D', function() {
-        Tween.removeAll();
-        expect(Tween.getAll().length).toEqual(0);
-
         var frameState = setUp2D();
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
@@ -397,7 +394,7 @@ defineSuite([
         expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
 
-        expect(Tween.getAll().length).toEqual(1);
+        expect(controller._animationCollection.getAll().length).toEqual(1);
     });
 
     function setUpCV() {
@@ -603,9 +600,6 @@ defineSuite([
     });
 
     it('adds an animation to correct position or zoom in Columbus view', function() {
-        Tween.removeAll();
-        expect(Tween.getAll().length).toEqual(0);
-
         var frameState = setUpCV();
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, canvas.clientHeight / 2);
@@ -617,7 +611,7 @@ defineSuite([
         expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
 
-        expect(Tween.getAll().length).toEqual(1);
+        expect(controller._animationCollection.getAll().length).toEqual(1);
     });
 
     function setUp3D() {

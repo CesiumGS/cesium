@@ -19,13 +19,19 @@ define([
      * @alias LinearSpline
      * @constructor
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points The array of {@link Cartesian3} control points.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points and times are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
+     *
+     * @see BSpline
+     * @see BezierSpline
+     * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see QuaternionSpline
      *
      * @example
      * var spline = new Cesium.LinearSpline({
@@ -38,6 +44,9 @@ define([
      *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
+     *
+     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var LinearSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -46,14 +55,11 @@ define([
         var times = options.times;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        if (!defined(points) || !defined(times)) {
+            throw new DeveloperError('points and times are required.');
         }
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
-        }
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
         }
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
