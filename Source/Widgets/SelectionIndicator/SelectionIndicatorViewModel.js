@@ -89,6 +89,7 @@ define([
         this._timerRunning = false;
         this._showSelection = false;
         this._titleText = '';
+        this._descriptionText = '';
         this._onCloseInfo = new Event();
         this._defaultPosition = new Cartesian2(this._container.clientWidth, this._container.clientHeight / 2);
         this._computeScreenSpacePosition = function(position, result) {
@@ -127,7 +128,7 @@ define([
          */
         this.triangleRotation = 45;
 
-        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation', '_showSelection', '_titleText']);
+        knockout.track(this, ['_positionX', '_positionY', 'triangleDistance', 'triangleRotation', '_showSelection', '_titleText', '_descriptionText']);
 
         /**
          * Determines the visibility of the selection indicator.
@@ -157,7 +158,27 @@ define([
                 return this._titleText;
             },
             set : function(value) {
-                this._titleText = value;
+                if (this._titleText !== value) {
+                    this._titleText = value;
+                }
+            }
+        });
+
+        /**
+         * The description text in the info box.
+         * @memberof SelectionIndicatorViewModel.prototype
+         *
+         * @type {String}
+         */
+        this.descriptionText = undefined;
+        knockout.defineProperty(this, 'descriptionText', {
+            get : function() {
+                return this._descriptionText;
+            },
+            set : function(value) {
+                if (this._descriptionText !== value) {
+                    this._descriptionText = value;
+                }
             }
         });
 
