@@ -792,8 +792,8 @@ define([
     var translucentAlphaBlend = {
         enabled : true,
         functionSourceRgb : BlendFunction.ZERO,
-        functionDestinationRgb : BlendFunction.ZERO,
-        functionSourceAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+        functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
+        functionSourceAlpha : BlendFunction.ZERO,
         functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
     };
 
