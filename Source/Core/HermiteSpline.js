@@ -154,23 +154,23 @@ define([
      * var spline = new Cesium.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ],
      *     outTangents : [
-     *         new Cartesian3(1125196, -161816, 270551),
-     *         new Cartesian3(-996690.5, -365906.5, 184028.5),
-     *         new Cartesian3(-2096917, 48379.5, -292683.5),
-     *         new Cartesian3(-890902.5, 408999.5, -447115)
+     *         new Cesium.Cartesian3(1125196, -161816, 270551),
+     *         new Cesium.Cartesian3(-996690.5, -365906.5, 184028.5),
+     *         new Cesium.Cartesian3(-2096917, 48379.5, -292683.5),
+     *         new Cesium.Cartesian3(-890902.5, 408999.5, -447115)
      *     ],
      *     inTangents : [
-     *         new Cartesian3(-1993381, -731813, 368057),
-     *         new Cartesian3(-4193834, 96759, -585367),
-     *         new Cartesian3(-1781805, 817999, -894230),
-     *         new Cartesian3(1165345, 112641, 47281)
+     *         new Cesium.Cartesian3(-1993381, -731813, 368057),
+     *         new Cesium.Cartesian3(-4193834, 96759, -585367),
+     *         new Cesium.Cartesian3(-1781805, 817999, -894230),
+     *         new Cesium.Cartesian3(1165345, 112641, 47281)
      *     ]
      * });
      *
@@ -185,21 +185,20 @@ define([
         var inTangents = options.inTangents;
         var outTangents = options.outTangents;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points) || !defined(times) || !defined(inTangents) || !defined(outTangents)) {
             throw new DeveloperError('times, points, inTangents, and outTangents are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
-
         if (inTangents.length !== outTangents.length || inTangents.length !== points.length - 1) {
             throw new DeveloperError('inTangents and outTangents must have a length equal to points.length - 1.');
         }
+        //>>includeEnd('debug');
 
         /**
          * An array of times for the control points.
@@ -248,22 +247,22 @@ define([
      *
      * @example
      * var points = [
-     *     new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *     new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *     new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *     new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *     new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *     new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *     new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *     new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *     new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *     new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      * ];
      *
      * // Add tangents
      * var tangents = new Array(points.length);
-     * tangents[0] = new Cartesian3(1125196, -161816, 270551);
+     * tangents[0] = new Cesium.Cartesian3(1125196, -161816, 270551);
      * for (var i = 1; i < tangents.length - 1; ++i) {
-     *     tangents[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(points[i + 1], points[i - 1]), 0.5);
+     *     tangents[i] = Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.subtract(points[i + 1], points[i - 1]), 0.5);
      * }
-     * tangents[tangents.length - 1] = new Cartesian3(1165345, 112641, 47281);
+     * tangents[tangents.length - 1] = new Cesium.Cartesian3(1165345, 112641, 47281);
      *
-     * var spline = new HermiteSpline({
+     * var spline = new Cesium.HermiteSpline({
      *     times : times,
      *     points : points,
      *     tangents : tangents
@@ -276,6 +275,7 @@ define([
         var points = options.points;
         var tangents = options.tangents;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points) || !defined(times) || !defined(tangents)) {
             throw new DeveloperError('points, times and tangents are required.');
         }
@@ -285,6 +285,7 @@ define([
         if (times.length !== points.length || times.length !== tangents.length) {
             throw new DeveloperError('times, points and tangents must have the same length.');
         }
+        //>>includeEnd('debug');
 
         var outTangents = tangents.slice(0, tangents.length - 1);
         var inTangents = tangents.slice(1, tangents.length);
@@ -312,14 +313,14 @@ define([
      *
      * @example
      * // Create a natural cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new HermiteSpline({
+     * var spline = new Cesium.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
      */
@@ -329,16 +330,17 @@ define([
         var times = options.times;
         var points = options.points;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points) || !defined(times)) {
             throw new DeveloperError('points and times are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         if (points.length < 3) {
             return new LinearSpline({
@@ -376,17 +378,17 @@ define([
      *
      * @example
      * // Create a clamped cubic spline above the earth from Philadelphia to Los Angeles.
-     * var spline = new HermiteSpline({
+     * var spline = new Cesium.HermiteSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ],
-     *     firstTangent : new Cartesian3(1125196, -161816, 270551),
-     *     lastTangent : new Cartesian3(1165345, 112641, 47281)
+     *     firstTangent : new Cesium.Cartesian3(1125196, -161816, 270551),
+     *     lastTangent : new Cesium.Cartesian3(1165345, 112641, 47281)
      * });
      */
     HermiteSpline.createClampedCubic = function(options) {
@@ -397,17 +399,17 @@ define([
         var firstTangent = options.firstTangent;
         var lastTangent = options.lastTangent;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points) || !defined(times) || !defined(firstTangent) || !defined(lastTangent)) {
             throw new DeveloperError('points, times, firstTangent and lastTangent are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         if (points.length < 3) {
             return new LinearSpline({

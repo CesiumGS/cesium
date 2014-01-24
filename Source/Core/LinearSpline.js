@@ -54,6 +54,7 @@ define([
         var points = options.points;
         var times = options.times;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(points) || !defined(times)) {
             throw new DeveloperError('points and times are required.');
         }
@@ -63,6 +64,7 @@ define([
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         /**
          * An array of times for the control points.
