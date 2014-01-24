@@ -351,8 +351,15 @@ define([
 
         this._debugSphere = undefined;
 
+        this._opaqueTexture = undefined;
+        this._accumulationTexture = undefined;
+        this._revealageTexture = undefined;
+        this._depthTexture = undefined;
+        this._depthRenderbuffer = undefined;
+
         this._opaqueFBO = undefined;
         this._translucentFBO = undefined;
+        this._alphaFBO = undefined;
 
         this._compositeCommand = undefined;
 
@@ -959,66 +966,49 @@ define([
         textureCoordinates : 1
     };
 
-    function updateFramebuffers(scene) {
+    function updateTextures(scene, width, height) {
         var context = scene._context;
-        var canvas = scene._canvas;
 
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var sampler = context.createSampler({
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
+        var opaqueTexture = scene._opaqueTexture = context.createTexture2D({
+            width : width,
+            height : height
+        });
+        opaqueTexture.setSampler(sampler);
+        var accumulationTexture = scene._accumulationTexture = context.createTexture2D({
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT
+        });
+        accumulationTexture.setSampler(sampler);
+        var revealageTexture = scene._revealageTexture = context.createTexture2D({
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT
+        });
+        revealageTexture.setSampler(sampler);
 
-        var opaqueFBO = scene._opaqueFBO;
-        var colorTexture = (defined(opaqueFBO) && opaqueFBO.getColorTexture(0)) || undefined;
-        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
-            var sampler = context.createSampler({
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            });
-            var opaqueTexture = context.createTexture2D({
-                width : width,
-                height : height
-            });
-            opaqueTexture.setSampler(sampler);
-            var accumulationTexture = context.createTexture2D({
+        if (context.getDepthTexture()) {
+            scene._depthTexture = context.createTexture2D({
                 width : width,
                 height : height,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
+                pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
             });
-            accumulationTexture.setSampler(sampler);
-            var revealageTexture = context.createTexture2D({
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT
-            });
-            revealageTexture.setSampler(sampler);
-
-            var depthTexture;
-            var depthRenderbuffer;
-            if (context.getDepthTexture()) {
-                depthTexture = context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                });
-            } else {
-                depthRenderbuffer = context.createRenderbuffer({
-                    format : RenderbufferFormat.DEPTH_COMPONENT16
-                });
-            }
-
-            scene._opaqueFBO = context.createFramebuffer({
-                colorTextures : [opaqueTexture],
-                depthTexture : depthTexture,
-                depthRenderbuffer : depthRenderbuffer
-            });
-            scene._translucentFBO = context.createFramebuffer({
-                colorTextures : [accumulationTexture, revealageTexture],
-                depthTexture : depthTexture,
-                depthRenderbuffer : depthRenderbuffer
+        } else {
+            scene._depthRenderbuffer = context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16
             });
         }
+    }
+
+    function updateCompositeCommand(scene) {
+        var context = scene._context;
 
         if (!defined(scene._compositeCommand)) {
             var command = new DrawCommand();
@@ -1028,19 +1018,46 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
             command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, CompositeOITFS, attributeIndices);
-            command.uniformMap = {
-                u_opaque : function() {
-                    return scene._opaqueFBO.getColorTexture(0);
-                },
-                u_accumulation : function() {
-                    return scene._translucentFBO.getColorTexture(0);
-                },
-                u_revealage : function() {
-                    return scene._translucentFBO.getColorTexture(1);
-                }
-            };
 
             scene._compositeCommand = command;
+        }
+
+        scene._compositeCommand.uniformMap = {
+            u_opaque : function() {
+                return scene._opaqueTexture;
+            },
+            u_accumulation : function() {
+                return scene._accumulationTexture;
+            },
+            u_revealage : function() {
+                return scene._revealageTexture;
+            }
+        };
+    }
+
+    function updateFramebuffers(scene) {
+        var context = scene._context;
+        var canvas = scene._canvas;
+
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        var colorTexture = scene._opaqueTexture;
+        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+            updateTextures(scene, width, height);
+
+            scene._opaqueFBO = context.createFramebuffer({
+                colorTextures : [scene._opaqueTexture],
+                depthTexture : scene._depthTexture,
+                depthRenderbuffer : scene._depthRenderbuffer
+            });
+            scene._translucentFBO = context.createFramebuffer({
+                colorTextures : [scene._accumulationTexture, scene._revealageTexture],
+                depthTexture : scene._depthTexture,
+                depthRenderbuffer : scene._depthRenderbuffer
+            });
+
+            updateCompositeCommand(scene);
         }
     }
 
