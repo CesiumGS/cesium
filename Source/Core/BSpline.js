@@ -106,7 +106,7 @@ define([
      * @see QuaternionSpline
      *
      * @example
-     * var spline = new BSpline({
+     * var spline = new Cesium.BSpline({
      *     times : times,
      *     points : positions
      * });
@@ -120,17 +120,17 @@ define([
         var times = options.times;
         var points = options.points;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(times) || !defined(points)) {
             throw new DeveloperError('times and points are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         /**
          * An array of times for the control points.

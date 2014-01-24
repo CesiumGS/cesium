@@ -29,7 +29,7 @@ defineSuite([
     it('constructor throws without points or times', function() {
         expect(function() {
             return new BSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 2', function() {
@@ -37,7 +37,7 @@ defineSuite([
             return new BSpline({
                 points : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -46,7 +46,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     // returns a function for a b-spline curve between points p0 and p1
@@ -89,7 +89,7 @@ defineSuite([
         });
         expect(function() {
             bs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate fails with time out of range', function() {
@@ -99,7 +99,7 @@ defineSuite([
         });
         expect(function() {
             bs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate with result parameter', function() {

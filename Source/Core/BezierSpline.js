@@ -49,20 +49,20 @@ define([
      * @see QuaternionSpline
      *
      * @example
-     * var spline = new BezierSpline({
+     * var spline = new Cesium.BezierSpline({
      *     times : [0.0, 1.0, 2.0],
      *     points : [
-     *         new Cartesian3(0.0, 0.0, 0.0),
-     *         new Cartesian3(3.0, 0.0, 2.0),
-     *         new Cartesian3(7.0, 3.0, 3.0)
+     *         new Cesium.Cartesian3(0.0, 0.0, 0.0),
+     *         new Cesium.Cartesian3(3.0, 0.0, 2.0),
+     *         new Cesium.Cartesian3(7.0, 3.0, 3.0)
      *     ],
      *     outControlPoints : [
-     *         new Cartesian3(1.0, 1.0, 1.0),
-     *         new Cartesian3(-2.0, 1.0, -1.0)
+     *         new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *         new Cesium.Cartesian3(-2.0, 1.0, -1.0)
      *     ],
      *     inControlPoints : [
-     *         new Cartesian3(2.0, -1.0, 1.0),
-     *         new Cartesian3(6.0, -1.0, 2.0)
+     *         new Cesium.Cartesian3(2.0, -1.0, 1.0),
+     *         new Cesium.Cartesian3(6.0, -1.0, 2.0)
      *     ]
      * });
      *
@@ -77,21 +77,20 @@ define([
         var inControlPoints = options.inControlPoints;
         var outControlPoints = options.outControlPoints;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(times) || !defined(points) || !defined(inControlPoints) || !defined(outControlPoints)) {
             throw new DeveloperError('times, points, inControlPoints, and outControlPoints are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
-
         if (inControlPoints.length !== outControlPoints.length || inControlPoints.length !== points.length - 1) {
             throw new DeveloperError('inControlPoints and outControlPoints must have a length equal to points.length - 1.');
         }
+        //>>includeEnd('debug');
 
         /**
          * An array of times for the control points.
