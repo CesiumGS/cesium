@@ -1045,6 +1045,9 @@ define([
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
+        if (!defined(this._vertexAttributes)) {
+            this._bind();
+        }
         return this._vertexAttributes;
     };
 
@@ -1056,6 +1059,9 @@ define([
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
+        if (!defined(this._numberOfVertexAttributes)) {
+            this._bind();
+        }
         return this._numberOfVertexAttributes;
     };
 
@@ -1070,6 +1076,9 @@ define([
      * @see ShaderProgram#getManualUniforms
      */
     ShaderProgram.prototype.getAllUniforms = function() {
+        if (!defined(this._uniformsByName)) {
+            this._bind();
+        }
         return this._uniformsByName;
     };
 
@@ -1082,6 +1091,9 @@ define([
      * @see ShaderProgram#getAllUniforms
      */
     ShaderProgram.prototype.getManualUniforms = function() {
+        if (!defined(this._manualUniforms)) {
+            this._bind();
+        }
         return this._manualUniforms;
     };
 
