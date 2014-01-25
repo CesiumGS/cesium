@@ -912,12 +912,16 @@ define([
         if (!defined(shader)) {
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+            renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
 
             var source = 'vec4 czm_gl_FragColor;\n' +
+                'bool czm_discard = false;\n' +
                 renamedFS + '\n\n' +
                 'void main()\n' +
                 '{\n' +
                 '    czm_translucent_main();\n' +
+                '    if (czm_discard)\n' +
+                '        discard;\n' +
                 '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
                 '    float wzi = czm_alphaWeight(ai);' +
@@ -949,9 +953,9 @@ define([
                 renamedFS + '\n\n' +
                 'void main()\n' +
                 '{\n' +
+                '    czm_translucent_main();\n' +
                 '    if (czm_discard)\n' +
                 '        discard;\n' +
-                '    czm_translucent_main();\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
                 '    gl_FragColor = vec4(ai);\n' +
                 '}\n';
