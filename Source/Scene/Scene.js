@@ -959,77 +959,9 @@ define([
         return shader;
     }
 
-    var scratchPerspectiveFrustum = new PerspectiveFrustum();
-    var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
-    var scratchOrthographicFrustum = new OrthographicFrustum();
-
-    function executeCommands(scene, passState, clearColor) {
-        var frameState = scene._frameState;
-        var camera = scene._camera;
+    function executeFrustumCommands(scene, passState, frustum) {
         var context = scene._context;
         var us = context.getUniformState();
-
-        var frustum;
-        if (defined(camera.frustum.fovy)) {
-            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
-        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
-            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
-            frustum = camera.frustum.clone(scratchOrthographicFrustum);
-        }
-
-        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom) {
-                scene._sunPostProcess = new SunPostProcess();
-            } else {
-                scene._sunPostProcess = scene._sunPostProcess.destroy();
-            }
-
-            scene._sunBloom = scene.sunBloom;
-        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
-            scene._sunPostProcess = scene._sunPostProcess.destroy();
-            scene._sunBloom = false;
-        }
-
-        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
-        var sunVisible = isVisible(sunCommand, frameState);
-
-        if (sunVisible && scene.sunBloom) {
-            passState.framebuffer = scene._sunPostProcess.update(context);
-        }
-
-        var clear = scene._clearColorCommand;
-        Color.clone(clearColor, clear.color);
-        clear.execute(context, passState);
-
-        if (sunVisible && scene.sunBloom) {
-            scene._sunPostProcess.clear(context, scene.backgroundColor);
-        }
-
-        // Ideally, we would render the sky box and atmosphere last for
-        // early-z, but we would have to draw it in each frustum
-        frustum.near = camera.frustum.near;
-        frustum.far = camera.frustum.far;
-        us.updateFrustum(frustum);
-
-        if (defined(skyBoxCommand)) {
-            executeCommand(skyBoxCommand, scene, context, passState);
-        }
-
-        if (defined(skyAtmosphereCommand)) {
-            executeCommand(skyAtmosphereCommand, scene, context, passState);
-        }
-
-        if (defined(sunCommand) && sunVisible) {
-            sunCommand.execute(context, passState);
-
-            if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context);
-                passState.framebuffer = undefined;
-            }
-        }
 
         passState.framebuffer = scene._opaqueFBO;
         scene._opaqueClearCommand.execute(context, passState);
@@ -1122,12 +1054,135 @@ define([
         scene._compositeCommand.execute(context, passState);
     }
 
+    var scratchPerspectiveFrustum = new PerspectiveFrustum();
+    var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
+    var scratchOrthographicFrustum = new OrthographicFrustum();
+
+    function executeCommands(scene, passState, clearColor) {
+        var frameState = scene._frameState;
+        var camera = scene._camera;
+        var context = scene._context;
+        var us = context.getUniformState();
+
+        var frustum;
+        if (defined(camera.frustum.fovy)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
+
+        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
+            if (scene.sunBloom) {
+                scene._sunPostProcess = new SunPostProcess();
+            } else {
+                scene._sunPostProcess = scene._sunPostProcess.destroy();
+            }
+
+            scene._sunBloom = scene.sunBloom;
+        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
+            scene._sunPostProcess = scene._sunPostProcess.destroy();
+            scene._sunBloom = false;
+        }
+
+        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
+        var sunVisible = isVisible(sunCommand, frameState);
+
+        if (sunVisible && scene.sunBloom) {
+            passState.framebuffer = scene._sunPostProcess.update(context);
+        }
+
+        var clear = scene._clearColorCommand;
+        Color.clone(clearColor, clear.color);
+        clear.execute(context, passState);
+
+        if (sunVisible && scene.sunBloom) {
+            scene._sunPostProcess.clear(context, scene.backgroundColor);
+        }
+
+        // Ideally, we would render the sky box and atmosphere last for
+        // early-z, but we would have to draw it in each frustum
+        frustum.near = camera.frustum.near;
+        frustum.far = camera.frustum.far;
+        us.updateFrustum(frustum);
+
+        if (defined(skyBoxCommand)) {
+            executeCommand(skyBoxCommand, scene, context, passState);
+        }
+
+        if (defined(skyAtmosphereCommand)) {
+            executeCommand(skyAtmosphereCommand, scene, context, passState);
+        }
+
+        if (defined(sunCommand) && sunVisible) {
+            sunCommand.execute(context, passState);
+
+            if (scene.sunBloom) {
+                scene._sunPostProcess.execute(context);
+                passState.framebuffer = undefined;
+            }
+        }
+
+        executeFrustumCommands(scene, passState, frustum);
+    }
+
     function executeOverlayCommands(scene, passState) {
         var context = scene._context;
         var commandList = scene._overlayCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             commandList[i].execute(context, passState);
+        }
+    }
+
+    function executePickCommands(scene, passState, clearColor) {
+        var frameState = scene._frameState;
+        var camera = scene._camera;
+        var context = scene._context;
+        var us = context.getUniformState();
+
+        var frustum;
+        if (defined(camera.frustum.fovy)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
+
+        var clear = scene._clearColorCommand;
+        Color.clone(clearColor, clear.color);
+        clear.execute(context, passState);
+
+        var clearDepthStencil = scene._depthStencilClearCommand;
+
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            clearDepthStencil.execute(context, passState);
+
+            var index = numFrustums - i - 1;
+            var frustumCommands = frustumCommandsList[index];
+            frustum.near = frustumCommands.near;
+            frustum.far = frustumCommands.far;
+
+            us.updateFrustum(frustum);
+
+            var j;
+            var commands = frustumCommands.opaqueCommands;
+            var length = frustumCommands.opaqueIndex;
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            commands = frustumCommands.translucentCommands;
+            length = commands.length = frustumCommands.translucentIndex;
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
         }
     }
 
@@ -1466,7 +1521,7 @@ define([
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
+        executePickCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
         executeEvents(frameState);
