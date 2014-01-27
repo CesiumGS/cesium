@@ -100,6 +100,8 @@ define([
         this.createRenderStates = true;
         this.createUniformMaps = true;
         this.createRuntimeNodes = true;
+
+        this.skinnedNodesNames = [];
     }
 
     LoadResources.prototype.finishedPendingLoads = function() {
@@ -397,6 +399,7 @@ define([
         var runtimeNodes = {};
         var skinnedNodes = [];
 
+        var skinnedNodesNames = model._loadResources.skinnedNodesNames;
         var nodes = model.gltf.nodes;
 
         for (var name in nodes) {
@@ -404,9 +407,6 @@ define([
                 var node = nodes[name];
 
                 var runtimeNode = {
-// TODO: remove these?
-                    name : name,
-
                     matrix : undefined,
                     translation : undefined,
                     rotation : undefined,
@@ -421,7 +421,7 @@ define([
 
                     skin : undefined,                   // undefined when node is not skinned
                     jointMatrices : [],                 // empty when node is not skinned
-                    skeletons : [],                     // empty when node is not skinned
+                    joints : [],                        // empty when node is not skinned
 
                     children : [],                      // empty for leaf nodes
                     parents : []                        // empty for root nodes
@@ -429,6 +429,7 @@ define([
                 runtimeNodes[name] = runtimeNode;
 
                 if (defined(node.instanceSkin)) {
+                    skinnedNodesNames.push(name);
                     skinnedNodes.push(runtimeNode);
                 }
             }
@@ -701,18 +702,20 @@ define([
             }
         }
 
-        var skinnedNodes = model._runtime.skinnedNodes;
-        var length = skinnedNodes.length;
+        var skinnedNodesNames = model._loadResources.skinnedNodesNames;
+        var length = skinnedNodesNames.length;
         for (var j = 0; j < length; ++j) {
-            var skinnedNode = skinnedNodes[j];
-            skinnedNode.skin = runtimeSkins[nodes[skinnedNode.name].instanceSkin.skin];
+            var nodeName = skinnedNodesNames[j];
+            var skinnedNode = runtimeNodes[nodeName];
+            var instanceSkin = nodes[nodeName].instanceSkin;
+            skinnedNode.skin = runtimeSkins[instanceSkin.skin];
 
             // TODO: we first find nodes with the names in instanceSkin.skeletons, then we only search those nodes and their sub-trees for nodes with jointId equal to the strings in skin.joints. Is this correct?
             // TODO: https://github.com/KhronosGroup/glTF/issues/193
-            var gltfSkeletons = nodes[skinnedNode.name].instanceSkin.skeletons;
+            var gltfSkeletons = instanceSkin.skeletons;
             var skeletonsLength = gltfSkeletons.length;
             for (var k = 0; k < skeletonsLength; ++k) {
-                skinnedNode.skeletons.push(runtimeNodes[gltfSkeletons[k]]);
+                skinnedNode.joints.push(runtimeNodes[gltfSkeletons[k]]);
             }
         }
     }
@@ -1483,7 +1486,7 @@ define([
             scratchObjectSpace = Matrix4.inverseTransformation(node.transformToRoot, scratchObjectSpace);
 
             var jointMatrices = node.jointMatrices;
-            var joints = node.skeletons;
+            var joints = node.joints;
             var skin = node.skin;
             var bindShapeMatrix = skin.bindShapeMatrix;
             var inverseBindMatrices = skin.inverseBindMatrices;
