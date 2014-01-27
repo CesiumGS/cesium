@@ -239,24 +239,18 @@ define([
             console.log(statistics);
 
             if (endUserOptions.animate) {
-                var animations = model.gltf.animations;
-                for (var name in animations) {
-                    if (animations.hasOwnProperty(name)) {
-                        model.animations.add({
-                            name : name,
-                            // startTime : (new JulianDate()).addSeconds(3),
-                            // startOffset : 3.0,
-                            // stopTime : (new JulianDate()).addSeconds(4),
-                            // removeOnStop : true,
-                            speedup : 0.5, //1.0,
-                            wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
-                            // reverse : true,
-                            start : animationStart,
-                            stop : animationStop
-                            // , update : animationUpdate
-                        });
-                    }
-                }
+                model.animations.addAll({
+                    // startTime : (new JulianDate()).addSeconds(3),
+                    // startOffset : 3.0,
+                    // stopTime : (new JulianDate()).addSeconds(4),
+                    // removeOnStop : true,
+                    speedup : 0.5, //1.0,
+                    wrap : ModelAnimationWrap.REPEAT, // ModelAnimationWrap.MIRRORED_REPEAT,
+                    // reverse : true,
+                    start : animationStart,
+                    stop : animationStop
+                    // , update : animationUpdate
+                });
             }
 
             var center = model.worldBoundingSphere.center;

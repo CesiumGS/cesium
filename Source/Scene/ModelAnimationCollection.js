@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/defaultValue',
@@ -12,6 +13,7 @@ define([
         './ModelAnimationState',
         './ModelAnimation'
     ], function(
+        clone,
         defined,
         defineProperties,
         defaultValue,
@@ -108,6 +110,21 @@ define([
         this._scheduledAnimations.push(scheduledAnimation);
         this.animationAdded.raiseEvent(scheduledAnimation);
         return scheduledAnimation;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    ModelAnimationCollection.prototype.addAll = function(options) {
+        options = clone(options);
+
+        var animations = this._model.gltf.animations;
+        for (var name in animations) {
+            if (animations.hasOwnProperty(name)) {
+                options.name = name;
+                this.add(options);
+            }
+        }
     };
 
     /**
