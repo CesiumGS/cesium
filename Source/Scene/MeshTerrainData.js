@@ -343,8 +343,8 @@ define([
         var that = this;
         return when(upsamplePromise, function(result) {
             return new MeshTerrainData({
-                quantizedVertices : result.vertices,
-                indices : result.indices,
+                quantizedVertices : new Uint16Array(result.vertices),
+                indices : new Uint16Array(result.indices),
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,
                 boundingSphere : BoundingSphere.clone(result.boundingSphere),

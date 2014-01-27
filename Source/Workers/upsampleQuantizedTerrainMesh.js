@@ -239,9 +239,14 @@ define([
             vertices[start + i] = maxShort * (heightBuffer[i] - minimumHeight) / heightRange;
         }
 
+        var indicesTypedArray = new Uint16Array(indices);
+
+        transferableObjects.push(vertices.buffer);
+        transferableObjects.push(indicesTypedArray.buffer);
+
         return {
-            vertices : vertices,
-            indices : indices,
+            vertices : vertices.buffer,
+            indices : indicesTypedArray.buffer,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
             westIndices : westIndices,
