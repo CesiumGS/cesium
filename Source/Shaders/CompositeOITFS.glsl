@@ -17,9 +17,5 @@ void main()
 #endif
     
     transparent.a = 1.0 - transparent.a;
-    
-    // 0.0 if the transparent color is the clear color, 1.0 if the transparent color should be blended with the opaque color.
-    float t = ceil(clamp(abs(transparent.r + transparent.g + transparent.b + transparent.a - 1.0), 0.0, 1.0));
-    vec4 blended = transparent.a * transparent + (1.0 - transparent.a) * opaque;
-    gl_FragColor = mix(opaque, blended, t);
+    gl_FragColor = transparent.a * transparent + (1.0 - transparent.a) * opaque;
 }
