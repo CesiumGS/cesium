@@ -159,8 +159,6 @@ define([
             }
         }
 
-        viewer.scene.moon = undefined;
-        
         var primitives = viewer.scene.getPrimitives();
 
         var northernmost = CesiumMath.toRadians(50.0);
@@ -172,12 +170,12 @@ define([
 
         var numHorizontal = 5;
         var numVertical = 3;
-        
+
         var alpha = 1.0;
 
         var minHeight = 1000.0;
         var maxHeight = 1000000.0;
-        
+
         CesiumMath.setRandomNumberSeed(5);
 
         for (var i = 0; i < numVertical; ++i) {
@@ -187,9 +185,9 @@ define([
             for (var j = 0; j < numHorizontal; ++j) {
                 var west = westernmost + j * (width + gap);
                 var east = west + width;
-                
+
                 var color = new Color(CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), CesiumMath.nextRandomNumber(), alpha);
-                
+
                 var primitive = primitives.add(new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : new ExtentGeometry({
@@ -207,7 +205,7 @@ define([
                         faceforward : true
                     })
                 }));
-                
+
                 alpha -= 1.0 / (numHorizontal * numVertical);
             }
         }

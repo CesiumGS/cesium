@@ -85,6 +85,7 @@ define([
             onlySunLighting : this.onlySunLighting,
             _owner : this
         });
+        this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
     };
