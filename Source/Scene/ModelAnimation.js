@@ -17,7 +17,7 @@ define([
      */
     var ModelAnimation = function(options, runtimeAnimation) {
         /**
-         * DOC_TBA
+         * The glTF animation name that identifies this animation.
          *
          * @type {String}
          *
@@ -26,17 +26,18 @@ define([
         this.name = options.name;
 
         /**
-         * DOC_TBA
+         * The scene time to start playing this animation.  When this is <code>undefined</code>,
+         * the animation starts at the next frame.
          *
          * @type {JulianDate}
          * @default undefined
          *
          * @readonly
          */
-        this.startTime = options.startTime; // when undefined, start next frame
+        this.startTime = options.startTime;
 
         /**
-         * DOC_TBA
+         * The offset, in seconds, from {@link ModelAnimation#startTime} to start playing.
          *
          * @type {Number}
          * @default undefined
@@ -46,17 +47,21 @@ define([
         this.startOffset = defaultValue(options.startOffset, 0.0); // in seconds
 
         /**
-         * DOC_TBA
+         * The scene time to stop playing this animation.  When this is <code>undefined</code>,
+         * the animation is played for its full duration and perhaps repeated depending on
+         * {@link ModelAnimation#wrap}.
          *
          * @type {JulianDate}
          * @default undefined
          *
          * @readonly
          */
-        this.stopTime = options.stopTime; // when defined, play until end of animation depending on wrap
+        this.stopTime = options.stopTime;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the animation is removed after it stops playing.
+         * This is slightly more efficient that not removing it, but if, for example,
+         * time is reversed, the animation is not played again.
          *
          * @type {Boolean}
          * @default false
@@ -64,7 +69,11 @@ define([
         this.removeOnStop = defaultValue(options.removeOnStop, false);
 
         /**
-         * DOC_TBA
+         * Values greater than <code>1.0</code> increase the speed that the animation is played relative
+         * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
+         * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
+         * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
+         * will play in one second even if <code>speedup</code> is <code>1.0</code>.
          *
          * @type {Number}
          * @default 1.0
@@ -74,7 +83,7 @@ define([
         this.speedup = defaultValue(options.speedup, 1.0);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the animation is played in reverse.
          *
          * @type {Boolean}
          * @default false
@@ -84,9 +93,9 @@ define([
         this.reverse = defaultValue(options.reverse, false);
 
         /**
-         * DOC_TBA
+         * Determines if and how the animation is repeated.
          *
-         * @type {ModelAnimationRepea}
+         * @type {ModelAnimationWrap.CLAMP}
          * @default {@link ModelAnimationWrap.CLAMP}
          *
          * @readonly
@@ -94,26 +103,61 @@ define([
         this.wrap = defaultValue(options.wrap, ModelAnimationWrap.CLAMP);
 
         /**
-         * DOC_TBA
+         * The event fired when this animated is started.  This can be used, for
+         * example, to play a sound or start a particle system, when the animation starts.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
          *
          * @type {Event}
          * @default undefined
+         *
+         * @example
+         * var start = new Event();
+         * start.addEventListener(function(model, animation) {
+         *   console.log('Animation started: ' + animation.name);
+         * });
+         * animation.start = start;
          */
         this.start = options.start;
 
         /**
-         * DOC_TBA
+         * The event fired when on each frame when this animation is updated.  The
+         * current time of the animation, relative to the glTF animation time span, is
+         * passed to the event, which allows, for example, starting new animations at a
+         * specific time relative to a playing animation.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
          *
          * @type {Event}
          * @default undefined
+         *
+         * @example
+         * var update = new Event();
+         * update.addEventListener(function(model, animation, time) {
+         *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+         * });
+         * animation.update = update;
          */
         this.update = options.update;
 
         /**
-         * DOC_TBA
+         * The event fired when this animated is stopped.  This can be used, for
+         * example, to play a sound or start a particle system, when the animation stops.
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
          *
          * @type {Event}
          * @default undefined
+         *
+         * @example
+         * var stop = new Event();
+         * stop.addEventListener(function(model, animation) {
+         *   console.log('Animation stopped: ' + animation.name);
+         * });
+         * animation.stop = stop;
          */
         this.stop = options.stop;
 

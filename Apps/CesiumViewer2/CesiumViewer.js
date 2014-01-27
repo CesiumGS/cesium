@@ -211,24 +211,24 @@ define([
         }));
 
         var animationStart = new Event();
-        animationStart.addEventListener(function() {
-            console.log('start animation');
+        animationStart.addEventListener(function(model, animation) {
+            console.log('start animation ' + animation.name);
         });
 
         var animationStop = new Event();
-        animationStop.addEventListener(function() {
-            console.log('stop animation');
+        animationStop.addEventListener(function(model, animation) {
+            console.log('stop animation ' + animation.name);
         });
 
         var animationUpdate = new Event();
-        animationUpdate.addEventListener(function() {
-            console.log('update animation');
+        animationUpdate.addEventListener(function(model, animation, time) {
+            console.log('update animation ' + animation.name + ' at time ' + time);
         });
 
-        model.animations.animationAdded.addEventListener(function(animation) {
+        model.animations.animationAdded.addEventListener(function(model, animation) {
             console.log('Added ' + animation.name);
         });
-        model.animations.animationRemoved.addEventListener(function(animation) {
+        model.animations.animationRemoved.addEventListener(function(model, animation) {
             console.log('Removed ' + animation.name);
         });
 

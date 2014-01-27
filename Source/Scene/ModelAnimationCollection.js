@@ -86,7 +86,8 @@ define([
     ModelAnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var animations = this._model._runtime.animations;
+        var model = this._model;
+        var animations = model._runtime.animations;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(animations)) {
@@ -108,7 +109,7 @@ define([
 
         var scheduledAnimation = new ModelAnimation(options, animation);
         this._scheduledAnimations.push(scheduledAnimation);
-        this.animationAdded.raiseEvent(scheduledAnimation);
+        this.animationAdded.raiseEvent(model, scheduledAnimation);
         return scheduledAnimation;
     };
 
@@ -253,7 +254,8 @@ define([
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (defined(scheduledAnimation.start)) {
                         events.push({
-                            event : scheduledAnimation.start
+                            event : scheduledAnimation.start,
+                            eventArguments : [model, scheduledAnimation]
                         });
                     }
                 }
@@ -280,7 +282,8 @@ define([
 
                 if (defined(scheduledAnimation.update)) {
                     events.push({
-                        event : scheduledAnimation.update
+                        event : scheduledAnimation.update,
+                        eventArguments : [model, scheduledAnimation, localAnimationTime]
                     });
                 }
                 animationOccured = true;
@@ -290,7 +293,8 @@ define([
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
                         events.push({
-                            event : scheduledAnimation.stop
+                            event : scheduledAnimation.stop,
+                            eventArguments : [model, scheduledAnimation]
                         });
                     }
 
@@ -308,7 +312,7 @@ define([
             scheduledAnimations.splice(scheduledAnimations.indexOf(animationToRemove), 1);
             events.push({
                 event : this.animationRemoved,
-                eventArguments : [animationToRemove]
+                eventArguments : [model, animationToRemove]
             });
         }
         animationsToRemove.length = 0;
