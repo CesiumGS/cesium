@@ -99,11 +99,15 @@ define([
         clear.execute(context);
     };
 
-    SunPostProcess.prototype.execute = function(context) {
+    SunPostProcess.prototype.execute = function(context, framebuffer) {
         this._downSampleCommand.execute(context, this._downSamplePassState);
         this._brightPassCommand.execute(context, this._downSamplePassState);
         this._blurXCommand.execute(context, this._downSamplePassState);
         this._blurYCommand.execute(context, this._downSamplePassState);
+
+        this._fullScreenCommand.framebuffer = framebuffer;
+        this._blendCommand.framebuffer = framebuffer;
+
         this._fullScreenCommand.execute(context);
         this._blendCommand.execute(context, this._upSamplePassState);
     };

@@ -971,16 +971,6 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
-        passState.framebuffer = scene._opaqueFBO;
-        scene._opaqueClearCommand.execute(context, passState);
-        passState.framebuffer = scene._translucentFBO;
-        scene._translucentClearCommand.execute(context, passState);
-
-        if (!context.getDrawBuffers()) {
-            passState.framebuffer = scene._alphaFBO;
-            scene._alphaClearCommand.execute(context, passState);
-        }
-
         var clearDepthStencil = scene._depthStencilClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1099,16 +1089,30 @@ define([
         var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
-        if (sunVisible && scene.sunBloom) {
-            passState.framebuffer = scene._sunPostProcess.update(context);
-        }
-
         var clear = scene._clearColorCommand;
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
+        passState.framebuffer = scene._opaqueFBO;
+        scene._opaqueClearCommand.execute(context, passState);
+        passState.framebuffer = scene._translucentFBO;
+        scene._translucentClearCommand.execute(context, passState);
+
+        if (!context.getDrawBuffers()) {
+            passState.framebuffer = scene._alphaFBO;
+            scene._alphaClearCommand.execute(context, passState);
+        }
+
+        if (sunVisible && scene.sunBloom) {
+            passState.framebuffer = scene._sunPostProcess.update(context);
+        } else {
+            passState.framebuffer = scene._opaqueFBO;
+        }
+
         if (sunVisible && scene.sunBloom) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
+        } else {
+            passState.framebuffer = scene._opaqueFBO;
         }
 
         // Ideally, we would render the sky box and atmosphere last for
@@ -1129,7 +1133,7 @@ define([
             sunCommand.execute(context, passState);
 
             if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context);
+                scene._sunPostProcess.execute(context, scene._opaqueFBO);
                 passState.framebuffer = undefined;
             }
         }
