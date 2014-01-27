@@ -1008,6 +1008,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
+        this._animationCollection.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
