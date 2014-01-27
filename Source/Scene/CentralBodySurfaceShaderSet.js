@@ -15,10 +15,10 @@ define([
      * @alias CentralBodySurfaceShaderSet
      * @private
      */
-    function CentralBodySurfaceShaderSet(attributeIndices) {
+    function CentralBodySurfaceShaderSet(attributeLocations) {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
-        this._attributeIndices = attributeIndices;
+        this._attributeLocations = attributeLocations;
         this._shaders = {};
     }
 
@@ -105,7 +105,7 @@ define([
             shader = context.getShaderCache().getShaderProgram(
                 vs,
                 fs,
-                this._attributeIndices);
+                this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;
