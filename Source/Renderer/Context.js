@@ -2648,7 +2648,7 @@ define([
         return this.createVertexArray(vaAttributes, indexBuffer);
     };
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -2690,7 +2690,7 @@ define([
 
         vertexArray = this.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
