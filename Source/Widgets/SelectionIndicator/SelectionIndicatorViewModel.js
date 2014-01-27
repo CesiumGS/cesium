@@ -8,6 +8,7 @@ define([
         '../../Core/Event',
         '../../Scene/SceneTransforms',
         '../../ThirdParty/knockout',
+        '../../ThirdParty/sanitize-caja',
         '../../ThirdParty/Tween'
     ], function(
         Cartesian2,
@@ -18,6 +19,7 @@ define([
         Event,
         SceneTransforms,
         knockout,
+        sanitizeCaja,
         Tween) {
     "use strict";
 
@@ -80,6 +82,7 @@ define([
             throw new DeveloperError('selectionIndicatorElement is required.');
         }
 
+        this._sanitizer = undefined;
         this._scene = scene;
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
@@ -91,6 +94,7 @@ define([
         this._showSelection = false;
         this._titleText = '';
         this._descriptionText = '';
+        this._unsanitizedDescriptionText = '';
         this._onCloseInfo = new Event();
         this._defaultPosition = new Cartesian2(this._container.clientWidth, this._container.clientHeight / 2);
         this._computeScreenSpacePosition = function(position, result) {
@@ -183,7 +187,13 @@ define([
                 return this._descriptionText;
             },
             set : function(value) {
-                if (this._descriptionText !== value) {
+                if (this._unsanitizedDescriptionText !== value) {
+                    this._unsanitizedDescriptionText = value;
+                    if (defined(this._sanitizer)) {
+                        value = this._sanitizer(value);
+                    } else if (defined(SelectionIndicatorViewModel.defaultSanitizer)) {
+                        value = SelectionIndicatorViewModel.defaultSanitizer(value);
+                    }
                     this._descriptionText = value;
                 }
             }
@@ -220,6 +230,17 @@ define([
             }
         });
     };
+
+    /**
+     * Gets or sets the default HTML sanitization function to use for all instances.
+     * By default, Google Caja is used with only basic HTML allowed.
+     * A specific instance can override this property by setting its prototype sanitizer property.
+     *
+     * This property is a function which takes a unsanitized HTML string and returns a
+     * sanitized version.
+     * @memberof SelectionIndicatorViewModel
+     */
+    SelectionIndicatorViewModel.defaultSanitizer = sanitizeCaja;
 
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model
@@ -391,6 +412,21 @@ define([
         onCloseInfo : {
             get : function() {
                 return this._onCloseInfo;
+            }
+        },
+        /**
+         * Gets the HTML sanitization function to use for the selection description.
+         */
+        sanitizer : {
+            get : function() {
+                return this._sanitizer;
+            },
+            set : function(value) {
+                this._sanitizer = value;
+                //Force resanitization of existing text
+                var oldText = this._unsanitizedDescriptionText;
+                this._unsanitizedDescriptionText = '';
+                this.descriptionText = oldText;
             }
         }
     });
