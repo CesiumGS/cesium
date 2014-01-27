@@ -107,7 +107,7 @@ define([
         this._material = undefined;
     };
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -155,7 +155,7 @@ define([
 
                 var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
                 this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                    this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
+                    this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeLocations);
             }
 
             this._material.update(context);
