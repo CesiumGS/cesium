@@ -15,7 +15,7 @@ define([
      * @alias ModelAnimation
      * @internalConstructor
      */
-    var ModelAnimation = function(options, runtimeAnimation) {
+    var ModelAnimation = function(options, model, runtimeAnimation) {
         /**
          * The glTF animation name that identifies this animation.
          *
@@ -165,6 +165,20 @@ define([
         this._runtimeAnimation = runtimeAnimation;
         this._startTime = undefined;
         this._duration = undefined;
+
+        // To avoid allocations in ModelAnimationCollection.update
+        this._startEvent = {
+            event : undefined,
+            eventArguments : [model, this]
+        };
+        this._updateEvent = {
+            event : undefined,
+            eventArguments : [model, this, 0.0]
+        };
+        this._stopEvent = {
+            event : undefined,
+            eventArguments : [model, this]
+        };
     };
 
     return ModelAnimation;

@@ -107,7 +107,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var scheduledAnimation = new ModelAnimation(options, animation);
+        var scheduledAnimation = new ModelAnimation(options, model, animation);
         this._scheduledAnimations.push(scheduledAnimation);
         this.animationAdded.raiseEvent(model, scheduledAnimation);
         return scheduledAnimation;
@@ -253,10 +253,8 @@ define([
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (defined(scheduledAnimation.start)) {
-                        events.push({
-                            event : scheduledAnimation.start,
-                            eventArguments : [model, scheduledAnimation]
-                        });
+                        scheduledAnimation._startEvent.event = scheduledAnimation.start;
+                        events.push(scheduledAnimation._startEvent);
                     }
                 }
 
@@ -281,10 +279,9 @@ define([
                 animateChannels(runtimeAnimation, localAnimationTime);
 
                 if (defined(scheduledAnimation.update)) {
-                    events.push({
-                        event : scheduledAnimation.update,
-                        eventArguments : [model, scheduledAnimation, localAnimationTime]
-                    });
+                    scheduledAnimation._updateEvent.event = scheduledAnimation.update;
+                    scheduledAnimation._updateEvent.eventArguments[2] = localAnimationTime;
+                    events.push(scheduledAnimation._updateEvent);
                 }
                 animationOccured = true;
             } else {
@@ -292,10 +289,8 @@ define([
                 if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (defined(scheduledAnimation.stop)) {
-                        events.push({
-                            event : scheduledAnimation.stop,
-                            eventArguments : [model, scheduledAnimation]
-                        });
+                        scheduledAnimation._stopEvent.event = scheduledAnimation.stop;
+                        events.push(scheduledAnimation._stopEvent);
                     }
 
                     if (scheduledAnimation.removeOnStop) {
