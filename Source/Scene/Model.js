@@ -407,22 +407,28 @@ define([
                 var node = nodes[name];
 
                 var runtimeNode = {
+                    // Animation targets
                     matrix : undefined,
                     translation : undefined,
                     rotation : undefined,
                     scale : undefined,
 
+                    // Computed transforms
                     transformToRoot : new Matrix4(),
                     computedMatrix : new Matrix4(),
                     dirty : false,                      // for graph traversal
                     anyAncestorDirty : false,           // for graph traversal
 
+                    // Rendering
                     commands : [],                      // empty for transform, light, and camera nodes
 
-                    skin : undefined,                   // undefined when node is not skinned
-                    jointMatrices : [],                 // empty when node is not skinned
+                    // Skinning
+                    inverseBindMatrices : undefined,    // undefined when node is not skinned
+                    bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
                     joints : [],                        // empty when node is not skinned
+                    computedJointMatrices : [],         // empty when node is not skinned
 
+                    // Graph pointers
                     children : [],                      // empty for leaf nodes
                     parents : []                        // empty for root nodes
                 };
@@ -650,6 +656,34 @@ define([
         return attributeLocations;
     }
 
+    function createJoints(model, runtimeSkins) {
+        var gltf = model.gltf;
+        var skins = gltf.skins;
+        var nodes = gltf.nodes;
+        var runtimeNodes = model._runtime.nodes;
+
+        var skinnedNodesNames = model._loadResources.skinnedNodesNames;
+        var length = skinnedNodesNames.length;
+        for (var j = 0; j < length; ++j) {
+            var name = skinnedNodesNames[j];
+            var skinnedNode = runtimeNodes[name];
+            var instanceSkin = nodes[name].instanceSkin;
+//            var gltfSkin = skins[instanceSkin.skin];
+
+            // TODO: we first find nodes with the names in instanceSkin.skeletons, then we only search those nodes and their sub-trees for nodes with jointId equal to the strings in skin.joints. Is this correct?
+            // TODO: https://github.com/KhronosGroup/glTF/issues/193
+            var gltfSkeletons = instanceSkin.skeletons;
+            var skeletonsLength = gltfSkeletons.length;
+            for (var k = 0; k < skeletonsLength; ++k) {
+                skinnedNode.joints.push(runtimeNodes[gltfSkeletons[k]]);
+            }
+
+            var runtimeSkin = runtimeSkins[instanceSkin.skin];
+            skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
+            skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
+        }
+    }
+
     function createSkins(model) {
         var loadResources = model._loadResources;
 
@@ -666,8 +700,6 @@ define([
         var buffers = loadResources.buffers;
         var bufferViews = gltf.bufferViews;
         var skins = gltf.skins;
-        var nodes = gltf.nodes;
-        var runtimeNodes = model._runtime.nodes;
         var runtimeSkins = {};
 
         for (var name in skins) {
@@ -702,22 +734,7 @@ define([
             }
         }
 
-        var skinnedNodesNames = model._loadResources.skinnedNodesNames;
-        var length = skinnedNodesNames.length;
-        for (var j = 0; j < length; ++j) {
-            var nodeName = skinnedNodesNames[j];
-            var skinnedNode = runtimeNodes[nodeName];
-            var instanceSkin = nodes[nodeName].instanceSkin;
-            skinnedNode.skin = runtimeSkins[instanceSkin.skin];
-
-            // TODO: we first find nodes with the names in instanceSkin.skeletons, then we only search those nodes and their sub-trees for nodes with jointId equal to the strings in skin.joints. Is this correct?
-            // TODO: https://github.com/KhronosGroup/glTF/issues/193
-            var gltfSkeletons = instanceSkin.skeletons;
-            var skeletonsLength = gltfSkeletons.length;
-            for (var k = 0; k < skeletonsLength; ++k) {
-                skinnedNode.joints.push(runtimeNodes[gltfSkeletons[k]]);
-            }
-        }
+        createJoints(model, runtimeSkins);
     }
 
     function getChannelEvaluator(runtimeNode, targetPath, spline) {
@@ -1128,7 +1145,7 @@ define([
 
     function createJointMatricesFunction(runtimeNode) {
         return function() {
-            return runtimeNode.jointMatrices;
+            return runtimeNode.computedJointMatrices;
         };
     }
 
@@ -1485,20 +1502,19 @@ define([
 
             scratchObjectSpace = Matrix4.inverseTransformation(node.transformToRoot, scratchObjectSpace);
 
-            var jointMatrices = node.jointMatrices;
+            var computedJointMatrices = node.computedJointMatrices;
             var joints = node.joints;
-            var skin = node.skin;
-            var bindShapeMatrix = skin.bindShapeMatrix;
-            var inverseBindMatrices = skin.inverseBindMatrices;
+            var bindShapeMatrix = node.bindShapeMatrix;
+            var inverseBindMatrices = node.inverseBindMatrices;
             var inverseBindMatricesLength = inverseBindMatrices.length;
 
             for (var m = 0; m < inverseBindMatricesLength; ++m) {
                 // [joint-matrix] = [node-to-root^-1][joint-to-root][inverse-bind][bind-shape]
-                jointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, jointMatrices[m]);
-                jointMatrices[m] = Matrix4.multiplyTransformation(jointMatrices[m], inverseBindMatrices[m], jointMatrices[m]);
+                computedJointMatrices[m] = Matrix4.multiplyTransformation(scratchObjectSpace, joints[m].transformToRoot, computedJointMatrices[m]);
+                computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], inverseBindMatrices[m], computedJointMatrices[m]);
                 if (defined(bindShapeMatrix)) {
                     // Optimization for when bind shape matrix is the identity.
-                    jointMatrices[m] = Matrix4.multiplyTransformation(jointMatrices[m], bindShapeMatrix, jointMatrices[m]);
+                    computedJointMatrices[m] = Matrix4.multiplyTransformation(computedJointMatrices[m], bindShapeMatrix, computedJointMatrices[m]);
                 }
             }
         }
