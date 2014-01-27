@@ -16,7 +16,7 @@ define([
         '../Core/Math',
         './Credit',
         './GeographicTilingScheme',
-        './MeshTerrainData',
+        './QuantizedMeshTerrainData',
         './TerrainProvider',
         './TileProviderError',
         '../ThirdParty/when'
@@ -37,7 +37,7 @@ define([
         CesiumMath,
         Credit,
         GeographicTilingScheme,
-        MeshTerrainData,
+        QuantizedMeshTerrainData,
         TerrainProvider,
         TileProviderError,
         when) {
@@ -296,7 +296,7 @@ define([
 
             var skirtHeight = that.getLevelMaximumGeometricError(level) * 2.0;
 
-            return new MeshTerrainData({
+            return new QuantizedMeshTerrainData({
                 center : center,
                 minimumHeight : minimumHeight,
                 maximumHeight : maximumHeight,
