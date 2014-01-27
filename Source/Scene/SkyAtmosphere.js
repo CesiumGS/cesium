@@ -145,7 +145,7 @@ define([
             }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+                attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;
