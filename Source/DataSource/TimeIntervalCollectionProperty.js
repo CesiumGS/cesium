@@ -65,9 +65,9 @@ define(['./Property',
         var raiseDefinitionChanged = function() {
             definitionChanged.raiseEvent(that);
         };
-        intervals.addInterval = wrapFunction(intervals, intervals.addInterval, raiseDefinitionChanged);
-        intervals.removeInterval = wrapFunction(intervals, intervals.removeInterval, raiseDefinitionChanged);
-        intervals.clear = wrapFunction(intervals, intervals.clear, raiseDefinitionChanged);
+        intervals.addInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.addInterval);
+        intervals.removeInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.removeInterval);
+        intervals.clear = wrapFunction(intervals, raiseDefinitionChanged, intervals.clear);
 
         this._intervals = intervals;
         this._definitionChanged = definitionChanged;

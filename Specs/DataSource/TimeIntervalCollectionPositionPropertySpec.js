@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DataSource/TimeIntervalCollectionPositionProperty',
+defineSuite(['DataSource/TimeIntervalCollectionPositionProperty',
              'DataSource/PositionProperty',
              'Core/Cartesian3',
              'Core/JulianDate',

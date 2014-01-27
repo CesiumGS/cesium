@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DataSource/ConstantPositionProperty',
+defineSuite(['DataSource/ConstantPositionProperty',
              'DataSource/PositionProperty',
              'Core/Cartesian3',
              'Core/JulianDate',

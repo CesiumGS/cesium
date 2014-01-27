@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DataSource/SampledProperty',
+defineSuite(['DataSource/SampledProperty',
              'Core/defined',
              'Core/JulianDate',
              'Core/LinearApproximation',

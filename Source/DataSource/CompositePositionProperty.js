@@ -1,71 +1,54 @@
 /*global define*/
-define(['./PositionProperty',
-        './Property',
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/ReferenceFrame',
-        '../Core/TimeIntervalCollection',
-        '../Core/wrapFunction'
+        './CompositeProperty',
+        './Property'
     ], function(
-        PositionProperty,
-        Property,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         ReferenceFrame,
-        TimeIntervalCollection,
-        wrapFunction) {
+        CompositeProperty,
+        Property) {
     "use strict";
 
     /**
-     * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
+     * A {@link CompositeProperty} which is also a {@link PositionProperty}.
      *
-     * @alias TimeIntervalCollectionPositionProperty
+     * @alias CompositePositionProperty
      * @constructor
-     *
-     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
-    var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
-        var intervals = new TimeIntervalCollection();
-        var definitionChanged = new Event();
-
-        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
-        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
-        var that = this;
-        var raiseDefinitionChanged = function() {
-            definitionChanged.raiseEvent(that);
-        };
-        intervals.addInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.addInterval);
-        intervals.removeInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.removeInterval);
-        intervals.clear = wrapFunction(intervals, raiseDefinitionChanged, intervals.clear);
-
-        this._intervals = intervals;
-        this._definitionChanged = definitionChanged;
+    var CompositePositionProperty = function(referenceFrame) {
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+        this._definitionChanged = new Event();
+        this._composite = new CompositeProperty();
+        this._composite.definitionChanged.addEventListener(function() {
+            this._definitionChanged.raiseEvent(this);
+        }, this);
     };
 
-    defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
+    defineProperties(CompositePositionProperty.prototype, {
         /**
-         * Gets a value indicating if this property is constant.  A value is considered
-         * constant if getValue always returns the same result for the current definition.
-         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * Gets a value indicating if this property is constant.
+         * @memberof CompositePositionProperty.prototype
          * @type {Boolean}
          */
         isConstant : {
             get : function() {
-                return this._intervals.isEmpty();
+                return this._composite.isConstant;
             }
         },
         /**
          * Gets the event that is raised whenever the definition of this property changes.
-         * The definition is considered to have changed if a call to getValue would return
-         * a different result for the same time.
-         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof CompositePositionProperty.prototype
          * @type {Event}
          */
         definitionChanged : {
@@ -75,23 +58,30 @@ define(['./PositionProperty',
         },
         /**
          * Gets the interval collection.
-         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * @memberof CompositePositionProperty.prototype
+         *
          * @type {TimeIntervalCollection}
          */
         intervals : {
             get : function() {
-                return this._intervals;
+                return this._composite.intervals;
             }
         },
         /**
-         * Gets the reference frame in which the position is defined.
-         * @memberof TimeIntervalCollectionPositionProperty.prototype
-         * @Type {ReferenceFrame}
-         * @default ReferenceFrame.FIXED;
+         * Gets or sets the reference frame which this position presents itself as.
+         * Each PositionProperty making up this object has it's own reference frame,
+         * so this property merely exposes a "preferred" reference frame for clients
+         * to use.
+         * @memberof CompositePositionProperty.prototype
+         *
+         * @Type {ReferenceFrame} The preferred reference frame.
          */
         referenceFrame : {
             get : function() {
                 return this._referenceFrame;
+            },
+            set : function(value) {
+                this._referenceFrame = value;
             }
         }
     });
@@ -106,7 +96,7 @@ define(['./PositionProperty',
      *
      * @exception {DeveloperError} time is required.
      */
-    TimeIntervalCollectionPositionProperty.prototype.getValue = function(time, result) {
+    CompositePositionProperty.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
     };
 
@@ -122,7 +112,7 @@ define(['./PositionProperty',
      * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} referenceFrame is required.
      */
-    TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+    CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -132,9 +122,9 @@ define(['./PositionProperty',
         }
         //>>includeEnd('debug');
 
-        var position = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(position)) {
-            return PositionProperty.convertToReferenceFrame(time, position, this._referenceFrame, referenceFrame, result);
+        var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(time);
+        if (defined(innerProperty)) {
+            return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
         }
         return undefined;
     };
@@ -142,17 +132,17 @@ define(['./PositionProperty',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeIntervalCollectionPositionProperty
+     * @memberof CompositePositionProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    TimeIntervalCollectionPositionProperty.prototype.equals = function(other) {
+    CompositePositionProperty.prototype.equals = function(other) {
         return this === other || //
-               (other instanceof TimeIntervalCollectionPositionProperty && //
-                this._intervals.equals(other._intervals, Property.equals) && //
-                this._referenceFrame === other._referenceFrame);
+               (other instanceof CompositePositionProperty && //
+                this._referenceFrame === other._referenceFrame && //
+                this._composite.equals(other._composite, Property.equals));
     };
 
-    return TimeIntervalCollectionPositionProperty;
+    return CompositePositionProperty;
 });

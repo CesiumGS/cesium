@@ -69,9 +69,9 @@ define(['./Property',
             subscribeAll(that, eventHelper, definitionChanged, intervals);
             definitionChanged.raiseEvent(that);
         };
-        intervals.addInterval = wrapFunction(intervals, intervals.addInterval, intervalsChanged);
-        intervals.removeInterval = wrapFunction(intervals, intervals.removeInterval, intervalsChanged);
-        intervals.clear = wrapFunction(intervals, intervals.clear, intervalsChanged);
+        intervals.addInterval = wrapFunction(intervals, intervalsChanged, intervals.addInterval);
+        intervals.removeInterval = wrapFunction(intervals, intervalsChanged, intervals.removeInterval);
+        intervals.clear = wrapFunction(intervals, intervalsChanged, intervals.clear);
 
         this._intervals = intervals;
         this._definitionChanged = definitionChanged;

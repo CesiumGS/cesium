@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DataSource/SampledPositionProperty',
+defineSuite(['DataSource/SampledPositionProperty',
              'DataSource/PositionProperty',
              'Core/Cartesian3',
              'Core/defined',
