@@ -234,7 +234,7 @@ define([
 
         var statistics;
 
-        model.readyToRender.addEventListener(function() {
+        model.readyToRender.addEventListener(function(model) {
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
 

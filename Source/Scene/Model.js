@@ -128,8 +128,6 @@ define([
         return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
     };
 
-// TODO: what data should we pass to all events?
-
     /**
      * DOC_TBA
      *
@@ -1634,7 +1632,8 @@ define([
         if (justLoaded) {
             // Called after modelMatrix update.
             frameState.events.push({
-                event : this.readyToRender
+                event : this.readyToRender,
+                eventArguments : [this]
             });
         }
 
