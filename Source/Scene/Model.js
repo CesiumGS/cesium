@@ -422,11 +422,14 @@ define([
                     // Rendering
                     commands : [],                      // empty for transform, light, and camera nodes
 
-                    // Skinning
+                    // Skinned node
                     inverseBindMatrices : undefined,    // undefined when node is not skinned
                     bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
                     joints : [],                        // empty when node is not skinned
                     computedJointMatrices : [],         // empty when node is not skinned
+
+                    // Joint node
+                    jointId : node.jointId,             // undefined when node is not a joint
 
                     // Graph pointers
                     children : [],                      // empty for leaf nodes
@@ -656,6 +659,30 @@ define([
         return attributeLocations;
     }
 
+    function searchForest(forest, jointId) {
+        var length = forest.length;
+        for (var i = 0; i < length; ++i) {
+            var stack = [forest[i]]; // Push root node of tree
+
+            while (stack.length > 0) {
+                var n = stack.pop();
+
+                if (n.jointId === jointId) {
+                    return n;
+                }
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    stack.push(children[k]);
+                }
+            }
+        }
+
+        // This should never happen; the skeleton should have a node for all joints in the skin.
+        return undefined;
+    }
+
     function createJoints(model, runtimeSkins) {
         var gltf = model.gltf;
         var skins = gltf.skins;
@@ -668,19 +695,27 @@ define([
             var name = skinnedNodesNames[j];
             var skinnedNode = runtimeNodes[name];
             var instanceSkin = nodes[name].instanceSkin;
-//            var gltfSkin = skins[instanceSkin.skin];
-
-            // TODO: we first find nodes with the names in instanceSkin.skeletons, then we only search those nodes and their sub-trees for nodes with jointId equal to the strings in skin.joints. Is this correct?
-            // TODO: https://github.com/KhronosGroup/glTF/issues/193
-            var gltfSkeletons = instanceSkin.skeletons;
-            var skeletonsLength = gltfSkeletons.length;
-            for (var k = 0; k < skeletonsLength; ++k) {
-                skinnedNode.joints.push(runtimeNodes[gltfSkeletons[k]]);
-            }
 
             var runtimeSkin = runtimeSkins[instanceSkin.skin];
             skinnedNode.inverseBindMatrices = runtimeSkin.inverseBindMatrices;
             skinnedNode.bindShapeMatrix = runtimeSkin.bindShapeMatrix;
+
+            // 1. Find nodes with the names in instanceSkin.skeletons (the node's skeletons)
+            // 2. These nodes form the root nodes of the forest to search for each joint in skin.joints.  This search uses jointId, not the node's name.
+
+            var forest = [];
+            var gltfSkeletons = instanceSkin.skeletons;
+            var skeletonsLength = gltfSkeletons.length;
+            for (var k = 0; k < skeletonsLength; ++k) {
+                forest.push(runtimeNodes[gltfSkeletons[k]]);
+            }
+
+            var gltfJointIds = skins[instanceSkin.skin].joints;
+            var jointIdsLength = gltfJointIds.length;
+            for (var i = 0; i < jointIdsLength; ++i) {
+                var jointId = gltfJointIds[i];
+                skinnedNode.joints.push(searchForest(forest, jointId));
+            }
         }
     }
 
