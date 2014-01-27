@@ -5,10 +5,6 @@ define([
         loadWithXhr) {
     "use strict";
 
-    var defaultHeaders = {
-            Accept: 'application/octet-stream,*/*;q=0.01'
-        };
-
     /**
      * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
      * an ArrayBuffer once loaded, or reject if the URL failed to load.  The data is loaded
