@@ -234,11 +234,10 @@ define([
 
         var statistics;
 
-        model.jsonLoad.addEventListener(function() {
+        model.readyToRender.addEventListener(function() {
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
-        });
-        model.readyToRender.addEventListener(function() {
+
             if (endUserOptions.animate) {
                 var animations = model.gltf.animations;
                 for (var name in animations) {

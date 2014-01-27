@@ -222,11 +222,6 @@ define([
         /**
          * DOC_TBA
          */
-        this.jsonLoad = new Event();
-
-        /**
-         * DOC_TBA
-         */
         this.readyToRender = new Event();
 
 // TODO: will change with animation
@@ -302,7 +297,6 @@ define([
         loadText(url, options.headers).then(function(data) {
             model.gltf = gltfDefaults(JSON.parse(data));
             model.basePath = basePath;
-            model.jsonLoad.raiseEvent();
         });
 
         return model;
