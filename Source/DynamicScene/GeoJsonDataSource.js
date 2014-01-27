@@ -58,10 +58,13 @@ define([
             id = finalId;
         }
 
-        function describe(properties) {
-            var html = '<table class="geoJsonDataSourceTable">';
+        function describe(properties, nameProperty) {
+            var html = '<table class="cesium-geoJsonDataSourceTable">';
             for ( var key in properties) {
                 if (properties.hasOwnProperty(key)) {
+                    if (key === nameProperty) {
+                        continue;
+                    }
                     var value = properties[key];
                     if (defined(value)) {
                         if (typeof value === 'object') {
@@ -79,11 +82,34 @@ define([
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
         var properties = geoJson.properties;
-        if (defined(properties.name)) {
-            dynamicObject.name = properties.name;
-            properties.name = undefined;
+
+        //Try and find a good name for the object from its meta-data
+        //TODO: Make this a user-settable callback so they can override for their own data.
+        var key;
+        var nameProperty;
+        for (key in properties) {
+            if (properties.hasOwnProperty(key)) {
+                var upperKey = key.toUpperCase();
+                if (upperKey === 'NAME' || upperKey === 'TITLE') {
+                    nameProperty = key;
+                    dynamicObject.name = properties[key];
+                    break;
+                }
+            }
         }
-        var description = describe(properties);
+        if (!defined(nameProperty)) {
+            for (key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    if (/name/i.test(key) || /title/i.test(key)) {
+                        nameProperty = key;
+                        dynamicObject.name = properties[key];
+                        break;
+                    }
+                }
+            }
+        }
+
+        var description = describe(properties, nameProperty);
         if (defined(properties)) {
             dynamicObject.description = {
                 getValue : function() {
