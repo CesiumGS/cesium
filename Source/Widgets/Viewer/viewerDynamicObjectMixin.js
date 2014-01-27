@@ -8,7 +8,8 @@ define([
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
-        '../../DynamicScene/DynamicObjectView'
+        '../../DynamicScene/DynamicObjectView',
+        '../../ThirdParty/knockout'
     ], function(
         defined,
         DeveloperError,
@@ -18,7 +19,8 @@ define([
         ScreenSpaceEventType,
         wrapFunction,
         SceneMode,
-        DynamicObjectView) {
+        DynamicObjectView,
+        knockout) {
     "use strict";
 
     /**
@@ -49,14 +51,10 @@ define([
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('objectTracked')) {
-            throw new DeveloperError('objectTracked is already defined by another mixin.');
-        }
         //>>includeEnd('debug');
 
         var eventHelper = new EventHelper();
-        var objectTracked = new Event();
-        var trackedObject;
+        var trackedObjectObservable = knockout.observable();
         var dynamicObjectView;
 
         //Subscribe to onTick so that we can update the view each update.
@@ -110,7 +108,7 @@ define([
         function dataSourceRemoved(dataSourceCollection, dataSource) {
             dataSource.getDynamicObjectCollection().collectionChanged.removeEventListener(onDynamicCollectionChanged);
 
-            if (defined(trackedObject)) {
+            if (defined(viewer.trackedObject)) {
                 if (dataSource.getDynamicObjectCollection().getById(viewer.trackedObject.id) === viewer.trackedObject) {
                     viewer.homeButton.viewModel.command();
                 }
@@ -131,45 +129,30 @@ define([
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
 
-        defineProperties(viewer, {
-            /**
-             * Gets or sets the DynamicObject instance currently being tracked by the camera.
-             * @memberof viewerDynamicObjectMixin.prototype
-             * @type {DynamicObject}
-             */
-            trackedObject : {
-                get : function() {
-                    return trackedObject;
-                },
-                set : function(value) {
-                    var sceneMode = viewer.scene.getFrameState().mode;
-
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                        viewer.scene.getScreenSpaceCameraController().enableTranslate = !defined(value);
-                    }
-
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                        viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
-                    }
-
-                    if (trackedObject !== value) {
-                        trackedObject = value;
-                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
-                        objectTracked.raiseEvent(viewer, value);
-                    }
-                }
+        /**
+         * Gets or sets the DynamicObject instance currently being tracked by the camera.
+         * @memberof viewerDynamicObjectMixin.prototype
+         * @type {DynamicObject}
+         */
+        viewer.trackedObject = undefined;
+        knockout.defineProperty(viewer, 'trackedObject', {
+            get : function() {
+                return trackedObjectObservable();
             },
+            set : function(value) {
+                var sceneMode = viewer.scene.getFrameState().mode;
 
-            /**
-             * Gets an event that will be raised when an object is tracked by the camera.  The event
-             * has two parameters: a reference to the viewer instance, and the newly tracked object.
-             *
-             * @memberof viewerDynamicObjectMixin.prototype
-             * @type {Event}
-             */
-            objectTracked : {
-                get : function() {
-                    return objectTracked;
+                if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                    viewer.scene.getScreenSpaceCameraController().enableTranslate = !defined(value);
+                }
+
+                if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                    viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
+                }
+
+                if (trackedObjectObservable() !== value) {
+                    dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                    trackedObjectObservable(value);
                 }
             }
         });

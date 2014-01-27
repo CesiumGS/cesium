@@ -122,7 +122,7 @@ exports.Parser.prototype._parseSourceCode = function(sourceCode, sourceName) {
         sourceCode = e.source;
         currentSourceName = sourceName = e.filename;
 
-        sourceCode = pretreat(e.source);
+        sourceCode = pretreat(e.source, currentSourceName);
 
         var ast = parserFactory().parse(sourceCode, sourceName, 1);
         ast.visit(
@@ -137,7 +137,8 @@ exports.Parser.prototype._parseSourceCode = function(sourceCode, sourceName) {
     currentSourceName = '';
 }
 
-function pretreat(code) {
+function pretreat(code, sourceFile){
+    var sourceFileName = (sourceFile.split("/").pop()).match(/([A-z_0-9]*)/).pop();
     return code
         // make starbangstar comments look like real jsdoc comments
         .replace(/\/\*\!\*/g, '/**')
@@ -152,7 +153,10 @@ function pretreat(code) {
         .replace(/(\/\*\*[^»]*?@lends\b[^»]*?»)(\s*)return(\s*)\{/g, '$2$3 return $1 ____ = {') // like @lends return {
 
         // make matching comment endings harder
-        .replace(/»/g, '*/');
+        .replace(/»/g, '*/')
+
+        // support for unqualified links to methods
+        .replace(/@link\s#([A-z_0-9]*)/, "@link "+sourceFileName+"#$1|$1");
 }
 
 var tkn = { NAMEDFUNCTIONSTATEMENT: -1001 };
