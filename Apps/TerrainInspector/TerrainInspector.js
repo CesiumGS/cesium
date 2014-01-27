@@ -19,8 +19,9 @@ require([
     var centralBody = scene.getPrimitives().getCentralBody();
     centralBody.depthTestAgainstTerrain = true;
 
-    centralBody.terrainProvider = new Cesium.CesiumMeshTerrainProvider({
-        url : 'http://c1200562-00.stk.com/stk-terrain/tilesets/slightly-smaller/tiles'
+    centralBody.terrainProvider = new Cesium.CesiumTerrainProvider({
+        //url : 'http://c1200562-00.stk.com/stk-terrain/tilesets/slightly-smaller/tiles'
+        url : 'http://cesiumjs.org/smallterrain'
     });
 
     var tp = new TitlePane({
