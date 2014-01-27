@@ -11,6 +11,9 @@ define([
      *
      * @alias TerrainData
      * @constructor
+     *
+     * @see HeightmapTerrainData
+     * @see QuantizedMeshTerrainData
      */
     var TerrainData = function TerrainData() {
         throw new DeveloperError('This type should not be instantiated directly.');

@@ -344,7 +344,7 @@ define([
         var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
 
         var proxy = this._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 
@@ -353,7 +353,7 @@ define([
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, loadTile);
-            if (typeof promise === 'undefined') {
+            if (!defined(promise)) {
                 return undefined;
             }
         } else {

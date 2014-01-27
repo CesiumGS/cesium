@@ -172,8 +172,13 @@ require(['Cesium'], function(Cesium) {
     var centralBody = scene.getPrimitives().getCentralBody();
     centralBody.depthTestAgainstTerrain = true;
 
-    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+    var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
         url : 'http://cesiumjs.org/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+
+    var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesiumjs.org/terrain/world/tiles',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
@@ -184,15 +189,11 @@ require(['Cesium'], function(Cesium) {
         credit : 'Terrain data courtesy VT MÄK'
     });
     
-    var mesh = new Cesium.CesiumMeshTerrainProvider({
-        url : 'http://172.16.37.34/mesh2'
-    });
-
     var terrainProviders = [
-        { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
+        { name : 'CesiumTerrainProvider - heightmaps', provider : cesiumTerrainProviderHeightmaps },
+        { name : 'CesiumTerrainProvider - meshes', provider : cesiumTerrainProviderMeshes },
         { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
-        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider },
-        { name : 'Mesh', provider : mesh }
+        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
     centralBody.terrainProvider = cesiumTerrainProvider;

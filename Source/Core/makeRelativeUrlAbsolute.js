@@ -36,7 +36,22 @@ define([], function () {
         return output.join('').replace(/^\//, input.charAt(0) === '/' ? '/' : '');
     }
 
-    function makeRelativeUrlAbsolute(base, href) {// RFC 3986
+    /**
+     * Returns the absolute URL corresponding to a relative URL.  The relative URL is relative
+     * to a given base URL.
+     *
+     * @exports makeRelativeUrlAbsolute
+     *
+     * @param {String} base The base absolute URL to which the URL is relative.
+     * @param {String} href The relative URL.  The URL is relative to the base URL.
+     *
+     * @returns {String} An equivalent absolute URL.
+     *
+     * @example
+     * var absolute = Cesium.makeRelativeUrlAbsolute('http://foo.bar/something', '../whatever');
+     * // absolute === 'http://foo.bar/whatever'
+     */
+    var makeRelativeUrlAbsolute = function(base, href) {// RFC 3986
         href = parseURI(href || '');
         base = parseURI(base || '');
 
@@ -45,7 +60,7 @@ define([], function () {
                removeDotSegments(href.protocol || href.authority || href.pathname.charAt(0) === '/' ? href.pathname : (href.pathname ? ((base.authority && !base.pathname ? '/' : '') + base.pathname.slice(0, base.pathname.lastIndexOf('/') + 1) + href.pathname) : base.pathname)) +
                (href.protocol || href.authority || href.pathname ? href.search : (href.search || base.search)) +
                href.hash;
-    }
+    };
 
     return makeRelativeUrlAbsolute;
 });

@@ -37,24 +37,33 @@ define([
         when) {
     "use strict";
 
-    var vertexStride = 6;
-    var xIndex = 0;
-    var yIndex = 1;
-    var zIndex = 2;
-    var hIndex = 3;
-    var uIndex = 4;
-    var vIndex = 5;
-
     /**
-     * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
-     * is a rectangular array of heights in row-major order from south to north and west to east.
+     * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
+     * mesh consists of three vertex attributes, longitude, latitude, and height.  All attributes are expressed
+     * as 16-bit values in the range 0 to 32767.  Longitude and latitude are zero at the southwest corner
+     * of the tile and 32767 at the northeast corner.  Height is zero at the minimum height in the tile
+     * and 32767 at the maximum height in the tile.
      *
-     * @alias MeshTerrainData
+     * @alias QuantizedMeshTerrainData
      * @constructor
      *
-     * @param {TypedArray} description.buffer The buffer containing height data.
-     * @param {Number} description.width The width (longitude direction) of the heightmap, in samples.
-     * @param {Number} description.height The height (latitude direction) of the heightmap, in samples.
+     * @param {Uint16Array} description.quantizedVertices The buffer containing the quantized mesh.
+     * @param {Uint16Array} description.indices The indices specifying how the quantized vertices are linked
+     *                      together into triangles.  Each three indices specifies one triangle.
+     * @param {Number} description.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
+     * @param {Number} description.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
+     * @param {BoundingSphere} description.boundingSphere A sphere bounding all of the vertices in the mesh.
+     * @param {Cartesian3} description.horizonOcclusionPoint The horizon occlusion point of the mesh.  If this point
+     *                      is below the horizon, the entire tile is assumed to be below the horizon as well.
+     *                      The point is expressed in ellipsoid-scaled coordinates.
+     * @param {Number[]} description.westIndices The indices of the vertices on the western edge of the tile.
+     * @param {Number[]} description.southIndices The indices of the vertices on the southern edge of the tile.
+     * @param {Number[]} description.eastIndices The indices of the vertices on the eastern edge of the tile.
+     * @param {Number[]} description.northIndices The indices of the vertices on the northern edge of the tile.
+     * @param {Number} description.westSkirtHeight The height of the skirt to add on the western edge of the tile.
+     * @param {Number} description.southSkirtHeight The height of the skirt to add on the southern edge of the tile.
+     * @param {Number} description.eastSkirtHeight The height of the skirt to add on the eastern edge of the tile.
+     * @param {Number} description.northSkirtHeight The height of the skirt to add on the northern edge of the tile.
      * @param {Number} [description.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
@@ -66,32 +75,11 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
-     * @param {Object} [description.structure] An object describing the structure of the height data.
-     * @param {Number} [description.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
-     *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
-     *                 height after multiplying by the scale.
-     * @param {Number} [description.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
-     *                 height in meters.  The offset is added after the height sample is multiplied by the
-     *                 heightScale.
-     * @param {Number} [description.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
-     *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
-     *                 it is greater than 1, that number of elements together form the height sample, which is
-     *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
-     * @param {Number} [description.structure.stride=1] The number of elements to skip to get from the first element of
-     *                 one height to the first element of the next height.
-     * @param {Number} [description.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
-     *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
-     *                 is 256, the height is computed as follows:
-     *                 `height = buffer[index] + buffer[index + 1] * 256 + buffer[index + 2] * 256 * 256 + buffer[index + 3] * 256 * 256 * 256`
-     *                 This is assuming that the isBigEndian property is false.  If it is true, the order of the
-     *                 elements is reversed.
-     * @param {Boolean} [description.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
-     *                  stride property is greater than 1.  If this property is false, the first element is the
-     *                  low-order element.  If it is true, the first element is the high-order element.
      * @param {Boolean} [description.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
      * @see TerrainData
+     * @see HeightmapTerrainData
      *
      * @example
      * var buffer = ...
@@ -108,7 +96,7 @@ define([
      *   waterMask : waterMask
      * });
      */
-    var MeshTerrainData = function MeshTerrainData(description) {
+    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(description) {
         if (!defined(description) || !defined(description.quantizedVertices)) {
             throw new DeveloperError('description.quantizedVertices is required.');
         }
@@ -176,7 +164,7 @@ define([
         this._eastSkirtHeight = description.eastSkirtHeight;
         this._northSkirtHeight = description.northSkirtHeight;
 
-        this._childTileMask = description.childTileMask;
+        this._childTileMask = defaultValue(description.childTileMask, 15);
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
@@ -198,7 +186,7 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
-     * @memberof HeightmapTerrainData
+     * @memberof QuantizedMeshTerrainData
      *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
@@ -208,7 +196,7 @@ define([
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    MeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
         if (typeof tilingScheme === 'undefined') {
             throw new DeveloperError('tilingScheme is required.');
         }
@@ -265,9 +253,9 @@ define([
 
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
-     * height samples in this instance, interpolated if necessary.
+     * vertices in this instance, interpolated if necessary.
      *
-     * @memberof HeightmapTerrainData
+     * @memberof QuantizedMeshTerrainData
      *
      * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
      * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
@@ -277,11 +265,11 @@ define([
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
      *
-     * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     * @returns {Promise|QuantizedMeshTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
-    MeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+    QuantizedMeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
         if (typeof tilingScheme === 'undefined') {
             throw new DeveloperError('tilingScheme is required.');
         }
@@ -342,7 +330,7 @@ define([
 
         var that = this;
         return when(upsamplePromise, function(result) {
-            return new MeshTerrainData({
+            return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),
                 indices : new Uint16Array(result.indices),
                 minimumHeight : result.minimumHeight,
@@ -366,7 +354,7 @@ define([
     /**
      * Computes the terrain height at a specified longitude and latitude.
      *
-     * @memberof HeightmapTerrainData
+     * @memberof QuantizedMeshTerrainData
      *
      * @param {Extent} extent The extent covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
@@ -375,7 +363,7 @@ define([
      *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
      *          incorrect for positions far outside the extent.
      */
-    MeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+    QuantizedMeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
         //var width = this._width;
         //var height = this._height;
 
@@ -402,7 +390,7 @@ define([
      * to be one of the four children of this tile.  If non-child tile coordinates are
      * given, the availability of the southeast child tile is returned.
      *
-     * @memberof HeightmapTerrainData
+     * @memberof QuantizedMeshTerrainData
      *
      * @param {Number} thisX The tile X coordinate of this (the parent) tile.
      * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
@@ -410,7 +398,7 @@ define([
      * @param {Number} childY The tile Y coordinate of the child tile to check for availability.
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
-    MeshTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
+    QuantizedMeshTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
         if (typeof thisX === 'undefined') {
             throw new DeveloperError('thisX is required.');
         }
@@ -440,11 +428,11 @@ define([
      * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
      * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
      *
-     *  @memberof HeightmapTerrainData
+     *  @memberof QuantizedMeshTerrainData
      *
      *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
      */
-    MeshTerrainData.prototype.getWaterMask = function() {
+    QuantizedMeshTerrainData.prototype.getWaterMask = function() {
         return this._waterMask;
     };
 
@@ -454,13 +442,13 @@ define([
      * as by downloading it from a remote server.  This method should return true for instances
      * returned from a call to {@link HeightmapTerrainData#upsample}.
      *
-     * @memberof HeightmapTerrainData
+     * @memberof QuantizedMeshTerrainData
      *
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
      */
-    MeshTerrainData.prototype.wasCreatedByUpsampling = function() {
+    QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function() {
         return this._createdByUpsampling;
     };
 
-    return MeshTerrainData;
+    return QuantizedMeshTerrainData;
 });
