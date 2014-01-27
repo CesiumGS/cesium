@@ -1,11 +1,7 @@
 /*global define*/
 define([
-        './clone',
-        './defined',
         './loadWithXhr'
     ], function(
-        clone,
-        defined,
         loadWithXhr) {
     "use strict";
 
@@ -38,14 +34,6 @@ define([
      * });
      */
     var loadArrayBuffer = function(url, headers) {
-        if (!defined(headers)) {
-            headers = defaultHeaders;
-        } else if (!defined(headers.Accept)) {
-            // clone before adding the Accept header
-            headers = clone(headers);
-            headers.Accept = defaultHeaders.Accept;
-        }
-
         return loadWithXhr({
             url : url,
             responseType : 'arraybuffer',

@@ -124,6 +124,14 @@ define([
         requestMetadata();
     };
 
+    var requestHeaders = {
+        Accept : 'application/octet-stream,*/*;q=0.01'
+    };
+
+    function loadTile(url) {
+        return loadArrayBuffer(url, requestHeaders);
+    }
+
     var cartesian3Scratch = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var extentScratch = new Extent();
@@ -171,12 +179,12 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadArrayBuffer);
+            promise = throttleRequestByServer(url, loadTile);
             if (typeof promise === 'undefined') {
                 return undefined;
             }
         } else {
-            promise = loadArrayBuffer(url);
+            promise = loadTile(url);
         }
 
         var that = this;
