@@ -8,12 +8,15 @@ define([
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/Extent',
         'Core/ExtentGeometry',
         'Core/GeometryInstance',
         'Core/Math',
+        'Scene/EllipsoidPrimitive',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
@@ -27,12 +30,15 @@ define([
         Viewer,
         viewerDragDropMixin,
         viewerDynamicObjectMixin,
+        Cartesian3,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         Extent,
         ExtentGeometry,
         GeometryInstance,
         CesiumMath,
+        EllipsoidPrimitive,
         Material,
         PerInstanceColorAppearance,
         Primitive) {
@@ -209,5 +215,21 @@ define([
                 alpha -= 1.0 / (numHorizontal * numVertical);
             }
         }
+
+        var ellipsoid = scene.getPrimitives().getCentralBody().getEllipsoid();
+
+        var e = primitives.add(new EllipsoidPrimitive({
+            center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+            radii : new Cartesian3(500000.0, 500000.0, 500000.0),
+            material : Material.fromType(Material.ColorType)
+        }));
+        e.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        e = primitives.add(new EllipsoidPrimitive({
+            center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+            radii : new Cartesian3(1000000.0, 1000000.0, 1000000.0),
+            material : Material.fromType(Material.ColorType)
+        }));
+        e.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
     }
 });
