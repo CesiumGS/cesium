@@ -24,7 +24,6 @@ define([
         './TerrainProvider',
         './TileReplacementQueue',
         './TileState',
-        './WebMercatorTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -51,7 +50,6 @@ define([
         TerrainProvider,
         TileReplacementQueue,
         TileState,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
 
