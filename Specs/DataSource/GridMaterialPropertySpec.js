@@ -19,7 +19,7 @@ defineSuite(['DataSource/GridMaterialProperty',
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('works with basic types', function() {
+    it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();
         expect(property.color).toBeDefined();
         expect(property.cellAlpha).toBeDefined();

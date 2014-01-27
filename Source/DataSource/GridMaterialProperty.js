@@ -209,6 +209,9 @@ define(['../Core/Cartesian2',
         Property.equals(this._lineThickness, other._lineThickness));
     };
 
+    /**
+     * @private
+     */
     GridMaterialProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
