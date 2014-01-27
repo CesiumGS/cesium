@@ -57,8 +57,40 @@ define([
             }
             id = finalId;
         }
+
+        function describe(properties) {
+            var html = '<table class="geoJsonDataSourceTable">';
+            for ( var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    if (defined(value)) {
+                        if (typeof value === 'object') {
+                            html += '<tr><td>' + key + '</td><td>' + describe(value) + '</td></tr>';
+                        } else {
+                            html += '<tr><td>' + key + '</td><td>' + value + '</td></tr>';
+                        }
+                    }
+                }
+            }
+            html += '</table>';
+            return html;
+        }
+
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
+        var properties = geoJson.properties;
+        if (defined(properties.name)) {
+            dynamicObject.name = properties.name;
+            properties.name = undefined;
+        }
+        var description = describe(properties);
+        if (defined(properties)) {
+            dynamicObject.description = {
+                getValue : function() {
+                    return description;
+                }
+            };
+        }
         return dynamicObject;
     }
 
