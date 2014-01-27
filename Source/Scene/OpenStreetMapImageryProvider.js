@@ -33,6 +33,7 @@ define([
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
+     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
@@ -70,6 +71,7 @@ define([
         this._tileWidth = 256;
         this._tileHeight = 256;
 
+        this._minimumLevel = defaultValue(description.minimumLevel, 0);
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
         this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
@@ -197,7 +199,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return 0;
+        return this._minimumLevel;
     };
 
     /**
