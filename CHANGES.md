@@ -17,6 +17,7 @@ Beta Releases
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 
 ### b24 - 2014-01-06
 
