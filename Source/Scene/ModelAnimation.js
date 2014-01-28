@@ -95,7 +95,7 @@ define([
         /**
          * Determines if and how the animation is repeated.
          *
-         * @type {ModelAnimationWrap.CLAMP}
+         * @type {ModelAnimationWrap}
          * @default {@link ModelAnimationWrap.CLAMP}
          *
          * @readonly

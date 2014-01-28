@@ -1,15 +1,12 @@
 /*global define*/
-define([
-        '../Core/Enumeration'
-    ], function(
-        Enumeration) {
+define(function() {
     "use strict";
 
     /**
      * @private
      */
     return {
-        STOPPED : new Enumeration(0, 'STOPPED'),
-        ANIMATING : new Enumeration(1, 'ANIMATING')
+        STOPPED : 0,
+        ANIMATING : 1
     };
 });

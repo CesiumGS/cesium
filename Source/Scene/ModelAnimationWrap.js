@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        '../Core/Enumeration'
-    ], function(
-        Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -19,7 +16,7 @@ define([
          * @constant
          * @default 0
          */
-        CLAMP : new Enumeration(0, 'CLAMP'),
+        CLAMP : 0,
 
         /**
          * DOC_TBA
@@ -28,7 +25,7 @@ define([
          * @constant
          * @default 1
          */
-        REPEAT : new Enumeration(1, 'REPEAT'),
+        REPEAT : 1,
 
         /**
          * DOC_TBA
@@ -37,7 +34,7 @@ define([
          * @constant
          * @default 2
          */
-        MIRRORED_REPEAT : new Enumeration(2, 'MIRRORED_REPEAT')
+        MIRRORED_REPEAT : 2
     };
 
     return ModelAnimationWrap;

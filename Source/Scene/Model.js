@@ -6,7 +6,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
-        '../Core/Enumeration',
         '../Core/loadArrayBuffer',
         '../Core/loadText',
         '../Core/loadImage',
@@ -43,7 +42,6 @@ define([
         destroyObject,
         DeveloperError,
         RuntimeError,
-        Enumeration,
         loadArrayBuffer,
         loadText,
         loadImage,
@@ -76,9 +74,9 @@ define([
     "use strict";
 
     var ModelState = {
-        NEEDS_LOAD : new Enumeration(0, 'NEEDS_LOAD'),
-        LOADING : new Enumeration(1, 'LOADING'),
-        LOADED : new Enumeration(2, 'LOADED')
+        NEEDS_LOAD : 0,
+        LOADING : 1,
+        LOADED : 2
     };
 
     function LoadResources() {
