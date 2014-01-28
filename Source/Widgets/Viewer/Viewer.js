@@ -655,10 +655,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             return;
         }
 
+        var panelMaxHeight = height - 125;
+
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
         if (defined(baseLayerPickerDropDown)) {
-            var baseLayerPickerMaxHeight = height - 125;
-            baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
+            baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(this._selectionIndicator)) {
+            this._selectionIndicator.viewModel.maxHeight = Math.min(panelMaxHeight, 480);
         }
 
         var timelineExists = defined(this._timeline);
