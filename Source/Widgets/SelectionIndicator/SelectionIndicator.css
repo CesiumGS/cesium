@@ -67,7 +67,7 @@
 .cesium-selection-info-title {
     display: block;
     height: 20px;
-    padding: 5px 30px 5px 8px;
+    padding: 5px 30px 5px 25px;
     background: rgba(84, 84, 84, 0.8);
     border-top-left-radius: 7px;
     text-align: center;
@@ -80,7 +80,7 @@ button.cesium-selection-info-camera {
     display: block;
     position: absolute;
     top: 4px;
-    left: 5px;
+    left: 4px;
     width: 22px;
     height: 22px;
     background: transparent;
