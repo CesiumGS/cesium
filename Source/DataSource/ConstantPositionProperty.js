@@ -38,7 +38,7 @@ define(['./PositionProperty',
 
     defineProperties(ConstantPositionProperty.prototype, {
         /**
-         * Gets a value indicating if this property is constant.  A value is considered
+         * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof PositionProperty.prototype
          * @type {Boolean}

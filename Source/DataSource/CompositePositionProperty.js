@@ -35,7 +35,8 @@ define(['../Core/defaultValue',
 
     defineProperties(CompositePositionProperty.prototype, {
         /**
-         * Gets a value indicating if this property is constant.
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
          * @memberof CompositePositionProperty.prototype
          * @type {Boolean}
          */
