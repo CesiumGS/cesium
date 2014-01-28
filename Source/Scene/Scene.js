@@ -1256,9 +1256,7 @@ define([
             var command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
-            command.renderState = context.createRenderState({
-                blending : BlendingState.ALPHA_BLEND
-            });
+            command.renderState = context.createRenderState();
             command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
 
             scene._compositeCommand = command;
