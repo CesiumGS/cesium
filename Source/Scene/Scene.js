@@ -29,6 +29,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
+        '../Renderer/FramebufferStatus',
         '../Renderer/PassState',
         '../Renderer/Pass',
         '../Renderer/PixelFormat',
@@ -84,6 +85,7 @@ define([
         Context,
         ClearCommand,
         DrawCommand,
+        FramebufferStatus,
         PassState,
         Pass,
         PixelFormat,
@@ -162,6 +164,8 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
+        this._translucentMRTSupport = context.getDrawBuffers() && context.getFloatingPointTexture();
+
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
         this._clearColorCommand.owner = true;
@@ -178,7 +182,7 @@ define([
         this._translucentClearCommand = translucentClearCommand;
 
         var alphaClearCommand;
-        if (!context.getDrawBuffers()) {
+        if (!this._translucentMRTSupport) {
             translucentClearCommand.color.alpha = 0.0;
 
             alphaClearCommand = new ClearCommand();
@@ -975,7 +979,7 @@ define([
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
 
-            if (context.getDrawBuffers()) {
+            if (scene._translucentMRTSupport) {
                 passState.framebuffer = scene._translucentFBO;
 
                 for (j = 0; j < length; ++j) {
@@ -1073,7 +1077,7 @@ define([
         passState.framebuffer = scene._translucentFBO;
         scene._translucentClearCommand.execute(context, passState);
 
-        if (!context.getDrawBuffers()) {
+        if (!scene._translucentMRTSupport) {
             passState.framebuffer = scene._alphaFBO;
             scene._alphaClearCommand.execute(context, passState);
         }
@@ -1219,7 +1223,7 @@ define([
 
         if (!defined(scene._compositeCommand)) {
             var fs = createShaderSource({
-                defines : [context.getDrawBuffers() ? 'MRT' : ''],
+                defines : [scene._translucentMRTSupport ? 'MRT' : ''],
                 sources : [CompositeOITFS]
             });
 
@@ -1264,24 +1268,35 @@ define([
                 depthTexture : scene._depthTexture,
                 depthRenderbuffer : scene._depthRenderbuffer
             });
+            scene._opaqueFBO.destroyAttachments = false;
 
-            if (context.getDrawBuffers()) {
+            if (scene._translucentMRTSupport) {
                 scene._translucentFBO = context.createFramebuffer({
                     colorTextures : [scene._accumulationTexture, scene._revealageTexture],
                     depthTexture : scene._depthTexture,
                     depthRenderbuffer : scene._depthRenderbuffer
                 });
-            } else {
+                scene._translucentFBO.destroyAttachments = false;
+
+                if(scene._translucentFBO.getStatus() !== FramebufferStatus.COMPLETE) {
+                    scene._translucentFBO.destroy();
+                    scene._translucentMRTSupport = false;
+                }
+            }
+
+            if (!scene._translucentMRTSupport) {
                 scene._translucentFBO = context.createFramebuffer({
                     colorTextures : [scene._accumulationTexture],
                     depthTexture : scene._depthTexture,
                     depthRenderbuffer : scene._depthRenderbuffer
                 });
+                scene._translucentFBO.destroyAttachments = false;
                 scene._alphaFBO = context.createFramebuffer({
                     colorTextures : [scene._revealageTexture],
                     depthTexture : scene._depthTexture,
                     depthRenderbuffer : scene._depthRenderbuffer
                 });
+                scene._alphaFBO.destroyAttachments = false;
             }
 
             updateCompositeCommand(scene);
@@ -1601,6 +1616,17 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+
+        this._opaqueFBO = this._opaqueFBO && this._opaqueFBO.destroy();
+        this._translucentFBO = this._translucentFBO && this._translucentFBO.destroy();
+        this._alphaFBO = this._alphaFBO && this._alphaFBO.destroy();
+
+        this._opaqueTexture = this._opaqueTexture && this._opaqueTexture.destroy();
+        this._accumulationTexture = this._accumulationTexture && this._accumulationTexture.destroy();
+        this._revealageTexture = this._revealageTexture && this._revealageTexture.destroy();
+        this._depthTexture = this._depthTexture && this._depthTexture.destroy();
+        this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
         return destroyObject(this);

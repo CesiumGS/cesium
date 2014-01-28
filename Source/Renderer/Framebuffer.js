@@ -210,6 +210,19 @@ define([
     };
 
     /**
+     * Returns the status of the framebuffer. If the status is not {@link FramebufferStatus#COMPPLETE},
+     * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
+     *
+     * @returns {FramebufferStatus} The framebuffer status.
+     */
+    Framebuffer.prototype.getStatus = function() {
+        this._bind();
+        var status = this._gl.checkFramebufferStatus(this._gl.FRAMEBUFFER);
+        this._unBind();
+        return status;
+    };
+
+    /**
      * Returns the number of color textures or renderbuffers attached to this framebuffer.
      *
      * @memberof Framebuffer
