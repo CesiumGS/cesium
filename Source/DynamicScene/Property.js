@@ -79,5 +79,18 @@ define(['../Core/defined',
         return left === right || (defined(left) && left.equals(right));
     };
 
+    /**
+     * @private
+     */
+    Property.arrayEquals = function(left, right) {
+        var length = left.length;
+        for (var i = 0; i < length; i++) {
+            if (!Property.equals(left[i], right[i])) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     return Property;
 });

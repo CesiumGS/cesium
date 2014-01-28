@@ -52,7 +52,8 @@ define([
         './DynamicPolygon',
         './DynamicPyramid',
         './DynamicVector',
-        './DynamicVertexPositionsProperty',
+        './PositionPropertyArray',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
         './TimeIntervalCollectionPositionProperty',
@@ -112,7 +113,8 @@ define([
         DynamicPolygon,
         DynamicPyramid,
         DynamicVector,
-        DynamicVertexPositionsProperty,
+        PositionPropertyArray,
+        ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionPositionProperty,
@@ -751,11 +753,55 @@ define([
             return;
         }
 
-        var vertexPositions = dynamicObject.vertexPositions;
-        if (!defined(vertexPositions)) {
-            dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
+        var i;
+        var len;
+        var references = vertexPositionsData.references;
+        if (defined(references)) {
+            var properties = [];
+            for (i = 0, len = references.length; i < len; i++) {
+                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
+            }
+
+            var iso8601Interval = vertexPositionsData.interval;
+            if (defined(iso8601Interval)) {
+                iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+                if (!(dynamicObject.vertexPositions instanceof CompositePositionProperty)) {
+                    dynamicObject.vertexPositions = new CompositePositionProperty();
+                    iso8601Interval.data = new PositionPropertyArray(properties);
+                    dynamicObject.vertexPositions.intervals.addInterval(iso8601Interval);
+                }
+            } else {
+                dynamicObject.vertexPositions = new PositionPropertyArray(properties);
+            }
+        } else {
+            var values = [];
+            var tmp = vertexPositionsData.cartesian;
+            if (defined(tmp)) {
+                for (i = 0, len = tmp.length; i < len; i += 3) {
+                    values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
+                }
+                vertexPositionsData.array = values;
+            } else {
+                tmp = vertexPositionsData.cartographicRadians;
+                if (defined(tmp)) {
+                    for (i = 0, len = tmp.length; i < len; i += 3) {
+                        values.push(Ellipsoid.WGS84.cartographicToCartesian(new Cartographic(tmp[i], tmp[i + 1], tmp[i + 2])));
+                    }
+                    vertexPositionsData.array = values;
+                } else {
+                    tmp = vertexPositionsData.cartographicDegrees;
+                    if (defined(tmp)) {
+                        for (i = 0, len = tmp.length; i < len; i += 3) {
+                            values.push(Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2])));
+                        }
+                        vertexPositionsData.array = values;
+                    }
+                }
+            }
+            if (defined(vertexPositionsData.array)) {
+                processPacketData(Array, dynamicObject, 'vertexPositions', vertexPositionsData, undefined, sourceUri);
+            }
         }
-        vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
     }
 
     function processAvailability(dynamicObject, packet, dynamicObjectCollection, sourceUri) {

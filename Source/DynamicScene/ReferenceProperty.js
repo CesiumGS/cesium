@@ -2,11 +2,15 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/DeveloperError'
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
        ], function(
          defaultValue,
          defined,
-         DeveloperError) {
+         defineProperties,
+         DeveloperError,
+         Event) {
     "use strict";
 
     function resolve(referenceProperty) {
@@ -55,7 +59,35 @@ define([
         this._targetObjectId = targetObjectId;
         this._targetObject = undefined;
         this._targetPropertyName = targetPropertyName;
+        this._definitionChanged = new Event();
     };
+
+    defineProperties(ReferenceProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.
+         * This property always returns <code>true</code>.
+         * @memberof ConstantProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                var targetProperty = resolve(this);
+                return !defined(targetProperty) || targetProperty.isConstant;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof ConstantProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        }
+    });
 
     /**
      * Creates a new reference property given the dynamic object collection that will
@@ -112,6 +144,17 @@ define([
 
         var targetProperty = resolve(this);
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
+    };
+
+    ReferenceProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        //>>includeEnd('debug');
+
+        var targetProperty = resolve(this);
+        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValueInReferenceFrame(time, referenceFrame, result) : undefined;
     };
 
     /**

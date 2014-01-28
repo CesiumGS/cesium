@@ -3,13 +3,11 @@ defineSuite([
              'DynamicScene/DynamicPolygon',
              'DynamicScene/ColorMaterialProperty',
              'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicVertexPositionsProperty',
              'Core/Color'
          ], function(
              DynamicPolygon,
              ColorMaterialProperty,
              ConstantProperty,
-             DynamicVertexPositionsProperty,
              Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
