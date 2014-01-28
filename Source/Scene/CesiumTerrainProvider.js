@@ -97,10 +97,9 @@ define([
             var message;
 
             if (!data.format) {
-                data.format = 'quantized-mesh-1.0';
-//                message = 'The tile format is not specified in the layer.json file.';
-//                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-//                return;
+                message = 'The tile format is not specified in the layer.json file.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                return;
             }
 
             if (data.format === 'heightmap-1.0') {

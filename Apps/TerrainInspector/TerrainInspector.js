@@ -20,8 +20,7 @@ require([
     centralBody.depthTestAgainstTerrain = true;
 
     centralBody.terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : 'http://c1200562-00.stk.com/stk-terrain/tilesets/slightly-smaller/tiles'
-        //url : 'http://cesiumjs.org/smallterrain'
+        url : 'http://cesiumjs.org/smallterrain'
     });
 
     var tp = new TitlePane({
