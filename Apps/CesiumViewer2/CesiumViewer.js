@@ -6,6 +6,7 @@ define([
         'Core/Cartesian3',
         'Core/Matrix3',
         'Core/Matrix4',
+        'Core/Quaternion',
         'Core/Cartographic',
         'Core/Transforms',
         'Core/Ellipsoid',
@@ -33,6 +34,7 @@ define([
         Cartesian3,
         Matrix3,
         Matrix4,
+        Quaternion,
         Cartographic,
         Transforms,
         Ellipsoid,
@@ -238,6 +240,13 @@ define([
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
 
+//            model.getNode('LOD3sp').setMatrix(Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0)));
+
+//            model.getNode('LOD3sp').setMatrix(undefined);
+//            model.getNode('LOD3sp').setTranslation(new Cartesian3());
+//            model.getNode('LOD3sp').setRotation(Quaternion.IDENTITY.clone());
+//            model.getNode('LOD3sp').setScale(new Cartesian3(5.0, 1.0, 1.0));
+
             if (endUserOptions.animate) {
                 model.animations.addAll({
                     // startTime : (new JulianDate()).addSeconds(3),
@@ -282,6 +291,7 @@ define([
                 if (defined(pick) && (pick.primitive === model)) {
                     var gltf = pick.gltf;
                     if ((prevPickedNode !== gltf.node) || (prevPickedMesh !== gltf.mesh) || (prevPickedPrimitiveIndex !== gltf.primitiveIndex)) {
+
                         prevPickedNode = gltf.node;
                         prevPickedMesh = gltf.mesh;
                         prevPickedPrimitiveIndex = gltf.primitiveIndex;

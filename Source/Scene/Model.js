@@ -33,6 +33,7 @@ define([
         './ModelTypes',
         './ModelCache',
         './ModelAnimationCollection',
+        './ModelNode',
         './SceneMode',
         './gltfDefaults'
     ], function(
@@ -69,6 +70,7 @@ define([
         ModelTypes,
         ModelCache,
         ModelAnimationCollection,
+        ModelNode,
         SceneMode,
         gltfDefaults) {
     "use strict";
@@ -248,6 +250,8 @@ define([
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
+        this._cesiumAnimationsDirty = false;
+
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
@@ -296,6 +300,25 @@ define([
         });
 
         return model;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Model.prototype.getNode = function(name) {
+        var nodes = this._runtime.nodes;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(nodes)) {
+            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
+        }
+
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        return nodes[name];
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -396,35 +419,7 @@ define([
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
-                var runtimeNode = {
-                    // Animation targets
-                    matrix : undefined,
-                    translation : undefined,
-                    rotation : undefined,
-                    scale : undefined,
-
-                    // Computed transforms
-                    transformToRoot : new Matrix4(),
-                    computedMatrix : new Matrix4(),
-                    dirty : false,                      // for graph traversal
-                    anyAncestorDirty : false,           // for graph traversal
-
-                    // Rendering
-                    commands : [],                      // empty for transform, light, and camera nodes
-
-                    // Skinned node
-                    inverseBindMatrices : undefined,    // undefined when node is not skinned
-                    bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
-                    joints : [],                        // empty when node is not skinned
-                    computedJointMatrices : [],         // empty when node is not skinned
-
-                    // Joint node
-                    jointId : node.jointId,             // undefined when node is not a joint
-
-                    // Graph pointers
-                    children : [],                      // empty for leaf nodes
-                    parents : []                        // empty for root nodes
-                };
+                var runtimeNode = new ModelNode(model, node);
                 runtimeNodes[name] = runtimeNode;
 
                 if (defined(node.instanceSkin)) {
@@ -1407,14 +1402,12 @@ define([
         return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
     }
 
-    // To reduce allocations in updateModelMatrix()
     var scratchNodeStack = [];
-
     var scratchSphereCenter = new Cartesian3();
     var scratchSpheres = [];
     var scratchSubtract = new Cartesian3();
 
-    function updateModelMatrix(model, modelTransformChanged, justLoaded) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
         var allowPicking = model.allowPicking;
         var gltf = model.gltf;
 
@@ -1432,7 +1425,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
 
-            n.transformToRoot = getNodeMatrix(n);
+            n.transformToRoot = getNodeMatrix(n, n.transformToRoot);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -1606,16 +1599,20 @@ define([
         }
 
         if (this._state === ModelState.LOADED) {
-            var animated = this.animations.update(frameState);
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale);
+            var animated = this.animations.update(frameState) || this._cesiumAnimationsDirty;
+            this._cesiumAnimationsDirty = false;
 
-            // Update modelMatrix throughout the tree as needed
-            if (animated || modelTransformChanged || justLoaded) {
+            // Model's model matrix needs to be updated
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale);
+            if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
                 Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
+            }
 
-                updateModelMatrix(this, modelTransformChanged, justLoaded);
+            // Update modelMatrix throughout the graph as needed
+            if (animated || modelTransformChanged || justLoaded) {
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
