@@ -6,7 +6,6 @@ define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Math',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationWrap',
@@ -19,7 +18,6 @@ define([
         defaultValue,
         DeveloperError,
         CesiumMath,
-        Enumeration,
         Event,
         JulianDate,
         ModelAnimationWrap,
@@ -35,12 +33,34 @@ define([
      */
     var ModelAnimationCollection = function(model) {
         /**
-         * DOC_TBA
+         * The event fired when an animation is added to the collection.  This can be used, for
+         * example, to keep a UI in sync.
+         *
+         * @type {Event}
+         * @default undefined
+         *
+         * @example
+         * var added = new Event();
+         * added.addEventListener(function(model, animation) {
+         *   console.log('Animation added: ' + animation.name);
+         * });
+         * model.animations.animationAdded = added;
          */
         this.animationAdded = new Event();
 
         /**
-         * DOC_TBA
+         * The event fired when an animation is removed from the collection.  This can be used, for
+         * example, to keep a UI in sync.
+         *
+         * @type {Event}
+         * @default undefined
+         *
+         * @example
+         * var removed = new Event();
+         * removed.addEventListener(function(model, animation) {
+         *   console.log('Animation removed: ' + animation.name);
+         * });
+         * model.animations.animationRemoved = removed;
          */
         this.animationRemoved = new Event();
 
@@ -50,7 +70,7 @@ define([
 
     defineProperties(ModelAnimationCollection.prototype, {
         /**
-         * DOC_TBA
+         * The number of animations in the collection.
          *
          * @memberof ModelAnimationCollection
          * @type {Number}
@@ -65,23 +85,63 @@ define([
     });
 
     /**
-     * DOC_TBA
+     * Creates and adds an animation with the specified initial properties to the collection.
+     * <p>
+     * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
+     * </p>
      *
-     * @param {String} options.name DOC_TBA
-     * @param {JulianDate} [options.startTime] DOC_TBA
-     * @param {Number} [options.startOffset] DOC_TBA
-     * @param {JulianDate} [options.stopTime] DOC_TBA
-     * @param {Boolean} [options.removeOnStop=false] DOC_TBA
-     * @param {Number} [options.scale=1.0] DOC_TBA
-     * @param {Boolean} [options.reverse=false] DOC_TBA
-     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] DOC_TBA
-     * @param {Event} [options.start] DOC_TBA
-     * @param {Event} [options.update] DOC_TBA
-     * @param {Event} [options.stop] DOC_TBA
+     * @param {String} options.name The glTF animation name that identifies the animation.
+     * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
+     * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
+     * @param {JulianDate} [options.stopTime=undefined] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
+     * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
+     * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+     * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
+     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] Determines if and how the animation is looped.
+     * @param {Event} [options.start=undefined] The event fired when the animation is started.
+     * @param {Event} [options.update=undefined] The event fired when on each frame when the animation is updated.
+     * @param {Event} [options.stop=undefined] The event fired when the animation is stopped.
+     *
+     * @returns {ModelAnimation} The animation that was added to the collection.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@see Model#readyToRender} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
+     *
+     * @example
+     * // Example 1. Add an animation
+     * model.animations.add({
+     *   name : 'animation name'
+     * });
+     *
+     * // Example 2. Add an animation and provide all properties and events
+     * var startTime = new JulianDate();
+     * var start = new Event();
+     * start.addEventListener(function(model, animation) {
+     *   console.log('Animation started: ' + animation.name);
+     * });
+     * var update = new Event();
+     * update.addEventListener(function(model, animation, time) {
+     *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+     * });
+     * var stop = new Event();
+     * stop.addEventListener(function(model, animation) {
+     *   console.log('Animation stopped: ' + animation.name);
+     * });
+     *
+     * model.animations.add({
+     *   name : 'another animation name',
+     *   startTime : startTime,
+     *   startOffset : 0.0,                    // Play at startTime (default)
+     *   stopTime : startTime.addSeconds(4.0),
+     *   removeOnStop : false,                 // Do not remove when animation stops (default)
+     *   speedup : 2.0,                        // Play at double speed
+     *   reverse : true,                       // Play in reverse
+     *   wrap : ModelAnimationWrap.REPEAT,     // Loop the animation
+     *   start : start,
+     *   update : update,
+     *   stop : stop
+     * });
      */
     ModelAnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -91,7 +151,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(animations)) {
-            throw new DeveloperError('Animations are not loaded.  Wait for the {@see Model#readyToRender} event.');
+            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event.');
         }
         //>>includeEnd('debug');
 
@@ -114,24 +174,71 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates and adds an animation with the specified initial properties to the collection
+     * for each animation in the model.
+     * <p>
+     * This raises the {@link ModelAnimationCollection#animationAdded} event for each model so, for example, a UI can stay in sync.
+     * </p>
+     *
+     * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
+     * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
+     * @param {JulianDate} [options.stopTime=undefined] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.
+     * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing.
+     * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
+     * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
+     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] Determines if and how the animations are looped.
+     * @param {Event} [options.start=undefined] The event fired when each animation is started.
+     * @param {Event} [options.update=undefined] The event fired when on each frame when each animation is updated.
+     * @param {Event} [options.stop=undefined] The event fired when each animation is stopped.
+     *
+     * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.
+     *
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@see Model#readyToRender} event.
+     * @exception {DeveloperError} options.name is required and must be a valid animation name.
+     * @exception {DeveloperError} options.speedup must be greater than zero.
+     *
+     * @example
+     * model.animations.addAll({
+     *   speedup : 0.5,                        // Play at half-speed
+     *   wrap : ModelAnimationWrap.REPEAT      // Loop the animations
+     * });
      */
     ModelAnimationCollection.prototype.addAll = function(options) {
         options = clone(options);
 
+        var scheduledAnimations = [];
         var animations = this._model.gltf.animations;
         for (var name in animations) {
             if (animations.hasOwnProperty(name)) {
                 options.name = name;
-                this.add(options);
+                scheduledAnimations.push(this.add(options));
             }
         }
+
+        return scheduledAnimations;
     };
 
     /**
-     * DOC_TBA
+     * Removes an animation from the collection.
+     * <p>
+     * This raises the {@link ModelAnimationCollection#animationRemoved} event so, for example, a UI can stay in sync.
+     * </p>
+     * <p>
+     * An animation can also be implicitly removed from the collection by setting {@link ModelAnimation#removeOnStop} to
+     * <code>true</code>.  The {@link ModelAnimationCollection#animationRemoved} event is still fired when the animation is removed.
+     * </p>
      *
      * @memberof ModelAnimationCollection
+     *
+     * @param {ModelAnimation} animation The animation to remove.
+     *
+     * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
+     *
+     * @example
+     * var a = model.animations.add({
+     *   name : 'animation name'
+     * });
+     * model.animations.remove(a); // Returns true
      */
     ModelAnimationCollection.prototype.remove = function(animation) {
         if (defined(animation)) {
@@ -148,7 +255,11 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Removes all animations from the collection.
+     * <p>
+     * This raises the {@link ModelAnimationCollection#animationRemoved} event for each
+     * animation so, for example, a UI can stay in sync.
+     * </p>
      *
      * @memberof ModelAnimationCollection
      */
@@ -164,9 +275,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Determines whether this collection contains a given animation.
      *
      * @memberof ModelAnimationCollection
+     *
+     * @param {ModelAnimation} animation The animation to check for.
+     *
+     * @returns {Boolean} <code>true</code> if this animation contains the animation, <code>false</code> otherwise.
      */
     ModelAnimationCollection.prototype.contains = function(animation) {
         if (defined(animation)) {
@@ -177,9 +292,29 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the animation in the collection at the specified index.  Indices are zero-based
+     * and increase as animations are added.  Removing an animation shifts all animations after
+     * it to the left, changing their indices.  This function is commonly used with
+     * {@link ModelAnimationCollection#length} to iterate over all the animations
+     * in the collection.
      *
      * @memberof ModelAnimationCollection
+     *
+     * @param {Number} index The zero-based index of the animation.
+     *
+     * @returns {ModelAnimation} The animation at the specified index.
+     *
+     * @exception {DeveloperError} index is required.
+     *
+     * @see ModelAnimationCollection#length
+     *
+     * @example
+     * // Output the names of all the animations in the collection.
+     * var animations = model.animations;
+     * var length = animations.length;
+     * for (var i = 0; i < length; ++i) {
+     *   console.log(animations.get(i).name);
+     * }
      */
     ModelAnimationCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);

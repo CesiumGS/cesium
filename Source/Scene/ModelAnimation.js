@@ -93,7 +93,7 @@ define([
         this.reverse = defaultValue(options.reverse, false);
 
         /**
-         * Determines if and how the animation is repeated.
+         * Determines if and how the animation is looped.
          *
          * @type {ModelAnimationWrap}
          * @default {@link ModelAnimationWrap.CLAMP}
@@ -103,7 +103,7 @@ define([
         this.wrap = defaultValue(options.wrap, ModelAnimationWrap.CLAMP);
 
         /**
-         * The event fired when this animated is started.  This can be used, for
+         * The event fired when this animation is started.  This can be used, for
          * example, to play a sound or start a particle system, when the animation starts.
          * <p>
          * This event is fired at the end of the frame after the scene is rendered.
@@ -143,7 +143,7 @@ define([
         this.update = options.update;
 
         /**
-         * The event fired when this animated is stopped.  This can be used, for
+         * The event fired when this animation is stopped.  This can be used, for
          * example, to play a sound or start a particle system, when the animation stops.
          * <p>
          * This event is fired at the end of the frame after the scene is rendered.
