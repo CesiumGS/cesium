@@ -88,10 +88,15 @@ define(['../../Core/BoundingSphere',
         var trackedObjectObservable = knockout.observable();
         var dynamicObjectView;
 
+        function trackSelectedObject() {
+            viewer.trackedObject = viewer.selectedObject;
+        }
+
         function selectionInfoClosed() {
             viewer.selectedObject = undefined;
         }
 
+        eventHelper.add(selectionIndicatorViewModel.onCamera, trackSelectedObject);
         eventHelper.add(selectionIndicatorViewModel.onCloseInfo, selectionInfoClosed);
 
         var scratchVertexPositions;
@@ -110,16 +115,23 @@ define(['../../Core/BoundingSphere',
                 if (selectedObject.isAvailable(time)) {
                     if (defined(selectedObject.position)) {
                         selectionIndicatorViewModel.position = selectedObject.position.getValue(time, selectionIndicatorViewModel.position);
+                        selectionIndicatorViewModel.enableCamera = defined(selectionIndicatorViewModel.position) &&
+                            (viewer.trackedObject !== viewer.selectedObject);
                     } else if (defined(selectedObject.vertexPositions)) {
                         scratchVertexPositions = selectedObject.vertexPositions.getValue(time, scratchVertexPositions);
                         scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
                         selectionIndicatorViewModel.position = scratchBoundingSphere.center;
+                        // Can't track scratch positions.
+                        selectionIndicatorViewModel.enableCamera = false;
                     } else {
                         selectionIndicatorViewModel.position = undefined;
+                        selectionIndicatorViewModel.enableCamera = false;
                     }
                 } else {
                     selectionIndicatorViewModel.position = undefined;
+                    selectionIndicatorViewModel.enableCamera = false;
                 }
+                selectionIndicatorViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
 
                 if (defined(selectedObject.description)) {
                     selectionIndicatorViewModel.descriptionHtml = selectedObject.description.getValue(time) || '';

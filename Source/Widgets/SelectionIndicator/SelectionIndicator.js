@@ -74,6 +74,16 @@ define([
         infoElement.appendChild(titleElement);
         this._titleElement = titleElement;
 
+        var cameraElement = document.createElement('button');
+        cameraElement.type = 'button';
+        cameraElement.className = 'cesium-button cesium-selection-info-camera';
+        cameraElement.setAttribute('data-bind', '\
+attr: { title: "Focus camera on object" },\
+click: function () { onCamera.raiseEvent(); },\
+enable: enableCamera,\
+cesiumSvgPath: { path: _cameraIconPath, width: 32, height: 32 }');
+        infoElement.appendChild(cameraElement);
+
         var closeElement = document.createElement('button');
         closeElement.type = 'button';
         closeElement.className = 'cesium-selection-info-close';
