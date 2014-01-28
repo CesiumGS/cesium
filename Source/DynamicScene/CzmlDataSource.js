@@ -40,7 +40,6 @@ define([
         './PolylineOutlineMaterialProperty',
         './DynamicCone',
         './DynamicLabel',
-        './DynamicDirectionsProperty',
         './DynamicEllipse',
         './DynamicEllipsoid',
         './GridMaterialProperty',
@@ -101,7 +100,6 @@ define([
         PolylineOutlineMaterialProperty,
         DynamicCone,
         DynamicLabel,
-        DynamicDirectionsProperty,
         DynamicEllipse,
         DynamicEllipsoid,
         GridMaterialProperty,
@@ -1094,12 +1092,28 @@ define([
         processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri);
         processMaterialPacketData(pyramid, 'material', pyramidData.material, interval, sourceUri);
 
+        //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
+        //We pre-process this into Spherical instances and then process it like any other array.
         if (defined(pyramidData.directions)) {
-            var directions = pyramid.directions;
-            if (!defined(directions)) {
-                pyramid.directions = directions = new DynamicDirectionsProperty();
+            var i;
+            var len;
+            var values = [];
+            var tmp = pyramidData.directions.unitSpherical;
+            if (defined(tmp)) {
+                for (i = 0, len = tmp.length; i < len; i += 2) {
+                    values.push(new Spherical(tmp[i], tmp[i + 1]));
+                }
+                pyramidData.directions.array = values;
             }
-            directions.processCzmlIntervals(pyramidData.directions, interval);
+
+            tmp = pyramidData.directions.unitCartesian;
+            if (defined(tmp)) {
+                for (i = 0, len = tmp.length; i < len; i += 3) {
+                    values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+                }
+                pyramidData.directions.array = values;
+            }
+            processPacketData(Array, pyramid, 'directions', pyramidData.directions, interval, sourceUri);
         }
     }
 
