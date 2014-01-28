@@ -3,34 +3,36 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines if and how a glTF animation is looped.
      *
      * @alias ComponentDatatype
      * @enumeration
+     *
+     * @see ModelAnimationCollection#add
      */
     var ModelAnimationWrap = {
         /**
-         * DOC_TBA
+         * Play the animation once; do not loop it.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 0
          */
         CLAMP : 0,
 
         /**
-         * DOC_TBA
+         * Loop the animation playing it from the start immediately after it stops.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 1
          */
         REPEAT : 1,
 
         /**
-         * DOC_TBA
+         * Loop the animation.  First, playing it forward, then in reverse, then forward, and so on.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 2
          */
