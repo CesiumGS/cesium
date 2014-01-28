@@ -1037,6 +1037,28 @@ define([
         };
     }
 
+    function initialize(shader) {
+        if (defined(shader._program)) {
+            return;
+        }
+
+        var gl = shader._gl;
+        var program = createAndLinkProgram(gl, shader._logShaderCompilation, shader.vertexShaderSource, shader.fragmentShaderSource, shader._attributeLocations);
+        var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+        var uniforms = findUniforms(gl, program);
+        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
+
+        shader._program = program;
+        shader._numberOfVertexAttributes = numberOfVertexAttributes;
+        shader._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
+        shader._uniformsByName = uniforms.uniformsByName;
+        shader._uniforms = uniforms.uniforms;
+        shader._automaticUniforms = partitionedUniforms.automaticUniforms;
+        shader._manualUniforms = partitionedUniforms.manualUniforms;
+
+        shader.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+    }
+
     /**
      * DOC_TBA
      * @memberof ShaderProgram
@@ -1046,7 +1068,7 @@ define([
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
         if (!defined(this._vertexAttributes)) {
-            this._bind();
+            initialize(this);
         }
         return this._vertexAttributes;
     };
@@ -1060,7 +1082,7 @@ define([
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
         if (!defined(this._numberOfVertexAttributes)) {
-            this._bind();
+            initialize(this);
         }
         return this._numberOfVertexAttributes;
     };
@@ -1077,7 +1099,7 @@ define([
      */
     ShaderProgram.prototype.getAllUniforms = function() {
         if (!defined(this._uniformsByName)) {
-            this._bind();
+            initialize(this);
         }
         return this._uniformsByName;
     };
@@ -1092,31 +1114,13 @@ define([
      */
     ShaderProgram.prototype.getManualUniforms = function() {
         if (!defined(this._manualUniforms)) {
-            this._bind();
+            initialize(this);
         }
         return this._manualUniforms;
     };
 
     ShaderProgram.prototype._bind = function() {
-        var gl = this._gl;
-
-        if (!defined(this._program)) {
-            var program = createAndLinkProgram(gl, this._logShaderCompilation, this.vertexShaderSource, this.fragmentShaderSource, this._attributeLocations);
-            var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-            var uniforms = findUniforms(gl, program);
-            var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
-
-            this._program = program;
-            this._numberOfVertexAttributes = numberOfVertexAttributes;
-            this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
-            this._uniformsByName = uniforms.uniformsByName;
-            this._uniforms = uniforms.uniforms;
-            this._automaticUniforms = partitionedUniforms.automaticUniforms;
-            this._manualUniforms = partitionedUniforms.manualUniforms;
-
-            this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
-        }
-
+        initialize(this);
         this._gl.useProgram(this._program);
     };
 
