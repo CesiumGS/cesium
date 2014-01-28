@@ -169,7 +169,6 @@ define([
         var opaqueClearCommand = new ClearCommand();
         opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
         opaqueClearCommand.depth = 1.0;
-        opaqueClearCommand.stencil = 1.0;
         opaqueClearCommand.owner = this;
         this._opaqueClearCommand = opaqueClearCommand;
 
@@ -178,20 +177,20 @@ define([
         translucentClearCommand.owner = this;
         this._translucentClearCommand = translucentClearCommand;
 
+        var alphaClearCommand;
         if (!context.getDrawBuffers()) {
             translucentClearCommand.color.alpha = 0.0;
 
-            var alphaClearCommand = new ClearCommand();
+            alphaClearCommand = new ClearCommand();
             alphaClearCommand.color = new Color(1.0, 1.0, 1.0, 1.0);
             alphaClearCommand.owner = this;
-            this._alphaClearCommand = alphaClearCommand;
         }
+        this._alphaClearCommand = alphaClearCommand;
 
-        var depthStencilClearCommand = new ClearCommand();
-        depthStencilClearCommand.depth = 1.0;
-        depthStencilClearCommand.stencil = 1.0;
-        depthStencilClearCommand.owner = this;
-        this._depthStencilClearCommand = depthStencilClearCommand;
+        var depthClearCommand = new ClearCommand();
+        depthClearCommand.depth = 1.0;
+        depthClearCommand.owner = this;
+        this._depthClearCommand = depthClearCommand;
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -971,7 +970,7 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
-        var clearDepthStencil = scene._depthStencilClearCommand;
+        var clearDepth = scene._depthClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
@@ -984,7 +983,7 @@ define([
             us.updateFrustum(frustum);
 
             passState.framebuffer = scene._opaqueFBO;
-            clearDepthStencil.execute(context, passState);
+            clearDepth.execute(context, passState);
 
             var j;
             var commands = frustumCommands.opaqueCommands;
@@ -1169,12 +1168,12 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        var clearDepthStencil = scene._depthStencilClearCommand;
+        var clearDepth = scene._depthClearCommand;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
-            clearDepthStencil.execute(context, passState);
+            clearDepth.execute(context, passState);
 
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
