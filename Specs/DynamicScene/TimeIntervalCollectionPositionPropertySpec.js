@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/TimeIntervalCollectionPositionProperty',
+defineSuite(['DynamicScene/TimeIntervalCollectionPositionProperty',
              'DynamicScene/PositionProperty',
              'Core/Cartesian3',
              'Core/JulianDate',
@@ -158,5 +157,24 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
         right.intervals.addInterval(interval2);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged event', function() {
+        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+
+        var property = new TimeIntervalCollectionPositionProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.intervals.addInterval(interval);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.removeInterval(interval);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+
+        property.intervals.addInterval(interval);
+        property.definitionChanged.raiseEvent.reset();
+        property.intervals.clear();
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
     });
 });

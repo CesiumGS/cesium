@@ -5,24 +5,19 @@ defineSuite([
              'DynamicScene/TimeIntervalCollectionProperty',
              'Core/Cartesian2',
              'Core/JulianDate',
-             'Core/TimeInterval',
-             'Specs/UndefinedProperty'
+             'Core/TimeInterval'
      ], function(
              ImageMaterialProperty,
              ConstantProperty,
              TimeIntervalCollectionProperty,
              Cartesian2,
              JulianDate,
-             TimeInterval,
-             UndefinedProperty) {
+             TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('works with basic types', function() {
+    it('constructor provides the expected defaults', function() {
         var property = new ImageMaterialProperty();
-        expect(property.image).toBeUndefined();
-        expect(property.repeat).toBeDefined();
-
         expect(property.getType()).toEqual('Image');
 
         var result = property.getValue();
@@ -42,8 +37,8 @@ defineSuite([
 
     it('works with undefined values', function() {
         var property = new ImageMaterialProperty();
-        property.image = new UndefinedProperty();
-        property.repeat = new UndefinedProperty();
+        property.image = new ConstantProperty();
+        property.repeat = new ConstantProperty();
 
         var result = property.getValue();
         expect(result.hasOwnProperty('image')).toEqual(true);
@@ -99,5 +94,54 @@ defineSuite([
 
         right.repeat = left.repeat;
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged when a property is assigned or modified', function() {
+        var property = new ImageMaterialProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.image = new ConstantProperty('http://test.invalid/image.png');
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.image.setValue('http://test.invalid/image2.png');
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.image = property.image;
+        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.repeat = new ConstantProperty(new Cartesian2(1.5, 1.5));
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.repeat.setValue(new Cartesian2(1.0, 1.0));
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.repeat = property.repeat;
+        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+    });
+
+    it('isConstant is only true when all properties are constant or undefined', function() {
+        var property = new ImageMaterialProperty();
+        expect(property.isConstant).toBe(true);
+
+        property.image = undefined;
+        property.repeat = undefined;
+        expect(property.isConstant).toBe(true);
+
+        var start = new JulianDate(1, 0);
+        var stop = new JulianDate(2, 0);
+        property.image = new TimeIntervalCollectionProperty();
+        property.image.intervals.addInterval(new TimeInterval(start, stop, true, true, 'http://test.invalid/image.png'));
+        expect(property.isConstant).toBe(false);
+
+        property.image = undefined;
+        expect(property.isConstant).toBe(true);
+        property.repeat = new TimeIntervalCollectionProperty();
+        property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
+        expect(property.isConstant).toBe(false);
     });
 });

@@ -1,22 +1,25 @@
 /*global define*/
-define([
+define(['./PositionProperty',
+        './Property',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/ReferenceFrame',
         '../Core/TimeIntervalCollection',
-        './PositionProperty',
-        './Property'
+        '../Core/wrapFunction'
     ], function(
+        PositionProperty,
+        Property,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         ReferenceFrame,
         TimeIntervalCollection,
-        PositionProperty,
-        Property) {
+        wrapFunction) {
     "use strict";
 
     /**
@@ -28,11 +31,48 @@ define([
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
-        this._intervals = new TimeIntervalCollection();
+        var intervals = new TimeIntervalCollection();
+        var definitionChanged = new Event();
+
+        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
+        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
+        var that = this;
+        var raiseDefinitionChanged = function() {
+            definitionChanged.raiseEvent(that);
+        };
+        intervals.addInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.addInterval);
+        intervals.removeInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.removeInterval);
+        intervals.clear = wrapFunction(intervals, raiseDefinitionChanged, intervals.clear);
+
+        this._intervals = intervals;
+        this._definitionChanged = definitionChanged;
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     };
 
     defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._intervals.isEmpty();
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the interval collection.
          * @memberof TimeIntervalCollectionPositionProperty.prototype

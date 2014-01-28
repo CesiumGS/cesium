@@ -317,11 +317,11 @@ define([
 
     function updateInterpolationSettings(packetData, property) {
         var interpolator = interpolators[packetData.interpolationAlgorithm];
-        if (defined(interpolator)) {
-            property.interpolationAlgorithm = interpolator;
-        }
-        if (defined(packetData.interpolationDegree)) {
-            property.interpolationDegree = packetData.interpolationDegree;
+        if (defined(interpolator) || defined(packetData.interpolationDegree)) {
+            property.setInterpolationOptions({
+                interpolationAlgorithm : interpolator,
+                interpolationDegree : packetData.interpolationDegree
+            });
         }
     }
 

@@ -1,17 +1,38 @@
 /*global define*/
-define([
+define(['./Property',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/EventHelper',
         '../Core/TimeIntervalCollection',
-        './Property'
+        '../Core/wrapFunction'
     ], function(
+        Property,
         defined,
         defineProperties,
         DeveloperError,
+        Event,
+        EventHelper,
         TimeIntervalCollection,
-        Property) {
+        wrapFunction) {
     "use strict";
+
+    function subscribeAll(property, eventHelper, definitionChanged, intervals) {
+        var callback = function() {
+            definitionChanged.raiseEvent(property);
+        };
+
+        var items = [];
+        eventHelper.removeAll();
+        var length = intervals.getLength();
+        for (var i = 0; i < length; i++) {
+            var interval = intervals.get(i);
+            if (defined(interval.data) && items.indexOf(interval.data) === -1) {
+                eventHelper.add(interval.data.definitionChanged, callback);
+            }
+        }
+    }
 
     /**
      * A {@link Property} which is defined by a {@link TimeIntervalCollection}, where the
@@ -37,10 +58,49 @@ define([
      * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
      */
     var CompositeProperty = function() {
-        this._intervals = new TimeIntervalCollection();
+        var intervals = new TimeIntervalCollection();
+        var definitionChanged = new Event();
+
+        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
+        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
+        var that = this;
+        var eventHelper = new EventHelper();
+        var intervalsChanged = function() {
+            subscribeAll(that, eventHelper, definitionChanged, intervals);
+            definitionChanged.raiseEvent(that);
+        };
+        intervals.addInterval = wrapFunction(intervals, intervalsChanged, intervals.addInterval);
+        intervals.removeInterval = wrapFunction(intervals, intervalsChanged, intervals.removeInterval);
+        intervals.clear = wrapFunction(intervals, intervalsChanged, intervals.clear);
+
+        this._intervals = intervals;
+        this._definitionChanged = definitionChanged;
     };
 
     defineProperties(CompositeProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof CompositeProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._intervals.isEmpty();
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof CompositeProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the interval collection.
          * @memberof CompositeProperty.prototype

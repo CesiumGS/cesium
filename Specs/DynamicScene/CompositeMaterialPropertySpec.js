@@ -1,17 +1,16 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/CompositeMaterialProperty',
-             'DynamicScene/ConstantProperty',
+defineSuite(['DynamicScene/CompositeMaterialProperty',
              'DynamicScene/ColorMaterialProperty',
              'DynamicScene/GridMaterialProperty',
+             'Core/Color',
              'Core/JulianDate',
              'Core/TimeInterval',
              'Core/TimeIntervalCollection'
      ], function(
              CompositeMaterialProperty,
-             ConstantProperty,
              ColorMaterialProperty,
              GridMaterialProperty,
+             Color,
              JulianDate,
              TimeInterval,
              TimeIntervalCollection) {
@@ -77,6 +76,50 @@ defineSuite([
 
         right.intervals.addInterval(interval2);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged event in all cases', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ColorMaterialProperty());
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ColorMaterialProperty());
+
+        var property = new CompositeMaterialProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.intervals.addInterval(interval1);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.addInterval(interval2);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.removeInterval(interval2);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        interval1.data.color.setValue(Color.BLUE);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.clear();
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+    });
+
+    it('does not raise definitionChanged for an overwritten interval', function() {
+        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, new ColorMaterialProperty());
+        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, new ColorMaterialProperty());
+
+        var property = new CompositeMaterialProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+        expect(property.definitionChanged.raiseEvent.callCount).toBe(2);
+
+        //interval2 overwrites interval1, so callCount should not increase.
+        interval1.data.color.setValue(Color.BLUE);
+        expect(property.definitionChanged.raiseEvent.callCount).toBe(2);
     });
 
     it('getValue throws with no time parameter', function() {

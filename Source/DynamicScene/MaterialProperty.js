@@ -1,20 +1,17 @@
 /*global define*/
-define([
-        '../Core/defined',
+define(['../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         Material) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
-     * The interface for all {@link Property} objects that represent {@link Material} uniforms.
+     * The interface for all {@link MaterialProperty} objects that represent {@link Material} uniforms.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias MaterialProperty
@@ -25,7 +22,31 @@ define([
      * @see GridMaterialProperty
      * @see ImageMaterialProperty
      */
-    var MaterialProperty = throwInstantiationError;
+    var MaterialProperty = function() {
+        DeveloperError.throwInstantiationError();
+    };
+
+    defineProperties(MaterialProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof MaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof MaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the {@link Material} type at the provided time.
@@ -35,7 +56,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve the type.
      * @type {String} The type of material.
      */
-    MaterialProperty.prototype.getType = throwInstantiationError;
+    MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the value of the property at the provided time.
@@ -48,7 +69,7 @@ define([
      *
      * @exception {DeveloperError} time is required.
      */
-    MaterialProperty.prototype.getValue = throwInstantiationError;
+    MaterialProperty.prototype.getValue = DeveloperError.throwInstantiationError;
 
     /**
      * Compares this property to the provided property and returns
@@ -58,7 +79,7 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    MaterialProperty.prototype.equals = throwInstantiationError;
+    MaterialProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
     /**
      * @private

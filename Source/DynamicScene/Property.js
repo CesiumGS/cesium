@@ -1,18 +1,15 @@
 /*global define*/
 define(['../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defined,
+        defineProperties,
         DeveloperError) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
-     * The interface for all properties, which represent a value that can
-     * optionally vary over time.
+     * The interface for all properties, which represent a value that can optionally vary over time.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias Property
@@ -24,9 +21,33 @@ define(['../Core/defined',
      * @see TimeIntervalCollectionProperty
      * @see MaterialProperty
      * @see PositionProperty
-     * @see RefereenceProperty
+     * @see ReferenceProperty
      */
-    var Property = throwInstantiationError;
+    var Property = function() {
+        DeveloperError.throwInstantiationError();
+    };
+
+    defineProperties(Property.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof Property.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof Property.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the value of the property at the provided time.
@@ -39,7 +60,7 @@ define(['../Core/defined',
      *
      * @exception {DeveloperError} time is required.
      */
-    Property.prototype.getValue = throwInstantiationError;
+    Property.prototype.getValue = DeveloperError.throwInstantiationError;
 
     /**
      * Compares this property to the provided property and returns
@@ -49,7 +70,7 @@ define(['../Core/defined',
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    Property.prototype.equals = throwInstantiationError;
+    Property.prototype.equals = DeveloperError.throwInstantiationError;
 
     /**
      * @private

@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/CompositePositionProperty',
+defineSuite(['DynamicScene/CompositePositionProperty',
              'DynamicScene/ConstantPositionProperty',
              'DynamicScene/PositionProperty',
              'Core/Cartesian3',
@@ -172,5 +171,49 @@ defineSuite([
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('raises definitionChanged event in all cases', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantPositionProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantPositionProperty(new Cartesian3(4, 5, 6)));
+
+        var property = new CompositePositionProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.intervals.addInterval(interval1);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.addInterval(interval2);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.removeInterval(interval2);
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        interval1.data.setValue(new Cartesian3());
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+
+        property.intervals.clear();
+        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        property.definitionChanged.raiseEvent.reset();
+    });
+
+    it('does not raise definitionChanged for an overwritten interval', function() {
+        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, new ConstantPositionProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, new ConstantPositionProperty(new Cartesian3(4, 5, 6)));
+
+        var property = new CompositePositionProperty();
+        spyOn(property.definitionChanged, 'raiseEvent');
+
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+        expect(property.definitionChanged.raiseEvent.callCount).toBe(2);
+
+        //interval2 overwrites interval1, so callCount should not increase.
+        interval1.data.setValue(new Cartesian3());
+        expect(property.definitionChanged.raiseEvent.callCount).toBe(2);
     });
 });
