@@ -138,14 +138,27 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The object for the glTF JSON, including properties with default values omitted
+         * from the JSON provided to this model.
+         *
+         * @type {Object}
+         *
+         * @default undefined
          *
          * @readonly
          */
         this.gltf = gltfDefaults(options.gltf);
 
         /**
-         * DOC_TBA
+         * The base path that paths in the glTF JSON are relative to.  The base
+         * path is the same path as the path containing the .json file
+         * minus the .json file, when binary, image, and shader files are
+         * in the same directory as the .json.  When this is <code>''</code>,
+         * the app's base path is used.
+         *
+         * @type {String}
+         *
+         * @default ''
          *
          * @readonly
          */
@@ -164,8 +177,7 @@ define([
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
          * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          *
@@ -177,7 +189,6 @@ define([
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -207,7 +218,7 @@ define([
         this._id = options.id;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
          *
          * @type {Boolean}
          *
@@ -218,7 +229,14 @@ define([
         this.allowPicking = defaultValue(options.allowPicking, true);
 
         /**
-         * DOC_TBA
+         * The event fired when this model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This is event is fired at the end of the frame before the first frame the model is rendered in.
+         * </p>
+         *
+         * @type {Event}
+         * @default undefined
          */
         this.readyToRender = new Event();
 
@@ -231,17 +249,34 @@ define([
         this.worldBoundingSphere = new BoundingSphere();
 
         /**
-         * DOC_TBA
+         * The currently playing glTF animations.
+         *
+         * @type {ModelAnimationCollection}
          */
         this.animations = new ModelAnimationCollection(this);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the bounding sphere for each {@see DrawCommand} in the model.  A glTF primitive corresponds
+         * to one {@see DrawCommand}.  A glTF mesh has an array of primitives, often of length one.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the model in wireframe.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
@@ -250,7 +285,7 @@ define([
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
-        this._cesiumAnimationsDirty = false;
+        this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
 
         this._runtime = {
             animations : undefined,
@@ -1630,6 +1665,7 @@ define([
                 event : this.readyToRender,
                 eventArguments : [this]
             });
+            return;
         }
 
 // TODO: make this not so wasteful
