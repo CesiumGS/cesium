@@ -48,7 +48,6 @@ defineSuite([
 
         // Update scene state
         scene.initializeFrame();
-        scene.render();
 
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
         expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON3);
