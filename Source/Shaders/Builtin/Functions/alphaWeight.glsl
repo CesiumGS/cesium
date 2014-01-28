@@ -1,3 +1,9 @@
+/**
+ * @private
+ *
+ * See Weighted Blended Order-Independent Transparency for examples of different weighting functions:
+ * http://jcgt.org/published/0002/02/09/
+ */
 float czm_alphaWeight(float a)
 {
     float z = czm_windowToEyeCoordinates(gl_FragCoord).z;

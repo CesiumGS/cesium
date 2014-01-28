@@ -805,18 +805,16 @@ define([
         functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
     };
 
-    function getTranslucentMRTRenderState(scene, renderState) {
-        var cache = scene._translucentRenderStateCache;
-
+    function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
             var depthMask = renderState.depthMask;
             var blending = renderState.blending;
 
             renderState.depthMask = false;
-            renderState.blending = translucentMRTBlend;
+            renderState.blending = translucentBlending;
 
-            translucentState = scene._context.createRenderState(renderState);
+            translucentState = context.createRenderState(renderState);
             cache[renderState.id] = translucentState;
 
             renderState.depthMask = depthMask;
@@ -824,48 +822,18 @@ define([
         }
 
         return translucentState;
+    }
+
+    function getTranslucentMRTRenderState(scene, renderState) {
+        return getTranslucentRenderState(scene._context, translucentMRTBlend, scene._translucentRenderStateCache, renderState);
     }
 
     function getTranslucentColorRenderState(scene, renderState) {
-        var cache = scene._translucentRenderStateCache;
-
-        var translucentState = cache[renderState.id];
-        if (!defined(translucentState)) {
-            var depthMask = renderState.depthMask;
-            var blending = renderState.blending;
-
-            renderState.depthMask = false;
-            renderState.blending = translucentColorBlend;
-
-            translucentState = scene._context.createRenderState(renderState);
-            cache[renderState.id] = translucentState;
-
-            renderState.depthMask = depthMask;
-            renderState.blending = blending;
-        }
-
-        return translucentState;
+        return getTranslucentRenderState(scene._context, translucentColorBlend, scene._translucentRenderStateCache, renderState);
     }
 
     function getTranslucentAlphaRenderState(scene, renderState) {
-        var cache = scene._alphaRenderStateCache;
-
-        var translucentState = cache[renderState.id];
-        if (!defined(translucentState)) {
-            var depthMask = renderState.depthMask;
-            var blending = renderState.blending;
-
-            renderState.depthMask = false;
-            renderState.blending = translucentAlphaBlend;
-
-            translucentState = scene._context.createRenderState(renderState);
-            cache[renderState.id] = translucentState;
-
-            renderState.depthMask = depthMask;
-            renderState.blending = blending;
-        }
-
-        return translucentState;
+        return getTranslucentRenderState(scene._context, translucentAlphaBlend, scene._alphaRenderStateCache, renderState);
     }
 
     function getTranslucentMRTShaderProgram(scene, shaderProgram) {
@@ -913,6 +881,8 @@ define([
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
 
+            // Discarding the fragment in main is a workaround for ANGLE D3D9
+            // shader compilation errors.
             var source = 'vec4 czm_gl_FragColor;\n' +
                 'bool czm_discard = false;\n' +
                 renamedFS + '\n\n' +
@@ -920,7 +890,9 @@ define([
                 '{\n' +
                 '    czm_translucent_main();\n' +
                 '    if (czm_discard)\n' +
+                '    {\n' +
                 '        discard;\n' +
+                '    }\n' +
                 '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
                 '    float wzi = czm_alphaWeight(ai);' +
@@ -947,6 +919,8 @@ define([
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
 
+            // Discarding the fragment in main is a workaround for ANGLE D3D9
+            // shader compilation errors.
             var source = 'vec4 czm_gl_FragColor;\n' +
                 'bool czm_discard = false;\n' +
                 renamedFS + '\n\n' +
@@ -954,7 +928,9 @@ define([
                 '{\n' +
                 '    czm_translucent_main();\n' +
                 '    if (czm_discard)\n' +
+                '    {\n' +
                 '        discard;\n' +
+                '    }\n' +
                 '    float ai = czm_gl_FragColor.a;\n' +
                 '    gl_FragColor = vec4(ai);\n' +
                 '}\n';
@@ -1197,11 +1173,6 @@ define([
         }
     }
 
-    var attributeIndices = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
     function updateTextures(scene, width, height) {
         var context = scene._context;
 
@@ -1256,7 +1227,10 @@ define([
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
             command.renderState = context.createRenderState();
-            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, {
+                position : 0,
+                textureCoordinates : 1
+            });
 
             scene._compositeCommand = command;
         }

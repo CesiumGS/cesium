@@ -1,3 +1,8 @@
+/**
+ * Compositing for Weighted Blended Order-Independent Transparency. See:
+ * http://jcgt.org/published/0002/02/09/
+ */
+ 
 uniform sampler2D u_opaque;
 uniform sampler2D u_accumulation;
 uniform sampler2D u_revealage;
