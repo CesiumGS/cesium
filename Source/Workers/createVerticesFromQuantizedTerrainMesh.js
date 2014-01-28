@@ -15,12 +15,8 @@ define([
         createTaskProcessorWorker) {
     "use strict";
 
-    var quantizedStride = 3;
     var vertexStride = 6;
     var maxShort = 32767;
-
-    var cartesian3Scratch = new Cartesian3();
-    var cartographicScratch = new Cartographic();
 
     var xIndex = 0;
     var yIndex = 1;
@@ -28,6 +24,9 @@ define([
     var hIndex = 3;
     var uIndex = 4;
     var vIndex = 5;
+
+    var cartesian3Scratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
         var quantizedVertices = parameters.quantizedVertices;

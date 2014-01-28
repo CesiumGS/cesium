@@ -178,9 +178,6 @@ define([
         return result;
     }
 
-    var cartesian3Scratch = new Cartesian3();
-    var cartographicScratch = new Cartographic();
-
     var createMeshTaskProcessor = new TaskProcessor('createVerticesFromQuantizedTerrainMesh');
 
     /**
