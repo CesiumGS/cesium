@@ -2648,11 +2648,9 @@ define([
         return this.createVertexArray(vaAttributes, indexBuffer);
     };
 
-    var attributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
+    /**
+     * @private
+     */
     Context.prototype.getViewportQuadVertexArray = function() {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
@@ -2690,7 +2688,10 @@ define([
 
         vertexArray = this.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeLocations : attributeLocations,
+            attributeLocations : {
+                position : 0,
+                textureCoordinates : 1
+            },
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
