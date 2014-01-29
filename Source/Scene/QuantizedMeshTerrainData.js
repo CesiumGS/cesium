@@ -168,6 +168,11 @@ define([
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
+
+        var vertexCount = this._quantizedVertices.length / 3;
+        this._uValues = this._quantizedVertices.subarray(0, vertexCount);
+        this._vValues = this._quantizedVertices.subarray(vertexCount, 2 * vertexCount);
+        this._heightValues = this._quantizedVertices.subarray(2 * vertexCount, 3 * vertexCount);
     };
 
     function toArray(typedArray) {
@@ -348,6 +353,9 @@ define([
         });
     };
 
+    var maxShort = 32767;
+    var barycentricCoordinateScratch = new Cartesian3();
+
     /**
      * Computes the terrain height at a specified longitude and latitude.
      *
@@ -361,24 +369,40 @@ define([
      *          incorrect for positions far outside the extent.
      */
     QuantizedMeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
-        //var width = this._width;
-        //var height = this._height;
+        var u = (longitude - extent.west) / (extent.east - extent.west);
+        u *= maxShort;
+        var v = (latitude - extent.south) / (extent.north - extent.south);
+        v *= maxShort;
 
-        var heightSample = 0.0;
+        var uBuffer = this._uValues;
+        var vBuffer = this._vValues;
+        var heightBuffer = this._heightValues;
 
-        var structure = this._structure;
-        var stride = structure.stride;
-        if (stride > 1) {
-            //var elementsPerHeight = structure.elementsPerHeight;
-            //var elementMultiplier = structure.elementMultiplier;
-            //var isBigEndian = structure.isBigEndian;
+        var indices = this._indices;
+        for (var i = 0, len = indices.length; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
 
-//            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
-        } else {
-//            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+            var u0 = uBuffer[i0];
+            var u1 = uBuffer[i1];
+            var u2 = uBuffer[i2];
+
+            var v0 = vBuffer[i0];
+            var v1 = vBuffer[i1];
+            var v2 = vBuffer[i2];
+
+            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
+            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                var quantizedHeight = barycentric.x * heightBuffer[i0] +
+                                      barycentric.y * heightBuffer[i1] +
+                                      barycentric.z * heightBuffer[i2];
+                return CesiumMath.lerp(this._minimumHeight, this._maximumHeight, quantizedHeight / maxShort);
+            }
         }
 
-        return heightSample * structure.heightScale + structure.heightOffset;
+        // Position does not lie in any triangle in this mesh.
+        return undefined;
     };
 
     /**

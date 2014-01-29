@@ -1,11 +1,21 @@
 /*global define*/
 define([
-    ], function() {
+        './Cartesian3',
+        './defined'
+    ], function(
+        Cartesian3,
+        defined) {
     "use strict";
 
     var Intersections2D = {};
 
     /**
+     * Splits a 2D triangle at given axis-aligned threshold value and returns the resulting
+     * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
+     * 3, or 4 vertices.
+     *
+     * @memberof Intersections2D
+     *
      * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
      * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
      *                            to keep the portion below.
@@ -169,6 +179,45 @@ define([
         return result;
     };
 
+    /**
+     * Compute the barycentric coordinates of a 2D position within a 2D triangle.
+     *
+     * @memberof Intersections2D
+     *
+     * @param {Number} x The x coordinate of the position for which to find the barycentric coordinates.
+     * @param {Number} y The y coordinate of the position for which to find the barycentric coordinates.
+     * @param {Number} x1 The x coordinate of the triangle's first vertex.
+     * @param {Number} y1 The y coordinate of the triangle's first vertex.
+     * @param {Number} x2 The x coordinate of the triangle's second vertex.
+     * @param {Number} y2 The y coordinate of the triangle's second vertex.
+     * @param {Number} x3 The x coordinate of the triangle's third vertex.
+     * @param {Number} y3 The y coordinate of the triangle's third vertex.
+     * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
+     *                     is undefined, a new instance is created and returned.
+     *
+     * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
+     */
+    Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
+        var x1mx3 = x1 - x3;
+        var x3mx2 = x3 - x2;
+        var y2my3 = y2 - y3;
+        var y1my3 = y1 - y3;
+        var inverseDeterminant = 1.0 / (y2my3 * x1mx3 + x3mx2 * y1my3);
+        var ymy3 = y - y3;
+        var xmx3 = x - x3;
+        var l1 = (y2my3 * xmx3 + x3mx2 * ymy3) * inverseDeterminant;
+        var l2 = (-y1my3 * xmx3 + x1mx3 * ymy3) * inverseDeterminant;
+        var l3 = 1.0 - l1 - l2;
+
+        if (defined(result)) {
+            result.x = l1;
+            result.y = l2;
+            result.z = l3;
+            return result;
+        } else {
+            return new Cartesian3(l1, l2, l3);
+        }
+    };
 
     return Intersections2D;
 });

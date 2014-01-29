@@ -17,7 +17,8 @@ Beta Releases
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
-* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.  
+* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.  
 
 ### b24 - 2014-01-06
 
