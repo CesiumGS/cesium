@@ -946,100 +946,86 @@ define([
         return shader;
     }
 
-    function executeFrustumCommands(scene, passState, frustum) {
+    function executeTranslucentCommandsInOrder(scene, passState, frustumCommands) {
         var context = scene._context;
-        var us = context.getUniformState();
+        var commands = frustumCommands.translucentCommands;
+        var length = commands.length = frustumCommands.translucentIndex;
+        for (var j = 0; j < length; ++j) {
+            executeCommand(commands[j], scene, context, passState);
+        }
+    }
 
-        var clearDepth = scene._depthClearCommand;
+    function executeTranslucentCommandsSorted(scene, passState, frustumCommands) {
+        var command;
+        var renderState;
+        var shaderProgram;
+        var j;
 
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            var index = numFrustums - i - 1;
-            var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
+        var context = scene._context;
+        var commands = frustumCommands.translucentCommands;
+        var length = commands.length = frustumCommands.translucentIndex;
 
-            us.updateFrustum(frustum);
+        passState.framebuffer = scene._translucentFBO;
 
-            passState.framebuffer = scene._opaqueFBO;
-            clearDepth.execute(context, passState);
+        for (j = 0; j < length; ++j) {
+            command = commands[j];
+            renderState = command.renderState;
+            shaderProgram = command.shaderProgram;
 
-            var j;
-            var commands = frustumCommands.opaqueCommands;
-            var length = frustumCommands.opaqueIndex;
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
+            command.renderState = getTranslucentColorRenderState(scene, renderState);
+            command.shaderProgram = getTranslucentColorShaderProgram(scene, shaderProgram);
+            executeCommand(command, scene, context, passState);
 
-            var command;
-            var renderState;
-            var shaderProgram;
-
-            commands = frustumCommands.translucentCommands;
-            length = commands.length = frustumCommands.translucentIndex;
-
-            if (scene._translucentMRTSupport) {
-                passState.framebuffer = scene._translucentFBO;
-
-                for (j = 0; j < length; ++j) {
-                    command = commands[j];
-                    renderState = command.renderState;
-                    shaderProgram = command.shaderProgram;
-
-                    command.renderState = getTranslucentMRTRenderState(scene, renderState);
-                    command.shaderProgram = getTranslucentMRTShaderProgram(scene, shaderProgram);
-                    executeCommand(command, scene, context, passState);
-
-                    command.renderState = renderState;
-                    command.shaderProgram = shaderProgram;
-                }
-            } else {
-                passState.framebuffer = scene._translucentFBO;
-
-                for (j = 0; j < length; ++j) {
-                    command = commands[j];
-                    renderState = command.renderState;
-                    shaderProgram = command.shaderProgram;
-
-                    command.renderState = getTranslucentColorRenderState(scene, renderState);
-                    command.shaderProgram = getTranslucentColorShaderProgram(scene, shaderProgram);
-                    executeCommand(command, scene, context, passState);
-
-                    command.renderState = renderState;
-                    command.shaderProgram = shaderProgram;
-                }
-
-                passState.framebuffer = scene._alphaFBO;
-
-                for (j = 0; j < length; ++j) {
-                    command = commands[j];
-                    renderState = command.renderState;
-                    shaderProgram = command.shaderProgram;
-
-                    command.renderState = getTranslucentAlphaRenderState(scene, renderState);
-                    command.shaderProgram = getTranslucentAlphaShaderProgram(scene, shaderProgram);
-                    executeCommand(command, scene, context, passState);
-
-                    command.renderState = renderState;
-                    command.shaderProgram = shaderProgram;
-                }
-            }
+            command.renderState = renderState;
+            command.shaderProgram = shaderProgram;
         }
 
-        passState.framebuffer = undefined;
-        scene._compositeCommand.execute(context, passState);
+        passState.framebuffer = scene._alphaFBO;
+
+        for (j = 0; j < length; ++j) {
+            command = commands[j];
+            renderState = command.renderState;
+            shaderProgram = command.shaderProgram;
+
+            command.renderState = getTranslucentAlphaRenderState(scene, renderState);
+            command.shaderProgram = getTranslucentAlphaShaderProgram(scene, shaderProgram);
+            executeCommand(command, scene, context, passState);
+
+            command.renderState = renderState;
+            command.shaderProgram = shaderProgram;
+        }
+    }
+
+    function executeTranslucentCommandsSortedMRT(scene, passState, frustumCommands) {
+        var context = scene._context;
+        var commands = frustumCommands.translucentCommands;
+        var length = commands.length = frustumCommands.translucentIndex;
+
+        passState.framebuffer = scene._translucentFBO;
+        for (var j = 0; j < length; ++j) {
+            var command = commands[j];
+            var renderState = command.renderState;
+            var shaderProgram = command.shaderProgram;
+
+            command.renderState = getTranslucentMRTRenderState(scene, renderState);
+            command.shaderProgram = getTranslucentMRTShaderProgram(scene, shaderProgram);
+            executeCommand(command, scene, context, passState);
+
+            command.renderState = renderState;
+            command.shaderProgram = shaderProgram;
+        }
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();
 
-    function executeCommands(scene, passState, clearColor) {
+    function executeCommands(scene, passState, clearColor, picking) {
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene._context;
         var us = context.getUniformState();
+        var sortTranslucent = !picking && context.getFloatingPointTexture();
 
         var frustum;
         if (defined(camera.frustum.fovy)) {
@@ -1072,26 +1058,26 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        passState.framebuffer = scene._opaqueFBO;
-        scene._opaqueClearCommand.execute(context, passState);
-        passState.framebuffer = scene._translucentFBO;
-        scene._translucentClearCommand.execute(context, passState);
+        var opaqueFramebuffer;
+        if (sortTranslucent) {
+            updateFramebuffers(scene);
+            opaqueFramebuffer = scene._opaqueFBO;
 
-        if (!scene._translucentMRTSupport) {
-            passState.framebuffer = scene._alphaFBO;
-            scene._alphaClearCommand.execute(context, passState);
+            passState.framebuffer = scene._opaqueFBO;
+            scene._opaqueClearCommand.execute(context, passState);
+            passState.framebuffer = scene._translucentFBO;
+            scene._translucentClearCommand.execute(context, passState);
+
+            if (!scene._translucentMRTSupport) {
+                passState.framebuffer = scene._alphaFBO;
+                scene._alphaClearCommand.execute(context, passState);
+            }
         }
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         } else {
-            passState.framebuffer = scene._opaqueFBO;
-        }
-
-        if (sunVisible && scene.sunBloom) {
-            scene._sunPostProcess.clear(context, scene.backgroundColor);
-        } else {
-            passState.framebuffer = scene._opaqueFBO;
+            passState.framebuffer = opaqueFramebuffer;
         }
 
         // Ideally, we would render the sky box and atmosphere last for
@@ -1112,55 +1098,31 @@ define([
             sunCommand.execute(context, passState);
 
             if (scene.sunBloom) {
-                scene._sunPostProcess.execute(context, scene._opaqueFBO);
+                scene._sunPostProcess.execute(context, opaqueFramebuffer);
                 passState.framebuffer = undefined;
             }
         }
 
-        executeFrustumCommands(scene, passState, frustum);
-    }
-
-    function executeOverlayCommands(scene, passState) {
-        var context = scene._context;
-        var commandList = scene._overlayCommandList;
-        var length = commandList.length;
-        for (var i = 0; i < length; ++i) {
-            commandList[i].execute(context, passState);
-        }
-    }
-
-    function executePickCommands(scene, passState, clearColor) {
-        var frameState = scene._frameState;
-        var camera = scene._camera;
-        var context = scene._context;
-        var us = context.getUniformState();
-
-        var frustum;
-        if (defined(camera.frustum.fovy)) {
-            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
-        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
-            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
-        } else {
-            frustum = camera.frustum.clone(scratchOrthographicFrustum);
-        }
-
-        var clear = scene._clearColorCommand;
-        Color.clone(clearColor, clear.color);
-        clear.execute(context, passState);
-
         var clearDepth = scene._depthClearCommand;
+        var executeTranslucentCommands;
+        if (sortTranslucent) {
+            executeTranslucentCommands = scene._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSorted;
+        } else {
+            executeTranslucentCommands = executeTranslucentCommandsInOrder;
+        }
 
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
-            clearDepth.execute(context, passState);
-
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
             us.updateFrustum(frustum);
+
+            passState.framebuffer = opaqueFramebuffer;
+            clearDepth.execute(context, passState);
 
             var j;
             var commands = frustumCommands.opaqueCommands;
@@ -1169,11 +1131,21 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            commands = frustumCommands.translucentCommands;
-            length = commands.length = frustumCommands.translucentIndex;
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
-            }
+            executeTranslucentCommands(scene, passState, frustumCommands);
+        }
+
+        if (sortTranslucent) {
+            passState.framebuffer = undefined;
+            scene._compositeCommand.execute(context, passState);
+        }
+    }
+
+    function executeOverlayCommands(scene, passState) {
+        var context = scene._context;
+        var commandList = scene._overlayCommandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            commandList[i].execute(context, passState);
         }
     }
 
@@ -1364,7 +1336,6 @@ define([
         this._commandList.length = 0;
         this._overlayCommandList.length = 0;
 
-        updateFramebuffers(this);
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
 
@@ -1519,7 +1490,7 @@ define([
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executePickCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
+        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
         executeEvents(frameState);
