@@ -98,7 +98,7 @@ define([
          * indicate that the components should be mapped to the range [0, 1] (unsigned)
          * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
          * <p>
-         * This is commonly used when storing colors using {@ ComponentDatatype.UNSIGNED_BYTE}.
+         * This is commonly used when storing colors using {@link ComponentDatatype.UNSIGNED_BYTE}.
          * </p>
          *
          * @type Boolean
