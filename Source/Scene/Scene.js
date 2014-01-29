@@ -164,7 +164,9 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._translucentMRTSupport = context.getDrawBuffers() && context.getFloatingPointTexture();
+        var textureFloat = context.getFloatingPointTexture();
+        this._translucentMRTSupport = context.getDrawBuffers() && textureFloat;
+        this._translucentMultipassSupport = !this._translucentMRTSupport && textureFloat;
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -182,7 +184,7 @@ define([
         this._translucentClearCommand = translucentClearCommand;
 
         var alphaClearCommand;
-        if (!this._translucentMRTSupport) {
+        if (this._translucentMultipassSupport) {
             translucentClearCommand.color.alpha = 0.0;
 
             alphaClearCommand = new ClearCommand();
@@ -759,7 +761,7 @@ define([
             scene._debugSphere.update(context, scene._frameState, commandList);
 
             var framebuffer;
-            var renderToTexture = context.getFloatingPointTexture();
+            var renderToTexture = scene._translucentMultipassSupport;
             if (renderToTexture) {
                 framebuffer = passState.framebuffer;
                 passState.framebuffer = scene._opaqueFBO;
@@ -1043,7 +1045,7 @@ define([
         var camera = scene._camera;
         var context = scene._context;
         var us = context.getUniformState();
-        var sortTranslucent = !picking && context.getFloatingPointTexture();
+        var sortTranslucent = !picking && (scene._translucentMRTSupport || scene._translucentMultipassSupport);
 
         var frustum;
         if (defined(camera.frustum.fovy)) {
@@ -1077,18 +1079,22 @@ define([
         clear.execute(context, passState);
 
         var opaqueFramebuffer = passState.framebuffer;
+
         if (sortTranslucent) {
-            updateFramebuffers(scene);
-            opaqueFramebuffer = scene._opaqueFBO;
+            sortTranslucent = updateFramebuffers(scene);
 
-            passState.framebuffer = scene._opaqueFBO;
-            scene._opaqueClearCommand.execute(context, passState);
-            passState.framebuffer = scene._translucentFBO;
-            scene._translucentClearCommand.execute(context, passState);
+            if (sortTranslucent) {
+                opaqueFramebuffer = scene._opaqueFBO;
 
-            if (!scene._translucentMRTSupport) {
-                passState.framebuffer = scene._alphaFBO;
-                scene._alphaClearCommand.execute(context, passState);
+                passState.framebuffer = scene._opaqueFBO;
+                scene._opaqueClearCommand.execute(context, passState);
+                passState.framebuffer = scene._translucentFBO;
+                scene._translucentClearCommand.execute(context, passState);
+
+                if (scene._translucentMultipassSupport) {
+                    passState.framebuffer = scene._alphaFBO;
+                    scene._alphaClearCommand.execute(context, passState);
+                }
             }
         }
 
@@ -1200,6 +1206,8 @@ define([
             });
         } else {
             scene._depthRenderbuffer = context.createRenderbuffer({
+                width : width,
+                height : height,
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             });
         }
@@ -1246,7 +1254,9 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
+        var supported = true;
         var colorTexture = scene._opaqueTexture;
+
         if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
             updateTextures(scene, width, height);
 
@@ -1278,16 +1288,35 @@ define([
                     depthRenderbuffer : scene._depthRenderbuffer
                 });
                 scene._translucentFBO.destroyAttachments = false;
-                scene._alphaFBO = context.createFramebuffer({
-                    colorTextures : [scene._revealageTexture],
-                    depthTexture : scene._depthTexture,
-                    depthRenderbuffer : scene._depthRenderbuffer
-                });
-                scene._alphaFBO.destroyAttachments = false;
+
+                if(scene._translucentFBO.getStatus() !== FramebufferStatus.COMPLETE) {
+                    scene._translucentFBO.destroy();
+                    scene._opaqueFBO.destroy();
+
+                    scene._opaqueTexture = scene._opaqueTexture && scene._opaqueTexture.destroy();
+                    scene._accumulationTexture = scene._accumulationTexture && scene._accumulationTexture.destroy();
+                    scene._revealageTexture = scene._revealageTexture && scene._revealageTexture.destroy();
+                    scene._depthTexture = scene._depthTexture && scene._depthTexture.destroy();
+                    scene._depthRenderbuffer = scene._depthRenderbuffer && scene._depthRenderbuffer.destroy();
+
+                    scene._translucentMultipassSupport = false;
+                } else {
+                    scene._alphaFBO = context.createFramebuffer({
+                        colorTextures : [scene._revealageTexture],
+                        depthTexture : scene._depthTexture,
+                        depthRenderbuffer : scene._depthRenderbuffer
+                    });
+                    scene._alphaFBO.destroyAttachments = false;
+                }
             }
 
-            updateCompositeCommand(scene);
+            supported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
+            if (supported) {
+                updateCompositeCommand(scene);
+            }
         }
+
+        return supported;
     }
 
     function updatePrimitives(scene) {
@@ -1603,15 +1632,19 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
-        this._opaqueFBO = this._opaqueFBO && this._opaqueFBO.destroy();
-        this._translucentFBO = this._translucentFBO && this._translucentFBO.destroy();
-        this._alphaFBO = this._alphaFBO && this._alphaFBO.destroy();
+        if (defined(this._compositeCommand)) {
+            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
+        }
 
-        this._opaqueTexture = this._opaqueTexture && this._opaqueTexture.destroy();
-        this._accumulationTexture = this._accumulationTexture && this._accumulationTexture.destroy();
-        this._revealageTexture = this._revealageTexture && this._revealageTexture.destroy();
-        this._depthTexture = this._depthTexture && this._depthTexture.destroy();
-        this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
+        this._opaqueFBO = this._opaqueFBO && !this._opaqueFBO.isDestroyed() && this._opaqueFBO.destroy();
+        this._translucentFBO = this._translucentFBO && !this._translucentFBO.isDestroyed() && this._translucentFBO.destroy();
+        this._alphaFBO = this._alphaFBO && !this._alphaFBO.isDestroyed() && this._alphaFBO.destroy();
+
+        this._opaqueTexture = this._opaqueTexture && !this._opaqueTexture.isDestroyed() && this._opaqueTexture.destroy();
+        this._accumulationTexture = this._accumulationTexture && !this._accumulationTexture.isDestroyed() && this._accumulationTexture.destroy();
+        this._revealageTexture = this._revealageTexture && !this._revealageTexture.isDestroyed() && this._revealageTexture.destroy();
+        this._depthTexture = this._depthTexture && !this._depthTexture.isDestroyed() && this._depthTexture.destroy();
+        this._depthRenderbuffer = this._depthRenderbuffer && !this._depthRenderbuffer.isDestroyed() && this._depthRenderbuffer.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
