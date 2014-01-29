@@ -39,7 +39,9 @@ define([
 
         var el = document.createElement('div');
         el.className = 'cesium-selection-wrapper';
-        el.setAttribute('data-bind', 'style: { "bottom" : _positionY, "left" : _positionX }, css: { "cesium-selection-wrapper-visible" : showPosition }');
+        el.setAttribute('data-bind', '\
+style: { "bottom" : _positionY, "left" : _positionX },\
+css: { "cesium-selection-wrapper-visible" : showPosition }');
         container.appendChild(el);
         this._element = el;
 
@@ -64,7 +66,8 @@ define([
 
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-selection-info';
-        infoElement.setAttribute('data-bind', 'css: { "cesium-selection-info-visible" : showSelection }');
+        infoElement.setAttribute('data-bind', '\
+css: { "cesium-selection-info-visible" : showSelection, "cesium-selection-info-bodyless" : _bodyless }');
         container.appendChild(infoElement);
         this._infoElement = infoElement;
 

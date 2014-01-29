@@ -247,6 +247,12 @@ define([
                 return 'rotate(' + (this.rotation) + ') scale(' + (this.scale) + ')';
             }
         });
+
+        knockout.defineProperty(this, '_bodyless', {
+            get : function() {
+                return !this.descriptionHtml;
+            }
+        });
     };
 
     /**

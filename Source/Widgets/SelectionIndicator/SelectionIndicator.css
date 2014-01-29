@@ -76,6 +76,10 @@
     overflow: hidden;
 }
 
+.cesium-selection-info-bodyless .cesium-selection-info-title {
+    border-bottom-left-radius: 7px;
+}
+
 button.cesium-selection-info-camera {
     display: block;
     position: absolute;
@@ -125,6 +129,10 @@ button.cesium-selection-info-close:active {
     padding: 4px 10px;
     margin-right: 4px;
     overflow: auto;
+}
+
+.cesium-selection-info-bodyless .cesium-selection-info-body {
+    display: none;
 }
 
 .cesium-selection-info-description {
