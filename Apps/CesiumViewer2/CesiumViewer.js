@@ -240,12 +240,13 @@ define([
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
 
-//            model.getNode('LOD3sp').setMatrix(Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0)));
+            var node = model.getNode('LOD3sp');
+//            node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
 
-//            model.getNode('LOD3sp').setMatrix(undefined);
-//            model.getNode('LOD3sp').setTranslation(new Cartesian3());
-//            model.getNode('LOD3sp').setRotation(Quaternion.IDENTITY.clone());
-//            model.getNode('LOD3sp').setScale(new Cartesian3(5.0, 1.0, 1.0));
+//            node.matrix = undefined;
+//            node.translation = new Cartesian3();
+//            node.rotation = Quaternion.IDENTITY.clone();
+//            node.scale = new Cartesian3(5.0, 1.0, 1.0);
 
             if (endUserOptions.animate) {
                 model.activeAnimations.addAll({
