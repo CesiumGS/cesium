@@ -187,15 +187,11 @@ define([
 
         var polygon;
         var showProperty = dynamicPolygon._show;
-        var ellipseProperty = dynamicObject._ellipse;
         var positionProperty = dynamicObject._position;
         var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polygonVisualizerIndex = dynamicObject._polygonVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
-        var hasVertexPostions = defined(vertexPositionsProperty);
-        if (!show || //
-           (!hasVertexPostions && //
-           (!defined(ellipseProperty) || !defined(positionProperty)))) {
+        if (!show || !defined(vertexPositionsProperty)) {
             //Remove the existing primitive if we have one
             if (defined(polygonVisualizerIndex)) {
                 polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
@@ -230,16 +226,10 @@ define([
 
         polygon.show = true;
 
-        var vertexPositions;
-        if (hasVertexPostions) {
-            vertexPositions = vertexPositionsProperty.getValue(time);
-        } else {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
-        }
-
+        var vertexPositions = vertexPositionsProperty.getValue(time);
         if (polygon._visualizerPositions !== vertexPositions && //
-            defined(vertexPositions) && //
-            vertexPositions.length > 3) {
+        defined(vertexPositions) && //
+        vertexPositions.length > 3) {
             polygon.setPositions(vertexPositions);
             polygon._visualizerPositions = vertexPositions;
         }

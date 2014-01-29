@@ -186,16 +186,13 @@ define([
 
         var polyline;
         var showProperty = dynamicPolyline._show;
-        var ellipseProperty = dynamicObject._ellipse;
         var positionProperty = dynamicObject._position;
         var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
         var context = dynamicPolylineVisualizer._scene.getContext();
 
-        if (!show || //
-           (!defined(vertexPositionsProperty) && //
-           (!defined(ellipseProperty) || !defined(positionProperty)))) {
+        if (!show || !defined(vertexPositionsProperty)) {
             //Remove the existing primitive if we have one
             if (defined(polylineVisualizerIndex)) {
                 polyline = dynamicPolylineVisualizer._polylineCollection.get(polylineVisualizerIndex);
@@ -232,12 +229,7 @@ define([
 
         polyline.setShow(true);
 
-        var vertexPositions;
-        if (defined(ellipseProperty)) {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
-        } else {
-            vertexPositions = vertexPositionsProperty.getValue(time);
-        }
+        var vertexPositions = vertexPositionsProperty.getValue(time);
 
         if (defined(vertexPositions) && polyline._visualizerPositions !== vertexPositions) {
             polyline.setPositions(vertexPositions);
