@@ -240,7 +240,7 @@ define([
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
 
-            var node = model.getNode('LOD3sp');
+//            var node = model.getNode('LOD3sp');
 //            node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
 
 //            node.matrix = undefined;
