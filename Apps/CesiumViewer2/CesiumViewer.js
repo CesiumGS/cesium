@@ -227,10 +227,10 @@ define([
             console.log('update animation ' + animation.name + ' at time ' + time);
         });
 
-        model.animations.animationAdded.addEventListener(function(model, animation) {
+        model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
             console.log('Added ' + animation.name);
         });
-        model.animations.animationRemoved.addEventListener(function(model, animation) {
+        model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
             console.log('Removed ' + animation.name);
         });
 
@@ -248,7 +248,7 @@ define([
 //            model.getNode('LOD3sp').setScale(new Cartesian3(5.0, 1.0, 1.0));
 
             if (endUserOptions.animate) {
-                model.animations.addAll({
+                model.activeAnimations.addAll({
                     // startTime : (new JulianDate()).addSeconds(3),
                     // startOffset : 3.0,
                     // stopTime : (new JulianDate()).addSeconds(4),

@@ -26,10 +26,12 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A collection of active model animations.  Access this using {@link Model#activeAnimations}.
      *
      * @alias ModelAnimationCollection
-     * @constructor
+     * @internalConstructor
+     *
+     * @see Model#activeAnimations
      */
     var ModelAnimationCollection = function(model) {
         /**
@@ -40,7 +42,7 @@ define([
          * @default undefined
          *
          * @example
-         * model.animations.animationAdded.addEventListener(function(model, animation) {
+         * model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
          *   console.log('Animation added: ' + animation.name);
          * });
          */
@@ -54,7 +56,7 @@ define([
          * @default undefined
          *
          * @example
-         * model.animations.animationRemoved.addEventListener(function(model, animation) {
+         * model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
          *   console.log('Animation removed: ' + animation.name);
          * });
          */
@@ -106,7 +108,7 @@ define([
      *
      * @example
      * // Example 1. Add an animation
-     * model.animations.add({
+     * model.activeAnimations.add({
      *   name : 'animation name'
      * });
      *
@@ -125,7 +127,7 @@ define([
      *   console.log('Animation stopped: ' + animation.name);
      * });
      *
-     * model.animations.add({
+     * model.activeAnimations.add({
      *   name : 'another animation name',
      *   startTime : startTime,
      *   startOffset : 0.0,                    // Play at startTime (default)
@@ -194,7 +196,7 @@ define([
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
-     * model.animations.addAll({
+     * model.activeAnimations.addAll({
      *   speedup : 0.5,                        // Play at half-speed
      *   wrap : ModelAnimationWrap.REPEAT      // Loop the animations
      * });
@@ -231,10 +233,10 @@ define([
      * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
      *
      * @example
-     * var a = model.animations.add({
+     * var a = model.activeAnimations.add({
      *   name : 'animation name'
      * });
-     * model.animations.remove(a); // Returns true
+     * model.activeAnimations.remove(a); // Returns true
      */
     ModelAnimationCollection.prototype.remove = function(animation) {
         if (defined(animation)) {
@@ -304,7 +306,7 @@ define([
      *
      * @example
      * // Output the names of all the animations in the collection.
-     * var animations = model.animations;
+     * var animations = model.activeAnimations;
      * var length = animations.length;
      * for (var i = 0; i < length; ++i) {
      *   console.log(animations.get(i).name);

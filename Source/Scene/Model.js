@@ -249,7 +249,7 @@ define([
          * @example
          * // Play all animations at half-speed when the model is ready to render
          * model.readyToRender.addEventListener(function(model) {
-         *   model.animations.addAll({
+         *   model.activeAnimations.addAll({
          *     speedup : 0.5
          *   });
          * });
@@ -269,7 +269,7 @@ define([
          *
          * @type {ModelAnimationCollection}
          */
-        this.animations = new ModelAnimationCollection(this);
+        this.activeAnimations = new ModelAnimationCollection(this);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -359,7 +359,7 @@ define([
      * var readyToRender = new Event();
      * readyToRender.addEventListener(function(model) {
      *   // Play all animations when the model is ready to render
-     *   model.animations.addAll();
+     *   model.activeAnimations.addAll();
      * });
      *
      * var model = scene.getPrimitives().add(Model.fromGltf({
@@ -1696,7 +1696,7 @@ define([
         }
 
         if (this._state === ModelState.LOADED) {
-            var animated = this.animations.update(frameState) || this._cesiumAnimationsDirty;
+            var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
 
             // Model's model matrix needs to be updated

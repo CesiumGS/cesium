@@ -10,10 +10,19 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An active glTF animation.  A glTF asset can contain animations.  An active animation
+     * is an animation that is currently playing or scheduled to be played because it was
+     * added to a model's {@link ModelAnimationCollection}.  An active animation is an
+     * instance of an animation; for example, there can be multiple active animations
+     * for the same glTF animation, each with a different start time.
+     * <p>
+     * Create this by calling {@link ModelAnimationCollection#add}.
+     * </p>
      *
      * @alias ModelAnimation
      * @internalConstructor
+     *
+     * @see ModelAnimationCollection#add
      */
     var ModelAnimation = function(options, model, runtimeAnimation) {
         /**
