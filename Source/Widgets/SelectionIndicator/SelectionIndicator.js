@@ -44,7 +44,7 @@ define([
         this._element = el;
 
         var svgNS = 'http://www.w3.org/2000/svg';
-        var path = 'M -4 -50 L -4 -38 L -38 -38 L -38 -4 L -50 -4 L -50 4 L -38 4 L -38 38 L -4 38 L -4 50 L 4 50 L 4 38 L 38 38 L 38 4 L 50 4 L 50 -4 L 38 -4 L 38 -38 L 4 -38 L 4 -50 L -4 -50 z M -30 -30 L 30 -30 L 30 30 L -30 30 L -30 -30 z';
+        var path = 'M -34 -34 L -34 -11.25 L -30 -15.25 L -30 -30 L -15.25 -30 L -11.25 -34 L -34 -34 z M 11.25 -34 L 15.25 -30 L 30 -30 L 30 -15.25 L 34 -11.25 L 34 -34 L 11.25 -34 z M -34 11.25 L -34 34 L -11.25 34 L -15.25 30 L -30 30 L -30 15.25 L -34 11.25 z M 34 11.25 L 30 15.25 L 30 30 L 15.25 30 L 11.25 34 L 34 34 L 34 11.25 z';
 
         var svg = document.createElementNS(svgNS, 'svg:svg');
         svg.setAttribute('width', 160);
