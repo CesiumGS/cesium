@@ -757,7 +757,19 @@ define([
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
+
+            var framebuffer;
+            var renderToTexture = context.getFloatingPointTexture();
+            if (renderToTexture) {
+                framebuffer = passState.framebuffer;
+                passState.framebuffer = scene._opaqueFBO;
+            }
+
             commandList[0].execute(context, passState);
+
+            if (renderToTexture) {
+                passState.framebuffer = framebuffer;
+            }
         }
     }
 
