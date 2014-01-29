@@ -364,10 +364,10 @@ define([
      *
      * var model = scene.getPrimitives().add(Model.fromGltf({
      *   url : './duck/duck.json',
-     *   show : true,               // default
+     *   show : true,                     // default
      *   modelMatrix : modelMatrix,
-     *   scale : 2.0,               // double size
-     *   allowPicking : false,      // not pickable
+     *   scale : 2.0,                     // double size
+     *   allowPicking : false,            // not pickable
      *   readyToRender : readyToRender,
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
