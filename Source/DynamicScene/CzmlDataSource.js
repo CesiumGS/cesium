@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/Cartesian2',
+define(['../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
@@ -9,6 +8,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -70,6 +70,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -122,6 +123,92 @@ define([
         Uri,
         when) {
     "use strict";
+
+    //This class is a workaround for CZML represented as two properties which get turned into a single Cartesian2 property once loaded.
+    var Cartesian2WrapperProperty = function() {
+        this._definitionChanged = new Event();
+        this._x = undefined;
+        this._xSubscription = undefined;
+        this._y = undefined;
+        this._ySubscription = undefined;
+
+        this.x = new ConstantProperty(0);
+        this.y = new ConstantProperty(0.1);
+    };
+
+    defineProperties(Cartesian2WrapperProperty.prototype, {
+        isConstant : {
+            get : function() {
+                return this._x.isConstant && this._y.isConstant;
+            }
+        },
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
+        x : {
+            get : function() {
+                return this._x;
+            },
+            set : function(value) {
+                if (this._x !== value) {
+                    if (this._xSubscription) {
+                        this._xSubscription();
+                        this._xSubscription = undefined;
+                    }
+                    this._x = value;
+                    if (defined(value)) {
+                        this._xSubscription = value.definitionChanged.addEventListener(Cartesian2WrapperProperty.prototype._raiseDefinitionChanged, this);
+                    }
+                    this._raiseDefinitionChanged(this);
+                }
+            }
+        },
+        y : {
+            get : function() {
+                return this._y;
+            },
+            set : function(value) {
+                if (this._y !== value) {
+                    if (this._ySubscription) {
+                        this._ySubscription();
+                        this._ySubscription = undefined;
+                    }
+                    this._y = value;
+                    if (defined(value)) {
+                        this._ySubscription = value.definitionChanged.addEventListener(Cartesian2WrapperProperty.prototype._raiseDefinitionChanged, this);
+                    }
+                    this._raiseDefinitionChanged(this);
+                }
+            }
+        }
+    });
+
+    Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+        result.x = this._x.getValue(time);
+        result.y = this._y.getValue(time);
+        return result;
+    };
+
+    Cartesian2WrapperProperty.prototype._raiseDefinitionChanged = function() {
+        this._definitionChanged.raiseEvent(this);
+    };
+
+    function combineIntoCartesian2(object, packetDataX, packetDataY) {
+        if (!defined(packetDataX) && !defined(packetDataY)) {
+            return object;
+        }
+        if (!(object instanceof Cartesian2WrapperProperty)) {
+            object = new Cartesian2WrapperProperty();
+        }
+        processPacketData(Number, object, 'x', packetDataX);
+        processPacketData(Number, object, 'y', packetDataY);
+        return object;
+    }
 
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
@@ -616,32 +703,6 @@ define([
         } else {
             processPositionProperty(object, propertyName, packetData, interval, sourceUri);
         }
-    }
-
-    var Cartesian2WrapperProperty = function() {
-        this._x = new ConstantProperty(0);
-        this._y = new ConstantProperty(0);
-    };
-
-    Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
-        if (!defined(result)) {
-            result = new Cartesian2();
-        }
-        result.x = this._x.getValue(time);
-        result.y = this._y.getValue(time);
-        return result;
-    };
-
-    function combineIntoCartesian2(object, packetDataX, packetDataY) {
-        if (!defined(packetDataX) && !defined(packetDataY)) {
-            return object;
-        }
-        if (!(object instanceof Cartesian2WrapperProperty)) {
-            object = new Cartesian2WrapperProperty();
-        }
-        processPacketData(Number, object, '_x', packetDataX);
-        processPacketData(Number, object, '_y', packetDataY);
-        return object;
     }
 
     function processMaterialProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
