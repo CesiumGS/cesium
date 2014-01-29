@@ -6,6 +6,8 @@ Beta Releases
 
 ### TODO
 
+* Added `Model` for drawing 3D models using glTF.
+* Added `DebugAxesPrimitive` for debugging a primitive's `modelMatrix`.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 * Added `FrameState.previousTime`.
 

@@ -129,11 +129,25 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * A 3D model based on glTF, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
+     * <p>
+     * Cesium includes support for geometry and materials, glTF animations, and glTF skinning.
+     * In addition, individual glTF nodes are pickable with {@link Scene#pick} and animatable
+     * with {@link Model#getNode}.  glTF cameras and lights are not currently supported.
+     * </p>
+     * <p>
+     * An external glTF asset is created with {@link Model#fromGltf}.  glTF JSON can also be
+     * created at runtime and passed to this constructor function.  In either case, the
+     * {@link Model#readyToRender} event is fired when the model is ready to render, i.e.,
+     * when the external binary, image, and shader files are downloaded and the WebGL
+     * resources are created.
+     * </p>
      *
      * @alias Model
      * @constructor
      *
+     * @param {Object} [options.gltf=undefined] The object for the glTF JSON.
+     * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
@@ -141,6 +155,9 @@ define([
      * @param {Event} [options.readyToRender=new Event()] The event fired when this model is ready to render.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     *
+     * @see Model#fromGltf
+     * @see Model#readyToRender
      */
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -400,7 +417,22 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the glTF node with the given <code>name</code>.  This is used to
+     * modify a node's transform for animation outside of glTF animations.
+     *
+     * @memberof Model
+     *
+     * @param {String} name The glTF name of the node.
+     *
+     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> was found.
+     *
+     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} name is required.
+     *
+     * @example
+     * // Apply non-uniform scale to node LOD3sp
+     * var node = model.getNode('LOD3sp');
+     * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
         var nodes = this._runtime.nodes;
