@@ -28,6 +28,17 @@ defineSuite([
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
+    function returnHeightmapTileJson() {
+        var oldLoad = loadWithXhr.load;
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            if (url.indexOf('layer.json') >= 0) {
+                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/StandardHeightmap.tile.json', responseType, method, data, headers, deferred);
+            } else {
+                return oldLoad(url, responseType, method, data, headers, deferred);
+            }
+        };
+    }
+
     it('conforms to TerrainProvider interface', function() {
         expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
     });
@@ -44,12 +55,20 @@ defineSuite([
     });
 
     it('uses geographic tiling scheme by default', function() {
+        returnHeightmapTileJson();
+
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
 
-        var tilingScheme = provider.getTilingScheme();
-        expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+        waitsFor(function() {
+            return provider.isReady();
+        });
+
+        runs(function() {
+            var tilingScheme = provider.getTilingScheme();
+            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+        });
     });
 
     it('has error event', function() {
@@ -71,32 +90,52 @@ defineSuite([
     });
 
     it('logo is undefined if credit is not provided', function() {
+        returnHeightmapTileJson();
+
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getCredit()).toBeUndefined();
+
+        waitsFor(function() {
+            return provider.isReady();
+        });
+
+        runs(function() {
+            expect(provider.getCredit()).toBeUndefined();
+        });
     });
 
     it('logo is defined if credit is provided', function() {
+        returnHeightmapTileJson();
+
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
-        expect(provider.getCredit()).toBeDefined();
+
+        waitsFor(function() {
+            return provider.isReady();
+        });
+
+        runs(function() {
+            expect(provider.getCredit()).toBeDefined();
+        });
     });
 
     it('has a water mask', function() {
-        var provider = new CesiumTerrainProvider({
-            url : 'made/up/url'
-        });
-        expect(provider.hasWaterMask()).toBe(true);
-    });
+        returnHeightmapTileJson();
 
-    it('is ready immediately', function() {
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.isReady()).toBe(true);
+
+        waitsFor(function() {
+            return provider.isReady();
+        });
+
+        runs(function() {
+            expect(provider.hasWaterMask()).toBe(true);
+        });
     });
 
     describe('requestTileGeometry', function() {
@@ -110,16 +149,25 @@ defineSuite([
                 return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
+            returnHeightmapTileJson();
+
             var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl,
                 proxy : new DefaultProxy('/proxy/')
             });
 
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            waitsFor(function() {
+                return terrainProvider.isReady();
+            });
 
             var loaded = false;
-            when(promise, function(terrainData) {
-                loaded = true;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loaded = true;
+                });
             });
 
             waitsFor(function() {
@@ -128,6 +176,8 @@ defineSuite([
         });
 
         it('provides HeightmapTerrainData', function() {
+            returnHeightmapTileJson();
+
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
@@ -135,15 +185,24 @@ defineSuite([
                 return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
 
+            returnHeightmapTileJson();
+
             var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl
             });
 
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+            waitsFor(function() {
+                return terrainProvider.isReady();
+            });
 
             var loadedData;
-            when(promise, function(terrainData) {
-                loadedData = terrainData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
             });
 
             waitsFor(function() {
@@ -165,24 +224,32 @@ defineSuite([
                 deferreds.push(deferred);
             };
 
+            returnHeightmapTileJson();
+
             var terrainProvider = new CesiumTerrainProvider({
                 url : baseUrl
             });
 
-            var promise = terrainProvider.requestTileGeometry(0, 0, 0);
-            expect(promise).toBeDefined();
+            waitsFor(function() {
+                return terrainProvider.isReady();
+            });
 
-            var i;
-            for (i = 0; i < 10; ++i) {
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                expect(promise).toBeDefined();
+
+                var i;
+                for (i = 0; i < 10; ++i) {
+                    promise = terrainProvider.requestTileGeometry(0, 0, 0);
+                }
+
                 promise = terrainProvider.requestTileGeometry(0, 0, 0);
-            }
+                expect(promise).toBeUndefined();
 
-            promise = terrainProvider.requestTileGeometry(0, 0, 0);
-            expect(promise).toBeUndefined();
-
-            for (i = 0; i < deferreds.length; ++i) {
-                deferreds[i].resolve();
-            }
+                for (i = 0; i < deferreds.length; ++i) {
+                    deferreds[i].resolve();
+                }
+            });
         });
     });
 });
