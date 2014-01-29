@@ -133,6 +133,14 @@ define([
      *
      * @alias Model
      * @constructor
+     *
+     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Event} [options.readyToRender=new Event()] The event fired when this model is ready to render.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      */
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -237,8 +245,16 @@ define([
          *
          * @type {Event}
          * @default undefined
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * model.readyToRender.addEventListener(function(model) {
+         *   model.animations.addAll({
+         *     speedup : 0.5
+         *   });
+         * });
          */
-        this.readyToRender = new Event();
+        this.readyToRender = defaultValue(options.readyToRender, new Event());
 
 // TODO: will change with animation
 // TODO: only load external files if within bounding sphere
@@ -258,8 +274,8 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the model.  A glTF primitive corresponds
-         * to one {@see DrawCommand}.  A glTF mesh has an array of primitives, often of length one.
+         * Draws the bounding sphere for each {@link DrawCommand} in the model.  A glTF primitive corresponds
+         * to one {@link DrawCommand}.  A glTF mesh has an array of primitives, often of length one.
          * </p>
          *
          * @type {Boolean}
@@ -311,9 +327,55 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a model from a glTF assets.  When the model is ready to render, i.e., when the external binary, image,
+     * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
+     *
+     * @memberof Model
+     *
+     * @param {String} options.url The url to the glTF .json file.
+     * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
+     * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Event} [options.readyToRender=new Event()] The event fired when this model is ready to render.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+     * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     *
+     * @returns {Model} The newly created model.
+     *
+     * @exception {DeveloperError} options.url is required.
+     *
+     * @example
+     * // Example 1. Create a model from a glTF asset
+     * var model = scene.getPrimitives().add(Model.fromGltf({
+     *   url : './duck/duck.json'
+     * }));
+     *
+     * // Example 2. Create model and provide all properties and events
+     * var origin = ellipsoid.cartographicToCartesian(
+     *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+     * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+     *
+     * var readyToRender = new Event();
+     * readyToRender.addEventListener(function(model) {
+     *   // Play all animations when the model is ready to render
+     *   model.animations.addAll();
+     * });
+     *
+     * var model = scene.getPrimitives().add(Model.fromGltf({
+     *   url : './duck/duck.json',
+     *   show : true,               // default
+     *   modelMatrix : modelMatrix,
+     *   scale : 2.0,               // double size
+     *   allowPicking : false,      // not pickable
+     *   readyToRender : readyToRender,
+     *   debugShowBoundingVolume : false, // default
+     *   debugWireframe : false
+     * }));
+     *
+     * @see Model#readyToRender
      */
-    Model.fromText = function(options) {
+    Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required');

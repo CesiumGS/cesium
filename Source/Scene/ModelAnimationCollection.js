@@ -40,11 +40,9 @@ define([
          * @default undefined
          *
          * @example
-         * var added = new Event();
-         * added.addEventListener(function(model, animation) {
+         * model.animations.animationAdded.addEventListener(function(model, animation) {
          *   console.log('Animation added: ' + animation.name);
          * });
-         * model.animations.animationAdded = added;
          */
         this.animationAdded = new Event();
 
@@ -56,11 +54,9 @@ define([
          * @default undefined
          *
          * @example
-         * var removed = new Event();
-         * removed.addEventListener(function(model, animation) {
+         * model.animations.animationRemoved.addEventListener(function(model, animation) {
          *   console.log('Animation removed: ' + animation.name);
          * });
-         * model.animations.animationRemoved = removed;
          */
         this.animationRemoved = new Event();
 
@@ -104,7 +100,7 @@ define([
      *
      * @returns {ModelAnimation} The animation that was added to the collection.
      *
-     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@see Model#readyToRender} event.
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
@@ -193,7 +189,7 @@ define([
      *
      * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.
      *
-     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@see Model#readyToRender} event.
+     * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
      * @exception {DeveloperError} options.name is required and must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
@@ -306,8 +302,6 @@ define([
      *
      * @exception {DeveloperError} index is required.
      *
-     * @see ModelAnimationCollection#length
-     *
      * @example
      * // Output the names of all the animations in the collection.
      * var animations = model.animations;
@@ -315,6 +309,8 @@ define([
      * for (var i = 0; i < length; ++i) {
      *   console.log(animations.get(i).name);
      * }
+     *
+     * @see ModelAnimationCollection#length
      */
     ModelAnimationCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);

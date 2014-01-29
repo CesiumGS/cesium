@@ -203,7 +203,7 @@ define([
         var rotateX = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.toRadians(90.0)), Cartesian3.ZERO);
         var modelMatrix = Matrix4.multiply(Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 100.0))), rotateX);
 
-        var model = scene.getPrimitives().add(Model.fromText({
+        var model = scene.getPrimitives().add(Model.fromGltf({
             url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
             modelMatrix : modelMatrix,
             scale : 10.0,

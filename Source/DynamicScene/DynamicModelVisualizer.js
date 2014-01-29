@@ -217,7 +217,7 @@ define([
         }
 
         if (!defined(model) || uri !== dynamicObject._modelPrimitiveUri) {
-            model = Model.fromText({
+            model = Model.fromGltf({
                 url : uri
             });
 
