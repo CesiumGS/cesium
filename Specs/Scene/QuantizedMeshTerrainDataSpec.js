@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/MeshTerrainData',
+         'Scene/QuantizedMeshTerrainData',
          'Core/Cartesian3',
          'Core/Math',
          'Scene/GeographicTilingScheme',
          'Scene/TerrainData',
          'ThirdParty/when'
      ], function(
-         MeshTerrainData,
+         QuantizedMeshTerrainData,
          Cartesian3,
          CesiumMath,
          GeographicTilingScheme,
@@ -17,7 +17,7 @@ defineSuite([
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
      it('conforms to TerrainData interface', function() {
-         expect(MeshTerrainData).toConformToInterface(TerrainData);
+         expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);
      });
 
      describe('upsample', function() {
@@ -56,7 +56,7 @@ defineSuite([
          }
 
          it('works for all four children of a simple quad', function() {
-             var data = new MeshTerrainData({
+             var data = new QuantizedMeshTerrainData({
                  center : new Cartesian3(0.0, 0.0, 0.0),
                  vertexBuffer : new Float32Array([
                                                   0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
@@ -98,7 +98,7 @@ defineSuite([
          });
 
          it('works for a quad with an extra vertex in the northwest child', function() {
-             var data = new MeshTerrainData({
+             var data = new QuantizedMeshTerrainData({
                  center : new Cartesian3(0.0, 0.0, 0.0),
                  vertexBuffer : new Float32Array([
                                                   0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
@@ -154,7 +154,7 @@ defineSuite([
          });
 
          it('works when a triangle has two vertices on the boundary and a third outside', function() {
-             var data = new MeshTerrainData({
+             var data = new QuantizedMeshTerrainData({
                  center : new Cartesian3(0.0, 0.0, 0.0),
                  vertexBuffer : new Float32Array([
                                                   0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
