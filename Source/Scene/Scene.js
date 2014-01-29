@@ -962,6 +962,7 @@ define([
         var j;
 
         var context = scene._context;
+        var framebuffer = passState.framebuffer;
         var commands = frustumCommands.translucentCommands;
         var length = commands.length = frustumCommands.translucentIndex;
 
@@ -994,10 +995,13 @@ define([
             command.renderState = renderState;
             command.shaderProgram = shaderProgram;
         }
+
+        passState.framebuffer = framebuffer;
     }
 
     function executeTranslucentCommandsSortedMRT(scene, passState, frustumCommands) {
         var context = scene._context;
+        var framebuffer = passState.framebuffer;
         var commands = frustumCommands.translucentCommands;
         var length = commands.length = frustumCommands.translucentIndex;
 
@@ -1014,6 +1018,8 @@ define([
             command.renderState = renderState;
             command.shaderProgram = shaderProgram;
         }
+
+        passState.framebuffer = framebuffer;
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
@@ -1058,7 +1064,7 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        var opaqueFramebuffer;
+        var opaqueFramebuffer = passState.framebuffer;
         if (sortTranslucent) {
             updateFramebuffers(scene);
             opaqueFramebuffer = scene._opaqueFBO;
@@ -1099,7 +1105,7 @@ define([
 
             if (scene.sunBloom) {
                 scene._sunPostProcess.execute(context, opaqueFramebuffer);
-                passState.framebuffer = undefined;
+                passState.framebuffer = opaqueFramebuffer;
             }
         }
 
@@ -1120,14 +1126,11 @@ define([
             frustum.far = frustumCommands.far;
 
             us.updateFrustum(frustum);
-
-            passState.framebuffer = opaqueFramebuffer;
             clearDepth.execute(context, passState);
 
-            var j;
             var commands = frustumCommands.opaqueCommands;
             var length = frustumCommands.opaqueIndex;
-            for (j = 0; j < length; ++j) {
+            for (var j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
 
