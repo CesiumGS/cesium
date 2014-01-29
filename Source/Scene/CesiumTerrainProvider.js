@@ -286,7 +286,7 @@ define([
         var northIndices = new Uint16Array(buffer, pos, northVertexCount);
         pos += northVertexCount * uint16Length;
 
-        var skirtHeight = provider.getLevelMaximumGeometricError(level) * 2.0;
+        var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
         return new QuantizedMeshTerrainData({
             center : center,
