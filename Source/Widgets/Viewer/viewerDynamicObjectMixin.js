@@ -272,7 +272,7 @@ define(['../../Core/BoundingSphere',
             set : function(value) {
                 if (selectedObjectObservable() !== value) {
                     if (defined(value)) {
-                        selectionIndicatorViewModel.titleText = defined(value.name) ? value.name : '';
+                        selectionIndicatorViewModel.titleText = defined(value.name) ? value.name : value.id;
                         selectionIndicatorViewModel.animateAppear();
                     } else {
                         // Leave the info text in place here, it is needed during the exit animation.
