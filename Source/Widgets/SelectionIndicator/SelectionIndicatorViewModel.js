@@ -8,7 +8,6 @@ define([
         '../../Core/Event',
         '../../Scene/SceneTransforms',
         '../../ThirdParty/knockout',
-        '../../ThirdParty/sanitize-caja',
         '../../ThirdParty/Tween'
     ], function(
         Cartesian2,
@@ -19,13 +18,10 @@ define([
         Event,
         SceneTransforms,
         knockout,
-        sanitizeCaja,
         Tween) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
-    var cameraIconPath = 'M 13.84375 7.03125 C 11.412798 7.03125 9.46875 8.975298 9.46875 11.40625 L 9.46875 11.59375 L 2.53125 7.21875 L 2.53125 24.0625 L 9.46875 19.6875 C 9.4853444 22.104033 11.423165 24.0625 13.84375 24.0625 L 25.875 24.0625 C 28.305952 24.0625 30.28125 22.087202 30.28125 19.65625 L 30.28125 11.40625 C 30.28125 8.975298 28.305952 7.03125 25.875 7.03125 L 13.84375 7.03125 z';
-    var cameraDisabledPath = 'M 27.34375 1.65625 L 5.28125 27.9375 L 8.09375 30.3125 L 30.15625 4.03125 L 27.34375 1.65625 z M 13.84375 7.03125 C 11.412798 7.03125 9.46875 8.975298 9.46875 11.40625 L 9.46875 11.59375 L 2.53125 7.21875 L 2.53125 24.0625 L 9.46875 19.6875 C 9.4724893 20.232036 9.5676108 20.7379 9.75 21.21875 L 21.65625 7.03125 L 13.84375 7.03125 z M 28.21875 7.71875 L 14.53125 24.0625 L 25.875 24.0625 C 28.305952 24.0625 30.28125 22.087202 30.28125 19.65625 L 30.28125 11.40625 C 30.28125 9.8371439 29.456025 8.4902779 28.21875 7.71875 z';
 
     function toPx(value) {
         if (value === 0) {
@@ -69,13 +65,15 @@ define([
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
-     * @param {Element} [container = document.body] The element containing the selection indicator.
+     * @param {Element} container The DOM element that contains the widget.
      *
      * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} selectionIndicatorElement is required.
+     * @exception {DeveloperError} container is required.
      *
      */
     var SelectionIndicatorViewModel = function(scene, selectionIndicatorElement, container) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -84,21 +82,18 @@ define([
             throw new DeveloperError('selectionIndicatorElement is required.');
         }
 
+        if (!defined(container)) {
+            throw new DeveloperError('container is required.');
+        }
+        //>>includeEnd('debug')
+
         this._sanitizer = undefined;
         this._scene = scene;
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
-        this._content = '';
         this._position = undefined;
-        this._updateContent = false;
-        this._timerRunning = false;
         this._showSelection = false;
-        this._titleText = '';
-        this._descriptionHtml = '';
-        this._unsanitizedDescriptionHtml = '';
-        this._onCamera = new Event();
-        this._onCloseInfo = new Event();
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
@@ -141,19 +136,7 @@ define([
          */
         this.maxHeight = 500;
 
-        /**
-         * Gets or sets the availability of camera tracking.
-         * @type {Boolean}
-         */
-        this.enableCamera = false;
-
-        /**
-         * Gets or sets the status of current camera tracking of the selected object.
-         * @type {Boolean}
-         */
-        this.isCameraTracking = false;
-
-        knockout.track(this, ['_position', '_positionX', '_positionY', 'scale', 'rotation', '_showSelection', '_titleText', '_descriptionHtml', 'maxHeight', 'enableCamera', 'isCameraTracking']);
+        knockout.track(this, ['_position', '_positionX', '_positionY', 'scale', 'rotation', '_showSelection']);
 
         /**
          * Gets or sets the visibility of the selection indicator.
@@ -184,87 +167,12 @@ define([
             }
         });
 
-        /**
-         * The title text in the info box.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
-         * @type {String}
-         */
-        this.titleText = undefined;
-        knockout.defineProperty(this, 'titleText', {
-            get : function() {
-                return this._titleText;
-            },
-            set : function(value) {
-                if (this._titleText !== value) {
-                    this._titleText = value;
-                }
-            }
-        });
-
-        /**
-         * The description text in the info box.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
-         * @type {String}
-         */
-        this.descriptionHtml = undefined;
-        knockout.defineProperty(this, 'descriptionHtml', {
-            get : function() {
-                return this._descriptionHtml;
-            },
-            set : function(value) {
-                if (this._unsanitizedDescriptionHtml !== value) {
-                    this._unsanitizedDescriptionHtml = value;
-                    if (defined(this._sanitizer)) {
-                        value = this._sanitizer(value);
-                    } else if (defined(SelectionIndicatorViewModel.defaultSanitizer)) {
-                        value = SelectionIndicatorViewModel.defaultSanitizer(value);
-                    }
-                    this._descriptionHtml = value;
-                }
-            }
-        });
-
-        knockout.defineProperty(this, '_cameraIconPath', {
-            get : function() {
-                return (this.enableCamera || this.isCameraTracking) ? cameraIconPath : cameraDisabledPath;
-            }
-        });
-
-        /**
-         * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
-         * @param {Number} offset The offset in pixels.
-         * @memberof SelectionIndicatorViewModel.prototype
-         * @returns {String}
-         */
-        SelectionIndicatorViewModel.prototype.maxHeightOffset = function(offset) {
-            return toPx(this.maxHeight - offset);
-        };
-
         knockout.defineProperty(this, '_transform', {
             get : function() {
                 return 'rotate(' + (this.rotation) + ') scale(' + (this.scale) + ')';
             }
         });
-
-        knockout.defineProperty(this, '_bodyless', {
-            get : function() {
-                return !this.descriptionHtml;
-            }
-        });
     };
-
-    /**
-     * Gets or sets the default HTML sanitization function to use for all instances.
-     * By default, Google Caja is used with only basic HTML allowed.
-     * A specific instance can override this property by setting its prototype sanitizer property.
-     *
-     * This property is a function which takes a unsanitized HTML string and returns a
-     * sanitized version.
-     * @memberof SelectionIndicatorViewModel
-     */
-    SelectionIndicatorViewModel.defaultSanitizer = sanitizeCaja;
 
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model
@@ -325,7 +233,7 @@ define([
 
     defineProperties(SelectionIndicatorViewModel.prototype, {
         /**
-         * Gets or sets the HTML element containing the selection indicator
+         * Gets the HTML element containing the selection indicator
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Element}
@@ -333,16 +241,10 @@ define([
         container : {
             get : function() {
                 return this._container;
-            },
-            set : function(value) {
-                if (!(value instanceof Element)) {
-                    throw new DeveloperError('value must be a valid Element.');
-                }
-                this._container = value;
             }
         },
         /**
-         * Gets or sets the HTML element that makes up the selection indicator
+         * Gets the HTML element that makes up the selection indicator
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Element}
@@ -350,12 +252,6 @@ define([
         selectionIndicatorElement : {
             get : function() {
                 return this._selectionIndicatorElement;
-            },
-            set : function(value) {
-                if (!(value instanceof Element)) {
-                    throw new DeveloperError('value must be a valid Element.');
-                }
-                this._selectionIndicatorElement = value;
             }
         },
         /**
@@ -405,37 +301,6 @@ define([
             },
             set : function(value) {
                 this._position = value;
-            }
-        },
-        /**
-         * Gets an {@link Event} that is fired when the user clicks the camera icon.
-         */
-        onCamera : {
-            get : function() {
-                return this._onCamera;
-            }
-        },
-        /**
-         * Gets an {@link Event} that is fired when the user closes the selection info window.
-         */
-        onCloseInfo : {
-            get : function() {
-                return this._onCloseInfo;
-            }
-        },
-        /**
-         * Gets the HTML sanitization function to use for the selection description.
-         */
-        sanitizer : {
-            get : function() {
-                return this._sanitizer;
-            },
-            set : function(value) {
-                this._sanitizer = value;
-                //Force resanitization of existing text
-                var oldHtml = this._unsanitizedDescriptionHtml;
-                this._unsanitizedDescriptionHtml = '';
-                this.descriptionHtml = oldHtml;
             }
         }
     });

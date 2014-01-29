@@ -10,6 +10,7 @@ define(['../../Core/BoundingSphere',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
+        '../InfoBox/InfoBox',
         '../SelectionIndicator/SelectionIndicator',
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
@@ -25,6 +26,7 @@ define(['../../Core/BoundingSphere',
         ScreenSpaceEventType,
         wrapFunction,
         SceneMode,
+        InfoBox,
         SelectionIndicator,
         DynamicObjectView,
         knockout) {
@@ -66,22 +68,11 @@ define(['../../Core/BoundingSphere',
         }
         //>>includeEnd('debug');
 
-        //SelectionIndicator
-        var selectionIndicatorContainer = document.createElement('div');
-        var viewerElement = viewer.container.firstChild;
-        if (viewerElement.children.length > 1) {
-            // The first (rear-most) child of "viewer" will always be "cesiumWidget".  Insert the
-            // selection as the second child, prior to any other UI elements.
-            viewerElement.insertBefore(selectionIndicatorContainer, viewerElement.children[1]);
-        } else {
-            // If all other subwidgets are turned off, just append after cesiumWidget.
-            viewerElement.appendChild(selectionIndicatorContainer);
-        }
+        var infoBox = viewer.infoBox;
+        var infoBoxViewModel = defined(infoBox) ? infoBox.viewModel : undefined;
 
-        var selectionIndicator = new SelectionIndicator(selectionIndicatorContainer, viewer.scene);
-
-        var selectionIndicatorViewModel = selectionIndicator.viewModel;
-        viewer._selectionIndicator = selectionIndicator;
+        var selectionIndicator = viewer.selectionIndicator;
+        var selectionIndicatorViewModel = defined(selectionIndicator) ? selectionIndicator.viewModel : undefined;
 
         var eventHelper = new EventHelper();
         var selectedObjectObservable = knockout.observable();
@@ -92,12 +83,12 @@ define(['../../Core/BoundingSphere',
             viewer.trackedObject = viewer.selectedObject;
         }
 
-        function selectionInfoClosed() {
+        function infoBoxClosed() {
             viewer.selectedObject = undefined;
         }
 
-        eventHelper.add(selectionIndicatorViewModel.onCamera, trackSelectedObject);
-        eventHelper.add(selectionIndicatorViewModel.onCloseInfo, selectionInfoClosed);
+        eventHelper.add(infoBoxViewModel.onCamera, trackSelectedObject);
+        eventHelper.add(infoBoxViewModel.onCloseInfo, infoBoxClosed);
 
         var scratchVertexPositions;
         var scratchBoundingSphere;
@@ -115,33 +106,34 @@ define(['../../Core/BoundingSphere',
                 if (selectedObject.isAvailable(time)) {
                     if (defined(selectedObject.position)) {
                         selectionIndicatorViewModel.position = selectedObject.position.getValue(time, selectionIndicatorViewModel.position);
-                        selectionIndicatorViewModel.enableCamera = defined(selectionIndicatorViewModel.position) &&
+                        infoBoxViewModel.enableCamera = defined(selectionIndicatorViewModel.position) &&
                             (viewer.trackedObject !== viewer.selectedObject);
                     } else if (defined(selectedObject.vertexPositions)) {
                         scratchVertexPositions = selectedObject.vertexPositions.getValue(time, scratchVertexPositions);
                         scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
                         selectionIndicatorViewModel.position = scratchBoundingSphere.center;
                         // Can't track scratch positions.
-                        selectionIndicatorViewModel.enableCamera = false;
+                        infoBoxViewModel.enableCamera = false;
                     } else {
                         selectionIndicatorViewModel.position = undefined;
-                        selectionIndicatorViewModel.enableCamera = false;
+                        infoBoxViewModel.enableCamera = false;
                     }
                 } else {
                     selectionIndicatorViewModel.position = undefined;
-                    selectionIndicatorViewModel.enableCamera = false;
+                    infoBoxViewModel.enableCamera = false;
                 }
-                selectionIndicatorViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
+                infoBoxViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
 
                 if (defined(selectedObject.description)) {
-                    selectionIndicatorViewModel.descriptionHtml = selectedObject.description.getValue(time) || '';
+                    infoBoxViewModel.descriptionRawHtml = selectedObject.description.getValue(time) || '';
                 } else {
-                    selectionIndicatorViewModel.descriptionHtml = '';
+                    infoBoxViewModel.descriptionRawHtml = '';
                 }
             }
 
             selectionIndicatorViewModel.update();
             selectionIndicatorViewModel.showSelection = showSelection;
+            infoBoxViewModel.showInfo = showSelection;
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
@@ -272,7 +264,7 @@ define(['../../Core/BoundingSphere',
             set : function(value) {
                 if (selectedObjectObservable() !== value) {
                     if (defined(value)) {
-                        selectionIndicatorViewModel.titleText = defined(value.name) ? value.name : value.id;
+                        infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
                         selectionIndicatorViewModel.animateAppear();
                     } else {
                         // Leave the info text in place here, it is needed during the exit animation.

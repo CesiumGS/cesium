@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
@@ -7,6 +8,7 @@ define([
         './SelectionIndicatorViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         DeveloperError,
         destroyObject,
@@ -28,9 +30,11 @@ define([
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
     var SelectionIndicator = function(container, scene) {
-        if (typeof container === 'undefined') {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
+        //>>includeEnd('debug')
 
         container = getElement(container);
 
@@ -63,45 +67,6 @@ css: { "cesium-selection-wrapper-visible" : showPosition }');
         group.appendChild(pathElement);
 
         el.appendChild(svg);
-
-        var infoElement = document.createElement('div');
-        infoElement.className = 'cesium-selection-info';
-        infoElement.setAttribute('data-bind', '\
-css: { "cesium-selection-info-visible" : showSelection, "cesium-selection-info-bodyless" : _bodyless }');
-        container.appendChild(infoElement);
-        this._infoElement = infoElement;
-
-        var titleElement = document.createElement('div');
-        titleElement.className = 'cesium-selection-info-title';
-        titleElement.setAttribute('data-bind', 'text: titleText');
-        infoElement.appendChild(titleElement);
-        this._titleElement = titleElement;
-
-        var cameraElement = document.createElement('button');
-        cameraElement.type = 'button';
-        cameraElement.className = 'cesium-button cesium-selection-info-camera';
-        cameraElement.setAttribute('data-bind', '\
-attr: { title: "Focus camera on object" },\
-click: function () { onCamera.raiseEvent(); },\
-enable: enableCamera,\
-cesiumSvgPath: { path: _cameraIconPath, width: 32, height: 32 }');
-        infoElement.appendChild(cameraElement);
-
-        var closeElement = document.createElement('button');
-        closeElement.type = 'button';
-        closeElement.className = 'cesium-selection-info-close';
-        closeElement.setAttribute('data-bind', 'click: function () { onCloseInfo.raiseEvent(); }');
-        closeElement.innerHTML = '&times;';
-        infoElement.appendChild(closeElement);
-
-        var infoBodyElement = document.createElement('div');
-        infoBodyElement.className = 'cesium-selection-info-body';
-        infoElement.appendChild(infoBodyElement);
-
-        var descriptionElement = document.createElement('div');
-        descriptionElement.className = 'cesium-selection-info-description';
-        descriptionElement.setAttribute('data-bind', 'html: descriptionHtml, style : { maxHeight : maxHeightOffset(40) }');
-        infoBodyElement.appendChild(descriptionElement);
 
         var viewModel = new SelectionIndicatorViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
