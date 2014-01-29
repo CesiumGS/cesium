@@ -415,7 +415,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        return nodes[name];
+        var node = nodes[name];
+        return defined(node) ? node.publicNode : undefined;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -516,7 +517,40 @@ define([
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
 
-                var runtimeNode = new ModelNode(model, node);
+                var runtimeNode = {
+                    // Animation targets
+                    matrix : undefined,
+                    translation : undefined,
+                    rotation : undefined,
+                    scale : undefined,
+
+                    // Computed transforms
+                    transformToRoot : new Matrix4(),
+                    computedMatrix : new Matrix4(),
+                    dirty : false,                      // for graph traversal
+                    anyAncestorDirty : false,           // for graph traversal
+
+                    // Rendering
+                    commands : [],                      // empty for transform, light, and camera nodes
+
+                    // Skinned node
+                    inverseBindMatrices : undefined,    // undefined when node is not skinned
+                    bindShapeMatrix : undefined,        // undefined when node is not skinned or identity
+                    joints : [],                        // empty when node is not skinned
+                    computedJointMatrices : [],         // empty when node is not skinned
+
+                    // Joint node
+                    jointId : node.jointId,             // undefined when node is not a joint
+
+                    // Graph pointers
+                    children : [],                      // empty for leaf nodes
+                    parents : [],                       // empty for root nodes
+
+                    // Publicly-accessible ModelNode instance to modify animation targets
+                    publicNode : undefined
+                };
+                runtimeNode.publicNode = new ModelNode(model, runtimeNode);
+
                 runtimeNodes[name] = runtimeNode;
 
                 if (defined(node.instanceSkin)) {
