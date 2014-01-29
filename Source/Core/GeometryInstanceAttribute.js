@@ -66,7 +66,7 @@ define([
 
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
-         * {@see GeometryInstanceAttribute#value}.
+         * {@link GeometryInstanceAttribute#value}.
          *
          * @type ComponentDatatype
          *
