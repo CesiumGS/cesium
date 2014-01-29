@@ -299,7 +299,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * When {@see Scene.debugShowFrustums} is <code>true</code>, this contains
+         * When {@link Scene.debugShowFrustums} is <code>true</code>, this contains
          * properties with statistics about the number of command execute per frustum.
          * <code>totalCommands</code> is the total number of commands executed, ignoring
          * overlap. <code>commandsInFrustums</code> is an array with the number of times
