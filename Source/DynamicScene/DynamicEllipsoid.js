@@ -58,7 +58,36 @@ define(['../Core/defaultValue',
          * @memberof DynamicEllipsoid.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material')
+        material : createDynamicPropertyDescriptor('material', '_material'),
+
+        /**
+         * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be filled.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        fill : createDynamicPropertyDescriptor('fill', '_fill'),
+
+        /**
+         * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be outlined.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        outline : createDynamicPropertyDescriptor('outline', '_outline'),
+
+        /**
+         * Gets or sets the Number {@link Property} specifying whether the width of the outline.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
+
+        /**
+         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor')
+
     });
 
     /**
@@ -75,6 +104,10 @@ define(['../Core/defaultValue',
         result.show = this.show;
         result.radii = this.radii;
         result.material = this.material;
+        result.fill = this.fill;
+        result.outline = this.outline;
+        result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
         return result;
     };
 
@@ -96,6 +129,10 @@ define(['../Core/defaultValue',
         this.show = defaultValue(this.show, source.show);
         this.radii = defaultValue(this.radii, source.radii);
         this.material = defaultValue(this.material, source.material);
+        this.fill = defaultValue(this.fill, source.fill);
+        this.outline = defaultValue(this.outline, source.outline);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
     };
 
     return DynamicEllipsoid;

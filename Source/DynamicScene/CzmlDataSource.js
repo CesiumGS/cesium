@@ -356,6 +356,12 @@ define([
         var propertyCreated = false;
         var property = object[propertyName];
 
+        var epoch;
+        var packetEpoch = packetData.epoch;
+        if (defined(packetEpoch)) {
+            epoch = JulianDate.fromIso8601(packetEpoch);
+        }
+
         //Without an interval, any sampled value is infinite, meaning it completely
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
@@ -363,11 +369,6 @@ define([
                 property = new SampledProperty(type);
                 object[propertyName] = property;
                 propertyCreated = true;
-            }
-            var epoch;
-            var packetEpoch = packetData.epoch;
-            if (defined(packetEpoch)) {
-                epoch = JulianDate.fromIso8601(packetEpoch);
             }
             property.addSamplesPackedArray(unwrappedInterval, epoch);
             updateInterpolationSettings(packetData, property);
@@ -456,7 +457,7 @@ define([
             interval.data = new SampledProperty(type);
             intervals.addInterval(interval);
         }
-        interval.data.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+        interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
         return propertyCreated;
     }
@@ -503,6 +504,12 @@ define([
         var propertyCreated = false;
         var property = object[propertyName];
 
+        var epoch;
+        var packetEpoch = packetData.epoch;
+        if (defined(packetEpoch)) {
+            epoch = JulianDate.fromIso8601(packetEpoch);
+        }
+
         //Without an interval, any sampled value is infinite, meaning it completely
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
@@ -510,11 +517,6 @@ define([
                 property = new SampledPositionProperty(referenceFrame);
                 object[propertyName] = property;
                 propertyCreated = true;
-            }
-            var epoch;
-            var packetEpoch = packetData.epoch;
-            if (defined(packetEpoch)) {
-                epoch = JulianDate.fromIso8601(packetEpoch);
             }
             property.addSamplesPackedArray(unwrappedInterval, epoch);
             updateInterpolationSettings(packetData, property);
@@ -597,7 +599,7 @@ define([
             interval.data = new SampledPositionProperty(referenceFrame);
             intervals.addInterval(interval);
         }
-        interval.data.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+        interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
         return propertyCreated;
     }
@@ -654,21 +656,17 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        combinedInterval = defaultValue(combinedInterval, Iso8601.MAXIMUM_INTERVAL);
-
-        var propertyCreated = false;
         var property = object[propertyName];
-        if (!defined(property)) {
+        var existingMaterial;
+        var existingInterval;
+
+        if (defined(combinedInterval)) {
+            if (!(property instanceof CompositeMaterialProperty)) {
             property = new CompositeMaterialProperty();
             object[propertyName] = property;
-            propertyCreated = true;
-        }
-
         //See if we already have data at that interval.
         var thisIntervals = property.intervals;
-        var existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
-        var existingMaterial;
-
+                existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
         if (defined(existingInterval)) {
             //We have an interval, but we need to make sure the
             //new data is the same type of material as the old data.
@@ -677,6 +675,10 @@ define([
             //If not, create it.
             existingInterval = combinedInterval.clone();
             thisIntervals.addInterval(existingInterval);
+        }
+            }
+        } else {
+            existingMaterial = property;
         }
 
         var materialData;
@@ -703,9 +705,12 @@ define([
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
             existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
         }
-        existingInterval.data = existingMaterial;
 
-        return propertyCreated;
+        if (defined(existingInterval)) {
+        existingInterval.data = existingMaterial;
+        } else {
+            object[propertyName] = existingMaterial;
+        }
     }
 
     function processMaterialPacketData(object, propertyName, packetData, interval, sourceUri) {
@@ -939,9 +944,19 @@ define([
             dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
+        processPacketData(Boolean, ellipse, 'show', ellipseData.show, interval, sourceUri);
         processPacketData(Number, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri);
         processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri);
         processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri);
+        processPacketData(Number, ellipse, 'height', ellipseData.height, interval, sourceUri);
+        processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri);
+        processPacketData(Number, ellipse, 'granularity', ellipseData.granularity, interval, sourceUri);
+        processPacketData(Number, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri);
+        processMaterialPacketData(ellipse, 'material', ellipseData.material, interval, sourceUri);
+        processPacketData(Boolean, ellipse, 'fill', ellipseData.fill, interval, sourceUri);
+        processPacketData(Boolean, ellipse, 'outline', ellipseData.outline, interval, sourceUri);
+        processPacketData(Color, ellipse, 'outlineColor', ellipseData.outlineColor, interval, sourceUri);
+        processPacketData(Number, ellipse, 'outlineWidth', ellipseData.outlineWidth, interval, sourceUri);
     }
 
     function processEllipsoid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -963,6 +978,10 @@ define([
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
+        processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri);
+        processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri);
+        processPacketData(Color, ellipsoid, 'outlineColor', ellipsoidData.outlineColor, interval, sourceUri);
+        processPacketData(Number, ellipsoid, 'outlineWidth', ellipsoidData.outlineWidth, interval, sourceUri);
     }
 
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1062,6 +1081,14 @@ define([
 
         processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri);
         processMaterialPacketData(polygon, 'material', polygonData.material, interval, sourceUri);
+        processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri);
+        processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri);
+        processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri);
+        processPacketData(Number, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri);
+        processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri);
+        processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri);
+        processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri);
+        processPacketData(Number, polygon, 'outlineWidth', polygonData.outlineWidth, interval, sourceUri);
     }
 
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
