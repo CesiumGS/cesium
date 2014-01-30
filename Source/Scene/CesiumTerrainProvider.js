@@ -120,9 +120,11 @@ define([
                 return;
             }
 
+            var baseUri = new Uri(metadataUrl);
+
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                that._tileUrlTemplates[i] = Uri.resolve(that._tileUrlTemplates[i], metadataUrl).replace('{version}', data.version);
+                that._tileUrlTemplates[i] = new Uri(that._tileUrlTemplates[i]).resolve(baseUri).toString().replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
