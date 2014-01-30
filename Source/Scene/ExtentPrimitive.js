@@ -177,7 +177,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}

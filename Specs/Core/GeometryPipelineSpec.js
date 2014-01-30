@@ -214,7 +214,7 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var indices = GeometryPipeline.createAttributeIndices(geometry);
+        var indices = GeometryPipeline.createAttributeLocations(geometry);
 
         var validIndices = [0, 1, 2];
         expect(validIndices).toContain(indices.position);
@@ -224,9 +224,9 @@ defineSuite([
         expect(indices.position).not.toEqual(indices.color);
     });
 
-    it('createAttributeIndices throws without a geometry', function() {
+    it('createAttributeLocations throws without a geometry', function() {
         expect(function() {
-            GeometryPipeline.createAttributeIndices(undefined);
+            GeometryPipeline.createAttributeLocations(undefined);
         }).toThrowDeveloperError();
     });
 
