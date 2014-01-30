@@ -76,6 +76,16 @@ define([
 
         this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
 
+        // Check the number of tiles at the minimum level.  If it's more than four,
+        // try requesting the lower levels anyway, because starting at the higher minimum
+        // level will cause too many tiles to be downloaded and rendered.
+        var swTile = this._tilingScheme.positionToTileXY(this._extent.getSouthwest(), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(this._extent.getNortheast(), this._minimumLevel);
+        var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+        if (tileCount > 4) {
+            throw new DeveloperError('Too many tiles at the minimum level');
+        }
+
         this._errorEvent = new Event();
 
         this._ready = true;
