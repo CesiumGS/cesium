@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './DynamicBillboardVisualizer',
+        './EllipseGeometryUpdater',
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor',
         './DynamicLabelVisualizer',
@@ -15,6 +16,7 @@ define([
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer',
         './DynamicVectorVisualizer',
+        './GeometryVisualizer',
         './VisualizerCollection'
     ], function(
         defaultValue,
@@ -23,6 +25,7 @@ define([
         DeveloperError,
         EventHelper,
         DynamicBillboardVisualizer,
+        EllipseGeometryUpdater,
         DynamicEllipsoidVisualizer,
         DynamicConeVisualizerUsingCustomSensor,
         DynamicLabelVisualizer,
@@ -32,19 +35,33 @@ define([
         DynamicPolylineVisualizer,
         DynamicPyramidVisualizer,
         DynamicVectorVisualizer,
+        GeometryVisualizer,
         VisualizerCollection) {
     "use strict";
 
-    var defaultVisualizerTypes = [DynamicBillboardVisualizer,
-                                  DynamicEllipsoidVisualizer,
-                                  DynamicConeVisualizerUsingCustomSensor,
-                                  DynamicLabelVisualizer,
-                                  DynamicPointVisualizer,
-                                  DynamicPolygonVisualizer,
-                                  DynamicPolylineVisualizer,
-                                  DynamicPyramidVisualizer,
-                                  DynamicPathVisualizer,
-                                  DynamicVectorVisualizer];
+    var defaultVisualizerTypes = [function(scene) {
+        return new DynamicBillboardVisualizer(scene);
+    }, function(scene) {
+        return new GeometryVisualizer(EllipseGeometryUpdater, scene);
+    }, function(scene) {
+        return new DynamicEllipsoidVisualizer(scene);
+    }, function(scene) {
+        return new DynamicConeVisualizerUsingCustomSensor(scene);
+    }, function(scene) {
+        return new DynamicLabelVisualizer(scene);
+    }, function(scene) {
+        return new DynamicPointVisualizer(scene);
+    }, function(scene) {
+        return new DynamicPolygonVisualizer(scene);
+    }, function(scene) {
+        return new DynamicPolylineVisualizer(scene);
+    }, function(scene) {
+        return new DynamicVectorVisualizer(scene);
+    }, function(scene) {
+        return new DynamicPyramidVisualizer(scene);
+    }, function(scene) {
+        return new DynamicPathVisualizer(scene);
+    }];
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -188,7 +205,7 @@ define([
         var visualizers = new Array(length);
         var scene = this._scene;
         for ( var i = 0; i < length; i++) {
-            visualizers[i] = new visualizerTypes[i](scene);
+            visualizers[i] = visualizerTypes[i](scene);
         }
 
         var vCollection = new VisualizerCollection(visualizers, dataSource.getDynamicObjectCollection());
