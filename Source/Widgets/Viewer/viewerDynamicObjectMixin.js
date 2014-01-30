@@ -125,7 +125,7 @@ define(['../../Core/BoundingSphere',
                 infoBoxViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
 
                 if (defined(selectedObject.description)) {
-                    infoBoxViewModel.descriptionRawHtml = selectedObject.description.getValue(time) || '';
+                    infoBoxViewModel.descriptionRawHtml = defaultValue(selectedObject.description.getValue(time), '');
                 } else {
                     infoBoxViewModel.descriptionRawHtml = '';
                 }

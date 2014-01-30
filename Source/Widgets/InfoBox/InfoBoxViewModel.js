@@ -37,10 +37,8 @@ define([
      */
     var InfoBoxViewModel = function() {
         this._sanitizer = undefined;
-        this._showInfo = false;
-        this._titleText = '';
-        this._descriptionHtml = '';
-        this._unsanitizedDescriptionHtml = '';
+        this._descriptionRawHtml = '';
+        this._descriptionSanitizedHtml = '';
         this._cameraClicked = new Event();
         this._closeClicked = new Event();
 
@@ -62,23 +60,13 @@ define([
          */
         this.isCameraTracking = false;
 
-        knockout.track(this, ['_showInfo', '_titleText', '_descriptionHtml', 'maxHeight', 'enableCamera', 'isCameraTracking']);
-
         /**
          * Gets or sets the visibility of the info box.
          * @memberof InfoBoxViewModel.prototype
          *
          * @type {Boolean}
          */
-        this.showInfo = undefined;
-        knockout.defineProperty(this, 'showInfo', {
-            get : function() {
-                return this._showInfo;
-            },
-            set : function(value) {
-                this._showInfo = value;
-            }
-        });
+        this.showInfo = false;
 
         /**
          * Gets or sets the title text in the info box.
@@ -86,17 +74,9 @@ define([
          *
          * @type {String}
          */
-        this.titleText = undefined;
-        knockout.defineProperty(this, 'titleText', {
-            get : function() {
-                return this._titleText;
-            },
-            set : function(value) {
-                if (this._titleText !== value) {
-                    this._titleText = value;
-                }
-            }
-        });
+        this.titleText = '';
+
+        knockout.track(this, ['showInfo', 'titleText', '_descriptionRawHtml', '_descriptionSanitizedHtml', 'maxHeight', 'enableCamera', 'isCameraTracking']);
 
         /**
          * Gets or sets the un-sanitized description HTML for the info box.
@@ -107,17 +87,17 @@ define([
         this.descriptionRawHtml = undefined;
         knockout.defineProperty(this, 'descriptionRawHtml', {
             get : function() {
-                return this._unsanitizedDescriptionHtml;
+                return this._descriptionRawHtml;
             },
             set : function(value) {
-                if (this._unsanitizedDescriptionHtml !== value) {
-                    this._unsanitizedDescriptionHtml = value;
+                if (this._descriptionRawHtml !== value) {
+                    this._descriptionRawHtml = value;
                     if (defined(this._sanitizer)) {
                         value = this._sanitizer(value);
                     } else if (defined(InfoBoxViewModel.defaultSanitizer)) {
                         value = InfoBoxViewModel.defaultSanitizer(value);
                     }
-                    this._descriptionHtml = value;
+                    this._descriptionSanitizedHtml = value;
                 }
             }
         });
@@ -131,7 +111,7 @@ define([
         this.descriptionSanitizedHtml = undefined;
         knockout.defineProperty(this, 'descriptionSanitizedHtml', {
             get : function() {
-                return this._descriptionHtml;
+                return this._descriptionSanitizedHtml;
             }
         });
 
@@ -153,7 +133,7 @@ define([
 
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
-                return !this._descriptionHtml;
+                return !this._descriptionSanitizedHtml;
             }
         });
     };
@@ -196,8 +176,8 @@ define([
             set : function(value) {
                 this._sanitizer = value;
                 //Force resanitization of existing text
-                var oldHtml = this._unsanitizedDescriptionHtml;
-                this._unsanitizedDescriptionHtml = '';
+                var oldHtml = this._descriptionRawHtml;
+                this._descriptionRawHtml = '';
                 this.descriptionRawHtml = oldHtml;
             }
         }

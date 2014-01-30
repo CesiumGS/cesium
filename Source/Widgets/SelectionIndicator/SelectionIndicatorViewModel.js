@@ -72,7 +72,6 @@ define([
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
         this._position = undefined;
-        this._showSelection = false;
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
@@ -115,23 +114,15 @@ define([
          */
         this.maxHeight = 500;
 
-        knockout.track(this, ['_position', '_positionX', '_positionY', 'scale', 'rotation', '_showSelection']);
-
         /**
          * Gets or sets the visibility of the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Boolean}
          */
-        this.showSelection = undefined;
-        knockout.defineProperty(this, 'showSelection', {
-            get : function() {
-                return this._showSelection;
-            },
-            set : function(value) {
-                this._showSelection = value;
-            }
-        });
+        this.showSelection = false;
+
+        knockout.track(this, ['_position', '_positionX', '_positionY', 'scale', 'rotation', 'showSelection']);
 
         /**
          * Gets the visibility of the position indicator.
@@ -142,7 +133,7 @@ define([
         this.showPosition = undefined;
         knockout.defineProperty(this, 'showPosition', {
             get : function() {
-                return this._showSelection && defined(this._position);
+                return this.showSelection && defined(this._position);
             }
         });
 
