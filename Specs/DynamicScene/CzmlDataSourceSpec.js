@@ -1096,7 +1096,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
-        expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
+        expect(dynamicObject.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
     });
 
     it('CZML Availability works with a single interval.', function() {
