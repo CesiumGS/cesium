@@ -276,10 +276,6 @@ define([
 // TODO: will change with animation
 // TODO: only load external files if within bounding sphere
 // TODO: cull whole model, not commands?  Good for our use-cases, but not buildings, etc.
-        /**
-         * DOC_TBA
-         */
-        this.worldBoundingSphere = new BoundingSphere();
 
         /**
          * The currently playing glTF animations.
@@ -435,10 +431,8 @@ define([
      * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
-        var nodes = this._runtime.nodes;
-
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(nodes)) {
+        if (this._state !== ModelState.LOADED) {
             throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
         }
 
@@ -447,8 +441,62 @@ define([
         }
         //>>includeEnd('debug');
 
-        var node = nodes[name];
+        var node = this._runtime.nodes[name];
         return defined(node) ? node.publicNode : undefined;
+    };
+
+    var scratchSphereCenter = new Cartesian3();
+    var scratchSpheres = [];
+    var scratchSubtract = new Cartesian3();
+
+    /**
+     * DOC_TBA
+     */
+    Model.prototype.computeWorldBoundingSphere = function(result) {
+        if (this._state !== ModelState.LOADED) {
+            throw new DeveloperError('Geometry is not loaded.  Wait for the model\'s readyToRender event.');
+        }
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        // Compute bounding sphere that includes all transformed nodes
+        Cartesian3.clone(Cartesian3.ZERO, scratchSphereCenter);
+        scratchSpheres.length = 0;
+        var spheres = scratchSpheres;
+
+        var commands = this._renderCommands;
+        var length = commands.length;
+
+        for (var i = 0; i < length; ++i) {
+            var command = commands[i];
+            Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
+            spheres.push(command.boundingVolume);
+        }
+
+        if (spheres.length > 0) {
+            // Compute bounding sphere around the model
+            var radiusSquared = 0;
+            var index = 0;
+
+            length = spheres.length;
+            Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
+            for (i = 0; i < length; ++i) {
+                var bbs = spheres[i];
+                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
+
+                if (r > radiusSquared) {
+                    radiusSquared = r;
+                    index = i;
+                }
+            }
+
+            Cartesian3.clone(scratchSphereCenter, result.center);
+            result.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
+        }
+
+        return result;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1566,9 +1614,6 @@ define([
     }
 
     var scratchNodeStack = [];
-    var scratchSphereCenter = new Cartesian3();
-    var scratchSpheres = [];
-    var scratchSubtract = new Cartesian3();
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
         var allowPicking = model.allowPicking;
@@ -1579,11 +1624,6 @@ define([
 
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
-
-        // Compute bounding sphere that includes all transformed nodes
-        Cartesian3.clone(Cartesian3.ZERO, scratchSphereCenter);
-        scratchSpheres.length = 0;
-        var spheres = scratchSpheres;
 
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
@@ -1620,9 +1660,6 @@ define([
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
-
-                            Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
-                            spheres.push(command.boundingVolume);
                         }
                     } else {
                         // Node has a light or camera
@@ -1647,28 +1684,6 @@ define([
                     nodeStack.push(child);
                 }
             }
-        }
-
-        if (spheres.length > 0) {
-            // Compute bounding sphere around the model
-            var radiusSquared = 0;
-            var index = 0;
-
-            length = spheres.length;
-            Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
-            for (i = 0; i < length; ++i) {
-                var bbs = spheres[i];
-                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
-
-                if (r > radiusSquared) {
-                    radiusSquared = r;
-                    index = i;
-                }
-            }
-
-            // TODO: world bounding sphere is wrong unless all nodes are dirty.
-            Cartesian3.clone(scratchSphereCenter, model.worldBoundingSphere.center);
-            model.worldBoundingSphere.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
         }
     }
 

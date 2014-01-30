@@ -263,7 +263,8 @@ define([
                 });
             }
 
-            var center = model.worldBoundingSphere.center;
+            var worldBoundingSphere = model.computeWorldBoundingSphere();
+            var center = worldBoundingSphere.center;
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
             // View in east-north-up frame
@@ -277,7 +278,7 @@ define([
 
             // Zoom in
             camera.controller.lookAt(
-                new Cartesian3(0.0, -model.worldBoundingSphere.radius * 0.25, model.worldBoundingSphere.radius * 2.0),
+                new Cartesian3(0.0, -worldBoundingSphere.radius * 0.25, worldBoundingSphere.radius * 2.0),
                 Cartesian3.ZERO,
                 Cartesian3.UNIT_Z);
         });
