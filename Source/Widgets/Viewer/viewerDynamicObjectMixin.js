@@ -74,6 +74,8 @@ define(['../../Core/BoundingSphere',
         var selectionIndicator = viewer.selectionIndicator;
         var selectionIndicatorViewModel = defined(selectionIndicator) ? selectionIndicator.viewModel : undefined;
 
+        var enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
+
         var eventHelper = new EventHelper();
         var selectedObjectObservable = knockout.observable();
         var trackedObjectObservable = knockout.observable();
@@ -87,8 +89,10 @@ define(['../../Core/BoundingSphere',
             viewer.selectedObject = undefined;
         }
 
-        eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedObject);
-        eventHelper.add(infoBoxViewModel.closeClicked, infoBoxClosed);
+        if (defined(infoBoxViewModel)) {
+            eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedObject);
+            eventHelper.add(infoBoxViewModel.closeClicked, infoBoxClosed);
+        }
 
         var scratchVertexPositions;
         var scratchBoundingSphere;
@@ -101,39 +105,49 @@ define(['../../Core/BoundingSphere',
             }
 
             var selectedObject = viewer.selectedObject;
-            var showSelection = defined(selectedObject);
+            var showSelection = defined(selectedObject) && enableInfoOrSelection;
             if (showSelection) {
+                var oldPosition = defined(selectionIndicatorViewModel) ? selectionIndicatorViewModel.position : undefined;
+                var position;
+                var enableCamera = false;
+
                 if (selectedObject.isAvailable(time)) {
                     if (defined(selectedObject.position)) {
-                        selectionIndicatorViewModel.position = selectedObject.position.getValue(time, selectionIndicatorViewModel.position);
-                        infoBoxViewModel.enableCamera = defined(selectionIndicatorViewModel.position) &&
-                            (viewer.trackedObject !== viewer.selectedObject);
+                        position = selectedObject.position.getValue(time, oldPosition);
+                        enableCamera = defined(position) && (viewer.trackedObject !== viewer.selectedObject);
                     } else if (defined(selectedObject.vertexPositions)) {
                         scratchVertexPositions = selectedObject.vertexPositions.getValue(time, scratchVertexPositions);
                         scratchBoundingSphere = BoundingSphere.fromPoints(scratchVertexPositions, scratchBoundingSphere);
-                        selectionIndicatorViewModel.position = scratchBoundingSphere.center;
-                        // Can't track scratch positions.
-                        infoBoxViewModel.enableCamera = false;
-                    } else {
-                        selectionIndicatorViewModel.position = undefined;
-                        infoBoxViewModel.enableCamera = false;
+                        position = scratchBoundingSphere.center;
+                        // Can't track scratch positions: "enableCamera" is false.
                     }
-                } else {
-                    selectionIndicatorViewModel.position = undefined;
-                    infoBoxViewModel.enableCamera = false;
+                    // else "position" is undefined and "enableCamera" is false.
                 }
-                infoBoxViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
+                // else "position" is undefined and "enableCamera" is false.
 
-                if (defined(selectedObject.description)) {
-                    infoBoxViewModel.descriptionRawHtml = defaultValue(selectedObject.description.getValue(time), '');
-                } else {
-                    infoBoxViewModel.descriptionRawHtml = '';
+                if (defined(selectionIndicatorViewModel)) {
+                    selectionIndicatorViewModel.position = position;
+                }
+
+                if (defined(infoBoxViewModel)) {
+                    infoBoxViewModel.enableCamera = enableCamera;
+                    infoBoxViewModel.isCameraTracking = (viewer.trackedObject === viewer.selectedObject);
+
+                    if (defined(selectedObject.description)) {
+                        infoBoxViewModel.descriptionRawHtml = defaultValue(selectedObject.description.getValue(time), '');
+                    } else {
+                        infoBoxViewModel.descriptionRawHtml = '';
+                    }
                 }
             }
 
-            selectionIndicatorViewModel.update();
-            selectionIndicatorViewModel.showSelection = showSelection;
-            infoBoxViewModel.showInfo = showSelection;
+            if (defined(selectionIndicatorViewModel)) {
+                selectionIndicatorViewModel.update();
+                selectionIndicatorViewModel.showSelection = showSelection;
+            }
+            if (defined(infoBoxViewModel)) {
+                infoBoxViewModel.showInfo = showSelection;
+            }
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
@@ -264,11 +278,17 @@ define(['../../Core/BoundingSphere',
             set : function(value) {
                 if (selectedObjectObservable() !== value) {
                     if (defined(value)) {
-                        infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
-                        selectionIndicatorViewModel.animateAppear();
+                        if (defined(infoBoxViewModel)) {
+                            infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
+                        }
+                        if (defined(selectionIndicatorViewModel)) {
+                            selectionIndicatorViewModel.animateAppear();
+                        }
                     } else {
                         // Leave the info text in place here, it is needed during the exit animation.
-                        selectionIndicatorViewModel.animateDepart();
+                        if (defined(selectionIndicatorViewModel)) {
+                            selectionIndicatorViewModel.animateDepart();
+                        }
                     }
                     selectedObjectObservable(value);
                 }
