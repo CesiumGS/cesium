@@ -7,6 +7,10 @@ define([
         defined) {
     "use strict";
 
+    /**
+     * Contains functions for operating on 2D triangles.
+     * @exports Intersections2D
+     */
     var Intersections2D = {};
 
     /**

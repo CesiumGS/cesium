@@ -18,7 +18,9 @@ Beta Releases
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
-* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.  
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
+* Added `makeRelativeUrlAbsolute` function to build an absolute URL from a base URL and a relative URL.
+* Added `Intersections2D` class containing operations on 2D triangles.  
 
 ### b24 - 2014-01-06
 
