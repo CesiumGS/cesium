@@ -1108,6 +1108,8 @@ define([
         return this._gl.drawingBufferWidth;
     };
 
+    var nextShaderProgramId = 0;
+
     /**
      * Creates a shader program given the GLSL source for a vertex and fragment shader.
      * <br /><br />
@@ -1170,7 +1172,9 @@ define([
      * sp = context.createShaderProgram(vs, fs, attributes);            *
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        var shaderProgram = new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        shaderProgram.id = nextShaderProgramId++;
+        return shaderProgram;
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {

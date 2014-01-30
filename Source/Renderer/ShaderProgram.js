@@ -622,6 +622,8 @@ define([
          * @readonly
          */
         this.fragmentShaderSource = fragmentShaderSource;
+
+        this.id = 0;
     };
 
     /**

@@ -856,13 +856,14 @@ define([
 
     function getTranslucentMRTShaderProgram(scene, shaderProgram) {
         var cache = scene._translucentShaderCache;
-        var attributeLocations = shaderProgram._attributeLocations;
-        var vs = shaderProgram.vertexShaderSource;
-        var fs = shaderProgram.fragmentShaderSource;
-        var key = vs + fs + JSON.stringify(attributeLocations);
+        var id = shaderProgram.id;
 
-        var shader = cache[key];
+        var shader = cache[id];
         if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var vs = shaderProgram.vertexShaderSource;
+            var fs = shaderProgram.fragmentShaderSource;
+
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
 
@@ -880,7 +881,7 @@ define([
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
-            cache[key] = shader;
+            cache[id] = shader;
         }
 
         return shader;
@@ -888,13 +889,14 @@ define([
 
     function getTranslucentColorShaderProgram(scene, shaderProgram) {
         var cache = scene._translucentShaderCache;
-        var attributeLocations = shaderProgram._attributeLocations;
-        var vs = shaderProgram.vertexShaderSource;
-        var fs = shaderProgram.fragmentShaderSource;
-        var key = vs + fs + JSON.stringify(attributeLocations);
+        var id = shaderProgram.id;
 
-        var shader = cache[key];
+        var shader = cache[id];
         if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var vs = shaderProgram.vertexShaderSource;
+            var fs = shaderProgram.fragmentShaderSource;
+
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
@@ -918,7 +920,7 @@ define([
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
-            cache[key] = shader;
+            cache[id] = shader;
         }
 
         return shader;
@@ -926,13 +928,14 @@ define([
 
     function getTranslucentAlphaShaderProgram(scene, shaderProgram) {
         var cache = scene._alphaShaderCache;
-        var attributeLocations = shaderProgram._attributeLocations;
-        var vs = shaderProgram.vertexShaderSource;
-        var fs = shaderProgram.fragmentShaderSource;
-        var key = vs + fs + JSON.stringify(attributeLocations);
+        var id = shaderProgram.id;
 
-        var shader = cache[key];
+        var shader = cache[id];
         if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var vs = shaderProgram.vertexShaderSource;
+            var fs = shaderProgram.fragmentShaderSource;
+
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
@@ -954,7 +957,7 @@ define([
                 '}\n';
 
             shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
-            cache[key] = shader;
+            cache[id] = shader;
         }
 
         return shader;
