@@ -240,14 +240,6 @@ define([
             statistics = gltfStatistics(model.gltf);
             console.log(statistics);
 
-//            var node = model.getNode('LOD3sp');
-//            node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
-
-//            node.matrix = undefined;
-//            node.translation = new Cartesian3();
-//            node.rotation = Quaternion.IDENTITY.clone();
-//            node.scale = new Cartesian3(5.0, 1.0, 1.0);
-
             if (endUserOptions.animate) {
                 model.activeAnimations.addAll({
                     // startTime : (new JulianDate()).addSeconds(3),
@@ -308,6 +300,19 @@ define([
                 }
             },
             ScreenSpaceEventType.MOUSE_MOVE
+        );
+
+        handler.setInputAction(
+            function () {
+                var n = prevPickedNode;
+                n.matrix = Matrix4.multiplyByUniformScale(n.matrix, 1.5, n.matrix);
+
+//              n.matrix = undefined;
+//              n.translation = new Cartesian3();
+//              n.rotation = Quaternion.IDENTITY.clone();
+//              n.scale = new Cartesian3(2.0, 2.0, 2.0);
+            },
+            ScreenSpaceEventType.LEFT_CLICK
         );
 
 //      scene.debugCommandFilter = function(command) { return command.owner.instance === model; };

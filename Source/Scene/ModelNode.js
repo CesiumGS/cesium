@@ -37,9 +37,21 @@ define([
      *
      * @see Model#getNode
      */
-    var ModelNode = function(model, runtimeNode) {
+    var ModelNode = function(model, node, runtimeNode) {
         this._model = model;
         this._runtimeNode = runtimeNode;
+
+        /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
+        this.name = node.name;
+
+        /**
+         * DOC_TBA
+         */
+        this._matrix = Matrix4.clone(Matrix4.IDENTITY);
     };
 
     defineProperties(ModelNode.prototype, {
@@ -58,12 +70,18 @@ define([
          */
         matrix : {
             get : function () {
-                return this._runtimeNode.matrix;
+
+// TODO: expose node's matrix/TRS (or just matrix) and a "custom" (or whatever) matrix
+
+                return this._matrix;
+//                return this._runtimeNode.matrix;
             },
             set : function(value) {
                 var runtimeNode = this._runtimeNode;
-                runtimeNode.matrix = Matrix4.clone(value, runtimeNode.matrix);
-                runtimeNode.dirty = true;
+//                runtimeNode.matrix = Matrix4.clone(value, runtimeNode.matrix);
+                this._matrix = Matrix4.clone(value, this._matrix);
+
+                runtimeNode.dirtyNumber = this._model._maxDirtyNumber;
                 this._model._cesiumAnimationsDirty = true;
             }
         },
@@ -96,7 +114,7 @@ define([
             set : function(value) {
                 var runtimeNode = this._runtimeNode;
                 runtimeNode.translation = Cartesian3.clone(value, runtimeNode.translation);
-                runtimeNode.dirty = true;
+                runtimeNode.dirtyNumber = this._model._maxDirtyNumber;
                 this._model._cesiumAnimationsDirty = true;
             }
         },
@@ -129,7 +147,7 @@ define([
             set : function(value) {
                 var runtimeNode = this._runtimeNode;
                 runtimeNode.rotation = Quaternion.clone(value, runtimeNode.rotation);
-                runtimeNode.dirty = true;
+                runtimeNode.dirtyNumber = this._model._maxDirtyNumber;
                 this._model._cesiumAnimationsDirty = true;
             }
         },
@@ -162,7 +180,7 @@ define([
             set : function(value) {
                 var runtimeNode = this._runtimeNode;
                 runtimeNode.scale = Cartesian3.clone(value, runtimeNode.scale);
-                runtimeNode.dirty = true;
+                runtimeNode.dirtyNumber = this._model._maxDirtyNumber;
                 this._model._cesiumAnimationsDirty = true;
             }
         }

@@ -311,6 +311,7 @@ define([
         this._loadResources = undefined;
 
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
+        this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
         this._runtime = {
             animations : undefined,
@@ -614,8 +615,7 @@ define([
                     // Computed transforms
                     transformToRoot : new Matrix4(),
                     computedMatrix : new Matrix4(),
-                    dirty : false,                      // for graph traversal
-                    anyAncestorDirty : false,           // for graph traversal
+                    dirtyNumber : 0,               // The frame this node was made dirty by an animation; for graph traversal
 
                     // Rendering
                     commands : [],                      // empty for transform, light, and camera nodes
@@ -636,7 +636,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, runtimeNode);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode);
 
                 runtimeNodes[name] = runtimeNode;
 
@@ -975,10 +975,10 @@ define([
         createJoints(model, runtimeSkins);
     }
 
-    function getChannelEvaluator(runtimeNode, targetPath, spline) {
+    function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
             runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
-            runtimeNode.dirty = true;
+            runtimeNode.dirtyNumber = model._maxDirtyNumber;
         };
     }
 
@@ -1035,7 +1035,7 @@ define([
 
                      var spline = ModelCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
                      // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(runtimeNodes[target.id], target.path, spline);
+                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
                  }
 
                  model._runtime.animations[animationName] = {
@@ -1462,7 +1462,9 @@ define([
                     primitive : model,
                     id : model.id,
                     gltf : {
-                        node : gltfNode,
+                        node : runtimeNode.publicNode,
+
+// TODO: Expose direct glTF types like we do here?
                         mesh : mesh,
                         primitive : primitive,
                         primitiveIndex : i
@@ -1619,19 +1621,24 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getNodeMatrix(node, result) {
+        var m;
         if (defined(node.matrix)) {
-            result = node.matrix;
-            return node.matrix;
+            m = Matrix4.clone(node.matrix, result);
+        } else {
+            m = Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
         }
 
-        return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
+// TODO: don't always do this.
+        Matrix4.multiplyTransformation(m, node.publicNode.matrix, m);
+
+// TODO: user or animation translation and scale need to update bounding sphere
     }
 
     var scratchNodeStack = [];
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
+        var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
-        var gltf = model.gltf;
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -1642,7 +1649,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
 
-            n.transformToRoot = getNodeMatrix(n, n.transformToRoot);
+            getNodeMatrix(n, n.transformToRoot);
             nodeStack.push(n);
 
             while (nodeStack.length > 0) {
@@ -1650,12 +1657,7 @@ define([
                 var transformToRoot = n.transformToRoot;
                 var commands = n.commands;
 
-                // This nodes transform needs to be updated if
-                // - It was targeted for animation this frame, or
-                // - Any of its ancestors were targeted for animation this frame
-                var dirty = (n.dirty || n.anyAncestorDirty);
-
-                if (dirty || modelTransformChanged || justLoaded) {
+                if ((n.dirtyNumber === maxDirtyNumber) || modelTransformChanged || justLoaded) {
                     var commandsLength = commands.length;
                     if (commandsLength > 0) {
                         // Node has meshes, which has primitives.  Update their commands.
@@ -1681,24 +1683,33 @@ define([
                     }
                 }
 
-                n.dirty = false;
-                n.anyAncestorDirty = false;
-
                 var children = n.children;
                 var childrenLength = children.length;
                 for (var k = 0; k < childrenLength; ++k) {
                     var child = children[k];
 
-                    if (dirty || justLoaded) {
-                        var childMatrix = getNodeMatrix(child, child.transformToRoot);
-                        Matrix4.multiplyTransformation(transformToRoot, childMatrix, child.transformToRoot);
+                    // A node's transform needs to be updated if
+                    // - It was targeted for animation this frame, or
+                    // - Any of its ancestors were targeted for animation this frame
+
+                    // PERFORMANCE_IDEA: if a child has multiple parents and only one of the parents
+                    // is dirty, all the subtrees for each child instance will be dirty; we probably
+                    // won't see this in the wild often.
+                    child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
+
+                    if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
+                        // Don't check for modelTransformChanged since if only the model's model matrix changed,
+                        // we do not need to rebuild the local transform-to-root, only the final
+                        // [model's-model-matrix][transform-to-root] above.
+                        getNodeMatrix(child, child.transformToRoot);
+                        Matrix4.multiplyTransformation(transformToRoot, child.transformToRoot, child.transformToRoot);
                     }
 
-                    child.anyAncestorDirty = dirty;
                     nodeStack.push(child);
                 }
             }
         }
+        ++model._maxDirtyNumber;
     }
 
     var scratchObjectSpace = new Matrix4();
@@ -1805,6 +1816,7 @@ define([
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+//                updateNodeHierarchyModelMatrix(this, true/*modelTransformChanged*/, true/*justLoaded*/);
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
