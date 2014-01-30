@@ -273,10 +273,6 @@ define([
          */
         this.readyToRender = defaultValue(options.readyToRender, new Event());
 
-// TODO: will change with animation
-// TODO: only load external files if within bounding sphere
-// TODO: cull whole model, not commands?  Good for our use-cases, but not buildings, etc.
-
         /**
          * The currently playing glTF animations.
          *
@@ -450,11 +446,22 @@ define([
     var scratchSubtract = new Cartesian3();
 
     /**
-     * DOC_TBA
+     * Computes the bounding sphere around the entire model in world coordinates using the
+     * previous frame's {@link Model#modelMatrix} and node transforms.  This can be used in
+     * {@link readyToRender} to zoom to the model.  This can't be called before the
+     * {@link readyToRender} event fires because it requires that the glTF nodes are loaded.
+     *
+     * @memberof Model
+     *
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     *
+     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
      */
     Model.prototype.computeWorldBoundingSphere = function(result) {
         if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Geometry is not loaded.  Wait for the model\'s readyToRender event.');
+            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
         }
 
         if (!defined(result)) {
