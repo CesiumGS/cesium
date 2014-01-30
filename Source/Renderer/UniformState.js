@@ -40,6 +40,7 @@ define([
      */
     var UniformState = function() {
         this._viewport = new BoundingRectangle();
+        this._viewportCartesain4 = new Cartesian4();
         this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
@@ -65,6 +66,9 @@ define([
 
         this._inverseModelDirty = true;
         this._inverseModel = new Matrix4();
+
+        this._inverseTransposeModelDirty = true;
+        this._inverseTransposeModel = new Matrix3();
 
         this._viewRotation = new Matrix3();
         this._inverseViewRotation = new Matrix3();
@@ -292,6 +296,14 @@ define([
     UniformState.prototype.setViewport = function(viewport) {
         if (!BoundingRectangle.equals(viewport, this._viewport)) {
             BoundingRectangle.clone(viewport, this._viewport);
+
+            var v = this._viewport;
+            var vc = this._viewportCartesian4;
+            vc.x = v.x;
+            vc.y = v.y;
+            vc.z = v.width;
+            vc.w = v.height;
+
             this._viewportDirty = true;
         }
     };
@@ -306,8 +318,15 @@ define([
      * @see UniformState#setViewport
      * @see czm_viewport
      */
-    UniformState.prototype.getViewport = function () {
+    UniformState.prototype.getViewport = function() {
         return this._viewport;
+    };
+
+    /**
+     * @private
+     */
+    UniformState.prototype.getViewportCartesian4 = function() {
+        return this._viewportCartesian4;
     };
 
     function cleanViewport(uniformState) {
@@ -359,6 +378,7 @@ define([
         this._modelView3DDirty = true;
         this._inverseModelView3DDirty = true;
         this._inverseModelDirty = true;
+        this._inverseTransposeModelDirty = true;
         this._modelViewDirty = true;
         this._inverseModelViewDirty = true;
         this._viewProjectionDirty = true;
@@ -409,6 +429,22 @@ define([
         }
 
         return this._inverseModel;
+    };
+
+    var inverseTransposeModelScratch = new Matrix4();
+
+    /**
+     * @private
+     */
+    UniformState.prototype.getInverseTranposeModel = function() {
+        if (this._inverseTransposeModelDirty) {
+            this._inverseTransposeModelDirty = false;
+
+            Matrix4.transpose(uniformState.getInverseModel(), inverseTransposeModelScratch);
+            Matrix4.getRotation(inverseTransposeModelScratch, uniformState._inverseTransposeModel);
+        }
+
+        return this._inverseTransposeModel;
     };
 
     /**

@@ -59,13 +59,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                var v = uniformState.getViewport();
-                return {
-                    x : v.x,
-                    y : v.y,
-                    z : v.width,
-                    w : v.height
-                };
+                return uniformState.getViewportCartesian4();
             }
         }),
 

@@ -1129,8 +1129,11 @@ define([
         }
     }
 
+    // The glTF spec allows both mat4 (3D) and mat3 (2D) affine transforms and
+    // mat3 (3D) and mat2 (2D) rotations.  We only support 3D.
+    //
+    // This also doesn't support LOCAL, which we could add if it is ever used.
     var gltfSemanticUniforms = {
-// TODO: All semantics from https://github.com/KhronosGroup/glTF/issues/83
         MODEL : function(uniformState) {
             return function() {
                 return uniformState.getModel();
@@ -1176,9 +1179,24 @@ define([
                 return uniformState.getInverseModelView();
             };
         },
+        MODELVIEWPROJECTIONINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseModelViewProjection();
+            };
+        },
+        MODELINVERSETRANSPOSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseTranposeModel();
+            };
+        },
         MODELVIEWINVERSETRANSPOSE : function(uniformState) {
             return function() {
                 return uniformState.getNormal();
+            };
+        },
+        VIEWPORT : function(uniformState) {
+            return function() {
+                return uniformState.getViewportCartesian4();
             };
         }
         // JOINT_MATRIX created in createCommands()
@@ -1323,7 +1341,6 @@ define([
                                 // Parameter overrides by the instance technique
                                 func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
                             } else if (defined(parameter.semantic)) {
-// TODO: account for parameter.type with semantic
                                 if (parameter.semantic !== 'JOINT_MATRIX') {
                                     // Map glTF semantic to Cesium automatic uniform
                                     func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
