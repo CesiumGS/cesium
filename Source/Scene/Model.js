@@ -746,7 +746,7 @@ define([
             model._rendererResources.programs[name] = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
 
             if (model.allowPicking) {
-             // TODO: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+                // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
                 var pickFS = createShaderSource({
                     sources : [fs],
                     pickColorQualifier : 'uniform'
@@ -1034,7 +1034,7 @@ define([
                      stopTime = Math.max(stopTime, times[times.length - 1]);
 
                      var spline = ModelCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
-                     // TODO: Support other targets when glTF does: https://github.com/KhronosGroup/glTF/issues/142
+                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                      channelEvaluators[i] = getChannelEvaluator(runtimeNodes[target.id], target.path, spline);
                  }
 
