@@ -761,7 +761,7 @@ define([
             scene._debugSphere.update(context, scene._frameState, commandList);
 
             var framebuffer;
-            var renderToTexture = scene._translucentMultipassSupport;
+            var renderToTexture = scene._translucentMRTSupport || scene._translucentMultipassSupport;
             if (renderToTexture) {
                 framebuffer = passState.framebuffer;
                 passState.framebuffer = scene._opaqueFBO;
@@ -1087,6 +1087,7 @@ define([
                 opaqueFramebuffer = scene._opaqueFBO;
 
                 passState.framebuffer = scene._opaqueFBO;
+                Color.clone(clearColor, scene._opaqueClearCommand.color);
                 scene._opaqueClearCommand.execute(context, passState);
                 passState.framebuffer = scene._translucentFBO;
                 scene._translucentClearCommand.execute(context, passState);
