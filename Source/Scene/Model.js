@@ -1151,11 +1151,6 @@ define([
                 return uniformState.getModelView();
             };
         },
-        VIEWPROJECTION : function(uniformState) {
-            return function() {
-                return uniformState.getViewProjection();
-            };
-        },
         MODELVIEWPROJECTION : function(uniformState) {
             return function() {
                 return uniformState.getModelViewProjection();
@@ -1179,11 +1174,6 @@ define([
         MODELVIEWINVERSE : function(uniformState) {
             return function() {
                 return uniformState.getInverseModelView();
-            };
-        },
-        VIEWPROJECTIONINVERSE : function(uniformState) {
-            return function() {
-                return uniformState.getInverseViewProjection();
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState) {
