@@ -189,6 +189,10 @@ defineSuite([
         });
 
         beforeEach(function() {
+            waitsFor(function() {
+                return realTerrainProvider.isReady();
+            });
+
             tilingScheme = new WebMercatorTilingScheme();
             rootTiles = tilingScheme.createLevelZeroTiles();
             rootTile = rootTiles[0];
