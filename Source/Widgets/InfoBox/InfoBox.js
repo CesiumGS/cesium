@@ -58,7 +58,7 @@ css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyles
         cameraElement.className = 'cesium-button cesium-infoBox-camera';
         cameraElement.setAttribute('data-bind', '\
 attr: { title: "Focus camera on object" },\
-click: function () { onCamera.raiseEvent(); },\
+click: function () { cameraClicked.raiseEvent(); },\
 enable: enableCamera,\
 cesiumSvgPath: { path: _cameraIconPath, width: 32, height: 32 }');
         infoElement.appendChild(cameraElement);
@@ -66,7 +66,8 @@ cesiumSvgPath: { path: _cameraIconPath, width: 32, height: 32 }');
         var closeElement = document.createElement('button');
         closeElement.type = 'button';
         closeElement.className = 'cesium-infoBox-close';
-        closeElement.setAttribute('data-bind', 'click: function () { onCloseInfo.raiseEvent(); }');
+        closeElement.setAttribute('data-bind', '\
+click: function () { closeClicked.raiseEvent(); }');
         closeElement.innerHTML = '&times;';
         infoElement.appendChild(closeElement);
 

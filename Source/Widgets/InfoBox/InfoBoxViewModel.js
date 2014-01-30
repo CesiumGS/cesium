@@ -41,8 +41,8 @@ define([
         this._titleText = '';
         this._descriptionHtml = '';
         this._unsanitizedDescriptionHtml = '';
-        this._onCamera = new Event();
-        this._onCloseInfo = new Event();
+        this._cameraClicked = new Event();
+        this._closeClicked = new Event();
 
         /**
          * Gets or sets the maximum height of the info box in pixels.  This property is observable.
@@ -173,17 +173,17 @@ define([
         /**
          * Gets an {@link Event} that is fired when the user clicks the camera icon.
          */
-        onCamera : {
+        cameraClicked : {
             get : function() {
-                return this._onCamera;
+                return this._cameraClicked;
             }
         },
         /**
          * Gets an {@link Event} that is fired when the user closes the info box.
          */
-        onCloseInfo : {
+        closeClicked : {
             get : function() {
-                return this._onCloseInfo;
+                return this._closeClicked;
             }
         },
         /**

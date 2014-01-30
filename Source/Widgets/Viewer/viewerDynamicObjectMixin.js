@@ -87,8 +87,8 @@ define(['../../Core/BoundingSphere',
             viewer.selectedObject = undefined;
         }
 
-        eventHelper.add(infoBoxViewModel.onCamera, trackSelectedObject);
-        eventHelper.add(infoBoxViewModel.onCloseInfo, infoBoxClosed);
+        eventHelper.add(infoBoxViewModel.cameraClicked, trackSelectedObject);
+        eventHelper.add(infoBoxViewModel.closeClicked, infoBoxClosed);
 
         var scratchVertexPositions;
         var scratchBoundingSphere;
