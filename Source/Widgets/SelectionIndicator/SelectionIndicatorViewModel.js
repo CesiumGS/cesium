@@ -23,39 +23,18 @@ define([
 
     var screenSpacePos = new Cartesian2();
 
-    function toPx(value) {
-        if (value === 0) {
-            return '0';
-        }
-        return value.toString() + 'px';
-    }
-
-    function shiftPosition(viewModel, position, arrow, screen) {
-        var posX = 0;
-        var posY = 0;
+    function trackPosition(viewModel, position) {
         var container = viewModel._container;
         var containerWidth = container.parentNode.clientWidth;
         var containerHeight = container.parentNode.clientHeight;
+        var indicatorSize = viewModel._selectionIndicatorElement.clientWidth;
+        var halfSize = indicatorSize * 0.5;
 
-        var selectionIndicatorElement = viewModel._selectionIndicatorElement;
-        var width = selectionIndicatorElement.offsetWidth;
-        var height = selectionIndicatorElement.offsetHeight;
+        var posX = Math.min(Math.max(position.x, 0), containerWidth) - halfSize;
+        var posY = Math.min(Math.max(position.y, 0), containerHeight) - halfSize;
 
-        var posMin = width * -0.5;
-        var posMaxY = containerHeight + posMin;
-        var posMaxX = containerWidth + posMin;
-
-        posX = Math.min(Math.max(position.x + posMin, posMin), posMaxX);
-        posY = Math.min(Math.max(position.y + posMin, posMin), posMaxY);
-
-        var positionXPx = toPx(posX);
-        if (viewModel._positionX !== positionXPx) {
-            viewModel._positionX = positionXPx;
-        }
-        var positionYPx = toPx(posY);
-        if (viewModel._positionY !== positionYPx) {
-            viewModel._positionY = positionYPx;
-        }
+        viewModel._positionX = Math.floor(posX + 0.25).toString() + 'px';
+        viewModel._positionY = Math.floor(posY + 0.25).toString() + 'px';
     }
 
     /**
@@ -182,9 +161,7 @@ define([
         if (this.showSelection) {
             if (defined(this._position)) {
                 var pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
-                pos.x = Math.floor(pos.x + 0.25);
-                pos.y = Math.floor(pos.y + 0.25);
-                shiftPosition(this, pos);
+                trackPosition(this, pos);
             }
         }
     };
