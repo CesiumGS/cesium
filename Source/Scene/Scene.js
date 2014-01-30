@@ -854,10 +854,25 @@ define([
         return getTranslucentRenderState(scene._context, translucentAlphaBlend, scene._alphaRenderStateCache, renderState);
     }
 
-    function getTranslucentMRTShaderProgram(scene, shaderProgram) {
-        var cache = scene._translucentShaderCache;
-        var id = shaderProgram.id;
+    var mrtShaderSource =
+        '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
+        '    float ai = czm_gl_FragColor.a;\n' +
+        '    float wzi = czm_alphaWeight(ai);' +
+        '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
+        '    gl_FragData[1] = vec4(ai * wzi);\n';
 
+    var colorShaderSource =
+        '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
+        '    float ai = czm_gl_FragColor.a;\n' +
+        '    float wzi = czm_alphaWeight(ai);' +
+        '    gl_FragColor = vec4(Ci, ai) * wzi;\n';
+
+    var alphaShaderSource =
+        '    float ai = czm_gl_FragColor.a;\n' +
+        '    gl_FragColor = vec4(ai);\n';
+
+    function getTranslucentShaderProgram(scene, shaderProgram, cache, source) {
+        var id = shaderProgram.id;
         var shader = cache[id];
         if (!defined(shader)) {
             var attributeLocations = shaderProgram._attributeLocations;
@@ -866,101 +881,42 @@ define([
 
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
+            renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
 
-            var source = '#extension GL_EXT_draw_buffers : enable \n' +
+            // Discarding the fragment in main is a workaround for ANGLE D3D9
+            // shader compilation errors.
+            var newSource =
+                (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
                 'vec4 czm_gl_FragColor;\n' +
+                'bool czm_discard = false;\n' +
                 renamedFS + '\n\n' +
                 'void main()\n' +
                 '{\n' +
                 '    czm_translucent_main();\n' +
-                '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
-                '    float ai = czm_gl_FragColor.a;\n' +
-                '    float wzi = czm_alphaWeight(ai);' +
-                '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
-                '    gl_FragData[1] = vec4(ai * wzi);\n' +
+                '    if (czm_discard)\n' +
+                '    {\n' +
+                '        discard;\n' +
+                '    }\n' +
+                source +
                 '}\n';
 
-            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
+            shader = scene._context.getShaderCache().getShaderProgram(vs, newSource, attributeLocations);
             cache[id] = shader;
         }
 
         return shader;
+    }
+
+    function getTranslucentMRTShaderProgram(scene, shaderProgram) {
+        return getTranslucentShaderProgram(scene, shaderProgram, scene._translucentShaderCache, mrtShaderSource);
     }
 
     function getTranslucentColorShaderProgram(scene, shaderProgram) {
-        var cache = scene._translucentShaderCache;
-        var id = shaderProgram.id;
-
-        var shader = cache[id];
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var vs = shaderProgram.vertexShaderSource;
-            var fs = shaderProgram.fragmentShaderSource;
-
-            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
-            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
-            renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
-
-            // Discarding the fragment in main is a workaround for ANGLE D3D9
-            // shader compilation errors.
-            var source = 'vec4 czm_gl_FragColor;\n' +
-                'bool czm_discard = false;\n' +
-                renamedFS + '\n\n' +
-                'void main()\n' +
-                '{\n' +
-                '    czm_translucent_main();\n' +
-                '    if (czm_discard)\n' +
-                '    {\n' +
-                '        discard;\n' +
-                '    }\n' +
-                '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
-                '    float ai = czm_gl_FragColor.a;\n' +
-                '    float wzi = czm_alphaWeight(ai);' +
-                '    gl_FragColor = vec4(Ci, ai) * wzi;\n' +
-                '}\n';
-
-            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
-            cache[id] = shader;
-        }
-
-        return shader;
+        return getTranslucentShaderProgram(scene, shaderProgram, scene._translucentShaderCache, colorShaderSource);
     }
 
     function getTranslucentAlphaShaderProgram(scene, shaderProgram) {
-        var cache = scene._alphaShaderCache;
-        var id = shaderProgram.id;
-
-        var shader = cache[id];
-        if (!defined(shader)) {
-            var attributeLocations = shaderProgram._attributeLocations;
-            var vs = shaderProgram.vertexShaderSource;
-            var fs = shaderProgram.fragmentShaderSource;
-
-            var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
-            renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
-            renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
-
-            // Discarding the fragment in main is a workaround for ANGLE D3D9
-            // shader compilation errors.
-            var source = 'vec4 czm_gl_FragColor;\n' +
-                'bool czm_discard = false;\n' +
-                renamedFS + '\n\n' +
-                'void main()\n' +
-                '{\n' +
-                '    czm_translucent_main();\n' +
-                '    if (czm_discard)\n' +
-                '    {\n' +
-                '        discard;\n' +
-                '    }\n' +
-                '    float ai = czm_gl_FragColor.a;\n' +
-                '    gl_FragColor = vec4(ai);\n' +
-                '}\n';
-
-            shader = scene._context.getShaderCache().getShaderProgram(vs, source, attributeLocations);
-            cache[id] = shader;
-        }
-
-        return shader;
+        return getTranslucentShaderProgram(scene, shaderProgram, scene._alphaShaderCache, alphaShaderSource);
     }
 
     function executeTranslucentCommandsInOrder(scene, passState, frustumCommands) {
