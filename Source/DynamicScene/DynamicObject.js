@@ -68,7 +68,8 @@ define(['../Core/createGuid',
         this._propertyChanged = new Event();
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
-                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
+                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', //
+                               'uiShow', 'description'];
     };
 
     defineProperties(DynamicObject.prototype, {
