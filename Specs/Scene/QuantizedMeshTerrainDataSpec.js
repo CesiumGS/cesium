@@ -1,14 +1,18 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/QuantizedMeshTerrainData',
+         'Core/BoundingSphere',
          'Core/Cartesian3',
+         'Core/defined',
          'Core/Math',
          'Scene/GeographicTilingScheme',
          'Scene/TerrainData',
          'ThirdParty/when'
      ], function(
          QuantizedMeshTerrainData,
+         BoundingSphere,
          Cartesian3,
+         defined,
          CesiumMath,
          GeographicTilingScheme,
          TerrainData,
@@ -21,10 +25,14 @@ defineSuite([
      });
 
      describe('upsample', function() {
-         function findVertexWithCoordinates(vb, u, v) {
-             for (var i = 0; i < vb.length; i += 6) {
-                 if (Math.abs(vb[i + 4] - u) < 1e-6 && Math.abs(vb[i + 5] - v) < 1e-6) {
-                     return i / 6;
+         function findVertexWithCoordinates(uBuffer, vBuffer, u, v) {
+             u *= 32767;
+             u |= 0;
+             v *= 32767;
+             v |= 0;
+             for (var i = 0; i < uBuffer.length; ++i) {
+                 if (Math.abs(uBuffer[i] - u) <= 1 && Math.abs(vBuffer[i] - v) <= 1) {
+                     return i;
                  }
              }
              return -1;
@@ -57,131 +65,164 @@ defineSuite([
 
          it('works for all four children of a simple quad', function() {
              var data = new QuantizedMeshTerrainData({
-                 center : new Cartesian3(0.0, 0.0, 0.0),
-                 vertexBuffer : new Float32Array([
-                                                  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
-                                                  0.0, 1.0, 0.0, 2.0, 0.0, 1.0, // nw
-                                                  1.0, 0.0, 0.0, 3.0, 1.0, 0.0, // se
-                                                  1.0, 1.0, 0.0, 4.0, 1.0, 1.0  // ne
+                 minimumHeight : 0.0,
+                 maximumHeight : 4.0,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
                                                   ]),
-                 indexBuffer : new Uint32Array([
+                 indices : new Uint16Array([
                                                 0, 3, 1,
                                                 0, 2, 3
-                                                ])
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [],
+                 southIndices : [],
+                 eastIndices : [],
+                 northIndices : [],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
              });
 
              var tilingScheme = new GeographicTilingScheme();
 
-             for (var y = 0; y <= 1; ++y) {
-                 for (var x = 0; x <= 1; ++x) {
-                     var upsampled = data.upsample(tilingScheme, 0, 0, 0, x, y, 1);
-                     var vb = upsampled._vertexBuffer;
-                     var ib = upsampled._indexBuffer;
+             var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
 
-                     expect(vb.length).toBe(4 * 6);
+             var upsampleResults;
+
+             when.all([swPromise, sePromise, nwPromise, nePromise], function(results) {
+                 upsampleResults = results;
+             });
+
+             waitsFor(function() {
+                 return defined(upsampleResults);
+             });
+
+             runs(function() {
+                 expect(upsampleResults.length).toBe(4);
+
+                 for (var i = 0; i < upsampleResults.length; ++i) {
+                     var upsampled = upsampleResults[i];
+                     expect(upsampled).toBeDefined();
+
+                     var uBuffer = upsampled._uValues;
+                     var vBuffer = upsampled._vValues;
+                     var ib = upsampled._indices;
+
+                     expect(uBuffer.length).toBe(4);
+                     expect(vBuffer.length).toBe(4);
+                     expect(upsampled._heightValues.length).toBe(4);
                      expect(ib.length).toBe(6);
 
-                     var sw = findVertexWithCoordinates(vb, 0.0, 0.0);
+                     var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
                      expect(sw).not.toBe(-1);
-                     var nw = findVertexWithCoordinates(vb, 0.0, 1.0);
+                     var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
                      expect(nw).not.toBe(-1);
-                     var se = findVertexWithCoordinates(vb, 1.0, 0.0);
+                     var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
                      expect(se).not.toBe(-1);
-                     var ne = findVertexWithCoordinates(vb, 1.0, 1.0);
+                     var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
                      expect(ne).not.toBe(-1);
 
                      var nwToSe = hasTriangle(ib, sw, se, nw) && hasTriangle(ib, nw, se, ne);
                      var swToNe = hasTriangle(ib, sw, ne, nw) && hasTriangle(ib, sw, se, ne);
                      expect(nwToSe || swToNe).toBe(true);
                  }
-             }
+             });
          });
 
          it('works for a quad with an extra vertex in the northwest child', function() {
              var data = new QuantizedMeshTerrainData({
-                 center : new Cartesian3(0.0, 0.0, 0.0),
-                 vertexBuffer : new Float32Array([
-                                                  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
-                                                  0.0, 1.0, 0.0, 2.0, 0.0, 1.0, // nw
-                                                  1.0, 0.0, 0.0, 3.0, 1.0, 0.0, // se
-                                                  1.0, 1.0, 0.0, 4.0, 1.0, 1.0,  // ne
-                                                  0.125, 0.75, 0.0, 6.0, 0.125, 0.75 // extra vertex in nw quadrant
+                 minimumHeight : 0.0,
+                 maximumHeight : 6.0,
+                 quantizedVertices : new Uint16Array([ // order is sw, nw, se, ne, extra vertex in nw quadrant
+                                                      // u
+                                                      0, 0, 32767, 32767, 0.125 * 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767, 0.75 * 32767,
+                                                      // heights
+                                                      32767 / 6.0, 2.0 * 32767 / 6.0, 3.0 * 32767 / 6.0, 4.0 * 32767 / 6.0, 32767
                                                   ]),
-                 indexBuffer : new Uint32Array([
-                                                0, 4, 1,
-                                                0, 2, 4,
-                                                1, 4, 3,
-                                                3, 4, 2
-                                                ])
+                 indices : new Uint16Array([
+                                            0, 4, 1,
+                                            0, 2, 4,
+                                            1, 4, 3,
+                                            3, 4, 2
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [],
+                 southIndices : [],
+                 eastIndices : [],
+                 northIndices : [],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
              });
 
              var tilingScheme = new GeographicTilingScheme();
 
-             var upsampled = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var vb = upsampled._vertexBuffer;
-             var ib = upsampled._indexBuffer;
+             var upsampledPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
 
-             expect(vb.length).toBe(9 * 6);
-             expect(ib.length).toBe(8 * 3);
-
-             var sw = findVertexWithCoordinates(vb, 0.0, 0.0);
-             expect(sw).not.toBe(-1);
-             var nw = findVertexWithCoordinates(vb, 0.0, 1.0);
-             expect(nw).not.toBe(-1);
-             var se = findVertexWithCoordinates(vb, 1.0, 0.0);
-             expect(se).not.toBe(-1);
-             var ne = findVertexWithCoordinates(vb, 1.0, 1.0);
-             expect(ne).not.toBe(-1);
-             var extra = findVertexWithCoordinates(vb, 0.25, 0.5);
-             expect(extra).not.toBe(-1);
-             var v40 = findVertexWithCoordinates(vb, horizontalIntercept(0.0, 0.0, 0.125, 0.75) * 2.0, 0.0);
-             expect(v40).not.toBe(-1);
-             var v42 = findVertexWithCoordinates(vb, horizontalIntercept(0.5, verticalIntercept(1.0, 0.0, 0.125, 0.75), 0.125, 0.75) * 2.0, 0.0);
-             expect(v42).not.toBe(-1);
-             var v402 = findVertexWithCoordinates(vb, horizontalIntercept(0.5, 0.0, 0.125, 0.75) * 2.0, 0.0);
-             expect(v402).not.toBe(-1);
-             var v43 = findVertexWithCoordinates(vb, 1.0, verticalIntercept(1.0, 1.0, 0.125, 0.75) * 2.0 - 1.0);
-             expect(v43).not.toBe(-1);
-
-             expect(hasTriangle(ib, sw, extra, nw)).toBe(true);
-             expect(hasTriangle(ib, sw, v40, extra)).toBe(true);
-             expect(hasTriangle(ib, v40, v402, extra)).toBe(true);
-             expect(hasTriangle(ib, v402, v42, extra)).toBe(true);
-             expect(hasTriangle(ib, extra, v42, v43)).toBe(true);
-             expect(hasTriangle(ib, v42, se, v43)).toBe(true);
-             expect(hasTriangle(ib, nw, v43, ne)).toBe(true);
-             expect(hasTriangle(ib, nw, extra, v43)).toBe(true);
-         });
-
-         it('works when a triangle has two vertices on the boundary and a third outside', function() {
-             var data = new QuantizedMeshTerrainData({
-                 center : new Cartesian3(0.0, 0.0, 0.0),
-                 vertexBuffer : new Float32Array([
-                                                  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
-                                                  0.0, 1.0, 0.0, 2.0, 0.0, 1.0, // nw
-                                                  1.0, 0.0, 0.0, 3.0, 1.0, 0.0, // se
-                                                  1.0, 1.0, 0.0, 4.0, 1.0, 1.0,  // ne
-                                                  0.6, 0.875, 0.0, 5.0, 0.5, 0.875, // extra vertex on boundary
-                                                  0.6, 0.75, 0.0, 6.0, 0.5, 0.75 // extra vertex on boundary
-                                                  ]),
-                 indexBuffer : new Uint32Array([
-                                                5, 2, 4,
-                                                0, 5, 1,
-                                                0, 2, 5,
-                                                1, 5, 4,
-                                                1, 4, 3,
-                                                4, 2, 3
-                                                ])
+             var upsampled;
+             when(upsampledPromise, function(result) {
+                 upsampled = result;
              });
 
-             var tilingScheme = new GeographicTilingScheme();
+             waitsFor(function() {
+                 return defined(upsampled);
+             });
 
-             var upsampled = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var vb = upsampled._vertexBuffer;
-             var ib = upsampled._indexBuffer;
+             runs(function() {
+                 var uBuffer = upsampled._uValues;
+                 var vBuffer = upsampled._vValues;
+                 var ib = upsampled._indices;
 
-             expect(vb.length).toBe(7 * 6);
-             expect(ib.length).toBe(5 * 3);
+                 expect(uBuffer.length).toBe(9);
+                 expect(vBuffer.length).toBe(9);
+                 expect(upsampled._heightValues.length).toBe(9);
+                 expect(ib.length).toBe(8 * 3);
+
+                 var sw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 0.0);
+                 expect(sw).not.toBe(-1);
+                 var nw = findVertexWithCoordinates(uBuffer, vBuffer, 0.0, 1.0);
+                 expect(nw).not.toBe(-1);
+                 var se = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 0.0);
+                 expect(se).not.toBe(-1);
+                 var ne = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, 1.0);
+                 expect(ne).not.toBe(-1);
+                 var extra = findVertexWithCoordinates(uBuffer, vBuffer, 0.25, 0.5);
+                 expect(extra).not.toBe(-1);
+                 var v40 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(0.0, 0.0, 0.125, 0.75) * 2.0, 0.0);
+                 expect(v40).not.toBe(-1);
+                 var v42 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(0.5, verticalIntercept(1.0, 0.0, 0.125, 0.75), 0.125, 0.75) * 2.0, 0.0);
+                 expect(v42).not.toBe(-1);
+                 var v402 = findVertexWithCoordinates(uBuffer, vBuffer, horizontalIntercept(0.5, 0.0, 0.125, 0.75) * 2.0, 0.0);
+                 expect(v402).not.toBe(-1);
+                 var v43 = findVertexWithCoordinates(uBuffer, vBuffer, 1.0, verticalIntercept(1.0, 1.0, 0.125, 0.75) * 2.0 - 1.0);
+                 expect(v43).not.toBe(-1);
+
+                 expect(hasTriangle(ib, sw, extra, nw)).toBe(true);
+                 expect(hasTriangle(ib, sw, v40, extra)).toBe(true);
+                 expect(hasTriangle(ib, v40, v402, extra)).toBe(true);
+                 expect(hasTriangle(ib, v402, v42, extra)).toBe(true);
+                 expect(hasTriangle(ib, extra, v42, v43)).toBe(true);
+                 expect(hasTriangle(ib, v42, se, v43)).toBe(true);
+                 expect(hasTriangle(ib, nw, v43, ne)).toBe(true);
+                 expect(hasTriangle(ib, nw, extra, v43)).toBe(true);
+             });
          });
      });
 });
