@@ -2164,8 +2164,8 @@ define([
 
     var scratchBackBufferArray = [WebGLRenderingContext.BACK];
 
-    function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
+    function beginDraw(context, framebuffer, drawCommand, passState, renderState, shaderProgram) {
+        var rs = defaultValue(defaultValue(renderState, drawCommand.renderState), context._defaultRenderState);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
@@ -2192,14 +2192,14 @@ define([
             }
         }
 
-        var sp = drawCommand.shaderProgram;
+        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
 
         applyRenderState(context, rs, passState);
     }
 
-    function continueDraw(context, drawCommand) {
+    function continueDraw(context, drawCommand, shaderProgram) {
         var primitiveType = drawCommand.primitiveType;
         var va = drawCommand.vertexArray;
         var offset = drawCommand.offset;
@@ -2224,7 +2224,8 @@ define([
         //>>includeEnd('debug');
 
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
-        drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
+        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
+        sp._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
         var indexBuffer = va.getIndexBuffer();
 
@@ -2256,7 +2257,9 @@ define([
      * @memberof Context
      *
      * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {PassState} [passState] The state for the current rendering pass
+     * @param {PassState} [passState] The state for the current rendering pass.
+     * @param {RenderState} [renderState] The render state that will override the render state of the command.
+     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
      *
      * @memberof Context
      *
@@ -2295,7 +2298,7 @@ define([
      * @see Context#createFramebuffer
      * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawCommand, passState) {
+    Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
@@ -2310,8 +2313,8 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand.framebuffer, passState.framebuffer);
 
-        beginDraw(this, framebuffer, drawCommand, passState);
-        continueDraw(this, drawCommand);
+        beginDraw(this, framebuffer, drawCommand, passState, renderState, shaderProgram);
+        continueDraw(this, drawCommand, shaderProgram);
         endDraw(this, framebuffer);
     };
 

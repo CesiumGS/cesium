@@ -674,8 +674,9 @@ define([
         return attributeLocations;
     }
 
-    function createDebugFragmentShaderSource(command, scene) {
-        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
+    function createDebugFragmentShaderProgram(command, scene, context, shaderProgram) {
+        var sp = defaultValue(shaderProgram, command.shaderProgram);
+        var fragmentShaderSource = sp.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
 
         var newMain =
@@ -702,32 +703,29 @@ define([
 
         newMain += '}';
 
-        return renamedFS + '\n' + newMain;
+        var source = renamedFS + '\n' + newMain;
+        var attributeLocations = getAttributeLocations(sp);
+        return context.getShaderCache().getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
-    function executeDebugCommand(command, scene, context, passState) {
-        if (defined(command.shaderProgram)) {
+    function executeDebugCommand(command, scene, context, passState, renderState, shaderProgram) {
+        if (defined(command.shaderProgram) || defined(shaderProgram)) {
             // Replace shader for frustum visualization
-            var sp = command.shaderProgram;
-            var attributeLocations = getAttributeLocations(sp);
-
-            command.shaderProgram = context.getShaderCache().getShaderProgram(
-                sp.vertexShaderSource, createDebugFragmentShaderSource(command, scene), attributeLocations);
-            command.execute(context, passState);
-            command.shaderProgram.release();
-            command.shaderProgram = sp;
+            var sp = createDebugFragmentShaderProgram(command, scene, context, shaderProgram);
+            command.execute(context, passState, renderState, sp);
+            sp.release();
         }
     }
 
-    function executeCommand(command, scene, context, passState) {
+    function executeCommand(command, scene, context, passState, renderState, shaderProgram) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, context, passState);
+            executeDebugCommand(command, scene, context, passState, renderState, shaderProgram);
         } else {
-            command.execute(context, passState);
+            command.execute(context, passState, renderState, shaderProgram);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -943,30 +941,18 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = command.renderState;
-            shaderProgram = command.shaderProgram;
-
-            command.renderState = getTranslucentColorRenderState(scene, renderState);
-            command.shaderProgram = getTranslucentColorShaderProgram(scene, shaderProgram);
-            executeCommand(command, scene, context, passState);
-
-            command.renderState = renderState;
-            command.shaderProgram = shaderProgram;
+            renderState = getTranslucentColorRenderState(scene, command.renderState);
+            shaderProgram = getTranslucentColorShaderProgram(scene, command.shaderProgram);
+            executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
         passState.framebuffer = scene._alphaFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = command.renderState;
-            shaderProgram = command.shaderProgram;
-
-            command.renderState = getTranslucentAlphaRenderState(scene, renderState);
-            command.shaderProgram = getTranslucentAlphaShaderProgram(scene, shaderProgram);
-            executeCommand(command, scene, context, passState);
-
-            command.renderState = renderState;
-            command.shaderProgram = shaderProgram;
+            renderState = getTranslucentAlphaRenderState(scene, command.renderState);
+            shaderProgram = getTranslucentAlphaShaderProgram(scene, command.shaderProgram);
+            executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
         passState.framebuffer = framebuffer;
@@ -981,15 +967,9 @@ define([
         passState.framebuffer = scene._translucentFBO;
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var renderState = command.renderState;
-            var shaderProgram = command.shaderProgram;
-
-            command.renderState = getTranslucentMRTRenderState(scene, renderState);
-            command.shaderProgram = getTranslucentMRTShaderProgram(scene, shaderProgram);
-            executeCommand(command, scene, context, passState);
-
-            command.renderState = renderState;
-            command.shaderProgram = shaderProgram;
+            var renderState = getTranslucentMRTRenderState(scene, command.renderState);
+            var shaderProgram = getTranslucentMRTShaderProgram(scene, command.shaderProgram);
+            executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
         passState.framebuffer = framebuffer;
