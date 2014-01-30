@@ -69,7 +69,7 @@ define(['../../Core/BoundingSphere',
         //Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
-            if (defined(dynamicObjectView) && trackedObject.uiShow) {
+            if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(time);
             }
         }
