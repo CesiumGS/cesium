@@ -13,7 +13,7 @@ defineSuite([
             return new BoxOutlineGeometry({
                 maximumCorner : new Cartesian3()
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without maximum corner', function() {
@@ -21,7 +21,7 @@ defineSuite([
             return new BoxOutlineGeometry({
                 minimumCorner : new Cartesian3()
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor creates positions', function() {
@@ -37,7 +37,7 @@ defineSuite([
     it('fromDimensions throws without dimensions', function() {
         expect(function() {
             return BoxOutlineGeometry.fromDimensions();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromDimensions throws with negative dimensions', function() {
@@ -45,7 +45,7 @@ defineSuite([
             return BoxOutlineGeometry.fromDimensions({
                 dimensions : new Cartesian3(1, 2, -1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromDimensions', function() {

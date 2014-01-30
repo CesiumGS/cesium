@@ -118,7 +118,7 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeIndices);
+        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -442,7 +442,7 @@ define([
                     });
                     centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                         geometry : geometry,
-                        attributeIndices : {
+                        attributeLocations : {
                             position : 0
                         },
                         bufferUsage : BufferUsage.STREAM_DRAW
@@ -491,7 +491,7 @@ define([
                      });
                      centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                          geometry : geometry,
-                         attributeIndices : {
+                         attributeLocations : {
                              position : 0
                          },
                          bufferUsage : BufferUsage.STREAM_DRAW
@@ -624,7 +624,7 @@ define([
             });
             this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : {
+                attributeLocations : {
                     position : 0
                 },
                 bufferUsage : BufferUsage.DYNAMIC_DRAW
@@ -726,7 +726,7 @@ define([
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
+                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;

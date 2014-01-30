@@ -108,7 +108,7 @@ define([
         this._blendCommand.execute(context, this._upSamplePassState);
     };
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -150,7 +150,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -184,14 +184,14 @@ define([
             downSampleCommand.owner = this;
             downSampleCommand.primitiveType = primitiveType;
             downSampleCommand.vertexArray = vertexArray;
-            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
+            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
             downSampleCommand.uniformMap = {};
 
             var brightPassCommand = this._brightPassCommand = new DrawCommand();
             brightPassCommand.owner = this;
             brightPassCommand.primitiveType = primitiveType;
             brightPassCommand.vertexArray = vertexArray;
-            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeIndices);
+            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeLocations);
             brightPassCommand.uniformMap = {
                 u_avgLuminance : function() {
                     // A guess at the average luminance across the entire scene
@@ -212,7 +212,7 @@ define([
             blurXCommand.owner = this;
             blurXCommand.primitiveType = primitiveType;
             blurXCommand.vertexArray = vertexArray;
-            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
+            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
             blurXCommand.uniformMap = {
                 delta : function() {
                     return delta;
@@ -229,7 +229,7 @@ define([
             blurYCommand.owner = this;
             blurYCommand.primitiveType = primitiveType;
             blurYCommand.vertexArray = vertexArray;
-            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
+            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
             blurYCommand.uniformMap = {
                 delta : function() {
                     return delta;
@@ -246,7 +246,7 @@ define([
             additiveBlendCommand.owner = this;
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
-            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
+            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeLocations);
             additiveBlendCommand.uniformMap = {
                 u_center : function() {
                     return that._uCenter;
@@ -260,7 +260,7 @@ define([
             fullScreenCommand.owner = this;
             fullScreenCommand.primitiveType = primitiveType;
             fullScreenCommand.vertexArray = vertexArray;
-            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
+            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
             fullScreenCommand.uniformMap = {};
         }
 

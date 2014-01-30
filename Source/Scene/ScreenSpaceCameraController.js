@@ -55,13 +55,14 @@ define([
      * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
-
         if (!defined(cameraController)) {
             throw new DeveloperError('cameraController is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
@@ -1007,6 +1008,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
+        this._animationCollection.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();

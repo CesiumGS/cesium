@@ -41,6 +41,27 @@ define([
         topojson) {
     "use strict";
 
+    function describe(properties, nameProperty) {
+        var html = '<table class="cesium-geoJsonDataSourceTable">';
+        for ( var key in properties) {
+            if (properties.hasOwnProperty(key)) {
+                if (key === nameProperty) {
+                    continue;
+                }
+                var value = properties[key];
+                if (defined(value)) {
+                    if (typeof value === 'object') {
+                        html += '<tr><td>' + key + '</td><td>' + describe(value) + '</td></tr>';
+                    } else {
+                        html += '<tr><td>' + key + '</td><td>' + value + '</td></tr>';
+                    }
+                }
+            }
+        }
+        html += '</table>';
+        return html;
+    }
+
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple dynamicObject,
     //we can't use it for them either.
@@ -57,8 +78,45 @@ define([
             }
             id = finalId;
         }
+
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
+
+        var properties = geoJson.properties;
+        if (defined(properties)) {
+            //Try and find a good name for the object from its meta-data
+            //TODO: Make both name and description creation user-configurable.
+            var key;
+            var nameProperty;
+            for (key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var upperKey = key.toUpperCase();
+                    if (upperKey === 'NAME' || upperKey === 'TITLE') {
+                        nameProperty = key;
+                        dynamicObject.name = properties[key];
+                        break;
+                    }
+                }
+            }
+            if (!defined(nameProperty)) {
+                for (key in properties) {
+                    if (properties.hasOwnProperty(key)) {
+                        if (/name/i.test(key) || /title/i.test(key)) {
+                            nameProperty = key;
+                            dynamicObject.name = properties[key];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            var description = describe(properties, nameProperty);
+            dynamicObject.description = {
+                getValue : function() {
+                    return description;
+                }
+            };
+        }
         return dynamicObject;
     }
 
@@ -203,11 +261,11 @@ define([
      *
      * @example
      * //Use a billboard instead of a point.
-     * var dataSource = new GeoJsonDataSource();
+     * var dataSource = new Cesium.GeoJsonDataSource();
      * var defaultPoint = dataSource.defaulPoint;
      * defaultPoint.point = undefined;
-     * var billboard = new DynamicBillboard();
-     * billboard.image = new ConstantProperty('image.png');
+     * var billboard = new Cesium.DynamicBillboard();
+     * billboard.image = new Cesium.ConstantProperty('image.png');
      * defaultPoint.billboard = billboard;
      * dataSource.loadUrl('sample.geojson');
      */
@@ -343,9 +401,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     GeoJsonDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(geoJson) {
@@ -373,9 +433,11 @@ define([
      * @exception {RuntimeError} Unknown crs type.
      */
     GeoJsonDataSource.prototype.load = function(geoJson, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(geoJson)) {
             throw new DeveloperError('geoJson is required.');
         }
+        //>>includeEnd('debug');
 
         this._name = undefined;
         if (defined(source)) {

@@ -65,33 +65,33 @@ define([
         // Throw if a texture and renderbuffer are attached to the same point.  This won't
         // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(description.colorTextures) && defined(description.colorRenderbuffers)) {
             throw new DeveloperError('Cannot have both color texture and color renderbuffer attachments.');
         }
-
         if (defined(description.depthTexture) && defined(description.depthRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth texture and depth renderbuffer attachment.');
         }
-
         if (defined(description.depthStencilTexture) && defined(description.depthStencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.');
         }
+        //>>includeEnd('debug');
 
         // Avoid errors defined in Section 6.5 of the WebGL spec
         var depthAttachment = (defined(description.depthTexture) || defined(description.depthRenderbuffer));
         var depthStencilAttachment = (defined(description.depthStencilTexture) || defined(description.depthStencilRenderbuffer));
 
+        //>>includeStart('debug', pragmas.debug);
         if (depthAttachment && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
         }
-
         if (defined(description.stencilRenderbuffer) && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
         }
-
         if (depthAttachment && defined(description.stencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth and stencil attachment.');
         }
+        //>>includeEnd('debug');
 
         ///////////////////////////////////////////////////////////////////
 
@@ -107,16 +107,20 @@ define([
             var textures = description.colorTextures;
             length = this._colorTextures.length = this._activeColorAttachments.length = textures.length;
 
+            //>>includeStart('debug', pragmas.debug);
             if (length > maximumColorAttachments) {
                 throw new DeveloperError('The number of color attachments exceeds the number supported.');
             }
+            //>>includeEnd('debug');
 
             for (i = 0; i < length; ++i) {
                 texture = textures[i];
 
+                //>>includeStart('debug', pragmas.debug);
                 if (!PixelFormat.isColorFormat(texture.getPixelFormat())) {
                     throw new DeveloperError('The color-texture pixel-format must be a color format.');
                 }
+                //>>includeEnd('debug');
 
                 attachmentEnum = this._gl.COLOR_ATTACHMENT0 + i;
                 attachTexture(this, attachmentEnum, texture);
@@ -129,9 +133,11 @@ define([
             var renderbuffers = description.colorRenderbuffers;
             length = this._colorRenderbuffers.length = this._activeColorAttachments.length = renderbuffers.length;
 
+            //>>includeStart('debug', pragmas.debug);
             if (length > maximumColorAttachments) {
                 throw new DeveloperError('The number of color attachments exceeds the number supported.');
             }
+            //>>includeEnd('debug');
 
             for (i = 0; i < length; ++i) {
                 renderbuffer = renderbuffers[i];
@@ -145,9 +151,11 @@ define([
         if (defined(description.depthTexture)) {
             texture = description.depthTexture;
 
+            //>>includeStart('debug', pragmas.debug);
             if (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT) {
                 throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
             }
+            //>>includeEnd('debug');
 
             attachTexture(this, this._gl.DEPTH_ATTACHMENT, texture);
             this._depthTexture = texture;
@@ -168,9 +176,11 @@ define([
         if (defined(description.depthStencilTexture)) {
             texture = description.depthStencilTexture;
 
+            //>>includeStart('debug', pragmas.debug);
             if (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL) {
                 throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
             }
+            //>>includeEnd('debug');
 
             attachTexture(this, this._gl.DEPTH_STENCIL_ATTACHMENT, texture);
             this._depthStencilTexture = texture;
@@ -223,9 +233,12 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.getColorTexture = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorTextures.length) {
             throw new DeveloperError('index is required, must be greater than or equal to zero and must be less than the number of color attachments.');
         }
+        //>>includeEnd('debug');
+
         return this._colorTextures[index];
     };
 
@@ -242,9 +255,12 @@ define([
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
     Framebuffer.prototype.getColorRenderbuffer = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorRenderbuffers.length) {
             throw new DeveloperError('index is required, must be greater than or equal to zero and must be less than the number of color attachments.');
         }
+        //>>includeEnd('debug');
+
         return this._colorRenderbuffers[index];
     };
 

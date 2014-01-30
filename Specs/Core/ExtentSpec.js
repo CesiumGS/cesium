@@ -156,7 +156,7 @@ defineSuite([
     it('fromCartographicArray throws with no array', function() {
         expect(function() {
             Extent.fromCartographicArray(undefined, new Extent());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with no west', function() {
@@ -164,7 +164,7 @@ defineSuite([
         extent.west = undefined;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with no south', function() {
@@ -172,7 +172,7 @@ defineSuite([
         extent.south = undefined;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with no east', function() {
@@ -180,7 +180,7 @@ defineSuite([
         extent.east = undefined;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with no north', function() {
@@ -188,7 +188,7 @@ defineSuite([
         extent.north = undefined;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with bad west', function() {
@@ -196,7 +196,7 @@ defineSuite([
         extent.west = Math.PI * 2;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with bad south', function() {
@@ -204,7 +204,7 @@ defineSuite([
         extent.south = Math.PI * 2;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with bad east', function() {
@@ -212,7 +212,7 @@ defineSuite([
         extent.east = Math.PI * 2;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('validate throws with bad north', function() {
@@ -220,7 +220,7 @@ defineSuite([
         extent.north = Math.PI * 2;
         expect(function() {
             extent.validate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getSouthwest works without a result parameter', function() {
@@ -456,20 +456,20 @@ defineSuite([
         var other = new Extent();
         expect(function() {
             extent.equalsEpsilon(other, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('intersectWith throws with no extent', function() {
         var extent = new Extent(west, south, east, north);
         expect(function() {
             extent.intersectWith(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('contains throws with no cartographic', function() {
         var extent = new Extent(west, south, east, north);
         expect(function() {
             extent.contains(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

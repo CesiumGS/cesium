@@ -26,28 +26,28 @@ defineSuite([
     it('credit display throws with no container', function() {
         expect(function() {
             return new CreditDisplay();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('credit display addCredit throws when credit is undefined', function() {
         expect(function() {
             var creditDisplay = new CreditDisplay();
             creditDisplay.addCredit();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('credit display addDefaultCredit throws when credit is undefined', function() {
         expect(function() {
             var creditDisplay = new CreditDisplay();
             creditDisplay.addDefaultCredit();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('credit display removeDefaultCredit throws when credit is undefined', function() {
         expect(function() {
             var creditDisplay = new CreditDisplay();
             creditDisplay.removeDevaultCredit();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('credit display displays text credit', function() {

@@ -950,13 +950,13 @@ define([
      *
      * @example
      * // 1. compute the squad interpolation between two quaternions on a curve
-     * var s0 = Quaternion.innerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
-     * var s1 = Quaternion.innerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
-     * var q = Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
+     * var s0 = Cesium.Quaternion.innerQuadrangle(quaternions[i - 1], quaternions[i], quaternions[i + 1]);
+     * var s1 = Cesium.Quaternion.innerQuadrangle(quaternions[i], quaternions[i + 1], quaternions[i + 2]);
+     * var q = Cesium.Quaternion.squad(quaternions[i], quaternions[i + 1], s0, s1, t);
      *
      * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
-     * var s1 = Quaternion.innerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
-     * var q = Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
+     * var s1 = Cesium.Quaternion.innerQuadrangle(quaternions[0], quaternions[1], quaternions[2]);
+     * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t);
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);

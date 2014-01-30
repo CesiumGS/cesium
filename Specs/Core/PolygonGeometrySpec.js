@@ -23,19 +23,19 @@ defineSuite([
     it('throws without hierarchy', function() {
         expect(function() {
             return new PolygonGeometry();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without positions', function() {
         expect(function() {
             return PolygonGeometry.fromPositions();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with less than three positions', function() {
         expect(function() {
             return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({ positions : [new Cartesian3()] }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with polygon hierarchy with less than three positions', function() {
@@ -47,7 +47,7 @@ defineSuite([
 
         expect(function() {
             return PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate positions', function() {
@@ -62,7 +62,7 @@ defineSuite([
                 ],
                 ellipsoid : ellipsoid
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate positions extruded', function() {
@@ -78,7 +78,7 @@ defineSuite([
                 ellipsoid : ellipsoid,
                 extrudedHeight: 2
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate hierarchy positions', function() {
@@ -103,7 +103,7 @@ defineSuite([
                 polygonHierarchy : hierarchy,
                 ellipsoid : ellipsoid
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

@@ -42,11 +42,11 @@ define([
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Camera(context);
-     * camera.position = new Cartesian3();
-     * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-     * camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = CesiumMath.PI_OVER_THREE;
+     * var camera = new Cesium.Camera(context);
+     * camera.position = new Cesium.Cartesian3();
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
+     * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
+     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -54,9 +54,11 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
     var Camera = function(context) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
@@ -381,9 +383,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.inverseTransform, cartesian, result);
     };
 
@@ -399,9 +404,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.transform, cartesian, result);
     };
 

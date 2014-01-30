@@ -27,7 +27,7 @@ defineSuite([
     it('throws without polyline positions', function() {
         expect(function() {
             return new PolylineVolumeOutlineGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without shape positions', function() {
@@ -35,7 +35,7 @@ defineSuite([
             return new PolylineVolumeOutlineGeometry({
                 polylinePositions: [new Cartesian3()]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without 2 unique polyline positions', function() {
@@ -44,7 +44,7 @@ defineSuite([
                 polylinePositions: [new Cartesian3()],
                 shapePositions: shape
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without 3 unique shape positions', function() {
@@ -53,7 +53,7 @@ defineSuite([
                 polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
                 shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

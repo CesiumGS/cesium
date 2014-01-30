@@ -17,7 +17,7 @@ defineSuite([
             return new SphereGeometry({
                 stackPartitions : -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with invalid slicePartitions', function() {
@@ -25,7 +25,7 @@ defineSuite([
             return new SphereGeometry({
                 slicePartitions : -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

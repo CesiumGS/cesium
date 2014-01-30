@@ -222,7 +222,7 @@ defineSuite(['Core/Color',
     it('fromCssColorString throws with undefined', function() {
         expect(function() {
             Color.fromCssColorString(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromHsl produces expected output', function() {
@@ -296,7 +296,7 @@ defineSuite(['Core/Color',
                 minimumRed : 1,
                 maximumRed : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRandom throws with invalid minimum-maximum green values', function() {
@@ -305,7 +305,7 @@ defineSuite(['Core/Color',
                 minimumGreen : 1,
                 maximumGreen : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRandom throws with invalid minimum-maximum blue values', function() {
@@ -314,7 +314,7 @@ defineSuite(['Core/Color',
                 minimumBlue : 1,
                 maximumBlue : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRandom throws with invalid minimum-maximum alpha values', function() {
@@ -323,7 +323,7 @@ defineSuite(['Core/Color',
                 minimumAlpha : 1,
                 maximumAlpha : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('toString produces correct results', function() {

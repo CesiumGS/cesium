@@ -71,7 +71,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
+            attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(1);
@@ -101,7 +101,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+            attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             vertexLayout : VertexLayout.INTERLEAVED,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
@@ -138,7 +138,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
+            attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
@@ -180,7 +180,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+            attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -225,7 +225,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+            attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -273,10 +273,10 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -303,7 +303,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeIndices);
+        sp = context.createShaderProgram(vs, fs, attributeLocations);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -334,10 +334,10 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -358,7 +358,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeIndices);
+        sp = context.createShaderProgram(vs, fs, attributeLocations);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -409,10 +409,10 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -436,7 +436,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeIndices);
+        sp = context.createShaderProgram(vs, fs, attributeLocations);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -477,10 +477,10 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -508,7 +508,7 @@ defineSuite([
             'void main() { ' +
             '  gl_FragColor = fsColor; ' +
             '}';
-        sp = context.createShaderProgram(vs, fs, attributeIndices);
+        sp = context.createShaderProgram(vs, fs, attributeLocations);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -539,7 +539,7 @@ defineSuite([
             '  }' +
             '}';
         sp = sp.destroy();
-        sp = context.createShaderProgram(vs2, fs, attributeIndices);
+        sp = context.createShaderProgram(vs2, fs, attributeLocations);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -614,7 +614,7 @@ defineSuite([
         expect(function() {
             return context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : {
+                attributeLocations : {
                     position : 0,
                     normal : 0
                 }

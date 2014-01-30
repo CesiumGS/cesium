@@ -55,11 +55,11 @@ define([
      * @see EllipsoidGeometry#createGeometry
      *
      * @example
-     * var ellipsoid = new EllipsoidGeometry({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0)
+     * var ellipsoid = new Cesium.EllipsoidGeometry({
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+     *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0)
      * });
-     * var geometry = EllipsoidGeometry.createGeometry(ellipsoid);
+     * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -69,13 +69,14 @@ define([
         var slicePartitions = defaultValue(options.slicePartitions, 64);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (slicePartitions < 3) {
             throw new DeveloperError ('options.slicePartitions cannot be less than three.');
         }
-
         if (stackPartitions < 3) {
             throw new DeveloperError('options.stackPartitions cannot be less than three.');
         }
+        //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
         this._stackPartitions = stackPartitions;

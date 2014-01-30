@@ -311,25 +311,25 @@ defineSuite([
     it('throws when constructed without a context', function() {
         expect(function() {
             return new VertexArrayFacade(undefined, undefined, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed undefined attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, undefined, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes without componentsPerAttribute', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{}]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with an invalid componentDatatype', function() {
@@ -338,7 +338,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 componentDatatype : 'invalid component datatype'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with an invalid usage', function() {
@@ -347,7 +347,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 usage : 'invalid component usage'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices', function() {
@@ -359,7 +359,7 @@ defineSuite([
                 index : 0,
                 componentsPerAttribute : 1
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices for the same purpose.', function() {
@@ -373,7 +373,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 purpose : 'foo'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices and only one specifies a purpose.', function() {
@@ -386,7 +386,7 @@ defineSuite([
                 index : 0,
                 componentsPerAttribute : 1
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new VertexArrayFacade(context, [{
@@ -397,7 +397,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 purpose : 'foo'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('subCommit throws when passed an invalid offsetInVertices', function() {
@@ -411,14 +411,14 @@ defineSuite([
 
         expect(function() {
             vaf.subCommit(-1, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             vaf.subCommit(10, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             vaf.subCommit(1, 10);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

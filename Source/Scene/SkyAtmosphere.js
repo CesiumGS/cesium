@@ -49,7 +49,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
      *
      * @example
-     * scene.skyAtmosphere = new SkyAtmosphere();
+     * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
      * @see Scene.skyAtmosphere
      */
@@ -145,7 +145,7 @@ define([
             }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+                attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;

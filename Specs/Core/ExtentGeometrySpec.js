@@ -35,8 +35,8 @@ defineSuite([
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
-        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqual(expectedNWCorner);
-        expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqual(expectedSECorner);
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
+        expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
     });
 
     it('computes all attributes', function() {
@@ -125,7 +125,7 @@ defineSuite([
     it('throws without extent', function() {
         expect(function() {
             return new ExtentGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if rotated extent is invalid', function() {
@@ -134,7 +134,7 @@ defineSuite([
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if east is less than west', function() {
@@ -142,7 +142,7 @@ defineSuite([
             return new ExtentGeometry({
                 extent : new Extent(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if north is less than south', function() {
@@ -150,7 +150,7 @@ defineSuite([
             return new ExtentGeometry({
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions extruded', function() {

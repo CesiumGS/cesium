@@ -19,7 +19,7 @@ defineSuite([
     it('throws without positions', function() {
         expect(function() {
             return new CorridorOutlineGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without 2 unique positions', function() {
@@ -32,7 +32,7 @@ defineSuite([
                 ]),
                 width: 10000
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without width', function() {
@@ -40,7 +40,7 @@ defineSuite([
             return new CorridorOutlineGeometry({
                 positions: [new Cartesian3()]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

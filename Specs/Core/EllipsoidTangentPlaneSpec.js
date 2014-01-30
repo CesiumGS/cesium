@@ -134,40 +134,40 @@ defineSuite([
     it('constructor throws without origin', function() {
         expect(function() {
             return new EllipsoidTangentPlane(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if origin is at the center of the ellipsoid', function() {
         expect(function() {
             return new EllipsoidTangentPlane(Cartesian3.ZERO, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromPoints throws without cartesians', function() {
         expect(function() {
             return EllipsoidTangentPlane.fromPoints(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointOntoPlane throws without cartesian', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointOntoPlane(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoPlane throws without cartesians', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointsOntoPlane(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoEllipsoid throws without cartesians', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointsOntoEllipsoid(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {
