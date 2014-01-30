@@ -40,7 +40,7 @@ define([
      */
     var UniformState = function() {
         this._viewport = new BoundingRectangle();
-        this._viewportCartesain4 = new Cartesian4();
+        this._viewportCartesian4 = new Cartesian4();
         this._viewportDirty = false;
         this._viewportOrthographicMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._viewportTransformation = Matrix4.clone(Matrix4.IDENTITY);
