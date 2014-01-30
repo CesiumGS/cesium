@@ -6,7 +6,6 @@ define([
         '../Core/defined',
         '../Core/loadArrayBuffer',
         '../Core/loadJson',
-        '../Core/makeRelativeUrlAbsolute',
         '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -16,6 +15,7 @@ define([
         './QuantizedMeshTerrainData',
         './TerrainProvider',
         './TileProviderError',
+        '../ThirdParty/Uri',
         '../ThirdParty/when'
     ], function(
         BoundingSphere,
@@ -24,7 +24,6 @@ define([
         defined,
         loadArrayBuffer,
         loadJson,
-        makeRelativeUrlAbsolute,
         throttleRequestByServer,
         DeveloperError,
         Event,
@@ -34,6 +33,7 @@ define([
         QuantizedMeshTerrainData,
         TerrainProvider,
         TileProviderError,
+        Uri,
         when) {
     "use strict";
 
@@ -122,7 +122,7 @@ define([
 
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                that._tileUrlTemplates[i] = makeRelativeUrlAbsolute(metadataUrl, that._tileUrlTemplates[i]).replace('{version}', data.version);
+                that._tileUrlTemplates[i] = Uri.resolve(that._tileUrlTemplates[i], metadataUrl).replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
