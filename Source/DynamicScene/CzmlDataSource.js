@@ -1024,7 +1024,6 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, ellipse, 'fill', ellipseData.fill, interval, sourceUri);
         processPacketData(Boolean, ellipse, 'outline', ellipseData.outline, interval, sourceUri);
         processPacketData(Color, ellipse, 'outlineColor', ellipseData.outlineColor, interval, sourceUri);
-        processPacketData(Number, ellipse, 'outlineWidth', ellipseData.outlineWidth, interval, sourceUri);
     }
 
     function processEllipsoid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1049,7 +1048,6 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri);
         processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri);
         processPacketData(Color, ellipsoid, 'outlineColor', ellipsoidData.outlineColor, interval, sourceUri);
-        processPacketData(Number, ellipsoid, 'outlineWidth', ellipsoidData.outlineWidth, interval, sourceUri);
     }
 
     function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1156,7 +1154,6 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri);
         processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri);
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri);
-        processPacketData(Number, polygon, 'outlineWidth', polygonData.outlineWidth, interval, sourceUri);
     }
 
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {

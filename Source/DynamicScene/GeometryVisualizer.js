@@ -10,9 +10,9 @@ define(['../Core/defined',
         //'./DynamicGeometryBatch',
         './DynamicObjectCollection',
         './GeometryBatchType',
-        './StaticGeometryColorBatch'//,
+        './StaticGeometryColorBatch',
         //'./StaticGeometryPerMaterialBatch',
-        //'./StaticOutlineGeometryBatch'
+        './StaticOutlineGeometryBatch'
     ], function(
         defined,
         DeveloperError,
@@ -25,9 +25,9 @@ define(['../Core/defined',
         //DynamicGeometryBatch,
         DynamicObjectCollection,
         GeometryBatchType,
-        StaticGeometryColorBatch) {//,
+        StaticGeometryColorBatch,
         //StaticGeometryPerMaterialBatch,
-        //StaticOutlineGeometryBatch) {
+        StaticOutlineGeometryBatch) {
     "use strict";
 
     var emptyArray = [];
@@ -71,7 +71,7 @@ define(['../Core/defined',
         this._addedObjects = new DynamicObjectCollection();
         this._removedObjects = new DynamicObjectCollection();
 
-        //this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
+        this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
 
         this._batches = [];
         this._batches[GeometryBatchType.COLOR.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType);
@@ -155,6 +155,8 @@ define(['../Core/defined',
                 batch.remove(updater);
             }
 
+            this._outlineBatch.remove(updater);
+
             updater.destroy();
             this._updaters.remove(id);
         }
@@ -168,6 +170,9 @@ define(['../Core/defined',
             if (defined(batch)) {
                 batch.add(time, updater);
             }
+            if (updater.hasOutline) {
+                this._outlineBatch.add(time, updater);
+            }
         }
 
         addedObjects.removeAll();
@@ -176,6 +181,7 @@ define(['../Core/defined',
         for (g = 0; g < batches.length; g++) {
             batches[g].update(time);
         }
+        this._outlineBatch.update(time);
     };
 
     /**

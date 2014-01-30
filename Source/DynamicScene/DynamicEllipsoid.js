@@ -75,13 +75,6 @@ define(['../Core/defaultValue',
         outline : createDynamicPropertyDescriptor('outline', '_outline'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying whether the width of the outline.
-         * @memberof DynamicEllipsoid.prototype
-         * @type {Property}
-         */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
-
-        /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
@@ -107,7 +100,6 @@ define(['../Core/defaultValue',
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
-        result.outlineWidth = this.outlineWidth;
         return result;
     };
 
@@ -132,7 +124,6 @@ define(['../Core/defaultValue',
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
     };
 
     return DynamicEllipsoid;

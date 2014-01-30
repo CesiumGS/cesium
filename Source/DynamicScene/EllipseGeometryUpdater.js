@@ -1,45 +1,35 @@
 /*global define*/
 define(['../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/GeometryInstance',
         '../Core/EllipseGeometry',
+        '../Core/EllipseOutlineGeometry',
+        '../Core/Event',
+        '../Core/GeometryInstance',
         '../Core/Iso8601',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/ConstantPositionProperty',
+        '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/GeometryBatchType',
-        '../Scene/Primitive',
         '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Material',
-        './MaterialProperty'
+        '../Scene/PerInstanceColorAppearance'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
+        defined,
         defineProperties,
         DeveloperError,
-        Event,
-        ShowGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        GeometryInstance,
         EllipseGeometry,
+        EllipseOutlineGeometry,
+        Event,
+        GeometryInstance,
         Iso8601,
-        ConstantProperty,
-        ConstantPositionProperty,
+        ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         GeometryBatchType,
-        Primitive,
         MaterialAppearance,
-        PerInstanceColorAppearance,
-        Material,
-        MaterialProperty) {
+        PerInstanceColorAppearance) {
     "use strict";
 
     var GeometryOptions = function(dynamicObject) {
@@ -67,8 +57,11 @@ define(['../Core/Color',
         this._ellipseSubscription = undefined;
         this._geometryType = GeometryBatchType.NONE;
         this._geometryChanged = new Event();
-        this._geometryInstance = undefined;
         this._options = new GeometryOptions(dynamicObject);
+        this._hasOutline = false;
+        this._showOutline = undefined;
+        this._outlineColor = undefined;
+        this._outlineGeometryChanged = new Event();
         this._onDynamicObjectPropertyChanged(dynamicObject, 'ellipse', dynamicObject.ellipse, undefined);
     };
 
@@ -78,38 +71,42 @@ define(['../Core/Color',
 
     EllipseGeometryUpdater.prototype.createGeometryInstance = function(time) {
         var attributes;
-        if (!defined(this._geometryInstance)) {
-            if (this._geometryType === GeometryBatchType.COLOR) {
-                attributes = {
-                    show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true),
-                    color : ColorGeometryInstanceAttribute.fromColor(defined(this._material) && defined(this._material.color) ? this._material.color.getValue(time) : Color.WHTE)
-                };
-            } else if (this._geometryType === GeometryBatchType.MATERIAL) {
-                attributes = {
-                    show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true)
-                };
-            }
-
-            this._geometryInstance = new GeometryInstance({
-                id : this._dynamicObject,
-                geometry : new EllipseGeometry(this._options),
-                attributes : attributes
-            });
-        } else {
-            attributes = this._geometryInstance.attributes;
-            if (this._geometryType === GeometryBatchType.COLOR) {
-                attributes = {
-                    show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true),
-                    color : ColorGeometryInstanceAttribute.fromColor(defined(this._material) && defined(this._material.color) ? this._material.color.getValue(time) : Color.WHTE)
-                };
-            } else if (this._geometryType === GeometryBatchType.MATERIAL) {
-                attributes = {
-                    show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true)
-                };
-            }
+        if (this._geometryType === GeometryBatchType.COLOR) {
+            attributes = {
+                show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true),
+                color : ColorGeometryInstanceAttribute.fromColor(defined(this._material) && defined(this._material.color) ? this._material.color.getValue(time) : Color.WHTE)
+            };
+        } else if (this._geometryType === GeometryBatchType.MATERIAL) {
+            attributes = {
+                show : new ShowGeometryInstanceAttribute(defined(this._show) ? this._show.getValue(time) : true)
+            };
         }
 
-        return this._geometryInstance;
+        return new GeometryInstance({
+            id : this._dynamicObject,
+            geometry : new EllipseGeometry(this._options),
+            attributes : attributes
+        });
+    };
+
+    EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+        var attributes;
+        if (this._geometryType === GeometryBatchType.COLOR) {
+            attributes = {
+                show : new ShowGeometryInstanceAttribute(defined(this._showOutline) ? this._showOutline.getValue(time) : true),
+                color : ColorGeometryInstanceAttribute.fromColor(defined(this._outlineColor) ? this._outlineColor.getValue(time) : Color.BLACK)
+            };
+        } else if (this._geometryType === GeometryBatchType.MATERIAL) {
+            attributes = {
+                show : new ShowGeometryInstanceAttribute(defined(this._showOutline) ? this._showOutline.getValue(time) : true)
+            };
+        }
+
+        return new GeometryInstance({
+            id : this._dynamicObject,
+            geometry : new EllipseOutlineGeometry(this._options),
+            attributes : attributes
+        });
     };
 
     defineProperties(EllipseGeometryUpdater.prototype, {
@@ -137,14 +134,28 @@ define(['../Core/Color',
             get : function() {
                 return this._material;
             }
+        },
+        hasOutline : {
+            get : function() {
+                return this._hasOutline;
+            }
+        },
+        showOutline : {
+            get : function() {
+                return this._showOutline;
+            }
+        },
+        outlineColor : {
+            get : function() {
+                return this._outlineColor;
+            }
+        },
+        outlineGeometryChanged : {
+            get : function() {
+                return this._outlineGeometryChanged;
+            }
         }
     });
-
-    function setGeometryType(that, geometryType) {
-        that._geometryType = geometryType;
-        that._geometryInstance = undefined;
-        that._geometryChanged.raiseEvent();
-    }
 
     EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
         if (propertyName === 'ellipse') {
@@ -170,54 +181,68 @@ define(['../Core/Color',
 
     EllipseGeometryUpdater.prototype._update = function() {
         var ellipse = this._dynamicObject.ellipse;
+        var oldGeometryType = this._geometryType;
 
         if (!defined(ellipse)) {
-            setGeometryType(this, GeometryBatchType.NONE);
+            this._geometryType = GeometryBatchType.NONE;
+            this._geometryChanged.raiseEvent();
+            if(this._hasOutline){
+                this._hasOutline = false;
+                this._outlineGeometryChanged.raiseEvent();
+            }
             return;
         }
 
-        var createInstance = false;
-        var dynamicOptions = {};
-        var options = this._options;
-
+        var fillOff = false;
         var fill = ellipse.fill;
-        if (defined(fill)) {
-            if (fill.isConstant) {
-                if (!fill.getValue(Iso8601.MINIMUM_VALUE)) {
-                    setGeometryType(this, GeometryBatchType.NONE);
-                    return;
-                }
-            } else {
-                dynamicOptions.fill = fill;
+        if (defined(fill) && fill.isConstant && !fill.getValue(Iso8601.MINIMUM_VALUE)) {
+            if (this._geometryType !== GeometryBatchType.NONE) {
+                this._geometryType = GeometryBatchType.NONE;
+                this._geometryChanged.raiseEvent();
+            }
+            fillOff = true;
+        }
+
+        var outlineOff = false;
+        var outline = ellipse.outline;
+        if (defined(outline) && outline.isConstant && !outline.getValue(Iso8601.MINIMUM_VALUE) && this._hasOutline) {
+            if (this._hasOutline) {
+                this._hasOutline = false;
+                this._outlineGeometryChanged.raiseEvent();
+                outlineOff = true;
             }
         }
+
+        if (fillOff && outlineOff) {
+            return;
+        }
+
+        var position = this._dynamicObject.position;
+        var semiMajorAxis = ellipse.semiMajorAxis;
+        var semiMinorAxis = ellipse.semiMinorAxis;
 
         var show = ellipse.show;
-        if (defined(show)) {
-            if (show.isConstant) {
-                if (!show.getValue(Iso8601.MINIMUM_VALUE)) {
-                    setGeometryType(this, GeometryBatchType.NONE);
-                    return;
-                }
-            } else {
-                dynamicOptions.show = fill;
+        if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
+            (!defined(position) || !defined(semiMajorAxis) || !defined(semiMinorAxis))) {
+            if (this._geometryType !== GeometryBatchType.NONE) {
+                this._geometryType = GeometryBatchType.NONE;
+                this._geometryChanged.raiseEvent();
             }
+            if (this._hasOutline) {
+                this._hasOutline = false;
+                this._outlineGeometryChanged.raiseEvent();
+            }
+            return;
         }
+
 
         var material = ellipse.material;
         var isColorMaterial = !defined(material) || material instanceof ColorMaterialProperty;
 
         this._material = material;
         this._show = show;
-
-        var position = this._dynamicObject.position;
-        var semiMajorAxis = ellipse.semiMajorAxis;
-        var semiMinorAxis = ellipse.semiMinorAxis;
-
-        if (!defined(position) || !defined(semiMajorAxis) || !defined(semiMinorAxis)) {
-            setGeometryType(this, GeometryBatchType.NONE);
-            return;
-        }
+        this._outlineColor = ellipse.outlineColor;
+        this._showOutline = ellipse.outline;
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
@@ -233,8 +258,14 @@ define(['../Core/Color',
             defined(extrudedHeight) && !extrudedHeight.isConstant || //
             defined(granularity) && !granularity.isConstant || //
             defined(stRotation) && !stRotation.isConstant) {
-            setGeometryType(this, GeometryBatchType.DYNAMIC);
+            this._geometryType = GeometryBatchType.DYNAMIC;
+            this._geometryChanged.raiseEvent();
+            if (this._hasOutline) {
+                this._hasOutline = false;
+                this._outlineGeometryChanged.raiseEvent();
+            }
         } else {
+            var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.center = position.getValue(Iso8601.MINIMUM_VALUE, options.center);
             options.semiMajorAxis = semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMajorAxis);
@@ -244,7 +275,15 @@ define(['../Core/Color',
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE, options.extrudedHeight) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE, options.granularity) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE, options.stRotation) : undefined;
-            setGeometryType(this, isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL);
+
+            if (!fillOff) {
+                this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
+                this._geometryChanged.raiseEvent();
+            }
+            if (!outlineOff) {
+                this._hasOutline = true;
+                this._outlineGeometryChanged.raiseEvent();
+            }
         }
     };
 
