@@ -45,7 +45,7 @@ define([
         infoElement.setAttribute('data-bind', '\
 css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyless }');
         container.appendChild(infoElement);
-        this._infoElement = infoElement;
+        this._element = infoElement;
 
         var titleElement = document.createElement('div');
         titleElement.className = 'cesium-infoBox-title';
