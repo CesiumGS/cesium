@@ -21,6 +21,9 @@ defineSuite([
         expect(viewModel.showInfo).toBe(false);
         expect(viewModel.cameraClicked).toBeDefined();
         expect(viewModel.closeClicked).toBeDefined();
+        expect(viewModel.descriptionRawHtml).toBe('');
+        expect(viewModel.maxHeightOffset(0)).toBeDefined();
+        expect(viewModel.sanitizer).toBeDefined();
     });
 
     it('allows some HTML in description', function() {
@@ -36,6 +39,13 @@ defineSuite([
         viewModel.descriptionRawHtml = evilString;
         expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
         expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
+    });
+
+    it('indicates missing description', function() {
+        var viewModel = new InfoBoxViewModel();
+        expect(viewModel._bodyless).toBe(true);
+        viewModel.descriptionRawHtml = 'Testing';
+        expect(viewModel._bodyless).toBe(false);
     });
 
     function customSanitizer(string) {

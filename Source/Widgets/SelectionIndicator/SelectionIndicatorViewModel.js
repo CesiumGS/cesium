@@ -71,10 +71,17 @@ define([
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
-        this._position = undefined;
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
+
+        /**
+         * The world position of the object for which to display the selection indicator.
+         * @memberof SelectionIndicatorViewModel
+         *
+         * @type {Cartesian3}
+         */
+        this.position = undefined;
 
         /**
          * The x screen position of the selection indicator.
@@ -122,7 +129,7 @@ define([
          */
         this.showSelection = false;
 
-        knockout.track(this, ['_position', '_positionX', '_positionY', 'scale', 'rotation', 'showSelection']);
+        knockout.track(this, ['position', '_positionX', '_positionY', 'scale', 'rotation', 'showSelection']);
 
         /**
          * Gets the visibility of the position indicator.
@@ -133,7 +140,7 @@ define([
         this.showPosition = undefined;
         knockout.defineProperty(this, 'showPosition', {
             get : function() {
-                return this.showSelection && defined(this._position);
+                return this.showSelection && defined(this.position);
             }
         });
 
@@ -150,8 +157,8 @@ define([
      */
     SelectionIndicatorViewModel.prototype.update = function() {
         if (this.showSelection) {
-            if (defined(this._position)) {
-                var pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+            if (defined(this.position)) {
+                var pos = this._computeScreenSpacePosition(this.position, screenSpacePos);
                 trackPosition(this, pos);
             }
         }
@@ -234,7 +241,7 @@ define([
             }
         },
         /**
-         * Sets the function for converting the world position of the object to the screen space position.
+         * Gets or sets the function for converting the world position of the object to the screen space position.
          * Expects the {Cartesian3} parameter for the position and the optional {Cartesian2} parameter for the result.
          * Should return a {Cartesian2}.
          *
@@ -255,20 +262,6 @@ define([
             },
             set : function(value) {
                 this._computeScreenSpacePosition = value;
-            }
-        },
-        /**
-         * Sets the world position of the object for which to display the selection indicator.
-         * @memberof SelectionIndicatorViewModel
-         *
-         * @type {Cartesian3}
-         */
-        position : {
-            get : function() {
-                return this._position;
-            },
-            set : function(value) {
-                this._position = value;
             }
         }
     });
