@@ -44,7 +44,7 @@ define([
         this.maxHeight = 500;
 
         /**
-         * Gets or sets the availability of camera tracking.
+         * Enables or disables the camera tracking icon.
          * @type {Boolean}
          */
         this.enableCamera = false;
@@ -87,6 +87,7 @@ define([
             set : function(value) {
                 if (this._descriptionRawHtml !== value) {
                     this._descriptionRawHtml = value;
+                    this._descriptionSanitizedHtml = '';
                     var that = this;
                     when(this.sanitizer(value), function(sanitized) {
                         that._descriptionSanitizedHtml = sanitized;

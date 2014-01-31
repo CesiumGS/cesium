@@ -299,7 +299,6 @@ define(['../../Core/BoundingSphere',
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
             eventHelper.removeAll();
-            selectionIndicator.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 

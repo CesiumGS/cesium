@@ -43,19 +43,19 @@ defineSuite([
     it('throws if scene is undefined', function() {
         expect(function() {
             return new SelectionIndicatorViewModel(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if selectionIndicatorElement is undefined', function() {
         expect(function() {
             return new SelectionIndicatorViewModel(scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if container is undefined', function() {
         expect(function() {
             return new SelectionIndicatorViewModel(scene, selectionIndicatorElement);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can animate selection element', function() {

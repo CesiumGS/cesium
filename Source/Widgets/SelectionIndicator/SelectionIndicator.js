@@ -71,7 +71,7 @@ css: { "cesium-selection-wrapper-visible" : showPosition }');
         var viewModel = new SelectionIndicatorViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
 
-        knockout.applyBindings(this._viewModel, this._container);
+        knockout.applyBindings(this._viewModel, this._element);
     };
 
     defineProperties(SelectionIndicator.prototype, {
@@ -115,7 +115,7 @@ css: { "cesium-selection-wrapper-visible" : showPosition }');
      */
     SelectionIndicator.prototype.destroy = function() {
         var container = this._container;
-        knockout.cleanNode(container);
+        knockout.cleanNode(this._element);
         container.removeChild(this._element);
         return destroyObject(this);
     };

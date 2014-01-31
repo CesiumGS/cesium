@@ -832,6 +832,16 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
+        if (defined(this._infoBox)) {
+            this._element.removeChild(this._infoBox.container);
+            this._infoBox = this._infoBox.destroy();
+        }
+
+        if (defined(this._selectionIndicator)) {
+            this._element.removeChild(this._selectionIndicator.container);
+            this._selectionIndicator = this._selectionIndicator.destroy();
+        }
+
         this._clockViewModel = this._clockViewModel.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         this._cesiumWidget = this._cesiumWidget.destroy();

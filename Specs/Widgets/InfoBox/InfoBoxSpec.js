@@ -37,12 +37,12 @@ defineSuite([
     it('throws if container is undefined', function() {
         expect(function() {
             return new InfoBox(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if container string is undefined', function() {
         expect(function() {
             return new InfoBox('testElement');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });
