@@ -855,14 +855,14 @@ define([
     var mrtShaderSource =
         '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
         '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);' +
+        '    float wzi = czm_alphaWeight(ai);\n' +
         '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
         '    gl_FragData[1] = vec4(ai * wzi);\n';
 
     var colorShaderSource =
         '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
         '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);' +
+        '    float wzi = czm_alphaWeight(ai);\n' +
         '    gl_FragColor = vec4(Ci, ai) * wzi;\n';
 
     var alphaShaderSource =
