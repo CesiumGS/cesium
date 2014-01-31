@@ -13,6 +13,18 @@ define([
         defaultValue) {
     "use strict";
 
+    // this logic should match the logic in TWEEN.update and TWEEN.Tween.start
+    var getTime;
+    if (defined(window) && defined(window.performance) && defined(window.performance.now)) {
+        getTime = function() {
+            return window.performance.now();
+        };
+    } else {
+        getTime = function() {
+            return Date.now();
+        };
+    }
+
     /**
      * DOC_TBA
      *
@@ -22,6 +34,15 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
      */
     var AnimationCollection = function() {
+        this._tweens = [];
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof AnimationCollection
+     */
+    AnimationCollection.prototype.getAll = function() {
+        return this._tweens;
     };
 
     /**
@@ -33,9 +54,11 @@ define([
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.duration)) {
             throw new DeveloperError('duration is required.');
         }
+        //>>includeEnd('debug');
 
         if (options.duration > 0) {
             var delayDuration = defaultValue(options.delayDuration, 0);
@@ -55,7 +78,10 @@ define([
                 });
             }
             tween.onComplete(defaultValue(options.onComplete, null));
-            tween.start();
+
+            // start then stop to remove the tween from the global array
+            tween.start().stop();
+            this._tweens.push(tween);
 
             return {
                 _tween : tween
@@ -73,9 +99,11 @@ define([
      * @exception {DeveloperError} material has no properties with alpha components.
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
+        //>>includeEnd('debug');
 
         var properties = [];
 
@@ -87,9 +115,11 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (properties.length === 0) {
             throw new DeveloperError('material has no properties with alpha components.');
         }
+        //>>includeEnd('debug');
 
         // Default to fade in
         start = defaultValue(start, 0.0);
@@ -116,7 +146,10 @@ define([
             }
         });
         tween.onComplete(defaultValue(options.onComplete, null));
-        tween.start();
+
+        // start then stop to remove the tween from the global array
+        tween.start().stop();
+        this._tweens.push(tween);
 
         return {
             _tween : tween
@@ -132,17 +165,17 @@ define([
      * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
-
         if (!defined(property)) {
             throw new DeveloperError('property is required.');
         }
-
         if (!defined(object[property])) {
             throw new DeveloperError('object must have the specified property.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
@@ -162,7 +195,10 @@ define([
             object[property] = value.value;
         });
         tween.onComplete(defaultValue(options.onComplete, null));
-        tween.start();
+
+        // start then stop to remove the tween from the global array
+        tween.start().stop();
+        this._tweens.push(tween);
 
         return {
             _tween : tween
@@ -177,13 +213,14 @@ define([
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
-
         if (!defined(material.uniforms.offset)) {
             throw new DeveloperError('material must have an offset property.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
@@ -203,13 +240,11 @@ define([
             material.uniforms.offset = value.offset;
         });
         // options.onComplete is ignored.
-        tween.onComplete(function() {
-            tween.to({
-                offset : material.uniforms.offset + 1.0
-            }, duration);
-            tween.start();
-        });
-        tween.start();
+        tween.repeat(Infinity);
+
+        // start then stop to remove the tween from the global array
+        tween.start().stop();
+        this._tweens.push(tween);
 
         return {
             _tween : tween
@@ -221,11 +256,18 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.remove = function(animation) {
-        if (defined(animation)) {
-            var count = Tween.getAll().length;
-            Tween.remove(animation._tween);
+        if (!defined(animation)) {
+            return false;
+        }
 
-            return Tween.getAll().length === (count - 1);
+        var tween = animation._tween;
+        var index = this._tweens.indexOf(tween);
+        if (index !== -1) {
+            if (typeof tween.onCancel === 'function') {
+                tween.onCancel();
+            }
+            this._tweens.splice(index, 1);
+            return true;
         }
 
         return false;
@@ -236,16 +278,13 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.removeAll = function() {
-        var tweens = Tween.getAll();
-        var n = tweens.length;
-        var i = -1;
-        while (++i < n) {
-            var t = tweens[i];
-            if (typeof t.onCancel === 'function') {
-                t.onCancel();
+        for (var i = 0; i < this._tweens.length; ++i) {
+            var tween = this._tweens[i];
+            if (typeof tween.onCancel === 'function') {
+                tween.onCancel();
             }
         }
-        Tween.removeAll();
+        this._tweens.length = 0;
     };
 
     /**
@@ -253,10 +292,11 @@ define([
      * @memberof Animationcollection
      */
     AnimationCollection.prototype.contains = function(animation) {
-        if (defined(animation)) {
-            return Tween.getAll().indexOf(animation._tween) !== -1;
+        if (!defined(animation)) {
+            return false;
         }
-        return false;
+
+        return this._tweens.indexOf(animation._tween) !== -1;
     };
 
     /**
@@ -264,7 +304,22 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.update = function() {
-        Tween.update();
+        var tweens = this._tweens;
+        if (tweens.length === 0) {
+            return false;
+        }
+
+        var i = 0;
+        var time = getTime();
+        while (i < tweens.length) {
+            if (tweens[i].update(time)) {
+                i++;
+            } else {
+                tweens.splice(i, 1);
+            }
+        }
+
+        return true;
     };
 
     return AnimationCollection;

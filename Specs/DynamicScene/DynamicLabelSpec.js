@@ -162,6 +162,6 @@ defineSuite([
         var target = new DynamicLabel();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

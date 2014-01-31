@@ -132,13 +132,13 @@ defineSuite([
     it('constructor throws with no layer collection', function() {
         expect(function() {
             return new BaseLayerPickerViewModel(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if viewModels argument is not an array', function() {
         var imageryLayers = new ImageryLayerCollection();
         expect(function() {
             return new BaseLayerPickerViewModel(imageryLayers, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

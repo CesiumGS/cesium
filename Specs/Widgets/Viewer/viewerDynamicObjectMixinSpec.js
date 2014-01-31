@@ -77,7 +77,7 @@ defineSuite([
     it('throws with undefined viewer', function() {
         expect(function() {
             viewerDynamicObjectMixin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if dropTarget property already added by another mixin.', function() {
@@ -85,36 +85,7 @@ defineSuite([
         viewer.trackedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
-        }).toThrow();
-    });
-
-    it('adds objectTracked event', function() {
-        viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.hasOwnProperty('objectTracked')).toEqual(true);
-    });
-
-    it('objectTracked is raised by trackObject', function() {
-        viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-
-        var spyListener = jasmine.createSpy('listener');
-        viewer.objectTracked.addEventListener(spyListener);
-
-        viewer.trackedObject = dynamicObject;
-
-        waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, dynamicObject);
-
-            viewer.objectTracked.removeEventListener(spyListener);
-        });
+        }).toThrowDeveloperError();
     });
 
     it('returns to home when a tracked object is removed', function() {

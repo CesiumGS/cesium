@@ -44,7 +44,7 @@ define([
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
      *
      * @example
-     * primitives.add(new DebugModelMatrixPrimitive({
+     * primitives.add(new Cesium.DebugModelMatrixPrimitive({
      *   modelMatrix : primitive.modelMatrix,  // primitive to debug
      *   length : 100000.0,
      *   width : 10.0

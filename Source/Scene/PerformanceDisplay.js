@@ -38,7 +38,7 @@ define([
      * @param {BoundingRectangle} [description.rectangle] The position and size of the display, relative to the top left corner.
      *
      * @example
-     * scene.getPrimitives().add(new PerformanceDisplay());
+     * scene.getPrimitives().add(new Cesium.PerformanceDisplay());
      */
     var PerformanceDisplay = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);

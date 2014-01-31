@@ -378,7 +378,7 @@ defineSuite([
     it('throws with undefined viewer', function() {
         expect(function() {
             viewerDragDropMixin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with non-existant string container', function() {
@@ -387,7 +387,7 @@ defineSuite([
             viewer.extend(viewerDragDropMixin, {
                 dropTarget : 'doesNotExist'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if dropTarget property already added by another mixin.', function() {
@@ -395,7 +395,7 @@ defineSuite([
         viewer.dropTarget = true;
         expect(function() {
             viewer.extend(viewerDragDropMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if dropEnabled property already added by another mixin.', function() {
@@ -403,7 +403,7 @@ defineSuite([
         viewer.dropEnabled = true;
         expect(function() {
             viewer.extend(viewerDragDropMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if dropError property already added by another mixin.', function() {
@@ -411,7 +411,7 @@ defineSuite([
         viewer.dropError = true;
         expect(function() {
             viewer.extend(viewerDragDropMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if clearOnDrop property already added by another mixin.', function() {
@@ -419,7 +419,7 @@ defineSuite([
         viewer.clearOnDrop = true;
         expect(function() {
             viewer.extend(viewerDragDropMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting dropTarget to undefined throws exception', function() {
@@ -427,6 +427,6 @@ defineSuite([
         viewer.extend(viewerDragDropMixin);
         expect(function() {
             viewer.dropTarget = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

@@ -26,7 +26,7 @@ define([
      * @example
      * // Example 1. Construct a LeapSecond using a JulianDate
      * var date = new Date('January 1, 1990 00:00:00 UTC');
-     * var leapSecond = new LeapSecond(JulianDate.fromDate(date), 25.0);
+     * var leapSecond = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 25.0);
      * var offset = leapSecond.offset;    // 25.0
      *
      * //////////////////////////////////////////////////////////////////
@@ -36,13 +36,14 @@ define([
      * var leapSecond = new LeapSecond(date, 25.0);
      */
     var LeapSecond = function(date, offset) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
-
         if (offset === null || isNaN(offset)) {
             throw new DeveloperError('offset is required and must be a number.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The Julian date at which this leap second occurs.
@@ -71,16 +72,19 @@ define([
      * @see LeapSecond.setLeapSeconds
      *
      * @example
-     * LeapSecond.setLeapSeconds([
-     *                            new LeapSecond(new JulianDate(2453736, 43233.0, TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
-     *                            new LeapSecond(new JulianDate(2454832, 43234.0, TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
-     *                            new LeapSecond(new JulianDate(2456109, 43235.0, TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
+     * Cesium.LeapSecond.setLeapSeconds([
+     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2453736, 43233.0, Cesium.TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
+     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2454832, 43234.0, Cesium.TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
+     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2456109, 43235.0, Cesium.TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
      *                           ]);
      */
     LeapSecond.setLeapSeconds = function(leapSeconds) {
+        //>>includeStart('debug', pragmas.debug);
         if (!Array.isArray(leapSeconds)) {
             throw new DeveloperError("leapSeconds is required and must be an array.");
         }
+        //>>includeEnd('debug');
+
         LeapSecond._leapSeconds = leapSeconds;
         LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
     };
@@ -110,8 +114,8 @@ define([
      *
      * @example
      * var date = new Date('January 1, 1990 00:00:00 UTC');
-     * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 25.0);
-     * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 25.0);
+     * var leapSecond1 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 25.0);
+     * var leapSecond2 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 25.0);
      * leapSecond1.equals(leapSecond2);     // true
      */
     LeapSecond.prototype.equals = function(other) {
@@ -136,9 +140,9 @@ define([
      *
      * @example
      * var date = new Date('January 1, 2006 00:00:00 UTC');
-     * var leapSecond1 = new LeapSecond(JulianDate.fromDate(date), 33.0);
-     * var leapSecond2 = new LeapSecond(JulianDate.fromDate(date), 34.0);
-     * LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
+     * var leapSecond1 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 33.0);
+     * var leapSecond2 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 34.0);
+     * Cesium.LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
      */
     LeapSecond.compareLeapSecondDate = function(leapSecond1, leapSecond2) {
         return leapSecond1.julianDate.compareTo(leapSecond2.julianDate);

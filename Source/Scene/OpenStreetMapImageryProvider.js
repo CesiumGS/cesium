@@ -33,6 +33,7 @@ define([
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
+     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
@@ -47,7 +48,7 @@ define([
      *
      * @example
      * // OpenStreetMap tile provider
-     * var osm = new OpenStreetMapImageryProvider({
+     * var osm = new Cesium.OpenStreetMapImageryProvider({
      *     url : 'http://tile.openstreetmap.org/'
      * });
      */
@@ -70,9 +71,20 @@ define([
         this._tileWidth = 256;
         this._tileHeight = 256;
 
+        this._minimumLevel = defaultValue(description.minimumLevel, 0);
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
         this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
+
+        // Check the number of tiles at the minimum level.  If it's more than four,
+        // throw an exception, because starting at the higher minimum
+        // level will cause too many tiles to be downloaded and rendered.
+        var swTile = this._tilingScheme.positionToTileXY(this._extent.getSouthwest(), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(this._extent.getNortheast(), this._minimumLevel);
+        var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+        if (tileCount > 4) {
+            throw new DeveloperError('The imagery provider\'s extent and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
+        }
 
         this._errorEvent = new Event();
 
@@ -131,9 +143,12 @@ define([
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileWidth = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileWidth;
     };
 
@@ -148,9 +163,12 @@ define([
      * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileHeight = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileHeight;
     };
 
@@ -165,9 +183,12 @@ define([
      * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getMaximumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._maximumLevel;
     };
 
@@ -182,10 +203,13 @@ define([
      * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getMinimumLevel = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
         }
-        return 0;
+        //>>includeEnd('debug');
+
+        return this._minimumLevel;
     };
 
     /**
@@ -201,9 +225,12 @@ define([
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTilingScheme = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tilingScheme;
     };
 
@@ -218,9 +245,12 @@ define([
      * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getExtent = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._extent;
     };
 
@@ -240,9 +270,12 @@ define([
      * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.getTileDiscardPolicy = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         return this._tileDiscardPolicy;
     };
 
@@ -288,9 +321,12 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     OpenStreetMapImageryProvider.prototype.requestImage = function(x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
+        //>>includeEnd('debug');
+
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
     };

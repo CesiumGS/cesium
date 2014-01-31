@@ -25,15 +25,15 @@ define([
      * @param {Number} [alpha=1.0] The alpha component.
      *
      * @example
-     * var instance = new GeometryInstance({
-     *   geometry : new BoxGeometry({
-     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.BoxGeometry({
+     *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-0.0, 0.0))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-0.0, 0.0))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *     color : new ColorGeometryInstanceAttribute(red, green, blue, alpha)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
      *
@@ -107,17 +107,19 @@ define([
      * @exception {DeveloperError} color is required.
      *
      * @example
-     * var instance = new GeometryInstance({
+     * var instance = new Cesium.GeometryInstance({
      *   geometry : // ...
      *   attributes : {
-     *     color : ColorGeometryInstanceAttribute.fromColor(Color.CORNFLOWERBLUE),
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
      *   }
      * });
      */
     ColorGeometryInstanceAttribute.fromColor = function(color) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
+        //>>includeEnd('debug');
 
         return new ColorGeometryInstanceAttribute(color.red, color.green, color.blue, color.alpha);
     };
@@ -134,12 +136,14 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA, attributes.color);
+     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA, attributes.color);
      */
     ColorGeometryInstanceAttribute.toValue = function(color, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Uint8Array(color.toBytes());

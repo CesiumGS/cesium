@@ -93,73 +93,73 @@ define([
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
-     * var instance = new GeometryInstance({
-     *   geometry : new EllipseGeometry({
-     *       vertexFormat : VertexFormat.POSITION_AND_ST,
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.EllipseGeometry({
+     *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST,
      *       ellipsoid : ellipsoid,
-     *       center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+     *       center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100, 20)),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
-     *       rotation : CesiumMath.PI_OVER_FOUR
+     *       rotation : Cesium.Math.PI_OVER_FOUR
      *   }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
-     * var primitive = new Primitive({
+     * var primitive = new Cesium.Primitive({
      *   geometryInstances : instance,
-     *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType('Checkerboard')
+     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
+     *     material : Cesium.Material.fromType('Checkerboard')
      *   })
      * });
      * scene.getPrimitives().add(primitive);
      *
      * // 2. Draw different instances each with a unique color
-     * var extentInstance = new GeometryInstance({
-     *   geometry : new ExtentGeometry({
-     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     extent : new Extent(
-     *       CesiumMath.toRadians(-140.0),
-     *       CesiumMath.toRadians(30.0),
-     *       CesiumMath.toRadians(-100.0),
-     *       CesiumMath.toRadians(40.0))
+     * var extentInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.ExtentGeometry({
+     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+     *     extent : new Cesium.Extent(
+     *       Cesium.Math.toRadians(-140.0),
+     *       Cesium.Math.toRadians(30.0),
+     *       Cesium.Math.toRadians(-100.0),
+     *       Cesium.Math.toRadians(40.0))
      *     }),
      *   id : 'extent',
      *   attribute : {
-     *     color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
      * });
-     * var ellipsoidInstance = new GeometryInstance({
-     *   geometry : new EllipsoidGeometry({
-     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
+     * var ellipsoidInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.EllipsoidGeometry({
+     *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+     *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+     *   modelMatrix : Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
      *   id : 'ellipsoid',
      *   attribute : {
-     *     color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
      *   }
      * });
-     * var primitive = new Primitive({
+     * var primitive = new Cesium.Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
-     *   appearance : new PerInstanceColorAppearance()
+     *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      * scene.getPrimitives().add(primitive);
      *
      * // 3. Create the geometry on the main thread.
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *       geometry : EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-     *         vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *         radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *       geometry : Cesium.EllipsoidGeometry.createGeometry(new Cesium.EllipsoidGeometry({
+     *         vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+     *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
      *       })),
-     *       modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+     *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *         ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
      *       id : 'ellipsoid',
      *       attribute : {
-     *         color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
+     *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
      *       }
      *   }),
-     *   appearance : new PerInstanceColorAppearance()
+     *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      * scene.getPrimitives().add(primitive);
      *
@@ -210,8 +210,8 @@ define([
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
-         * p.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *   Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see czm_model
          */
@@ -287,7 +287,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -308,13 +308,13 @@ define([
         this._boundingSphereWC = undefined;
         this._boundingSphereCV = undefined;
         this._boundingSphere2D = undefined;
-        this._perInstanceAttributeIndices = undefined;
+        this._perInstanceAttributeLocations = undefined;
         this._instanceIds = [];
         this._lastPerInstanceAttributeIndex = 0;
         this._dirtyAttributes = [];
 
         this._va = [];
-        this._attributeIndices = undefined;
+        this._attributeLocations = undefined;
         this._primitiveType = undefined;
 
         this._frontFaceRS = undefined;
@@ -454,7 +454,7 @@ define([
     }
 
     function appendShow(primitive, vertexShaderSource) {
-        if (!defined(primitive._attributeIndices.show)) {
+        if (!defined(primitive._attributeLocations.show)) {
             return vertexShaderSource;
         }
 
@@ -470,7 +470,7 @@ define([
         return renamedVS + '\n' + showMain;
     }
 
-    function validateShaderMatching(shaderProgram, attributeIndices) {
+    function validateShaderMatching(shaderProgram, attributeLocations) {
         // For a VAO and shader program to be compatible, the VAO must have
         // all active attribute in the shader program.  The VAO may have
         // extra attributes with the only concern being a potential
@@ -482,14 +482,16 @@ define([
         // to match the shader program.
         var shaderAttributes = shaderProgram.getVertexAttributes();
 
+        //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {
             if (shaderAttributes.hasOwnProperty(name)) {
-                if (!defined(attributeIndices[name])) {
+                if (!defined(attributeLocations[name])) {
                     throw new DeveloperError('Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input \'' + name +
                         '\', which was not computed as part of the Geometry.  Use the appearance\'s vertexFormat property when constructing the geometry.');
                 }
             }
         }
+        //>>includeEnd('debug');
     }
 
     function createPickIds(context, primitive, instances) {
@@ -620,9 +622,9 @@ define([
                         PrimitivePipeline.receivePerInstanceAttributes(result.vaAttributes);
 
                         that._geometries = result.geometries;
-                        that._attributeIndices = result.attributeIndices;
+                        that._attributeLocations = result.attributeLocations;
                         that._vaAttributes = result.vaAttributes;
-                        that._perInstanceAttributeIndices = result.vaAttributeIndices;
+                        that._perInstanceAttributeLocations = result.vaAttributeLocations;
                         Matrix4.clone(result.modelMatrix, that.modelMatrix);
                         that._state = PrimitiveState.COMBINED;
                     }, function(error) {
@@ -673,16 +675,16 @@ define([
                 });
 
                 this._geometries = result.geometries;
-                this._attributeIndices = result.attributeIndices;
+                this._attributeLocations = result.attributeLocations;
                 this._vaAttributes = result.vaAttributes;
-                this._perInstanceAttributeIndices = result.vaAttributeIndices;
+                this._perInstanceAttributeLocations = result.vaAttributeLocations;
                 Matrix4.clone(result.modelMatrix, this.modelMatrix);
 
                 this._state = PrimitiveState.COMBINED;
             }
         }
 
-        var attributeIndices = this._attributeIndices;
+        var attributeLocations = this._attributeLocations;
 
         if (this._state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
@@ -705,7 +707,7 @@ define([
 
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometry,
-                    attributeIndices : attributeIndices,
+                    attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED,
                     vertexArrayAttributes : attributes
@@ -796,17 +798,17 @@ define([
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, attributeIndices);
-            validateShaderMatching(this._sp, attributeIndices);
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
+            validateShaderMatching(this._sp, attributeLocations);
 
             if (allowPicking) {
                 var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeIndices);
+                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
-                this._pickSP = shaderCache.getShaderProgram(vs, fs, attributeIndices);
+                this._pickSP = shaderCache.getShaderProgram(vs, fs, attributeLocations);
             }
 
-            validateShaderMatching(this._pickSP, attributeIndices);
+            validateShaderMatching(this._pickSP, attributeLocations);
         }
 
         var colorCommands = this._colorCommands;
@@ -952,9 +954,11 @@ define([
 
     function createSetFunction(name, perInstanceAttributes, dirtyList) {
         return function (value) {
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
+            //>>includeEnd('debug');
 
             var attribute = perInstanceAttributes[name];
             attribute.value = value;
@@ -977,17 +981,18 @@ define([
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
-     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
-     * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
+     * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required');
         }
-
-        if (!defined(this._perInstanceAttributeIndices)) {
+        if (!defined(this._perInstanceAttributeLocations)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
+        //>>includeEnd('debug');
 
         var index = -1;
         var lastIndex = this._lastPerInstanceAttributeIndex;
@@ -1005,7 +1010,7 @@ define([
             return undefined;
         }
 
-        var perInstanceAttributes = this._perInstanceAttributeIndices[index];
+        var perInstanceAttributes = this._perInstanceAttributeLocations[index];
         var attributes = {};
         var properties = {};
         var hasProperties = false;
