@@ -235,6 +235,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var selectionIndicator;
         if (!defined(options.selectionIndicator) || options.selectionIndicator !== false) {
             var selectionIndicatorContainer = document.createElement('div');
+            selectionIndicatorContainer.className = 'cesium-viewer-selectionIndicatorContainer';
             viewerContainer.appendChild(selectionIndicatorContainer);
             selectionIndicator = new SelectionIndicator(selectionIndicatorContainer, cesiumWidget.scene);
         }
@@ -243,6 +244,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var infoBox;
         if (!defined(options.infoBox) || options.infoBox !== false) {
             var infoBoxContainer = document.createElement('div');
+            infoBoxContainer.className = 'cesium-viewer-infoBoxContainer';
             viewerContainer.appendChild(infoBoxContainer);
             infoBox = new InfoBox(infoBoxContainer);
         }

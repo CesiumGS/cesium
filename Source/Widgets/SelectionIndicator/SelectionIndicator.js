@@ -39,7 +39,6 @@ define([
         container = getElement(container);
 
         this._container = container;
-        container.className = 'cesium-selection-container';
 
         var el = document.createElement('div');
         el.className = 'cesium-selection-wrapper';

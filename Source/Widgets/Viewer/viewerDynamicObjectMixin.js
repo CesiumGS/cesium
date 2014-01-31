@@ -10,8 +10,6 @@ define(['../../Core/BoundingSphere',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
-        '../InfoBox/InfoBox',
-        '../SelectionIndicator/SelectionIndicator',
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
@@ -26,8 +24,6 @@ define(['../../Core/BoundingSphere',
         ScreenSpaceEventType,
         wrapFunction,
         SceneMode,
-        InfoBox,
-        SelectionIndicator,
         DynamicObjectView,
         knockout) {
     "use strict";

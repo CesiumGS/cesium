@@ -38,7 +38,6 @@ define([
         container = getElement(container);
 
         this._container = container;
-        container.className = 'cesium-infoBox-container';
 
         var infoElement = document.createElement('div');
         infoElement.className = 'cesium-infoBox';

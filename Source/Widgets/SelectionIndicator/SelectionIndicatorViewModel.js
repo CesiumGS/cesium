@@ -66,7 +66,6 @@ define([
         }
         //>>includeEnd('debug')
 
-        this._sanitizer = undefined;
         this._scene = scene;
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
@@ -208,7 +207,7 @@ define([
 
     defineProperties(SelectionIndicatorViewModel.prototype, {
         /**
-         * Gets the HTML element containing the selection indicator
+         * Gets the HTML element containing the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Element}
@@ -219,7 +218,7 @@ define([
             }
         },
         /**
-         * Gets the HTML element that makes up the selection indicator
+         * Gets the HTML element that holds the selection indicator.
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Element}
