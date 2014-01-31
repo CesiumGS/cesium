@@ -67,6 +67,8 @@ define([
         //>>includeEnd('debug')
 
         this._scene = scene;
+        this._positionX = '-1000px';
+        this._positionY = '0';
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
@@ -81,22 +83,6 @@ define([
          * @type {Cartesian3}
          */
         this.position = undefined;
-
-        /**
-         * The x screen position of the selection indicator.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
-         * @type {Number}
-         */
-        this._positionX = '-1000px';
-
-        /**
-         * The y screen position of the selection indicator.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
-         * @type {Number}
-         */
-        this._positionY = '0';
 
         /**
          * The scale of the indicator relative to its default size.
