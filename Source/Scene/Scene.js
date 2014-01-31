@@ -923,13 +923,17 @@ define([
                 performanceContainer.style.position = 'absolute';
                 performanceContainer.style.top = '10px';
                 performanceContainer.style.left = '10px';
-                var container = document.getElementById('cesiumContainer');
+                var container = this._canvas.parentNode;
                 container.appendChild(performanceContainer);
                 var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
                 this._performanceDisplay = performanceDisplay;
+                this._performanceContainer = performanceContainer;
             }
 
             this._performanceDisplay.update();
+        } else if (defined(this._performanceDisplay)) {
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
 
         context.endFrame();
@@ -1176,6 +1180,11 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
+        if (defined(this._performanceDisplay)){
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         return destroyObject(this);
     };
 
