@@ -43,7 +43,7 @@ define([
         EllipsoidFS) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0
     };
 
@@ -190,7 +190,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -249,7 +249,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry: geometry,
-            attributeIndices: attributeIndices,
+            attributeLocations: attributeLocations,
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
@@ -352,7 +352,7 @@ define([
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
+            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
             colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
@@ -397,7 +397,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
+                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;

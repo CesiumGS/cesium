@@ -9,6 +9,8 @@ Beta Releases
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
   * `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials were moved to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
   * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
+  * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
+  * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
 * Fixed globe rendering in the current Canary version of Google Chrome.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
@@ -17,6 +19,7 @@ Beta Releases
 * `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
 * Added `makeRelativeUrlAbsolute` function to build an absolute URL from a base URL and a relative URL.

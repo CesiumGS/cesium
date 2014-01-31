@@ -848,7 +848,7 @@ define([
 
             reproject.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : reprojectGeometry,
-                attributeIndices : reprojectAttribInds,
+                attributeLocations : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
