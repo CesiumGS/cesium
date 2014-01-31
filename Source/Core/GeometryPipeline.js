@@ -786,7 +786,7 @@ define([
     /**
      * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
      * to batch together several instances with {@link GeometryPipeline.combine}.  This changes
-     * the instance's <code>modelMatrix</code> to {@see Matrix4.IDENTITY} and transforms the
+     * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.
      *

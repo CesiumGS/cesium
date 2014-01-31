@@ -1088,6 +1088,17 @@ defineSuite([
         expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
+    it('CZML description works.', function() {
+        var packet = {
+            description : "this is a description"
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
+    });
+
     it('CZML Availability works with a single interval.', function() {
         var packet1 = {
             id : 'testObject',

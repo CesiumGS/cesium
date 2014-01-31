@@ -49,6 +49,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
+        './PerformanceDisplay',
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
@@ -105,6 +106,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
+        PerformanceDisplay,
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
@@ -349,7 +351,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * When {@see Scene.debugShowFrustums} is <code>true</code>, this contains
+         * When {@link Scene.debugShowFrustums} is <code>true</code>, this contains
          * properties with statistics about the number of command execute per frustum.
          * <code>totalCommands</code> is the total number of commands executed, ignoring
          * overlap. <code>commandsInFrustums</code> is an array with the number of times
@@ -364,6 +366,20 @@ define([
          * @readonly
          */
         this.debugFrustumStatistics = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * Displays frames per second and time between frames.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowFramesPerSecond = false;
+
+        this._performanceDisplay = undefined;
 
         this._debugSphere = undefined;
 
@@ -1329,6 +1345,26 @@ define([
         executeOverlayCommands(this, passState);
 
         frameState.creditDisplay.endFrame();
+
+        if (this.debugShowFramesPerSecond) {
+            if (!defined(this._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = this._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                this._performanceDisplay = performanceDisplay;
+                this._performanceContainer = performanceContainer;
+            }
+
+            this._performanceDisplay.update();
+        } else if (defined(this._performanceDisplay)) {
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         context.endFrame();
         executeEvents(frameState);
     };
@@ -1588,6 +1624,11 @@ define([
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
+        if (defined(this._performanceDisplay)){
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         return destroyObject(this);
     };
 
