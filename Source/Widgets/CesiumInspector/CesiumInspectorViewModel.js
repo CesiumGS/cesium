@@ -648,6 +648,81 @@ define([
         },
 
         /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        selectParent : {
+            get : function() {
+                var that = this;
+                return createCommand(function() {
+                    that.tile = that.tile.parent;
+                });
+            }
+        },
+
+        /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        selectNW : {
+            get : function() {
+                var that = this;
+                return createCommand(function() {
+                    that.tile = that.tile.getChildren()[0];
+                });
+            }
+        },
+
+        /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        selectNE: {
+            get : function() {
+                var that = this;
+                return createCommand(function() {
+                    that.tile = that.tile.getChildren()[1];
+                });
+            }
+        },
+
+        /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        selectSW : {
+            get : function() {
+                var that = this;
+                return createCommand(function() {
+                    that.tile = that.tile.getChildren()[2];
+                });
+            }
+        },
+
+        /**
+         * Gets the command to pick a tile
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        selectSE : {
+            get : function() {
+                var that = this;
+                return createCommand(function() {
+                    that.tile = that.tile.getChildren()[3];
+                });
+            }
+        },
+
+        /**
          * Gets or sets the current selected primitive
          * @memberof CesiumInspectorViewModel.prototype
          *
@@ -697,6 +772,7 @@ define([
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
                         this.tileText += '<br>SW corner: ' + newTile.extent.west + ', ' + newTile.extent.south;
                         this.tileText += '<br>NE corner: ' + newTile.extent.east + ', ' + newTile.extent.north;
+                        this.tileText += '<br>Min: ' + newTile.minimumHeight + ' Max: ' + newTile.maximumHeight;
                     }
                     this._tile = newTile;
                     this.showTileBoundingSphere();
