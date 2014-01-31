@@ -54,7 +54,6 @@ define([
         return str;
     }
 
-    var br = new BoundingRectangle(220, 50, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     var performanceContainer = document.createElement('div');
@@ -81,7 +80,6 @@ define([
         canvas.parentNode.appendChild(performanceContainer);
         this._scene = scene;
         this._canvas = canvas;
-        br.x = canvas.clientWidth - br.width - 10;
         this._primitive = undefined;
         this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
@@ -288,9 +286,8 @@ define([
                     backgroundColor: bc,
                     font: '12px arial,sans-serif'
                 });
-                that._scene.getPrimitives().add(that._performanceDisplay);
             } else {
-                that._scene.getPrimitives().remove(that._performanceDisplay);
+                performanceContainer.innerHTML= '';
             }
             return true;
         });
@@ -802,7 +799,7 @@ define([
                         that.frustumStatisticText = frustumStatsToString(that._scene.debugFrustumStatistics);
                     }
                     if (that.performance) {
-                        br.x = that._canvas.clientWidth - br.width - 10;
+                        that._performanceDisplay.update();
                     }
                     if (that.primitiveReferenceFrame) {
                         that._modelMatrixPrimitive.modelMatrix = that._primitive.modelMatrix;
