@@ -166,11 +166,13 @@ define(['../Core/defined',
             id = dynamicObject.id;
             updater = new this._type(dynamicObject);
             this._updaters.set(id, updater);
+
             batch = batches[updater.geometryType.value];
             if (defined(batch)) {
                 batch.add(time, updater);
             }
-            if (updater.hasOutline) {
+
+            if (updater.isOutlined) {
                 this._outlineBatch.add(time, updater);
             }
         }

@@ -16,13 +16,6 @@ define(['../Core/Color',
         Primitive) {
     "use strict";
 
-    var AttributeCache = function() {
-        this.attributes = undefined;
-        this.showProperty = undefined;
-        this.colorProperty = undefined;
-        this.colorValue = Color.clone(Color.WHITE);
-    };
-
     var Batch = function(primitives, translucent, appearanceType) {
         this.translucent = translucent;
         this.appearanceType = appearanceType;
@@ -31,6 +24,7 @@ define(['../Core/Color',
         this.primitive = undefined;
         this.geometry = new Map();
         this.updaters = new Map();
+        this.updatersWithAttributes = new Map();
         this.attributes = new Map();
         this.itemsToRemove = [];
     };
@@ -40,24 +34,29 @@ define(['../Core/Color',
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
+        if (!updater.showOutlineProperty.isConstant || !updater.materialProperty.isConstant) {
+            this.updatersWithAttributes.set(id, updater);
+        }
     };
 
     Batch.prototype.remove = function(updater) {
         var id = updater.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         this.updaters.remove(id);
+        this.updatersWithAttributes.remove(id);
     };
 
+    var colorScratch = new Color();
     Batch.prototype.update = function(time) {
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var geometry = this.geometry.getValues();
         if (this.createPrimitive) {
             this.attributes.removeAll();
             if (defined(primitive)) {
                 primitives.remove(primitive);
             }
+            var geometry = this.geometry.getValues();
             if (geometry.length > 0) {
                 primitive = new Primitive({
                     asynchronous : false,
@@ -78,58 +77,25 @@ define(['../Core/Color',
             this.primitive = primitive;
             this.createPrimitive = false;
         } else {
-            var updaters = this.updaters.getValues();
-            var length = geometry.length;
+            var updatersWithAttributes = this.updatersWithAttributes.getValues();
+            var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
-                var instance = geometry[i];
-                var updater = updaters[i];
+                var updater = updatersWithAttributes[i];
+                var instance = this.geometry.get(updater.id);
 
-                //TODO PERFORMANCE We currently iterate over all geometry instances.
-                //We only need to iterate over attributes with time-dynamic values.
-                var cache = this.attributes.get(instance.id.id);
-                var attributes;
-                var colorProperty;
-                var showProperty;
-                if (!defined(cache)) {
-                    cache = new AttributeCache();
+                var attributes = this.attributes.get(instance.id.id);
+                if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
-                    cache.attributes = attributes;
-
-                    colorProperty = updater.outlineColor;
-                    if (defined(colorProperty) && colorProperty.isConstant) {
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorProperty.getValue(time), attributes.color);
-                    } else {
-                        cache.colorProperty = colorProperty;
-                    }
-
-                    showProperty = updater.show;
-                    if (defined(showProperty) && showProperty.isConstant) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(showProperty.getValue(time), attributes.show);
-                    } else {
-                        cache.showProperty = showProperty;
-                    }
-
-                    this.attributes.set(instance.id.id, cache);
+                    this.attributes.set(instance.id.id, attributes);
                 }
 
-                attributes = cache.attributes;
-                colorProperty = cache.colorProperty;
-                if (defined(colorProperty)) {
-                    var colorValue = colorProperty.getValue(time, cache.colorValue);
-                    if (defined(colorValue)) {
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorValue, attributes.color);
-                        if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
-                            this.itemsToRemove[removedCount++] = updater;
-                        }
-                    }
+                var outlineColorProperty = updater.outlineColorProperty;
+                outlineColorProperty.getValue(time, colorScratch);
+                attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
+                    this.itemsToRemove[removedCount++] = updater;
                 }
-                showProperty = updater.showProperty;
-                if (defined(showProperty)) {
-                    var showValue = showProperty.getValue(time);
-                    if (defined(showValue)) {
-                        attributes.show = ShowGeometryInstanceAttribute.toValue(showValue, attributes.show);
-                    }
-                }
+                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.showOutlineProperty.getValue(time), attributes.show);
             }
         }
         this.itemsToRemove.length = removedCount;
@@ -152,7 +118,7 @@ define(['../Core/Color',
 
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
         var instance = updater.createOutlineGeometryInstance(time);
-        if (!defined(instance.attributes.color) || instance.attributes.color.value[3] === 255) {
+        if (instance.attributes.color.value[3] === 255) {
             this._solidBatch.add(updater, instance);
         } else {
             this._translucentBatch.add(updater, instance);
