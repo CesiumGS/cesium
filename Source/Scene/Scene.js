@@ -38,6 +38,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
+        './PerformanceDisplay',
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
@@ -81,6 +82,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
+        PerformanceDisplay,
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
@@ -318,22 +320,16 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * A <code> PerformanceDisplay </code> that displays frames per second and time between frames.
-         * </p>
-         * <p>
-         * The default is <code>undefined</code>
+         * Displays frames per second and time between frames.
          * </p>
          *
-         * @type PerformanceDisplay
+         * @type Boolean
          *
-         * @default undefined
-         *
-         * @example
-         * //var performanceContainer = a DOM element to contain the performance display
-         * scene.performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-         *
+         * @default false
          */
-        this.performanceDisplay = undefined;
+        this.debugShowFramesPerSecond = false;
+
+        this._performanceDisplay = undefined;
 
         this._debugSphere = undefined;
 
@@ -921,8 +917,19 @@ define([
 
         frameState.creditDisplay.endFrame();
 
-        if (defined(this.performanceDisplay)) {
-            this.performanceDisplay.update();
+        if (this.debugShowFramesPerSecond) {
+            if (!defined(this._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = document.getElementById('cesiumContainer');
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                this._performanceDisplay = performanceDisplay;
+            }
+
+            this._performanceDisplay.update();
         }
 
         context.endFrame();

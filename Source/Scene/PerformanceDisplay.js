@@ -20,20 +20,7 @@ define([
     var defaultBackgroundColor = Color.fromCssColorString('rgba(40, 40, 40, 0.7)');
 
     /**
-     * Draws a display in the top left corner of the scene displaying FPS (frames per second),
-     * averaged over 1 second intervals, as well as unaveraged frame time.
-     *
-     * @alias PerformanceDisplay
-     * @constructor
-     *
-     * @param {Element} description.container The DOM element or ID that will contain the performance display.
-     * @param {Color} [description.fpsColor] The color of the FPS graph.
-     * @param {Color} [description.frameTimeColor] The color of the frame time graph.
-     * @param {Color} [description.backgroundColor] The color of the background of the display.
-     * @param {String} [description.font] The CSS font of the text in the display.
-     *
-     * @example
-     * scene.getPrimitives().add(new Cesium.PerformanceDisplay());
+     * @private
      */
     var PerformanceDisplay = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -91,18 +78,22 @@ define([
         var fps = this._fps;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
-            this._fps = this._frameCount * 1000 / fpsElapsedTime | 0;
-            fps = this._fps;
+            fps = this._frameCount * 1000 / fpsElapsedTime | 0;
 
             this._lastFpsSampleTime = time;
             this._frameCount = 0;
         }
 
-        if (defined(fps)) {
+        if (fps !== this._fps && defined(fps)) {
             this._fpsElement.textContent = fps + ' FPS';
+            this._fps = fps;
         }
 
-        this._msElement.textContent = frameTime + ' MS';
+        if (frameTime !== this._frameTime) {
+            this._msElement.textContent = frameTime + ' MS';
+            this._frameTime = frameTime;
+        }
+
     };
 
     /**

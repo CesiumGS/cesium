@@ -126,14 +126,7 @@ define([
         }
 
         if (endUserOptions.stats) {
-            var performanceContainer = document.createElement('div');
-            performanceContainer.style.position = 'absolute';
-            performanceContainer.style.top = '10px';
-            performanceContainer.style.left = '10px';
-            var container = document.getElementById('cesiumContainer');
-            container.appendChild(performanceContainer);
-            var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-            scene.performanceDisplay = performanceDisplay;
+            scene.debugShowFramesPerSecond = true;
         }
 
         var theme = endUserOptions.theme;
