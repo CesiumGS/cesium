@@ -50,7 +50,6 @@ css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyles
         titleElement.className = 'cesium-infoBox-title';
         titleElement.setAttribute('data-bind', 'text: titleText');
         infoElement.appendChild(titleElement);
-        this._titleElement = titleElement;
 
         var cameraElement = document.createElement('button');
         cameraElement.type = 'button';
@@ -59,7 +58,7 @@ css: { "cesium-infoBox-visible" : showInfo, "cesium-infoBox-bodyless" : _bodyles
 attr: { title: "Focus camera on object" },\
 click: function () { cameraClicked.raiseEvent(); },\
 enable: enableCamera,\
-cesiumSvgPath: { path: _cameraIconPath, width: 32, height: 32 }');
+cesiumSvgPath: { path: cameraIconPath, width: 32, height: 32 }');
         infoElement.appendChild(cameraElement);
 
         var closeElement = document.createElement('button');

@@ -91,10 +91,10 @@ defineSuite([
     it('camera icon changes when tracking is not available, unless due to active tracking', function() {
         var viewModel = new InfoBoxViewModel();
         viewModel.enableCamera = true;
-        var enabledCameraPath = viewModel._cameraIconPath;
+        var enabledCameraPath = viewModel.cameraIconPath;
         viewModel.enableCamera = false;
-        expect(viewModel._cameraIconPath).not.toBe(enabledCameraPath);
+        expect(viewModel.cameraIconPath).not.toBe(enabledCameraPath);
         viewModel.isCameraTracking = true;
-        expect(viewModel._cameraIconPath).toBe(enabledCameraPath);
+        expect(viewModel.cameraIconPath).toBe(enabledCameraPath);
     });
 });
