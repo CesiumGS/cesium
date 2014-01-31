@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/RuntimeError',
         './createTaskProcessorWorker'
     ], function(
         defined,
+        RuntimeError,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -25,6 +27,10 @@ define([
             self.window = {};
             importScripts(cajaScript); // importScripts is synchronous
             html_sanitize = window.html_sanitize;
+
+            if (!defined(html_sanitize)) {
+                throw new RuntimeError('Unable to load Google Caja sanitizer script.');
+            }
         }
 
         return html_sanitize(html);

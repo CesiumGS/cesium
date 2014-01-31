@@ -92,7 +92,11 @@ define([
                         that._descriptionSanitizedHtml = sanitized;
                     }).otherwise(function(e) {
                         /*global console*/
-                        console.log('An error occurred while sanitizing HTML: ' + e);
+                        var message = defined(e.name) && defined(e.message) ? (e.name + ': ' + e.message) : e.toString();
+                        if (defined(e.stack)) {
+                            message += '\n' + e.stack;
+                        }
+                        console.log('An error occurred while sanitizing HTML: ' + message);
                     });
                 }
             }
