@@ -206,10 +206,10 @@ define([
         var model = scene.getPrimitives().add(Model.fromGltf({
             url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
             modelMatrix : modelMatrix,
-            scale : 10.0,
+            scale : 1.0,
             debugWireframe : endUserOptions.wireframe,
-            allowPicking : endUserOptions.allowPicking
-            //, debugShowBoundingVolume : true
+            allowPicking : endUserOptions.allowPicking,
+            debugShowBoundingVolume : endUserOptions.showBoundingVolume
         }));
 
         var animationStart = new Event();
@@ -305,12 +305,7 @@ define([
         handler.setInputAction(
             function () {
                 var n = prevPickedNode;
-                n.matrix = Matrix4.multiplyByUniformScale(n.matrix, 1.5, n.matrix);
-
-//              n.matrix = undefined;
-//              n.translation = new Cartesian3();
-//              n.rotation = Quaternion.IDENTITY.clone();
-//              n.scale = new Cartesian3(2.0, 2.0, 2.0);
+                n.matrix = Matrix4.multiplyByUniformScale(defaultValue(n.matrix, Matrix4.IDENTITY.clone()), 2.0, n.matrix);
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

@@ -1628,10 +1628,12 @@ define([
             m = Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
         }
 
-// TODO: don't always do this.
-        Matrix4.multiplyTransformation(m, node.publicNode.matrix, m);
-
-// TODO: user or animation translation and scale need to update bounding sphere
+        var customMatrix = node.publicNode.matrix;
+        if (defined(customMatrix)) {
+// TODO: what exactly to expose?
+// TODO: bounding sphere for stick figure
+            m = Matrix4.multiplyTransformation(m, customMatrix, m);
+        }
     }
 
     var scratchNodeStack = [];
@@ -1666,10 +1668,8 @@ define([
                             var command = primitiveCommand.command;
                             Matrix4.multiplyTransformation(computedModelMatrix, transformToRoot, command.modelMatrix);
 
-                            // TODO: Use transformWithoutScale if no node up to the root has scale (included targeted scale from animation).
-                            // Preprocess this and store it with each node.
+                            // PERFORMANCE_IDEA: Can use transformWithoutScale if no node up to the root has scale (inclug animation)
                             BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-                            //BoundingSphere.transformWithoutScale(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
 
                             if (allowPicking) {
                                 var pickCommand = primitiveCommand.pickCommand;
@@ -1816,7 +1816,6 @@ define([
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
-//                updateNodeHierarchyModelMatrix(this, true/*modelTransformChanged*/, true/*justLoaded*/);
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
