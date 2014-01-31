@@ -140,7 +140,7 @@ define([
          * @returns {String}
          */
         InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
-            return (this.maxHeight - offset).toString() + 'px';
+            return (this.maxHeight - offset) + 'px';
         };
 
         knockout.defineProperty(this, '_bodyless', {

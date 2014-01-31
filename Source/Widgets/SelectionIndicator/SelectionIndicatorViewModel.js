@@ -42,7 +42,7 @@ define([
      * @alias SelectionIndicatorViewModel
      * @constructor
      *
-     * @param {Scene} scene The scene instance to use.
+     * @param {Scene} scene The scene instance to use for screen-space coordinate conversion.
      * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
      * @param {Element} container The DOM element that contains the widget.
      *
@@ -215,7 +215,7 @@ define([
             }
         },
         /**
-         * Gets the scene to control.
+         * Gets the scene being used.
          * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Scene}
