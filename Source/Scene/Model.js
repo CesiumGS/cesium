@@ -1078,18 +1078,22 @@ define([
                     var primitiveAttributes = primitive.attributes;
                     for (var attrName in primitiveAttributes) {
                         if (primitiveAttributes.hasOwnProperty(attrName)) {
-                            var a = accessors[primitiveAttributes[attrName]];
-
-                            var type = ModelTypes[a.type];
-                            attrs.push({
-                                index                  : attributeLocations[attrName],
-                                vertexBuffer           : rendererBuffers[a.bufferView],
-                                componentsPerAttribute : type.componentsPerAttribute,
-                                componentDatatype      : type.componentDatatype,
-                                normalize              : false,
-                                offsetInBytes          : a.byteOffset,
-                                strideInBytes          : a.byteStride
-                            });
+                            var attributeLocation = attributeLocations[attrName];
+                            // Skip if the attribute is not used by the material, e.g., because the asset was exported
+                            // with an attribute that wasn't used and the asset wasn't optimized.
+                            if (defined(attributeLocation)) {
+                                var a = accessors[primitiveAttributes[attrName]];
+                                var type = ModelTypes[a.type];
+                                attrs.push({
+                                    index                  : attributeLocation,
+                                    vertexBuffer           : rendererBuffers[a.bufferView],
+                                    componentsPerAttribute : type.componentsPerAttribute,
+                                    componentDatatype      : type.componentDatatype,
+                                    normalize              : false,
+                                    offsetInBytes          : a.byteOffset,
+                                    strideInBytes          : a.byteStride
+                                });
+                            }
                         }
                     }
 
