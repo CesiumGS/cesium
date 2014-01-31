@@ -30,22 +30,37 @@ defineSuite([
         var safeString = '<p>This is a test.</p>';
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = safeString;
-        expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
+        waitsFor(function() {
+            return viewModel.descriptionSanitizedHtml !== '';
+        });
+        runs(function() {
+            expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
+        });
     });
 
     it('removes script tags from HTML description by default', function() {
         var evilString = 'Testing. <script>console.error("Scripts are disallowed by default.");</script>';
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = evilString;
-        expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
-        expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
+        waitsFor(function() {
+            return viewModel.descriptionSanitizedHtml !== '';
+        });
+        runs(function() {
+            expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
+            expect(viewModel.descriptionSanitizedHtml).not.toContain('script');
+        });
     });
 
     it('indicates missing description', function() {
         var viewModel = new InfoBoxViewModel();
         expect(viewModel._bodyless).toBe(true);
         viewModel.descriptionRawHtml = 'Testing';
-        expect(viewModel._bodyless).toBe(false);
+        waitsFor(function() {
+            return viewModel.descriptionSanitizedHtml !== '';
+        });
+        runs(function() {
+            expect(viewModel._bodyless).toBe(false);
+        });
     });
 
     function customSanitizer(string) {
@@ -55,15 +70,22 @@ defineSuite([
     it('allows user-supplied HTML sanitization.', function() {
         var testString = 'Testing hot-swap of custom sanitizer.';
         var viewModel = new InfoBoxViewModel();
+
         viewModel.descriptionRawHtml = testString;
-        expect(viewModel.descriptionSanitizedHtml).toBe(testString);
-        viewModel.sanitizer = customSanitizer;
-        expect(viewModel.descriptionSanitizedHtml).toContain(testString);
-        expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
-        testString = 'subsequent test, after the swap.';
-        viewModel.descriptionRawHtml = testString;
-        expect(viewModel.descriptionSanitizedHtml).toContain(testString);
-        expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
+        waitsFor(function() {
+            return viewModel.descriptionSanitizedHtml !== '';
+        });
+        runs(function() {
+            expect(viewModel.descriptionSanitizedHtml).toBe(testString);
+
+            viewModel.sanitizer = customSanitizer;
+            expect(viewModel.descriptionSanitizedHtml).toContain(testString);
+            expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
+            testString = 'subsequent test, after the swap.';
+            viewModel.descriptionRawHtml = testString;
+            expect(viewModel.descriptionSanitizedHtml).toContain(testString);
+            expect(viewModel.descriptionSanitizedHtml).toContain('processed by customSanitizer');
+        });
     });
 
     it('camera icon changes when tracking is not available, unless due to active tracking', function() {
