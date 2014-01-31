@@ -710,7 +710,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (defined(this._infoBox)) {
-            this._infoBox.viewModel.maxHeight = Math.min(panelMaxHeight, 480);
+            this._infoBox.viewModel.maxHeight = panelMaxHeight;
         }
 
         var timelineExists = defined(this._timeline);
