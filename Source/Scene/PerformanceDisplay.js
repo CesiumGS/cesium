@@ -27,7 +27,7 @@ define([
 
         var container = getElement(description.container);
         if (!defined(container)) {
-            throw new DeveloperError('conatiner is required');
+            throw new DeveloperError('container is required');
         }
 
         this._container = container;
@@ -69,8 +69,8 @@ define([
         }
 
         var previousTime = this._time;
-        this._time = Date.now();
-        var time = this._time;
+        var time = Date.now();
+        this._time = time;
 
         var frameTime = time - previousTime;
 
