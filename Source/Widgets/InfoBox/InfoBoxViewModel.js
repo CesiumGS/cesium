@@ -6,8 +6,9 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/TaskProcessor',
         '../../ThirdParty/knockout',
-        '../../ThirdParty/sanitize-caja'
+        '../../ThirdParty/when'
     ], function(
         Cartesian2,
         defaultValue,
@@ -15,8 +16,9 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        TaskProcessor,
         knockout,
-        sanitizeCaja) {
+        when) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
@@ -85,7 +87,13 @@ define([
             set : function(value) {
                 if (this._descriptionRawHtml !== value) {
                     this._descriptionRawHtml = value;
-                    this._descriptionSanitizedHtml = this.sanitizer(value);
+                    var that = this;
+                    when(this.sanitizer(value), function(sanitized) {
+                        that._descriptionSanitizedHtml = sanitized;
+                    }).otherwise(function(e) {
+                        /*global console*/
+                        console.log('An error occurred while sanitizing HTML: ' + e);
+                    });
                 }
             }
         });
@@ -126,16 +134,24 @@ define([
         });
     };
 
+    var sanitizerTaskProcessor;
+    function defaultSanitizer(html) {
+        if (!defined(sanitizerTaskProcessor)) {
+            sanitizerTaskProcessor = new TaskProcessor('sanitizeHtml', Infinity);
+        }
+        return sanitizerTaskProcessor.scheduleTask(html);
+    }
+
     /**
      * Gets or sets the default HTML sanitization function to use for all instances.
-     * By default, Google Caja is used with only basic HTML allowed.
-     * A specific instance can override this property by setting its prototype sanitizer property.
+     * By default, the Google Caja HTML/CSS sanitizer is loaded in a worker.
+     * A specific instance can override this property by setting its sanitizer property.
      *
-     * This property is a function which takes a unsanitized HTML string and returns a
-     * sanitized version.
+     * This property returns a function which takes a unsanitized HTML String and returns a
+     * sanitized String, or a Promise which resolves to the sanitized version.
      * @memberof InfoBoxViewModel
      */
-    InfoBoxViewModel.defaultSanitizer = sanitizeCaja;
+    InfoBoxViewModel.defaultSanitizer = defaultSanitizer;
 
     defineProperties(InfoBoxViewModel.prototype, {
         /**
