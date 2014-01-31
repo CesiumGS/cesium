@@ -259,7 +259,8 @@ define(['../../Core/BoundingSphere',
                 }
 
                 if (trackedObjectObservable() !== value) {
-                    dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                    dynamicObjectView = (defined(value) && defined(value.position)) ?
+                        new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     trackedObjectObservable(value);
                 }
             }
