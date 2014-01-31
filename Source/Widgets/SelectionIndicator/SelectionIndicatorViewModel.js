@@ -23,20 +23,6 @@ define([
 
     var screenSpacePos = new Cartesian2();
 
-    function trackPosition(viewModel, position) {
-        var container = viewModel._container;
-        var containerWidth = container.parentNode.clientWidth;
-        var containerHeight = container.parentNode.clientHeight;
-        var indicatorSize = viewModel._selectionIndicatorElement.clientWidth;
-        var halfSize = indicatorSize * 0.5;
-
-        var posX = Math.min(Math.max(position.x, 0), containerWidth) - halfSize;
-        var posY = Math.min(Math.max(position.y, 0), containerHeight) - halfSize;
-
-        viewModel._positionX = Math.floor(posX + 0.25).toString() + 'px';
-        viewModel._positionY = Math.floor(posY + 0.25).toString() + 'px';
-    }
-
     /**
      * The view model for {@link SelectionIndicator}.
      * @alias SelectionIndicatorViewModel
@@ -67,8 +53,8 @@ define([
         //>>includeEnd('debug')
 
         this._scene = scene;
-        this._positionX = '-1000px';
-        this._positionY = '0';
+        this._screenPositionX = '-1000px';
+        this._screenPositionY = '0';
         this._animationCollection = scene.getAnimations();
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
@@ -114,7 +100,7 @@ define([
          */
         this.showSelection = false;
 
-        knockout.track(this, ['position', '_positionX', '_positionY', 'scale', 'rotation', 'showSelection']);
+        knockout.track(this, ['position', '_screenPositionX', '_screenPositionY', 'scale', 'rotation', 'showSelection']);
 
         /**
          * Gets the visibility of the position indicator.
@@ -141,11 +127,19 @@ define([
      * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.update = function() {
-        if (this.showSelection) {
-            if (defined(this.position)) {
-                var pos = this._computeScreenSpacePosition(this.position, screenSpacePos);
-                trackPosition(this, pos);
-            }
+        if (this.showSelection && defined(this.position)) {
+            var screenPosition = this._computeScreenSpacePosition(this.position, screenSpacePos);
+            var container = this._container;
+            var containerWidth = container.parentNode.clientWidth;
+            var containerHeight = container.parentNode.clientHeight;
+            var indicatorSize = this._selectionIndicatorElement.clientWidth;
+            var halfSize = indicatorSize * 0.5;
+
+            screenPosition.x = Math.min(Math.max(screenPosition.x, 0), containerWidth) - halfSize;
+            screenPosition.y = Math.min(Math.max(screenPosition.y, 0), containerHeight) - halfSize;
+
+            this._screenPositionX = Math.floor(screenPosition.x + 0.25) + 'px';
+            this._screenPositionY = Math.floor(screenPosition.y + 0.25) + 'px';
         }
     };
 

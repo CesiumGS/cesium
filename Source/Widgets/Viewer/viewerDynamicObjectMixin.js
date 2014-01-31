@@ -141,8 +141,8 @@ define(['../../Core/BoundingSphere',
             }
 
             if (defined(selectionIndicatorViewModel)) {
-                selectionIndicatorViewModel.update();
                 selectionIndicatorViewModel.showSelection = showSelection;
+                selectionIndicatorViewModel.update();
             }
 
             if (defined(infoBoxViewModel)) {

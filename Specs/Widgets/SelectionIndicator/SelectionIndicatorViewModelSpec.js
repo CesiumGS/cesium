@@ -79,8 +79,8 @@ defineSuite([
         expect(function() {
             viewModel.update();
         }).not.toThrow();
-        expect(viewModel._positionX).toBe('-9px');  // Negative half the test size, plus viewModel.position.x (1)
-        expect(viewModel._positionY).toBe('-8px');  // Negative half the test size, plus viewModel.position.y (2)
+        expect(viewModel._screenPositionX).toBe('-9px');  // Negative half the test size, plus viewModel.position.x (1)
+        expect(viewModel._screenPositionY).toBe('-8px');  // Negative half the test size, plus viewModel.position.y (2)
 
         document.body.removeChild(container);
     });
