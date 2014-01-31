@@ -57,6 +57,11 @@ define([
     var br = new BoundingRectangle(220, 50, 100, 75);
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
+    var performanceContainer = document.createElement('div');
+    performanceContainer.style.position = 'absolute';
+    performanceContainer.style.right= '10px';
+    performanceContainer.style.top = '50px';
+
     /**
      * The view model for {@link CesiumInspector}.
      * @alias CesiumInspectorViewModel
@@ -73,6 +78,7 @@ define([
 
         var that = this;
         var canvas = scene.getCanvas();
+        canvas.parentNode.appendChild(performanceContainer);
         this._scene = scene;
         this._canvas = canvas;
         br.x = canvas.clientWidth - br.width - 10;
@@ -278,7 +284,7 @@ define([
         this._showPerformance = createCommand(function() {
             if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    rectangle : br,
+                    container: performanceContainer,
                     backgroundColor: bc,
                     font: '12px arial,sans-serif'
                 });
