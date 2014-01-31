@@ -7,7 +7,6 @@ define(['../Core/defined',
         '../Scene/PolylineColorAppearance',
         '../Scene/MaterialAppearance',
         '../Scene/PolylineMaterialAppearance',
-        //'./DynamicGeometryBatch',
         './DynamicObjectCollection',
         './GeometryBatchType',
         './StaticGeometryColorBatch',
@@ -22,7 +21,6 @@ define(['../Core/defined',
         PolylineColorAppearance,
         MaterialAppearance,
         PolylineMaterialAppearance,
-        //DynamicGeometryBatch,
         DynamicObjectCollection,
         GeometryBatchType,
         StaticGeometryColorBatch,
@@ -31,6 +29,36 @@ define(['../Core/defined',
     "use strict";
 
     var emptyArray = [];
+
+    var DynamicGeometryBatch = function(primitives) {
+        this._primitives = primitives;
+        this._items = new Map();
+    };
+
+    DynamicGeometryBatch.prototype.add = function(time, updater) {
+        this._items.set(updater.id, updater.createDynamicUpdater(this._primitives));
+    };
+
+    DynamicGeometryBatch.prototype.remove = function(updater) {
+        var id = updater.id;
+        var primitive = this._items.get(id);
+        primitive.destroy();
+        this._items.remove(id);
+    };
+
+    DynamicGeometryBatch.prototype.update = function(time) {
+        var geometries = this._items.getValues();
+        for (var i = 0, len = geometries.length; i < len; i++) {
+            geometries[i].update(time);
+        }
+    };
+
+    DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
+        var geometries = this._items.getValues();
+        for (var i = 0, len = geometries.length; i < len; i++) {
+            geometries[i].destroy();
+        }
+    };
 
     /**
      * A DynamicObject visualizer which maps the DynamicPolygon instance
@@ -76,7 +104,7 @@ define(['../Core/defined',
         this._batches = [];
         this._batches[GeometryBatchType.COLOR.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType);
         this._batches[GeometryBatchType.MATERIAL.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType);
-        //this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
+        this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
 
         this._updaters = new Map();
         this.setDynamicObjectCollection(dynamicObjectCollection);

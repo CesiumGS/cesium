@@ -1,11 +1,13 @@
 /*global define*/
 define(['../Core/defined',
+        '../Core/Map',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         '../Scene/Material',
         './MaterialProperty'
     ], function(
         defined,
+        Map,
         ShowGeometryInstanceAttribute,
         Primitive,
         Material,
