@@ -38,6 +38,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
+        './PerformanceDisplay',
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
@@ -81,6 +82,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
+        PerformanceDisplay,
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
@@ -314,6 +316,20 @@ define([
          * @readonly
          */
         this.debugFrustumStatistics = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * Displays frames per second and time between frames.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowFramesPerSecond = false;
+
+        this._performanceDisplay = undefined;
 
         this._debugSphere = undefined;
 
@@ -900,6 +916,26 @@ define([
         executeOverlayCommands(this, passState);
 
         frameState.creditDisplay.endFrame();
+
+        if (this.debugShowFramesPerSecond) {
+            if (!defined(this._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = this._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                this._performanceDisplay = performanceDisplay;
+                this._performanceContainer = performanceContainer;
+            }
+
+            this._performanceDisplay.update();
+        } else if (defined(this._performanceDisplay)) {
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         context.endFrame();
         executeEvents(frameState);
     };
@@ -1144,6 +1180,11 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
+        if (defined(this._performanceDisplay)){
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         return destroyObject(this);
     };
 
