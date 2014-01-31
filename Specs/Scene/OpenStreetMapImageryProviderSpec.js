@@ -224,6 +224,14 @@ defineSuite([
         expect(provider.getMaximumLevel()).toEqual(5);
     });
 
+    it('uses minimumLevel passed to constructor', function() {
+        var provider = new OpenStreetMapImageryProvider({
+            url : 'made/up/osm/server',
+            minimumLevel : 0
+        });
+        expect(provider.getMinimumLevel()).toEqual(0);
+    });
+
     it('raises error event when image cannot be loaded', function() {
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
