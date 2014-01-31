@@ -90,7 +90,11 @@ define([
                     this._descriptionSanitizedHtml = '';
                     var that = this;
                     when(this.sanitizer(value), function(sanitized) {
-                        that._descriptionSanitizedHtml = sanitized;
+                        // make sure the raw HTML still matches the input we sanitized,
+                        // in case it was changed again while we were sanitizing.
+                        if (that._descriptionRawHtml === value) {
+                            that._descriptionSanitizedHtml = sanitized;
+                        }
                     }).otherwise(function(e) {
                         /*global console*/
                         var message = defined(e.name) && defined(e.message) ? (e.name + ': ' + e.message) : e.toString();
