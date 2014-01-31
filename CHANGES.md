@@ -7,10 +7,10 @@ Beta Releases
 ### b25 - 2014-02-03
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
+  * `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials were moved to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
   * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
   * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
   * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
-  * `PerformanceDisplay requires a `description.container` parameter
 * Fixed globe rendering in the current Canary version of Google Chrome.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
