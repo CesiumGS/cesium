@@ -11,6 +11,7 @@ Beta Releases
   * `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials were moved to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
   * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
   * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
+  * `PerformanceDisplay` requires a DOM element as a parameter
 * Fixed globe rendering in the current Canary version of Google Chrome.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
@@ -20,6 +21,7 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
+* Added `Scene.debugShowFramesPerSecond` which creates a `PerformanceDisplay` when true. 
 
 ### b24 - 2014-01-06
 
