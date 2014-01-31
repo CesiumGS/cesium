@@ -58,6 +58,6 @@ defineSuite([
         var target = new DynamicPolygon();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

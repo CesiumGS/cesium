@@ -15,7 +15,7 @@ defineSuite([
             return new CircleOutlineGeometry({
                 radius : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without a radius', function() {
@@ -23,7 +23,7 @@ defineSuite([
             return new CircleOutlineGeometry({
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic())
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative radius', function() {
@@ -32,7 +32,7 @@ defineSuite([
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 radius : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative granularity', function() {
@@ -42,7 +42,7 @@ defineSuite([
                 radius : 1.0,
                 granularity : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

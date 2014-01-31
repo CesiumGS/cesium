@@ -245,14 +245,14 @@ defineSuite([
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 }));
-                var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+                var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = context.createVertexArrayFromGeometry({
                     geometry: geometry,
-                    attributeIndices: attributeIndices,
+                    attributeLocations: attributeLocations,
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });

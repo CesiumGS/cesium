@@ -37,7 +37,7 @@ defineSuite([
     it('constructor throws an exception when there is no canvas', function() {
         expect(function() {
             return new Camera();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get view matrix', function() {
@@ -72,7 +72,7 @@ defineSuite([
     it('worldToCameraCoordinates throws without cartesian', function() {
         expect(function() {
             camera.worldToCameraCoordinates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('transforms to the cameras reference frame', function() {
@@ -86,7 +86,7 @@ defineSuite([
     it('cameraToWorldCoordinates throws without cartesian', function() {
         expect(function() {
             camera.cameraToWorldCoordinates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('transforms from the cameras reference frame', function() {

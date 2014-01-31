@@ -43,7 +43,7 @@ define([
         EllipsoidFS) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0
     };
 
@@ -66,19 +66,19 @@ define([
      *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
-     * primitives.add(new EllipsoidPrimitive({
+     * primitives.add(new Cesium.EllipsoidPrimitive({
      *   center : ellipsoid.cartographicToCartesian(
-     *     Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
-     *   radii : new Cartesian3(500000.0, 500000.0, 500000.0)
+     *     Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+     *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * }));
      *
      * @example
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
-     * var e = new EllipsoidPrimitive();
-     * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+     * var e = new Cesium.EllipsoidPrimitive();
+     * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
      *   ellipsoid.cartographicToCartesian(
-     *     Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
-     * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
+     *     Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
+     * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
@@ -112,7 +112,7 @@ define([
          *
          * @example
          * // A sphere with a radius of 2.0
-         * e.radii = new Cartesian3(2.0, 2.0, 2.0);
+         * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
@@ -134,8 +134,8 @@ define([
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
-         * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *   Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
@@ -164,10 +164,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * e.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -190,7 +190,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -249,7 +249,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry: geometry,
-            attributeIndices: attributeIndices,
+            attributeLocations: attributeLocations,
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
@@ -270,9 +270,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
@@ -350,7 +352,7 @@ define([
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
+            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
             colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
@@ -395,7 +397,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
+                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;

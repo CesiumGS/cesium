@@ -279,14 +279,14 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.resumeEvents();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws with undefined DynamicObject', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.add(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws for DynamicObject with same id', function() {
@@ -304,27 +304,27 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.remove(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeById throws for undefined id', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.removeById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getOrCreateObject throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getOrCreateObject(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

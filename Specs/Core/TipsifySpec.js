@@ -31,7 +31,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : [1, 2, 3, 4],
                                    maximumIndex : 1,
                                    cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when calculating ACMR (3 of 4)', function() {
@@ -39,7 +39,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : [0, 1, 2],
                                    maximumIndex : -1,
                                    cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when calculating ACMR (4 of 4)', function() {
@@ -47,7 +47,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : [0, 1, 2],
                                    maximumIndex : 2,
                                    cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (1 of 5)', function() {
@@ -63,7 +63,7 @@ defineSuite([
             Tipsify.tipsify({indices : [1, 2, 3, 4],
                              maximumIndex : 1,
                              cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (3 of 5)', function () {
@@ -71,7 +71,7 @@ defineSuite([
             Tipsify.tipsify({indices : [1, 2, 3],
                              maximumIndex : -1,
                              cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (4 of 5)', function() {
@@ -79,13 +79,13 @@ defineSuite([
             Tipsify.tipsify({indices : [0, 1, 2],
                              maximumIndex : 2,
                              cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (5 of 5)', function() {
         expect(function() {
             Tipsify.tipsify();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can lower ACMR using the Tipsify algorithm', function() {

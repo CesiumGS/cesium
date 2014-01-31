@@ -127,45 +127,37 @@ define([
             (!defined(viewport.width)) ? context.getDrawingBufferWidth() : viewport.width,
             (!defined(viewport.height)) ? context.getDrawingBufferHeight() : viewport.height) : undefined;
 
-        // Validate
+        if ((this.lineWidth < context.getMinimumAliasedLineWidth()) ||
+                (this.lineWidth > context.getMaximumAliasedLineWidth())) {
+                throw new RuntimeError('renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().');
+        }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!WindingOrder.validate(this.frontFace)) {
             throw new DeveloperError('Invalid renderState.frontFace.');
         }
-
         if (!CullFace.validate(this.cull.face)) {
             throw new DeveloperError('Invalid renderState.cull.face.');
         }
-
-        if ((this.lineWidth < context.getMinimumAliasedLineWidth()) ||
-            (this.lineWidth > context.getMaximumAliasedLineWidth())) {
-            throw new RuntimeError('renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().');
-        }
-
         if ((this.scissorTest.rectangle.width < 0) ||
             (this.scissorTest.rectangle.height < 0)) {
             throw new DeveloperError('renderState.scissorTest.rectangle.width and renderState.scissorTest.rectangle.height must be greater than or equal to zero.');
         }
-
         if (this.depthRange.near > this.depthRange.far) {
             // WebGL specific - not an error in GL ES
             throw new DeveloperError('renderState.depthRange.near can not be greater than renderState.depthRange.far.');
         }
-
         if (this.depthRange.near < 0) {
             // Would be clamped by GL
             throw new DeveloperError('renderState.depthRange.near must be greater than or equal to zero.');
         }
-
         if (this.depthRange.far > 1) {
             // Would be clamped by GL
             throw new DeveloperError('renderState.depthRange.far must be less than or equal to one.');
         }
-
         if (!DepthFunction.validate(this.depthTest.func)) {
             throw new DeveloperError('Invalid renderState.depthTest.func.');
         }
-
         if ((this.blending.color.red < 0.0) || (this.blending.color.red > 1.0) ||
             (this.blending.color.green < 0.0) || (this.blending.color.green > 1.0) ||
             (this.blending.color.blue < 0.0) || (this.blending.color.blue > 1.0) ||
@@ -173,80 +165,68 @@ define([
             // Would be clamped by GL
             throw new DeveloperError('renderState.blending.color components must be greater than or equal to zero and less than or equal to one.');
         }
-
         if (!BlendEquation.validate(this.blending.equationRgb)) {
             throw new DeveloperError('Invalid renderState.blending.equationRgb.');
         }
-
         if (!BlendEquation.validate(this.blending.equationAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.equationAlpha.');
         }
-
         if (!BlendFunction.validate(this.blending.functionSourceRgb)) {
             throw new DeveloperError('Invalid renderState.blending.functionSourceRgb.');
         }
-
         if (!BlendFunction.validate(this.blending.functionSourceAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.functionSourceAlpha.');
         }
-
         if (!BlendFunction.validate(this.blending.functionDestinationRgb)) {
             throw new DeveloperError('Invalid renderState.blending.functionDestinationRgb.');
         }
-
         if (!BlendFunction.validate(this.blending.functionDestinationAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.functionDestinationAlpha.');
         }
-
         if (!StencilFunction.validate(this.stencilTest.frontFunction)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontFunction.');
         }
-
         if (!StencilFunction.validate(this.stencilTest.backFunction)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backFunction.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.frontOperation.fail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.fail.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.frontOperation.zFail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zFail.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.frontOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zPass.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.backOperation.fail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.fail.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.backOperation.zFail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zFail.');
         }
-
         if (!StencilOperation.validate(this.stencilTest.backOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
         }
+        //>>includeEnd('debug');
 
         if (defined(this.viewport)) {
+            //>>includeStart('debug', pragmas.debug);
             if (this.viewport.width < 0) {
                 throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
             }
+            if (this.viewport.height < 0) {
+                throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
+            }
+            //>>includeEnd('debug');
 
             if (this.viewport.width > context.getMaximumViewportWidth()) {
                 throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
             }
-
-            if (this.viewport.height < 0) {
-                throw new DeveloperError('renderState.viewport.height must be greater than or equal to zero.');
-            }
-
             if (this.viewport.height > context.getMaximumViewportHeight()) {
                 throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
             }
         }
+
 
         this.id = 0;
         this._applyFunctions = [];

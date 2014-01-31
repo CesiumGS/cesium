@@ -35,16 +35,17 @@ define([
      *
      * @example
      * // Construct an Timeinterval closed on one end with a Color payload.
-     * var interval = new TimeInterval(JulianDate.fromTotalDays(1000), JulianDate.fromTotalDays(1001), true, false, Color.WHITE);
+     * var interval = new Cesium.TimeInterval(Cesium.JulianDate.fromTotalDays(1000), Cesium.JulianDate.fromTotalDays(1001), true, false, Cesium.Color.WHITE);
      */
     var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(start)) {
             throw new DeveloperError('start must be specified.');
         }
-
         if (!defined(stop)) {
             throw new DeveloperError('stop must be specified.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(isStartIncluded)) {
             isStartIncluded = true;
@@ -101,7 +102,7 @@ define([
      *
      * @example
      * // Construct an open Timeinterval with a Cartesian data payload.
-     * var interval = TimeInterval.fromIso8601('2012-03-15T11:02:24.55Z/2012-03-15T12:28:24.03Z', false, false, new Cartesian3(1,2,3));
+     * var interval = Cesium.TimeInterval.fromIso8601('2012-03-15T11:02:24.55Z/2012-03-15T12:28:24.03Z', false, false, new Cesium.Cartesian3(1,2,3));
      */
     TimeInterval.fromIso8601 = function(iso8601String, isStartIncluded, isStopIncluded, data) {
         var iso8601Interval = iso8601String.split('/');
@@ -150,9 +151,11 @@ define([
      * @exception {DeveloperError} epsilon is required and must be number.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
         }
+        //>>includeEnd('debug');
 
         return left === right ||
                defined(left) &&

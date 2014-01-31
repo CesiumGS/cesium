@@ -47,12 +47,12 @@ define([
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
      * @example
-     * var ellipsoid = new EllipsoidOutlineGeometry({
-     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0),
+     * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
+     *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
      *   stackPartitions: 6,
      *   slicePartitions: 5
      * });
-     * var geometry = EllipsoidOutlineGeometry.createGeometry(ellipsoid);
+     * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -62,17 +62,17 @@ define([
         var slicePartitions = defaultValue(options.slicePartitions, 8);
         var subdivisions = defaultValue(options.subdivisions, 128);
 
+        //>>includeStart('debug', pragmas.debug);
         if (stackPartitions < 1) {
             throw new DeveloperError('options.stackPartitions cannot be less than 1');
         }
-
         if (slicePartitions < 0) {
             throw new DeveloperError('options.slicePartitions cannot be less than 0');
         }
-
         if (subdivisions < 0) {
             throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
         }
+        //>>includeEnd('debug');
 
         this._radii = Cartesian3.clone(radii);
         this._stackPartitions = stackPartitions;

@@ -122,7 +122,7 @@ defineSuite([
                     imageryLayerCollection : new ImageryLayerCollection()
                 });
             }
-            expect(constructWithoutTerrainProvider).toThrow();
+            expect(constructWithoutTerrainProvider).toThrowDeveloperError();
         });
 
         it('throws if a ImageryLayerCollection is not provided', function() {
@@ -131,7 +131,7 @@ defineSuite([
                     terrainProvider : new EllipsoidTerrainProvider()
                 });
             }
-            expect(constructWithoutImageryLayerCollection).toThrow();
+            expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
         });
     }, 'WebGL');
 

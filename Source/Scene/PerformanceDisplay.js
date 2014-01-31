@@ -33,7 +33,7 @@ define([
      * @param {String} [description.font] The CSS font of the text in the display.
      *
      * @example
-     * scene.getPrimitives().add(new PerformanceDisplay());
+     * scene.getPrimitives().add(new Cesium.PerformanceDisplay());
      */
     var PerformanceDisplay = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);

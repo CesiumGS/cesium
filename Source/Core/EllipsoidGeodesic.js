@@ -176,9 +176,11 @@ define([
         var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
         var lastCartesian  = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end,   scratchCart2), scratchCart2);
 
+        //>>includeStart('debug', pragmas.debug);
         if (Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI) < 0.0125) {
             throw new DeveloperError('geodesic position is not unique');
         }
+        //>>includeEnd('debug');
 
         vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.getMaximumRadius(), ellipsoid.getMinimumRadius(),
                 start.longitude, start.latitude, end.longitude, end.latitude);
@@ -229,9 +231,11 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getSurfaceDistance = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getSurfaceDistance');
         }
+        //>>includeEnd('debug');
 
         return this._distance;
     };
@@ -247,12 +251,14 @@ define([
      * @exception {DeveloperError} end cartographic position is required
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(start)) {
             throw new DeveloperError('start cartographic position is required');
         }
         if (!defined(end)) {
             throw new DeveloperError('end cartgraphic position is required');
         }
+        //>>includeEnd('debug');
 
         computeProperties(this, start, end, this._ellipsoid);
     };
@@ -281,9 +287,11 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getStartHeading = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getStartHeading');
         }
+        //>>includeEnd('debug');
 
         return this._startHeading;
     };
@@ -296,9 +304,11 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getEndHeading
      */
     EllipsoidGeodesic.prototype.getEndHeading = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getEndHeading');
         }
+        //>>includeEnd('debug');
 
         return this._endHeading;
     };
@@ -326,9 +336,11 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance
      */
     EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
         }
+        //>>includeEnd('debug');
 
         var constants = this._constants;
 

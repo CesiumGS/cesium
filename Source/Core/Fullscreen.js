@@ -131,10 +131,10 @@ define(['./defined'], function(defined) {
      *
      * @example
      * // Put the entire page into fullscreen.
-     * Fullscreen.requestFullscreen(document.body)
+     * Cesium.Fullscreen.requestFullscreen(document.body)
      *
      * // Place only the Cesium canvas into fullscreen.
-     * Fullscreen.requestFullscreen(scene.getCanvas())
+     * Cesium.Fullscreen.requestFullscreen(scene.getCanvas())
      */
     Fullscreen.requestFullscreen = function(element) {
         if (!Fullscreen.supportsFullscreen()) {

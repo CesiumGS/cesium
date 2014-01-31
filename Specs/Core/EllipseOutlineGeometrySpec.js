@@ -16,7 +16,7 @@ defineSuite([
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without a semiMajorAxis', function() {
@@ -25,7 +25,7 @@ defineSuite([
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 semiMinorAxis : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without a semiMinorAxis', function() {
@@ -34,7 +34,7 @@ defineSuite([
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 semiMajorAxis : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative axis', function() {
@@ -44,7 +44,7 @@ defineSuite([
                 semiMajorAxis : 1.0,
                 semiMinorAxis : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative granularity', function() {
@@ -55,7 +55,7 @@ defineSuite([
                 semiMinorAxis : 1.0,
                 granularity : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when semiMajorAxis is less than the semiMajorAxis', function() {
@@ -65,7 +65,7 @@ defineSuite([
                 semiMajorAxis : 1.0,
                 semiMinorAxis : 2.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

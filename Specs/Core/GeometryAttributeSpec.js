@@ -40,7 +40,7 @@ defineSuite([
                     0, 0, 255, 255
                 ])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without componentsPerAttribute', function() {
@@ -53,7 +53,7 @@ defineSuite([
                     0, 0, 255, 255
                 ])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when componentsPerAttribute is less than 1 or greater than 4', function() {
@@ -67,7 +67,7 @@ defineSuite([
                     0, 0, 255, 255
                 ])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without values', function() {
@@ -76,7 +76,7 @@ defineSuite([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });
