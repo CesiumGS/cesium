@@ -11,7 +11,7 @@ define(['../Core/defined',
         './DynamicObjectCollection',
         './GeometryBatchType',
         './StaticGeometryColorBatch',
-        //'./StaticGeometryPerMaterialBatch',
+        './StaticGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         defined,
@@ -26,7 +26,7 @@ define(['../Core/defined',
         DynamicObjectCollection,
         GeometryBatchType,
         StaticGeometryColorBatch,
-        //StaticGeometryPerMaterialBatch,
+        StaticGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch) {
     "use strict";
 
@@ -75,7 +75,7 @@ define(['../Core/defined',
 
         this._batches = [];
         this._batches[GeometryBatchType.COLOR.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType);
-        //this._batches[GeometryBatchType.MATERIAL.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType);
+        this._batches[GeometryBatchType.MATERIAL.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType);
         //this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
 
         this._updaters = new Map();

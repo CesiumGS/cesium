@@ -151,22 +151,13 @@ define(['../Core/Color',
     };
 
     EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
-        var attributes;
-        if (this._geometryType === GeometryBatchType.COLOR) {
-            attributes = {
-                show : new ShowGeometryInstanceAttribute(this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(this._outlineColorProperty.getValue(time))
-            };
-        } else if (this._geometryType === GeometryBatchType.MATERIAL) {
-            attributes = {
-                show : new ShowGeometryInstanceAttribute(this._showOutlineProperty.getValue(time))
-            };
-        }
-
         return new GeometryInstance({
             id : this._dynamicObject,
             geometry : new EllipseOutlineGeometry(this._options),
-            attributes : attributes
+            attributes : {
+                show : new ShowGeometryInstanceAttribute(this._showOutlineProperty.getValue(time)),
+                color : ColorGeometryInstanceAttribute.fromColor(this._outlineColorProperty.getValue(time))
+            }
         });
     };
 
