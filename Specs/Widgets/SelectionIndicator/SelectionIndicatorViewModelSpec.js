@@ -95,4 +95,4 @@ defineSuite([
         viewModel.showSelection = false;
         expect(viewModel.showPosition).toBe(false);
     });
-});
+}, 'WebGL');

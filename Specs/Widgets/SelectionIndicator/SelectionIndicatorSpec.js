@@ -53,4 +53,4 @@ defineSuite([
             return new SelectionIndicator('testElement', scene);
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');
