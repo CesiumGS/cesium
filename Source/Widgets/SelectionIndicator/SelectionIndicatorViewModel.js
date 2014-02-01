@@ -63,39 +63,25 @@ define([
         };
 
         /**
-         * The world position of the object for which to display the selection indicator.
-         * @memberof SelectionIndicatorViewModel
-         *
+         * Gets or sets the world position of the object for which to display the selection indicator.
          * @type {Cartesian3}
          */
         this.position = undefined;
 
         /**
-         * The scale of the indicator relative to its default size.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
+         * Gets or sets the scale of the indicator relative to its default size.
          * @type {Number}
          */
         this.scale = 1;
 
         /**
-         * The rotation angle of the indicator, in degrees.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
+         * Gets or sets the rotation angle of the indicator, in degrees.
          * @type {Number}
          */
         this.rotation = 0;
 
         /**
-         * Gets or sets the maximum height of the info box in pixels.  This property is observable.
-         * @type {Number}
-         */
-        this.maxHeight = 500;
-
-        /**
          * Gets or sets the visibility of the selection indicator.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
          * @type {Boolean}
          */
         this.showSelection = false;
@@ -104,8 +90,6 @@ define([
 
         /**
          * Gets the visibility of the position indicator.
-         * @memberof SelectionIndicatorViewModel.prototype
-         *
          * @type {Boolean}
          */
         this.showPosition = undefined;
@@ -123,7 +107,8 @@ define([
     };
 
     /**
-     * Updates the view of the selection indicator to match the position and content properties of the view model
+     * Updates the view of the selection indicator to match the position and content properties of the view model.
+     * This function should be called as part of the render loop.
      * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.update = function() {
@@ -231,7 +216,7 @@ define([
          *     return Cartesian2.clone(position, result);
          * };
          *
-         * @memberof SelectionIndicatorViewModel
+         * @memberof SelectionIndicatorViewModel.prototype
          *
          * @type {Function}
          */

@@ -44,7 +44,7 @@ define([
         this.maxHeight = 500;
 
         /**
-         * Enables or disables the camera tracking icon.
+         * Gets or sets whether the camera tracking icon is enabled.
          * @type {Boolean}
          */
         this.enableCamera = false;
@@ -57,16 +57,12 @@ define([
 
         /**
          * Gets or sets the visibility of the info box.
-         * @memberof InfoBoxViewModel.prototype
-         *
          * @type {Boolean}
          */
         this.showInfo = false;
 
         /**
          * Gets or sets the title text in the info box.
-         * @memberof InfoBoxViewModel.prototype
-         *
          * @type {String}
          */
         this.titleText = '';
@@ -75,8 +71,6 @@ define([
 
         /**
          * Gets or sets the un-sanitized description HTML for the info box.
-         * @memberof InfoBoxViewModel.prototype
-         *
          * @type {String}
          */
         this.descriptionRawHtml = undefined;
@@ -109,8 +103,6 @@ define([
 
         /**
          * Gets the sanitized description HTML for the info box.
-         * @memberof InfoBoxViewModel.prototype
-         *
          * @type {String}
          */
         this.descriptionSanitizedHtml = undefined;
@@ -122,8 +114,6 @@ define([
 
         /**
          * Gets the SVG path of the camera icon, which can change to be "crossed out" or not.
-         * @memberof InfoBoxViewModel.prototype
-         *
          * @type {String}
          */
         this.cameraIconPath = undefined;
@@ -136,7 +126,6 @@ define([
         /**
          * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
          * @param {Number} offset The offset in pixels.
-         * @memberof InfoBoxViewModel.prototype
          * @returns {String}
          */
         InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
