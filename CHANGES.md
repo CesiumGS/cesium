@@ -4,7 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b26 - 2014-03-03
+
+* Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
+
 ### b25 - 2014-02-03
+
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
   * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
@@ -13,7 +18,6 @@ Beta Releases
   * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
   * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
   * `PerformanceDisplay` requires a DOM element as a parameter
-* Added new `SelectionIndicator` and `InfoBox` widgets, activated by `viewerDynamicObjectMixin`.
 * Fixed globe rendering in the current Canary version of Google Chrome.
 * `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
 * The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
