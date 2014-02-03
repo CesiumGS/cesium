@@ -20,9 +20,11 @@ define(['../Core/defined',
         this._createPrimitive = true;
         this._primitive = undefined;
         this._primitives = primitives;
-        this._geometries = new Map();
+        this._geometry = new Map();
         this._material = Material.fromType('Color');
         this._appearanceType = appearanceType;
+        this._updatersWithAttributes = new Map();
+        this._attributes = new Map();
     };
 
     Batch.prototype.isMaterial = function(updater) {
@@ -38,21 +40,27 @@ define(['../Core/defined',
     };
 
     Batch.prototype.add = function(time, updater) {
-        this._updaters.set(updater.id, updater);
-        this._geometries.set(updater.id, updater.createGeometryInstance(time));
+        var id = updater.id;
+        this._updaters.set(id, updater);
+        this._geometry.set(id, updater.createGeometryInstance(time));
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
+            this._updatersWithAttributes.set(id, updater);
+        }
         this._createPrimitive = true;
     };
 
     Batch.prototype.remove = function(updater) {
-        this._createPrimitive = this._updaters.remove(updater.id);
-        this._geometries.remove(updater.id);
+        var id = updater.id;
+        this._createPrimitive = this._updaters.remove(id);
+        this._geometry.remove(id);
+        this._updatersWithAttributes.remove(id);
         return this._createPrimitive;
     };
 
     Batch.prototype.update = function(time) {
         var primitive = this._primitive;
         var primitives = this._primitives;
-        var geometries = this._geometries.getValues();
+        var geometries = this._geometry.getValues();
         if (this._createPrimitive) {
             if (defined(primitive)) {
                 primitives.remove(primitive);
@@ -76,18 +84,21 @@ define(['../Core/defined',
         } else {
             this._primitive.appearance.material = MaterialProperty.getValue(time, this._materialProperty, this._material);
 
-            var updaters = this._updaters.getValues();
-            for (var i = geometries.length - 1; i > -1; i--) {
-                var instance = geometries[i];
-                var updater = updaters[i];
+            var updatersWithAttributes = this._updatersWithAttributes.getValues();
+            var length = updatersWithAttributes.length;
+            for (var i = 0; i < length; i++) {
+                var updater = updatersWithAttributes[i];
+                var instance = this._geometry.get(updater.id);
 
-                var attributes = updater.attributes;
+                var attributes = this._attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
-                    updater.attributes = attributes;
+                    this._attributes.set(instance.id.id, attributes);
                 }
-                var show = updater.isFilled(time);
-                attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+
+                if (!updater.hasConstantFill) {
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
+                }
             }
         }
     };

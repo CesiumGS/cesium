@@ -40,7 +40,6 @@ define(['../Core/Color',
         Primitive) {
     "use strict";
 
-    //TODO Fix fill for static objects
     var defaultMaterial = new ColorMaterialProperty(new ConstantProperty(Color.WHITE));
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ConstantProperty(true);
@@ -379,7 +378,7 @@ define(['../Core/Color',
 
         if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(time) : undefined;
 
             var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
