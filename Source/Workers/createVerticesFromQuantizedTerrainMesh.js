@@ -74,23 +74,6 @@ define([
         var indexBuffer = new Uint16Array(parameters.indices.length + edgeTriangleCount * 3);
         indexBuffer.set(parameters.indices, 0);
 
-        // TODO: ensure vertices are sorted on the server, and remove this.
-        parameters.westIndices.sort(function(a, b) {
-            return vBuffer[a] - vBuffer[b];
-        });
-
-        parameters.southIndices.sort(function(a, b) {
-            return uBuffer[a] - uBuffer[b];
-        });
-
-        parameters.eastIndices.sort(function(a, b) {
-            return vBuffer[a] - vBuffer[b];
-        });
-
-        parameters.northIndices.sort(function(a, b) {
-            return uBuffer[a] - uBuffer[b];
-        });
-
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;

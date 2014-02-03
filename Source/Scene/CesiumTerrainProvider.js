@@ -221,10 +221,8 @@ define([
         pos += vertexCount * encodedVertexLength;
 
         if (vertexCount > 64 * 1024) {
-            // More than 64k vertices, so read 32-bit indices.
-            // TODO: Basic WebGL doesn't support 32-bit indices, so we also need to
-            //       split this mesh or maybe use an extension.
-            throw new DeveloperError('TODO: 32-bit indices are not yet supported.');
+            // More than 64k vertices, so indices are 32-bit.  Not supported right now.
+            throw new DeveloperError('CesiumTerrainProvider currently does not support tiles with more than 65536 vertices.');
         }
 
         // Decode the vertex buffer.
@@ -341,7 +339,7 @@ define([
 
         var tmsY = (yTiles - y - 1);
 
-        // TODO: use all the available URL templates.
+        // Use the first URL template.  In the future we should use them all.
         var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
 
         var proxy = this._proxy;

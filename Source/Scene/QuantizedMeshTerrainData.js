@@ -153,11 +153,24 @@ define([
         this._boundingSphere = description.boundingSphere;
         this._horizonOcclusionPoint = description.horizonOcclusionPoint;
 
-        // TODO: these toArray calls are not necessary if we can count on the edge vertices being sorted.
-        this._westIndices = toArray(description.westIndices);
-        this._southIndices = toArray(description.southIndices);
-        this._eastIndices = toArray(description.eastIndices);
-        this._northIndices = toArray(description.northIndices);
+        var vertexCount = this._quantizedVertices.length / 3;
+        var uValues = this._uValues = this._quantizedVertices.subarray(0, vertexCount);
+        var vValues = this._vValues = this._quantizedVertices.subarray(vertexCount, 2 * vertexCount);
+        this._heightValues = this._quantizedVertices.subarray(2 * vertexCount, 3 * vertexCount);
+
+        // We don't assume that we can count on the edge vertices being sorted by u or v.
+        function sortByV(a, b) {
+            return vValues[a] - vValues[b];
+        }
+
+        function sortByU(a, b) {
+            return uValues[a] - uValues[b];
+        }
+
+        this._westIndices = sortIndicesIfNecessary(description.westIndices, sortByV);
+        this._southIndices = sortIndicesIfNecessary(description.southIndices, sortByU);
+        this._eastIndices = sortIndicesIfNecessary(description.eastIndices, sortByV);
+        this._northIndices = sortIndicesIfNecessary(description.northIndices, sortByU);
 
         this._westSkirtHeight = description.westSkirtHeight;
         this._southSkirtHeight = description.southSkirtHeight;
@@ -168,12 +181,26 @@ define([
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
-
-        var vertexCount = this._quantizedVertices.length / 3;
-        this._uValues = this._quantizedVertices.subarray(0, vertexCount);
-        this._vValues = this._quantizedVertices.subarray(vertexCount, 2 * vertexCount);
-        this._heightValues = this._quantizedVertices.subarray(2 * vertexCount, 3 * vertexCount);
     };
+
+    var arrayScratch = [];
+
+    function sortIndicesIfNecessary(indices, sortFunction) {
+        arrayScratch.length = indices.length;
+
+        var needsSort = false;
+        for (var i = 0, len = indices.length; i < len; ++i) {
+            arrayScratch[i] = indices[i];
+            needsSort = needsSort || (i > 0 && sortFunction(indices[i - 1], indices[i]) > 0);
+        }
+
+        if (needsSort) {
+            arrayScratch.sort(sortFunction);
+            return new Uint16Array(arrayScratch);
+        } else {
+            return indices;
+        }
+    }
 
     function toArray(typedArray) {
         var result = new Array(typedArray.length);
