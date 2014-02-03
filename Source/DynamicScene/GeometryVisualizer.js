@@ -200,7 +200,7 @@ define(['../Core/defined',
                 batch.add(time, updater);
             }
 
-            if (updater.isOutlined) {
+            if (updater.outlineEnabled) {
                 this._outlineBatch.add(time, updater);
             }
         }

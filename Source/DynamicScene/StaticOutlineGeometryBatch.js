@@ -34,7 +34,7 @@ define(['../Core/Color',
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
-        if (!updater.showOutlineProperty.isConstant || !updater.materialProperty.isConstant) {
+        if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant) {
             this.updatersWithAttributes.set(id, updater);
         }
     };
@@ -95,7 +95,7 @@ define(['../Core/Color',
                 if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
                     this.itemsToRemove[removedCount++] = updater;
                 }
-                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.showOutlineProperty.getValue(time), attributes.show);
+                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time), attributes.show);
             }
         }
         this.itemsToRemove.length = removedCount;

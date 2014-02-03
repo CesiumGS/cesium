@@ -86,10 +86,8 @@ define(['../Core/defined',
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     updater.attributes = attributes;
                 }
-                var show = updater.show;
-                if (defined(show)) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
-                }
+                var show = updater.isFilled(time);
+                attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
             }
         }
     };
@@ -118,7 +116,7 @@ define(['../Core/defined',
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.materialProperty);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty);
         batch.add(time, updater);
         items.push(batch);
     };
