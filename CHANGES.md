@@ -4,7 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b26 - 2014-03-03
+
+* Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
+
 ### b25 - 2014-02-03
+
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
   * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
