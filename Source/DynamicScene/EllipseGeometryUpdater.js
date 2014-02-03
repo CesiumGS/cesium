@@ -285,6 +285,7 @@ define(['../Core/Color',
     var DynamicGeometryBatchItem = function(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;
+        this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
     };
 
@@ -292,6 +293,7 @@ define(['../Core/Color',
         var geometryUpdater = this._geometryUpdater;
         if (defined(this._primitive)) {
             this._primitives.remove(this._primitive);
+            this._primitives.remove(this._outlinePrimitive);
         }
 
         this._material = MaterialProperty.getValue(time, geometryUpdater.materialProperty, this._material);
@@ -334,10 +336,38 @@ define(['../Core/Color',
             asynchronous : false
         });
         this._primitives.add(this._primitive);
+
+        if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
+            options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
+            this._outlinePrimitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    id : this._dynamicObject,
+                    geometry : new EllipseOutlineGeometry(options),
+                    attributes : {
+                        color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        }
+                    }
+                }),
+                asynchronous : false
+            });
+            this._primitives.add(this._outlinePrimitive);
+        }
     };
 
     DynamicGeometryBatchItem.prototype.destroy = function() {
-        this._primitives.remove(this._primitive);
+        if (defined(this._primitive)) {
+            this._primitives.remove(this._primitive);
+            this._primitives.add(this._outlinePrimitive);
+        }
     };
 
     return EllipseGeometryUpdater;

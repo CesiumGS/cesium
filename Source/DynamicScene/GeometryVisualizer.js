@@ -32,29 +32,29 @@ define(['../Core/defined',
 
     var DynamicGeometryBatch = function(primitives) {
         this._primitives = primitives;
-        this._items = new Map();
+        this._dynamicUpdaters = new Map();
     };
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._items.set(updater.id, updater.createDynamicUpdater(this._primitives));
+        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {
         var id = updater.id;
-        var primitive = this._items.get(id);
-        primitive.destroy();
-        this._items.remove(id);
+        var dynamicUpdater = this._dynamicUpdaters.get(id);
+        dynamicUpdater.destroy();
+        this._dynamicUpdaters.remove(id);
     };
 
     DynamicGeometryBatch.prototype.update = function(time) {
-        var geometries = this._items.getValues();
+        var geometries = this._dynamicUpdaters.getValues();
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].update(time);
         }
     };
 
     DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
-        var geometries = this._items.getValues();
+        var geometries = this._dynamicUpdaters.getValues();
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].destroy();
         }
