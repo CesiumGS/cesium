@@ -87,12 +87,12 @@ defineSuite([
 
     it('Hides the indicator when position is unknown', function() {
         var viewModel = new SelectionIndicatorViewModel(scene, selectionIndicatorElement, container);
-        expect(viewModel.showPosition).toBe(false);
+        expect(viewModel.isVisible).toBe(false);
         viewModel.showSelection = true;
-        expect(viewModel.showPosition).toBe(false);
+        expect(viewModel.isVisible).toBe(false);
         viewModel.position = new Cartesian3(1.0, 2.0, 3.0);
-        expect(viewModel.showPosition).toBe(true);
+        expect(viewModel.isVisible).toBe(true);
         viewModel.showSelection = false;
-        expect(viewModel.showPosition).toBe(false);
+        expect(viewModel.isVisible).toBe(false);
     });
 }, 'WebGL');

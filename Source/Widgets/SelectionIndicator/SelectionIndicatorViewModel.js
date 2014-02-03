@@ -89,11 +89,12 @@ define([
         knockout.track(this, ['position', '_screenPositionX', '_screenPositionY', 'scale', 'rotation', 'showSelection']);
 
         /**
-         * Gets the visibility of the position indicator.
+         * Gets the visibility of the position indicator.  This can be false even if an
+         * object is selected, when the selected object has no position.
          * @type {Boolean}
          */
-        this.showPosition = undefined;
-        knockout.defineProperty(this, 'showPosition', {
+        this.isVisible = undefined;
+        knockout.defineProperty(this, 'isVisible', {
             get : function() {
                 return this.showSelection && defined(this.position);
             }
