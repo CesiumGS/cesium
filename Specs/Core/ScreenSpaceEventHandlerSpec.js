@@ -108,26 +108,26 @@ defineSuite([
     it('setting mouse events require an action', function() {
         expect(function() {
             handler.setInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting mouse events require a type', function() {
         expect(function() {
             handler.setInputAction(function() {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getting mouse events require a type', function() {
         expect(function() {
             handler.getInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removing mouse events require a type', function() {
         expect(function() {
             handler.removeInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('mouse right down', function() {

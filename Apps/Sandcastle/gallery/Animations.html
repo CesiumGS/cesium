@@ -35,13 +35,6 @@ require(['Cesium'], function(Cesium) {
         scene.getAnimations().addAlpha(primitive.material, 0.0, 0.5);
     }
 
-    function addErosionAnimation(primitive, scene) {
-        Sandcastle.declare(addErosionAnimation); // For highlighting in Sandcastle.
-        scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
-            duration : 1000
-        });
-    }
-
     function addStripeAnimation(primitive, scene) {
         Sandcastle.declare(addStripeAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addOffsetIncrement(primitive.material);
@@ -63,7 +56,7 @@ require(['Cesium'], function(Cesium) {
                         Cesium.Math.toRadians(20.0),
                         Cesium.Math.toRadians(-80.0),
                         Cesium.Math.toRadians(50.0)),
-            material : Cesium.Material.fromType('Erosion')
+            material : Cesium.Material.fromType('Color')
         });
         primitives.add(extent);
 
@@ -97,13 +90,6 @@ require(['Cesium'], function(Cesium) {
         resetExtentPropeties(extent);
         addAlphaAnimation(extent, scene);
         Sandcastle.highlight(addAlphaAnimation);
-    });
-
-    Sandcastle.addToolbarButton('Erosion Animation', function() {
-        scene.getAnimations().removeAll();
-        resetExtentPropeties(extent);
-        addErosionAnimation(extent, scene);
-        Sandcastle.highlight(addErosionAnimation);
     });
 
     Sandcastle.addToolbarButton('Stripe Animation', function() {

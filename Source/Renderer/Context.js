@@ -74,6 +74,7 @@ define([
         ClearCommand,
         PassState) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -211,6 +212,8 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        // TODO: WebGL default is false. This works around a bug in Canary and can be removed when fixed: https://code.google.com/p/chromium/issues/detail?id=335273
+        webglOptions.stencil = defaultValue(webglOptions.stencil, false);
         webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
         this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
@@ -270,6 +273,10 @@ define([
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
+        this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+        this._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
+        this._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
@@ -286,6 +293,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
@@ -878,6 +886,45 @@ define([
      */
     Context.prototype.getFragmentDepth = function() {
         return !!this._fragDepth;
+    };
+
+    /**
+     * Returns <code>true</code> if the WEBGL_draw_buffers extension is supported. This
+     * extensions provides support for multiple render targets. The framebuffer object can have mutiple
+     * color attachments and the GLSL fragment shader can write to the built-in output array <code>gl_FragData</code>.
+     * A shader using this feature needs to explicitly enable the extension with
+     * <code>#extension GL_EXT_draw_buffers : enable</code>.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_draw_buffers is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/'>WEBGL_draw_buffers</a>
+     */
+    Context.prototype.getDrawBuffers = function() {
+        return !!this._drawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of simultaneous outputs that may be written in a fragment shader.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of draw buffers supported.
+     */
+    Context.prototype.getMaximumDrawBuffers = function() {
+        return this._maximumDrawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of color attachments supported.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of color attachments supported.
+     */
+    Context.prototype.getMaximumColorAttachments = function() {
+        return this._maximumColorAttachments;
     };
 
     /**
@@ -1713,15 +1760,15 @@ define([
     /**
      * Creates a framebuffer with optional initial color, depth, and stencil attachments.
      * Framebuffers are used for render-to-texture effects; they allow us to render to
-     * a texture in one pass, and read from it in a later pass.
+     * textures in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+     * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
      *
-     * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
      * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
@@ -1730,31 +1777,22 @@ define([
      * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
+     * @exception {DeveloperError} The number of color attachments exceeds the number supported.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createRenderbuffer
      *
      * @example
-     * // Example 1. Create a framebuffer with no initial attachments,
-     * // and then add a color-texture attachment.
-     * var framebuffer = context.createFramebuffer();
-     * framebuffer.setColorTexture(context.createTexture2D({
-     *     width : 256,
-     *     height : 256,
-     * }));
-     *
-     * //////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * // Create a framebuffer with color and depth texture attachments.
      * var width = context.getCanvas().clientWidth;
      * var height = context.getCanvas().clientHeight;
      * var framebuffer = context.createFramebuffer({
-     *   colorTexture : context.createTexture2D({
+     *   colorTextures : [context.createTexture2D({
      *     width : width,
      *     height : height,
      *     pixelFormat : PixelFormat.RGBA
-     *   }),
+     *   })],
      *   depthTexture : context.createTexture2D({
      *     width : width,
      *     height : height,
@@ -1764,7 +1802,7 @@ define([
      * });
      */
     Context.prototype.createFramebuffer = function(options) {
-        return new Framebuffer(this._gl, options);
+        return new Framebuffer(this._gl, this._maximumColorAttachments, options);
     };
 
     /**
@@ -2118,6 +2156,8 @@ define([
         }
     };
 
+    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
@@ -2129,9 +2169,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            validateFramebuffer(context, framebuffer);
+        if (framebuffer !== context._currentFamebuffer) {
+            context._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
+
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(context, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            }
+
+            if (context.getDrawBuffers()) {
+                context._drawBuffers.drawBuffersWEBGL(buffers);
+            }
         }
 
         var sp = drawCommand.shaderProgram;
@@ -2186,7 +2238,7 @@ define([
         }
     }
 
-    function endDraw(framebuffer) {
+    function endDraw(context, framebuffer) {
         if (defined(framebuffer)) {
             framebuffer._unBind();
         }
@@ -2254,7 +2306,7 @@ define([
 
         beginDraw(this, framebuffer, drawCommand, passState);
         continueDraw(this, drawCommand);
-        endDraw(framebuffer);
+        endDraw(this, framebuffer);
     };
 
     /**
@@ -2454,7 +2506,7 @@ define([
      * <code>creationArguments</code> can have four properties:
      * <ul>
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
-     *   <li><code>attributeIndices</code>:  An object that maps geometry attribute names to vertex shader attribute indices.</li>
+     *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
      *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
@@ -2472,7 +2524,7 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see GeometryPipeline.createAttributeIndices
+     * @see GeometryPipeline.createAttributeLocations
      * @see ShaderProgram
      *
      * @example
@@ -2481,8 +2533,8 @@ define([
      * // interleaved by default.
      * var geometry = new BoxGeometry();
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2490,10 +2542,10 @@ define([
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
-     *     bufferUsage      : BufferUsage.STATIC_DRAW,
-     *     vertexLayout     : VertexLayout.INTERLEAVED
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
+     *     bufferUsage        : BufferUsage.STATIC_DRAW,
+     *     vertexLayout       : VertexLayout.INTERLEAVED
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2508,7 +2560,7 @@ define([
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
-        var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
+        var attributeLocations = defaultValue(ca.attributeLocations, defaultValue.EMPTY_OBJECT);
         var interleave = (defined(ca.vertexLayout)) && (ca.vertexLayout === VertexLayout.INTERLEAVED);
         var createdVAAttributes = ca.vertexArrayAttributes;
 
@@ -2533,7 +2585,7 @@ define([
                         if (defined(attribute.values)) {
                             // Common case: per-vertex attributes
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 vertexBuffer : vertexBuffer,
                                 componentDatatype : attribute.componentDatatype,
                                 componentsPerAttribute : attribute.componentsPerAttribute,
@@ -2544,7 +2596,7 @@ define([
                         } else {
                             // Constant attribute for all vertices
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 value : attribute.value,
                                 componentDatatype : attribute.componentDatatype,
                                 normalize : attribute.normalize
@@ -2570,7 +2622,7 @@ define([
                     }
 
                     vaAttributes.push({
-                        index : attributeIndices[name],
+                        index : attributeLocations[name],
                         vertexBuffer : vertexBuffer,
                         value : attribute.value,
                         componentDatatype : componentDatatype,

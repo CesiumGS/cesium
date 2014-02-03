@@ -42,7 +42,7 @@ define([
      *
      * @example
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
-     * loadWithXhr({
+     * Cesium.loadWithXhr({
      *     url : 'some/url',
      *     responseType : 'blob'
      * }).then(function(blob) {
@@ -53,9 +53,12 @@ define([
      */
     var loadWithXhr = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
+        //>>includeEnd('debug');
 
         var responseType = options.responseType;
         var method = defaultValue(options.method, 'GET');

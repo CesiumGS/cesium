@@ -27,9 +27,11 @@ define([
      * @see ImageryProviderViewModel
      */
     var BaseLayerPickerViewModel = function(imageryLayers, imageryProviderViewModels) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(imageryProviderViewModels)) {
             imageryProviderViewModels = [];

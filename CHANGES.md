@@ -4,6 +4,25 @@ Change Log
 Beta Releases
 -------------
 
+### b25 - 2014-02-03
+* Breaking changes:
+  * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
+  * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
+  * Replaced `PerformanceDisplay` with `Scene.debugShowFramesPerSecond`.
+  * `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials were moved to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
+  * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
+  * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
+  * `PerformanceDisplay` requires a DOM element as a parameter
+* Fixed globe rendering in the current Canary version of Google Chrome.
+* `Viewer` now monitors the clock settings of the first added `DataSource` for changes, and also now has a constructor option `automaticallyTrackFirstDataSourceClock` which will turn off this behavior.
+* The `DynamicObjectCollection` created by `CzmlDataSource` now sends a single `collectionChanged` event after CZML is loaded; previously it was sending an event every time an object was created or removed during the load process.
+* Added `ScreenSpaceCameraController.enableInputs` to fix issue with inputs not being restored after overlapping camera flights.
+* Fixed picking in 2D with rotated map. [#1337](https://github.com/AnalyticalGraphicsInc/cesium/issues/1337)
+* `TileMapServiceImageryProvider` can now handle casing differences in tilemapresource.xml.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
+* Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
+* Upgraded Tween.js to version r12.
+
 ### b24 - 2014-01-06
 
 * Breaking changes:
@@ -25,13 +44,13 @@ Beta Releases
                }
            });
   * The read-only `Cartesian3` objects must now be cloned to camera properties instead of assigned. For example, code that looked like:
-  
+
           camera.up = Cartesian3.UNIT_Z;
-          
+
     should now look like:
-          
+
           Cartesian3.clone(Cartesian3.UNIT_Z, camera.up);
-          
+
   * The CSS files for individual widgets, e.g. `BaseLayerPicker.css`, no longer import other CSS files.  Most applications should import `widgets.css` (and optionally `lighter.css`).
   * `SvgPath` has been replaced by a Knockout binding: `cesiumSvgPath`.
   * `DynamicObject.availability` is now a `TimeIntervalCollection` instead of a `TimeInterval`.

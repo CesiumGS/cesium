@@ -55,14 +55,28 @@ define([
      * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
-
         if (!defined(cameraController)) {
             throw new DeveloperError('cameraController is required.');
         }
+        //>>includeEnd('debug');
 
+        /**
+         * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
+         * enableRotate, enableTilt, and enableLook.  If false, all inputs are disabled.
+         *
+         * NOTE: This setting is for temporary use cases, such as camera flights and
+         * drag-selection of regions (see Picking demo).  It is typically set to false at the
+         * start of such events, and set true on completion.  To keep inputs disabled
+         * past the end of camera flights, you must use the other booleans (enableTranslate,
+         * enableZoom, enableRotate, enableTilt, and enableLook).
+         * @type {Boolean}
+         * @default true
+         */
+        this.enableInputs = true;
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * This flag only applies in 2D and Columbus view modes.
@@ -368,11 +382,11 @@ define([
             var type = defined(eventType.eventType) ? eventType.eventType : eventType;
             var modifier = eventType.modifier;
 
-            var moving = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
+            var movement = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
 
-            if (enabled) {
-                if (moving) {
-                    action(controller, aggregator.getMovement(type, modifier));
+            if (controller.enableInputs && enabled) {
+                if (movement) {
+                    action(controller, movement);
                 } else if (inertiaConstant < 1.0) {
                     maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
                 }
@@ -419,13 +433,22 @@ define([
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
+    var scratchTranslateP0 = new Cartesian3();
+    var scratchTranslateP1 = new Cartesian3();
+
     function translate2D(controller, movement) {
         var cameraController = controller._cameraController;
         var start = cameraController.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = cameraController.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        cameraController.moveRight(start.x - end.x);
-        cameraController.moveUp(start.y - end.y);
+        var position = cameraController._camera.position;
+        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
+        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
+        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var distance = Cartesian3.magnitude(direction);
+        Cartesian3.normalize(direction, direction);
+
+        cameraController.move(direction, distance);
     }
 
     function zoom2D(controller, movement) {
@@ -985,6 +1008,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
+        this._animationCollection.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();

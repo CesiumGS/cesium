@@ -251,28 +251,119 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.process(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with undefined CZML', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.load(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('processUrl throws with undefined Url', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.processUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new CzmlDataSource();
         expect(function() {
             dataSource.loadUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
+    });
+
+    it('raises changed event when loading CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(clockCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('raises changed event when name changes in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var originalCzml = {
+            id : 'document',
+            name : 'czmlName'
+        };
+        dataSource.load(originalCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        var newCzml = {
+            id : 'document',
+            name : 'newCzmlName'
+        };
+        dataSource.load(newCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('does not raise changed event when name does not change in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.load(nameCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(nameCzml);
+
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('raises changed event when clock changes in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        var originalCzml = {
+            id : 'document',
+            clock : {
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+        dataSource.load(originalCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        var newCzml = {
+            id : 'document',
+            clock : {
+                interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
+                multiplier : 60.0,
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
+            }
+        };
+        dataSource.load(newCzml);
+
+        expect(spy).toHaveBeenCalledWith(dataSource);
+    });
+
+    it('does not raise changed event when clock does not change in CZML', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.load(clockCzml);
+
+        var spy = jasmine.createSpy('changedEvent');
+        dataSource.getChangedEvent().addEventListener(spy);
+
+        dataSource.load(clockCzml);
+
+        expect(spy).not.toHaveBeenCalled();
     });
 
     it('raises error when an error occurs in loadUrl', function() {
@@ -997,6 +1088,17 @@ defineSuite([
         expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
+    it('CZML description works.', function() {
+        var packet = {
+            description : "this is a description"
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
+    });
+
     it('CZML Availability works with a single interval.', function() {
         var packet1 = {
             id : 'testObject',
@@ -1561,5 +1663,31 @@ defineSuite([
 
         expect(object.arrayData).toBeDefined();
         expect(object.arrayData.getValue()).toEqual(arrayPacket.array);
+    });
+
+    it('CZML load suspends events.', function() {
+        var packets = [{
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }, {
+            point : {
+                show : true,
+                color : {
+                    rgbaf : [0.1, 0.1, 0.1, 0.1]
+                }
+            }
+        }];
+
+        var spy = jasmine.createSpy('changedEvent');
+
+        var dataSource = new CzmlDataSource();
+        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(spy);
+        dataSource.load(packets);
+
+        expect(spy.callCount).toEqual(1);
     });
 });

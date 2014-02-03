@@ -57,7 +57,7 @@ defineSuite([
     it('throws without geometry', function() {
         expect(function() {
             createTangentSpaceDebugPrimitive();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

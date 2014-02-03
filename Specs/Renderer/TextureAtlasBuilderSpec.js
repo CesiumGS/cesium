@@ -141,7 +141,7 @@ defineSuite([
     it('throws constructing without a TextureAtlas', function() {
         expect(function() {
             return new TextureAtlasBuilder();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromUrl throws without url', function() {
@@ -151,7 +151,7 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromUrl(undefined, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromUrl throws without callback', function() {
@@ -160,7 +160,7 @@ defineSuite([
 
         expect(function() {
             atlasBuilder.addTextureFromUrl('./Data/Images/Green.png', undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without url', function() {
@@ -171,7 +171,7 @@ defineSuite([
             atlasBuilder.addTextureFromFunction(undefined, function(loadedCallback) {
             }, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without create callback', function() {
@@ -181,7 +181,7 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', undefined, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without ready callback', function() {
@@ -191,6 +191,6 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', function(loadedCallback) {
             }, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

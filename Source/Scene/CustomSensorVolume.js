@@ -49,7 +49,7 @@ define([
         SceneMode) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         normal : 1
     };
@@ -139,8 +139,8 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
-         * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -178,10 +178,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Material.fromType(Material.StripeType);
+         * sensor.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -338,14 +338,14 @@ define([
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
-            index : attributeIndices.position,
+            index : attributeLocations.position,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : attributeIndices.normal,
+            index : attributeLocations.normal,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
@@ -370,13 +370,14 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
 
@@ -499,7 +500,7 @@ define([
                 var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
 
                 frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
+                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
                 frontFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
 
                 backFaceColorCommand.shaderProgram = frontFaceColorCommand.shaderProgram;
@@ -536,7 +537,7 @@ define([
                 });
 
                 pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);
+                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
                 pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {

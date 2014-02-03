@@ -39,7 +39,7 @@ defineSuite([
     it('throws with no url', function() {
         expect(function() {
             loadJson();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates and sends request, adding Accept header when headers are provided', function() {

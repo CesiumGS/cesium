@@ -35,25 +35,25 @@ define([
      * // Create geometry for a box, and two instances that refer to it.
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
-     * var geometry = new BoxGeometry({
-     *   vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * var geometry = new Cesium.BoxGeometry({
+     *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
+     *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
-     * var instanceBottom = new GeometryInstance({
+     * var instanceBottom = new Cesium.GeometryInstance({
      *   geometry : geometry,
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   attributes : {
-     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
      *   }
      *   id : 'bottom'
      * });
-     * var instanceTop = new GeometryInstance({
+     * var instanceTop = new Cesium.GeometryInstance({
      *   geometry : geometry,
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+     *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 3000000.0)),
      *   attributes : {
-     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
      *   }
      *   id : 'top'
      * });
@@ -63,9 +63,11 @@ define([
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.geometry)) {
             throw new DeveloperError('options.geometry is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The geometry being instanced.
