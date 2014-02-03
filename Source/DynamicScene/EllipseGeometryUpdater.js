@@ -14,8 +14,8 @@ define(['../Core/Color',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
         '../DynamicScene/GeometryBatchType',
-        '../Scene/MaterialAppearance',
         '../DynamicScene/MaterialProperty',
+        '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive'
     ], function(
@@ -34,8 +34,8 @@ define(['../Core/Color',
         ColorMaterialProperty,
         ConstantProperty,
         GeometryBatchType,
-        MaterialAppearance,
         MaterialProperty,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive) {
     "use strict";
@@ -79,7 +79,6 @@ define(['../Core/Color',
         this._outlineColorProperty = undefined;
         this._outlineGeometryChanged = new Event();
         this._options = new GeometryOptions(dynamicObject);
-
         this._onDynamicObjectPropertyChanged(dynamicObject, 'ellipse', dynamicObject.ellipse, undefined);
     };
 
@@ -246,6 +245,7 @@ define(['../Core/Color',
         var extrudedHeight = ellipse.extrudedHeight;
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
+        var numberOfVerticalLines = ellipse.numberOfVerticalLines;
 
         if (!position.isConstant || //
             !semiMajorAxis.isConstant || //
@@ -254,7 +254,8 @@ define(['../Core/Color',
             defined(height) && !height.isConstant || //
             defined(extrudedHeight) && !extrudedHeight.isConstant || //
             defined(granularity) && !granularity.isConstant || //
-            defined(stRotation) && !stRotation.isConstant) {
+            defined(stRotation) && !stRotation.isConstant || //
+            defined(numberOfVerticalLines) && !numberOfVerticalLines.isConstant) {
             if (this._geometryType !== GeometryBatchType.DYNAMIC) {
                 this._geometryType = GeometryBatchType.DYNAMIC;
                 this._geometryChanged.raiseEvent(this._geometryType, oldGeometryType);
@@ -265,11 +266,12 @@ define(['../Core/Color',
             options.center = position.getValue(Iso8601.MINIMUM_VALUE, options.center);
             options.semiMajorAxis = semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMajorAxis);
             options.semiMinorAxis = semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMinorAxis);
-            options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE, options.rotation) : undefined;
-            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE, options.height) : undefined;
-            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE, options.extrudedHeight) : undefined;
-            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE, options.granularity) : undefined;
-            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE, options.stRotation) : undefined;
+            options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             if (isFilled) {
                 this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
@@ -323,15 +325,16 @@ define(['../Core/Color',
         var extrudedHeight = ellipse.extrudedHeight;
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
+        var numberOfVerticalLines = ellipse.numberOfVerticalLines;
 
         options.center = position.getValue(time, options.center);
         options.semiMajorAxis = semiMajorAxis.getValue(time, options.semiMajorAxis);
         options.semiMinorAxis = semiMinorAxis.getValue(time, options.semiMinorAxis);
-        options.rotation = defined(rotation) ? rotation.getValue(time, options.rotation) : undefined;
-        options.height = defined(height) ? height.getValue(time, options.height) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options.extrudedHeight) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time, options.granularity) : undefined;
-        options.stRotation = defined(stRotation) ? stRotation.getValue(time, options.stRotation) : undefined;
+        options.rotation = defined(rotation) ? rotation.getValue(time, options) : undefined;
+        options.height = defined(height) ? height.getValue(time, options) : undefined;
+        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
+        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
+        options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
 
         if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
             this._material = MaterialProperty.getValue(time, geometryUpdater.materialProperty, this._material);
@@ -356,6 +359,8 @@ define(['../Core/Color',
 
         if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
             var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({

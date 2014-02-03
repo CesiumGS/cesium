@@ -39,6 +39,7 @@ define(['../Core/Cartesian3',
         this._propertyChanged = new Event();
         this._outline = undefined;
         this._outlineColor = undefined;
+        this._numberOfVerticalLines = undefined;
     };
 
     defineProperties(DynamicEllipse.prototype, {
@@ -140,7 +141,15 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor')
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+
+        /**
+         * Gets or sets the Number {@link Property} specifying the number of vertical lines
+         * to use when outlining the ellipse.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        numberOfVerticalLines : createDynamicPropertyDescriptor('numberOfVerticalLines', '_numberOfVerticalLines')
     });
 
     /**
@@ -166,6 +175,7 @@ define(['../Core/Cartesian3',
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.numberOfVerticalLines = this.numberOfVerticalLines;
         return result;
     };
 
@@ -196,6 +206,7 @@ define(['../Core/Cartesian3',
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
     };
 
     return DynamicEllipse;
