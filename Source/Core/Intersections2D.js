@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './Cartesian3',
-        './defined'
+        './defined',
+        './DeveloperError'
     ], function(
         Cartesian3,
-        defined) {
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -38,6 +40,24 @@ define([
      *                     vertex to the second one.
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(threshold)) {
+            throw new DeveloperError('threshold is required.');
+        }
+        if (!defined(keepAbove)) {
+            throw new DeveloperError('keepAbove is required.');
+        }
+        if (!defined(u0)) {
+            throw new DeveloperError('u0 is required.');
+        }
+        if (!defined(u1)) {
+            throw new DeveloperError('u1 is required.');
+        }
+        if (!defined(u2)) {
+            throw new DeveloperError('u2 is required.');
+        }
+        //>>includeEnd('debug');
+
         if (typeof result === 'undefined') {
             result = [];
         } else {
@@ -202,6 +222,33 @@ define([
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
      */
     Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(x1)) {
+            throw new DeveloperError('x1 is required.');
+        }
+        if (!defined(y1)) {
+            throw new DeveloperError('y1 is required.');
+        }
+        if (!defined(x2)) {
+            throw new DeveloperError('x2 is required.');
+        }
+        if (!defined(y2)) {
+            throw new DeveloperError('y2 is required.');
+        }
+        if (!defined(x3)) {
+            throw new DeveloperError('x3 is required.');
+        }
+        if (!defined(y3)) {
+            throw new DeveloperError('y3 is required.');
+        }
+        //>>includeEnd('debug');
+
         var x1mx3 = x1 - x3;
         var x3mx2 = x3 - x2;
         var y2my3 = y2 - y3;
