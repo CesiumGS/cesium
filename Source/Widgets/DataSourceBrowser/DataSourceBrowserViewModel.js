@@ -294,21 +294,19 @@ define([
     };
 
     DataSourceBrowserViewModel.prototype.selectViewModelById = function(id) {
-        var viewModel;
-        for ( var dynamicObjectCollectionId in this._dataSourceViewModelHash) {
-            if (this._dataSourceViewModelHash.hasOwnProperty(dynamicObjectCollectionId)) {
-                var dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId];
-                viewModel = dataSourceViewModelHash[id];
+        var hash = this._dataSourceViewModelHash;
+        var viewModel = hash[id];
+        if (!defined(viewModel)) {
+            var keys = Object.keys(hash);
+            for (var i = 0; i < keys.length; i++) {
+                viewModel = hash[keys[i]][id];
                 if (defined(viewModel)) {
-                    break;
+                    this.selectedViewModel = viewModel;
+                    return;
                 }
             }
-        }
-
-        if (!defined(viewModel)) {
             throw new DeveloperError('Item with id: ' + id + ' does not exist.');
         }
-        this.selectedViewModel = viewModel;
     };
 
     DataSourceBrowserViewModel.prototype.destroy = function() {
