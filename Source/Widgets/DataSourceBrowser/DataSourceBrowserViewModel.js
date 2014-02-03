@@ -294,7 +294,17 @@ define([
     };
 
     DataSourceBrowserViewModel.prototype.selectViewModelById = function(id) {
-        var viewModel = this._dataSourceViewModelHash[id];
+        var viewModel;
+        for ( var dynamicObjectCollectionId in this._dataSourceViewModelHash) {
+            if (this._dataSourceViewModelHash.hasOwnProperty(dynamicObjectCollectionId)) {
+                var dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId];
+                viewModel = dataSourceViewModelHash[id];
+                if (defined(viewModel)) {
+                    break;
+                }
+            }
+        }
+
         if (!defined(viewModel)) {
             throw new DeveloperError('Item with id: ' + id + ' does not exist.');
         }

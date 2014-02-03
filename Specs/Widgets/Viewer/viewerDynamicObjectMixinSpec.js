@@ -41,6 +41,7 @@ defineSuite([
         viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
         expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
+        expect(viewer.hasOwnProperty('selectedObject')).toEqual(true);
     });
 
     it('can get and set trackedObject', function() {
@@ -55,6 +56,22 @@ defineSuite([
 
         viewer.trackedObject = undefined;
         expect(viewer.trackedObject).toBeUndefined();
+    });
+
+    it('can get and set selectedObject', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        viewer.selectedObject = dynamicObject;
+        expect(viewer.selectedObject).toBe(dynamicObject);
+
+        viewer.selectedObject = undefined;
+        expect(viewer.selectedObject).toBeUndefined();
+
+        viewer.destroy();
     });
 
     it('home button resets tracked object', function() {
@@ -88,6 +105,15 @@ defineSuite([
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
         }).toThrowDeveloperError();
+    });
+
+    it('throws if selectedObject property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.selectedObject = true;
+        expect(function() {
+            viewer.extend(viewerDynamicObjectMixin);
+        }).toThrow();
+        viewer.destroy();
     });
 
     it('returns to home when a tracked object is removed', function() {

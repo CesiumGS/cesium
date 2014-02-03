@@ -20,9 +20,11 @@ define([
         '../FullscreenButton/FullscreenButton',
         '../Geocoder/Geocoder',
         '../getElement',
-        '../subscribeAndEvaluate',
         '../HomeButton/HomeButton',
+        '../InfoBox/InfoBox',
         '../SceneModePicker/SceneModePicker',
+        '../SelectionIndicator/SelectionIndicator',
+        '../subscribeAndEvaluate',
         '../Timeline/Timeline'
     ], function(
         defaultValue,
@@ -45,9 +47,11 @@ define([
         FullscreenButton,
         Geocoder,
         getElement,
-        subscribeAndEvaluate,
         HomeButton,
+        InfoBox,
         SceneModePicker,
+        SelectionIndicator,
+        subscribeAndEvaluate,
         Timeline) {
     "use strict";
 
@@ -103,7 +107,9 @@ define([
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
+     * @param {Boolean} [options.infoBox=true] If set to false, the InfoBox widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
+     * @param {Boolean} [options.selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
@@ -228,6 +234,25 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             clockViewModel.canAnimate = dataSourceDisplay.update(clock.currentTime);
         });
 
+        //Selection Indicator
+        var selectionIndicator;
+        if (!defined(options.selectionIndicator) || options.selectionIndicator !== false) {
+            var selectionIndicatorContainer = document.createElement('div');
+            selectionIndicatorContainer.className = 'cesium-viewer-selectionIndicatorContainer';
+            viewerContainer.appendChild(selectionIndicatorContainer);
+            selectionIndicator = new SelectionIndicator(selectionIndicatorContainer, cesiumWidget.scene);
+        }
+
+        //Info Box
+        var infoBox;
+        if (!defined(options.infoBox) || options.infoBox !== false) {
+            var infoBoxContainer = document.createElement('div');
+            infoBoxContainer.className = 'cesium-viewer-infoBoxContainer';
+            viewerContainer.appendChild(infoBoxContainer);
+            infoBox = new InfoBox(infoBoxContainer);
+        }
+
+        //Main Toolbar
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
@@ -382,6 +407,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._container = container;
         this._element = viewerContainer;
         this._cesiumWidget = cesiumWidget;
+        this._selectionIndicator = selectionIndicator;
+        this._infoBox = infoBox;
         this._dataSourceCollection = dataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
         this._clockViewModel = clockViewModel;
@@ -426,6 +453,28 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         cesiumWidget : {
             get : function() {
                 return this._cesiumWidget;
+            }
+        },
+
+        /**
+         * Gets the selection indicator.
+         * @memberof Viewer.prototype
+         * @type {SelectionIndicator}
+         */
+        selectionIndicator : {
+            get : function() {
+                return this._selectionIndicator;
+            }
+        },
+
+        /**
+         * Gets the info box.
+         * @memberof Viewer.prototype
+         * @type {InfoBox}
+         */
+        infoBox : {
+            get : function() {
+                return this._infoBox;
             }
         },
 
@@ -702,6 +751,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
         }
 
+        if (defined(this._infoBox)) {
+            this._infoBox.viewModel.maxHeight = panelMaxHeight;
+        }
+
         if (defined(this._dataSourceBrowser)) {
             this._dataSourceBrowser.viewModel.maxHeight = panelMaxHeight;
         }
@@ -823,6 +876,16 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             this._fullscreenSubscription.dispose();
             this._element.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
+        }
+
+        if (defined(this._infoBox)) {
+            this._element.removeChild(this._infoBox.container);
+            this._infoBox = this._infoBox.destroy();
+        }
+
+        if (defined(this._selectionIndicator)) {
+            this._element.removeChild(this._selectionIndicator.container);
+            this._selectionIndicator = this._selectionIndicator.destroy();
         }
 
         if (defined(this._dataSourceBrowser)) {
