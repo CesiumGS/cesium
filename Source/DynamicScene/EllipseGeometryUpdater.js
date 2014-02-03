@@ -40,6 +40,7 @@ define(['../Core/Color',
         Primitive) {
     "use strict";
 
+    //TODO Fix fill for static objects
     var defaultMaterial = new ColorMaterialProperty(new ConstantProperty(Color.WHITE));
     var defaultShow = new ConstantProperty(true);
     var defaultFill = new ColorMaterialProperty(true);
@@ -135,32 +136,35 @@ define(['../Core/Color',
     });
 
     EllipseGeometryUpdater.prototype.createGeometryInstance = function(time) {
-        var attributes;
-        if (this._geometryType === GeometryBatchType.COLOR) {
-            attributes = {
-                show : new ShowGeometryInstanceAttribute(this._showProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(defined(this._materialProperty.color) ? this._materialProperty.color.getValue(time) : Color.WHTE)
-            };
-        } else if (this._geometryType === GeometryBatchType.MATERIAL) {
-            attributes = {
-                show : new ShowGeometryInstanceAttribute(this._showProperty.getValue(time))
-            };
-        }
+        var dynamicObject = this._dynamicObject;
+        var isAvailable = dynamicObject.isAvailable(time);
 
+        var color;
+        var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
+        if (this._geometryType === GeometryBatchType.COLOR) {
+            var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
+            color = ColorGeometryInstanceAttribute.fromColor(currentColor);
+        }
         return new GeometryInstance({
-            id : this._dynamicObject,
+            id : dynamicObject,
             geometry : new EllipseGeometry(this._options),
-            attributes : attributes
+            attributes : {
+                show : show,
+                color : color
+            }
         });
     };
 
     EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+        var dynamicObject = this._dynamicObject;
+        var isAvailable = dynamicObject.isAvailable(time);
+
         return new GeometryInstance({
-            id : this._dynamicObject,
+            id : dynamicObject,
             geometry : new EllipseOutlineGeometry(this._options),
             attributes : {
-                show : new ShowGeometryInstanceAttribute(this._showOutlineProperty.getValue(time)),
-                color : ColorGeometryInstanceAttribute.fromColor(this._outlineColorProperty.getValue(time))
+                show : new ShowGeometryInstanceAttribute(isAvailable && this._showOutlineProperty.getValue(time)),
+                color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
             }
         });
     };
@@ -287,28 +291,31 @@ define(['../Core/Color',
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
+        this._options = new GeometryOptions(geometryUpdater._dynamicObject);
     };
 
     DynamicGeometryBatchItem.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
+
         if (defined(this._primitive)) {
             this._primitives.remove(this._primitive);
+        }
+
+        if (defined(this._outlinePrimitive)) {
             this._primitives.remove(this._outlinePrimitive);
         }
 
-        this._material = MaterialProperty.getValue(time, geometryUpdater.materialProperty, this._material);
-        var material = this._material;
-        var appearance = new MaterialAppearance({
-            material : material,
-            translucent : material.isTranslucent(),
-            closed : true
-        });
+        var dynamicObject = geometryUpdater._dynamicObject;
+        var show = dynamicObject.show;
 
-        var d = geometryUpdater._dynamicObject;
-        var options = {};
+        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+            return;
+        }
 
-        var ellipse = d.ellipse;
-        var position = d.position;
+        var options = this._options;
+        var ellipse = dynamicObject.ellipse;
+
+        var position = dynamicObject.position;
         var semiMajorAxis = ellipse.semiMajorAxis;
         var semiMinorAxis = ellipse.semiMinorAxis;
         var rotation = ellipse.rotation;
@@ -317,7 +324,6 @@ define(['../Core/Color',
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
 
-        options.vertexFormat = appearance.vertexFormat;
         options.center = position.getValue(time, options.center);
         options.semiMajorAxis = semiMajorAxis.getValue(time, options.semiMajorAxis);
         options.semiMinorAxis = semiMinorAxis.getValue(time, options.semiMinorAxis);
@@ -327,15 +333,26 @@ define(['../Core/Color',
         options.granularity = defined(granularity) ? granularity.getValue(time, options.granularity) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(time, options.stRotation) : undefined;
 
-        this._primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                id : this._dynamicObject,
-                geometry : new EllipseGeometry(options)
-            }),
-            appearance : appearance,
-            asynchronous : false
-        });
-        this._primitives.add(this._primitive);
+        if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
+            this._material = MaterialProperty.getValue(time, geometryUpdater.materialProperty, this._material);
+            var material = this._material;
+            var appearance = new MaterialAppearance({
+                material : material,
+                translucent : material.isTranslucent(),
+                closed : true
+            });
+            options.vertexFormat = appearance.vertexFormat;
+
+            this._primitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    id : this._dynamicObject,
+                    geometry : new EllipseGeometry(options)
+                }),
+                appearance : appearance,
+                asynchronous : false
+            });
+            this._primitives.add(this._primitive);
+        }
 
         if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
@@ -366,7 +383,10 @@ define(['../Core/Color',
     DynamicGeometryBatchItem.prototype.destroy = function() {
         if (defined(this._primitive)) {
             this._primitives.remove(this._primitive);
-            this._primitives.add(this._outlinePrimitive);
+        }
+
+        if (defined(this._outlinePrimitive)) {
+            this._primitives.remove(this._outlinePrimitive);
         }
     };
 
