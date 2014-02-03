@@ -1023,9 +1023,19 @@ define([
             result = new Cartesian3();
         }
 
-        var scalar = Cartesian3.magnitude(center) + d;
-        Cartesian3.negate(direction, result);
-        return Cartesian3.multiplyByScalar(result, scalar, result);
+        var mag = Cartesian3.magnitude(center);
+        var scalar = mag + d;
+
+        if (mag < CesiumMath.EPSILON6) {
+            cart.longitude = (east + west) * 0.5;
+            cart.latitude = (north + south) * 0.5;
+            ellipsoid.cartographicToCartesian(cart, center);
+            Cartesian3.normalize(center, center);
+        } else {
+            Cartesian3.normalize(center, center);
+        }
+
+        return Cartesian3.multiplyByScalar(center, scalar, result);
     }
 
     var viewExtentCVCartographic = new Cartographic();

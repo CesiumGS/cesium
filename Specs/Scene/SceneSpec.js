@@ -213,6 +213,12 @@ defineSuite([
         scene.debugShowCommands = false;
     });
 
+    it('debugShowFramesPerSecond', function() {
+        scene.debugShowFramesPerSecond = true;
+        scene.render();
+        expect(scene._performanceDisplay).toBeDefined();
+    });
+
     it('opaque/translucent render order (1)', function() {
         var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
