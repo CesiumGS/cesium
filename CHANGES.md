@@ -8,6 +8,7 @@ Beta Releases
 * Breaking changes:
   * The `Viewer` constructor argument `options.fullscreenElement` now matches the `FullscreenButton` default of `document.body`, it was previously the `Viewer` container itself.
   * Removed `Viewer.objectTracked` event; `Viewer.trackedObject` is now an ES5 Knockout observable that can be subscribed to directly.
+  * Replaced `PerformanceDisplay` with `Scene.debugShowFramesPerSecond`.
   * `Asphalt`, `Blob`, `Brick`, `Cement`, `Erosion`, `Facet`, `Grass`, `TieDye`, and `Wood` materials were moved to the [Materials Pack Plugin](https://github.com/AnalyticalGraphicsInc/cesium-materials-pack).
   * Renamed `GeometryPipeline.createAttributeIndices` to `GeometryPipeline.createAttributeLocations`.
   * Renamed `attributeIndices` property to `attributeLocations` when calling `Context.createVertexArrayFromGeometry`.
@@ -22,7 +23,6 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
-* Added `Scene.debugShowFramesPerSecond` which creates a `PerformanceDisplay` when true. 
 
 ### b24 - 2014-01-06
 
