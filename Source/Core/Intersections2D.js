@@ -82,7 +82,12 @@ define([
 
         var numBehind = u0Behind + u1Behind + u2Behind;
 
-        var u01Ratio, u02Ratio, u12Ratio, u10Ratio, u20Ratio, u21Ratio;
+        var u01Ratio;
+        var u02Ratio;
+        var u12Ratio;
+        var u10Ratio;
+        var u20Ratio;
+        var u21Ratio;
 
         if (numBehind === 1) {
             if (u0Behind) {
