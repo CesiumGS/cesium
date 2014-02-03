@@ -440,8 +440,8 @@ define([
         if (this._inverseTransposeModelDirty) {
             this._inverseTransposeModelDirty = false;
 
-            Matrix4.transpose(uniformState.getInverseModel(), inverseTransposeModelScratch);
-            Matrix4.getRotation(inverseTransposeModelScratch, uniformState._inverseTransposeModel);
+            Matrix4.transpose(this.getInverseModel(), inverseTransposeModelScratch);
+            Matrix4.getRotation(inverseTransposeModelScratch, this._inverseTransposeModel);
         }
 
         return this._inverseTransposeModel;

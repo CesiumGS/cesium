@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,WebGLRenderingContext*/
 define([
         '../Core/combine',
         '../Core/defined',
