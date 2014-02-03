@@ -97,6 +97,7 @@ define([
      * });
      */
     var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(description) {
+        //>>includeStart('debug', pragmas.debug)
         if (!defined(description) || !defined(description.quantizedVertices)) {
             throw new DeveloperError('description.quantizedVertices is required.');
         }
@@ -145,6 +146,7 @@ define([
         if (!defined(description.childTileMask)) {
             throw new DeveloperError('description.childTileMask is required.');
         }
+        //>>includeEnd('debug');
 
         this._quantizedVertices = description.quantizedVertices;
         this._indices = description.indices;

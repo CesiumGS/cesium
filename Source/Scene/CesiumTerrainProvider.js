@@ -9,6 +9,7 @@ define([
         '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/RuntimeError',
         './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
@@ -27,6 +28,7 @@ define([
         throttleRequestByServer,
         DeveloperError,
         Event,
+        RuntimeError,
         Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
@@ -222,7 +224,7 @@ define([
 
         if (vertexCount > 64 * 1024) {
             // More than 64k vertices, so indices are 32-bit.  Not supported right now.
-            throw new DeveloperError('CesiumTerrainProvider currently does not support tiles with more than 65536 vertices.');
+            throw new RuntimeError('CesiumTerrainProvider currently does not support tiles with more than 65536 vertices.');
         }
 
         // Decode the vertex buffer.
@@ -329,9 +331,11 @@ define([
      *            returns true.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+        //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
         }
+        //>>includeEnd('debug');
 
         var urlTemplates = this._tileUrlTemplates;
         if (urlTemplates.length === 0) {
@@ -409,9 +413,11 @@ define([
      *            returns true.
      */
     CesiumTerrainProvider.prototype.getCredit = function() {
+        //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('getCredit must not be called before the terrain provider is ready.');
         }
+        //>>includeEnd('debug');
 
         return this._credit;
     };
@@ -430,9 +436,11 @@ define([
      *            returns true.
      */
     CesiumTerrainProvider.prototype.getTilingScheme = function() {
+        //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('getTilingScheme must not be called before the terrain provider is ready.');
         }
+        //>>includeEnd('debug');
 
         return this._tilingScheme;
     };
@@ -450,9 +458,11 @@ define([
      *            returns true.
      */
     CesiumTerrainProvider.prototype.hasWaterMask = function() {
+        //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('hasWaterMask must not be called before the terrain provider is ready.');
         }
+        //>>includeEnd('debug');
 
         return this._hasWaterMask;
     };
