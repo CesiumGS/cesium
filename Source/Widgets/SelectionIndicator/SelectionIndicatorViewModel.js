@@ -5,7 +5,6 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/Event',
         '../../Scene/SceneTransforms',
         '../../ThirdParty/knockout',
         '../../ThirdParty/Tween'
@@ -15,7 +14,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Event,
         SceneTransforms,
         knockout,
         Tween) {
