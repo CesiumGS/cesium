@@ -252,7 +252,7 @@ defineSuite([
         });
 
         it('returns the correct result for a position in the barycenter of a triangle', function() {
-            var result = Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -1.0 / 2.0, 1, -1.0 / 2.0);
+            var result = Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
             expect(result.x).toEqualEpsilon(1.0 / 3.0, 1e-15);
             expect(result.y).toEqualEpsilon(1.0 / 3.0, 1e-15);
             expect(result.z).toEqualEpsilon(1.0 / 3.0, 1e-15);

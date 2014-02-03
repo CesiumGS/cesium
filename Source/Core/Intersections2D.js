@@ -38,6 +38,11 @@ define([
      *                     index of each of the two original vertices forming the line segment that
      *                     the new vertex lies on, and the fraction of the distance from the first
      *                     vertex to the second one.
+     *
+     *  @example
+     *  var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     *  // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
+     *
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -220,6 +225,10 @@ define([
      *                     is undefined, a new instance is created and returned.
      *
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
+     *
+     * @example
+     * var result = Intersections2D.computeBarycentricCoordinates(0.0, 0.0, 0.0, 1.0, -1, -0.5, 1, -0.5);
+     * // result === new Cartesian3(1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0);
      */
     Intersections2D.computeBarycentricCoordinates = function(x, y, x1, y1, x2, y2, x3, y3, result) {
         //>>includeStart('debug', pragmas.debug);
