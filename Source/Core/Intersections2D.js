@@ -69,7 +69,9 @@ define([
             result.length = 0;
         }
 
-        var u0Behind, u1Behind, u2Behind;
+        var u0Behind;
+        var u1Behind;
+        var u2Behind;
         if (keepAbove) {
             u0Behind = u0 < threshold;
             u1Behind = u1 < threshold;
