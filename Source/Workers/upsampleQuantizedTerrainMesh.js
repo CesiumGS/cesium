@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Extent',
@@ -14,6 +15,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        defined,
         Ellipsoid,
         EllipsoidalOccluder,
         Extent,
@@ -267,7 +269,7 @@ define([
     }
 
     Vertex.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Vertex();
         }
 
@@ -332,25 +334,25 @@ define([
     };
 
     Vertex.prototype.isIndexed = function() {
-        return typeof this.index !== 'undefined';
+        return defined(this.index);
     };
 
     Vertex.prototype.getH = function() {
-        if (typeof this.index !== 'undefined') {
+        if (defined(this.index)) {
             return this.heightBuffer[this.index];
         }
         return CesiumMath.lerp(this.first.getH(), this.second.getH(), this.ratio);
     };
 
     Vertex.prototype.getU = function() {
-        if (typeof this.index !== 'undefined') {
+        if (defined(this.index)) {
             return this.uBuffer[this.index] / maxShort;
         }
         return CesiumMath.lerp(this.first.getU(), this.second.getU(), this.ratio);
     };
 
     Vertex.prototype.getV = function() {
-        if (typeof this.index !== 'undefined') {
+        if (defined(this.index)) {
             return this.vBuffer[this.index] / maxShort;
         }
         return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
@@ -377,7 +379,7 @@ define([
             var polygonVertex = polygonVertices[i];
             if (!polygonVertex.isIndexed()) {
                 var key = polygonVertex.getKey();
-                if (typeof vertexMap[key] !== 'undefined') {
+                if (defined(vertexMap[key])) {
                     polygonVertex.newIndex = vertexMap[key];
                 } else {
                     var newIndex = uBuffer.length;

@@ -324,6 +324,9 @@ define([
      * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
+     *
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     *            returns true.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
         if (!this._ready) {
@@ -401,6 +404,9 @@ define([
      * @memberof CesiumTerrainProvider
      *
      * @returns {Credit} The credit, or undefined if no credix exists
+     *
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     *            returns true.
      */
     CesiumTerrainProvider.prototype.getCredit = function() {
         if (!this._ready) {
@@ -420,7 +426,8 @@ define([
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     *            returns true.
      */
     CesiumTerrainProvider.prototype.getTilingScheme = function() {
         if (!this._ready) {
@@ -438,6 +445,9 @@ define([
      * @memberof CesiumTerrainProvider
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
+     *
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     *            returns true.
      */
     CesiumTerrainProvider.prototype.hasWaterMask = function() {
         if (!this._ready) {

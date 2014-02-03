@@ -63,7 +63,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = [];
         } else {
             result.length = 0;

@@ -226,18 +226,20 @@ define([
      *          be retried later.
      */
     QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
-        if (typeof tilingScheme === 'undefined') {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
-        if (typeof x === 'undefined') {
+        if (!defined(x)) {
             throw new DeveloperError('x is required.');
         }
-        if (typeof y === 'undefined') {
+        if (!defined(y)) {
             throw new DeveloperError('y is required.');
         }
-        if (typeof level === 'undefined') {
+        if (!defined(level)) {
             throw new DeveloperError('level is required.');
         }
+        //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.getEllipsoid();
         var extent = tilingScheme.tileXYToExtent(x, y, level);
@@ -299,32 +301,33 @@ define([
      *          deferred.
      */
     QuantizedMeshTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        if (typeof tilingScheme === 'undefined') {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
-        if (typeof thisX === 'undefined') {
+        if (!defined(thisX)) {
             throw new DeveloperError('thisX is required.');
         }
-        if (typeof thisY === 'undefined') {
+        if (!defined(thisY)) {
             throw new DeveloperError('thisY is required.');
         }
-        if (typeof thisLevel === 'undefined') {
+        if (!defined(thisLevel)) {
             throw new DeveloperError('thisLevel is required.');
         }
-        if (typeof descendantX === 'undefined') {
+        if (!defined(descendantX)) {
             throw new DeveloperError('descendantX is required.');
         }
-        if (typeof descendantY === 'undefined') {
+        if (!defined(descendantY)) {
             throw new DeveloperError('descendantY is required.');
         }
-        if (typeof descendantLevel === 'undefined') {
+        if (!defined(descendantLevel)) {
             throw new DeveloperError('descendantLevel is required.');
         }
-
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
         }
+        //>>includeEnd('debug');
 
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
@@ -447,18 +450,20 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     QuantizedMeshTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
-        if (typeof thisX === 'undefined') {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(thisX)) {
             throw new DeveloperError('thisX is required.');
         }
-        if (typeof thisY === 'undefined') {
+        if (!defined(thisY)) {
             throw new DeveloperError('thisY is required.');
         }
-        if (typeof childX === 'undefined') {
+        if (!defined(childX)) {
             throw new DeveloperError('childX is required.');
         }
-        if (typeof childY === 'undefined') {
+        if (!defined(childY)) {
             throw new DeveloperError('childY is required.');
         }
+        //>>includeEnd('debug');
 
         var bitNumber = 2; // northwest child
         if (childX !== thisX * 2) {
