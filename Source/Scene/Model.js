@@ -1887,6 +1887,14 @@ define([
         }
     }
 
+    function release(property) {
+        for (var name in property) {
+            if (property.hasOwnProperty(name)) {
+                property[name].release();
+            }
+        }
+    }
+
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
@@ -1910,8 +1918,8 @@ define([
         var resources = this._rendererResources;
         destroy(resources.buffers);
         destroy(resources.vertexArrays);
-        destroy(resources.programs);
-        destroy(resources.pickPrograms);
+        release(resources.programs);
+        release(resources.pickPrograms);
         destroy(resources.textures);
         resources = undefined;
         this._rendererResources = undefined;
