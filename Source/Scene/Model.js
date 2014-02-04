@@ -974,6 +974,12 @@ define([
 
     function getChannelEvaluator(model, runtimeNode, targetPath, spline) {
         return function(localAnimationTime) {
+// TODO: remove workaround for https://github.com/KhronosGroup/glTF/issues/219
+/*
+            if (targetPath === 'translation') {
+                return;
+            }
+*/
             runtimeNode[targetPath] = spline.evaluate(localAnimationTime, runtimeNode[targetPath]);
             runtimeNode.dirtyNumber = model._maxDirtyNumber;
         };
