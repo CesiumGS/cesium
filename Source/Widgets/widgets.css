@@ -5,6 +5,8 @@
 @import url(./checkForChromeFrame.css);
 @import url(./FullscreenButton/FullscreenButton.css);
 @import url(./Geocoder/Geocoder.css);
+@import url(./InfoBox/InfoBox.css);
 @import url(./SceneModePicker/SceneModePicker.css);
+@import url(./SelectionIndicator/SelectionIndicator.css);
 @import url(./Timeline/Timeline.css);
 @import url(./Viewer/Viewer.css);
