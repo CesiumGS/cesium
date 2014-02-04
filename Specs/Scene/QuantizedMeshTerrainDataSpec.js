@@ -7,6 +7,7 @@ defineSuite([
          'Core/Math',
          'Scene/GeographicTilingScheme',
          'Scene/TerrainData',
+         'Scene/TerrainMesh',
          'ThirdParty/when'
      ], function(
          QuantizedMeshTerrainData,
@@ -16,6 +17,7 @@ defineSuite([
          CesiumMath,
          GeographicTilingScheme,
          TerrainData,
+         TerrainMesh,
          when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -223,6 +225,185 @@ defineSuite([
                  expect(hasTriangle(ib, nw, v43, ne)).toBe(true);
                  expect(hasTriangle(ib, nw, extra, v43)).toBe(true);
              });
+         });
+     });
+
+     describe('createMesh', function() {
+         var data;
+         var tilingScheme;
+
+         beforeEach(function() {
+             tilingScheme = new GeographicTilingScheme();
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : 0.0,
+                 maximumHeight : 4.0,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+         });
+
+         it('requires tilingScheme', function() {
+             expect(function() {
+                 data.createMesh(undefined, 0, 0, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires x', function() {
+             expect(function() {
+                 data.createMesh(tilingScheme, undefined, 0, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires y', function() {
+             expect(function() {
+                 data.createMesh(tilingScheme, 0, undefined, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires level', function() {
+             expect(function() {
+                 data.createMesh(tilingScheme, 0, 0, undefined);
+             }).toThrowDeveloperError();
+         });
+
+         it('creates specified vertices plus skirt vertices', function() {
+             var promise = data.createMesh(tilingScheme, 0, 0, 0);
+             expect(promise).toBeDefined();
+
+             var mesh;
+             when(promise, function(meshResult) {
+                 mesh = meshResult;
+             });
+
+             waitsFor(function() {
+                 return defined(mesh);
+             }, 'mesh to be created');
+
+             runs(function() {
+                 expect(mesh).toBeInstanceOf(TerrainMesh);
+                 expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
+                 expect(mesh.minimumHeight).toBe(data._minimumHeight);
+                 expect(mesh.maximumHeight).toBe(data._maximumHeight);
+                 expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
+             });
+         });
+     });
+
+     describe('interpolateHeight', function() {
+         var tilingScheme;
+         var extent;
+
+         beforeEach(function() {
+             tilingScheme = new GeographicTilingScheme();
+             extent = tilingScheme.tileXYToExtent(7, 6, 5);
+         });
+
+         it('returns undefined if given a position outside the mesh', function() {
+             var mesh = new QuantizedMeshTerrainData({
+                 minimumHeight : 0.0,
+                 maximumHeight : 4.0,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      32767 / 4.0, 2.0 * 32767 / 4.0, 3.0 * 32767 / 4.0, 32767
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+
+             expect(mesh.interpolateHeight(extent, 0.0, 0.0)).toBeUndefined();
+         });
+
+         it('returns a height interpolated from the correct triangle', function() {
+             // zero height along line between southwest and northeast corners.
+             // Negative height in the northwest corner, positive height in the southeast.
+             var mesh = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+
+
+             // position in the northwest quadrant of the tile.
+             var longitude = extent.west + (extent.east - extent.west) * 0.25;
+             var latitude = extent.south + (extent.north - extent.south) * 0.75;
+
+             var result = mesh.interpolateHeight(extent, longitude, latitude);
+             expect(result).toBeLessThan(0.0);
+
+             // position in the southeast quadrant of the tile.
+             longitude = extent.west + (extent.east - extent.west) * 0.75;
+             latitude = extent.south + (extent.north - extent.south) * 0.25;
+
+             result = mesh.interpolateHeight(extent, longitude, latitude);
+             expect(result).toBeGreaterThan(0.0);
+
+             // position on the line between the southwest and northeast corners.
+             longitude = extent.west + (extent.east - extent.west) * 0.5;
+             latitude = extent.south + (extent.north - extent.south) * 0.5;
+
+             result = mesh.interpolateHeight(extent, longitude, latitude);
+             expect(result).toEqualEpsilon(0.0, 1e-10);
          });
      });
 });

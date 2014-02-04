@@ -204,14 +204,6 @@ define([
         }
     }
 
-    function toArray(typedArray) {
-        var result = new Array(typedArray.length);
-        for (var i = 0, len = typedArray.length; i < len; ++i) {
-            result[i] = typedArray[i];
-        }
-        return result;
-    }
-
     var createMeshTaskProcessor = new TaskProcessor('createVerticesFromQuantizedTerrainMesh');
 
     /**
