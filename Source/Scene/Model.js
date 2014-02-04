@@ -958,7 +958,7 @@ define([
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
                 }
-                // TODO: else handle all valid types: https://github.com/KhronosGroup/glTF/issues/191
+                // The glTF spec also allows 3D matrices for skinning of 2D models, but we do not support it.
 
                 var bindShapeMatrix;
                 if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
@@ -1289,7 +1289,7 @@ define([
     gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
     gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
     gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
-    // TODO: function for gltfUniformFunctions[WebGLRenderingContext.SAMPLER_CUBE].  https://github.com/KhronosGroup/glTF/issues/40
+    // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
 
     function getUniformFunctionFromSource(source, model) {
         var runtimeNode = model._runtime.nodes[source];
@@ -1460,7 +1460,8 @@ define([
                     uniformMap = combine([uniformMap, jointUniformMap], false, false);
                 }
 
-                var isTranslucent = pass.states.blendEnable; // TODO: Offical way to test this: https://github.com/KhronosGroup/glTF/issues/105
+                // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
+                var isTranslucent = pass.states.blendEnable;
                 var rs = rendererRenderStates[instanceTechnique.technique];
                 var owner = {
                     primitive : model,

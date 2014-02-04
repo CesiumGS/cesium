@@ -74,7 +74,7 @@ define([
                     values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
                 }
             }
-            // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
+            // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
 
             cachedAnimationParameters[key] = values;
         }
@@ -125,9 +125,9 @@ define([
                             points : controlPoints
                         });
                     }
-                    // TODO: else handle other parameters when glTF supports material channel targets: https://github.com/KhronosGroup/glTF/issues/142
+                    // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
                 }
-                // TODO: else support all interpolators.  https://github.com/KhronosGroup/glTF/issues/156
+                // GLTF_SPEC: Support new interpolators. https://github.com/KhronosGroup/glTF/issues/156
             }
 
             cachedAnimationSplines[key] = spline;
