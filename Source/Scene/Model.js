@@ -31,7 +31,7 @@ define([
         '../Renderer/Pass',
         '../Renderer/createShaderSource',
         './ModelTypes',
-        './ModelCache',
+        './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelNode',
         './SceneMode',
@@ -68,7 +68,7 @@ define([
         Pass,
         createShaderSource,
         ModelTypes,
-        ModelCache,
+        ModelAnimationCache,
         ModelAnimationCollection,
         ModelNode,
         SceneMode,
@@ -947,8 +947,6 @@ define([
 
                 var type = inverseBindMatrices.type;
                 var count = inverseBindMatrices.count;
-
-// TODO: move to ModelCache.
                 var typedArray = ModelTypes[type].createArrayBufferView(buffers[bufferView.buffer], bufferView.byteOffset + inverseBindMatrices.byteOffset, count);
                 var matrices =  new Array(count);
 
@@ -1012,7 +1010,7 @@ define([
 
                  for (name in parameters) {
                      if (parameters.hasOwnProperty(name)) {
-                         parameterValues[name] = ModelCache.getAnimationParameterValues(model, accessors[parameters[name]]);
+                         parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
                      }
                  }
 
@@ -1032,7 +1030,7 @@ define([
                      startTime = Math.min(startTime, times[0]);
                      stopTime = Math.max(stopTime, times[times.length - 1]);
 
-                     var spline = ModelCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
+                     var spline = ModelAnimationCache.getAnimationSpline(model, animationName, animation, channel.sampler, sampler, parameterValues);
                      // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
                      channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
                  }

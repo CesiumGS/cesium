@@ -18,7 +18,7 @@ define([
     /**
      * @private
      */
-    var ModelCache = function() {
+    var ModelAnimationCache = function() {
     };
 
     var cachedAnimationParameters = {
@@ -40,7 +40,7 @@ define([
 
     var axisScratch = new Cartesian3();
 
-    ModelCache.getAnimationParameterValues = function(model, accessor) {
+    ModelAnimationCache.getAnimationParameterValues = function(model, accessor) {
         var key = getAnimationParameterKey(model, accessor);
         var values = cachedAnimationParameters[key];
 
@@ -99,7 +99,7 @@ define([
     };
  // END TODO Workaround
 
-    ModelCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, parameterValues) {
+    ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, parameterValues) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
         var spline = cachedAnimationSplines[key];
 
@@ -136,5 +136,5 @@ define([
         return spline;
     };
 
-    return ModelCache;
+    return ModelAnimationCache;
 });
