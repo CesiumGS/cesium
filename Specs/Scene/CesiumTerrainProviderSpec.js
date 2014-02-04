@@ -8,6 +8,7 @@ defineSuite([
          'Core/Math',
          'Scene/GeographicTilingScheme',
          'Scene/HeightmapTerrainData',
+         'Scene/QuantizedMeshTerrainData',
          'Scene/TerrainProvider',
          'ThirdParty/when'
      ], function(
@@ -19,6 +20,7 @@ defineSuite([
          CesiumMath,
          GeographicTilingScheme,
          HeightmapTerrainData,
+         QuantizedMeshTerrainData,
          TerrainProvider,
          when) {
     "use strict";
@@ -28,15 +30,23 @@ defineSuite([
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
-    function returnHeightmapTileJson() {
+    function returnTileJson(path) {
         var oldLoad = loadWithXhr.load;
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
             if (url.indexOf('layer.json') >= 0) {
-                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/StandardHeightmap.tile.json', responseType, method, data, headers, deferred);
+                return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
                 return oldLoad(url, responseType, method, data, headers, deferred);
             }
         };
+    }
+
+    function returnHeightmapTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/StandardHeightmap.tile.json');
+    }
+
+    function returnQuantizedMeshTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh.tile.json');
     }
 
     it('conforms to TerrainProvider interface', function() {
@@ -138,6 +148,106 @@ defineSuite([
         });
     });
 
+    it('raises an error if layer.json does not specify a format', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/NoFormat.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.getErrorEvent().addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return defined(error);
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(error.message).toContain('format is not specified');
+        });
+    });
+
+    it('raises an error if layer.json specifies an unknown format', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/InvalidFormat.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.getErrorEvent().addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return defined(error);
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(error.message).toContain('invalid or not supported');
+        });
+    });
+
+    it('raises an error if layer.json does not specify a tiles property', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/NoTiles.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.getErrorEvent().addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return defined(error);
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(error.message).toContain('does not specify any tile URL templates');
+        });
+    });
+
+    it('raises an error if layer.json tiles property is an empty array', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/EmptyTilesArray.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.getErrorEvent().addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return defined(error);
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(error.message).toContain('does not specify any tile URL templates');
+        });
+    });
+
+    it('uses attribution specified in layer.json', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/WithAttribution.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        });
+
+        runs(function() {
+            expect(provider.getCredit().getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
+        });
+    });
+
     describe('requestTileGeometry', function() {
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
@@ -176,8 +286,6 @@ defineSuite([
         });
 
         it('provides HeightmapTerrainData', function() {
-            returnHeightmapTileJson();
-
             var baseUrl = 'made/up/url';
 
             loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
@@ -211,6 +319,42 @@ defineSuite([
 
             runs(function() {
                 expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
+            });
+        });
+
+        it('provides QuantizedMeshTerrainData', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnQuantizedMeshTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl
+            });
+
+            waitsFor(function() {
+                return terrainProvider.isReady();
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
             });
         });
 

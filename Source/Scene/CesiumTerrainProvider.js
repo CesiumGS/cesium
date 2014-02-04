@@ -104,6 +104,12 @@ define([
                 return;
             }
 
+            if (!data.tiles || data.tiles.length === 0) {
+                message = 'The layer.json file does not specify any tile URL templates.';
+                metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                return;
+            }
+
             if (data.format === 'heightmap-1.0') {
                 that._heightmapStructure = {
                         heightScale : 1.0 / 5.0,
@@ -480,6 +486,9 @@ define([
 
     function getChildMaskForTile(terrainProvider, level, x, y) {
         var available = terrainProvider._availableTiles;
+        if (!available || available.length === 0) {
+            return 15;
+        }
 
         var childLevel = level + 1;
         if (childLevel >= available.length) {
