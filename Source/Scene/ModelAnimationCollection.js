@@ -368,7 +368,7 @@ define([
             var stopTime = scheduledAnimation.stopTime;
 
             // [0.0, 1.0] normalized local animation time
-            var delta = startTime.getSecondsDifference(sceneTime) / duration;
+            var delta = (duration !== 0.0) ? (startTime.getSecondsDifference(sceneTime) / duration) : 0.0;
             var pastStartTime = (delta >= 0.0);
 
             // Play animation if
