@@ -406,4 +406,236 @@ defineSuite([
              expect(result).toEqualEpsilon(0.0, 1e-10);
          });
      });
+
+     describe('isChildAvailable', function() {
+         var data;
+
+         beforeEach(function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+         });
+
+         it('requires thisX', function() {
+             expect(function() {
+                 data.isChildAvailable(undefined, 0, 0, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires thisY', function() {
+             expect(function() {
+                 data.isChildAvailable(0, undefined, 0, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires childX', function() {
+             expect(function() {
+                 data.isChildAvailable(0, 0, undefined, 0);
+             }).toThrowDeveloperError();
+         });
+
+         it('requires childY', function() {
+             expect(function() {
+                 data.isChildAvailable(0, 0, 0, undefined);
+             }).toThrowDeveloperError();
+         });
+
+         it('returns true for all children when child mask is not explicitly specified', function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0
+             });
+
+             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 21, 40)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(true);
+         });
+
+         it('works when only southwest child is available', function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 1
+             });
+
+             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
+         });
+
+         it('works when only southeast child is available', function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 2
+             });
+
+             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(true);
+         });
+
+         it('works when only northwest child is available', function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 4
+             });
+
+             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 21, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
+         });
+
+         it('works when only northeast child is available', function() {
+             data = new QuantizedMeshTerrainData({
+                 minimumHeight : -16384,
+                 maximumHeight : 16383,
+                 quantizedVertices : new Uint16Array([ // order is sw nw se ne
+                                                      // u
+                                                      0, 0, 32767, 32767,
+                                                      // v
+                                                      0, 32767, 0, 32767,
+                                                      // heights
+                                                      16384, 0, 32767, 16384
+                                                  ]),
+                 indices : new Uint16Array([
+                                                0, 3, 1,
+                                                0, 2, 3
+                                                ]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 8
+             });
+
+             expect(data.isChildAvailable(10, 20, 20, 40)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 40)).toBe(true);
+             expect(data.isChildAvailable(10, 20, 20, 41)).toBe(false);
+             expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
+         });
+     });
 });

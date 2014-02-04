@@ -82,18 +82,28 @@ define([
      * @see HeightmapTerrainData
      *
      * @example
-     * var buffer = ...
-     * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
-     * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
-     * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = HeightmapTessellator.DEFAULT_STRUCTURE;
-     * var terrainData = new HeightmapTerrainData({
-     *   buffer : heightBuffer,
-     *   width : 65,
-     *   height : 65,
-     *   childTileMask : childTileMask,
-     *   structure : structure,
-     *   waterMask : waterMask
+     * var data = new Cesium.QuantizedMeshTerrainData({
+     *     minimumHeight : -100,
+     *     maximumHeight : 2101,
+     *     quantizedVertices : new Uint16Array([// order is SW NW SE NE
+     *                                          // longitude
+     *                                          0, 0, 32767, 32767,
+     *                                          // latitude
+     *                                          0, 32767, 0, 32767,
+     *                                          // heights
+     *                                          16384, 0, 32767, 16384]),
+     *     indices : new Uint16Array([0, 3, 1,
+     *                                0, 2, 3]),
+     *     boundingSphere : new Cesium.BoundingSphere(new Cesium.Cartesian3(1.0, 2.0, 3.0), 10000),
+     *     horizonOcclusionPoint : new Cesium.Cartesian3(3.0, 2.0, 1.0),
+     *     westIndices : [0, 1],
+     *     southIndices : [0, 1],
+     *     eastIndices : [2, 3],
+     *     northIndices : [1, 3],
+     *     westSkirtHeight : 1.0,
+     *     southSkirtHeight : 1.0,
+     *     eastSkirtHeight : 1.0,
+     *     northSkirtHeight : 1.0
      * });
      */
     var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(description) {
@@ -142,9 +152,6 @@ define([
         }
         if (!defined(description.northSkirtHeight)) {
             throw new DeveloperError('description.northSkirtHeight is required.');
-        }
-        if (!defined(description.childTileMask)) {
-            throw new DeveloperError('description.childTileMask is required.');
         }
         //>>includeEnd('debug');
 
