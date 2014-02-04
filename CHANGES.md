@@ -7,6 +7,7 @@ Beta Releases
 ### b26 - 2014-03-03
 
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
+* Fixed viewing an extent. [#1431](https://github.com/AnalyticalGraphicsInc/cesium/issues/1431)
 
 ### b25 - 2014-02-03
 
