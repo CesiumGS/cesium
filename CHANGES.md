@@ -6,6 +6,8 @@ Beta Releases
 
 ### b26 - 2014-03-03
 
+* Breaking changes:
+  * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 
 ### b25 - 2014-02-03
