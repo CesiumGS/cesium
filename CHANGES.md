@@ -27,6 +27,10 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
+* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
+* Added `Intersections2D` class containing operations on 2D triangles.  
 
 ### b24 - 2014-01-06
 

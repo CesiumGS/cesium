@@ -162,7 +162,7 @@ require(['Cesium'], function(Cesium) {
                 }
             }
 
-            Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 11, terrainSamplePositions), sampleTerrainSuccess);
+            Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
         }, 'sampleButtons');
     }
 
@@ -172,8 +172,13 @@ require(['Cesium'], function(Cesium) {
     var centralBody = scene.getPrimitives().getCentralBody();
     centralBody.depthTestAgainstTerrain = true;
 
-    var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+    var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
         url : 'http://cesiumjs.org/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+
+    var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesiumjs.org/stk-terrain/tilesets/GTOPO30/tiles',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
@@ -183,14 +188,15 @@ require(['Cesium'], function(Cesium) {
         url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
         credit : 'Terrain data courtesy VT MÄK'
     });
-
+    
     var terrainProviders = [
-        { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
+        { name : 'CesiumTerrainProvider - GTOPO30+SRTM heightmaps', provider : cesiumTerrainProviderHeightmaps },
+        { name : 'CesiumTerrainProvider - GTOPO30 meshes', provider : cesiumTerrainProviderMeshes },
         { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
         { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
-    centralBody.terrainProvider = cesiumTerrainProvider;
+    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
 
     createTerrainMenu(terrainProviders);
 
