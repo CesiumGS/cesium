@@ -345,6 +345,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var trackedDataSource;
             var changedEventRemovalFunction;
 
+            var onDataSourceChanged = function(dataSource) {
+                var dataSourceClock = dataSource.getClock();
+                if (defined(dataSourceClock)) {
+                    dataSourceClock.getValue(clock);
+                    if (defined(timeline)) {
+                        timeline.updateFromClock();
+                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+                    }
+                }
+            };
+
             var onDataSourceAdded = function(dataSourceCollection, dataSource) {
                 if (dataSourceCollection.getLength() === 1) {
                     onDataSourceChanged(dataSource);
@@ -361,19 +372,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 }
             };
 
-            var onDataSourceChanged = function(dataSource) {
-                var dataSourceClock = dataSource.getClock();
-                if (defined(dataSourceClock)) {
-                    dataSourceClock.getValue(clock);
-                    if (defined(timeline)) {
-                        timeline.updateFromClock();
-                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
-                    }
-                }
-            };
-
             eventHelper.add(dataSourceCollection.dataSourceAdded, onDataSourceAdded);
-            eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceAdded);
+            eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceRemoved);
         }
 
         this._container = container;
