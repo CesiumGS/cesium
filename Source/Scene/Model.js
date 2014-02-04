@@ -814,7 +814,6 @@ define([
                 source = canvas;
             }
 
-// TODO: texture cache
             var tx;
 
             if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
@@ -824,7 +823,7 @@ define([
                     flipY : false
                 });
             }
-            // TODO: else handle WebGLRenderingContext.TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
 
             if (mipmap) {
                 tx.generateMipmap();
