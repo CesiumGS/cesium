@@ -135,7 +135,7 @@ defineSuite([
                     ])
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('construction throws with less than three positions', function() {
@@ -143,7 +143,7 @@ defineSuite([
             return new Polygon({
                 positions : []
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets default show', function() {
@@ -170,7 +170,7 @@ defineSuite([
 
         expect(function() {
             polygon.setPositions([new Cartesian3()]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('configure polygon from hierarchy', function() {
@@ -245,7 +245,7 @@ defineSuite([
         polygon.configureFromPolygonHierarchy(hierarchy);
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets the default color', function() {
@@ -342,7 +342,7 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without hierarchy positions due to duplicates', function() {
@@ -369,7 +369,7 @@ defineSuite([
 
         expect(function () {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -457,7 +457,7 @@ defineSuite([
 
         expect(function() {
             polygon.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when updated/rendered without an invalid granularity', function() {
@@ -466,7 +466,7 @@ defineSuite([
 
         expect(function() {
             polygon.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
@@ -475,6 +475,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, polygon);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

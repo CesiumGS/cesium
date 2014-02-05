@@ -30,11 +30,15 @@ define([
      * var constantProperty = new ConstantProperty(new Cartesian2(10, 12));
      */
     var ConstantProperty = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var simple = typeof value !== 'object' || Array.isArray(value) || value instanceof Enumeration;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!simple) {
             if (typeof value.clone !== 'function') {
                 throw new DeveloperError('clone is a required function.');
@@ -43,6 +47,7 @@ define([
                 throw new DeveloperError('equals is a required function.');
             }
         }
+        //>>includeEnd('debug');
 
         this._value = value;
         this._simple = simple;

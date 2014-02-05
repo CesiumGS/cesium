@@ -113,7 +113,7 @@ defineSuite([
     it('get throws if index is undefined', function() {
         expect(function() {
             primitives.get(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('has zero primitives when constructed', function() {
@@ -607,7 +607,7 @@ defineSuite([
     it('throws when add() without an primitive', function() {
         expect(function() {
             primitives.add();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raise throws when primitive is not in composite', function() {
@@ -615,7 +615,7 @@ defineSuite([
 
         expect(function() {
             primitives.raise(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseToTop throws when primitive is not in composite', function() {
@@ -623,7 +623,7 @@ defineSuite([
 
         expect(function() {
             primitives.raiseToTop(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lower throws when primitive is not in composite', function() {
@@ -631,7 +631,7 @@ defineSuite([
 
         expect(function() {
             primitives.lower(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerToBottom throws when primitive is not in composite', function() {
@@ -639,6 +639,6 @@ defineSuite([
 
         expect(function() {
             primitives.lowerToBottom(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

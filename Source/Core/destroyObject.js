@@ -34,7 +34,7 @@ define([
      * // How a texture would destroy itself.
      * this.destroy = function () {
      *     _gl.deleteTexture(_texture);
-     *     return destroyObject(this);
+     *     return Cesium.destroyObject(this);
      * };
      */
     var destroyObject = function(object, message) {

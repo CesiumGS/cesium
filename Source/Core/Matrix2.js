@@ -79,11 +79,11 @@ define([
      * // [1.0, 2.0]
      *
      * var v = [1.0, 1.0, 2.0, 2.0];
-     * var m = Matrix2.fromArray(v);
+     * var m = Cesium.Matrix2.fromArray(v);
      *
      * // Create same Matrix2 with using an offset into an array
      * var v2 = [0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
-     * var m2 = Matrix2.fromArray(v2, 2);
+     * var m2 = Cesium.Matrix2.fromArray(v2, 2);
      */
     Matrix2.fromArray = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -169,7 +169,7 @@ define([
      * // Creates
      * //   [7.0, 0.0]
      * //   [0.0, 8.0]
-     * var m = Matrix2.fromScale(new Cartesian2(7.0, 8.0));
+     * var m = Cesium.Matrix2.fromScale(new Cesium.Cartesian2(7.0, 8.0));
      */
     Matrix2.fromScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -205,7 +205,7 @@ define([
      * // Creates
      * //   [2.0, 0.0]
      * //   [0.0, 2.0]
-     * var m = Matrix2.fromUniformScale(2.0);
+     * var m = Cesium.Matrix2.fromUniformScale(2.0);
      */
     Matrix2.fromUniformScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -239,9 +239,9 @@ define([
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise.
-     * var p = new Cartesian2(5, 6);
-     * var m = Matrix2.fromRotation(CesiumMath.toRadians(45.0));
-     * var rotated = Matrix2.multiplyByVector(m, p);
+     * var p = new Cesium.Cartesian2(5, 6);
+     * var m = Cesium.Matrix2.fromRotation(Cesium.Math.toRadians(45.0));
+     * var rotated = Cesium.Matrix2.multiplyByVector(m, p);
      */
     Matrix2.fromRotation = function(angle, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -305,8 +305,8 @@ define([
      * @exception {DeveloperError} column is required and must be 0 or 1.
      *
      * @example
-     * var myMatrix = new Matrix2();
-     * var column1Row0Index = Matrix2.getElementIndex(1, 0);
+     * var myMatrix = new Cesium.Matrix2();
+     * var column1Row0Index = Cesium.Matrix2.getElementIndex(1, 0);
      * var column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      */
@@ -721,7 +721,7 @@ define([
      * @memberof Matrix2
      *
      * @example
-     * var matrix = new Matrix2();
+     * var matrix = new Cesium.Matrix2();
      * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 0, row 0 to 5.0
      */
     Matrix2.COLUMN0ROW0 = 0;
@@ -731,7 +731,7 @@ define([
      * @memberof Matrix2
      *
      * @example
-     * var matrix = new Matrix2();
+     * var matrix = new Cesium.Matrix2();
      * matrix[Matrix2.COLUMN0ROW1] = 5.0; //set column 0, row 1 to 5.0
      */
     Matrix2.COLUMN0ROW1 = 1;
@@ -741,7 +741,7 @@ define([
      * @memberof Matrix2
      *
      * @example
-     * var matrix = new Matrix2();
+     * var matrix = new Cesium.Matrix2();
      * matrix[Matrix2.COLUMN1ROW0] = 5.0; //set column 1, row 0 to 5.0
      */
     Matrix2.COLUMN1ROW0 = 2;
@@ -751,7 +751,7 @@ define([
      * @memberof Matrix2
      *
      * @example
-     * var matrix = new Matrix2();
+     * var matrix = new Cesium.Matrix2();
      * matrix[Matrix2.COLUMN1ROW1] = 5.0; //set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;

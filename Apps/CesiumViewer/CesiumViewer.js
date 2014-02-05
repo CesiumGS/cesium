@@ -133,7 +133,7 @@ define([
         }
 
         if (endUserOptions.stats) {
-            scene.getPrimitives().add(new PerformanceDisplay());
+            scene.debugShowFramesPerSecond = true;
         }
 
         var theme = endUserOptions.theme;

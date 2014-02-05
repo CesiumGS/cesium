@@ -34,19 +34,19 @@ define([
      * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
      *
      * @example
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new PolylineGeometry({
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.PolylineGeometry({
      *       positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(0.0, 0.0),
-     *         Cartographic.fromDegrees(5.0, 0.0)
+     *         Cesium.Cartographic.fromDegrees(0.0, 0.0),
+     *         Cesium.Cartographic.fromDegrees(5.0, 0.0)
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT
+     *       vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
      *     })
      *   }),
-     *   appearance : new PolylineMaterialAppearance({
-     *     material : Material.fromType('Color')
+     *   appearance : new Cesium.PolylineMaterialAppearance({
+     *     material : Cesium.Material.fromType('Color')
      *   })
      * }));
      *

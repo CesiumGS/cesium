@@ -80,13 +80,13 @@ defineSuite([
     it('removeDuplicates throws without positions', function() {
         expect(function() {
             PolylinePipeline.removeDuplicates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToSurface throws without positions', function() {
         expect(function() {
             PolylinePipeline.scaleToSurface();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToSurface subdivides in half', function() {
@@ -110,25 +110,25 @@ defineSuite([
     it('scaleToGeodeticHeight throws if positions is undefined', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticHeight throws if height is undefined', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], 0, undefined, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticHeight works with a result parameter', function() {

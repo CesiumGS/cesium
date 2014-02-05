@@ -67,18 +67,18 @@ define([
      *
      * @example
      * var positions = [
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall that spans from ground level to 10000 meters
-     * var wall = new WallGeometry({
+     * var wall = new Cesium.WallGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
-     * var geometry = WallGeometry.createGeometry(wall);
+     * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -87,17 +87,17 @@ define([
         var maximumHeights = options.maximumHeights;
         var minimumHeights = options.minimumHeights;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
             throw new DeveloperError('positions is required.');
         }
-
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and maximumHeights must have the same length.');
         }
-
         if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
+        //>>includeEnd('debug');
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -132,28 +132,30 @@ define([
      *
      * @example
      * var positions = [
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = WallGeometry.fromConstantHeights({
+     * var wall = Cesium.WallGeometry.fromConstantHeights({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
      *     minimumHeight : 20000.0,
      *     maximumHeight : 10000.0
      * });
-     * var geometry = WallGeometry.createGeometry(wall);
+     * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var positions = options.positions;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        //>>includeEnd('debug');
 
         var minHeights;
         var maxHeights;

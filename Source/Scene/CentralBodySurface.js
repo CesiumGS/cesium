@@ -63,12 +63,14 @@ define([
      * @private
      */
     var CentralBodySurface = function(options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.terrainProvider)) {
             throw new DeveloperError('options.terrainProvider is required.');
         }
         if (!defined(options.imageryLayerCollection)) {
             throw new DeveloperError('options.imageryLayerCollection is required.');
         }
+        //>>includeEnd('debug');
 
         this._terrainProvider = options.terrainProvider;
         this._imageryLayerCollection = options.imageryLayerCollection;
@@ -139,9 +141,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
         }
+        //>>includeEnd('debug');
 
         this._terrainProvider = terrainProvider;
 
@@ -455,22 +459,7 @@ define([
 
         var extent = tile.extent;
 
-        var latitudeFactor = 1.0;
-
-        // Adjust by latitude in 3D only.
-        if (frameState.mode === SceneMode.SCENE3D) {
-            var latitudeClosestToEquator = 0.0;
-            if (extent.south > 0.0) {
-                latitudeClosestToEquator = extent.south;
-            } else if (extent.north < 0.0) {
-                latitudeClosestToEquator = extent.north;
-            }
-
-            latitudeFactor = Math.cos(latitudeClosestToEquator);
-        }
-
-        var maxGeometricError = latitudeFactor * surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
-
+        var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
 
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
