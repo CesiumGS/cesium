@@ -192,7 +192,6 @@ define([
      * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
-     * @exception {DeveloperError} options.name must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
@@ -202,6 +201,18 @@ define([
      * });
      */
     ModelAnimationCollection.prototype.addAll = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(this._model._runtime.animations)) {
+            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event.');
+        }
+
+        if (defined(options.speedup) && (options.speedup <= 0.0)) {
+            throw new DeveloperError('options.speedup must be greater than zero.');
+        }
+        //>>includeEnd('debug');
+
         options = clone(options);
 
         var scheduledAnimations = [];
@@ -244,7 +255,7 @@ define([
             var i = animations.indexOf(animation);
             if (i !== -1) {
                 animations.splice(i, 1);
-                this.animationRemoved.raiseEvent(animation);
+                this.animationRemoved.raiseEvent(this._model, animation);
                 return true;
             }
         }
@@ -262,13 +273,14 @@ define([
      * @memberof ModelAnimationCollection
      */
     ModelAnimationCollection.prototype.removeAll = function() {
+        var model = this._model;
         var animations = this._scheduledAnimations;
         var length = animations.length;
 
         this._scheduledAnimations = [];
 
         for (var i = 0; i < length; ++i) {
-            this.animationRemoved.raiseEvent(animations[i]);
+            this.animationRemoved.raiseEvent(model, animations[i]);
         }
     };
 

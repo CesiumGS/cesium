@@ -11,7 +11,8 @@ defineSuite([
          'Core/Matrix4',
          'Core/BoundingSphere',
          'Core/Ellipsoid',
-         'Core/Transforms'
+         'Core/Transforms',
+         'Scene/ModelAnimationWrap'
      ], function(
          Model,
          createScene,
@@ -24,7 +25,8 @@ defineSuite([
          Matrix4,
          BoundingSphere,
          Ellipsoid,
-         Transforms) {
+         Transforms,
+         ModelAnimationWrap) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -319,6 +321,117 @@ defineSuite([
         animBoxesModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         animBoxesModel.show = false;
+    });
+
+    it('adds and removes all animations', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.addAll();
+        expect(animations.length).toEqual(2);
+        expect(spyAdd.calls.length).toEqual(2);
+        expect(spyAdd.calls[0].args[0]).toBe(animBoxesModel);
+        expect(spyAdd.calls[0].args[1]).toBe(a[0]);
+        expect(spyAdd.calls[1].args[0]).toBe(animBoxesModel);
+        expect(spyAdd.calls[1].args[1]).toBe(a[1]);
+        animations.animationAdded.removeEventListener(spyAdd);
+
+        expect(animations.contains(a[0])).toEqual(true);
+        expect(animations.get(0)).toEqual(a[0]);
+        expect(animations.contains(a[1])).toEqual(true);
+        expect(animations.get(1)).toEqual(a[1]);
+
+        var spyRemove = jasmine.createSpy('listener');
+        animations.animationRemoved.addEventListener(spyRemove);
+        animations.removeAll();
+        expect(animations.length).toEqual(0);
+        expect(spyRemove.calls.length).toEqual(2);
+        expect(spyRemove.calls[0].args[0]).toBe(animBoxesModel);
+        expect(spyRemove.calls[0].args[1]).toBe(a[0]);
+        expect(spyRemove.calls[1].args[0]).toBe(animBoxesModel);
+        expect(spyRemove.calls[1].args[1]).toBe(a[1]);
+        animations.animationRemoved.removeEventListener(spyRemove);
+    });
+
+    it('addAll throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.addAll();
+        }).toThrowDeveloperError();
+    });
+
+    it('addAll throws when speedup is less than or equal to zero.', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.addAll({
+                speedup : 0.0
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('adds and removes an animation', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+
+        var spyAdd = jasmine.createSpy('listener');
+        animations.animationAdded.addEventListener(spyAdd);
+        var a = animations.add({
+            name : 'animation_0'
+        });
+        expect(a).toBeDefined();
+        expect(a.name).toEqual('animation_0');
+        expect(a.startTime).not.toBeDefined();
+        expect(a.startOffset).toEqual(0.0);
+        expect(a.stopTime).not.toBeDefined();
+        expect(a.removeOnStop).toEqual(false);
+        expect(a.speedup).toEqual(1.0);
+        expect(a.reverse).toEqual(false);
+        expect(a.wrap).toEqual(ModelAnimationWrap.CLAMP);
+        expect(a.start).not.toBeDefined();
+        expect(a.update).not.toBeDefined();
+        expect(a.stop).not.toBeDefined();
+        expect(spyAdd).toHaveBeenCalledWith(animBoxesModel, a);
+        animations.animationAdded.removeEventListener(spyAdd);
+
+        expect(animations.contains(a)).toEqual(true);
+        expect(animations.get(0)).toEqual(a);
+
+        var spyRemove = jasmine.createSpy('listener');
+        animations.animationRemoved.addEventListener(spyRemove);
+        expect(animations.remove(a)).toEqual(true);
+        expect(animations.remove(a)).toEqual(false);
+        expect(animations.remove()).toEqual(false);
+        expect(animations.length).toEqual(0);
+        expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
+        animations.animationRemoved.removeEventListener(spyRemove);
+    });
+
+    it('add throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.add({
+                name : 'animation_0'
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when name is invalid.', function() {
+        expect(function() {
+            return animBoxesModel.activeAnimations.add({
+                name : 'animation-does-not-exist'
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws when speedup is less than or equal to zero.', function() {
+        expect(function() {
+            return animBoxesModel.activeAnimations.add({
+                name : 'animation_0',
+                speedup : 0.0
+            });
+        }).toThrowDeveloperError();
     });
 
     ///////////////////////////////////////////////////////////////////////////
