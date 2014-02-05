@@ -61,8 +61,7 @@ defineSuite([
 
         waitsFor(function() {
             // Render scene to progressively load the model
-            scene.initializeFrame();
-            scene.render();
+            scene.renderForSpecs();
             return duckReadyToRender;
         }, 'duckModel.readyToRender', 10000);
     });
@@ -72,16 +71,10 @@ defineSuite([
     });
 
     it('renders the duck', function() {
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         duckModel.show = true;
-
-        scene.initializeFrame();
-        scene.render();
-        expect(scene.getContext().readPixels()).not.toEqual([0, 0, 0, 255]);
-
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         duckModel.show = false;
     });
 
