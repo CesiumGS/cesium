@@ -3,22 +3,31 @@ defineSuite([
          'Scene/Model',
          'Specs/createScene',
          'Specs/destroyScene',
+         'Core/Math',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/Matrix4',
+         'Core/BoundingSphere',
          'Core/Ellipsoid',
          'Core/Transforms'
      ], function(
          Model,
          createScene,
          destroyScene,
+         CesiumMath,
          Cartesian2,
          Cartesian3,
          Cartographic,
+         Matrix4,
+         BoundingSphere,
          Ellipsoid,
          Transforms) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var duckUrl = './Data/Models/duck/duck.json';
+    var superMurdochUrl = './Data/Models/SuperMurdoch/SuperMurdoch.json';
 
     var scene;
     var primitives;
@@ -81,11 +90,23 @@ defineSuite([
     }
 
     it('loads duck.json', function() {
-        duckModel = loadModel('./Data/Models/duck/duck.json');
+        duckModel = loadModel(duckUrl);
     });
 
     it('loads SuperMurdochModel.json', function() {
-        superMurdochModel = loadModel('./Data/Models/SuperMurdoch/SuperMurdoch.json');
+        superMurdochModel = loadModel(superMurdochUrl);
+    });
+
+    it('fromGltf throws without options', function() {
+        expect(function() {
+            Model.fromGltf();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromGltf throws without options.url', function() {
+        expect(function() {
+            Model.fromGltf({});
+        }).toThrowDeveloperError();
     });
 
     it('sets model properties', function() {
@@ -97,7 +118,7 @@ defineSuite([
        expect(duckModel.show).toEqual(false);
        expect(duckModel.modelMatrix).toEqual(modelMatrix);
        expect(duckModel.scale).toEqual(1.0);
-       expect(duckModel.id).toEqual('./Data/Models/duck/duck.json');
+       expect(duckModel.id).toEqual(duckUrl);
        expect(duckModel.allowPicking).toEqual(true);
        expect(duckModel.activeAnimations).toBeDefined();
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
@@ -141,7 +162,7 @@ defineSuite([
 
         var pick = scene.pick(new Cartesian2(0, 0));
         expect(pick.primitive).toEqual(duckModel);
-        expect(pick.id).toEqual('./Data/Models/duck/duck.json');
+        expect(pick.id).toEqual(duckUrl);
         expect(pick.gltf.node).toEqual(duckModel.getNode('LOD3sp'));
 
         duckModel.show = false;
@@ -167,6 +188,61 @@ defineSuite([
         duckModel.allowPicking = true;
     });
 
+    it('getNode throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.getNode('gltf-node-name');
+        }).toThrowDeveloperError();
+    });
+
+    it('getNode throws when name is not provided', function() {
+        expect(function() {
+            return duckModel.getNode();
+        }).toThrowDeveloperError();
+    });
+
+    it('getNode returns undefined when node does not exist', function() {
+        expect(duckModel.getNode('name-of-node-that-does-not-exist')).not.toBeDefined();
+    });
+
+    it('getNode returns returns a node', function() {
+        var node = duckModel.getNode('LOD3sp');
+        expect(node).toBeDefined();
+        expect(node.name).toEqual('LOD3sp');
+
+        // Change node transform and render
+        expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+        node.matrix = Matrix4.fromUniformScale(1.25);
+        expect(duckModel._cesiumAnimationsDirty).toEqual(true);
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        duckModel.show = true;
+        duckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        duckModel.show = false;
+
+        expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+    });
+
+    it('computeWorldBoundingSphere throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.computeWorldBoundingSphere();
+        }).toThrowDeveloperError();
+    });
+
+    it('computeWorldBoundingSphere computes a bounding sphere', function() {
+        var radius = duckModel.computeWorldBoundingSphere().radius;
+        expect(radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
+    });
+
+    it('computeWorldBoundingSphere uses a result parameter', function() {
+        var result = new BoundingSphere();
+        var sphere = duckModel.computeWorldBoundingSphere(result);
+        expect(sphere).toBe(result);
+        expect(sphere.radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
+    });
+
     it('renders SuperMurdoch (many meshes, including translucent ones)', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
@@ -182,10 +258,9 @@ defineSuite([
 
         var pick = scene.pick(new Cartesian2(0, 0));
         expect(pick.primitive).toEqual(superMurdochModel);
-        expect(pick.id).toEqual('./Data/Models/SuperMurdoch/SuperMurdoch.json');
+        expect(pick.id).toEqual(superMurdochUrl);
         expect(pick.gltf.node).toBeDefined();
 
         superMurdochModel.show = false;
     });
-
 }, 'WebGL');

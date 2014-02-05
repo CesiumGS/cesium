@@ -25,15 +25,7 @@ define([
      *
      * @example
      * var node = model.getNode('LOD3sp');
-     *
-     * // Example 1. Apply non-uniform scale using the matrix transform
      * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
-     *
-     * // Example 2. Apply non-uniform scale using individual translation, rotation, and scale
-     * node.matrix = undefined;
-     * node.translation = new Cartesian3();
-     * node.rotation = Quaternion.IDENTITY.clone();
-     * node.scale = new Cartesian3(5.0, 1.0, 1.0);
      *
      * @see Model#getNode
      */

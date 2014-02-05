@@ -1806,7 +1806,7 @@ define([
             }
         }
 
-        if ((this.show || justLoaded) && (this._state === ModelState.LOADED)) {
+        if ((this.show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
 
