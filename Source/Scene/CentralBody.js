@@ -643,7 +643,8 @@ define([
                 });
         }
 
-        if (this._surface._terrainProvider.hasWaterMask() &&
+        if (this._surface._terrainProvider.isReady() &&
+            this._surface._terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -659,7 +660,7 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
-        var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface._terrainProvider.isReady() && this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
@@ -855,18 +856,24 @@ define([
 
     function displayCredits(centralBody, frameState) {
         var creditDisplay = frameState.creditDisplay;
-        var credit = centralBody._surface._terrainProvider.getCredit();
-        if (defined(credit)) {
-            creditDisplay.addCredit(credit);
+        var credit;
+
+        if (centralBody._surface._terrainProvider.isReady()) {
+            credit = centralBody._surface._terrainProvider.getCredit();
+            if (defined(credit)) {
+                creditDisplay.addCredit(credit);
+            }
         }
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                credit = layer.getImageryProvider().getCredit();
-                if (defined(credit)) {
-                    creditDisplay.addCredit(credit);
+                if (layer.getImageryProvider().isReady()) {
+                    credit = layer.getImageryProvider().getCredit();
+                    if (defined(credit)) {
+                        creditDisplay.addCredit(credit);
+                    }
                 }
             }
         }

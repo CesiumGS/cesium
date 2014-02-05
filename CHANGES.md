@@ -7,6 +7,10 @@ Beta Releases
 ### b26 - 2014-03-03
 
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
+* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
+* Added `Intersections2D` class containing operations on 2D triangles.  
 
 ### b25 - 2014-02-03
 
