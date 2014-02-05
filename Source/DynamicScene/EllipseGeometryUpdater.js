@@ -195,13 +195,17 @@ define(['../Core/Color',
             this._ellipse = newValue;
 
             if (defined(newValue)) {
-                this._ellipseSubscription = newValue.propertyChanged.addEventListener(EllipseGeometryUpdater.prototype._update, this);
+                this._ellipseSubscription = newValue.propertyChanged.addEventListener(EllipseGeometryUpdater.prototype._onEllipsePropertyChanged, this);
             }
 
             this._update();
         } else if (propertyName === 'position') {
             this._update();
         }
+    };
+
+    EllipseGeometryUpdater.prototype._onEllipsePropertyChanged = function(ellipse, propertyName, oldValue, newValue) {
+        this._update();
     };
 
     EllipseGeometryUpdater.prototype._update = function() {

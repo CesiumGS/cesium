@@ -1,5 +1,9 @@
 /*global define*/
-define(['../Core/defaultValue'], function(defaultValue) {
+define(['../Core/defaultValue',
+        '../Core/defined'
+    ], function(
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -7,6 +11,7 @@ define(['../Core/defaultValue'], function(defaultValue) {
      * @private
      */
     function createDynamicPropertyDescriptor(name, privateName, configurable) {
+        var subscriptionName = privateName + 'Subsription';
         return {
             configurable : defaultValue(configurable, false),
             get : function() {
@@ -14,9 +19,19 @@ define(['../Core/defaultValue'], function(defaultValue) {
             },
             set : function(value) {
                 var oldValue = this[privateName];
+                var subscription = this[subscriptionName];
+                if (defined(subscription)) {
+                    subscription();
+                    this[subscriptionName] = undefined;
+                }
                 if (oldValue !== value) {
                     this[privateName] = value;
                     this._propertyChanged.raiseEvent(this, name, value, oldValue);
+                }
+                if (defined(value) && defined(value.definitionChanged)) {
+                    this[subscriptionName] = value.definitionChanged.addEventListener(function() {
+                        this._propertyChanged.raiseEvent(this, name, value, value);
+                    }, this);
                 }
             }
         };
