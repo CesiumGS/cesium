@@ -269,8 +269,9 @@ define([
             controller.enableTilt = false;
 
             // Zoom in
+            var r = Math.max(worldBoundingSphere.radius, camera.frustum.near);
             camera.controller.lookAt(
-                new Cartesian3(0.0, -worldBoundingSphere.radius * 0.25, worldBoundingSphere.radius * 2.0),
+                new Cartesian3(0.0, -r * 0.25, r * 2.0),
                 Cartesian3.ZERO,
                 Cartesian3.UNIT_Z);
         });
