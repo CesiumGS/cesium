@@ -21,9 +21,9 @@ define(['../Core/Color',
      */
     var ColorMaterialProperty = function(color) {
         this._definitionChanged = new Event();
-        this._color = color;
+        this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = new ConstantProperty(Color.WHITE);
+        this.color = new ConstantProperty(color);
     };
 
     defineProperties(ColorMaterialProperty.prototype, {

@@ -42,8 +42,10 @@ define(['../Core/defined',
     DynamicGeometryBatch.prototype.remove = function(updater) {
         var id = updater.id;
         var dynamicUpdater = this._dynamicUpdaters.get(id);
-        dynamicUpdater.destroy();
-        this._dynamicUpdaters.remove(id);
+        if (defined(dynamicUpdater)) {
+            this._dynamicUpdaters.remove(id);
+            dynamicUpdater.destroy();
+        }
     };
 
     DynamicGeometryBatch.prototype.update = function(time) {
@@ -86,6 +88,10 @@ define(['../Core/defined',
      * @see DynamicPyramidVisualizer
      */
     var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
+        if (!defined(type)) {
+            throw new DeveloperError('type is required.');
+        }
+
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
@@ -98,6 +104,7 @@ define(['../Core/defined',
         this._dynamicObjectCollection = undefined;
         this._addedObjects = new DynamicObjectCollection();
         this._removedObjects = new DynamicObjectCollection();
+        this._changedObjects = new DynamicObjectCollection();
 
         this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
 
@@ -106,6 +113,7 @@ define(['../Core/defined',
         this._batches[GeometryBatchType.MATERIAL.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType);
         this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
 
+        this._subscriptions = new Map();
         this._updaters = new Map();
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -166,6 +174,8 @@ define(['../Core/defined',
         var added = addedObjects.getObjects();
         var removedObjects = this._removedObjects;
         var removed = removedObjects.getObjects();
+        var changedObjects = this._changedObjects;
+        var changed = changedObjects.getObjects();
 
         var i;
         var g;
@@ -174,6 +184,8 @@ define(['../Core/defined',
         var updater;
         var batch;
         var batches = this._batches;
+        var batchesLength = batches.length;
+
         for (i = removed.length - 1; i > -1; i--) {
             dynamicObject = removed[i];
             id = dynamicObject.id;
@@ -187,6 +199,8 @@ define(['../Core/defined',
 
             updater.destroy();
             this._updaters.remove(id);
+            this._subscriptions.get(id)();
+            this._subscriptions.remove(id);
         }
 
         for (i = added.length - 1; i > -1; i--) {
@@ -203,10 +217,33 @@ define(['../Core/defined',
             if (updater.outlineEnabled) {
                 this._outlineBatch.add(time, updater);
             }
+            this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometyChanged, this));
+        }
+
+        for (i = changed.length - 1; i > -1; i--) {
+            dynamicObject = changed[i];
+            id = dynamicObject.id;
+            updater = this._updaters.get(id);
+            for (g = 0; g < batchesLength; g++) {
+                if (batches[g].remove(updater)) {
+                    break;
+                }
+            }
+            this._outlineBatch.remove(updater);
+
+            batch = batches[updater.geometryType.value];
+            if (defined(batch)) {
+                batch.add(time, updater);
+            }
+
+            if (updater.outlineEnabled) {
+                this._outlineBatch.add(time, updater);
+            }
         }
 
         addedObjects.removeAll();
         removedObjects.removeAll();
+        changedObjects.removeAll();
 
         for (g = 0; g < batches.length; g++) {
             batches[g].update(time);
@@ -225,6 +262,12 @@ define(['../Core/defined',
         var batchesLength = batches.length;
         for (var g = 0; g < batchesLength; g++) {
             batches[g].removeAllPrimitives();
+        }
+
+        var subscriptions = this._subscriptions.getValues();
+        var len = subscriptions.length;
+        for (var i = 0; i < len; i++) {
+            subscriptions[i]();
         }
     };
 
@@ -268,9 +311,22 @@ define(['../Core/defined',
         return destroyObject(this);
     };
 
+    GeometryVisualizer._onGeometyChanged = function(updater) {
+        var removedObjects = this._removedObjects;
+        var changedObjects = this._changedObjects;
+
+        var dynamicObject = updater.dynamicObject;
+        var id = dynamicObject.id;
+
+        if (!defined(removedObjects.getById(id)) && !defined(this._changedObjects.getById(id))) {
+            this._changedObjects.add(dynamicObject);
+        }
+    };
+
     GeometryVisualizer.prototype._onCollectionChanged = function(dynamicObjectCollection, added, removed) {
         var addedObjects = this._addedObjects;
         var removedObjects = this._removedObjects;
+        var changedObjects = this._changedObjects;
 
         var i;
         var dynamicObject;
@@ -278,12 +334,15 @@ define(['../Core/defined',
             dynamicObject = removed[i];
             if (!addedObjects.remove(dynamicObject)) {
                 removedObjects.add(dynamicObject);
+                changedObjects.remove(dynamicObject);
             }
         }
 
         for (i = added.length - 1; i > -1; i--) {
             dynamicObject = added[i];
-            if (!removedObjects.remove(dynamicObject)) {
+            if (removedObjects.remove(dynamicObject)) {
+                changedObjects.add(dynamicObject);
+            } else {
                 addedObjects.add(dynamicObject);
             }
         }

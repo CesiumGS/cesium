@@ -15,21 +15,27 @@ define(['../Core/defined',
     "use strict";
 
     var Batch = function(primitives, appearanceType, materialProperty) {
-        this._materialProperty = materialProperty;
-        this._updaters = new Map();
-        this._createPrimitive = true;
-        this._primitive = undefined;
-        this._primitives = primitives;
-        this._geometry = new Map();
-        this._material = Material.fromType('Color');
-        this._appearanceType = appearanceType;
-        this._updatersWithAttributes = new Map();
-        this._attributes = new Map();
+        this.materialProperty = materialProperty;
+        this.updaters = new Map();
+        this.createPrimitive = true;
+        this.primitive = undefined;
+        this.primitives = primitives;
+        this.geometry = new Map();
+        this.material = Material.fromType('Color');
+        this.appearanceType = appearanceType;
+        this.updatersWithAttributes = new Map();
+        this.attributes = new Map();
+        this.invalidated = false;
+        this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(Batch.prototype.onMaterialChanged, this);
+    };
+
+    Batch.prototype.onMaterialChanged = function() {
+        this.invalidated = true;
     };
 
     Batch.prototype.isMaterial = function(updater) {
-        var material = this._materialProperty;
-        var updaterMaterial = updater._materialProperty;
+        var material = this.materialProperty;
+        var updaterMaterial = updater.materialProperty;
         if (updaterMaterial === material) {
             return true;
         }
@@ -41,27 +47,27 @@ define(['../Core/defined',
 
     Batch.prototype.add = function(time, updater) {
         var id = updater.id;
-        this._updaters.set(id, updater);
-        this._geometry.set(id, updater.createGeometryInstance(time));
+        this.updaters.set(id, updater);
+        this.geometry.set(id, updater.createGeometryInstance(time));
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
-            this._updatersWithAttributes.set(id, updater);
+            this.updatersWithAttributes.set(id, updater);
         }
-        this._createPrimitive = true;
+        this.createPrimitive = true;
     };
 
     Batch.prototype.remove = function(updater) {
         var id = updater.id;
-        this._createPrimitive = this._updaters.remove(id);
-        this._geometry.remove(id);
-        this._updatersWithAttributes.remove(id);
-        return this._createPrimitive;
+        this.createPrimitive = this.updaters.remove(id);
+        this.geometry.remove(id);
+        this.updatersWithAttributes.remove(id);
+        return this.createPrimitive;
     };
 
     Batch.prototype.update = function(time) {
-        var primitive = this._primitive;
-        var primitives = this._primitives;
-        var geometries = this._geometry.getValues();
-        if (this._createPrimitive) {
+        var primitive = this.primitive;
+        var primitives = this.primitives;
+        var geometries = this.geometry.getValues();
+        if (this.createPrimitive) {
             if (defined(primitive)) {
                 primitives.remove(primitive);
             }
@@ -69,31 +75,31 @@ define(['../Core/defined',
                 primitive = new Primitive({
                     asynchronous : false,
                     geometryInstances : geometries,
-                    appearance : new this._appearanceType({
-                        material : MaterialProperty.getValue(time, this._materialProperty, this._material),
+                    appearance : new this.appearanceType({
+                        material : MaterialProperty.getValue(time, this.materialProperty, this.material),
                         faceForward : true,
-                        translucent : this._material.isTranslucent(),
+                        translucent : this.material.isTranslucent(),
                         closed : true
                     })
                 });
 
                 primitives.add(primitive);
             }
-            this._primitive = primitive;
-            this._createPrimitive = false;
+            this.primitive = primitive;
+            this.createPrimitive = false;
         } else {
-            this._primitive.appearance.material = MaterialProperty.getValue(time, this._materialProperty, this._material);
+            this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
-            var updatersWithAttributes = this._updatersWithAttributes.getValues();
+            var updatersWithAttributes = this.updatersWithAttributes.getValues();
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this._geometry.get(updater.id);
+                var instance = this.geometry.get(updater.id);
 
-                var attributes = this._attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
-                    this._attributes.set(instance.id.id, attributes);
+                    this.attributes.set(instance.id.id, attributes);
                 }
 
                 if (!updater.hasConstantFill) {
@@ -104,11 +110,12 @@ define(['../Core/defined',
     };
 
     Batch.prototype.destroy = function(time) {
-        var primitive = this._primitive;
-        var primitives = this._primitives;
+        var primitive = this.primitive;
+        var primitives = this.primitives;
         if (defined(primitive)) {
             primitives.remove(primitive);
         }
+        this.removeMaterialSubscription();
     };
 
     var StaticGeometryPerMaterialBatch = function(primitives, appearanceType) {
@@ -138,15 +145,34 @@ define(['../Core/defined',
         for (var i = length - 1; i >= 0; i--) {
             var item = items[i];
             if (item.remove(updater)) {
+                if (item.updaters.getCount() === 0) {
+                    items.splice(i, 1);
+                    item.destroy();
+                }
                 break;
             }
         }
     };
 
     StaticGeometryPerMaterialBatch.prototype.update = function(time) {
+        var i;
         var items = this._items;
         var length = items.length;
-        for (var i = 0; i < length; i++) {
+
+        for (i = length - 1; i >= 0; i--) {
+            var item = items[i];
+            if (item.invalidated) {
+                items.splice(i, 1);
+                var updaters = item.updaters.getValues();
+                var updatersLength = updaters.length;
+                for (var h = 0; h < updatersLength; i++) {
+                    this.add(updaters[h]);
+                }
+                item.destroy();
+            }
+        }
+
+        for (i = 0; i < length; i++) {
             items[i].update(time);
         }
     };

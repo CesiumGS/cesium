@@ -19,6 +19,10 @@ define(['./defined',
         return this._hash[key];
     };
 
+    Map.prototype.getCount = function() {
+        return this._array.length;
+    };
+
     Map.prototype.getValues = function() {
         return this._array;
     };

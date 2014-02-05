@@ -14,6 +14,8 @@ define(['../Core/Color',
         Primitive) {
     "use strict";
 
+    var colorScratch = new Color();
+
     var Batch = function(primitives, translucent, appearanceType) {
         this.translucent = translucent;
         this.appearanceType = appearanceType;
@@ -44,7 +46,6 @@ define(['../Core/Color',
         this.updatersWithAttributes.remove(id);
     };
 
-    var colorScratch = new Color();
     Batch.prototype.update = function(time) {
         var removedCount = 0;
         var primitive = this.primitive;
