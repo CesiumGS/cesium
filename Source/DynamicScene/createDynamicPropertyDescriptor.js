@@ -26,11 +26,11 @@ define(['../Core/defaultValue',
                 }
                 if (oldValue !== value) {
                     this[privateName] = value;
-                    this._propertyChanged.raiseEvent(this, name, value, oldValue);
+                    this._definitionChanged.raiseEvent(this, name, value, oldValue);
                 }
                 if (defined(value) && defined(value.definitionChanged)) {
                     this[subscriptionName] = value.definitionChanged.addEventListener(function() {
-                        this._propertyChanged.raiseEvent(this, name, value, value);
+                        this._definitionChanged.raiseEvent(this, name, value, value);
                     }, this);
                 }
             }

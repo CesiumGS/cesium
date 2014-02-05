@@ -27,7 +27,7 @@ define(['../Core/defaultValue',
         this._extrudedHeight = undefined;
         this._granularity = undefined;
         this._stRotation = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPolygon.prototype, {
@@ -36,9 +36,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

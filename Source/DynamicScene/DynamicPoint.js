@@ -26,7 +26,7 @@ define(['../Core/defaultValue',
         this._outlineWidth = undefined;
         this._show = undefined;
         this._scaleByDistance = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPoint.prototype, {
@@ -35,9 +35,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPoint.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

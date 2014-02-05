@@ -36,7 +36,7 @@ define(['../Core/Cartesian3',
         this._extrudedHeight = undefined;
         this._granularity = undefined;
         this._stRotation = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
         this._outline = undefined;
         this._outlineColor = undefined;
         this._numberOfVerticalLines = undefined;
@@ -48,9 +48,9 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

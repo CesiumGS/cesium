@@ -34,7 +34,7 @@ define(['../Core/defaultValue',
         this._showIntersection = undefined;
         this._radius = undefined;
         this._show = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicCone.prototype, {
@@ -43,9 +43,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicCone.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

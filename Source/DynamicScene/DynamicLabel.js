@@ -34,7 +34,7 @@ define(['../Core/defaultValue',
         this._show = undefined;
         this._translucencyByDistance = undefined;
         this._pixelOffsetScaleByDistance = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicLabel.prototype, {
@@ -43,9 +43,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicLabel.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

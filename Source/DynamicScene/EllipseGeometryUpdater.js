@@ -67,7 +67,7 @@ define(['../Core/Color',
 
         this._id = dynamicObject.id;
         this._dynamicObject = dynamicObject;
-        this._dynamicObjectSubscription = dynamicObject.propertyChanged.addEventListener(EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
+        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
         this._ellipseSubscription = undefined;
         this._geometryType = GeometryBatchType.NONE;
         this._geometryChanged = new Event();
@@ -195,7 +195,7 @@ define(['../Core/Color',
             this._ellipse = newValue;
 
             if (defined(newValue)) {
-                this._ellipseSubscription = newValue.propertyChanged.addEventListener(EllipseGeometryUpdater.prototype._onEllipsePropertyChanged, this);
+                this._ellipseSubscription = newValue.definitionChanged.addEventListener(EllipseGeometryUpdater.prototype._onEllipsePropertyChanged, this);
             }
 
             this._update();

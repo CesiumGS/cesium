@@ -25,7 +25,7 @@ define(['../Core/defaultValue',
         this._width = undefined;
         this._direction = undefined;
         this._length = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicVector.prototype, {
@@ -34,9 +34,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicVector.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

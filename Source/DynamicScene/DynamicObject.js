@@ -20,7 +20,7 @@ define(['../Core/createGuid',
         createDynamicPropertyDescriptor) {
     "use strict";
 
-    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyChanged', //
+    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'definitionChanged', //
                                  'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
 
     /**
@@ -64,7 +64,7 @@ define(['../Core/createGuid',
         this._viewFrom = undefined;
         this._description = undefined;
 
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
@@ -76,9 +76,9 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
         /**
@@ -116,7 +116,7 @@ define(['../Core/createGuid',
                 var oldValue = this._name;
                 if (oldValue !== value) {
                     this._name = value;
-                    this._propertyChanged.raiseEvent(this, 'name', value, oldValue);
+                    this._definitionChanged.raiseEvent(this, 'name', value, oldValue);
                 }
             }
         },
@@ -257,7 +257,7 @@ define(['../Core/createGuid',
 
     /**
      * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link DynamicObject.propertyChanged} and composited
+     * observed with {@link DynamicObject.definitionChanged} and composited
      * with {@link CompositeDynamicObjectCollection}
      * @memberof DynamicObject
      *

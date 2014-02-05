@@ -36,7 +36,7 @@ define(['../Core/defaultValue',
         this._scaleByDistance = undefined;
         this._translucencyByDistance = undefined;
         this._pixelOffsetScaleByDistance = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicBillboard.prototype, {
@@ -45,9 +45,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

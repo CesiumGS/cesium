@@ -31,7 +31,7 @@ define(['../Core/Clock',
         this._clockRange = undefined;
         this._clockStep = undefined;
         this._multiplier = undefined;
-        this._propertyChanged = new Event();
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicClock.prototype, {
@@ -40,9 +40,9 @@ define(['../Core/Clock',
          * @memberof DynamicClock.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 

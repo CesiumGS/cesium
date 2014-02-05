@@ -92,12 +92,12 @@ define(['../Core/createGuid',
     }
 
     function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
-        if (defined(property) && defined(property.propertyChanged)) {
-            var subpropertyChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
+        if (defined(property) && defined(property.definitionChanged)) {
+            var subdefinitionChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
             propertyIdScratch[0] = collectionId;
             propertyIdScratch[1] = dynamicObject.id;
             propertyIdScratch[2] = propertyName;
-            eventHash[JSON.stringify(propertyIdScratch)] = property.propertyChanged.addEventListener(subpropertyChanged);
+            eventHash[JSON.stringify(propertyIdScratch)] = property.definitionChanged.addEventListener(subdefinitionChanged);
         }
     }
 
@@ -116,7 +116,7 @@ define(['../Core/createGuid',
     function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
         dynamicObjectIdScratch[0] = collectionId;
         dynamicObjectIdScratch[1] = dynamicObject.id;
-        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
+        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.definitionChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
