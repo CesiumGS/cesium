@@ -3,6 +3,7 @@ defineSuite([
          'Scene/Model',
          'Specs/createScene',
          'Specs/destroyScene',
+         'Core/defaultValue',
          'Core/Math',
          'Core/Cartesian2',
          'Core/Cartesian3',
@@ -15,6 +16,7 @@ defineSuite([
          Model,
          createScene,
          destroyScene,
+         defaultValue,
          CesiumMath,
          Cartesian2,
          Cartesian3,
@@ -26,13 +28,21 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+// TODO: Tests for all uniform semantics
+// TODO: Tests for all uniform types
+
     var duckUrl = './Data/Models/duck/duck.json';
     var superMurdochUrl = './Data/Models/SuperMurdoch/SuperMurdoch.json';
+    var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
+    var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
+
+    var duckModel;
+    var superMurdochModel;
+    var animBoxesModel;
+    var riggedFigureModel;
 
     var scene;
     var primitives;
-    var duckModel;
-    var superMurdochModel;
 
     beforeAll(function() {
         scene = createScene();
@@ -43,14 +53,17 @@ defineSuite([
         destroyScene(scene);
     });
 
-    function loadModel(url) {
+    function loadModel(url, options) {
+        options = defaultValue(options, {});
+
         var ellipsoid = Ellipsoid.WGS84;
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 0.0)));
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
 
         var model = primitives.add(Model.fromGltf({
             url : url,
             modelMatrix : modelMatrix,
             show : false,
+            scale : options.scale,
             id : url        // for picking tests
         }));
 
@@ -73,8 +86,9 @@ defineSuite([
                 controller.enableTilt = false;
 
                 // Zoom in
+                var r = Math.max(worldBoundingSphere.radius, camera.frustum.near);
                 camera.controller.lookAt(
-                    new Cartesian3(0.0, -worldBoundingSphere.radius, worldBoundingSphere.radius),
+                    new Cartesian3(0.0, -r, r),
                     Cartesian3.ZERO,
                     Cartesian3.UNIT_Z);
             };
@@ -89,12 +103,8 @@ defineSuite([
         return model;
     }
 
-    it('loads duck.json', function() {
+    it('loads duck', function() {
         duckModel = loadModel(duckUrl);
-    });
-
-    it('loads SuperMurdochModel.json', function() {
-        superMurdochModel = loadModel(superMurdochUrl);
     });
 
     it('fromGltf throws without options', function() {
@@ -111,7 +121,7 @@ defineSuite([
 
     it('sets model properties', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 0.0)));
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 100.0)));
 
        expect(duckModel.gltf).toBeDefined();
        expect(duckModel.basePath).toEqual('./Data/Models/duck/');
@@ -165,6 +175,21 @@ defineSuite([
         expect(pick.id).toEqual(duckUrl);
         expect(pick.gltf.node).toEqual(duckModel.getNode('LOD3sp'));
 
+        duckModel.show = false;
+    });
+
+    it('is picked with a new pick id', function() {
+        var oldId = duckModel.id;
+        duckModel.id = 'id';
+        duckModel.show = true;
+        duckModel.zoomTo();
+
+        var pick = scene.pick(new Cartesian2(0, 0));
+        expect(pick.primitive).toEqual(duckModel);
+        expect(pick.id).toEqual('id');
+        expect(pick.gltf.node).toEqual(duckModel.getNode('LOD3sp'));
+
+        duckModel.id = oldId;
         duckModel.show = false;
     });
 
@@ -243,7 +268,23 @@ defineSuite([
         expect(sphere.radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
     });
 
-    it('renders SuperMurdoch (many meshes, including translucent ones)', function() {
+    it('destroys', function() {
+        var m = loadModel(duckUrl);
+
+        runs(function() {
+            expect(m.isDestroyed()).toEqual(false);
+            primitives.remove(m);
+            expect(m.isDestroyed()).toEqual(true);
+        });
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    it('loads superMurdoch', function() {
+        superMurdochModel = loadModel(superMurdochUrl);
+    });
+
+    it('renders superMurdoch (many meshes, including translucent ones)', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         superMurdochModel.show = true;
@@ -252,7 +293,7 @@ defineSuite([
         superMurdochModel.show = false;
     });
 
-    it('picks SuperMurdoch', function() {
+    it('picks superMurdoch', function() {
         superMurdochModel.show = true;
         superMurdochModel.zoomTo();
 
@@ -262,5 +303,36 @@ defineSuite([
         expect(pick.gltf.node).toBeDefined();
 
         superMurdochModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    it('loads animBoxes', function() {
+        animBoxesModel = loadModel(animBoxesUrl, {
+            scale : 2.0
+        });
+    });
+
+    it('renders animBoxes without animation', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        animBoxesModel.show = true;
+        animBoxesModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        animBoxesModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    it('loads riggedFigure', function() {
+        riggedFigureModel = loadModel(riggedFigureUrl);
+    });
+
+    it('renders riggedFigure without animation', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        riggedFigureModel.show = true;
+        riggedFigureModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        riggedFigureModel.show = false;
     });
 }, 'WebGL');
