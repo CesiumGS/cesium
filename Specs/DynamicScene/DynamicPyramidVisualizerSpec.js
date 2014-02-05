@@ -185,7 +185,7 @@ defineSuite([
 
         var time = new JulianDate();
         visualizer.update(time);
-        expect(scene.getPrimitives().get(0).dynamicObject).toEqual(testObject);
+        expect(scene.getPrimitives().get(0).id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -210,12 +210,12 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var pyramidPrimitive = scene.getPrimitives().get(0);
-        expect(pyramidPrimitive.dynamicObject).toEqual(testObject);
+        expect(pyramidPrimitive.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         pyramidPrimitive = scene.getPrimitives().get(0);
-        expect(pyramidPrimitive.dynamicObject).toEqual(testObject2);
+        expect(pyramidPrimitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

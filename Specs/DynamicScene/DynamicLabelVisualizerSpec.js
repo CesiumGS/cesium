@@ -259,7 +259,7 @@ defineSuite([
         visualizer.update(time);
         expect(labelCollection.getLength()).toEqual(1);
         var l = labelCollection.get(0);
-        expect(l.dynamicObject).toEqual(testObject);
+        expect(l.id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -285,12 +285,12 @@ defineSuite([
         visualizer.update(time);
         expect(labelCollection.getLength()).toEqual(1);
         var l = labelCollection.get(0);
-        expect(l.dynamicObject).toEqual(testObject);
+        expect(l.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(labelCollection.getLength()).toEqual(1);
         l = labelCollection.get(0);
-        expect(l.dynamicObject).toEqual(testObject2);
+        expect(l.id).toEqual(testObject2);
     });
 }, 'WebGL');

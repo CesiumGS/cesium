@@ -240,7 +240,7 @@ define([
                 dynamicEllipsoidVisualizer._primitives.add(ellipsoid);
             }
             dynamicObject._ellipsoidVisualizerIndex = ellipsoidVisualizerIndex;
-            ellipsoid.dynamicObject = dynamicObject;
+            ellipsoid.id = dynamicObject;
 
             ellipsoid.material = Material.fromType(Material.ColorType);
         } else {

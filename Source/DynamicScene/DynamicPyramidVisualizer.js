@@ -243,7 +243,7 @@ define([
                 dynamicPyramidVisualizer._primitives.add(pyramid);
             }
             dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
-            pyramid.dynamicObject = dynamicObject;
+            pyramid.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             pyramid.radius = Number.POSITIVE_INFINITY;

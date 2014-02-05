@@ -214,7 +214,7 @@ define([
                 polyline = dynamicPolylineVisualizer._polylineCollection.add();
             }
             dynamicObject._polylineVisualizerIndex = polylineVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);

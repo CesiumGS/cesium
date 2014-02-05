@@ -8,6 +8,7 @@ define(['../../Core/BoundingSphere',
         '../../Core/wrapFunction',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
+        '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
@@ -20,6 +21,7 @@ define(['../../Core/BoundingSphere',
         wrapFunction,
         SceneMode,
         subscribeAndEvaluate,
+        DynamicObject,
         DynamicObjectView,
         knockout) {
     "use strict";
@@ -151,20 +153,22 @@ define(['../../Core/BoundingSphere',
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
-        function pickAndTrackObject(e) {
+        function pickDynamicObject(e) {
             var picked = viewer.scene.pick(e.position);
-            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
-                viewer.trackedObject = picked.primitive.dynamicObject;
+            if (defined(picked)) {
+                var id = defaultValue(picked.id, picked.primitive.id);
+                if (id instanceof DynamicObject) {
+                    return id;
+                }
             }
         }
 
+        function pickAndTrackObject(e) {
+            viewer.trackedObject = defaultValue(pickDynamicObject(e), viewer.trackedObject);
+        }
+
         function pickAndSelectObject(e) {
-            var picked = viewer.scene.pick(e.position);
-            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
-                viewer.selectedObject = picked.primitive.dynamicObject;
-            } else {
-                viewer.selectedObject = undefined;
-            }
+            viewer.selectedObject = pickDynamicObject(e);
         }
 
         // Subscribe to the home button beforeExecute event if it exists,

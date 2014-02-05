@@ -191,7 +191,7 @@ defineSuite([
 
         var time = new JulianDate();
         visualizer.update(time);
-        expect(scene.getPrimitives().get(0).dynamicObject).toEqual(testObject);
+        expect(scene.getPrimitives().get(0).id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -216,12 +216,12 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var ellipsoidPrimitive = scene.getPrimitives().get(0);
-        expect(ellipsoidPrimitive.dynamicObject).toEqual(testObject);
+        expect(ellipsoidPrimitive.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         ellipsoidPrimitive = scene.getPrimitives().get(0);
-        expect(ellipsoidPrimitive.dynamicObject).toEqual(testObject2);
+        expect(ellipsoidPrimitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

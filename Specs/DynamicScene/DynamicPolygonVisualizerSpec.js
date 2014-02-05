@@ -174,7 +174,7 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var primitive = scene.getPrimitives().get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -197,12 +197,12 @@ defineSuite([
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var primitive = scene.getPrimitives().get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(scene.getPrimitives().getLength()).toEqual(1);
         primitive = scene.getPrimitives().get(0);
-        expect(primitive.dynamicObject).toEqual(testObject2);
+        expect(primitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

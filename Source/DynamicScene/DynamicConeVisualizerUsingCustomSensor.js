@@ -285,7 +285,7 @@ define([
                 dynamicConeVisualizerUsingCustomSensor._primitives.add(cone);
             }
             dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
-            cone.dynamicObject = dynamicObject;
+            cone.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(Material.ColorType);

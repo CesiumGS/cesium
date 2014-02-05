@@ -216,7 +216,7 @@ define([
                 dynamicPolygonVisualizer._primitives.add(polygon);
             }
             dynamicObject._polygonVisualizerIndex = polygonVisualizerIndex;
-            polygon.dynamicObject = dynamicObject;
+            polygon.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polygon.material = Material.fromType(Material.ColorType);

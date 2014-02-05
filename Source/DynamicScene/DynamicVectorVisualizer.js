@@ -214,7 +214,7 @@ define([
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);

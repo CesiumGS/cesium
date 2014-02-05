@@ -285,7 +285,7 @@ defineSuite([
         visualizer.update(time);
         expect(billboardCollection.getLength()).toEqual(1);
         var bb = billboardCollection.get(0);
-        expect(bb.dynamicObject).toEqual(testObject);
+        expect(bb.id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -311,12 +311,12 @@ defineSuite([
         visualizer.update(time);
         expect(billboardCollection.getLength()).toEqual(1);
         var bb = billboardCollection.get(0);
-        expect(bb.dynamicObject).toEqual(testObject);
+        expect(bb.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
         expect(billboardCollection.getLength()).toEqual(1);
         bb = billboardCollection.get(0);
-        expect(bb.dynamicObject).toEqual(testObject2);
+        expect(bb.id).toEqual(testObject2);
     });
 }, 'WebGL');

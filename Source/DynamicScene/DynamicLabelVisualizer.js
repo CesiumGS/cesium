@@ -228,7 +228,7 @@ define([
                 label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
-            label.dynamicObject = dynamicObject;
+            label.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             label.setText('');
