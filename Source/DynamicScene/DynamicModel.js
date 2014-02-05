@@ -82,7 +82,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicModel
      *
      * @param {DynamicModel} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicModel.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

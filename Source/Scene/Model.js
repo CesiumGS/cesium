@@ -354,8 +354,6 @@ define([
      *
      * @returns {Model} The newly created model.
      *
-     * @exception {DeveloperError} options.url is required.
-     *
      * @example
      * // Example 1. Create a model from a glTF asset
      * var model = scene.getPrimitives().add(Model.fromGltf({
@@ -421,7 +419,6 @@ define([
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> was found.
      *
      * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
-     * @exception {DeveloperError} name is required.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp

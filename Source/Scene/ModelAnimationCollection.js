@@ -103,7 +103,7 @@ define([
      * @returns {ModelAnimation} The animation that was added to the collection.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
-     * @exception {DeveloperError} options.name is required and must be a valid animation name.
+     * @exception {DeveloperError} options.name must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
@@ -157,7 +157,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(animation)) {
-            throw new DeveloperError('options.name is required and must be a valid animation name.');
+            throw new DeveloperError('options.name must be a valid animation name.');
         }
 
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
@@ -192,7 +192,7 @@ define([
      * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
-     * @exception {DeveloperError} options.name is required and must be a valid animation name.
+     * @exception {DeveloperError} options.name must be a valid animation name.
      * @exception {DeveloperError} options.speedup must be greater than zero.
      *
      * @example
@@ -301,8 +301,6 @@ define([
      * @param {Number} index The zero-based index of the animation.
      *
      * @returns {ModelAnimation} The animation at the specified index.
-     *
-     * @exception {DeveloperError} index is required.
      *
      * @example
      * // Output the names of all the animations in the collection.
