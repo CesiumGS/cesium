@@ -1784,8 +1784,7 @@ define([
      * @private
      */
     Model.prototype.update = function(context, frameState, commandList) {
-        if (!this.show ||
-            (frameState.mode !== SceneMode.SCENE3D)) {
+        if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
@@ -1809,7 +1808,7 @@ define([
             }
         }
 
-        if (this._state === ModelState.LOADED) {
+        if ((this.show || justLoaded) && (this._state === ModelState.LOADED)) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
 
@@ -1844,23 +1843,28 @@ define([
             return;
         }
 
-// TODO: make this not so wasteful
-        var passes = frameState.passes;
-        var i;
-        var length;
-        var commands;
-        if (passes.render) {
-            commands = this._renderCommands;
-            length = commands.length;
-            for (i = 0; i < length; ++i) {
-                commandList.push(commands[i]);
+        // We don't check show at the top of the function since we
+        // want to be able to progressively load models when they are shown,
+        // and then have them visibile immediately when show is set to true.
+        if (this.show) {
+         // TODO: make this not so wasteful
+            var passes = frameState.passes;
+            var i;
+            var length;
+            var commands;
+            if (passes.render) {
+                commands = this._renderCommands;
+                length = commands.length;
+                for (i = 0; i < length; ++i) {
+                    commandList.push(commands[i]);
+                }
             }
-        }
-        if (passes.pick) {
-            commands = this._pickCommands;
-            length = commands.length;
-            for (i = 0; i < length; ++i) {
-                commandList.push(commands[i]);
+            if (passes.pick) {
+                commands = this._pickCommands;
+                length = commands.length;
+                for (i = 0; i < length; ++i) {
+                    commandList.push(commands[i]);
+                }
             }
         }
 // END TODO

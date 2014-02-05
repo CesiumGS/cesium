@@ -221,6 +221,7 @@ defineSuite([
         scene.debugShowFramesPerSecond = true;
         scene.render();
         expect(scene._performanceDisplay).toBeDefined();
+        scene.debugShowFramesPerSecond = false;
     });
 
     it('opaque/translucent render order (1)', function() {
