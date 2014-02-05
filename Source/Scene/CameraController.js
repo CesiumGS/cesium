@@ -639,6 +639,11 @@ define([
             newLeft = -maxRight;
         }
 
+        if (newRight <= newLeft) {
+            newRight = 1.0;
+            newLeft = -1.0;
+        }
+
         var ratio = frustum.top / frustum.right;
         frustum.right = newRight;
         frustum.left = newLeft;
