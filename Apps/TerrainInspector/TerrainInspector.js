@@ -38,6 +38,7 @@ require([
                         <tr><td id="selectedTileLabel" colspan="2">None</td></tr>\
                         <tr><td id="selectedTileExtentSWLabel" colspan="2">&nbsp;</td></tr>\
                         <tr><td id="selectedTileExtentNELabel" colspan="2">&nbsp;</td></tr>\
+                        <tr><td id="selectedTileMinMaxHeightLabel" colspan="2">&nbsp;</td></tr>\
                         <tr><td id="boundingSphereToggle"></td><td>Show bounding sphere of selected tile</td></tr>\
                         <tr><td id="renderSelectedTileOnlyToggle"></td><td>Render selected tile only</td></tr>', 'debuggingTable');
 
@@ -82,6 +83,51 @@ require([
     var selectedTile;
     var renderSelectedTileOnly = false;
 
+    function updateSelectedTile(selectedTile) {
+        var text;
+        var sw;
+        var ne;
+        var minMax;
+        if (selectedTile) {
+            text = 'L: ' + selectedTile.level + ' X: ' + selectedTile.x + ' Y: ' + selectedTile.y;
+            sw = 'SW corner: ' + selectedTile.extent.west + ', ' + selectedTile.extent.south;
+            ne = 'NE corner: ' + selectedTile.extent.east + ', ' + selectedTile.extent.north;
+            minMax = 'Min: ' + selectedTile.minimumHeight + ' Max: ' + selectedTile.maximumHeight;
+        } else {
+            text = 'None';
+            sw = '&nbsp;';
+            ne = '&nbsp;';
+            minMax = '&nbsp;';
+        }
+
+        if (showBoundingSphere) {
+            centralBody._surface._debug.boundingSphereTile = selectedTile;
+        }
+
+        if (renderSelectedTileOnly) {
+            centralBody._surface._tilesToRenderByTextureCount = [];
+
+            if (Cesium.defined(selectedTile)) {
+                var readyTextureCount = 0;
+                var tileImageryCollection = selectedTile.imagery;
+                for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                    var tileImagery = tileImageryCollection[i];
+                    if (Cesium.defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
+                        ++readyTextureCount;
+                    }
+                }
+
+                centralBody._surface._tilesToRenderByTextureCount[readyTextureCount] = [selectedTile];
+                centralBody._surface._tileLoadQueue.push(selectedTile);
+            }
+        }
+
+        document.getElementById('selectedTileLabel').innerHTML = text;
+        document.getElementById('selectedTileExtentSWLabel').innerHTML = sw;
+        document.getElementById('selectedTileExtentNELabel').innerHTML = ne;
+        document.getElementById('selectedTileMinMaxHeightLabel').innerHTML = minMax;
+    }
+
     function selectTile(event) {
         selectedTile = undefined;
 
@@ -109,26 +155,7 @@ require([
             }
         }
 
-        var text;
-        var sw;
-        var ne;
-        if (selectedTile) {
-            text = 'L: ' + selectedTile.level + ' X: ' + selectedTile.x + ' Y: ' + selectedTile.y;
-            sw = 'SW corner: ' + selectedTile.extent.west + ', ' + selectedTile.extent.south;
-            ne = 'NE corner: ' + selectedTile.extent.east + ', ' + selectedTile.extent.north;
-        } else {
-            text = 'None';
-            sw = '&nbsp;';
-            ne = '&nbsp;';
-        }
-
-        if (showBoundingSphere) {
-            centralBody._surface._debug.boundingSphereTile = selectedTile;
-        }
-
-        document.getElementById('selectedTileLabel').innerHTML = text;
-        document.getElementById('selectedTileExtentSWLabel').innerHTML = sw;
-        document.getElementById('selectedTileExtentNELabel').innerHTML = ne;
+        updateSelectedTile(selectedTile);
 
         viewer.cesiumWidget.canvas.removeEventListener('mousedown', selectTile, false);
         selectingTile = false;
@@ -148,6 +175,61 @@ require([
         }
     }).placeAt('selectTileButton');
 
+    new Button({
+        label: "Parent",
+        showLabel: true,
+        onClick: function() {
+            if (Cesium.defined(selectedTile)) {
+                selectedTile = selectedTile.parent;
+                updateSelectedTile(selectedTile);
+            }
+        }
+    }).placeAt('selectTileButton');
+
+    new Button({
+        label: "NW",
+        showLabel: true,
+        onClick: function() {
+            if (Cesium.defined(selectedTile)) {
+                selectedTile = selectedTile.getChildren()[0];
+                updateSelectedTile(selectedTile);
+            }
+        }
+    }).placeAt('selectTileButton');
+
+    new Button({
+        label: "NE",
+        showLabel: true,
+        onClick: function() {
+            if (Cesium.defined(selectedTile)) {
+                selectedTile = selectedTile.getChildren()[1];
+                updateSelectedTile(selectedTile);
+            }
+        }
+    }).placeAt('selectTileButton');
+
+    new Button({
+        label: "SW",
+        showLabel: true,
+        onClick: function() {
+            if (Cesium.defined(selectedTile)) {
+                selectedTile = selectedTile.getChildren()[2];
+                updateSelectedTile(selectedTile);
+            }
+        }
+    }).placeAt('selectTileButton');
+
+    new Button({
+        label: "SE",
+        showLabel: true,
+        onClick: function() {
+            if (Cesium.defined(selectedTile)) {
+                selectedTile = selectedTile.getChildren()[3];
+                updateSelectedTile(selectedTile);
+            }
+        }
+    }).placeAt('selectTileButton');
+
     new CheckBox({
         checked: showBoundingSphere,
         onChange: function(b) {
@@ -163,24 +245,13 @@ require([
     var renderSelectedTileOnlyCheckbox = new CheckBox({
         checked: renderSelectedTileOnly,
         onChange: function(b) {
+            renderSelectedTileOnly = b;
             if (!b) {
                 suspendLodCheckbox.set("checked", false);
             } else {
                 suspendLodCheckbox.set("checked", true);
-                centralBody._surface._tilesToRenderByTextureCount = [];
-
-                if (Cesium.defined(selectedTile)) {
-                    var readyTextureCount = 0;
-                    var tileImageryCollection = selectedTile.imagery;
-                    for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
-                        var tileImagery = tileImageryCollection[i];
-                        if (Cesium.defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
-                            ++readyTextureCount;
-                        }
-                    }
-
-                    centralBody._surface._tilesToRenderByTextureCount[readyTextureCount] = [selectedTile];
-                }
+                centralBody._surface._debug.suspendLodUpdate = true;
+                updateSelectedTile(selectedTile);
             }
         }
     });
