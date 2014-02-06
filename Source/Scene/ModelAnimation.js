@@ -105,11 +105,11 @@ define([
          * Determines if and how the animation is looped.
          *
          * @type {ModelAnimationLoop}
-         * @default {@link ModelAnimationLoop.CLAMP}
+         * @default {@link ModelAnimationLoop.NONE}
          *
          * @readonly
          */
-        this.wrap = defaultValue(options.wrap, ModelAnimationLoop.CLAMP);
+        this.wrap = defaultValue(options.wrap, ModelAnimationLoop.NONE);
 
         /**
          * The event fired when this animation is started.  This can be used, for

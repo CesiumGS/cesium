@@ -95,7 +95,7 @@ define([
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
-     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.CLAMP] Determines if and how the animation is looped.
+     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
      * @param {Event} [options.start=undefined] The event fired when the animation is started.
      * @param {Event} [options.update=undefined] The event fired when on each frame when the animation is updated.
      * @param {Event} [options.stop=undefined] The event fired when the animation is stopped.
@@ -184,7 +184,7 @@ define([
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
-     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.CLAMP] Determines if and how the animations are looped.
+     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
      * @param {Event} [options.start=undefined] The event fired when each animation is started.
      * @param {Event} [options.update=undefined] The event fired when on each frame when each animation is updated.
      * @param {Event} [options.stop=undefined] The event fired when each animation is stopped.

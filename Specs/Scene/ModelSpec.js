@@ -392,7 +392,7 @@ defineSuite([
         expect(a.removeOnStop).toEqual(false);
         expect(a.speedup).toEqual(1.0);
         expect(a.reverse).toEqual(false);
-        expect(a.wrap).toEqual(ModelAnimationLoop.CLAMP);
+        expect(a.wrap).toEqual(ModelAnimationLoop.NONE);
         expect(a.start).not.toBeDefined();
         expect(a.update).not.toBeDefined();
         expect(a.stop).not.toBeDefined();
