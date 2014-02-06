@@ -242,6 +242,7 @@ define(['../Core/Color',
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
         this._outlineColorProperty = defaultValue(ellipse.outlineColor, defaultOutlineColor);
+        this._outlineEnabled = outlineEnabled;
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
