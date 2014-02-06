@@ -12,8 +12,9 @@ Beta Releases
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
 * Added `Intersections2D` class containing operations on 2D triangles.
 * Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
-* Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.  
-* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`. 
+* Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
+* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
+* `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
 
 ### b25 - 2014-02-03
 
