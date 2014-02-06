@@ -392,7 +392,7 @@ defineSuite([
         expect(a.removeOnStop).toEqual(false);
         expect(a.speedup).toEqual(1.0);
         expect(a.reverse).toEqual(false);
-        expect(a.wrap).toEqual(ModelAnimationLoop.NONE);
+        expect(a.loop).toEqual(ModelAnimationLoop.NONE);
         expect(a.start).not.toBeDefined();
         expect(a.update).not.toBeDefined();
         expect(a.stop).not.toBeDefined();
@@ -610,7 +610,7 @@ defineSuite([
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            wrap : ModelAnimationLoop.REPEAT,
+            loop : ModelAnimationLoop.REPEAT,
             update : updateEvent
         });
 
@@ -642,7 +642,7 @@ defineSuite([
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            wrap : ModelAnimationLoop.MIRRORED_REPEAT,
+            loop : ModelAnimationLoop.MIRRORED_REPEAT,
             update : updateEvent
         });
 

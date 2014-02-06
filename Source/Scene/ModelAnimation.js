@@ -58,7 +58,7 @@ define([
         /**
          * The scene time to stop playing this animation.  When this is <code>undefined</code>,
          * the animation is played for its full duration and perhaps repeated depending on
-         * {@link ModelAnimation#wrap}.
+         * {@link ModelAnimation#loop}.
          *
          * @type {JulianDate}
          * @default undefined
@@ -109,7 +109,7 @@ define([
          *
          * @readonly
          */
-        this.wrap = defaultValue(options.wrap, ModelAnimationLoop.NONE);
+        this.loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
 
         /**
          * The event fired when this animation is started.  This can be used, for

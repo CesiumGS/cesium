@@ -247,7 +247,7 @@ define([
                     // stopTime : (new JulianDate()).addSeconds(4),
                     // removeOnStop : true,
                     speedup : 0.5, //1.0,
-                    wrap : ModelAnimationLoop.REPEAT, // ModelAnimationLoop.MIRRORED_REPEAT,
+                    loop : ModelAnimationLoop.REPEAT, // ModelAnimationLoop.MIRRORED_REPEAT,
                     // reverse : true,
                     start : animationStart,
                     stop : animationStop
