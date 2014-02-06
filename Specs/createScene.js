@@ -18,9 +18,9 @@ define([
         var scene = new Scene(createCanvas(), options);
 
         // Add functions for test
-        scene.renderForSpecs = function() {
+        scene.renderForSpecs = function(time) {
             scene.initializeFrame();
-            scene.render();
+            scene.render(time);
             return scene.getContext().readPixels();
         };
 

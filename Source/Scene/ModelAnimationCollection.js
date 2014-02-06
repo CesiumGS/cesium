@@ -416,7 +416,7 @@ define([
                 }
 
                 var localAnimationTime = delta * duration * scheduledAnimation.speedup;
-                // Clamp in case float-point roundoff goes outside the animation's first or last keyframe
+                // Clamp in case floating-point roundoff goes outside the animation's first or last keyframe
                 localAnimationTime = CesiumMath.clamp(localAnimationTime, runtimeAnimation.startTime, runtimeAnimation.stopTime);
 
                 animateChannels(runtimeAnimation, localAnimationTime);

@@ -12,6 +12,8 @@ defineSuite([
          'Core/BoundingSphere',
          'Core/Ellipsoid',
          'Core/Transforms',
+         'Core/Event',
+         'Core/JulianDate',
          'Scene/ModelAnimationWrap'
      ], function(
          Model,
@@ -26,6 +28,8 @@ defineSuite([
          BoundingSphere,
          Ellipsoid,
          Transforms,
+         Event,
+         JulianDate,
          ModelAnimationWrap) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -432,6 +436,59 @@ defineSuite([
                 speedup : 0.0
             });
         }).toThrowDeveloperError();
+    });
+
+    it('raises animation start, update, and stop events when removeOnStop is true', function() {
+        var startEvent = new Event();
+        var spyStart = jasmine.createSpy('listener');
+        startEvent.addEventListener(spyStart);
+
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var stopped = false;
+        var stopEvent = new Event();
+        stopEvent.addEventListener(function(model, animation) {
+            stopped = true;
+        });
+        var spyStop = jasmine.createSpy('listener');
+        stopEvent.addEventListener(spyStop);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            removeOnStop : true,
+            start : startEvent,
+            update : updateEvent,
+            stop : stopEvent
+        });
+
+        animBoxesModel.show = true;
+
+        waitsFor(function() {
+            scene.renderForSpecs(time);
+            time = time.addSeconds(1.0, time);
+            return stopped;
+        }, 'raises animation start, update, and stop events when removeOnStop is true', 10000);
+
+        runs(function() {
+            expect(spyStart).toHaveBeenCalledWith(animBoxesModel, a);
+
+            expect(spyUpdate.calls.length).toEqual(4);
+            expect(spyUpdate.calls[0].args[0]).toBe(animBoxesModel);
+            expect(spyUpdate.calls[0].args[1]).toBe(a);
+            expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+            expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+            expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON14);
+            expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+            expect(spyStop).toHaveBeenCalledWith(animBoxesModel, a);
+            expect(animations.length).toEqual(0);
+            animBoxesModel.show = false;
+        });
     });
 
     ///////////////////////////////////////////////////////////////////////////
