@@ -144,7 +144,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -187,7 +187,7 @@ defineSuite([
         extent = createExtent();
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
     });
 
@@ -198,7 +198,7 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
@@ -212,7 +212,7 @@ defineSuite([
         frameState.mode = SceneMode.SCENE2D;
         var commandList = [];
         extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
@@ -234,7 +234,7 @@ defineSuite([
 
         expect(function() {
             extent.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when updated/rendered without an invalid granularity', function() {
@@ -243,7 +243,7 @@ defineSuite([
 
         expect(function() {
             extent.update(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
@@ -252,6 +252,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, extent);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

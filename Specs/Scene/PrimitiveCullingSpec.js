@@ -76,7 +76,7 @@ defineSuite([
 
         camera = new Camera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.frustum.near = 0.01;
         camera.frustum.far = 10.0;
@@ -104,7 +104,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
@@ -140,11 +140,11 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
@@ -185,11 +185,11 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
@@ -217,7 +217,7 @@ defineSuite([
         // get bounding volume for primitive and reposition camera so its in the the frustum.
         var commandList = [];
         primitive.update(context, frameState, commandList);
-        var bv = commandList[0].opaqueList[0].boundingVolume;
+        var bv = commandList[0].boundingVolume;
         camera.position = Cartesian3.clone(bv.center);
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));

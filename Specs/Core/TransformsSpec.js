@@ -232,11 +232,11 @@ defineSuite([
         it('throws if the date parameter is not specified', function() {
             expect(function() {
                 Transforms.computeIcrfToFixedMatrix(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 Transforms.computeFixedToIcrfMatrix(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('works with data from STK Components', function() {
@@ -285,8 +285,8 @@ defineSuite([
                     for ( var k = 0; k < 9; k++) {
                         testDiff[k] = t[k] - expectedMtx[k];
                     }
-                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                    expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                    expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
                 }
             });
         });
@@ -328,8 +328,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 
@@ -353,8 +353,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 
@@ -377,8 +377,8 @@ defineSuite([
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
                 }
-                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON15);
-                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON15);
+                expect(testInverse).toEqualEpsilon(Matrix3.IDENTITY, CesiumMath.EPSILON14);
+                expect(testDiff).toEqualEpsilon(new Matrix3(), CesiumMath.EPSILON14);
             });
         });
 
@@ -571,36 +571,36 @@ defineSuite([
     it('eastNorthUpToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('northEastDownToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.northEastDownToFixedFrame(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeTemeToPseudoFixedMatrix throws without a date', function() {
         expect(function() {
             Transforms.computeTemeToPseudoFixedMatrix(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without modelViewProjectionMatrix', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(undefined, Matrix4.IDENTITY, Cartesian3.ZERO);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without viewportTransformation', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, undefined, Cartesian3.ZERO);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('pointToWindowCoordinates throws without a point', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, Matrix4.IDENTITY, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

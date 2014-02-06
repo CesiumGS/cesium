@@ -206,15 +206,15 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.passes.color = false;
+        frameState.passes.render = false;
         frameState.passes.pick = false;
 
         var commands = [];
         primitive.update(context, frameState, commands);
         expect(commands.length).toEqual(0);
 
-        frameState.passes.color = true;
-        frameState.passes.pick = true;
+        frameState.passes.render = true;
+        frameState.passes.pick = false;
 
         primitive = primitive && primitive.destroy();
     });
@@ -277,8 +277,7 @@ defineSuite([
 
         var commands = [];
         primitive.update(context, frameState, commands);
-        expect(commands.length).toEqual(1);
-        expect(commands[0].translucentList.length).toEqual(2);
+        expect(commands.length).toEqual(2);
 
         primitive = primitive && primitive.destroy();
     });
@@ -615,7 +614,7 @@ defineSuite([
 
         expect(function() {
             primitive.update(context, frameState, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('shader validation', function() {
@@ -630,7 +629,7 @@ defineSuite([
 
         expect(function() {
             primitive.update(context, frameState, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting per instance attribute throws when value is undefined', function() {
@@ -646,7 +645,7 @@ defineSuite([
 
         expect(function() {
             attributes.color = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });
@@ -663,7 +662,7 @@ defineSuite([
 
         expect(function() {
             primitive.getGeometryInstanceAttributes();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });
@@ -678,7 +677,7 @@ defineSuite([
 
         expect(function() {
             primitive.getGeometryInstanceAttributes('extent1');
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         primitive = primitive && primitive.destroy();
     });

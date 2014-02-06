@@ -439,13 +439,13 @@ defineSuite([
     it('throws when creating a texture without a description', function() {
         expect(function() {
             texture = context.createTexture2D();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture without a source', function() {
         expect(function() {
             texture = context.createTexture2D({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with width and no height', function() {
@@ -453,7 +453,7 @@ defineSuite([
             texture = context.createTexture2D({
                 width : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with height and no width', function() {
@@ -461,7 +461,7 @@ defineSuite([
             texture = context.createTexture2D({
                 height : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with zero width', function() {
@@ -470,7 +470,7 @@ defineSuite([
                 width : 0,
                 height : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with width larger than the maximum texture size', function() {
@@ -479,7 +479,7 @@ defineSuite([
                 width : context.getMaximumTextureSize() + 1,
                 height : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with zero height', function() {
@@ -488,7 +488,7 @@ defineSuite([
                 width : 16,
                 height : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with height larger than the maximum texture size', function() {
@@ -497,7 +497,7 @@ defineSuite([
                 width : 16,
                 height : context.getMaximumTextureSize() + 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with an invalid pixel format', function() {
@@ -506,7 +506,7 @@ defineSuite([
                 source : blueImage,
                 pixelFormat : 'invalid PixelFormat'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a texture with an invalid pixel datatype', function() {
@@ -516,7 +516,7 @@ defineSuite([
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT and pixelDatatype is not UNSIGNED_SHORT or UNSIGNED_INT', function() {
@@ -525,7 +525,7 @@ defineSuite([
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating if pixelFormat is DEPTH_STENCIL and pixelDatatype is not UNSIGNED_INT_24_8_WEBGL', function() {
@@ -534,7 +534,7 @@ defineSuite([
                 pixelFormat : PixelFormat.DEPTH_STENCIL,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and source is provided', function() {
@@ -544,7 +544,7 @@ defineSuite([
                 pixelFormat : PixelFormat.DEPTH_COMPONENT,
                 pixelDatatype : PixelDatatype.UNSIGNED_SHORT
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and WEBGL_depth_texture is not supported', function() {
@@ -569,44 +569,44 @@ defineSuite([
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
     it('throws when creating from the framebuffer with an invalid pixel format', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer('invalid PixelFormat');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer if PixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.DEPTH_COMPONENT);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a negative framebufferXOffset', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a negative framebufferYOffset', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a width greater than the canvas clientWidth', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, context.getCanvas().clientWidth + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a height greater than the canvas clientHeight', function() {
         expect(function() {
             texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.getCanvas().clientHeight + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying to a texture from the framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
@@ -620,7 +620,7 @@ defineSuite([
 
             expect(function() {
                 texture.copyFromFramebuffer();
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -635,7 +635,7 @@ defineSuite([
 
             expect(function() {
                 texture.copyFromFramebuffer();
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -646,7 +646,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying from the framebuffer with a negative yOffset', function() {
@@ -656,7 +656,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying from the framebuffer with a negative framebufferXOffset', function() {
@@ -666,7 +666,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying from the framebuffer with a negative framebufferYOffset', function() {
@@ -676,7 +676,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(0, 0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying from the framebuffer with a larger width', function() {
@@ -686,7 +686,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(0, 0, 0, 0, texture.getWidth() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying from the framebuffer with a larger height', function() {
@@ -696,7 +696,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFromFramebuffer(0, 0, 0, 0, 0, texture.getHeight() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copying to a texture with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
@@ -714,7 +714,7 @@ defineSuite([
                     width : 1,
                     height : 1
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -725,7 +725,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFrom();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copyFrom is given a negative xOffset', function() {
@@ -735,7 +735,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFrom(blueImage, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copyFrom is given a negative yOffset', function() {
@@ -745,7 +745,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFrom(blueImage, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copyFrom is given a source with larger width', function() {
@@ -757,7 +757,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when copyFrom is given a source with larger height', function() {
@@ -769,7 +769,7 @@ defineSuite([
 
         expect(function() {
             texture.copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
@@ -783,7 +783,7 @@ defineSuite([
 
             expect(function() {
                 texture.generateMipmap();
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -795,7 +795,7 @@ defineSuite([
 
         expect(function() {
             texture.generateMipmap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when generating mipmaps with a non-power of two height', function() {
@@ -806,7 +806,7 @@ defineSuite([
 
         expect(function() {
             texture.generateMipmap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when generating mipmaps with an invalid hint', function() {
@@ -816,7 +816,7 @@ defineSuite([
 
         expect(function() {
             texture.generateMipmap('invalid hint');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
@@ -859,6 +859,6 @@ defineSuite([
 
         expect(function() {
             t.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

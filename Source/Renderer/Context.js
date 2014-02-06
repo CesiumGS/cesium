@@ -74,6 +74,7 @@ define([
         ClearCommand,
         PassState) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -196,9 +197,11 @@ define([
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
+        //>>includeEnd('debug');
 
         this._canvas = canvas;
 
@@ -209,6 +212,8 @@ define([
 
         // Override select WebGL defaults
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
+        // TODO: WebGL default is false. This works around a bug in Canary and can be removed when fixed: https://code.google.com/p/chromium/issues/detail?id=335273
+        webglOptions.stencil = defaultValue(webglOptions.stencil, false);
         webglOptions.failIfMajorPerformanceCaveat = defaultValue(webglOptions.failIfMajorPerformanceCaveat, true); // WebGL default is false
 
         this._originalGLContext = canvas.getContext('webgl', webglOptions) || canvas.getContext('experimental-webgl', webglOptions) || undefined;
@@ -268,6 +273,10 @@ define([
         this._vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
         this._fragDepth = getExtension(gl, ['EXT_frag_depth']);
 
+        this._drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
+        this._maximumDrawBuffers = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_DRAW_BUFFERS_WEBGL) : 1;
+        this._maximumColorAttachments = defined(this._drawBuffers) ? gl.getParameter(this._drawBuffers.MAX_COLOR_ATTACHMENTS_WEBGL) : 1; // min when supported: 4
+
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
@@ -284,6 +293,7 @@ define([
 
         this._us = us;
         this._currentRenderState = rs;
+        this._currentFramebuffer = undefined;
         this._maxFrameTextureUnitIndex = 0;
 
         this._pickObjects = {};
@@ -879,6 +889,45 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the WEBGL_draw_buffers extension is supported. This
+     * extensions provides support for multiple render targets. The framebuffer object can have mutiple
+     * color attachments and the GLSL fragment shader can write to the built-in output array <code>gl_FragData</code>.
+     * A shader using this feature needs to explicitly enable the extension with
+     * <code>#extension GL_EXT_draw_buffers : enable</code>.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if WEBGL_draw_buffers is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/'>WEBGL_draw_buffers</a>
+     */
+    Context.prototype.getDrawBuffers = function() {
+        return !!this._drawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of simultaneous outputs that may be written in a fragment shader.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of draw buffers supported.
+     */
+    Context.prototype.getMaximumDrawBuffers = function() {
+        return this._maximumDrawBuffers;
+    };
+
+    /**
+     * Returns the maximum number of color attachments supported.
+     *
+     * @memberof Context
+     *
+     * @returns {Number} The maximum number of color attachments supported.
+     */
+    Context.prototype.getMaximumColorAttachments = function() {
+        return this._maximumColorAttachments;
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -1130,9 +1179,12 @@ define([
         } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
+            //>>includeEnd('debug');
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (sizeInBytes <= 0) {
             throw new DeveloperError('typedArrayOrSizeInBytes must be greater than zero.');
         }
@@ -1140,6 +1192,7 @@ define([
         if (!BufferUsage.validate(usage)) {
             throw new DeveloperError('usage is invalid.');
         }
+        //>>includeEnd('debug');
 
         var buffer = gl.createBuffer();
         gl.bindBuffer(bufferTarget, buffer);
@@ -1228,9 +1281,11 @@ define([
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
+        //>>includeStart('debug', pragmas.debug);
         if (!IndexDatatype.validate(indexDatatype)) {
             throw new DeveloperError('Invalid indexDatatype.');
         }
+        //>>includeEnd('debug');
 
         if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
@@ -1358,7 +1413,6 @@ define([
      *
      * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} options is required.
      * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
      * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
@@ -1375,14 +1429,15 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createTexture2D = function(options) {
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var source = options.source;
         var width = defined(source) ? source.width : options.width;
         var height = defined(source) ? source.height : options.height;
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
@@ -1403,18 +1458,12 @@ define([
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
         }
 
-        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid options.pixelFormat.');
         }
 
-        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid options.pixelDatatype.');
-        }
-
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
-            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
@@ -1425,11 +1474,18 @@ define([
         if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
             throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
         }
+        //>>includeEnd('debug');
+
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
+            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+        }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
+            //>>includeStart('debug', pragmas.debug);
             if (defined(source)) {
                 throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
             }
+            //>>includeEnd('debug');
 
             if (!this.getDepthTexture()) {
                 throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
@@ -1506,6 +1562,7 @@ define([
         width = defaultValue(width, gl.drawingBufferWidth);
         height = defaultValue(height, gl.drawingBufferHeight);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
@@ -1529,6 +1586,7 @@ define([
         if (framebufferYOffset + height > gl.drawingBufferHeight) {
             throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
         }
+        //>>includeEnd('debug');
 
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -1572,7 +1630,6 @@ define([
      * @returns {CubeMap} DOC_TBA.
      *
      * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
-     * @exception {DeveloperError} options is required.
      * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
      * @exception {DeveloperError} Each face in options.sources must have the same width and height.
      * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
@@ -1588,9 +1645,7 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createCubeMap = function(options) {
-        if (!defined(options)) {
-            throw new DeveloperError('options is required.');
-        }
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var source = options.source;
         var width;
@@ -1599,23 +1654,32 @@ define([
         if (defined(source)) {
             var faces = [source.positiveX, source.negativeX, source.positiveY, source.negativeY, source.positiveZ, source.negativeZ];
 
+            //>>includeStart('debug', pragmas.debug);
             if (!faces[0] || !faces[1] || !faces[2] || !faces[3] || !faces[4] || !faces[5]) {
                 throw new DeveloperError('options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.');
             }
+            //>>includeEnd('debug');
 
             width = faces[0].width;
             height = faces[0].height;
 
+            //>>includeStart('debug', pragmas.debug);
             for ( var i = 1; i < 6; ++i) {
                 if ((Number(faces[i].width) !== width) || (Number(faces[i].height) !== height)) {
                     throw new DeveloperError('Each face in options.source must have the same width and height.');
                 }
             }
+            //>>includeEnd('debug');
         } else {
             width = options.width;
             height = options.height;
         }
 
+        var size = width;
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
@@ -1623,8 +1687,6 @@ define([
         if (width !== height) {
             throw new DeveloperError('Width must equal height.');
         }
-
-        var size = width;
 
         if (size <= 0) {
             throw new DeveloperError('Width and height must be greater than zero.');
@@ -1634,7 +1696,6 @@ define([
             throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
         }
 
-        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid options.pixelFormat.');
         }
@@ -1643,10 +1704,10 @@ define([
             throw new DeveloperError('options.pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
 
-        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
         if (!PixelDatatype.validate(pixelDatatype)) {
             throw new DeveloperError('Invalid options.pixelDatatype.');
         }
+        //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
             throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
@@ -1699,15 +1760,15 @@ define([
     /**
      * Creates a framebuffer with optional initial color, depth, and stencil attachments.
      * Framebuffers are used for render-to-texture effects; they allow us to render to
-     * a texture in one pass, and read from it in a later pass.
+     * textures in one pass, and read from it in a later pass.
      *
      * @memberof Context
      *
-     * @param {Object} [options] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
+     * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
      *
-     * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
+     * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
      * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth and depth-stencil renderbuffer.
@@ -1716,31 +1777,22 @@ define([
      * @exception {DeveloperError} The color-texture pixel-format must be a color format.
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
+     * @exception {DeveloperError} The number of color attachments exceeds the number supported.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createRenderbuffer
      *
      * @example
-     * // Example 1. Create a framebuffer with no initial attachments,
-     * // and then add a color-texture attachment.
-     * var framebuffer = context.createFramebuffer();
-     * framebuffer.setColorTexture(context.createTexture2D({
-     *     width : 256,
-     *     height : 256,
-     * }));
-     *
-     * //////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Create a framebuffer with color and depth texture attachments.
+     * // Create a framebuffer with color and depth texture attachments.
      * var width = context.getCanvas().clientWidth;
      * var height = context.getCanvas().clientHeight;
      * var framebuffer = context.createFramebuffer({
-     *   colorTexture : context.createTexture2D({
+     *   colorTextures : [context.createTexture2D({
      *     width : width,
      *     height : height,
      *     pixelFormat : PixelFormat.RGBA
-     *   }),
+     *   })],
      *   depthTexture : context.createTexture2D({
      *     width : width,
      *     height : height,
@@ -1750,7 +1802,7 @@ define([
      * });
      */
     Context.prototype.createFramebuffer = function(options) {
-        return new Framebuffer(this._gl, options);
+        return new Framebuffer(this._gl, this._maximumColorAttachments, options);
     };
 
     /**
@@ -1778,6 +1830,7 @@ define([
         var width = defined(options.width) ? options.width : gl.drawingBufferWidth;
         var height = defined(options.height) ? options.height : gl.drawingBufferHeight;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!RenderbufferFormat.validate(format)) {
             throw new DeveloperError('Invalid format.');
         }
@@ -1797,6 +1850,7 @@ define([
         if (height > this.getMaximumRenderbufferSize()) {
             throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
         }
+        //>>includeEnd('debug');
 
         return new Renderbuffer(gl, format, width, height);
     };
@@ -1973,6 +2027,7 @@ define([
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
+        //>>includeStart('debug', pragmas.debug);
         if (!TextureWrap.validate(s.wrapS)) {
             throw new DeveloperError('Invalid sampler.wrapS.');
         }
@@ -1992,6 +2047,7 @@ define([
         if (s.maximumAnisotropy < 1.0) {
             throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
         }
+        //>>includeEnd('debug');
 
         return s;
     };
@@ -2100,20 +2156,34 @@ define([
         }
     };
 
+    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
+        //>>includeEnd('debug');
 
-        ///////////////////////////////////////////////////////////////////////
+        if (framebuffer !== context._currentFamebuffer) {
+            context._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
 
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            validateFramebuffer(context, framebuffer);
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(context, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            }
+
+            if (context.getDrawBuffers()) {
+                context._drawBuffers.drawBuffersWEBGL(buffers);
+            }
         }
 
         var sp = drawCommand.shaderProgram;
@@ -2129,6 +2199,7 @@ define([
         var offset = drawCommand.offset;
         var count = drawCommand.count;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!PrimitiveType.validate(primitiveType)) {
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
@@ -2144,6 +2215,7 @@ define([
         if (count < 0) {
             throw new DeveloperError('drawCommand.count must be omitted or greater than or equal to zero.');
         }
+        //>>includeEnd('debug');
 
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
         drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
@@ -2166,7 +2238,7 @@ define([
         }
     }
 
-    function endDraw(framebuffer) {
+    function endDraw(context, framebuffer) {
         if (defined(framebuffer)) {
             framebuffer._unBind();
         }
@@ -2218,6 +2290,7 @@ define([
      * @see Context#createRenderState
      */
     Context.prototype.draw = function(drawCommand, passState) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
         }
@@ -2225,6 +2298,7 @@ define([
         if (!defined(drawCommand.shaderProgram)) {
             throw new DeveloperError('drawCommand.shaderProgram is required.');
         }
+        //>>includeEnd('debug');
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
@@ -2232,7 +2306,7 @@ define([
 
         beginDraw(this, framebuffer, drawCommand, passState);
         continueDraw(this, drawCommand);
-        endDraw(framebuffer);
+        endDraw(this, framebuffer);
     };
 
     /**
@@ -2270,6 +2344,7 @@ define([
         var height = readState.height || gl.drawingBufferHeight;
         var framebuffer = readState.framebuffer || null;
 
+        //>>includeStart('debug', pragmas.debug);
         if (width <= 0) {
             throw new DeveloperError('readState.width must be greater than zero.');
         }
@@ -2277,6 +2352,7 @@ define([
         if (height <= 0) {
             throw new DeveloperError('readState.height must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var pixels = new Uint8Array(4 * width * height);
 
@@ -2430,7 +2506,7 @@ define([
      * <code>creationArguments</code> can have four properties:
      * <ul>
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
-     *   <li><code>attributeIndices</code>:  An object that maps geometry attribute names to vertex shader attribute indices.</li>
+     *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
      *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
@@ -2448,7 +2524,7 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see GeometryPipeline.createAttributeIndices
+     * @see GeometryPipeline.createAttributeLocations
      * @see ShaderProgram
      *
      * @example
@@ -2457,8 +2533,8 @@ define([
      * // interleaved by default.
      * var geometry = new BoxGeometry();
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2466,10 +2542,10 @@ define([
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
-     *     bufferUsage      : BufferUsage.STATIC_DRAW,
-     *     vertexLayout     : VertexLayout.INTERLEAVED
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
+     *     bufferUsage        : BufferUsage.STATIC_DRAW,
+     *     vertexLayout       : VertexLayout.INTERLEAVED
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2484,7 +2560,7 @@ define([
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
-        var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
+        var attributeLocations = defaultValue(ca.attributeLocations, defaultValue.EMPTY_OBJECT);
         var interleave = (defined(ca.vertexLayout)) && (ca.vertexLayout === VertexLayout.INTERLEAVED);
         var createdVAAttributes = ca.vertexArrayAttributes;
 
@@ -2509,7 +2585,7 @@ define([
                         if (defined(attribute.values)) {
                             // Common case: per-vertex attributes
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 vertexBuffer : vertexBuffer,
                                 componentDatatype : attribute.componentDatatype,
                                 componentsPerAttribute : attribute.componentsPerAttribute,
@@ -2520,7 +2596,7 @@ define([
                         } else {
                             // Constant attribute for all vertices
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 value : attribute.value,
                                 componentDatatype : attribute.componentDatatype,
                                 normalize : attribute.normalize
@@ -2546,7 +2622,7 @@ define([
                     }
 
                     vaAttributes.push({
-                        index : attributeIndices[name],
+                        index : attributeLocations[name],
                         vertexBuffer : vertexBuffer,
                         value : attribute.value,
                         componentDatatype : componentDatatype,
@@ -2598,9 +2674,11 @@ define([
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(pickColor)) {
             throw new DeveloperError('pickColor is required.');
         }
+        //>>includeEnd('debug');
 
         return this._pickObjects[pickColor.toRgba()];
     };
@@ -2639,9 +2717,11 @@ define([
      * });
      */
     Context.prototype.createPickId = function(object) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
+        //>>includeEnd('debug');
 
         // the increment and assignment have to be separate statements to
         // actually detect overflow in the Uint32 value

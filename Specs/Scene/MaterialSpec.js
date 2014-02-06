@@ -166,26 +166,6 @@ defineSuite([
         verifyMaterial('Fresnel');
     });
 
-    it('draws Brick built-in material', function() {
-        verifyMaterial('Brick');
-    });
-
-    it('draws Wood built-in material', function() {
-        verifyMaterial('Wood');
-    });
-
-    it('draws Asphalt built-in material', function() {
-        verifyMaterial('Asphalt');
-    });
-
-    it('draws Cement built-in material', function() {
-        verifyMaterial('Cement');
-    });
-
-    it('draws Grass built-in material', function() {
-        verifyMaterial('Grass');
-    });
-
     it('draws Grid built-in material', function() {
         verifyMaterial('Grid');
     });
@@ -202,28 +182,12 @@ defineSuite([
         verifyMaterial('Dot');
     });
 
-    it('draws TieDye built-in material', function() {
-        verifyMaterial('TieDye');
-    });
-
-    it('draws Facet built-in material', function() {
-        verifyMaterial('Facet');
-    });
-
     it('draws Water built-in material', function() {
         verifyMaterial('Water');
     });
 
-    it('draws Blob built-in material', function() {
-        verifyMaterial('Blob');
-    });
-
     it('draws RimLighting built-in material', function() {
         verifyMaterial('RimLighting');
-    });
-
-    it('draws Erosion built-in material', function() {
-        verifyMaterial('Erosion');
     });
 
     it('draws Fade built-in material', function() {
@@ -543,7 +507,7 @@ defineSuite([
                              'return material;\n}\n'
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Material({
@@ -555,7 +519,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with duplicate names in materials and uniforms', function () {
@@ -572,7 +536,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid template type', function() {
@@ -583,7 +547,7 @@ defineSuite([
                     invalid : 3.0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid component type', function () {
@@ -596,7 +560,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid uniform type', function() {
@@ -615,7 +579,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Material({
@@ -626,7 +590,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with unused channels', function() {
@@ -639,7 +603,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused uniform strings are ignored.
         var material = new Material({
@@ -668,7 +632,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused uniforms are ignored.
         var material = new Material({
@@ -699,7 +663,7 @@ defineSuite([
                     }
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         // If strict is false, unused materials are ignored.
         var material = new Material({
@@ -719,7 +683,7 @@ defineSuite([
     it('throws with invalid type sent to fromType', function() {
         expect(function() {
             return Material.fromType('Nothing');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('destroys material with texture', function() {

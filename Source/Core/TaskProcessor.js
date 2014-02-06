@@ -79,7 +79,9 @@ define([
             workerModule : TaskProcessor._workerModulePrefix + processor._workerName
         };
 
-        if (defined(require.toUrl)) {
+        if (defined(TaskProcessor._loaderConfig)) {
+            bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
+        } else if (defined(require.toUrl)) {
             var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
             bootstrapMessage.loaderConfig.baseUrl = baseUrl;
         } else {
@@ -133,15 +135,15 @@ define([
      *                    if there are too many active tasks,
      *
      * @example
-     * var taskProcessor = new TaskProcessor('myWorkerName');
+     * var taskProcessor = new Cesium.TaskProcessor('myWorkerName');
      * var promise = taskProcessor.scheduleTask({
      *     someParameter : true,
      *     another : 'hello'
      * });
-     * if (!defined(promise)) {
+     * if (!Cesium.defined(promise)) {
      *     // too many active tasks - try again later
      * } else {
-     *     when(promise, function(result) {
+     *     Cesium.when(promise, function(result) {
      *         // use the result of the task
      *     });
      * }
@@ -205,6 +207,7 @@ define([
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
+    TaskProcessor._loaderConfig = undefined;
 
     return TaskProcessor;
 });

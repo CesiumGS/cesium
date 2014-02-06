@@ -13,7 +13,7 @@ defineSuite([
     it('contructor throws', function() {
         expect(function() {
             return new Spline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws', function() {
@@ -27,29 +27,29 @@ defineSuite([
     });
 
     it('findTimeInterval throws without a time', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             times : [0.0, 1.0, 2.0]
         });
 
         expect(function() {
             spline.findTimeInterval();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval throws when time is out of range', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             times : [0.0, 1.0, 2.0]
         });
 
         expect(function() {
             spline.findTimeInterval(4.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z],
             times : [0.0, 1.0, 2.0, 4.0]
         });

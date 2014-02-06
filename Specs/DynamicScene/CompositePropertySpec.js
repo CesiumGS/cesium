@@ -77,6 +77,6 @@ defineSuite([
         var property = new CompositeProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

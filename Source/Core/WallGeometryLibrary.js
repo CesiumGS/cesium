@@ -65,7 +65,7 @@ define([
 
         var length = positions.length;
         if (length < 2) {
-            return positions.slice(0);
+            return { positions: positions };
         }
 
         var v0 = positions[0];
@@ -115,9 +115,12 @@ define([
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
 
+        //>>includeStart('debug', pragmas.debug);
         if (wallPositions.length < 2) {
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
+        //>>includeEnd('debug');
+
         var hasMinHeights = (defined(minimumHeights));
 
         if (wallPositions.length >= 3) {

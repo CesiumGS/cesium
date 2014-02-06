@@ -195,7 +195,7 @@ defineSuite([
         var property = new SampledPositionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with no reference frame parameter', function() {
@@ -203,7 +203,7 @@ defineSuite([
         var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works when interpolators differ', function() {

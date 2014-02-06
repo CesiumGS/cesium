@@ -85,7 +85,7 @@ defineSuite([
                 mapStyle : BingMapsStyle.AERIAL
             });
         }
-        expect(constructWithoutServer).toThrow();
+        expect(constructWithoutServer).toThrowDeveloperError();
     });
 
     it('can provide a root tile', function() {

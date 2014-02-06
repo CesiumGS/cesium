@@ -87,14 +87,14 @@ defineSuite([
     it('constructor throws with undefined value', function() {
         expect(function() {
             return new ConstantPositionProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getValue throws without time parameter', function() {
         var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getValueInReferenceFrame throws with no referenceFrame parameter', function() {
@@ -102,6 +102,6 @@ defineSuite([
         var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -55,14 +55,28 @@ define([
      * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
-
         if (!defined(cameraController)) {
             throw new DeveloperError('cameraController is required.');
         }
+        //>>includeEnd('debug');
 
+        /**
+         * If true, inputs are allowed conditionally with the flags enableTranslate, enableZoom,
+         * enableRotate, enableTilt, and enableLook.  If false, all inputs are disabled.
+         *
+         * NOTE: This setting is for temporary use cases, such as camera flights and
+         * drag-selection of regions (see Picking demo).  It is typically set to false at the
+         * start of such events, and set true on completion.  To keep inputs disabled
+         * past the end of camera flights, you must use the other booleans (enableTranslate,
+         * enableZoom, enableRotate, enableTilt, and enableLook).
+         * @type {Boolean}
+         * @default true
+         */
+        this.enableInputs = true;
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * This flag only applies in 2D and Columbus view modes.
@@ -153,18 +167,76 @@ define([
          * @default {@link Number.POSITIVE_INFINITY}
          */
         this.maximumZoomDistance = Number.POSITIVE_INFINITY;
+        /**
+         * The input that allows the user to pan around the map. This only applies in 2D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default {@link CameraEventType.LEFT_DRAG}
+         */
+        this.translateEventTypes = CameraEventType.LEFT_DRAG;
+        /**
+         * The input that allows the user to zoom in/out.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default [{@link CameraEventType.RIGHT_DRAG}, {@link CameraEventType.WHEEL}, {@link CameraEventType.PINCH}]
+         */
+        this.zoomEventTypes = [CameraEventType.RIGHT_DRAG, CameraEventType.WHEEL, CameraEventType.PINCH];
+        /**
+         * The input that allows the user to rotate around the globe or another object. This only applies in 3D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default {@link CameraEventType.LEFT_DRAG}
+         */
+        this.rotateEventTypes = CameraEventType.LEFT_DRAG;
+        /**
+         * The input that allows the user to tilt in 3D and Columbus view or twist in 2D.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default [{@link CameraEventType.MIDDLE_DRAG}, {@link CameraEventType.PINCH}, {
+         *     eventType : {@link CameraEventType.LEFT_DRAG},
+         *     modifier : {@link KeyboardEventModifier.CTRL}
+         * }]
+         */
+        this.tiltEventTypes = [CameraEventType.MIDDLE_DRAG, CameraEventType.PINCH, {
+            eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.CTRL
+        }];
+        /**
+         * The input that allows the user to change the direction the camera is viewing. This only applies in 3D and Columbus view modes.
+         * <p>
+         * The type came be a {@link CameraEventType}, <code>undefined</code>, an object with <code>eventType</code>
+         * and <code>modifier</code> properties with types <code>CameraEventType</code> and {@link KeyboardEventModifier},
+         * or an array of any of the preceding.
+         * </p>
+         * @type {CameraEventType|Array|undefined}
+         * @default { eventType : {@link CameraEventType.LEFT_DRAG}, modifier : {@link KeyboardEventModifier.SHIFT} }
+         */
+        this.lookEventTypes = {
+            eventType : CameraEventType.LEFT_DRAG,
+            modifier : KeyboardEventModifier.SHIFT
+        };
 
         this._canvas = canvas;
         this._cameraController = cameraController;
         this._ellipsoid = Ellipsoid.WGS84;
 
-        this._spinHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
-        this._translateHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG);
-        this._lookHandler = new CameraEventAggregator(canvas, CameraEventType.LEFT_DRAG, KeyboardEventModifier.SHIFT);
-        this._rotateHandler = new CameraEventAggregator(canvas, CameraEventType.MIDDLE_DRAG);
-        this._zoomHandler = new CameraEventAggregator(canvas, CameraEventType.RIGHT_DRAG);
-        this._zoomWheelHandler = new CameraEventAggregator(canvas, CameraEventType.WHEEL);
-        this._pinchHandler = new CameraEventAggregator(canvas, CameraEventType.PINCH);
+        this._aggregator = new CameraEventAggregator(canvas);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
@@ -230,50 +302,95 @@ define([
     // hardware. Should be investigated further.
     var inertiaMaxClickTimeThreshold = 0.4;
 
-    function maintainInertia(handler, decayCoef, action, object, lastMovementName) {
-        var ts = handler.getButtonPressTime();
-        var tr = handler.getButtonReleaseTime();
+    function maintainInertia(aggregator, type, modifier, decayCoef, action, object, lastMovementName) {
+        var movementState = object[lastMovementName];
+        if (!defined(movementState)) {
+            movementState = object[lastMovementName] = {
+                startPosition : new Cartesian2(),
+                endPosition : new Cartesian2(),
+                motion : new Cartesian2(),
+                active : false
+            };
+        }
+
+        var ts = aggregator.getButtonPressTime(type, modifier);
+        var tr = aggregator.getButtonReleaseTime(type, modifier);
+
         var threshold = ts && tr && ((tr.getTime() - ts.getTime()) / 1000.0);
         var now = new Date();
         var fromNow = tr && ((now.getTime() - tr.getTime()) / 1000.0);
+
         if (ts && tr && threshold < inertiaMaxClickTimeThreshold) {
             var d = decay(fromNow, decayCoef);
 
-            if (!defined(object[lastMovementName])) {
-                var lastMovement = handler.getLastMovement();
-                if (!lastMovement || sameMousePosition(lastMovement)) {
+            if (!movementState.active) {
+                var lastMovement = aggregator.getLastMovement(type, modifier);
+                if (!defined(lastMovement) || sameMousePosition(lastMovement)) {
                     return;
                 }
 
-                var motionX = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
-                var motionY = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
-                object[lastMovementName] = {
-                    startPosition : new Cartesian2(lastMovement.startPosition.x, lastMovement.startPosition.y),
-                    endPosition : new Cartesian2(lastMovement.startPosition.x + motionX * d, lastMovement.startPosition.y + motionY * d),
-                    motion : new Cartesian2(motionX, motionY)
-                };
+                movementState.motion.x = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
+                movementState.motion.y = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
+
+                Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                movementState.active = true;
             } else {
-                object[lastMovementName] = {
-                    startPosition : Cartesian2.clone(object[lastMovementName].endPosition),
-                    endPosition : new Cartesian2(
-                            object[lastMovementName].endPosition.x + object[lastMovementName].motion.x * d,
-                            object[lastMovementName].endPosition.y + object[lastMovementName].motion.y * d),
-                    motion : new Cartesian2()
-                };
+                Cartesian2.clone(movementState.endPosition, movementState.startPosition);
+
+                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+
+                Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
             // the end coordinates may be NaN.
-            if (isNaN(object[lastMovementName].endPosition.x) || isNaN(object[lastMovementName].endPosition.y) || sameMousePosition(object[lastMovementName])) {
-                object[lastMovementName] = undefined;
+            if (isNaN(movementState.endPosition.x) || isNaN(movementState.endPosition.y) || sameMousePosition(movementState)) {
+                movementState.active = false;
                 return;
             }
 
-            if (!handler.isButtonDown()) {
-                action(object, object[lastMovementName]);
+            if (!aggregator.isButtonDown(type, modifier)) {
+                action(object, movementState);
             }
         } else {
-            object[lastMovementName] = undefined;
+            movementState.active = false;
+        }
+    }
+
+    var scratchEventTypeArray = [];
+
+    function reactToInput(controller, enabled, eventTypes, action, inertiaConstant, inertiaStateName) {
+        if (!defined(eventTypes)) {
+            return;
+        }
+
+        var aggregator = controller._aggregator;
+
+        if (!Array.isArray(eventTypes)) {
+            scratchEventTypeArray[0] = eventTypes;
+            eventTypes = scratchEventTypeArray;
+        }
+
+        var length = eventTypes.length;
+        for (var i = 0; i < length; ++i) {
+            var eventType = eventTypes[i];
+            var type = defined(eventType.eventType) ? eventType.eventType : eventType;
+            var modifier = eventType.modifier;
+
+            var movement = aggregator.isMoving(type, modifier) && aggregator.getMovement(type, modifier);
+
+            if (controller.enableInputs && enabled) {
+                if (movement) {
+                    action(controller, movement);
+                } else if (inertiaConstant < 1.0) {
+                    maintainInertia(aggregator, type, modifier, inertiaConstant, action, controller, inertiaStateName);
+                }
+            }
         }
     }
 
@@ -316,22 +433,40 @@ define([
 
     var translate2DStart = new Ray();
     var translate2DEnd = new Ray();
+    var scratchTranslateP0 = new Cartesian3();
+    var scratchTranslateP1 = new Cartesian3();
+
     function translate2D(controller, movement) {
         var cameraController = controller._cameraController;
         var start = cameraController.getPickRay(movement.startPosition, translate2DStart).origin;
         var end = cameraController.getPickRay(movement.endPosition, translate2DEnd).origin;
 
-        cameraController.moveRight(start.x - end.x);
-        cameraController.moveUp(start.y - end.y);
+        var position = cameraController._camera.position;
+        var p0 = Cartesian3.subtract(start, position, scratchTranslateP0);
+        var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
+        var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
+        var distance = Cartesian3.magnitude(direction);
+        Cartesian3.normalize(direction, direction);
+
+        cameraController.move(direction, distance);
     }
 
     function zoom2D(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         handleZoom(controller, movement, controller._zoomFactor, controller._cameraController.getMagnitude());
     }
 
     var twist2DStart = new Cartesian2();
     var twist2DEnd = new Cartesian2();
     function twist2D(controller, movement) {
+        if (defined(movement.angleAndHeight)) {
+            singleAxisTwist2D(controller, movement.angleAndHeight);
+            return;
+        }
+
         var width = controller._canvas.clientWidth;
         var height = controller._canvas.clientHeight;
 
@@ -378,63 +513,17 @@ define([
     }
 
     function update2D(controller) {
-        var translate = controller._translateHandler;
-        var rightZoom = controller._zoomHandler;
-        var wheelZoom = controller._zoomWheelHandler;
-        var pinch = controller._pinchHandler;
-        var translating = translate.isMoving() && translate.getMovement();
-        var rightZooming = rightZoom.isMoving() && rightZoom.getMovement();
-        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
-        var pinching = pinch.isMoving() && pinch.getMovement();
-
-        if (translate.isButtonDown() || rightZoom.isButtonDown() || wheelZooming) {
+        if (controller._aggregator.anyButtonDown()) {
             controller._animationCollection.removeAll();
         }
 
-        if (controller.enableTranslate) {
-            if (translating) {
-                translate2D(controller, translate.getMovement());
-            }
+        reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
 
-            if (!translating && controller.inertiaTranslate < 1.0) {
-                maintainInertia(translate, controller.inertiaTranslate, translate2D, controller, '_lastInertiaTranslateMovement');
-            }
-        }
-
-        if (controller.enableZoom) {
-            if (rightZooming) {
-                zoom2D(controller, rightZoom.getMovement());
-            } else if (wheelZooming) {
-                zoom2D(controller, wheelZoom.getMovement());
-            } else if (pinching) {
-                zoom2D(controller, pinch.getMovement().distance);
-            }
-
-            if (!rightZooming && controller.inertiaZoom < 1.0) {
-                maintainInertia(rightZoom, controller.inertiaZoom, zoom2D, controller, '_lastInertiaZoomMovement');
-            }
-
-            if (!wheelZooming && controller.inertiaZoom < 1.0) {
-                maintainInertia(wheelZoom, controller.inertiaZoom, zoom2D, controller, '_lastInertiaWheelZoomMovement');
-            }
-
-            if (!pinching && controller.inertiaZoom < 1.0) {
-                maintainInertia(pinch, controller.inertiaZoom, zoom2D, controller, '_lastInertiaZoomMovement');
-            }
-        }
-
-        if (controller.enableRotate) {
-            if (controller._rotateHandler.isMoving()) {
-                twist2D(controller, controller._rotateHandler.getMovement());
-                //singleAxisTwist2D(controller, controller._rotateHandler.getMovement());
-            }
-            if (pinching) {
-                singleAxisTwist2D(controller, pinch.getMovement().angleAndHeight);
-            }
-        }
-
-        if (!translate.isButtonDown() && !rightZoom.isButtonDown() &&
-                !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+        if (!controller._aggregator.anyButtonDown() &&
+                (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                 !controller._animationCollection.contains(controller._animation)) {
             var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (defined(animation)) {
@@ -443,8 +532,6 @@ define([
         }
 
         controller._animationCollection.update();
-
-        return true;
     }
 
     var translateCVStartRay = new Ray();
@@ -487,6 +574,10 @@ define([
     var rotateCVCenter = new Cartesian3();
     var rotateTransform = new Matrix4();
     function rotateCV(controller, movement) {
+        if (defined(movement.angleAndHeight)) {
+            movement = movement.angleAndHeight;
+        }
+
         var windowPosition = rotateCVWindowPos;
         windowPosition.x = controller._canvas.clientWidth / 2;
         windowPosition.y = controller._canvas.clientHeight / 2;
@@ -511,6 +602,10 @@ define([
     var zoomCVWindowPos = new Cartesian2();
     var zoomCVWindowRay = new Ray();
     function zoomCV(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         var windowPosition = zoomCVWindowPos;
         windowPosition.x = controller._canvas.clientWidth / 2;
         windowPosition.y = controller._canvas.clientHeight / 2;
@@ -525,115 +620,21 @@ define([
     }
 
     function updateCV(controller) {
-        var zoom = controller._zoomHandler;
-        var zoomimg = zoom.isMoving() && zoom.getMovement();
-        var wheelZoom = controller._zoomWheelHandler;
-        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
-        var pinch = controller._pinchHandler;
-        var pinching = pinch.isMoving()  && pinch.getMovement();
-        var translate = controller._translateHandler;
-        var translating = translate.isMoving() && translate.getMovement();
-        var rotate = controller._rotateHandler;
-        var rotating = rotate.isMoving() && rotate.getMovement();
-        var spin = controller._spinHandler;
-        var spinning = spin.isMoving() && spin.getMovement();
-        var look = controller._lookHandler;
-        var looking = look.isMoving() && look.getMovement();
-
-        var buttonDown = rotate.isButtonDown() || spin.isButtonDown() || translate.isButtonDown() || zoom.isButtonDown() || looking || wheelZooming || pinching;
-
         if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
-            if (controller.enableRotate) {
-                if (spinning) {
-                    rotate3D(controller, spin.getMovement());
-                }
-
-                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                    maintainInertia(spin, controller.inertiaSpin, rotate3D, controller, '_lastInertiaSpinMovement');
-                }
-            }
-
-            if (controller.enableZoom) {
-                if (zoomimg) {
-                    zoom3D(controller, zoom.getMovement());
-                } else if (wheelZooming) {
-                    zoom3D(controller, wheelZoom.getMovement());
-                } else if (pinching) {
-                    zoom3D(controller, pinch.getMovement().distance);
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(zoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-                }
-            }
+                reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
-            if (buttonDown) {
+            if (controller._aggregator.anyButtonDown()) {
                 controller._animationCollection.removeAll();
             }
 
-            if (controller.enableTilt) {
-                if (rotating) {
-                    rotateCV(controller, rotate.getMovement());
-                }
+            reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translateCV, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoomCV, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
 
-                if (pinching) {
-                    rotateCV(controller, pinch.getMovement().angleAndHeight);
-                }
-
-                if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                    maintainInertia(rotate, controller.inertiaSpin, rotateCV, controller, '_lastInertiaTiltMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
-            }
-
-            if (controller.enableTranslate) {
-                if (translating) {
-                    translateCV(controller, translate.getMovement());
-                }
-
-                if (!buttonDown && controller.inertiaTranslate >= 0.0 && controller.inertiaTranslate < 1.0) {
-                    maintainInertia(translate, controller.inertiaTranslate, translateCV, controller, '_lastInertiaTranslateMovement');
-                }
-            }
-
-            if (controller.enableZoom) {
-                if (zoomimg) {
-                    zoomCV(controller, zoom.getMovement());
-                } else if (wheelZooming) {
-                    zoomCV(controller, wheelZoom.getMovement());
-                } else if (pinching) {
-                    zoomCV(controller, pinch.getMovement().distance);
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(zoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(wheelZoom, controller.inertiaZoom, zoomCV, controller, '_lastInertiaWheelZoomMovement');
-                }
-
-                if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                    maintainInertia(pinch, controller.inertiaZoom, zoomCV, controller, '_lastInertiaZoomMovement');
-                }
-            }
-
-            if (controller.enableLook && looking) {
-                look3D(controller, look.getMovement());
-            }
-
-            if (!buttonDown && !controller._lastInertiaZoomMovement && !controller._lastInertiaTranslateMovement &&
+            if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
+                    (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
                     !controller._animationCollection.contains(controller._animation)) {
                 var animation = controller._cameraController.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
@@ -643,8 +644,6 @@ define([
 
             controller._animationCollection.update();
         }
-
-        return true;
     }
 
     var spin3DPick = new Cartesian3();
@@ -656,7 +655,11 @@ define([
         }
     }
 
-    var rotate3DRestrictedDirection = Cartesian4.clone(Cartesian4.ZERO);
+    var rotate3DRestrictedDirection = Cartesian3.clone(Cartesian3.ZERO);
+    var rotate3DScratchCartesian3 = new Cartesian3();
+    var rotate3DNegateScratch = new Cartesian3();
+    var rotate3DInverseMatrixScratch = new Matrix4();
+
     function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
         var cameraController = controller._cameraController;
         var oldAxis = cameraController.constrainedAxis;
@@ -687,9 +690,9 @@ define([
 
         if (defined(cameraController.constrainedAxis) && !defined(transform)) {
             var camera = cameraController._camera;
-            var p = Cartesian3.normalize(camera.position);
-            var northParallel = Cartesian3.equalsEpsilon(p, cameraController.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
+            var positionNormal = Cartesian3.normalize(camera.position, rotate3DScratchCartesian3);
+            var northParallel = Cartesian3.equalsEpsilon(positionNormal, cameraController.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(positionNormal, Cartesian3.negate(cameraController.constrainedAxis, rotate3DNegateScratch), CesiumMath.EPSILON2);
 
             if (!northParallel && !southParallel) {
                 var up;
@@ -700,10 +703,11 @@ define([
                 }
 
                 var east;
-                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, Cartesian3.normalize(camera.position), CesiumMath.EPSILON2)) {
+                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, positionNormal, CesiumMath.EPSILON2)) {
                     east = camera.right;
                 } else {
-                    east = Cartesian3.normalize(Cartesian3.cross(cameraController.constrainedAxis, camera.position));
+                    east = Cartesian3.cross(cameraController.constrainedAxis, positionNormal, rotate3DScratchCartesian3);
+                    Cartesian3.normalize(east, east);
                 }
 
                 var rDotE = Cartesian3.dot(camera.right, east);
@@ -725,8 +729,8 @@ define([
 
         if (defined(restrictedAngle)) {
             var direction = Cartesian3.clone(cameraController._camera.directionWC, rotate3DRestrictedDirection);
-            var invTransform = Matrix4.inverseTransformation(transform);
-            Matrix4.multiplyByVector(invTransform, direction, direction);
+            var invTransform = Matrix4.inverseTransformation(transform, rotate3DInverseMatrixScratch);
+            direction = Matrix4.multiplyByPointAsVector(invTransform, direction, direction);
 
             var dot = -Cartesian3.dot(direction, constrainedAxis);
             var angle = Math.acos(dot);
@@ -805,7 +809,7 @@ define([
             if (Cartesian3.equalsEpsilon(basis0, cameraController._camera.position, CesiumMath.EPSILON2)) {
                 east = cameraController._camera.right;
             } else {
-                east = Cartesian3.cross(basis0, cameraController._camera.position);
+                east = Cartesian3.cross(basis0, cameraController._camera.position, pan3DTemp0);
             }
 
             var planeNormal = Cartesian3.cross(basis0, east, pan3DTemp0);
@@ -832,6 +836,10 @@ define([
 
     var zoom3DUnitPosition = new Cartesian3();
     function zoom3D(controller, movement) {
+        if (defined(movement.distance)) {
+            movement = movement.distance;
+        }
+
         // CAMERA TODO: remove access to camera
         var camera = controller._cameraController._camera;
         var ellipsoid = controller._ellipsoid;
@@ -847,7 +855,12 @@ define([
     var tilt3DCart = new Cartographic();
     var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
     var tilt3DTransform = new Matrix4();
+
     function tilt3D(controller, movement) {
+        if (defined(movement.angleAndHeight)) {
+            movement = movement.angleAndHeight;
+        }
+
         var cameraController = controller._cameraController;
 
         var ellipsoid = controller._ellipsoid;
@@ -885,7 +898,7 @@ define([
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        var angle = (minHeight * 0.25) / Cartesian3.magnitude(Cartesian3.subtract(center, camera.position));
+        var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.setEllipsoid(oldEllipsoid);
@@ -937,78 +950,10 @@ define([
     }
 
     function update3D(controller) {
-        var spin = controller._spinHandler;
-        var rightZoom = controller._zoomHandler;
-        var wheelZoom = controller._zoomWheelHandler;
-        var pinch = controller._pinchHandler;
-        var spinning = spin.isMoving() && spin.getMovement();
-        var rightZooming = rightZoom.isMoving() && rightZoom.getMovement();
-        var wheelZooming = wheelZoom.isMoving() && wheelZoom.getMovement();
-        var pinching = pinch.isMoving() && pinch.getMovement();
-        var rotate = controller._rotateHandler;
-        var rotating = rotate.isMoving() && rotate.getMovement();
-        var look = controller._lookHandler;
-        var looking = look.isMoving() && look.getMovement();
-
-        var buttonDown = spin.isButtonDown() || rightZoom.isButtonDown() || rotate.isButtonDown() || looking || wheelZooming || pinching;
-
-        if (controller.enableRotate) {
-            if (spinning) {
-                spin3D(controller, spin.getMovement());
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(spin, controller.inertiaSpin, spin3D, controller, '_lastInertiaSpinMovement');
-            }
-
-        }
-
-        if (controller.enableTilt) {
-            if (rotating) {
-                tilt3D(controller, rotate.getMovement());
-            }
-            if (pinching) {
-                tilt3D(controller, pinch.getMovement().angleAndHeight);
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(rotate, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
-            }
-
-            if (!buttonDown && controller.inertiaSpin >= 0.0 && controller.inertiaSpin < 1.0) {
-                maintainInertia(pinch, controller.inertiaSpin, tilt3D, controller, '_lastInertiaTiltMovement');
-            }
-        }
-
-        if (controller.enableZoom) {
-            if (rightZooming) {
-                zoom3D(controller, rightZoom.getMovement());
-            } else if (wheelZooming) {
-                zoom3D(controller, wheelZoom.getMovement());
-            } else if (pinching) {
-                zoom3D(controller, pinch.getMovement().distance);
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(rightZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(wheelZoom, controller.inertiaZoom, zoom3D, controller, '_lastInertiaWheelZoomMovement');
-            }
-
-            if (!buttonDown && controller.inertiaZoom >= 0.0 && controller.inertiaZoom < 1.0) {
-                maintainInertia(pinch, controller.inertiaZoom, zoom3D, controller, '_lastInertiaZoomMovement');
-            }
-        }
-
-        if (controller.enableLook) {
-            if (looking) {
-                look3D(controller, look.getMovement());
-            }
-        }
-
-        return true;
+        reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, spin3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, tilt3D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        reactToInput(controller, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
     /**
@@ -1024,6 +969,8 @@ define([
             this._horizontalRotationAxis = undefined;
             update3D(this);
         }
+
+        this._aggregator.reset();
     };
 
     /**
@@ -1061,6 +1008,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
+        this._animationCollection.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();

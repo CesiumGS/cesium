@@ -42,11 +42,11 @@ define([
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Camera(context);
-     * camera.position = new Cartesian3();
-     * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-     * camera.up = Cartesian3.UNIT_Y;
-     * camera.frustum.fovy = CesiumMath.PI_OVER_THREE;
+     * var camera = new Cesium.Camera(context);
+     * camera.position = new Cesium.Cartesian3();
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
+     * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
+     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -54,9 +54,11 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
     var Camera = function(context) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
@@ -68,7 +70,7 @@ define([
          * @see Camera#inverseTransform
          */
         this.transform = Matrix4.clone(Matrix4.IDENTITY);
-        this._transform = Matrix4.clone(this.transform);
+        this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
@@ -79,20 +81,20 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.position = Cartesian3.clone(position);
-        this._position = position;
-        this._positionWC = position;
+        this.position = position;
+        this._position = Cartesian3.clone(position);
+        this._positionWC = Cartesian3.clone(position);
 
-        var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
+        var direction = Cartesian3.normalize(Cartesian3.negate(position));
 
         /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
          */
-        this.direction = Cartesian3.clone(direction);
-        this._direction = direction;
-        this._directionWC = direction;
+        this.direction = direction;
+        this._direction = Cartesian3.clone(direction);
+        this._directionWC = Cartesian3.clone(direction);
 
         var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         var up = Cartesian3.cross(right, direction);
@@ -102,9 +104,9 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.up = Cartesian3.clone(up);
-        this._up = up;
-        this._upWC = up;
+        this.up = up;
+        this._up = Cartesian3.clone(up);
+        this._upWC = Cartesian3.clone(up);
 
         right = Cartesian3.cross(direction, up);
 
@@ -113,9 +115,9 @@ define([
          *
          * @type {Cartesian3}
          */
-        this.right = Cartesian3.clone(right);
-        this._right = right;
-        this._rightWC = right;
+        this.right = right;
+        this._right = Cartesian3.clone(right);
+        this._rightWC = Cartesian3.clone(right);
 
         /**
          * The region of space in view.
@@ -139,8 +141,8 @@ define([
          */
         this.controller = new CameraController(this);
 
-        this._viewMatrix = undefined;
-        this._invViewMatrix = undefined;
+        this._viewMatrix = new Matrix4();
+        this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
 
         this._context = context;
@@ -152,79 +154,94 @@ define([
         var d = camera._direction;
         var e = camera._position;
 
-        var viewMatrix = new Matrix4( r.x,  r.y,  r.z, -Cartesian3.dot(r, e),
-                                      u.x,  u.y,  u.z, -Cartesian3.dot(u, e),
-                                     -d.x, -d.y, -d.z,  Cartesian3.dot(d, e),
-                                      0.0,  0.0,  0.0,      1.0);
-        camera._viewMatrix = Matrix4.multiply(viewMatrix, camera._invTransform);
-        camera._invViewMatrix = Matrix4.inverseTransformation(camera._viewMatrix);
+        var viewMatrix = camera._viewMatrix;
+        viewMatrix[0] = r.x;
+        viewMatrix[1] = u.x;
+        viewMatrix[2] = -d.x;
+        viewMatrix[3] = 0.0;
+        viewMatrix[4] = r.y;
+        viewMatrix[5] = u.y;
+        viewMatrix[6] = -d.y;
+        viewMatrix[7] = 0.0;
+        viewMatrix[8] = r.z;
+        viewMatrix[9] = u.z;
+        viewMatrix[10] = -d.z;
+        viewMatrix[11] = 0.0;
+        viewMatrix[12] = -Cartesian3.dot(r, e);
+        viewMatrix[13] = -Cartesian3.dot(u, e);
+        viewMatrix[14] = Cartesian3.dot(d, e);
+        viewMatrix[15] = 1.0;
+
+        Matrix4.multiply(viewMatrix, camera._invTransform, camera._viewMatrix);
+        Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
+
+    var scratchCartesian = new Cartesian3();
 
     function update(camera) {
         var position = camera._position;
         var positionChanged = !Cartesian3.equals(position, camera.position);
         if (positionChanged) {
-            position = camera._position = Cartesian3.clone(camera.position);
+            position = Cartesian3.clone(camera.position, camera._position);
         }
 
         var direction = camera._direction;
         var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
-            direction = camera._direction = Cartesian3.clone(camera.direction);
+            direction = Cartesian3.clone(camera.direction, camera._direction);
         }
 
         var up = camera._up;
         var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
-            up = camera._up = Cartesian3.clone(camera.up);
+            up = Cartesian3.clone(camera.up, camera._up);
         }
 
         var right = camera._right;
         var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
-            right = camera._right = Cartesian3.clone(camera.right);
+            right = Cartesian3.clone(camera.right, camera._right);
         }
 
         var transform = camera._transform;
         var transformChanged = !Matrix4.equals(transform, camera.transform);
         if (transformChanged) {
-            transform = camera._transform = Matrix4.clone(camera.transform);
-
-            camera._invTransform = Matrix4.inverseTransformation(camera._transform);
+            transform = Matrix4.clone(camera.transform, camera._transform);
+            Matrix4.inverseTransformation(camera._transform, camera._invTransform);
         }
 
         if (positionChanged || transformChanged) {
-            camera._positionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByPoint(transform, position), camera._positionWC);
+            camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
         }
 
         if (directionChanged || upChanged || rightChanged) {
-            var det = Cartesian3.dot(direction, Cartesian3.cross(up, right));
+            var det = Cartesian3.dot(direction, Cartesian3.cross(up, right, scratchCartesian));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
-                direction = camera._direction = Cartesian3.normalize(direction);
-                camera.direction = Cartesian3.clone(direction);
+                direction = Cartesian3.normalize(direction, camera._direction);
+                Cartesian3.clone(direction, camera.direction);
 
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = Cartesian3.dot(up, direction) * invUpMag;
-                var w0 = Cartesian3.multiplyByScalar(direction, scalar);
-                up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
-                camera.up = Cartesian3.clone(up);
+                var w0 = Cartesian3.multiplyByScalar(direction, scalar, scratchCartesian);
+                up = Cartesian3.normalize(Cartesian3.subtract(up, w0, camera._up), camera._up);
+                Cartesian3.clone(up, camera.up);
 
-                right = camera._right = Cartesian3.cross(direction, up);
-                camera.right = Cartesian3.clone(right);
+                right = Cartesian3.cross(direction, up, camera._right);
+                Cartesian3.clone(right, camera.right);
             }
         }
 
         if (directionChanged || transformChanged) {
-            camera._directionWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(direction.x, direction.y, direction.z, 0.0)));
+            camera._directionWC = Matrix4.multiplyByPointAsVector(transform, direction, camera._directionWC);
         }
 
         if (upChanged || transformChanged) {
-            camera._upWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(up.x, up.y, up.z, 0.0)));
+            camera._upWC = Matrix4.multiplyByPointAsVector(transform, up, camera._upWC);
         }
 
         if (rightChanged || transformChanged) {
-            camera._rightWC = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(transform, new Cartesian4(right.x, right.y, right.z, 0.0)));
+            camera._rightWC = Matrix4.multiplyByPointAsVector(transform, right, camera._rightWC);
         }
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
@@ -366,9 +383,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.inverseTransform, cartesian, result);
     };
 
@@ -384,9 +404,12 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
+
         return Matrix4.multiplyByVector(this.transform, cartesian, result);
     };
 

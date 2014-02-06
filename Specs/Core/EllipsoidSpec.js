@@ -331,19 +331,19 @@ defineSuite([
     it('constructor throws if x less than 0', function() {
         expect(function() {
             return new Ellipsoid(-1, 0, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if y less than 0', function() {
         expect(function() {
             return new Ellipsoid(0, -1, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if z less than 0', function() {
         expect(function() {
             return new Ellipsoid(0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('expect Ellipsoid.geocentricSurfaceNormal is be Cartesian3.normalize', function() {
@@ -353,49 +353,49 @@ defineSuite([
     it('geodeticSurfaceNormalCartographic throws with no cartographic', function() {
         expect(function() {
             Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('geodeticSurfaceNormal throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.geodeticSurfaceNormal(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartographicToCartesian throws with no cartographic', function() {
         expect(function() {
             Ellipsoid.WGS84.cartographicToCartesian(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartographicArrayToCartesianArray throws with no cartographics', function() {
         expect(function() {
             Ellipsoid.WGS84.cartographicArrayToCartesianArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartesianToCartographic throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.cartesianToCartographic(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartesianArrayToCartographicArray throws with no cartesians', function() {
         expect(function() {
             Ellipsoid.WGS84.cartesianArrayToCartographicArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticSurface throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.scaleToGeodeticSurface(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeocentricSurface throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.scaleToGeocentricSurface(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clone copies any object with the proper structure', function() {

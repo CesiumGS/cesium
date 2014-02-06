@@ -35,42 +35,42 @@ define([
      *
      * @example
      * // A solid white line segment
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new SimplePolylineGeometry({
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.SimplePolylineGeometry({
      *       positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(0.0, 0.0),
-     *         Cartographic.fromDegrees(5.0, 0.0)
+     *         Cesium.Cartographic.fromDegrees(0.0, 0.0),
+     *         Cesium.Cartographic.fromDegrees(5.0, 0.0)
      *       ])
      *     }),
      *     attributes : {
-     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 1.0, 1.0))
+     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
      *     }
      *   }),
-     *   appearance : new PerInstanceColorAppearance({
+     *   appearance : new Cesium.PerInstanceColorAppearance({
      *     flat : true,
      *     translucent : false
      *   })
      * }));
      *
      * // Two extents in a primitive, each with a different color
-     * var instance = new GeometryInstance({
-     *   geometry : new ExtentGeometry({
-     *     extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.ExtentGeometry({
+     *     extent : Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
-     *   color : new Color(1.0, 0.0, 0.0, 0.5)
+     *   color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
      * });
      *
-     * var anotherInstance = new GeometryInstance({
-     *   geometry : new ExtentGeometry({
-     *     extent : Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
+     * var anotherInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.ExtentGeometry({
+     *     extent : Cesium.Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
-     *   color : new Color(0.0, 0.0, 1.0, 0.5)
+     *   color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
      * });
      *
-     * var extentPrimitive = new Primitive({
+     * var extentPrimitive = new Cesium.Primitive({
      *   geometryInstances : [instance, anotherInstance],
-     *   appearance : new PerInstanceColorAppearance()
+     *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      */
     var PerInstanceColorAppearance = function(options) {

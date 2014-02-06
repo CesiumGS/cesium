@@ -42,41 +42,38 @@ define([
      * var diagonal = [2.0, 4.0, 4.0, 4.0, 2.0];
      * var upperDiagonal = [1.0, 1.0, 1.0, 1.0];
      * var rightHandSide = [
-     *     new Cartesian3(410757.0, -1595711.0, 1375302.0),
-     *     new Cartesian3(-5986705.0, -2190640.0, 1099600.0),
-     *     new Cartesian3(-12593180.0, 288588.0, -1755549.0),
-     *     new Cartesian3(-5349898.0, 2457005.0, -2685438.0),
-     *     new Cartesian3(845820.0, 1573488.0, -1205591.0)
+     *     new Cesium.Cartesian3(410757.0, -1595711.0, 1375302.0),
+     *     new Cesium.Cartesian3(-5986705.0, -2190640.0, 1099600.0),
+     *     new Cesium.Cartesian3(-12593180.0, 288588.0, -1755549.0),
+     *     new Cesium.Cartesian3(-5349898.0, 2457005.0, -2685438.0),
+     *     new Cesium.Cartesian3(845820.0, 1573488.0, -1205591.0)
      * ];
      *
-     * var solution = TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
+     * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(lower) || !(lower instanceof Array)) {
             throw new DeveloperError('The array lower is required.');
         }
-
         if (!defined(diagonal) || !(diagonal instanceof Array)) {
             throw new DeveloperError('The array diagonal is required.');
         }
-
         if (!defined(upper) || !(upper instanceof Array)) {
             throw new DeveloperError('The array upper is required.');
         }
-
         if (!defined(right) || !(right instanceof Array)) {
             throw new DeveloperError('The array right is required.');
         }
-
         if (diagonal.length !== right.length) {
             throw new DeveloperError('diagonal and right must have the same lengths.');
         }
-
         if (lower.length !== upper.length) {
             throw new DeveloperError('lower and upper must have the same lengths.');
         } else if (lower.length !== diagonal.length - 1) {
             throw new DeveloperError('lower and upper must be one less than the length of diagonal.');
         }
+        //>>includeEnd('debug');
 
         var c = [], d = [], x = [];
         c.length = upper.length;

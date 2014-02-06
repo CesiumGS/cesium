@@ -339,7 +339,7 @@ defineSuite([
         var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             b.setScaleByDistance(scale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws new billboard with invalid scaleByDistance (nearDistance === farDistance)', function() {
@@ -348,7 +348,7 @@ defineSuite([
             billboards.add({
                 scaleByDistance : scale
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws setScaleByDistance with nearDistance > farDistance', function() {
@@ -356,7 +356,7 @@ defineSuite([
         var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.setScaleByDistance(scale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws setPixelOffsetScaleByDistance with nearDistance === farDistance', function() {
@@ -364,7 +364,7 @@ defineSuite([
         var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             b.setPixelOffsetScaleByDistance(scale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws new billboard with invalid pixelOffsetScaleByDistance (nearDistance === farDistance)', function() {
@@ -373,7 +373,7 @@ defineSuite([
             billboards.add({
                 pixelOffsetScaleByDistance : scale
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws setPixelOffsetScaleByDistance with nearDistance > farDistance', function() {
@@ -381,7 +381,7 @@ defineSuite([
         var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.setPixelOffsetScaleByDistance(scale);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws setTranslucencyByDistance with nearDistance === farDistance', function() {
@@ -389,7 +389,7 @@ defineSuite([
         var translucency = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             b.setTranslucencyByDistance(translucency);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws new billboard with invalid translucencyByDistance (nearDistance === farDistance)', function() {
@@ -398,7 +398,7 @@ defineSuite([
             billboards.add({
                 translucencyByDistance : translucency
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws setTranslucencyByDistance with nearDistance > farDistance', function() {
@@ -406,14 +406,14 @@ defineSuite([
         var translucency = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
             b.setTranslucencyByDistance(translucency);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with non number Index', function() {
         var b = billboards.add();
         expect(function() {
             b.setImageIndex(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with invalid index', function() {
@@ -425,7 +425,7 @@ defineSuite([
 
         expect(function() {
             billboards.update(context, frameState, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 
@@ -1004,7 +1004,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -1187,7 +1187,7 @@ defineSuite([
 
         expect(function() {
             b.computeScreenSpacePosition(context, frameState);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when computing screen space position without context', function() {
@@ -1195,7 +1195,7 @@ defineSuite([
 
         expect(function() {
             b.computeScreenSpacePosition();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when computing screen space position without frame state', function() {
@@ -1203,7 +1203,7 @@ defineSuite([
 
         expect(function() {
             b.computeScreenSpacePosition(context);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals another billboard', function() {
@@ -1248,7 +1248,7 @@ defineSuite([
     it('throws when accessing without an index', function() {
         expect(function() {
             billboards.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes bounding sphere in 3D', function() {
@@ -1269,7 +1269,7 @@ defineSuite([
 
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
 
         var positions = [one.getPosition(), two.getPosition()];
         var bs = BoundingSphere.fromPoints(positions);
@@ -1297,7 +1297,7 @@ defineSuite([
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var projectedPositions = [
@@ -1343,7 +1343,7 @@ defineSuite([
 
         var commandList = [];
         billboards.update(context, frameState, commandList);
-        var actual = commandList[0].opaqueList[0].boundingVolume;
+        var actual = commandList[0].boundingVolume;
 
         camera.frustum = frustum;
         frameState.mode = mode;

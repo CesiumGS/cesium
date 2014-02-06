@@ -32,21 +32,22 @@ define([
      * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
      *
      * @example
-     * var primitive = new Primitive({
+     * var primitive = new Cesium.Primitive({
      *   geometryInstances : // ...
-     *   appearance : new DebugAppearance({
+     *   appearance : new Cesium.DebugAppearance({
      *     attributeName : 'normal'
      *   })
      * });
      */
     var DebugAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var attributeName = options.attributeName;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(attributeName)) {
             throw new DeveloperError('options.attributeName is required.');
         }
+        //>>includeEnd('debug');
 
         var glslDatatype = defaultValue(options.glslDatatype, 'vec3');
         var varyingName = 'v_' + attributeName;

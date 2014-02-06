@@ -25,6 +25,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
+        '../Renderer/Pass',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',
@@ -34,8 +35,10 @@ define([
         './SceneTransforms',
         './FrameState',
         './OrthographicFrustum',
+        './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
+        './PerformanceDisplay',
         './Primitive',
         './PerInstanceColorAppearance',
         './SunPostProcess',
@@ -66,6 +69,7 @@ define([
         Context,
         ClearCommand,
         PassState,
+        Pass,
         Camera,
         ScreenSpaceCameraController,
         CompositePrimitive,
@@ -75,8 +79,10 @@ define([
         SceneTransforms,
         FrameState,
         OrthographicFrustum,
+        PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
+        PerformanceDisplay,
         Primitive,
         PerInstanceColorAppearance,
         SunPostProcess,
@@ -99,7 +105,7 @@ define([
      *
      * @example
      * // Create scene without anisotropic texture filtering
-     * var scene = new Scene(canvas, {
+     * var scene = new Cesium.Scene(canvas, {
      *   allowTextureFilterAnisotropic : false
      * });
      */
@@ -132,6 +138,7 @@ define([
 
         this._commandList = [];
         this._frustumCommandsList = [];
+        this._overlayCommandList = [];
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -250,7 +257,7 @@ define([
          * };
          *
          * // Execute only the billboard's commands.  That is, only draw the billboard.
-         * var billboards = new BillboardCollection();
+         * var billboards = new Cesium.BillboardCollection();
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
@@ -259,6 +266,20 @@ define([
          * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, commands are randomly shaded.  This is useful
+         * for performance analysis to see what parts of a scene or model are
+         * command-dense and could benefit from batching.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowCommands = false;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -280,7 +301,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
-         * When {@see Scene.debugShowFrustums} is <code>true</code>, this contains
+         * When {@link Scene.debugShowFrustums} is <code>true</code>, this contains
          * properties with statistics about the number of command execute per frustum.
          * <code>totalCommands</code> is the total number of commands executed, ignoring
          * overlap. <code>commandsInFrustums</code> is an array with the number of times
@@ -295,6 +316,20 @@ define([
          * @readonly
          */
         this.debugFrustumStatistics = undefined;
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * Displays frames per second and time between frames.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
+         */
+        this.debugShowFramesPerSecond = false;
+
+        this._performanceDisplay = undefined;
 
         this._debugSphere = undefined;
 
@@ -377,6 +412,7 @@ define([
     };
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
+    var scratchOccluder;
 
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
@@ -385,16 +421,16 @@ define([
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
-            return new Occluder(scratchOccluderBoundingSphere, scene._camera.positionWC);
+            scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
+            return scratchOccluder;
         }
 
         return undefined;
     }
 
     function clearPasses(passes) {
-        passes.color = false;
+        passes.render = false;
         passes.pick = false;
-        passes.overlay = false;
     }
 
     function updateFrameState(scene, frameNumber, time) {
@@ -456,8 +492,11 @@ define([
                 break;
             }
 
-            // PERFORMANCE_IDEA: sort bins
-            frustumCommands.commands[frustumCommands.index++] = command;
+            if (command.pass === Pass.OPAQUE || command instanceof ClearCommand) {
+                frustumCommands.opaqueCommands[frustumCommands.opaqueIndex++] = command;
+            } else if (command.pass === Pass.TRANSLUCENT){
+                frustumCommands.translucentCommands[frustumCommands.translucentIndex++] = command;
+            }
 
             if (scene.debugShowFrustums) {
                 command.debugOverlappingFrustums |= (1 << i);
@@ -478,8 +517,10 @@ define([
     var scratchCullingVolume = new CullingVolume();
     var distances = new Interval();
 
-    function createPotentiallyVisibleSet(scene, listNames, pick) {
-        var commandLists = scene._commandList;
+    function createPotentiallyVisibleSet(scene) {
+        var commandList = scene._commandList;
+        var overlayList = scene._overlayCommandList;
+
         var cullingVolume = scene._frameState.cullingVolume;
         var camera = scene._camera;
 
@@ -496,7 +537,8 @@ define([
         var frustumCommandsList = scene._frustumCommandsList;
         var numberOfFrustums = frustumCommandsList.length;
         for (var n = 0; n < numberOfFrustums; ++n) {
-            frustumCommandsList[n].index = 0;
+            frustumCommandsList[n].opaqueIndex = 0;
+            frustumCommandsList[n].translucentIndex = 0;
         }
 
         var near = Number.MAX_VALUE;
@@ -515,37 +557,35 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        var length = commandLists.length;
-        var listNameLength = listNames.length;
-        for (var i = 0; i < listNameLength; ++i) {
-            var listName = listNames[i];
-            for (var j = 0; j < length; ++j) {
-                var commandList = !pick ? commandLists[j][listName] : commandLists[j].pickList[listName];
-                var commandListLength = commandList.length;
-                for (var k = 0; k < commandListLength; ++k) {
-                    var command = commandList[k];
-                    var boundingVolume = command.boundingVolume;
-                    if (defined(boundingVolume)) {
-                        if (command.cull &&
-                                ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
-                                 (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
-                            continue;
-                        }
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            var pass = command.pass;
 
-                        distances = boundingVolume.getPlaneDistances(position, direction, distances);
-                        near = Math.min(near, distances.start);
-                        far = Math.max(far, distances.stop);
-                    } else {
-                        // Clear commands don't need a bounding volume - just add the clear to all frustums.
-                        // If another command has no bounding volume, though, we need to use the camera's
-                        // worst-case near and far planes to avoid clipping something important.
-                        distances.start = camera.frustum.near;
-                        distances.stop = camera.frustum.far;
-                        undefBV = !(command instanceof ClearCommand);
+            if (pass === Pass.OVERLAY) {
+                overlayList.push(command);
+            } else {
+                var boundingVolume = command.boundingVolume;
+                if (defined(boundingVolume)) {
+                    if (command.cull &&
+                            ((cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) ||
+                             (defined(occluder) && !occluder.isBoundingSphereVisible(boundingVolume)))) {
+                        continue;
                     }
 
-                    insertIntoBin(scene, command, distances);
+                    distances = boundingVolume.getPlaneDistances(position, direction, distances);
+                    near = Math.min(near, distances.start);
+                    far = Math.max(far, distances.stop);
+                } else {
+                    // Clear commands don't need a bounding volume - just add the clear to all frustums.
+                    // If another command has no bounding volume, though, we need to use the camera's
+                    // worst-case near and far planes to avoid clipping something important.
+                    distances.start = camera.frustum.near;
+                    distances.stop = camera.frustum.far;
+                    undefBV = !(command instanceof ClearCommand);
                 }
+
+                insertIntoBin(scene, command, distances);
             }
         }
 
@@ -567,47 +607,62 @@ define([
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
-            createPotentiallyVisibleSet(scene, listNames, pick);
+            createPotentiallyVisibleSet(scene);
         }
     }
 
-    function createFrustumDebugFragmentShaderSource(command) {
-        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_frustumDebug_main()');
+    function getAttributeLocations(shaderProgram) {
+        var attributeLocations = {};
+        var attributes = shaderProgram.getVertexAttributes();
+        for (var a in attributes) {
+            if (attributes.hasOwnProperty(a)) {
+                attributeLocations[a] = attributes[a].index;
+            }
+        }
 
-        // Support up to three frustums.  If a command overlaps all
-        // three, it's code is not changed.
-        var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
-        var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
-        var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
-
-        var pickMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_frustumDebug_main(); \n' +
-            '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n' +
-            '}';
-
-        return renamedFS + '\n' + pickMain;
+        return attributeLocations;
     }
 
-    function executeFrustumDebugCommand(command, context, passState) {
+    function createDebugFragmentShaderSource(command, scene) {
+        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
+
+        var newMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_Debug_main(); \n';
+
+        if (scene.debugShowCommands) {
+            if (!defined(command._debugColor)) {
+                command._debugColor = Color.fromRandom();
+            }
+            var c = command._debugColor;
+            newMain += '    gl_FragColor.rgb *= vec3(' + c.red + ', ' + c.green + ', ' + c.blue + '); \n';
+        }
+
+        if (scene.debugShowFrustums) {
+            // Support up to three frustums.  If a command overlaps all
+            // three, it's code is not changed.
+            var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
+            var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
+            var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
+            newMain += '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n';
+        }
+
+        newMain += '}';
+
+        return renamedFS + '\n' + newMain;
+    }
+
+    function executeDebugCommand(command, scene, context, passState) {
         if (defined(command.shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = command.shaderProgram;
-            var attributeLocations = {};
-            var attributes = sp.getVertexAttributes();
-            for (var a in attributes) {
-                if (attributes.hasOwnProperty(a)) {
-                    attributeLocations[a] = attributes[a].index;
-                }
-            }
+            var attributeLocations = getAttributeLocations(sp);
 
             command.shaderProgram = context.getShaderCache().getShaderProgram(
-                sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), attributeLocations);
-
+                sp.vertexShaderSource, createDebugFragmentShaderSource(command, scene), attributeLocations);
             command.execute(context, passState);
-
             command.shaderProgram.release();
             command.shaderProgram = sp;
         }
@@ -618,10 +673,10 @@ define([
             return;
         }
 
-        if (!scene.debugShowFrustums) {
-            command.execute(context, passState);
+        if (scene.debugShowCommands || scene.debugShowFrustums) {
+            executeDebugCommand(command, scene, context, passState);
         } else {
-            executeFrustumDebugCommand(command, context, passState);
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -653,7 +708,7 @@ define([
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
-            commandList[0].opaqueList[0].execute(context, passState);
+            commandList[0].execute(context, passState);
         }
     }
 
@@ -681,12 +736,24 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
+    var scratchPerspectiveFrustum = new PerspectiveFrustum();
+    var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
+    var scratchOrthographicFrustum = new OrthographicFrustum();
+
     function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
+
+        var frustum;
+        if (defined(camera.frustum.fovy)) {
+            frustum = camera.frustum.clone(scratchPerspectiveFrustum);
+        } else if (defined(camera.frustum.infiniteProjectionMatrix)){
+            frustum = camera.frustum.clone(scratchPerspectiveOffCenterFrustum);
+        } else {
+            frustum = camera.frustum.clone(scratchOrthographicFrustum);
+        }
 
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
@@ -701,11 +768,10 @@ define([
             scene._sunBloom = false;
         }
 
-        var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
+        var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
-
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -756,9 +822,16 @@ define([
 
             us.updateFrustum(frustum);
 
-            var commands = frustumCommands.commands;
-            var length = frustumCommands.index;
-            for (var j = 0; j < length; ++j) {
+            var j;
+            var commands = frustumCommands.opaqueCommands;
+            var length = frustumCommands.opaqueIndex;
+            for (j = 0; j < length; ++j) {
+                executeCommand(commands[j], scene, context, passState);
+            }
+
+            commands = frustumCommands.translucentCommands;
+            length = commands.length = frustumCommands.translucentIndex;
+            for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
         }
@@ -766,14 +839,10 @@ define([
 
     function executeOverlayCommands(scene, passState) {
         var context = scene._context;
-        var commandLists = scene._commandList;
-        var length = commandLists.length;
+        var commandList = scene._overlayCommandList;
+        var length = commandList.length;
         for (var i = 0; i < length; ++i) {
-            var commandList = commandLists[i].overlayList;
-            var commandListLength = commandList.length;
-            for (var j = 0; j < commandListLength; ++j) {
-                commandList[j].execute(context, passState);
-            }
+            commandList[i].execute(context, passState);
         }
     }
 
@@ -815,8 +884,6 @@ define([
         this._screenSpaceCameraController.update(this.mode);
     };
 
-    var renderListNames = ['opaqueList', 'translucentList'];
-
     /**
      * DOC_TBA
      * @memberof Scene
@@ -831,27 +898,54 @@ define([
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
         updateFrameState(this, frameNumber, time);
-        frameState.passes.color = true;
-        frameState.passes.overlay = true;
+        frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
 
         var context = this._context;
         us.update(context, frameState);
 
         this._commandList.length = 0;
+        this._overlayCommandList.length = 0;
+
         updatePrimitives(this);
-        createPotentiallyVisibleSet(this, renderListNames);
+        createPotentiallyVisibleSet(this);
 
         var passState = this._passState;
 
         executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
+
         frameState.creditDisplay.endFrame();
+
+        if (this.debugShowFramesPerSecond) {
+            if (!defined(this._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = this._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                this._performanceDisplay = performanceDisplay;
+                this._performanceContainer = performanceContainer;
+            }
+
+            this._performanceDisplay.update();
+        } else if (defined(this._performanceDisplay)) {
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         context.endFrame();
         executeEvents(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
+    var scratchOrigin = new Cartesian3();
+    var scratchDirection = new Cartesian3();
+    var scratchBufferDimensions = new Cartesian2();
+    var scratchPixelSize = new Cartesian2();
+
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
         var context = scene._context;
         var camera = scene._camera;
@@ -865,12 +959,18 @@ define([
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
         y *= (frustum.top - frustum.bottom) * 0.5;
 
-        var position = camera.position;
-        position = new Cartesian3(position.z, position.x, position.y);
-        position.y += x;
-        position.z += y;
+        var origin = Cartesian3.clone(camera.position, scratchOrigin);
+        Cartesian3.multiplyByScalar(camera.right, x, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
+        Cartesian3.multiplyByScalar(camera.up, y, scratchDirection);
+        Cartesian3.add(scratchDirection, origin, origin);
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
+        Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
+
+        scratchBufferDimensions.x = drawingBufferWidth;
+        scratchBufferDimensions.y = drawingBufferHeight;
+
+        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
 
         var ortho = orthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -880,10 +980,11 @@ define([
         ortho.near = frustum.near;
         ortho.far = frustum.far;
 
-        return ortho.computeCullingVolume(position, camera.directionWC, camera.upWC);
+        return ortho.computeCullingVolume(origin, camera.directionWC, camera.upWC);
     }
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+
     function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
         var context = scene._context;
         var camera = scene._camera;
@@ -902,7 +1003,10 @@ define([
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelSize(new Cartesian2(drawingBufferWidth, drawingBufferHeight));
+        scratchBufferDimensions.x = drawingBufferWidth;
+        scratchBufferDimensions.y = drawingBufferHeight;
+
+        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 
@@ -930,6 +1034,7 @@ define([
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
+    var scratchPosition = new Cartesian2();
 
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
@@ -946,15 +1051,17 @@ define([
      *
      */
     Scene.prototype.pick = function(windowPosition) {
+        //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var context = this._context;
         var us = this.getUniformState();
         var frameState = this._frameState;
 
-        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition);
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
@@ -969,7 +1076,7 @@ define([
 
         this._commandList.length = 0;
         updatePrimitives(this);
-        createPotentiallyVisibleSet(this, renderListNames, true);
+        createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
@@ -996,15 +1103,18 @@ define([
      * @exception {DeveloperError} windowPosition is undefined.
      *
      * @example
-     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     * var pickedObjects = Cesium.Scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
      */
     Scene.prototype.drillPick = function(windowPosition) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
+        //>>includeEnd('debug');
 
         var pickedObjects = [];
 
@@ -1059,6 +1169,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.destroy = function() {
+        this._animations.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
@@ -1069,6 +1180,11 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();
+        if (defined(this._performanceDisplay)){
+            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
+            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
+        }
+
         return destroyObject(this);
     };
 

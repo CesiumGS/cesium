@@ -137,9 +137,11 @@ define([
      * });
      */
     var CesiumWidget = function(container, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
 
@@ -419,22 +421,35 @@ define([
         errorHeader.textContent = title;
         content.appendChild(errorHeader);
 
+        var resizeCallback;
         if (defined(error)) {
+            var errorPanelScroller = document.createElement('div');
+            errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
+            content.appendChild(errorPanelScroller);
+            resizeCallback = function() {
+                errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
+            };
+            resizeCallback();
+            window.addEventListener('resize', resizeCallback, false);
+
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
             errorMessage.textContent = error;
-            content.appendChild(errorMessage);
+            errorPanelScroller.appendChild(errorMessage);
         }
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
         content.appendChild(buttonPanel);
 
-        var okButton = document.createElement('span');
+        var okButton = document.createElement('button');
+        okButton.type = 'button';
         okButton.className = 'cesium-button';
         okButton.textContent = 'OK';
-        okButton.tabIndex = 100;
         okButton.onclick = function() {
+            if (defined(resizeCallback)) {
+                window.removeEventListener('resize', resizeCallback, false);
+            }
             element.removeChild(overlay);
         };
 

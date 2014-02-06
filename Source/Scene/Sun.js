@@ -120,7 +120,7 @@ define([
         }
     });
 
-    var viewportAttributeIndices = {
+    var viewportAttributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -162,7 +162,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : viewportAttributeIndices,
+            attributeLocations : viewportAttributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -172,7 +172,7 @@ define([
 
     var scratchPositionWC = new Cartesian2();
     var scratchLimbWC = new Cartesian2();
-    var scratchCartesian3 = new Cartesian3();
+    var scratchPositionEC = new Cartesian4();
     var scratchCartesian4 = new Cartesian4();
 
     /**
@@ -188,7 +188,7 @@ define([
             return undefined;
         }
 
-        if (!frameState.passes.color) {
+        if (!frameState.passes.render) {
             return undefined;
         }
 
@@ -214,7 +214,7 @@ define([
             });
 
             var fbo = context.createFramebuffer({
-                colorTexture : this._texture
+                colorTextures : [this._texture]
             });
             fbo.destroyAttachments = false;
 
@@ -226,7 +226,7 @@ define([
             drawCommand.owner = this;
             drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
             drawCommand.vertexArray = getVertexArray(context);
-            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeIndices);
+            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeLocations);
             drawCommand.framebuffer = fbo;
             drawCommand.renderState = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
@@ -255,7 +255,7 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var attributeIndices = {
+            var attributeLocations = {
                 direction : 0
             };
 
@@ -274,7 +274,7 @@ define([
 
             var vertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
             var attributes = [{
-                index : attributeIndices.direction,
+                index : attributeLocations.direction,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 2,
                 normalize : true,
@@ -283,7 +283,7 @@ define([
             command.vertexArray = context.createVertexArray(attributes);
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -316,13 +316,17 @@ define([
         var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
         var projMatrix = context.getUniformState().getProjection();
 
-        var positionEC = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3);
+        var positionEC = scratchPositionEC;
+        positionEC.x = 0;
+        positionEC.y = 0;
         positionEC.z = -dist;
-        var positionCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
+        positionEC.w = 1;
+
+        var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
         var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(context, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
-        var limbCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
+        var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
         var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(context, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));

@@ -285,7 +285,23 @@ define([
         case Array:
             return czmlInterval.array;
         case Quaternion:
-            return czmlInterval.unitQuaternion;
+            //TODO: Currently Quaternion convention in CZML is the opposite of what Cesium expects.
+            //To avoid unecessary CZML churn, we conjugate manually for now.  During the next big CZML
+            //update, we should remove this code and change the convention.
+            var unitQuaternion = czmlInterval.unitQuaternion;
+            if (defined(unitQuaternion)) {
+                if (unitQuaternion.length === 4) {
+                    return [-unitQuaternion[0], -unitQuaternion[1], -unitQuaternion[2], unitQuaternion[3]];
+                }
+
+                unitQuaternion = unitQuaternion.slice(0);
+                for (var i = 0; i < unitQuaternion.length; i += 5) {
+                    unitQuaternion[i + 1] = -unitQuaternion[i + 1];
+                    unitQuaternion[i + 2] = -unitQuaternion[i + 2];
+                    unitQuaternion[i + 3] = -unitQuaternion[i + 3];
+                }
+            }
+            return unitQuaternion;
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
@@ -708,6 +724,13 @@ define([
 
     function processName(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         dynamicObject.name = defaultValue(packet.name, dynamicObject.name);
+    }
+
+    function processDescription(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var descriptionData = packet.description;
+        if (defined(descriptionData)) {
+            processPacketData(String, dynamicObject, 'description', descriptionData, undefined, sourceUri);
+        }
     }
 
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1139,43 +1162,61 @@ define([
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
-        var availability = dynamicObjectCollection.computeAvailability();
+        dynamicObjectCollection.suspendEvents();
 
-        var clock;
+        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri, undefined, dataSource);
+
         var documentObject = dataSource._document;
-        if (defined(documentObject) && defined(documentObject.clock)) {
-            clock = new DynamicClock();
-            clock.startTime = documentObject.clock.startTime;
-            clock.stopTime = documentObject.clock.stopTime;
-            clock.clockRange = documentObject.clock.clockRange;
-            clock.clockStep = documentObject.clock.clockStep;
-            clock.multiplier = documentObject.clock.multiplier;
-            clock.currentTime = documentObject.clock.currentTime;
-        } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-            clock = new DynamicClock();
-            clock.startTime = availability.start;
-            clock.stopTime = availability.stop;
-            clock.clockRange = ClockRange.LOOP_STOP;
-            var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
-            var multiplier = Math.round(totalSeconds / 120.0);
-            clock.multiplier = multiplier;
-            clock.currentTime = clock.startTime;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+
+        var raiseChangedEvent = false;
+        var czmlClock;
+        if (defined(documentObject.clock)) {
+            czmlClock = documentObject.clock;
+        } else {
+            var availability = dynamicObjectCollection.computeAvailability();
+            if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
+                var startTime = availability.start;
+                var stopTime = availability.stop;
+                var totalSeconds = startTime.getSecondsDifference(stopTime);
+                var multiplier = Math.round(totalSeconds / 120.0);
+
+                czmlClock = new DynamicClock();
+                czmlClock.startTime = startTime;
+                czmlClock.stopTime = stopTime;
+                czmlClock.clockRange = ClockRange.LOOP_STOP;
+                czmlClock.multiplier = multiplier;
+                czmlClock.currentTime = startTime;
+                czmlClock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            }
+        }
+
+        if (defined(czmlClock)) {
+            if (!defined(dataSource._clock)) {
+                dataSource._clock = new DynamicClock();
+                raiseChangedEvent = true;
+            }
+            if (!czmlClock.equals(dataSource._clock)) {
+                czmlClock.clone(dataSource._clock);
+                raiseChangedEvent = true;
+            }
         }
 
         var name;
-        if (defined(documentObject) && defined(documentObject.name)) {
+        if (defined(documentObject.name)) {
             name = documentObject.name;
-        }
-
-        if (!defined(name) && defined(sourceUri)) {
+        } else if (defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
 
-        dataSource._name = name;
+        if (dataSource._name !== name) {
+            dataSource._name = name;
+            raiseChangedEvent = true;
+        }
 
-        return clock;
+        dynamicObjectCollection.resumeEvents();
+        if (raiseChangedEvent) {
+            dataSource._changed.raiseEvent(dataSource);
+        }
     }
 
     /**
@@ -1207,6 +1248,7 @@ define([
     processCone, //
     processLabel, //
     processName, //
+    processDescription, //
     processPath, //
     processPoint, //
     processPolygon, //
@@ -1218,16 +1260,6 @@ define([
     processOrientation, //
     processVertexPositions, //
     processAvailability];
-
-    /**
-     * Gets the name of this data source.
-     * @memberof CzmlDataSource
-     *
-     * @returns {String} The name.
-     */
-    CzmlDataSource.prototype.getName = function() {
-        return this._name;
-    };
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
@@ -1251,18 +1283,6 @@ define([
     };
 
     /**
-     * Gets the top level clock defined in CZML or the availability of the
-     * underlying data if no clock is defined.  If the CZML document only contains
-     * infinite data, undefined will be returned.
-     * @memberof CzmlDataSource
-     *
-     * @returns {DynamicClock} The clock associated with the current CZML data, or undefined if none exists.
-     */
-    CzmlDataSource.prototype.getClock = function() {
-        return this._clock;
-    };
-
-    /**
      * Gets the DynamicObjectCollection generated by this data source.
      * @memberof CzmlDataSource
      *
@@ -1270,6 +1290,30 @@ define([
      */
     CzmlDataSource.prototype.getDynamicObjectCollection = function() {
         return this._dynamicObjectCollection;
+    };
+
+    /**
+     * Gets the name of this data source.  If the return value of
+     * this function changes, the changed event will be raised.
+     * @memberof CzmlDataSource
+     *
+     * @returns {String} The name.
+     */
+    CzmlDataSource.prototype.getName = function() {
+        return this._name;
+    };
+
+    /**
+     * Gets the top level clock defined in CZML or the availability of the
+     * underlying data if no clock is defined.  If the CZML document only contains
+     * infinite data, undefined will be returned.  If the return value of
+     * this function changes, the changed event will be raised.
+     * @memberof CzmlDataSource
+     *
+     * @returns {DynamicClock} The clock associated with the current CZML data, or undefined if none exists.
+     */
+    CzmlDataSource.prototype.getClock = function() {
+        return this._clock;
     };
 
     /**
@@ -1292,11 +1336,13 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.process = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
+        //>>includeEnd('debug');
 
-        this._clock = loadCzml(this, czml, source);
+        loadCzml(this, czml, source);
     };
 
     /**
@@ -1308,13 +1354,15 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.load = function(czml, source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
+        //>>includeEnd('debug');
 
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
-        this._clock = loadCzml(this, czml, source);
+        loadCzml(this, czml, source);
     };
 
     /**
@@ -1327,9 +1375,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {
@@ -1350,9 +1400,11 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         var dataSource = this;
         return when(loadJson(url), function(czml) {

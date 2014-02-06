@@ -85,6 +85,8 @@ define([
 
         this._uCenter = new Cartesian2();
         this._uRadius = undefined;
+
+        this._blurStep = new Cartesian2();
     };
 
     SunPostProcess.prototype.clear = function(context, color) {
@@ -106,7 +108,7 @@ define([
         this._blendCommand.execute(context, this._upSamplePassState);
     };
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -148,7 +150,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : attributeIndices,
+            attributeLocations : attributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -162,26 +164,18 @@ define([
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
-
     SunPostProcess.prototype.update = function(context) {
         var width = context.getDrawingBufferWidth();
         var height = context.getDrawingBufferHeight();
 
         var that = this;
 
-        if (!defined(this._fbo)) {
-            this._fbo = context.createFramebuffer();
-
-            this._downSampleFBO1 = context.createFramebuffer();
-            this._downSampleFBO2 = context.createFramebuffer();
-
+        if (!defined(this._downSampleCommand)) {
             this._clearFBO1Command = new ClearCommand();
             this._clearFBO1Command.color = new Color();
-            this._clearFBO1Command.framebuffer = this._downSampleFBO1;
 
             this._clearFBO2Command = new ClearCommand();
             this._clearFBO2Command.color = new Color();
-            this._clearFBO2Command.framebuffer = this._downSampleFBO2;
 
             var primitiveType = PrimitiveType.TRIANGLE_FAN;
             var vertexArray = getVertexArray(context);
@@ -190,15 +184,14 @@ define([
             downSampleCommand.owner = this;
             downSampleCommand.primitiveType = primitiveType;
             downSampleCommand.vertexArray = vertexArray;
-            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
+            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
             downSampleCommand.uniformMap = {};
-            downSampleCommand.framebuffer = this._downSampleFBO1;
 
             var brightPassCommand = this._brightPassCommand = new DrawCommand();
             brightPassCommand.owner = this;
             brightPassCommand.primitiveType = primitiveType;
             brightPassCommand.vertexArray = vertexArray;
-            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeIndices);
+            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeLocations);
             brightPassCommand.uniformMap = {
                 u_avgLuminance : function() {
                     // A guess at the average luminance across the entire scene
@@ -211,7 +204,6 @@ define([
                     return 0.1;
                 }
             };
-            brightPassCommand.framebuffer = this._downSampleFBO2;
 
             var delta = 1.0;
             var sigma = 2.0;
@@ -220,7 +212,7 @@ define([
             blurXCommand.owner = this;
             blurXCommand.primitiveType = primitiveType;
             blurXCommand.vertexArray = vertexArray;
-            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
+            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
             blurXCommand.uniformMap = {
                 delta : function() {
                     return delta;
@@ -232,13 +224,12 @@ define([
                     return 0.0;
                 }
             };
-            blurXCommand.framebuffer = this._downSampleFBO1;
 
             var blurYCommand = this._blurYCommand = new DrawCommand();
             blurYCommand.owner = this;
             blurYCommand.primitiveType = primitiveType;
             blurYCommand.vertexArray = vertexArray;
-            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
+            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
             blurYCommand.uniformMap = {
                 delta : function() {
                     return delta;
@@ -250,13 +241,12 @@ define([
                     return 1.0;
                 }
             };
-            blurYCommand.framebuffer = this._downSampleFBO2;
 
             var additiveBlendCommand = this._blendCommand = new DrawCommand();
             additiveBlendCommand.owner = this;
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
-            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
+            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeLocations);
             additiveBlendCommand.uniformMap = {
                 u_center : function() {
                     return that._uCenter;
@@ -270,7 +260,7 @@ define([
             fullScreenCommand.owner = this;
             fullScreenCommand.primitiveType = primitiveType;
             fullScreenCommand.vertexArray = vertexArray;
-            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
+            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
             fullScreenCommand.uniformMap = {};
         }
 
@@ -287,34 +277,57 @@ define([
         downSampleViewport.height = downSampleSize;
 
         var fbo = this._fbo;
-        var colorTexture = fbo.getColorTexture();
+        var colorTexture = (defined(fbo) && fbo.getColorTexture(0)) || undefined;
         if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
-            fbo.setColorTexture(context.createTexture2D({
+            fbo = fbo && fbo.destroy();
+            this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
+            this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
+
+            this._blurStep.x = this._blurStep.y = 1.0 / downSampleSize;
+
+            var colorTextures = [context.createTexture2D({
                 width : width,
                 height : height
-            }));
+            })];
 
             if (context.getDepthTexture()) {
-                fbo.setDepthTexture(context.createTexture2D({
-                    width : width,
-                    height : height,
-                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                }));
+                fbo = this._fbo = context.createFramebuffer({
+                    colorTextures :colorTextures,
+                    depthTexture : context.createTexture2D({
+                        width : width,
+                        height : height,
+                        pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                        pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                    })
+                });
             } else {
-                fbo.setDepthRenderbuffer(context.createRenderbuffer({
-                    format : RenderbufferFormat.DEPTH_COMPONENT16
-                }));
+                fbo = this._fbo = context.createFramebuffer({
+                    colorTextures : colorTextures,
+                    depthRenderbuffer : context.createRenderbuffer({
+                        format : RenderbufferFormat.DEPTH_COMPONENT16
+                    })
+                });
             }
 
-            this._downSampleFBO1.setColorTexture(context.createTexture2D({
-                width : downSampleSize,
-                height : downSampleSize
-            }));
-            this._downSampleFBO2.setColorTexture(context.createTexture2D({
-                width : downSampleSize,
-                height : downSampleSize
-            }));
+            this._downSampleFBO1 = context.createFramebuffer({
+                colorTextures : [context.createTexture2D({
+                    width : downSampleSize,
+                    height : downSampleSize
+                })]
+            });
+            this._downSampleFBO2 = context.createFramebuffer({
+                colorTextures : [context.createTexture2D({
+                    width : downSampleSize,
+                    height : downSampleSize
+                })]
+            });
+
+            this._clearFBO1Command.framebuffer = this._downSampleFBO1;
+            this._clearFBO2Command.framebuffer = this._downSampleFBO2;
+            this._downSampleCommand.framebuffer = this._downSampleFBO1;
+            this._brightPassCommand.framebuffer = this._downSampleFBO2;
+            this._blurXCommand.framebuffer = this._downSampleFBO1;
+            this._blurYCommand.framebuffer = this._downSampleFBO2;
 
             var downSampleRenderState = context.createRenderState({
                 viewport : downSampleViewport
@@ -322,41 +335,41 @@ define([
             var upSampleRenderState = context.createRenderState();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._downSampleCommand.renderState = downSampleRenderState;
 
             this._brightPassCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture();
+                return that._downSampleFBO1.getColorTexture(0);
             };
             this._brightPassCommand.renderState = downSampleRenderState;
 
             this._blurXCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO2.getColorTexture();
+                return that._downSampleFBO2.getColorTexture(0);
             };
             this._blurXCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
+                return that._blurStep;
             };
             this._blurXCommand.renderState = downSampleRenderState;
 
             this._blurYCommand.uniformMap.u_texture = function() {
-                return that._downSampleFBO1.getColorTexture();
+                return that._downSampleFBO1.getColorTexture(0);
             };
             this._blurYCommand.uniformMap.u_step = function() {
-                return new Cartesian2(1.0 / downSampleSize, 1.0 / downSampleSize);
+                return that._blurStep;
             };
             this._blurYCommand.renderState = downSampleRenderState;
 
             this._blendCommand.uniformMap.u_texture0 = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._blendCommand.uniformMap.u_texture1 = function() {
-                return that._downSampleFBO2.getColorTexture();
+                return that._downSampleFBO2.getColorTexture(0);
             };
             this._blendCommand.renderState = upSampleRenderState;
 
             this._fullScreenCommand.uniformMap.u_texture = function() {
-                return fbo.getColorTexture();
+                return fbo.getColorTexture(0);
             };
             this._fullScreenCommand.renderState = upSampleRenderState;
         }
