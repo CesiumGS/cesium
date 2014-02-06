@@ -149,11 +149,12 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
     <span data-bind="click: toggleExpanded, html: expandIndicator"></span>\
     <span data-bind="click: toggleExpanded, text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
-        <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+        <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
             data-bind="visible: !isSoleSource || !clockTracking, \
                        click: trackClock, \
                        clickBubble: false, \
-                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }">clock</span>\
+                       cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
+                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
         <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
             data-bind="visible: configure.canExecute, \
                        click: configure, \
@@ -171,11 +172,12 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
     <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
     <span data-bind="text: displayName"></span>\
     <span class="cesium-dataSourceBrowser-item-buttons">\
-        <span class="cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+        <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
             data-bind="visible: !isSoleSource || !clockTracking, \
                        click: trackClock, \
                        clickBubble: false, \
-                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }">clock</span>\
+                       cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
+                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
         <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
             data-bind="visible: configure.canExecute, \
                        click: configure, \
