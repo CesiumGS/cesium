@@ -137,9 +137,11 @@ define([
                 return clockTrackedDataSource();
             },
             set : function(dataSource) {
-                clockTrackedDataSource(dataSource);
-                if (defined(dataSource)) {
-                    that._onClockSelected.raiseEvent(dataSource);
+                if (clockTrackedDataSource() !== dataSource) {
+                    clockTrackedDataSource(dataSource);
+                    if (defined(dataSource)) {
+                        that._onClockSelected.raiseEvent(dataSource);
+                    }
                 }
             }
         });
@@ -387,7 +389,6 @@ define([
 
         this._dataSourceViewModels.push(dataSourceViewModel);
         this._dataSourcesLength = this.dataSources.getLength();
-        this.clockTrackedDataSource = dataSource;
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
