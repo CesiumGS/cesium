@@ -7,7 +7,7 @@ define([
         '../Core/EventHelper',
         './DynamicBillboardVisualizer',
         './EllipseGeometryUpdater',
-        './DynamicEllipsoidVisualizer',
+        './EllipsoidGeometryUpdater',
         './DynamicConeVisualizerUsingCustomSensor',
         './DynamicLabelVisualizer',
         './DynamicPathVisualizer',
@@ -26,7 +26,7 @@ define([
         EventHelper,
         DynamicBillboardVisualizer,
         EllipseGeometryUpdater,
-        DynamicEllipsoidVisualizer,
+        EllipsoidGeometryUpdater,
         DynamicConeVisualizerUsingCustomSensor,
         DynamicLabelVisualizer,
         DynamicPathVisualizer,
@@ -44,7 +44,7 @@ define([
     }, function(scene) {
         return new GeometryVisualizer(EllipseGeometryUpdater, scene);
     }, function(scene) {
-        return new DynamicEllipsoidVisualizer(scene);
+        return new GeometryVisualizer(EllipsoidGeometryUpdater, scene);
     }, function(scene) {
         return new DynamicConeVisualizerUsingCustomSensor(scene);
     }, function(scene) {

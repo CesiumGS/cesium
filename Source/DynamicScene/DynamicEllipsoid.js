@@ -24,6 +24,9 @@ define(['../Core/defaultValue',
         this._show = undefined;
         this._radii = undefined;
         this._material = undefined;
+        this._stackPartitions = undefined;
+        this._slicePartitions = undefined;
+        this._subdivisions = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -79,8 +82,28 @@ define(['../Core/defaultValue',
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor')
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
 
+        /**
+         * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        stackPartitions : createDynamicPropertyDescriptor('stackPartitions', '_stackPartitions'),
+
+        /**
+         * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into radial slices.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        slicePartitions : createDynamicPropertyDescriptor('slicePartitions', '_slicePartitions'),
+
+        /**
+         * Gets or sets the Number {@link Property} specifying the number of points per line, determining the granularity of the curvature .
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Property}
+         */
+        subdivisions : createDynamicPropertyDescriptor('subdivisions', '_subdivisions')
     });
 
     /**
@@ -100,6 +123,10 @@ define(['../Core/defaultValue',
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.stackPartitions = this.stackPartitions;
+        result.slicePartitions = this.slicePartitions;
+        result.subdivisions = this.subdivisions;
+
         return result;
     };
 
@@ -124,6 +151,9 @@ define(['../Core/defaultValue',
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.stackPartitions = defaultValue(this.stackPartitions, source.stackPartitions);
+        this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
+        this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
     };
 
     return DynamicEllipsoid;
