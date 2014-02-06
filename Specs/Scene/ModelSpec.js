@@ -14,7 +14,7 @@ defineSuite([
          'Core/Transforms',
          'Core/Event',
          'Core/JulianDate',
-         'Scene/ModelAnimationWrap'
+         'Scene/ModelAnimationLoop'
      ], function(
          Model,
          createScene,
@@ -30,7 +30,7 @@ defineSuite([
          Transforms,
          Event,
          JulianDate,
-         ModelAnimationWrap) {
+         ModelAnimationLoop) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -392,7 +392,7 @@ defineSuite([
         expect(a.removeOnStop).toEqual(false);
         expect(a.speedup).toEqual(1.0);
         expect(a.reverse).toEqual(false);
-        expect(a.wrap).toEqual(ModelAnimationWrap.CLAMP);
+        expect(a.wrap).toEqual(ModelAnimationLoop.CLAMP);
         expect(a.start).not.toBeDefined();
         expect(a.update).not.toBeDefined();
         expect(a.stop).not.toBeDefined();

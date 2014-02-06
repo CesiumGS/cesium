@@ -1,11 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        './ModelAnimationWrap',
+        './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
-        ModelAnimationWrap,
+        ModelAnimationLoop,
         ModelAnimationState) {
     "use strict";
 
@@ -104,12 +104,12 @@ define([
         /**
          * Determines if and how the animation is looped.
          *
-         * @type {ModelAnimationWrap}
-         * @default {@link ModelAnimationWrap.CLAMP}
+         * @type {ModelAnimationLoop}
+         * @default {@link ModelAnimationLoop.CLAMP}
          *
          * @readonly
          */
-        this.wrap = defaultValue(options.wrap, ModelAnimationWrap.CLAMP);
+        this.wrap = defaultValue(options.wrap, ModelAnimationLoop.CLAMP);
 
         /**
          * The event fired when this animation is started.  This can be used, for

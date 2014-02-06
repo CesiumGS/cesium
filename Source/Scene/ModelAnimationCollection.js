@@ -8,7 +8,7 @@ define([
         '../Core/Math',
         '../Core/Event',
         '../Core/JulianDate',
-        './ModelAnimationWrap',
+        './ModelAnimationLoop',
         './ModelAnimationState',
         './ModelAnimation'
     ], function(
@@ -20,7 +20,7 @@ define([
         CesiumMath,
         Event,
         JulianDate,
-        ModelAnimationWrap,
+        ModelAnimationLoop,
         ModelAnimationState,
         ModelAnimation) {
     "use strict";
@@ -95,7 +95,7 @@ define([
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
-     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] Determines if and how the animation is looped.
+     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.CLAMP] Determines if and how the animation is looped.
      * @param {Event} [options.start=undefined] The event fired when the animation is started.
      * @param {Event} [options.update=undefined] The event fired when on each frame when the animation is updated.
      * @param {Event} [options.stop=undefined] The event fired when the animation is stopped.
@@ -135,7 +135,7 @@ define([
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
      *   speedup : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
-     *   wrap : ModelAnimationWrap.REPEAT,     // Loop the animation
+     *   wrap : ModelAnimationLoop.REPEAT,     // Loop the animation
      *   start : start,
      *   update : update,
      *   stop : stop
@@ -184,7 +184,7 @@ define([
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
-     * @param {ModelAnimationWrap} [options.wrap=ModelAnimationWrap.CLAMP] Determines if and how the animations are looped.
+     * @param {ModelAnimationLoop} [options.wrap=ModelAnimationLoop.CLAMP] Determines if and how the animations are looped.
      * @param {Event} [options.start=undefined] The event fired when each animation is started.
      * @param {Event} [options.update=undefined] The event fired when on each frame when each animation is updated.
      * @param {Event} [options.stop=undefined] The event fired when each animation is stopped.
@@ -197,7 +197,7 @@ define([
      * @example
      * model.activeAnimations.addAll({
      *   speedup : 0.5,                        // Play at half-speed
-     *   wrap : ModelAnimationWrap.REPEAT      // Loop the animations
+     *   wrap : ModelAnimationLoop.REPEAT      // Loop the animations
      * });
      */
     ModelAnimationCollection.prototype.addAll = function(options) {
@@ -387,8 +387,8 @@ define([
             // * we did not reach a user-provided stop time.
             var play = pastStartTime &&
                        ((delta <= 1.0) ||
-                        ((scheduledAnimation.wrap === ModelAnimationWrap.REPEAT) ||
-                         (scheduledAnimation.wrap === ModelAnimationWrap.MIRRORED_REPEAT))) &&
+                        ((scheduledAnimation.wrap === ModelAnimationLoop.REPEAT) ||
+                         (scheduledAnimation.wrap === ModelAnimationLoop.MIRRORED_REPEAT))) &&
                        (!defined(stopTime) || sceneTime.lessThanOrEquals(stopTime));
 
             if (play) {
@@ -402,9 +402,9 @@ define([
                 }
 
                 // Trunicate to [0.0, 1.0] for repeating animations
-                if (scheduledAnimation.wrap === ModelAnimationWrap.REPEAT) {
+                if (scheduledAnimation.wrap === ModelAnimationLoop.REPEAT) {
                     delta = delta - Math.floor(delta);
-                } else if (scheduledAnimation.wrap === ModelAnimationWrap.MIRRORED_REPEAT) {
+                } else if (scheduledAnimation.wrap === ModelAnimationLoop.MIRRORED_REPEAT) {
                     var floor = Math.floor(delta);
                     var fract = delta - floor;
                     // When even use (1.0 - fract) to mirror repeat
