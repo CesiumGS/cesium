@@ -40,7 +40,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
 
-## [Developer Certificate of Origin](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md)
-* [Kyle Linden](https://github.com/klinden)
-
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
