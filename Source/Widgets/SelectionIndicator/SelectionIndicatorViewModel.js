@@ -59,6 +59,7 @@ define([
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
+        this._scale = 1;
 
         /**
          * Gets or sets the world position of the object for which to display the selection indicator.
@@ -67,24 +68,12 @@ define([
         this.position = undefined;
 
         /**
-         * Gets or sets the scale of the indicator relative to its default size.
-         * @type {Number}
-         */
-        this.scale = 1;
-
-        /**
-         * Gets or sets the rotation angle of the indicator, in degrees.
-         * @type {Number}
-         */
-        this.rotation = 0;
-
-        /**
          * Gets or sets the visibility of the selection indicator.
          * @type {Boolean}
          */
         this.showSelection = false;
 
-        knockout.track(this, ['position', '_screenPositionX', '_screenPositionY', 'scale', 'rotation', 'showSelection']);
+        knockout.track(this, ['position', '_screenPositionX', '_screenPositionY', '_scale', 'showSelection']);
 
         /**
          * Gets the visibility of the position indicator.  This can be false even if an
@@ -100,7 +89,7 @@ define([
 
         knockout.defineProperty(this, '_transform', {
             get : function() {
-                return 'rotate(' + (this.rotation) + ') scale(' + (this.scale) + ')';
+                return 'scale(' + (this._scale) + ')';
             }
         });
     };
@@ -143,7 +132,7 @@ define([
             duration : 800,
             easingFunction : Tween.Easing.Exponential.Out,
             onUpdate : function (value) {
-                viewModel.scale = value.scale;
+                viewModel._scale = value.scale;
             }
         });
     };
@@ -156,7 +145,7 @@ define([
         var viewModel = this;
         this._animationCollection.add({
             startValue : {
-                scale : viewModel.scale
+                scale : viewModel._scale
             },
             stopValue : {
                 scale : 1.5
@@ -164,7 +153,7 @@ define([
             duration : 800,
             easingFunction : Tween.Easing.Exponential.Out,
             onUpdate : function (value) {
-                viewModel.scale = value.scale;
+                viewModel._scale = value.scale;
             }
         });
     };
