@@ -3,6 +3,7 @@ defineSuite([
          'Scene/Model',
          'Specs/createScene',
          'Specs/destroyScene',
+         'Core/defined',
          'Core/defaultValue',
          'Core/Math',
          'Core/Cartesian2',
@@ -19,6 +20,7 @@ defineSuite([
          Model,
          createScene,
          destroyScene,
+         defined,
          defaultValue,
          CesiumMath,
          Cartesian2,
@@ -674,15 +676,6 @@ defineSuite([
     });
 
     it('Animates and renders', function() {
-        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
-        var animations = animBoxesModel.activeAnimations;
-
-        var a = animations.add({
-            name : 'animation_1',
-            startTime : time,
-            update : updateEvent
-        });
-
         var node = animBoxesModel.getNode('Geometry-mesh020Node');
         var matrix;
 
@@ -691,6 +684,14 @@ defineSuite([
             // Verify target node transform changes at each animation update
             expect(!defined(matrix) || !Matrix4.equals(matrix, node.matrix)).toEqual(true);
             matrix = Matrix4.clone(node.matrix);
+        });
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            update : updateEvent
         });
 
         animBoxesModel.zoomTo();
