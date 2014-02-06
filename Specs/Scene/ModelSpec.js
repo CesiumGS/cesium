@@ -721,4 +721,26 @@ defineSuite([
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         riggedFigureModel.show = false;
     });
+
+    it('renders riggedFigure with animation (skinning)', function() {
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = riggedFigureModel.activeAnimations;
+        animations.addAll({
+            startTime : time
+        });
+
+        riggedFigureModel.zoomTo();
+
+        for (var i = 0; i < 6; ++i) {
+            var t = time.addSeconds(0.25 * i);
+            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+
+            riggedFigureModel.show = true;
+            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+            riggedFigureModel.show = false;
+        }
+
+        animations.removeAll();
+        riggedFigureModel.show = false;
+    });
 }, 'WebGL');
