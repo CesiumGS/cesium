@@ -1,5 +1,6 @@
 /*global define*/
 define(['../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
@@ -7,6 +8,7 @@ define(['../Core/Color',
         './Property'
     ], function(
         Color,
+        defaultValue,
         defined,
         defineProperties,
         Event,
@@ -23,7 +25,7 @@ define(['../Core/Color',
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = new ConstantProperty(color);
+        this.color = new ConstantProperty(defaultValue(color, Color.WHITE));
     };
 
     defineProperties(ColorMaterialProperty.prototype, {
