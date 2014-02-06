@@ -600,6 +600,70 @@ defineSuite([
         animBoxesModel.show = false;
     });
 
+    it('Animates with REPEAT', function() {
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            wrap : ModelAnimationLoop.REPEAT,
+            update : updateEvent
+        });
+
+        animBoxesModel.show = true;
+        for (var i = 0; i < 8; ++i) {
+            scene.renderForSpecs(time.addSeconds(i));
+        }
+
+        expect(spyUpdate.calls.length).toEqual(8);
+        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[4].args[2]).toEqualEpsilon(0.291, CesiumMath.EPSILON3); // Repeat with duration of ~3.7
+        expect(spyUpdate.calls[5].args[2]).toEqualEpsilon(1.291, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[6].args[2]).toEqualEpsilon(2.291, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[7].args[2]).toEqualEpsilon(3.291, CesiumMath.EPSILON3);
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
+    it('Animates with MIRRORED_REPEAT', function() {
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            wrap : ModelAnimationLoop.MIRRORED_REPEAT,
+            update : updateEvent
+        });
+
+        animBoxesModel.show = true;
+        for (var i = 0; i < 8; ++i) {
+            scene.renderForSpecs(time.addSeconds(i));
+        }
+
+        expect(spyUpdate.calls.length).toEqual(8);
+        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(2.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[4].args[2]).toEqualEpsilon(3.416, CesiumMath.EPSILON3); // Mirror repeat with duration of 3.6
+        expect(spyUpdate.calls[5].args[2]).toEqualEpsilon(2.416, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[6].args[2]).toEqualEpsilon(1.416, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[7].args[2]).toEqualEpsilon(0.416, CesiumMath.EPSILON3);
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads riggedFigure', function() {
