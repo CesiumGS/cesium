@@ -97,9 +97,7 @@ define([
      * @see DynamicConeVisualizer
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);

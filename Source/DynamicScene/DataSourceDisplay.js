@@ -13,7 +13,7 @@ define([
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './PolygonGeometryUpdater',
-        './DynamicPolylineVisualizer',
+        './PolylineGeometryUpdater',
         './DynamicPyramidVisualizer',
         './DynamicVectorVisualizer',
         './GeometryVisualizer',
@@ -32,7 +32,7 @@ define([
         DynamicPathVisualizer,
         DynamicPointVisualizer,
         PolygonGeometryUpdater,
-        DynamicPolylineVisualizer,
+        PolylineGeometryUpdater,
         DynamicPyramidVisualizer,
         DynamicVectorVisualizer,
         GeometryVisualizer,
@@ -54,7 +54,7 @@ define([
     }, function(scene) {
         return new GeometryVisualizer(PolygonGeometryUpdater, scene);
     }, function(scene) {
-        return new DynamicPolylineVisualizer(scene);
+        return new GeometryVisualizer(PolylineGeometryUpdater, scene);
     }, function(scene) {
         return new DynamicVectorVisualizer(scene);
     }, function(scene) {

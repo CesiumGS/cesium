@@ -51,8 +51,6 @@ define([
      * @see DynamicConeVisualizerUsingCustomSensorr
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolylineVisualizer
-     *
      */
     var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);

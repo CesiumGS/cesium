@@ -61,9 +61,7 @@ define([
      * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicBillboardVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);

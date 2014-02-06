@@ -303,15 +303,14 @@ define(['../Core/Color',
         }
 
         var dynamicObject = geometryUpdater._dynamicObject;
-        var show = dynamicObject.show;
+        var ellipsoid = dynamicObject.ellipsoid;
+        var show = ellipsoid.show;
 
         if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             return;
         }
 
         var options = this._options;
-        var ellipsoid = dynamicObject.ellipsoid;
-
         var position = dynamicObject.position;
         var orientation = dynamicObject.orientation;
         var radii = ellipsoid.radii;

@@ -296,15 +296,14 @@ define(['../Core/Color',
         }
 
         var dynamicObject = geometryUpdater._dynamicObject;
-        var show = dynamicObject.show;
+        var polygon = dynamicObject.polygon;
+        var show = polygon.show;
 
         if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             return;
         }
 
         var options = this._options;
-        var polygon = dynamicObject.polygon;
-
         var vertexPositions = dynamicObject.vertexPositions;
         var perPositionHeight = polygon.perPositionHeight;
         var height = polygon.height;

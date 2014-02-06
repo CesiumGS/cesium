@@ -85,7 +85,6 @@ define(['../Core/defined',
      * @see DynamicConeVisualizerUsingCustomSensorr
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      */
     var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {

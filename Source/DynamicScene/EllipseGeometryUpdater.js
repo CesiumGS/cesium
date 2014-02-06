@@ -306,14 +306,14 @@ define(['../Core/Color',
         }
 
         var dynamicObject = geometryUpdater._dynamicObject;
-        var show = dynamicObject.show;
+        var ellipse = dynamicObject.ellipse;
+        var show = ellipse.show;
 
         if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
             return;
         }
 
         var options = this._options;
-        var ellipse = dynamicObject.ellipse;
 
         var position = dynamicObject.position;
         var semiMajorAxis = ellipse.semiMajorAxis;
