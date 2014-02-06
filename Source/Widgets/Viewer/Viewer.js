@@ -25,7 +25,8 @@ define([
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
-        '../Timeline/Timeline'
+        '../Timeline/Timeline',
+        '../../ThirdParty/knockout'
     ], function(
         defaultValue,
         defined,
@@ -52,7 +53,8 @@ define([
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline) {
+        Timeline,
+        knockout) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -119,7 +121,7 @@ define([
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Boolean} [options.automaticallyTrackFirstDataSourceClock=true] If true, this widget will automatically track the clock settings of the first DataSource that is added, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
+     * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
@@ -344,33 +346,68 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        function setClockFromDataSource(dataSource) {
-            var dataSourceClock = dataSource.getClock();
-            if (defined(dataSourceClock)) {
-                dataSourceClock.getValue(clock);
-                if (defined(timeline)) {
-                    timeline.updateFromClock();
-                    timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+        /**
+         * Gets or sets the data source to track with the viewer's clock.
+         * @type {DataSource}
+         */
+        this.clockTrackedDataSource = undefined;
+
+        knockout.track(this, ['clockTrackedDataSource']);
+
+        this._dataSourceChangedListeners = {};
+        this._knockoutSubscriptions = [];
+        var automaticallyTrackDataSourceClocks = defaultValue(options.automaticallyTrackDataSourceClocks, true);
+        var that = this;
+
+        function trackDataSourceClock(dataSource) {
+            if (defined(dataSource)) {
+                var dataSourceClock = dataSource.getClock();
+                if (defined(dataSourceClock)) {
+                    dataSourceClock.getValue(clock);
+                    if (defined(timeline)) {
+                        timeline.updateFromClock();
+                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+                    }
                 }
             }
         }
 
-        var trackedDataSource;
-        var trackedDataSourceChangedEventRemovalFunction;
+        this._knockoutSubscriptions.push(subscribeAndEvaluate(this, 'clockTrackedDataSource', function(value) {
+            trackDataSourceClock(value);
+        }));
 
-        function trackDataSourceClock(dataSource) {
-            if (defined(trackedDataSourceChangedEventRemovalFunction)) {
-                trackedDataSourceChangedEventRemovalFunction();
-                trackedDataSourceChangedEventRemovalFunction = undefined;
+        var onDataSourceChanged = function(dataSource) {
+            if (this.clockTrackedDataSource === dataSource) {
+                trackDataSourceClock(dataSource);
             }
-            trackedDataSource = undefined;
+        };
 
-            if (defined(dataSource)) {
-                setClockFromDataSource(dataSource);
-                trackedDataSourceChangedEventRemovalFunction = eventHelper.add(dataSource.getChangedEvent(), setClockFromDataSource);
-                trackedDataSource = dataSource;
+        var onDataSourceAdded = function(dataSourceCollection, dataSource) {
+            if (automaticallyTrackDataSourceClocks) {
+                that.clockTrackedDataSource = dataSource;
             }
-        }
+            var id = dataSource.getDynamicObjectCollection().id;
+            var removalFunc = eventHelper.add(dataSource.getChangedEvent(), onDataSourceChanged);
+            that._dataSourceChangedListeners[id] = removalFunc;
+        };
+
+        var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
+            var resetClock = (that.clockTrackedDataSource === dataSource);
+            var id = dataSource.getDynamicObjectCollection().id;
+            that._dataSourceChangedListeners[id]();
+            that._dataSourceChangedListeners[id] = undefined;
+            if (resetClock) {
+                var numDataSources = dataSourceCollection.getLength();
+                if (automaticallyTrackDataSourceClocks && numDataSources > 0) {
+                    that.clockTrackedDataSource = dataSourceCollection.get(numDataSources - 1);
+                } else {
+                    that.clockTrackedDataSource = undefined;
+                }
+            }
+        };
+
+        eventHelper.add(dataSourceCollection.dataSourceAdded, onDataSourceAdded);
+        eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceRemoved);
 
         //DataSourceBrowser
         var dataSourceBrowser;
@@ -379,29 +416,9 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             dataSourceBrowserContainer.className = 'cesium-viewer-dataSourceBrowserContainer';
             viewerContainer.appendChild(dataSourceBrowserContainer);
             dataSourceBrowser = new DataSourceBrowser(dataSourceBrowserContainer, dataSourceCollection);
-            eventHelper.add(dataSourceBrowser.viewModel.onClockSelected, trackDataSourceClock);
-        }
-
-        if (defaultValue(options.automaticallyTrackFirstDataSourceClock, true)) {
-            var onDataSourceAdded = function(dataSourceCollection, dataSource) {
-                if (dataSourceCollection.getLength() === 1) {
-                    if (defined(dataSourceBrowser)) {
-                        dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
-                    } else {
-                        trackDataSourceClock(dataSource);
-                    }
-                }
-            };
-
-            var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-                if (trackedDataSource === dataSource) {
-                    // stop tracking
-                    trackDataSourceClock(undefined);
-                }
-            };
-
-            eventHelper.add(dataSourceCollection.dataSourceAdded, onDataSourceAdded);
-            eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceAdded);
+            eventHelper.add(dataSourceBrowser.viewModel.onClockSelected, function(dataSource) {
+                that.clockTrackedDataSource = dataSource;
+            });
         }
 
         this._container = container;
@@ -840,6 +857,12 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
+        var i;
+        var numSubscriptions = this._knockoutSubscriptions.length;
+        for (i = 0; i < numSubscriptions; i++) {
+            this._knockoutSubscriptions[i].dispose();
+        }
+
         this._container.removeChild(this._element);
         this._element.removeChild(this._toolbar);
 

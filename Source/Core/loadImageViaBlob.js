@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './loadBlob',
-        './loadImage'
+        './loadImage',
+        '../ThirdParty/when'
     ], function(
         loadBlob,
-        loadImage) {
+        loadImage,
+        when) {
     "use strict";
 
     var dataUriRegex = /^data:/;
@@ -56,9 +58,9 @@ define([
                 image.blob = blob;
                 window.URL.revokeObjectURL(blobUrl);
                 return image;
-            }, function(e) {
+            }, function(error) {
                 window.URL.revokeObjectURL(blobUrl);
-                return e;
+                return when.reject(error);
             });
         });
     };
