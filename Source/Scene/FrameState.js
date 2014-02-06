@@ -47,14 +47,6 @@ define([
          */
         this.time = undefined;
 
-        /**
-         * The scene's current time at the previous frame.
-         *
-         * @type {JulianDate}
-         * @default undefined
-         */
-        this.previousTime = undefined;
-
         this.scene2D = {
             /**
              * The projection to use in 2D mode.

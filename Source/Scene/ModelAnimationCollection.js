@@ -64,6 +64,7 @@ define([
 
         this._model = model;
         this._scheduledAnimations = [];
+        this._previousTime = undefined;
     };
 
     defineProperties(ModelAnimationCollection.prototype, {
@@ -348,10 +349,11 @@ define([
      * @private
      */
     ModelAnimationCollection.prototype.update = function(frameState) {
-        if (JulianDate.equals(frameState.time, frameState.previousTime)) {
+        if (JulianDate.equals(frameState.time, this._previousTime)) {
             // Animations are currently only time-dependent so do not animate when paused or picking
             return false;
         }
+        this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
 
         var animationOccured = false;
         var sceneTime = frameState.time;

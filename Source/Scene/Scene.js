@@ -436,13 +436,11 @@ define([
     function updateFrameState(scene, frameNumber, time) {
         var camera = scene._camera;
         var frameState = scene._frameState;
-        var previousTime = defaultValue(frameState.time, time);
 
         frameState.mode = scene.mode;
         frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
         frameState.frameNumber = frameNumber;
-        frameState.previousTime = JulianDate.clone(previousTime, frameState.previousTime);
         frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
