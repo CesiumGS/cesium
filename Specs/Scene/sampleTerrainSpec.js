@@ -13,7 +13,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var terrainProvider = new CesiumTerrainProvider({
-        url : 'http://cesium.agi.com/smallterrain'
+        url : 'http://cesiumjs.org/smallterrain'
     });
 
     it('queries heights', function() {
@@ -96,14 +96,14 @@ defineSuite([
 
         expect(function() {
             sampleTerrain(undefined, 11, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             sampleTerrain(terrainProvider, undefined, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             sampleTerrain(terrainProvider, 11, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -16,8 +16,8 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
-         'Renderer/CommandLists',
          'Renderer/DrawCommand',
+         'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
          'Scene/BillboardCollection'
@@ -38,8 +38,8 @@ defineSuite([
          PrimitiveType,
          BlendingState,
          BufferUsage,
-         CommandLists,
          DrawCommand,
+         Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
          BillboardCollection) {
@@ -61,10 +61,10 @@ defineSuite([
         primitives = scene.getPrimitives();
 
         var camera = scene.getCamera();
-        camera.position = Cartesian3.ZERO;
+        camera.position = new Cartesian3();
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-        camera.up = Cartesian3.UNIT_Y;
-        camera.right = Cartesian3.UNIT_X;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
 
         camera.frustum.near = 1.0;
         camera.frustum.far = 1000000000.0;
@@ -222,7 +222,7 @@ defineSuite([
             };
         };
 
-        Primitive.prototype.update = function(context, frameState, commandLists) {
+        Primitive.prototype.update = function(context, frameState, commandList) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -245,14 +245,14 @@ defineSuite([
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 }));
-                var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+                var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = context.createVertexArrayFromGeometry({
                     geometry: geometry,
-                    attributeIndices: attributeIndices,
+                    attributeLocations: attributeLocations,
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });
@@ -267,10 +267,9 @@ defineSuite([
             command.modelMatrix = this._modelMatrix;
             command.executeInClosestFrustum = closestFrustum;
             command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
+            command.pass = Pass.OPAQUE;
 
-            var commandList = new CommandLists();
-            commandList.opaqueList.push(command);
-            commandLists.push(commandList);
+            commandList.push(command);
         };
 
         Primitive.prototype.destroy = function() {

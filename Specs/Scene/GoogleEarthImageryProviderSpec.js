@@ -49,7 +49,7 @@ defineSuite([
                 channel: 1234
             });
         }
-        expect(constructWithoutServer).toThrow();
+        expect(constructWithoutServer).toThrowDeveloperError();
     });
 
     it('constructor throws when channel is not specified', function() {
@@ -58,7 +58,7 @@ defineSuite([
                 url: 'http://invalid.localhost'
             });
         }
-        expect(constructWithoutChannel).toThrow();
+        expect(constructWithoutChannel).toThrowDeveloperError();
     });
 
     it('can provide a root tile', function() {

@@ -52,9 +52,11 @@ define([
      * @see SceneMode
      */
     var SceneTransitioner = function(scene, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * Gets or sets the amount of time, in milliseconds, for
@@ -227,9 +229,12 @@ define([
      * @exception {DeveloperError} completeMorph can only be called during a transition.
      */
     SceneTransitioner.prototype.completeMorph = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this._completeMorph)) {
             throw new DeveloperError('completeMorph can only be called while morphing');
         }
+        //>>includeEnd('debug');
+
         this._completeMorph();
     };
 
@@ -346,18 +351,21 @@ define([
         return destroyObject(this);
     };
 
+    var scratchPos = new Cartesian3();
+    var scratchDir = new Cartesian3();
+    var scratchUp = new Cartesian3();
     function setCameraTransform(camera, transform) {
-        var pos = new Cartesian4(camera.position.x, camera.position.y, camera.position.z, 1.0);
-        var dir = new Cartesian4(camera.direction.x, camera.direction.y, camera.direction.z, 0.0);
-        var up = new Cartesian4(camera.up.x, camera.up.y, camera.up.z, 0.0);
+        var pos = Cartesian3.clone(camera.position, scratchPos);
+        var dir = Cartesian3.clone(camera.direction, scratchDir);
+        var up = Cartesian3.clone(camera.up, scratchUp);
 
         var frame = Matrix4.multiply(Matrix4.inverseTransformation(transform), camera.transform);
         camera.transform = Matrix4.clone(transform);
 
-        camera.position = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, pos));
-        camera.direction = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, dir));
-        camera.up = Cartesian3.fromCartesian4(Matrix4.multiplyByVector(frame, up));
-        camera.right = Cartesian3.cross(camera.direction, camera.up);
+        Matrix4.multiplyByPoint(frame, pos, camera.position);
+        Matrix4.multiplyByPointAsVector(frame, dir, camera.direction);
+        Matrix4.multiplyByPointAsVector(frame, up, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
     }
 
     function createMorphHandler(transitioner, completeMorphFunction) {
@@ -688,6 +696,7 @@ define([
                 camera.position = endPos;
                 camera.direction = endDir;
                 camera.up = endUp;
+                camera.right = Cartesian3.cross(endDir, endUp, camera.right);
             }
         });
         transitioner._currentAnimations.push(animation);
@@ -762,6 +771,7 @@ define([
             camera.position = Cartesian3.clone(transitioner._camera3D.position);
             camera.direction = Cartesian3.clone(transitioner._camera3D.direction);
             camera.up = Cartesian3.clone(transitioner._camera3D.up);
+            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);
@@ -785,6 +795,7 @@ define([
         camera.position = Cartesian3.clone(transitioner._camera2D.position);
         camera.direction = Cartesian3.clone(transitioner._camera2D.direction);
         camera.up = Cartesian3.clone(transitioner._camera2D.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
@@ -809,7 +820,7 @@ define([
             camera.position = Cartesian3.clone(transitioner._cameraCV.position);
             camera.direction = Cartesian3.clone(transitioner._cameraCV.direction);
             camera.up = Cartesian3.clone(transitioner._cameraCV.up);
-            camera.right = Cartesian3.cross(camera.direction, camera.up);
+            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);

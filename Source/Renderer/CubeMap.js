@@ -3,6 +3,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/defaultValue',
         '../Core/Math',
         './MipmapHint',
         './PixelDatatype',
@@ -14,6 +15,7 @@ define([
         defined,
         DeveloperError,
         destroyObject,
+        defaultValue,
         CesiumMath,
         MipmapHint,
         PixelDatatype,
@@ -149,22 +151,23 @@ define([
      * // minification when the cube map is sampled.
      * cubeMap.generateMipmap();
      * cubeMap.setSampler(context.createSampler({
-     *   minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+     *   minificationFilter : Cesium.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
      * }));
      */
     CubeMap.prototype.generateMipmap = function(hint) {
+        hint = defaultValue(hint, MipmapHint.DONT_CARE);
+
+        //>>includeStart('debug', pragmas.debug);
         if ((this._size > 1) && !CesiumMath.isPowerOfTwo(this._size)) {
             throw new DeveloperError('width and height must be a power of two to call generateMipmap().');
         }
-
-        hint = hint || MipmapHint.DONT_CARE;
         if (!MipmapHint.validate(hint)) {
             throw new DeveloperError('hint is invalid.');
         }
+        //>>includeEnd('debug');
 
         var gl = this._gl;
         var target = this._textureTarget;
-
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
@@ -219,7 +222,7 @@ define([
         gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
-        if (this._textureFilterAnisotropic) {
+        if (defined(this._textureFilterAnisotropic)) {
             gl.texParameteri(target, this._textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, sampler.maximumAnisotropy);
         }
         gl.bindTexture(target, null);

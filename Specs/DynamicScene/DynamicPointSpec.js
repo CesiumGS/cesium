@@ -85,6 +85,6 @@ defineSuite([
         var target = new DynamicPoint();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

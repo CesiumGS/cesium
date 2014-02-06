@@ -57,6 +57,6 @@ defineSuite([
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         expect(function() {
             ray.getPoint(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

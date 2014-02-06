@@ -52,7 +52,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicLabelVisualizer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor sets expected parameters and adds collection to scene.', function() {
@@ -69,7 +69,7 @@ defineSuite([
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {
@@ -151,6 +151,7 @@ defineSuite([
         label.scale = new ConstantProperty(12.5);
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
         visualizer.update(time);
 
@@ -173,6 +174,7 @@ defineSuite([
         expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
         expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
         expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
+        expect(l.getPixelOffsetScaleByDistance()).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -188,6 +190,7 @@ defineSuite([
         label.scale = new ConstantProperty(2.5);
         label.show = new ConstantProperty(true);
         label.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+        label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
         visualizer.update(time);
         expect(l.getPosition()).toEqual(testObject.position.getValue(time));
@@ -204,6 +207,7 @@ defineSuite([
         expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
         expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
         expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
+        expect(l.getPixelOffsetScaleByDistance()).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);

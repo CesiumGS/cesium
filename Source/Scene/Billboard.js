@@ -54,6 +54,7 @@ define([
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -61,11 +62,12 @@ define([
      *
      * @internalConstructor
      *
-     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
         options = defaultValue(options, EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
             throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
         }
@@ -73,13 +75,17 @@ define([
                 options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
+        if (defined(options.pixelOffsetScaleByDistance) &&
+                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+            throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+        }
+        //>>includeEnd('debug');
 
         this._show = defaultValue(options.show, true);
-
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
@@ -92,6 +98,7 @@ define([
         this._height = options.height;
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._id = options.id;
 
         this._pickId = undefined;
@@ -114,7 +121,8 @@ define([
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
-    Billboard.NUMBER_OF_PROPERTIES = 13;
+    var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
+    Billboard.NUMBER_OF_PROPERTIES = 14;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -162,9 +170,11 @@ define([
      * @see Billboard#getShow
      */
     Billboard.prototype.setShow = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (value !== this._show) {
             this._show = value;
@@ -203,7 +213,7 @@ define([
      *
      * @example
      * // Example 1. Set a billboard's position using a Cartesian3.
-     * b.setPosition(new Cartesian3(1.0, 2.0, 3.0));
+     * b.setPosition(new Cesium.Cartesian3(1.0, 2.0, 3.0));
      *
      * // Example 2. Set a billboard's position using an object literal.
      * b.setPosition({
@@ -213,9 +223,11 @@ define([
      * });
      */
     Billboard.prototype.setPosition = function(value) {
+        //>>includeStart('debug', pragmas.debug)
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var position = this._position;
         if (!Cartesian3.equals(position, value)) {
@@ -277,13 +289,29 @@ define([
      * @see Label#setPixelOffset
      */
     Billboard.prototype.setPixelOffset = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var pixelOffset = this._pixelOffset;
         if (!Cartesian2.equals(pixelOffset, value)) {
             Cartesian2.clone(value, pixelOffset);
+            makeDirty(this, PIXEL_OFFSET_INDEX);
+        }
+    };
+
+    Billboard.prototype._setTranslate = function(value) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        var translate = this._translate;
+        if (!Cartesian2.equals(translate, value)) {
+            Cartesian2.clone(value, translate);
             makeDirty(this, PIXEL_OFFSET_INDEX);
         }
     };
@@ -322,7 +350,7 @@ define([
      * // Set a billboard's scaleByDistance to scale by 1.5 when the
      * // camera is 1500 meters from the billboard and disappear as
      * // the camera distance approaches 8.0e6 meters.
-     * b.setScaleByDistance(new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
+     * b.setScaleByDistance(new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
      *
      * // Example 2.
      * // disable scaling by distance
@@ -333,9 +361,11 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (scale.far <= scale.near) {
             throw new DeveloperError('far distance must be greater than near distance.');
         }
+        //>>includeEnd('debug');
 
         makeDirty(this, SCALE_BY_DISTANCE_INDEX);
         this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
@@ -375,7 +405,7 @@ define([
      * // Set a billboard's translucency to 1.0 when the
      * // camera is 1500 meters from the billboard and disappear as
      * // the camera distance approaches 8.0e6 meters.
-     * b.setTranslucencyByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
+     * b.setTranslucencyByDistance(new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0));
      *
      * // Example 2.
      * // disable translucency by distance
@@ -386,12 +416,74 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (translucency.far <= translucency.near) {
             throw new DeveloperError('far distance must be greater than near distance.');
         }
+        //>>includeEnd('debug');
 
         makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
         this._translucencyByDistance = NearFarScalar.clone(translucency, this._translucencyByDistance);
+    };
+
+    /**
+     * Returns the near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @returns {NearFarScalar} The near/far pixel offset scaling values based on camera distance to the billboard
+     *
+     * @see Billboard#setPixelOffsetScaleByDistance
+     * @see Billboard#setPixelOffset
+     * @see Billboard#getPixelOffset
+     */
+    Billboard.prototype.getPixelOffsetScaleByDistance = function() {
+        return this._pixelOffsetScaleByDistance;
+    };
+
+    /**
+     * Sets near and far pixel offset scaling properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's pixel offset will be scaled between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the billboard's pixel offset scale remains clamped to the nearest bound.  If undefined,
+     * pixelOffsetScaleByDistance will be disabled.
+     *
+     * @memberof Billboard
+     *
+     * @param {NearFarScalar} pixelOffsetScale The configuration of near and far distances and their respective pixel offset scaling values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Billboard#getPixelOffsetScaleByDistance
+     * @see Billboard#setPixelOffset
+     * @see Billboard#getPixelOffset
+     *
+     * @example
+     * // Example 1.
+     * // Set a billboard's pixel offset scale to 0.0 when the
+     * // camera is 1500 meters from the billboard and scale pixel offset to 10.0 pixels
+     * // in the y direction the camera distance approaches 8.0e6 meters.
+     * b.setPixelOffset(new Cesium.Cartesian2(0.0, 1.0);
+     * b.setPixelOffsetScaleByDistance(new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0));
+     *
+     * // Example 2.
+     * // disable pixel offset by distance
+     * b.setPixelOffsetScaleByDistance(undefined);
+     */
+    Billboard.prototype.setPixelOffsetScaleByDistance = function(pixelOffsetScale) {
+        if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, pixelOffsetScale)) {
+            return;
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (pixelOffsetScale.far <= pixelOffsetScale.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+        //>>includeEnd('debug');
+
+        makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
+        this._pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScale, this._pixelOffsetScaleByDistance);
     };
 
     /**
@@ -441,9 +533,11 @@ define([
      * @see Billboard#getEyeOffset
      */
     Billboard.prototype.setEyeOffset = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var eyeOffset = this._eyeOffset;
         if (!Cartesian3.equals(eyeOffset, value)) {
@@ -484,13 +578,15 @@ define([
      *
      * @example
      * // Use a bottom, left origin
-     * b.setHorizontalOrigin(HorizontalOrigin.LEFT);
-     * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
+     * b.setHorizontalOrigin(Cesium.HorizontalOrigin.LEFT);
+     * b.setVerticalOrigin(Cesium.VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setHorizontalOrigin = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._horizontalOrigin !== value) {
             this._horizontalOrigin = value;
@@ -530,13 +626,15 @@ define([
      *
      * @example
      * // Use a bottom, left origin
-     * b.setHorizontalOrigin(HorizontalOrigin.LEFT);
-     * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
+     * b.setHorizontalOrigin(Cesium.HorizontalOrigin.LEFT);
+     * b.setVerticalOrigin(Cesium.VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setVerticalOrigin = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._verticalOrigin !== value) {
             this._verticalOrigin = value;
@@ -579,9 +677,11 @@ define([
      * @see Billboard#setImageIndex
      */
     Billboard.prototype.setScale = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._scale !== value) {
             this._scale = value;
@@ -610,9 +710,11 @@ define([
      * @see BillboardCollection#setTextureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof value !== 'number') {
             throw new DeveloperError('value is required and must be a number.');
         }
+        //>>includeEnd('debug');
 
         if (this._imageIndex !== value) {
             this._imageIndex = value;
@@ -678,9 +780,11 @@ define([
      * });
      */
     Billboard.prototype.setColor = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var color = this._color;
         if (!Color.equals(color, value)) {
@@ -718,9 +822,11 @@ define([
      * @see Billboard#setAlignedAxis
      */
     Billboard.prototype.setRotation = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         if (this._rotation !== value) {
             this._rotation = value;
@@ -761,7 +867,7 @@ define([
      * @example
      * // Example 1.
      * // Have the billboard up vector point north
-     * billboard.setAlignedAxis(Cartesian3.UNIT_Z);
+     * billboard.setAlignedAxis(Cesium.Cartesian3.UNIT_Z);
      *
      * // Example 2.
      * // Have the billboard point east.
@@ -770,12 +876,14 @@ define([
      *
      * // Example 3.
      * // Reset the aligned axis
-     * billboard.setAlignedAxis(Cartesian3.ZERO);
+     * billboard.setAlignedAxis(Cesium.Cartesian3.ZERO);
      */
     Billboard.prototype.setAlignedAxis = function(value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var axis = this._alignedAxis;
         if (!Cartesian3.equals(axis, value)) {
@@ -861,16 +969,20 @@ define([
         return this._id;
     };
 
-    var tempCartesian4 = new Cartesian4();
+    var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
-        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian4);
-        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian4);
+        Matrix4.multiplyByPoint(modelMatrix, position, tempCartesian3);
+        return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
+    var scracthMatrix4 = new Matrix4();
+    var scratchCartesian4 = new Cartesian4();
+    var scrachEyeOffset = new Cartesian3();
+    var scratchCartesian2 = new Cartesian2();
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = frameState.camera;
@@ -878,25 +990,25 @@ define([
         var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
-        var mv = Matrix4.multiply(view, modelMatrix);
-        var positionEC = Matrix4.multiplyByPoint(mv, position);
+        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scracthMatrix4);
+        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
 
         // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC));
+        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC, scrachEyeOffset), scrachEyeOffset);
         positionEC.x += eyeOffset.x + zEyeOffset.x;
         positionEC.y += eyeOffset.y + zEyeOffset.y;
         positionEC.z += zEyeOffset.z;
 
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC);
+        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC, new Cartesian2());
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
-        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale());
+        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale(), scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 
-        return new Cartesian2(positionWC.x, positionWC.y);
+        return positionWC;
     };
 
     /**
@@ -921,22 +1033,28 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
+    var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(billboardCollection)) {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
-
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
-
         if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
+        //>>includeEnd('debug');
+
+        // pixel offset for screenspace computation is the pixelOffset + screenspace translate
+        Cartesian2.clone(this._pixelOffset, tempPixelOffset);
+        Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, context, frameState);
     };
 
     /**
@@ -960,9 +1078,11 @@ define([
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
+               Cartesian2.equals(this._translate, other._translate) &&
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
                this._id === other._id;
     };
 

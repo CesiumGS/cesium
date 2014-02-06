@@ -1,24 +1,20 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Color',
         '../getElement',
-        '../subscribeAndEvaluate',
-        '../../ThirdParty/knockout'
+        '../subscribeAndEvaluate'
     ], function(
-        defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Color,
         getElement,
-        subscribeAndEvaluate,
-        knockout) {
+        subscribeAndEvaluate) {
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";
@@ -335,19 +331,18 @@ define([
      * Cesium.requestAnimationFrame(tick);
      */
     var Animation = function(container, viewModel) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-
         if (!defined(viewModel)) {
             throw new DeveloperError('viewModel is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
-
         this._viewModel = viewModel;
         this._container = container;
-
         this._centerX = 0;
         this._centerY = 0;
         this._defsElement = undefined;

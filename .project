@@ -32,7 +32,7 @@
 	</natures>
 	<filteredResources>
 		<filter>
-			<id>1348681628761</id>
+			<id>1391456479002</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -41,7 +41,7 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1348681628764</id>
+			<id>1391456479007</id>
 			<name></name>
 			<type>10</type>
 			<matcher>
@@ -50,12 +50,21 @@
 			</matcher>
 		</filter>
 		<filter>
-			<id>1348681628769</id>
+			<id>1391456479012</id>
 			<name></name>
 			<type>6</type>
 			<matcher>
 				<id>org.eclipse.ui.ide.multiFilter</id>
 				<arguments>1.0-name-matches-false-false-Cesium-*.zip</arguments>
+			</matcher>
+		</filter>
+		<filter>
+			<id>1391456479018</id>
+			<name></name>
+			<type>10</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-.git</arguments>
 			</matcher>
 		</filter>
 		<filter>

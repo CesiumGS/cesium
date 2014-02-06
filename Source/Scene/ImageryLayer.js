@@ -628,6 +628,10 @@ define([
                 return;
             }
 
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
+            }
+
             when(imagePromise, success, failure);
         }
 
@@ -811,9 +815,6 @@ define([
                 }
             };
 
-            reproject.framebuffer = context.createFramebuffer();
-            reproject.framebuffer.destroyAttachments = false;
-
             // We need a vertex array with close to one vertex per output texel because we're doing
             // the reprojection by computing texture coordinates in the vertex shader.
             // If we computed Web Mercator texture coordinate per-fragment instead, we could get away with only
@@ -851,7 +852,7 @@ define([
 
             reproject.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : reprojectGeometry,
-                attributeIndices : reprojectAttribInds,
+                attributeLocations : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
@@ -907,7 +908,14 @@ define([
         // understand exactly why this is.
         outputTexture.generateMipmap(MipmapHint.NICEST);
 
-        reproject.framebuffer.setColorTexture(outputTexture);
+        if (defined(reproject.framebuffer)) {
+            reproject.framebuffer.destroy();
+        }
+
+        reproject.framebuffer = context.createFramebuffer({
+            colorTextures : [outputTexture]
+        });
+        reproject.framebuffer.destroyAttachments = false;
 
         var command = new ClearCommand();
         command.color = Color.BLACK;
@@ -947,7 +955,7 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.getTilingScheme();
         var ellipsoid = tilingScheme.getEllipsoid();
-        var latitudeFactor = Math.cos(latitudeClosestToEquator);
+        var latitudeFactor = !(layer._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeExtent = tilingScheme.getExtent();
         var levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
 

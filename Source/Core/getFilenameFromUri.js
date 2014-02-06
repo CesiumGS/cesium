@@ -19,12 +19,14 @@ define(['./defined',
      *
      * @example
      * //fileName will be"simple.czml";
-     * var fileName = getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
+     * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
      */
     var getFilenameFromUri = function(uri) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');
         }
+        //>>includeEnd('debug');
 
         var uriObject = new Uri(uri);
         uriObject.normalize();

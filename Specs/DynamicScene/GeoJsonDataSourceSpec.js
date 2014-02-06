@@ -400,6 +400,21 @@ defineSuite([
         });
     });
 
+    it('Generates description', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(topoJson);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 2;
+        });
+        runs(function() {
+            var objects = dynamicObjectCollection.getObjects();
+            var polygon = objects[0];
+            expect(polygon.description).toBeDefined();
+        });
+    });
+
     it('Works with geometrycollection', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(geometryCollection);
@@ -530,21 +545,21 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown geometry', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(unknownGeometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.loadUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl raises error with invalud url', function() {

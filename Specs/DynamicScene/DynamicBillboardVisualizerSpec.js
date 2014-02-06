@@ -54,7 +54,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicBillboardVisualizer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor sets expected parameters and adds collection to scene.', function() {
@@ -71,7 +71,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {
@@ -155,6 +155,7 @@ defineSuite([
             billboard.height = new ConstantProperty(5);
             billboard.scaleByDistance = new ConstantProperty(new NearFarScalar());
             billboard.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+            billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
             visualizer.update(time);
 
@@ -177,6 +178,7 @@ defineSuite([
                     expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
                     expect(bb.getScaleByDistance()).toEqual(testObject.billboard.scaleByDistance.getValue(time));
                     expect(bb.getTranslucencyByDistance()).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
+                    expect(bb.getPixelOffsetScaleByDistance()).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
                 }
                 return bb.getShow(); //true once the image is loaded.
             });
@@ -198,6 +200,7 @@ defineSuite([
             billboard.height = new ConstantProperty(12);
             billboard.scaleByDistance = new ConstantProperty(new NearFarScalar());
             billboard.translucencyByDistance = new ConstantProperty(new NearFarScalar());
+            billboard.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar(1.0, 0.0, 3.0e9, 0.0));
 
             waitsFor(function() {
                 visualizer.update(time);
@@ -216,6 +219,7 @@ defineSuite([
                     expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
                     expect(bb.getScaleByDistance()).toEqual(testObject.billboard.scaleByDistance.getValue(time));
                     expect(bb.getTranslucencyByDistance()).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
+                    expect(bb.getPixelOffsetScaleByDistance()).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
                 }
                 return imageReady;
             });

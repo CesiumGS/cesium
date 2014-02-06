@@ -35,10 +35,10 @@ define([
     var PolylinePipeline = {};
 
     var wrapLongitudeInversMatrix = new Matrix4();
-    var wrapLongitudeOrigin = new Cartesian4();
-    var wrapLongitudeXZNormal = new Cartesian4();
+    var wrapLongitudeOrigin = new Cartesian3();
+    var wrapLongitudeXZNormal = new Cartesian3();
     var wrapLongitudeXZPlane = new Plane(Cartesian3.ZERO, 0.0);
-    var wrapLongitudeYZNormal = new Cartesian4();
+    var wrapLongitudeYZNormal = new Cartesian3();
     var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
@@ -112,11 +112,11 @@ define([
      * @see PolylineCollection
      *
      * @example
-     * var polylines = new PolylineCollection();
+     * var polylines = new Cesium.PolylineCollection();
      * var polyline = polylines.add(...);
      * var positions = polyline.getPositions();
      * var modelMatrix = polylines.modelMatrix;
-     * var segments = PolylinePipeline.wrapLongitude(positions, modelMatrix);
+     * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */
     PolylinePipeline.wrapLongitude = function(positions, modelMatrix) {
         var cartesians = [];
@@ -127,9 +127,9 @@ define([
             var inverseModelMatrix = Matrix4.inverseTransformation(modelMatrix, wrapLongitudeInversMatrix);
 
             var origin = Matrix4.multiplyByPoint(inverseModelMatrix, Cartesian3.ZERO, wrapLongitudeOrigin);
-            var xzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_Y, wrapLongitudeXZNormal);
+            var xzNormal = Matrix4.multiplyByPointAsVector(inverseModelMatrix, Cartesian3.UNIT_Y, wrapLongitudeXZNormal);
             var xzPlane = Plane.fromPointNormal(origin, xzNormal, wrapLongitudeXZPlane);
-            var yzNormal = Matrix4.multiplyByVector(inverseModelMatrix, Cartesian4.UNIT_X, wrapLongitudeYZNormal);
+            var yzNormal = Matrix4.multiplyByPointAsVector(inverseModelMatrix, Cartesian3.UNIT_X, wrapLongitudeYZNormal);
             var yzPlane = Plane.fromPointNormal(origin, yzNormal, wrapLongitudeYZPlane);
 
             var count = 1;
@@ -189,15 +189,17 @@ define([
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var positions = [
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(2.0, 2.0, 2.0)];
-     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = Cesium.PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions )) {
             throw new DeveloperError('positions is required.');
         }
+        //>>includeEnd('debug');
 
         var length = positions.length;
         if (length < 2) {
@@ -234,17 +236,20 @@ define([
      *
      * @example
      * var positions = ellipsoid.cartographicArrayToCartesianArray([
-     *      Cartographic.fromDegrees(-105.0, 40.0),
-     *      Cartographic.fromDegrees(-100.0, 38.0),
-     *      Cartographic.fromDegrees(-105.0, 35.0),
-     *      Cartographic.fromDegrees(-100.0, 32.0)
+     *      Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+     *      Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+     *      Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+     *      Cesium.Cartographic.fromDegrees(-100.0, 32.0)
      * ]));
-     * var surfacePositions = PolylinePipeline.scaleToSurface(positions);
+     * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('positions is required');
         }
+        //>>includeEnd('debug');
+
         granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -288,17 +293,19 @@ define([
      * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
      * var heights = [1000, 1000, 2000, 2000];
      *
-     * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
+     * var raisedPositions = Cesium.PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
+    PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
         if (!defined(height)) {
             throw new DeveloperError('height must be defined');
         }
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        //>>includeEnd('debug');
 
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var length = positions.length;
         var i;
         var p = scaleP;

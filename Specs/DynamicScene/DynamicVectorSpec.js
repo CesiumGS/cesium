@@ -78,6 +78,6 @@ defineSuite([
         var target = new DynamicVector();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -626,6 +626,117 @@ defineSuite([
         expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON15);
     });
 
+    it('fastSlerp works without a result parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        expect(Quaternion.fastSlerp(start, end, 0.0)).toEqual(start);
+        expect(Quaternion.fastSlerp(start, end, 1.0)).toEqual(end);
+        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('fastSlerp works with a result parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        var result = new Quaternion();
+        var returnedResult = Quaternion.fastSlerp(start, end, 0.5, result);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+        expect(result).toBe(returnedResult);
+    });
+
+    it('fastSlerp works with a result parameter that is an input parameter', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, Math.sin(Math.PI / 8.0), Math.cos(Math.PI / 8.0));
+
+        var returnedResult = Quaternion.fastSlerp(start, end, 0.5, start);
+        expect(start).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+        expect(start).toBe(returnedResult);
+    });
+
+    it('fastSlerp works with obtuse angles', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, -1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+        var expected = new Quaternion(0.0, 0.0, -Math.sin(Math.PI / 8.0), -Math.cos(Math.PI / 8.0));
+        expect(Quaternion.fastSlerp(start, end, 0.5)).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('fastSlerp vs slerp', function() {
+        var start = Quaternion.normalize(new Quaternion(0.0, 0.0, 0.0, 1.0));
+        var end = new Quaternion(0.0, 0.0, Math.sin(CesiumMath.PI_OVER_FOUR), Math.cos(CesiumMath.PI_OVER_FOUR));
+
+        var expected = Quaternion.slerp(start, end, 0.25);
+        var actual = Quaternion.fastSlerp(start, end, 0.25);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        expected = Quaternion.slerp(start, end, 0.5);
+        actual = Quaternion.fastSlerp(start, end, 0.5);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        expected = Quaternion.slerp(start, end, 0.75);
+        actual = Quaternion.fastSlerp(start, end, 0.75);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
+    it('fastSquad works without a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+        var q4 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 0.0)).toEqualEpsilon(q1, CesiumMath.EPSILON6);
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(q2, CesiumMath.EPSILON6);
+
+        var s3 = Quaternion.innerQuadrangle(q2, q3, q4);
+        expect(Quaternion.fastSquad(q2, q3, s2, s3, 0.0)).toEqualEpsilon(q2, CesiumMath.EPSILON6);
+        expect(Quaternion.fastSquad(q2, q3, s2, s3, 1.0)).toEqualEpsilon(q3, CesiumMath.EPSILON6);
+
+        expect(Quaternion.fastSquad(q1, q2, s1, s2, 1.0)).toEqualEpsilon(Quaternion.fastSquad(q2, q3, s2, s3, 0.0), CesiumMath.EPSILON6);
+    });
+
+    it('fastSquad works with a result parameter', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+
+        var squadResult = new Quaternion();
+        var squad = Quaternion.fastSquad(q1, q2, s1, s2, 0.0, squadResult);
+        expect(squad).toBe(squadResult);
+        expect(squad).toEqualEpsilon(q1, CesiumMath.EPSILON6);
+    });
+
+    it('fastSquad vs squad', function() {
+        var q0 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, 0.0);
+        var q1 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var q2 = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var q3 = Quaternion.fromAxisAngle(Cartesian3.UNIT_X, -CesiumMath.PI_OVER_FOUR);
+
+        var s1 = Quaternion.innerQuadrangle(q0, q1, q2);
+        var s2 = Quaternion.innerQuadrangle(q1, q2, q3);
+
+        var actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.25);
+        var expected = Quaternion.squad(q1, q2, s1, s2, 0.25);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.5);
+        expected = Quaternion.squad(q1, q2, s1, s2, 0.5);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+
+        actual = Quaternion.fastSquad(q1, q2, s1, s2, 0.75);
+        expected = Quaternion.squad(q1, q2, s1, s2, 0.75);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
+    });
+
     it('equals', function() {
         var quaternion = new Quaternion(1.0, 2.0, 3.0, 4.0);
         expect(Quaternion.equals(quaternion, new Quaternion(1.0, 2.0, 3.0, 4.0))).toEqual(true);
@@ -659,19 +770,19 @@ defineSuite([
     it('fromAxisAngle throws with undefined axis', function() {
         expect(function() {
             Quaternion.fromAxisAngle(undefined, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromAxisAngle throws with non-numeric angle', function() {
         expect(function() {
             Quaternion.fromAxisAngle(Cartesian3.UNIT_X, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromRotationMatrix throws with undefined matrix', function() {
         expect(function() {
             Quaternion.fromRotationMatrix(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static clone returns undefined with no parameter', function() {
@@ -681,121 +792,121 @@ defineSuite([
     it('static conjugate throws with no parameter', function() {
         expect(function() {
             Quaternion.conjugate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static magnitudeSquared throws with no parameter', function() {
         expect(function() {
             Quaternion.magnitudeSquared();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static magnitude throws with no parameter', function() {
         expect(function() {
             Quaternion.magnitude();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static normalize throws with no parameter', function() {
         expect(function() {
             Quaternion.normalize();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static inverse throws with no parameter', function() {
         expect(function() {
             Quaternion.inverse();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static dot throws with no left parameter', function() {
         expect(function() {
             Quaternion.dot(undefined, new Quaternion());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static dot throws with no right parameter', function() {
         expect(function() {
             Quaternion.dot(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no right parameter', function() {
         expect(function() {
             Quaternion.multiply(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiply throws with no left parameter', function() {
         expect(function() {
             Quaternion.multiply(undefined, new Quaternion());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static add throws with no left parameter', function() {
         expect(function() {
             Quaternion.add(undefined, new Quaternion());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static add throws with no right parameter', function() {
         expect(function() {
             Quaternion.add(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static subtract throws with no left parameter', function() {
         expect(function() {
             Quaternion.subtract(undefined, new Quaternion());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static subtract throws with no right parameter', function() {
         expect(function() {
             Quaternion.subtract(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no quaternion parameter', function() {
         expect(function() {
             Quaternion.multiplyByScalar(undefined, 2.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no scalar parameter', function() {
         expect(function() {
             Quaternion.multiplyByScalar(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static divideByScalar throws with no quaternion parameter', function() {
         expect(function() {
             Quaternion.divideByScalar(undefined, 2.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static divideByScalar throws with no scalar parameter', function() {
         expect(function() {
             Quaternion.divideByScalar(new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getAxis throws with no parameter', function() {
         expect(function() {
             Quaternion.getAxis(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getAngle throws with no parameter', function() {
         expect(function() {
             Quaternion.getAngle(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static negate throws with no quaternion parameter', function() {
         expect(function() {
             Quaternion.negate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no start parameter', function() {
@@ -803,7 +914,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Quaternion.lerp(undefined, end, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no end parameter', function() {
@@ -811,7 +922,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Quaternion.lerp(start, undefined, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no t parameter', function() {
@@ -819,7 +930,7 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 6.0, 7.0);
         expect(function() {
             Quaternion.lerp(start, end, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static slerp throws with no start parameter', function() {
@@ -827,7 +938,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Quaternion.slerp(undefined, end, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static slerp throws with no end parameter', function() {
@@ -835,7 +946,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Quaternion.slerp(start, undefined, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static slerp throws with no t parameter', function() {
@@ -843,43 +954,43 @@ defineSuite([
         var end = new Quaternion(8.0, 20.0, 6.0, 7.0);
         expect(function() {
             Quaternion.slerp(start, end, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static log throws with no quaternion parameter', function() {
         expect(function() {
             Quaternion.log();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static exp throws with no cartesian parameter', function() {
         expect(function() {
             Quaternion.exp();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static innerQuadrangle throws without q0, q1, or q2 parameter', function() {
         expect(function() {
             Quaternion.innerQuadrangle();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static squad throws without q0, q1, s0, or s1 parameter', function() {
         expect(function() {
             Quaternion.squad();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static squad throws without t parameter', function() {
         expect(function() {
             Quaternion.squad(new Quaternion(), new Quaternion(), new Quaternion(), new Quaternion());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static equalsEpsilon throws with no epsilon', function() {
         expect(function() {
             Quaternion.equalsEpsilon(new Quaternion(), new Quaternion(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);

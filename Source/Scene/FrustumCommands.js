@@ -24,11 +24,17 @@ define(['../Core/defaultValue'], function(defaultValue) {
          */
         this.far = defaultValue(far, 0.0);
         /**
-         * The list of commands.
+         * The list of opaque commands.
          * @type {Array}
          * @default []
          */
-        this.commands = [];
+        this.opaqueCommands = [];
+        /**
+         * The list of translucent commands.
+         * @type {Array}
+         * @default []
+         */
+        this.translucentCommands = [];
     };
 
     return FrustumCommands;

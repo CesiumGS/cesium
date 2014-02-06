@@ -93,7 +93,7 @@ define([
      * var height = 5;
      * var vertices = new Float32Array(width * height * 6);
      * var description = ;
-     * HeightmapTessellator.computeVertices({
+     * Cesium.HeightmapTessellator.computeVertices({
      *     vertices : vertices,
      *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
      *     width : width,
@@ -108,25 +108,23 @@ define([
      * });
      */
     HeightmapTessellator.computeVertices = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.heightmap)) {
             throw new DeveloperError('description.heightmap is required.');
         }
-
         if (!defined(description.width) || !defined(description.height)) {
             throw new DeveloperError('description.width and description.height are required.');
         }
-
         if (!defined(description.vertices)) {
             throw new DeveloperError('description.vertices is required.');
         }
-
         if (!defined(description.nativeExtent)) {
             throw new DeveloperError('description.nativeExtent is required.');
         }
-
         if (!defined(description.skirtHeight)) {
             throw new DeveloperError('description.skirtHeight is required.');
         }
+        //>>includeEnd('debug');
 
         // This function tends to be a performance hotspot for terrain rendering,
         // so it employs a lot of inlining and unrolling as an optimization.

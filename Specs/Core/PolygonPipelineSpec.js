@@ -57,13 +57,13 @@ defineSuite([
     it('removeDuplicates throws without positions', function() {
         expect(function() {
             PolygonPipeline.removeDuplicates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeDuplicates throws without three positions', function() {
         expect(function() {
             PolygonPipeline.removeDuplicates([Cartesian3.ZERO, Cartesian3.ZERO]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeArea2D computes a positive area', function() {
@@ -91,13 +91,13 @@ defineSuite([
     it('computeArea2D throws without positions', function() {
         expect(function() {
             PolygonPipeline.computeArea2D();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeArea2D throws without three positions', function() {
         expect(function() {
             PolygonPipeline.computeArea2D([Cartesian3.ZERO, Cartesian3.ZERO]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     ///////////////////////////////////////////////////////////////////////
@@ -127,13 +127,13 @@ defineSuite([
     it('computeWindingOrder2D throws without positions', function() {
         expect(function() {
             PolygonPipeline.computeWindingOrder2D();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeWindingOrder2D throws without three positions', function() {
         expect(function() {
             PolygonPipeline.computeWindingOrder2D([Cartesian3.ZERO, Cartesian3.ZERO]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     ///////////////////////////////////////////////////////////////////////
@@ -294,13 +294,13 @@ defineSuite([
     it('throws without positions', function() {
         expect(function() {
             PolygonPipeline.triangulate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without three positions', function() {
         expect(function() {
             PolygonPipeline.triangulate([Cartesian2.ZERO, Cartesian2.ZERO]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     ///////////////////////////////////////////////////////////////////////
@@ -308,31 +308,31 @@ defineSuite([
     it('computeSubdivision throws without positions', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws without indices', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision([]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with less than 3 indices', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision([], [1, 2]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws without a multiple of 3 indices', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision([], [1, 2, 3, 4]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeSubdivision throws with negative granularity', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision([], [1, 2, 3], -1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeSubdivision', function() {
@@ -362,19 +362,19 @@ defineSuite([
     it('eliminateHoles throws an exception without an outerRing', function() {
         expect(function() {
             PolygonPipeline.eliminateHoles();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('eliminateHoles throws an exception with an empty outerRing', function() {
         expect(function() {
             PolygonPipeline.eliminateHoles([]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('eliminateHoles throws an exception without a second argument', function() {
         expect(function() {
             PolygonPipeline.eliminateHoles([new Cartesian3()]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('eliminateHoles works with non-WGS84 ellipsoids', function() {

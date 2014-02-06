@@ -34,7 +34,7 @@ define([
      *
      * @memberof TerrainProvider
      */
-    TerrainProvider.attributeIndices = {
+    TerrainProvider.attributeLocations = {
         position3DAndHeight : 0,
         textureCoordinates : 1
     };
@@ -113,14 +113,14 @@ define([
         }
 
         var attributes = [{
-            index : TerrainProvider.attributeIndices.position3DAndHeight,
+            index : TerrainProvider.attributeLocations.position3DAndHeight,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : position3DAndHeightLength,
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : TerrainProvider.attributeIndices.textureCoordinates,
+            index : TerrainProvider.attributeLocations.textureCoordinates,
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
@@ -162,7 +162,7 @@ define([
     /**
      * Specifies the quality of terrain created from heightmaps.  A value of 1.0 will
      * ensure that adjacent heightmap vertices are separated by no more than
-     * {@link CentralBodySurface._maxScreenSpaceError} screen pixels and will probably go very slowly.
+     * {@link CentralBody.maximumScreenSpaceError} screen pixels and will probably go very slowly.
      * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
      * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
      */

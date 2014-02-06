@@ -34,7 +34,7 @@ defineSuite([
     it('fromColor throws without color', function() {
         expect(function() {
             ColorGeometryInstanceAttribute.fromColor();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('toValue', function() {
@@ -55,7 +55,7 @@ defineSuite([
     it('toValue throws without a color', function() {
         expect(function() {
             ColorGeometryInstanceAttribute.toValue();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });
