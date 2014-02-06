@@ -491,6 +491,115 @@ defineSuite([
         });
     });
 
+    it('Animates with a startOffset', function() {
+        var startEvent = new Event();
+        var spyStart = jasmine.createSpy('listener');
+        startEvent.addEventListener(spyStart);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            startOffset : 1.0,
+            start : startEvent
+        });
+
+        animBoxesModel.show = true;
+        scene.renderForSpecs(time); // Does not fire start
+        scene.renderForSpecs(time.addSeconds(1.0));
+
+        expect(spyStart.calls.length).toEqual(1);
+
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
+    it('Animates with an explicit stopTime', function() {
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var stopTime = JulianDate.fromDate(new Date('January 1, 2014 12:00:01 UTC'));
+
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            stopTime : stopTime,
+            update : updateEvent
+        });
+
+        animBoxesModel.show = true;
+        scene.renderForSpecs(time);
+        scene.renderForSpecs(time.addSeconds(1.0));
+        scene.renderForSpecs(time.addSeconds(2.0)); // Does not fire update
+
+        expect(spyUpdate.calls.length).toEqual(2);
+        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
+    it('Animates with a speedup', function() {
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            speedup : 1.5,
+            update : updateEvent
+        });
+
+        animBoxesModel.show = true;
+        scene.renderForSpecs(time);
+        scene.renderForSpecs(time.addSeconds(1.0));
+        scene.renderForSpecs(time.addSeconds(2.0));
+
+        expect(spyUpdate.calls.length).toEqual(3);
+        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(1.5, CesiumMath.EPSILON14);
+        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
+    it('Animates in reverse', function() {
+        var updateEvent = new Event();
+        var spyUpdate = jasmine.createSpy('listener');
+        updateEvent.addEventListener(spyUpdate);
+
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            reverse : true,
+            update : updateEvent
+        });
+
+        animBoxesModel.show = true;
+        scene.renderForSpecs(time);
+        scene.renderForSpecs(time.addSeconds(1.0));
+        scene.renderForSpecs(time.addSeconds(2.0));
+        scene.renderForSpecs(time.addSeconds(3.0));
+
+        expect(spyUpdate.calls.length).toEqual(4);
+        expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(3.708, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[1].args[2]).toEqualEpsilon(2.708, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[2].args[2]).toEqualEpsilon(1.708, CesiumMath.EPSILON3);
+        expect(spyUpdate.calls[3].args[2]).toEqualEpsilon(0.708, CesiumMath.EPSILON3);
+        expect(animations.remove(a)).toEqual(true);
+        animBoxesModel.show = false;
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads riggedFigure', function() {
