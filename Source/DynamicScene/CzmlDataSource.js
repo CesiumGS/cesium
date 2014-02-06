@@ -1155,6 +1155,7 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri);
         processPacketData(Boolean, polygon, 'outline', polygonData.outline, interval, sourceUri);
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri);
+        processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri);
     }
 
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {

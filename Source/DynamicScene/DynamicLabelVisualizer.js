@@ -44,7 +44,6 @@ define([
      * @see DynamicConeVisualizer
      * @see DynamicConeVisualizerUsingCustomSensorr
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      *

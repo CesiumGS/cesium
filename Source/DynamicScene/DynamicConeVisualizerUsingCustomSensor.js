@@ -97,7 +97,6 @@ define([
      * @see DynamicConeVisualizer
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      *

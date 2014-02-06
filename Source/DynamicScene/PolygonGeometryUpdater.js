@@ -6,8 +6,8 @@ define(['../Core/Color',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/EllipseGeometry',
-        '../Core/EllipseOutlineGeometry',
+        '../Core/PolygonGeometry',
+        '../Core/PolygonOutlineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
@@ -27,8 +27,8 @@ define(['../Core/Color',
         defineProperties,
         destroyObject,
         DeveloperError,
-        EllipseGeometry,
-        EllipseOutlineGeometry,
+        PolygonGeometry,
+        PolygonOutlineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
@@ -51,25 +51,24 @@ define(['../Core/Color',
     var GeometryOptions = function(dynamicObject) {
         this.id = dynamicObject;
         this.vertexFormat = undefined;
-        this.center = undefined;
-        this.semiMajorAxis = undefined;
-        this.semiMinorAxis = undefined;
-        this.rotation = undefined;
+        this.polygonHierarchy = {
+            positions : undefined
+        };
+        this.perPositionHeight = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
         this.stRotation = undefined;
-        this.numberOfVerticalLines = undefined;
     };
 
-    var EllipseGeometryUpdater = function(dynamicObject) {
+    var PolygonGeometryUpdater = function(dynamicObject) {
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required');
         }
 
         this._id = dynamicObject.id;
         this._dynamicObject = dynamicObject;
-        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
+        this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
         this._geometryType = GeometryBatchType.NONE;
         this._geometryChanged = new Event();
         this._showProperty = undefined;
@@ -79,14 +78,14 @@ define(['../Core/Color',
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._options = new GeometryOptions(dynamicObject);
-        this._onDynamicObjectPropertyChanged(dynamicObject, 'ellipse', dynamicObject.ellipse, undefined);
+        this._onDynamicObjectPropertyChanged(dynamicObject, 'polygon', dynamicObject.polygon, undefined);
     };
 
-    EllipseGeometryUpdater.PerInstanceColorAppearanceType = PerInstanceColorAppearance;
+    PolygonGeometryUpdater.PerInstanceColorAppearanceType = PerInstanceColorAppearance;
 
-    EllipseGeometryUpdater.MaterialAppearanceType = MaterialAppearance;
+    PolygonGeometryUpdater.MaterialAppearanceType = MaterialAppearance;
 
-    defineProperties(EllipseGeometryUpdater.prototype, {
+    defineProperties(PolygonGeometryUpdater.prototype, {
         id : {
             get : function() {
                 return this._id;
@@ -134,17 +133,17 @@ define(['../Core/Color',
         }
     });
 
-    EllipseGeometryUpdater.prototype.isOutlineVisible = function(time) {
+    PolygonGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var dynamicObject = this._dynamicObject;
         return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
-    EllipseGeometryUpdater.prototype.isFilled = function(time) {
+    PolygonGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
         return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
-    EllipseGeometryUpdater.prototype.createGeometryInstance = function(time) {
+    PolygonGeometryUpdater.prototype.createGeometryInstance = function(time) {
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
 
@@ -167,18 +166,18 @@ define(['../Core/Color',
 
         return new GeometryInstance({
             id : dynamicObject,
-            geometry : new EllipseGeometry(this._options),
+            geometry : new PolygonGeometry(this._options),
             attributes : attributes
         });
     };
 
-    EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+    PolygonGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
 
         return new GeometryInstance({
             id : dynamicObject,
-            geometry : new EllipseOutlineGeometry(this._options),
+            geometry : new PolygonOutlineGeometry(this._options),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
@@ -186,19 +185,19 @@ define(['../Core/Color',
         });
     };
 
-    EllipseGeometryUpdater.prototype.destroy = function() {
+    PolygonGeometryUpdater.prototype.destroy = function() {
         this._dynamicObjectSubscription();
         destroyObject(this);
     };
 
-    EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
-        if (!(propertyName === 'availability' || propertyName === 'position' || propertyName === 'ellipse')) {
+    PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+        if (!(propertyName === 'availability' || propertyName === 'vertexPositions' || propertyName === 'polygon')) {
             return;
         }
 
-        var ellipse = this._dynamicObject.ellipse;
+        var polygon = this._dynamicObject.polygon;
 
-        if (!defined(ellipse)) {
+        if (!defined(polygon)) {
             if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
                 this._outlineEnabled = false;
                 this._geometryType = GeometryBatchType.NONE;
@@ -207,10 +206,10 @@ define(['../Core/Color',
             return;
         }
 
-        var fillProperty = ellipse.fill;
+        var fillProperty = polygon.fill;
         var isFilled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
-        var outlineProperty = ellipse.outline;
+        var outlineProperty = polygon.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
@@ -220,13 +219,11 @@ define(['../Core/Color',
             return;
         }
 
-        var position = this._dynamicObject.position;
-        var semiMajorAxis = ellipse.semiMajorAxis;
-        var semiMinorAxis = ellipse.semiMinorAxis;
+        var vertexPositions = this._dynamicObject.vertexPositions;
 
-        var show = ellipse.show;
+        var show = polygon.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(semiMajorAxis) || !defined(semiMinorAxis))) {
+            (!defined(vertexPositions))) {
             if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
                 this._outlineEnabled = false;
                 this._geometryType = GeometryBatchType.NONE;
@@ -235,30 +232,26 @@ define(['../Core/Color',
             return;
         }
 
-        var material = defaultValue(ellipse.material, defaultMaterial);
+        var material = defaultValue(polygon.material, defaultMaterial);
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
-        this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
-        this._outlineColorProperty = defaultValue(ellipse.outlineColor, defaultOutlineColor);
+        this._showOutlineProperty = defaultValue(polygon.outline, defaultOutline);
+        this._outlineColorProperty = defaultValue(polygon.outlineColor, defaultOutlineColor);
 
-        var rotation = ellipse.rotation;
-        var height = ellipse.height;
-        var extrudedHeight = ellipse.extrudedHeight;
-        var granularity = ellipse.granularity;
-        var stRotation = ellipse.stRotation;
-        var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+        var perPositionHeight = polygon.perPositionHeight;
+        var height = polygon.height;
+        var extrudedHeight = polygon.extrudedHeight;
+        var granularity = polygon.granularity;
+        var stRotation = polygon.stRotation;
 
-        if (!position.isConstant || //
-            !semiMajorAxis.isConstant || //
-            !semiMinorAxis.isConstant || //
-            defined(rotation) && !rotation.isConstant || //
+        if (!vertexPositions.isConstant || //
+            defined(perPositionHeight) && !perPositionHeight.isConstant || //
             defined(height) && !height.isConstant || //
             defined(extrudedHeight) && !extrudedHeight.isConstant || //
             defined(granularity) && !granularity.isConstant || //
-            defined(stRotation) && !stRotation.isConstant || //
-            defined(numberOfVerticalLines) && !numberOfVerticalLines.isConstant) {
+            defined(stRotation) && !stRotation.isConstant) {
             if (this._geometryType !== GeometryBatchType.DYNAMIC) {
                 this._geometryType = GeometryBatchType.DYNAMIC;
                 this._geometryChanged.raiseEvent(this);
@@ -266,15 +259,12 @@ define(['../Core/Color',
         } else {
             var options = this._options;
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
-            options.center = position.getValue(Iso8601.MINIMUM_VALUE, options.center);
-            options.semiMajorAxis = semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMajorAxis);
-            options.semiMinorAxis = semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE, options.semiMinorAxis);
-            options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.polygonHierarchy.positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.polygonHierarchy.positions);
+            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.height = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             this._outlineEnabled = outlineEnabled;
             this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
@@ -282,7 +272,7 @@ define(['../Core/Color',
         }
     };
 
-    EllipseGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    PolygonGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         return new DynamicGeometryBatchItem(primitives, this);
     };
 
@@ -313,28 +303,23 @@ define(['../Core/Color',
         }
 
         var options = this._options;
-        var ellipse = dynamicObject.ellipse;
+        var polygon = dynamicObject.polygon;
 
-        var position = dynamicObject.position;
-        var semiMajorAxis = ellipse.semiMajorAxis;
-        var semiMinorAxis = ellipse.semiMinorAxis;
-        var rotation = ellipse.rotation;
-        var height = ellipse.height;
-        var extrudedHeight = ellipse.extrudedHeight;
-        var granularity = ellipse.granularity;
-        var stRotation = ellipse.stRotation;
-        var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+        var vertexPositions = dynamicObject.vertexPositions;
+        var perPositionHeight = polygon.perPositionHeight;
+        var height = polygon.height;
+        var extrudedHeight = polygon.extrudedHeight;
+        var granularity = polygon.granularity;
+        var stRotation = polygon.stRotation;
 
-        options.center = position.getValue(time, options.center);
-        options.semiMajorAxis = semiMajorAxis.getValue(time, options.semiMajorAxis);
-        options.semiMinorAxis = semiMinorAxis.getValue(time, options.semiMinorAxis);
-        options.rotation = defined(rotation) ? rotation.getValue(time, options) : undefined;
+        options.polygonHierarchy.positions = vertexPositions.getValue(time, options.polygonHierarchy.positions);
+        options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(time) : undefined;
         options.height = defined(height) ? height.getValue(time, options) : undefined;
         options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
         options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
         options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
 
-        if (!defined(ellipse.fill) || ellipse.fill.getValue(time)) {
+        if (!defined(polygon.fill) || polygon.fill.getValue(time)) {
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
             var appearance = new MaterialAppearance({
@@ -347,7 +332,7 @@ define(['../Core/Color',
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
-                    geometry : new EllipseGeometry(options)
+                    geometry : new PolygonGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
@@ -355,15 +340,14 @@ define(['../Core/Color',
             this._primitives.add(this._primitive);
         }
 
-        if (defined(ellipse.outline) && ellipse.outline.getValue(time)) {
+        if (defined(polygon.outline) && polygon.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
-            options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(time) : undefined;
 
-            var outlineColor = defined(ellipse.outlineColor) ? ellipse.outlineColor.getValue(time) : Color.BLACK;
+            var outlineColor = defined(polygon.outlineColor) ? polygon.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
-                    geometry : new EllipseOutlineGeometry(options),
+                    geometry : new PolygonOutlineGeometry(options),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
@@ -394,5 +378,5 @@ define(['../Core/Color',
         destroyObject(this);
     };
 
-    return EllipseGeometryUpdater;
+    return PolygonGeometryUpdater;
 });

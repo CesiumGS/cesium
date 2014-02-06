@@ -27,6 +27,8 @@ define(['../Core/defaultValue',
         this._extrudedHeight = undefined;
         this._granularity = undefined;
         this._stRotation = undefined;
+        this._perPositionHeight = undefined;
+
         this._definitionChanged = new Event();
     };
 
@@ -108,7 +110,14 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor')
+        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+
+        /**
+         * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
+         * @memberof DynamicPolygon.prototype
+         * @type {Property}
+         */
+        perPositionHeight : createDynamicPropertyDescriptor('perPositionHeight', '_perPositionHeight')
     });
 
     /**
@@ -131,6 +140,7 @@ define(['../Core/defaultValue',
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.perPositionHeight = this.perPositionHeight;
         return result;
     };
 
@@ -158,6 +168,7 @@ define(['../Core/defaultValue',
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
     };
 
     return DynamicPolygon;

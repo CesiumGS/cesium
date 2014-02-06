@@ -61,7 +61,6 @@ define([
      * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      *

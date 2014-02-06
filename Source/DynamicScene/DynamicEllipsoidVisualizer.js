@@ -49,7 +49,6 @@ define([
      * @see DynamicConeVisualizerUsingCustomSensorr
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      */
     var DynamicEllipsoidVisualizer = function(scene, dynamicObjectCollection) {

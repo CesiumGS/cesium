@@ -60,6 +60,7 @@ define(['../Core/defined',
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].destroy();
         }
+        this._dynamicUpdaters.removeAll();
     };
 
     /**
@@ -263,12 +264,14 @@ define(['../Core/defined',
         for (var g = 0; g < batchesLength; g++) {
             batches[g].removeAllPrimitives();
         }
+        this._outlineBatch.removeAllPrimitives();
 
         var subscriptions = this._subscriptions.getValues();
         var len = subscriptions.length;
         for (var i = 0; i < len; i++) {
             subscriptions[i]();
         }
+        this._subscriptions.removeAll();
     };
 
     /**
