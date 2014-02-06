@@ -628,6 +628,10 @@ define([
                 return;
             }
 
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
+            }
+
             when(imagePromise, success, failure);
         }
 

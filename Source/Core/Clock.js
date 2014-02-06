@@ -1,20 +1,22 @@
 /*global define*/
 define([
+        './ClockRange',
+        './ClockStep',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './JulianDate',
-        './ClockStep',
-        './ClockRange',
         './Event',
-        './defaultValue'
-       ], function(
-         defined,
-         DeveloperError,
-         JulianDate,
-         ClockStep,
-         ClockRange,
-         Event,
-         defaultValue) {
+        './getTimestamp',
+        './JulianDate'
+    ], function(
+        ClockRange,
+        ClockStep,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Event,
+        getTimestamp,
+        JulianDate) {
     "use strict";
 
     /**
@@ -140,7 +142,7 @@ define([
          */
         this.onTick = new Event();
 
-        this._lastSystemTime = Date.now();
+        this._lastSystemTime = getTimestamp();
     };
 
     /**
@@ -152,7 +154,7 @@ define([
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function() {
-        var currentSystemTime = Date.now();
+        var currentSystemTime = getTimestamp();
         var currentTime = this.currentTime;
         var startTime = this.startTime;
         var stopTime = this.stopTime;
