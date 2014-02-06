@@ -433,6 +433,88 @@ defineSuite([
         expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
     });
 
+    it('sets the clock for multiple data sources', function() {
+        var dataSource1 = new MockDataSource();
+        dataSource1.clock = new DynamicClock();
+        dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+
+        viewer = new Viewer(container);
+        viewer.dataSources.add(dataSource1);
+
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        var dataSource2 = new MockDataSource();
+        dataSource2.clock = new DynamicClock();
+        dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+
+        viewer.dataSources.add(dataSource2);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+
+        var dataSource3 = new MockDataSource();
+        dataSource3.clock = new DynamicClock();
+        dataSource3.clock.startTime = JulianDate.fromIso8601('2015-08-01T18:00Z');
+        dataSource3.clock.stopTime = JulianDate.fromIso8601('2015-08-21T02:00Z');
+        dataSource3.clock.currentTime = JulianDate.fromIso8601('2015-08-02T00:00Z');
+
+        viewer.dataSources.add(dataSource3);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource3);
+        expect(viewer.clock.startTime).toEqual(dataSource3.clock.startTime);
+
+        // Removing the last dataSource moves the clock to second-last.
+        viewer.dataSources.remove(dataSource3);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+
+        // Removing the first data source has no effect, because it's not active.
+        viewer.dataSources.remove(dataSource1);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+    });
+
+    it('can manually control the clock tracking', function() {
+        var dataSource1 = new MockDataSource();
+        dataSource1.clock = new DynamicClock();
+        dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+
+        viewer = new Viewer(container, { automaticallyTrackDataSourceClocks : false });
+        viewer.dataSources.add(dataSource1);
+
+        // Because of the above Viewer option, data sources are not automatically
+        // selected for clock tracking.
+        expect(viewer.clockTrackedDataSource).not.toBeDefined();
+        // The mock data source time is in the past, so will not be the default time.
+        expect(viewer.clock.startTime).not.toEqual(dataSource1.clock.startTime);
+
+        // Manually set the first data source as the tracked data source.
+        viewer.clockTrackedDataSource = dataSource1;
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        var dataSource2 = new MockDataSource();
+        dataSource2.clock = new DynamicClock();
+        dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+
+        // Adding a second data source in manual mode still leaves the first one tracked.
+        viewer.dataSources.add(dataSource2);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        // Removing the tracked data source in manual mode turns off tracking, even
+        // if other data sources remain available for tracking.
+        viewer.dataSources.remove(dataSource1);
+        expect(viewer.clockTrackedDataSource).not.toBeDefined();
+    });
+
     it('shows the error panel when render throws', function() {
         viewer = new Viewer(container);
 
