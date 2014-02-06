@@ -7,6 +7,8 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
+        '../Core/Math',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
@@ -22,6 +24,8 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
+        Extent,
+        CesiumMath,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
@@ -125,7 +129,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -145,6 +149,29 @@ define([
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
+            }
+
+            var attributionList = that._attributionList = resource.imageryProviders;
+            if (!attributionList) {
+                attributionList = that._attributionList = [];
+            }
+
+            for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+                var attribution = attributionList[attributionIndex];
+
+                attribution.credit = new Credit(attribution.attribution);
+
+                var coverageAreas = attribution.coverageAreas;
+
+                for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
+                    var area = coverageAreas[areaIndex];
+                    var bbox = area.bbox;
+                    area.bbox = new Extent(
+                            CesiumMath.toRadians(bbox[1]),
+                            CesiumMath.toRadians(bbox[0]),
+                            CesiumMath.toRadians(bbox[3]),
+                            CesiumMath.toRadians(bbox[2]));
+                }
             }
 
             that._ready = true;
@@ -384,6 +411,30 @@ define([
         return this._ready;
     };
 
+    var extentScratch = new Extent();
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        if (!this._ready) {
+            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
+        }
+
+        var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
+        return getExtentAttribution(this._attributionList, level, extent);
+    };
+
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link BingMapsImageryProvider#isReady} returns true.
@@ -399,7 +450,7 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
@@ -508,6 +559,38 @@ define([
         }
 
         return imageUrl;
+    }
+
+    var intersectionScratch = new Extent();
+
+    function getExtentAttribution(attributionList, level, extent) {
+        // Bing levels start at 1, while ours start at 0.
+        ++level;
+
+        var result = [];
+
+        for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+            var attribution = attributionList[attributionIndex];
+            var coverageAreas = attribution.coverageAreas;
+
+            var included = false;
+
+            for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
+                var area = coverageAreas[areaIndex];
+                if (level >= area.zoomMin && level <= area.zoomMax) {
+                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
+                    if (!intersection.isEmpty()) {
+                        included = true;
+                    }
+                }
+            }
+
+            if (included) {
+                result.push(attribution.credit);
+            }
+        }
+
+        return result;
     }
 
     return BingMapsImageryProvider;

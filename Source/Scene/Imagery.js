@@ -32,6 +32,7 @@ define([
         this.imageUrl = undefined;
         this.image = undefined;
         this.texture = undefined;
+        this.credits = undefined;
         this.referenceCount = 0;
 
         if (!defined(extent) && imageryLayer.getImageryProvider().isReady()) {
