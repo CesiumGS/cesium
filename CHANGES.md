@@ -10,7 +10,10 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
-* Added `Intersections2D` class containing operations on 2D triangles.  
+* Added `Intersections2D` class containing operations on 2D triangles.
+* Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
+* Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.  
+* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`. 
 
 ### b25 - 2014-02-03
 

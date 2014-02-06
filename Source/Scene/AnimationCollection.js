@@ -3,27 +3,17 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/clone',
+        '../Core/getTimestamp',
         '../ThirdParty/Tween',
         '../Core/defaultValue'
     ], function(
         defined,
         DeveloperError,
         clone,
+        getTimestamp,
         Tween,
         defaultValue) {
     "use strict";
-
-    // this logic should match the logic in TWEEN.update and TWEEN.Tween.start
-    var getTime;
-    if (defined(window) && defined(window.performance) && defined(window.performance.now)) {
-        getTime = function() {
-            return window.performance.now();
-        };
-    } else {
-        getTime = function() {
-            return Date.now();
-        };
-    }
 
     /**
      * DOC_TBA
@@ -310,7 +300,7 @@ define([
         }
 
         var i = 0;
-        var time = getTime();
+        var time = getTimestamp();
         while (i < tweens.length) {
             if (tweens[i].update(time)) {
                 i++;

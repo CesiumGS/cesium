@@ -13,9 +13,13 @@
     bottom: 0;
     left: 0;
     color: #ffffff;
-    font-size: 10pt;
+    font-size: 10px;
     text-shadow: 0px 0px 2px #000000;
     padding-right: 5px;
+}
+
+.cesium-credit-text {
+    white-space: nowrap;
 }
 
 .cesium-widget-errorPanel {

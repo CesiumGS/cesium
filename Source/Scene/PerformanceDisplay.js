@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getTimestamp',
         '../Widgets/getElement'
     ], function(
         Color,
@@ -12,6 +13,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getTimestamp,
         getElement) {
     "use strict";
 
@@ -69,13 +71,13 @@ define([
     PerformanceDisplay.prototype.update = function() {
         if (!defined(this._time)) {
             //first update
-            this._lastFpsSampleTime = Date.now();
-            this._time = Date.now();
+            this._lastFpsSampleTime = getTimestamp();
+            this._time = getTimestamp();
             return;
         }
 
         var previousTime = this._time;
-        var time = Date.now();
+        var time = getTimestamp();
         this._time = time;
 
         var frameTime = time - previousTime;

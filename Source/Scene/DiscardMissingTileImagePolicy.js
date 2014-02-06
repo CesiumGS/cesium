@@ -33,7 +33,7 @@ define([
      * @exception {DeveloperError} <code>pixelsToCheck</code> is required.
      */
     var DiscardMissingTileImagePolicy = function(description) {
-        description = defaultValue(description, {});
+        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         if (!defined(description.missingImageUrl)) {
             throw new DeveloperError('description.missingImageUrl is required.');
