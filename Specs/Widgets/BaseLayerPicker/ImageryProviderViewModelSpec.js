@@ -43,7 +43,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no tooltip', function() {
@@ -55,7 +55,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no iconUrl', function() {
@@ -67,7 +67,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no creationFunction', function() {
@@ -79,7 +79,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
     });
 
@@ -111,7 +111,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no tooltip', function() {
@@ -123,7 +123,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no iconUrl', function() {
@@ -135,7 +135,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('constructor throws with no creationFunction', function() {
@@ -147,7 +147,7 @@ defineSuite([
 
             expect(function() {
                 return new ImageryProviderViewModel(description);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
     });
 });

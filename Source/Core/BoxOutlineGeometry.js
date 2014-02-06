@@ -41,11 +41,11 @@ define([
      * @see BoxOutlineGeometry#createGeometry
      *
      * @example
-     * var box = new BoxOutlineGeometry({
-     *   maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+     * var box = new Cesium.BoxOutlineGeometry({
+     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
-     * var geometry = BoxOutlineGeometry.createGeometry(box);
+     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
     var BoxOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -53,13 +53,14 @@ define([
         var min = options.minimumCorner;
         var max = options.maximumCorner;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
             throw new DeveloperError('options.minimumCorner is required.');
         }
-
         if (!defined(max)) {
             throw new DeveloperError('options.maximumCorner is required');
         }
+        //>>includeEnd('debug');
 
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
@@ -78,22 +79,23 @@ define([
      * @see BoxOutlineGeometry#createGeometry
      *
      * @example
-     * var box = BoxOutlineGeometry.fromDimensions({
-     *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
+     * var box = Cesium.BoxOutlineGeometry.fromDimensions({
+     *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
-     * var geometry = BoxOutlineGeometry.createGeometry(box);
+     * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var dimensions = options.dimensions;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dimensions)) {
             throw new DeveloperError('options.dimensions is required.');
         }
-
         if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
             throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
         }
+        //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5);
         var min = Cartesian3.negate(corner);

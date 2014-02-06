@@ -820,7 +820,7 @@ defineSuite([
         var camera = scene.getCamera();
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
-        camera.up = Cartesian3.UNIT_Z;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
@@ -1454,7 +1454,7 @@ defineSuite([
     it('throws when accessing without an index', function() {
         expect(function() {
             polylines.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes bounding sphere in 3D', function() {
@@ -1494,7 +1494,7 @@ defineSuite([
 
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.getPositions()));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.getPositions()));
@@ -1523,7 +1523,7 @@ defineSuite([
         frameState.mode = testMode;
         var commandList = [];
         polylines.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].opaqueList[0].boundingVolume;
+        var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
         var positions = one.getPositions();
@@ -1547,7 +1547,9 @@ defineSuite([
         expect(two._boundingVolume2D.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON8);
         expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        expect(boundingVolume).toEqual(one._boundingVolume2D.union(two._boundingVolume2D));
+        var expected = one._boundingVolume2D.union(two._boundingVolume2D);
+        expect(boundingVolume.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
+        expect(boundingVolume.radius).toEqualEpsilon(expected.radius, CesiumMath.EPSILON8);
     }
 
     it('computes bounding sphere in Columbus view', function() {
@@ -1588,8 +1590,8 @@ defineSuite([
         var commandList = [];
         polylines.update(context, frameState, commandList);
 
-        expect(commandList[0].opaqueList[0].boundingVolume).toEqual(one._boundingVolume);
-        expect(commandList[0].opaqueList[1].boundingVolume).toEqual(two._boundingVolume);
+        expect(commandList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(commandList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {

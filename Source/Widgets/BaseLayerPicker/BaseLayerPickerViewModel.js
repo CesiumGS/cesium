@@ -27,9 +27,11 @@ define([
      * @see ImageryProviderViewModel
      */
     var BaseLayerPickerViewModel = function(imageryLayers, imageryProviderViewModels) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(imageryProviderViewModels)) {
             imageryProviderViewModels = [];
@@ -60,7 +62,6 @@ define([
         /**
          * Gets the currently selected item name.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.selectedName = undefined;
         knockout.defineProperty(this, 'selectedName', function() {
@@ -71,7 +72,6 @@ define([
         /**
          * Gets the image url of the currently selected item.  This property is observable.
          * @type {String}
-         * @default undefined
          */
         this.selectedIconUrl = undefined;
         knockout.defineProperty(this, 'selectedIconUrl', function() {

@@ -21,7 +21,7 @@ defineSuite([
     it('throws when heightmap is not provided', function() {
         expect(function() {
             HeightmapTessellator.computeVertices();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             HeightmapTessellator.computeVertices({
@@ -36,7 +36,7 @@ defineSuite([
                 },
                 skirtHeight : 10.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when width or height is not provided', function() {
@@ -53,7 +53,7 @@ defineSuite([
                 },
                 skirtHeight : 10.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             HeightmapTessellator.computeVertices({
@@ -68,7 +68,7 @@ defineSuite([
                 },
                 skirtHeight : 10.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when vertices is not provided', function() {
@@ -85,7 +85,7 @@ defineSuite([
                 },
                 skirtHeight : 10.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when nativeExtent is not provided', function() {
@@ -97,7 +97,7 @@ defineSuite([
                 vertices : [],
                 skirtHeight : 10.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when skirtHeight is not provided', function() {
@@ -114,7 +114,7 @@ defineSuite([
                     north : 30.0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates mesh without skirt', function() {

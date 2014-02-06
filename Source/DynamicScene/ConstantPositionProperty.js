@@ -35,7 +35,7 @@ define([
      *
      * @example
      * //Create a constant position in the inertial frame.
-     * var constantProperty = new ConstantPositionProperty(new Cartesian3(-4225824.0, 1261219.0, -5148934.0), ReferenceFrame.INERTIAL);
+     * var constantProperty = new Cesium.ConstantPositionProperty(new Cesium.Cartesian3(-4225824.0, 1261219.0, -5148934.0), Cesium.ReferenceFrame.INERTIAL);
      */
     var ConstantPositionProperty = function(value, referenceFrame) {
         this._property = new ConstantProperty(value);
@@ -83,12 +83,15 @@ define([
      * @exception {DeveloperError} referenceFrame is required.
      */
     ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         if (!defined(referenceFrame)) {
             throw new DeveloperError('referenceFrame is required.');
         }
+        //>>includeEnd('debug');
+
         var value = this._property.getValue(time, result);
         return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, value);
     };

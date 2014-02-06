@@ -30,7 +30,7 @@ defineSuite([
     it('getVisibility throws without a bounding volume', function() {
         expect(function() {
             return new CullingVolume().getVisibility();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     describe('box intersections', function() {

@@ -22,7 +22,6 @@ define([
         when,
         getElement) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -51,6 +50,7 @@ define([
      * });
      */
     var viewerDragDropMixin = function(viewer, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -66,6 +66,7 @@ define([
         if (viewer.hasOwnProperty('clearOnDrop')) {
             throw new DeveloperError('clearOnDrop is already defined by another mixin.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -90,9 +91,12 @@ define([
                     return dropTarget;
                 },
                 set : function(value) {
+                    //>>includeStart('debug', pragmas.debug);
                     if (!defined(value)) {
                         throw new DeveloperError('value is required.');
                     }
+                    //>>includeEnd('debug');
+
                     unsubscribe(dropTarget, handleDrop);
                     dropTarget = value;
                     subscribe(dropTarget, handleDrop);

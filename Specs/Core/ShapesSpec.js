@@ -31,14 +31,14 @@ defineSuite([
     it('computeCircleBoundary throws without an ellipsoid', function() {
         expect(function() {
             Shapes.computeCircleBoundary();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCircleBoundary throws without a center', function() {
         var ellipsoid = Ellipsoid.WGS84;
         expect(function() {
             Shapes.computeCircleBoundary(ellipsoid);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCircleBoundary throws without a radius', function() {
@@ -46,7 +46,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeCircleBoundary(ellipsoid, center);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCircleBoundary throws with a negative radius', function() {
@@ -54,7 +54,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeCircleBoundary(ellipsoid, center, -1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCircleBoundary throws with a negative granularity', function() {
@@ -62,7 +62,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeCircleBoundary(ellipsoid, center, 1.0, -1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeEllipseBoundary computes a closed loop', function() {
@@ -83,14 +83,14 @@ defineSuite([
     it('computeEllipseBoundary throws without an ellipsoid', function() {
         expect(function() {
             Shapes.computeEllipseBoundary();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeEllipseBoundary throws without a center', function() {
         var ellipsoid = Ellipsoid.WGS84;
         expect(function() {
             Shapes.computeEllipseBoundary(ellipsoid);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeEllipseBoundary throws without a semi-major axis', function() {
@@ -98,7 +98,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeEllipseBoundary(ellipsoid, center, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeEllipseBoundary with a negative axis length', function() {
@@ -106,10 +106,10 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeEllipseBoundary(ellipsoid, center, -1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
         expect(function() {
             Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, -1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeEllipseBoundary throws with a negative granularity', function() {
@@ -117,7 +117,7 @@ defineSuite([
         var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
         expect(function() {
             Shapes.computeEllipseBoundary(ellipsoid, center, 1.0, 1.0, 0, -1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('compute2DCircle returns a unit circle by default', function() {

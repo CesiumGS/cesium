@@ -100,6 +100,6 @@ defineSuite([
         var target = new DynamicPath();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -23,7 +23,7 @@ defineSuite([
             context.createSampler({
                 wrapS : 'invalid wrap'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a sampler with invalid wrapT', function() {
@@ -31,7 +31,7 @@ defineSuite([
             context.createSampler({
                 wrapT : 'invalid wrap'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a sampler with invalid minificationFilter', function() {
@@ -39,7 +39,7 @@ defineSuite([
             context.createSampler({
                 minificationFilter : 'invalid filter'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a sampler with invalid magnificationFilter', function() {
@@ -47,7 +47,7 @@ defineSuite([
             context.createSampler({
                 magnificationFilter : 'invalid filter'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when creating a sampler with invalid maximumAnisotropy', function() {
@@ -55,7 +55,7 @@ defineSuite([
             context.createSampler({
                 maximumAnisotropy : 0.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 }, 'WebGL');

@@ -103,11 +103,19 @@ define(['./defined'], function(defined) {
             name = prefix + 'fullscreenchange';
             // event names do not have 'on' in the front, but the property on the document does
             if (defined(document['on' + name])) {
+                //except on IE
+                if (prefix === 'ms') {
+                    name = 'MSFullscreenChange';
+                }
                 _names.fullscreenchange = name;
             }
 
             name = prefix + 'fullscreenerror';
             if (defined(document['on' + name])) {
+                //except on IE
+                if (prefix === 'ms') {
+                    name = 'MSFullscreenError';
+                }
                 _names.fullscreenerror = name;
             }
         }
@@ -123,10 +131,10 @@ define(['./defined'], function(defined) {
      *
      * @example
      * // Put the entire page into fullscreen.
-     * Fullscreen.requestFullscreen(document.body)
+     * Cesium.Fullscreen.requestFullscreen(document.body)
      *
      * // Place only the Cesium canvas into fullscreen.
-     * Fullscreen.requestFullscreen(scene.getCanvas())
+     * Cesium.Fullscreen.requestFullscreen(scene.getCanvas())
      */
     Fullscreen.requestFullscreen = function(element) {
         if (!Fullscreen.supportsFullscreen()) {

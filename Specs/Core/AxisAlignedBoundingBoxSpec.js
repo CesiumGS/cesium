@@ -147,13 +147,13 @@ defineSuite([
         var plane = new Cartesian4();
         expect(function() {
             AxisAlignedBoundingBox.intersect(undefined, plane);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static intersect throws without a plane', function() {
         var box = new AxisAlignedBoundingBox();
         expect(function() {
             AxisAlignedBoundingBox.intersect(box, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

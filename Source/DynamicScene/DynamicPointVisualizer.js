@@ -44,9 +44,12 @@ define([
      *
      */
     var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
@@ -104,9 +107,12 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DynamicPointVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is requied.');
         }
+        //>>includeEnd('debug');
+
         if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -165,7 +171,7 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPointVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        this.setDynamicObjectCollection(undefined);
         this._scene.getPrimitives().remove(this._billboardCollection);
         return destroyObject(this);
     };

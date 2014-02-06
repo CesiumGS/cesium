@@ -16,8 +16,12 @@ define([
      * @alias Spline
      * @constructor
      *
-     * @see CatmullRomSpline
+     * @see BSpline
+     * @see BezierSpline
      * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see LinearSpline
+     * @see QuaternionSpline
      */
     var Spline = function() {
         /**
@@ -70,16 +74,17 @@ define([
      *                             in the array <code>times</code>.
      */
     Spline.prototype.findTimeInterval = function(time, startIndex) {
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-
         var times = this.times;
         var length = times.length;
 
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
         if (time < times[0] || time > times[length - 1]) {
             throw new DeveloperError('time is out of range.');
         }
+        //>>includeEnd('debug');
 
         // Take advantage of temporal coherence by checking current, next and previous intervals
         // for containment of time.

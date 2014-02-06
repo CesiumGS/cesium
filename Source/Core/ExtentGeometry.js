@@ -644,22 +644,22 @@ define([
      *
      * @example
      * // 1. create an extent
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      *
      * // 2. create an extruded extent without a top
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -672,18 +672,18 @@ define([
         var stRotation = options.stRotation;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-
         extent.validate();
         if (extent.east < extent.west) {
             throw new DeveloperError('options.extent.east must be greater than options.extent.west');
         }
-
         if (extent.north < extent.south) {
             throw new DeveloperError('options.extent.north must be greater than options.extent.south');
         }
+        //>>includeEnd('debug');
 
         this._extent = extent;
         this._granularity = granularity;

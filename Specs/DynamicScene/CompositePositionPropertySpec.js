@@ -163,7 +163,7 @@ defineSuite([
         var property = new CompositePositionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getValueInReferenceFrame throws with no referenceFrame parameter', function() {
@@ -171,6 +171,6 @@ defineSuite([
         var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

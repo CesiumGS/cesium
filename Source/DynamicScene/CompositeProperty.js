@@ -32,9 +32,9 @@ define([
      * //where the property is valid on August 1st, 2012 and uses a constant
      * //property for the first half of the day and a sampled property for the
      * //remaining half.
-     * var composite = new CompositeProperty();
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z', true, true, constantProperty));
-     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
+     * var composite = new Cesium.CompositeProperty();
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z', true, true, constantProperty));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
      */
     var CompositeProperty = function() {
         this._intervals = new TimeIntervalCollection();
@@ -65,9 +65,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     CompositeProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
+        //>>includeEnd('debug');
 
         var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {

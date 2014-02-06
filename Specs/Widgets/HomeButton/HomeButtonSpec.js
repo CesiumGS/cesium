@@ -60,12 +60,12 @@ defineSuite([
     it('throws if container is undefined', function() {
         expect(function() {
             return new HomeButton(undefined, scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if container string is undefined', function() {
         expect(function() {
             return new HomeButton('testElement', scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

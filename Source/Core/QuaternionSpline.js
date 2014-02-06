@@ -42,7 +42,7 @@ define([
 
             return function(time, result) {
                 var u = (time - t0) * invSpan;
-                return Quaternion.slerp(q0, q1, u, result);
+                return Quaternion.fastSlerp(q0, q1, u, result);
             };
         }
 
@@ -56,7 +56,7 @@ define([
             var s0 = quads[i];
             var s1 = quads[i + 1];
 
-            return Quaternion.squad(q0, q1, s0, s1, u, result);
+            return Quaternion.fastSquad(q0, q1, s0, s1, u, result);
         };
     }
 
@@ -67,17 +67,23 @@ define([
      * @alias QuaternionSpline
      * @constructor
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points The array of {@link Quaternion} control points.
      * @param {Quaternion} [options.firstInnerQuadrangle] The inner quadrangle of the curve at the first control point.
      *                     If the inner quadrangle is not given, it will be estimated.
      * @param {Quaternion} [options.lastInnerQuadrangle] The inner quadrangle of the curve at the last control point.
      *                     If the inner quadrangle is not given, it will be estimated.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points and times are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
+     *
+     * @see BSpline
+     * @see BezierSpline
+     * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see LinearSpline
      */
     var QuaternionSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -87,21 +93,17 @@ define([
         var firstInnerQuadrangle = options.firstInnerQuadrangle;
         var lastInnerQuadrangle = options.lastInnerQuadrangle;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(points) || !defined(times)) {
+            throw new DeveloperError('points and times are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         var innerQuadrangles = computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle);
 

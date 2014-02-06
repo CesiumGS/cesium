@@ -63,7 +63,7 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian3.fromArray();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clone without a result parameter', function() {
@@ -177,13 +177,13 @@ defineSuite([
     it('getMinimumByComponent throws without first', function() {
         expect(function() {
             Cartesian3.getMinimumByComponent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMinimumByComponent throws without second', function() {
         expect(function() {
             Cartesian3.getMinimumByComponent(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMinimumByComponent works when first\'s or second\'s X is lesser', function() {
@@ -275,13 +275,13 @@ defineSuite([
     it('getMaximumByComponent throws without first', function() {
         expect(function() {
             Cartesian3.getMaximumByComponent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMaximumByComponent throws without second', function() {
         expect(function() {
             Cartesian3.getMaximumByComponent(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMaximumByComponent works when first\'s or second\'s X is greater', function() {
@@ -332,13 +332,13 @@ defineSuite([
     it('distance throws without left', function() {
         expect(function() {
             Cartesian3.distance();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('distance throws without right', function() {
         expect(function() {
             Cartesian3.distance(Cartesian3.UNIT_X);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('normalize works without a result parameter', function() {
@@ -705,7 +705,7 @@ defineSuite([
     it('fromSpherical throws with no spherical parameter', function() {
         expect(function() {
             Cartesian3.fromSpherical(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 
@@ -716,117 +716,117 @@ defineSuite([
     it('static getMaximumComponent throws with no parameter', function() {
         expect(function() {
             Cartesian3.getMaximumComponent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static getMinimumComponent throws with no parameter', function() {
         expect(function() {
             Cartesian3.getMinimumComponent();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static magnitudeSquared throws with no parameter', function() {
         expect(function() {
             Cartesian3.magnitudeSquared();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static magnitude throws with no parameter', function() {
         expect(function() {
             Cartesian3.magnitude();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static normalize throws with no parameter', function() {
         expect(function() {
             Cartesian3.normalize();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static dot throws with no left parameter', function() {
         expect(function() {
             Cartesian3.dot(undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyComponents throw with no left parameter', function() {
         var right = new Cartesian3(4.0, 5.0, 6.0);
         expect(function() {
             Cartesian3.multiplyComponents(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyComponents throw with no right parameter', function() {
         var left = new Cartesian3(4.0, 5.0, 6.0);
         expect(function() {
             Cartesian3.multiplyComponents(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static dot throws with no right parameter', function() {
         expect(function() {
             Cartesian3.dot(new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static add throws with no left parameter', function() {
         expect(function() {
             Cartesian3.add(undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static add throws with no right parameter', function() {
         expect(function() {
             Cartesian3.add(new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static subtract throws with no left parameter', function() {
         expect(function() {
             Cartesian3.subtract(undefined, new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static subtract throws with no right parameter', function() {
         expect(function() {
             Cartesian3.subtract(new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian3.multiplyByScalar(undefined, 2.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static multiplyByScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian3.multiplyByScalar(new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static divideByScalar throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian3.divideByScalar(undefined, 2.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static divideByScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian3.divideByScalar(new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static negate throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian3.negate(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static abs throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian3.abs(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no start parameter', function() {
@@ -834,7 +834,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Cartesian3.lerp(undefined, end, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no end parameter', function() {
@@ -842,7 +842,7 @@ defineSuite([
         var t = 0.25;
         expect(function() {
             Cartesian3.lerp(start, undefined, t);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static lerp throws with no t parameter', function() {
@@ -850,47 +850,47 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 6.0);
         expect(function() {
             Cartesian3.lerp(start, end, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static angleBetween throws with no left parameter', function() {
         var right = new Cartesian3(8.0, 20.0, 6.0);
         expect(function() {
             Cartesian3.angleBetween(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static angleBetween throws with no right parameter', function() {
         var left = new Cartesian3(4.0, 8.0, 6.0);
         expect(function() {
             Cartesian3.angleBetween(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static mostOrthogonalAxis throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian3.mostOrthogonalAxis(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static equalsEpsilon throws with no epsilon', function() {
         expect(function() {
             Cartesian3.equalsEpsilon(new Cartesian3(), new Cartesian3(), undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static cross throw with no left paramater', function() {
         var right = new Cartesian3(4, 3, 6);
         expect(function() {
             Cartesian3.cross(undefined, right);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static cross throw with no left paramater', function() {
         var left = new Cartesian3(1, 2, 5);
         expect(function() {
             Cartesian3.cross(left, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromElements returns a cartesian3 with corrrect coordinates', function(){

@@ -83,6 +83,57 @@ define([
     };
 
     /**
+     * Creates a Matrix3 from 9 consecutive elements in an array.
+     * @memberof Matrix3
+     *
+     * @param {Array} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
+     * @param {Matrix3} [result] The object onto which to store the result.
+     *
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
+     *
+     * @exception {DeveloperError} array is required.
+     *
+     * @example
+     * // Create the Matrix3:
+     * // [1.0, 2.0, 3.0]
+     * // [1.0, 2.0, 3.0]
+     * // [1.0, 2.0, 3.0]
+     *
+     * var v = [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+     * var m = Cesium.Matrix3.fromArray(v);
+     *
+     * // Create same Matrix3 with using an offset into an array
+     * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0];
+     * var m2 = Cesium.Matrix3.fromArray(v2, 2);
+     */
+    Matrix3.fromArray = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
+
+        result[0] = array[startingIndex];
+        result[1] = array[startingIndex + 1];
+        result[2] = array[startingIndex + 2];
+        result[3] = array[startingIndex + 3];
+        result[4] = array[startingIndex + 4];
+        result[5] = array[startingIndex + 5];
+        result[6] = array[startingIndex + 6];
+        result[7] = array[startingIndex + 7];
+        result[8] = array[startingIndex + 8];
+        result[9] = array[startingIndex + 9];
+        return result;
+    };
+
+    /**
      * Creates a Matrix3 instance from a column-major order array.
      * @memberof Matrix3
      * @function
@@ -94,9 +145,12 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix3.fromColumnMajorArray = function(values, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(values)) {
             throw new DeveloperError('values parameter is required');
         }
+        //>>includeEnd('debug');
+
         return Matrix3.clone(values, result);
     };
 
@@ -112,9 +166,12 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix3.fromRowMajorArray = function(values, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(values)) {
             throw new DeveloperError('values is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Matrix3(values[0], values[1], values[2],
                                values[3], values[4], values[5],
@@ -141,9 +198,12 @@ define([
      * @returns {Matrix3} The 3x3 rotation matrix from this quaternion.
      */
     Matrix3.fromQuaternion = function(quaternion, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
+        //>>includeEnd('debug');
+
         var x2 = quaternion.x * quaternion.x;
         var xy = quaternion.x * quaternion.y;
         var xz = quaternion.x * quaternion.z;
@@ -199,12 +259,15 @@ define([
      * //   [7.0, 0.0, 0.0]
      * //   [0.0, 8.0, 0.0]
      * //   [0.0, 0.0, 9.0]
-     * var m = Matrix3.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+     * var m = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(7.0, 8.0, 9.0));
      */
     Matrix3.fromScale = function(scale, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scale)) {
             throw new DeveloperError('scale is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Matrix3(
                 scale.x, 0.0,     0.0,
@@ -239,12 +302,15 @@ define([
      * //   [2.0, 0.0, 0.0]
      * //   [0.0, 2.0, 0.0]
      * //   [0.0, 0.0, 2.0]
-     * var m = Matrix3.fromUniformScale(2.0);
+     * var m = Cesium.Matrix3.fromUniformScale(2.0);
      */
     Matrix3.fromUniformScale = function(scale, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required.');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Matrix3(
                 scale, 0.0,   0.0,
@@ -276,14 +342,16 @@ define([
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the x-axis.
-     * var p = new Cartesian3(5, 6, 7);
-     * var m = Matrix3.fromRotationX(CesiumMath.toRadians(45.0));
-     * var rotated = Matrix3.multiplyByVector(m, p);
+     * var p = new Cesium.Cartesian3(5, 6, 7);
+     * var m = Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(45.0));
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationX = function(angle, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(angle)) {
             throw new DeveloperError('angle is required.');
         }
+        //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
         var sinAngle = Math.sin(angle);
@@ -320,14 +388,16 @@ define([
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the y-axis.
-     * var p = new Cartesian3(5, 6, 7);
-     * var m = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
-     * var rotated = Matrix3.multiplyByVector(m, p);
+     * var p = new Cesium.Cartesian3(5, 6, 7);
+     * var m = Cesium.Matrix3.fromRotationY(Cesium.Math.toRadians(45.0));
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationY = function(angle, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(angle)) {
             throw new DeveloperError('angle is required.');
         }
+        //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
         var sinAngle = Math.sin(angle);
@@ -364,14 +434,16 @@ define([
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise around the z-axis.
-     * var p = new Cartesian3(5, 6, 7);
-     * var m = Matrix3.fromRotationZ(CesiumMath.toRadians(45.0));
-     * var rotated = Matrix3.multiplyByVector(m, p);
+     * var p = new Cesium.Cartesian3(5, 6, 7);
+     * var m = Cesium.Matrix3.fromRotationZ(Cesium.Math.toRadians(45.0));
+     * var rotated = Cesium.Matrix3.multiplyByVector(m, p);
      */
     Matrix3.fromRotationZ = function(angle, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(angle)) {
             throw new DeveloperError('angle is required.');
         }
+        //>>includeEnd('debug');
 
         var cosAngle = Math.cos(angle);
         var sinAngle = Math.sin(angle);
@@ -408,9 +480,12 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.toArray = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return [matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5], matrix[6], matrix[7], matrix[8]];
         }
@@ -438,18 +513,21 @@ define([
      * @exception {DeveloperError} column is required and must be 0, 1, or 2.
      *
      * @example
-     * var myMatrix = new Matrix3();
-     * var column1Row0Index = Matrix3.getElementIndex(1, 0);
+     * var myMatrix = new Cesium.Matrix3();
+     * var column1Row0Index = Cesium.Matrix3.getElementIndex(1, 0);
      * var column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      */
     Matrix3.getElementIndex = function(column, row) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 2) {
             throw new DeveloperError('row is required and must be 0, 1, or 2.');
         }
         if (typeof column !== 'number' || column < 0 || column > 2) {
             throw new DeveloperError('column is required and must be 0, 1, or 2.');
         }
+        //>>includeEnd('debug');
+
         return column * 3 + row;
     };
 
@@ -468,6 +546,7 @@ define([
      * @see Cartesian3
      */
     Matrix3.getColumn = function(matrix, index, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
@@ -475,6 +554,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 2) {
             throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
+        //>>includeEnd('debug');
 
         var startIndex = index * 3;
         var x = matrix[startIndex];
@@ -507,6 +587,7 @@ define([
      * @see Cartesian3
      */
     Matrix3.setColumn = function(matrix, index, cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
@@ -516,6 +597,8 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 2) {
             throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
+        //>>includeEnd('debug');
+
         result = Matrix3.clone(matrix, result);
         var startIndex = index * 3;
         result[startIndex] = cartesian.x;
@@ -539,6 +622,7 @@ define([
      * @see Cartesian3
      */
     Matrix3.getRow = function(matrix, index, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
@@ -546,6 +630,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 2) {
             throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
+        //>>includeEnd('debug');
 
         var x = matrix[index];
         var y = matrix[index + 3];
@@ -577,6 +662,7 @@ define([
      * @see Cartesian3
      */
     Matrix3.setRow = function(matrix, index, cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
@@ -586,6 +672,7 @@ define([
         if (typeof index !== 'number' || index < 0 || index > 2) {
             throw new DeveloperError('index is required and must be 0, 1, or 2.');
         }
+        //>>includeEnd('debug');
 
         result = Matrix3.clone(matrix, result);
         result[index] = cartesian.x;
@@ -607,12 +694,14 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Matrix3.multiply = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        //>>includeEnd('debug');
 
         var column0Row0 = left[0] * right[0] + left[3] * right[1] + left[6] * right[2];
         var column0Row1 = left[1] * right[0] + left[4] * right[1] + left[7] * right[2];
@@ -656,12 +745,14 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Matrix3.multiplyByVector = function(matrix, cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        //>>includeEnd('debug');
 
         var vX = cartesian.x;
         var vY = cartesian.y;
@@ -693,12 +784,14 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Matrix3.multiplyByScalar = function(matrix, scalar, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix3(matrix[0] * scalar, matrix[3] * scalar, matrix[6] * scalar,
@@ -728,9 +821,11 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.negate = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             return new Matrix3(-matrix[0], -matrix[3], -matrix[6],
@@ -760,9 +855,11 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.transpose = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         var column0Row0 = matrix[0];
         var column0Row1 = matrix[3];
@@ -894,23 +991,25 @@ define([
      * @example
      * var a = //... symetric matrix
      * var result = {
-     *     unitary : new Matrix3(),
-     *     diagonal : new Matrix3()
+     *     unitary : new Cesium.Matrix3(),
+     *     diagonal : new Cesium.Matrix3()
      * };
-     * Matrix3.getEigenDecomposition(a, result);
+     * Cesium.Matrix3.getEigenDecomposition(a, result);
      *
-     * var unitaryTranspose = Matrix3.transpose(result.unitary);
-     * var b = Matrix.multiply(result.unitary, result.diagonal);
-     * Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
+     * var unitaryTranspose = Cesium.Matrix3.transpose(result.unitary);
+     * var b = Cesium.Matrix3.multiply(result.unitary, result.diagonal);
+     * Cesium.Matrix3.multiply(b, unitaryTranspose, b); // b is now equal to a
      *
-     * var lambda = Matrix3.getColumn(result.diagonal, 0).x;  // first eigenvalue
-     * var v = Matrix3.getColumn(result.unitary, 0);          // first eigenvector
-     * var c = Cartesian3.multiplyByScalar(v, lambda);        // equal to Matrix3.multiplyByVector(a, v)
+     * var lambda = Cesium.Matrix3.getColumn(result.diagonal, 0).x;  // first eigenvalue
+     * var v = Cesium.Matrix3.getColumn(result.unitary, 0);          // first eigenvector
+     * var c = Cesium.Cartesian3.multiplyByScalar(v, lambda);        // equal to Cesium.Matrix3.multiplyByVector(a, v)
      */
     Matrix3.getEigenDecomposition = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
+        //>>includeEnd('debug');
 
         // This routine was created based upon Matrix Computations, 3rd ed., by Golub and Van Loan,
         // section 8.4.3 The Classical Jacobi Algorithm
@@ -957,9 +1056,12 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.abs = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Matrix3(Math.abs(matrix[0]), Math.abs(matrix[3]), Math.abs(matrix[6]),
                                Math.abs(matrix[1]), Math.abs(matrix[4]), Math.abs(matrix[7]),
@@ -988,9 +1090,11 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix3.determinant = function(matrix) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         var m11 = matrix[0];
         var m21 = matrix[3];
@@ -1017,9 +1121,11 @@ define([
      * @exception {DeveloperError} matrix is not invertible.
      */
     Matrix3.inverse = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
+        //>>includeEnd('debug');
 
         var m11 = matrix[0];
         var m21 = matrix[1];
@@ -1082,9 +1188,11 @@ define([
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Matrix3.equalsEpsilon = function(left, right, epsilon) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number');
         }
+        //>>includeEnd('debug');
 
         return (left === right) ||
                 (defined(left) &&

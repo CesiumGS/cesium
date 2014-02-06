@@ -50,7 +50,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
      * @example
-     * scene.skyBox = new SkyBox({
+     * scene.skyBox = new Cesium.SkyBox({
      *   sources : {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
@@ -106,8 +106,8 @@ define([
             return undefined;
         }
 
-        // The sky box is only rendered during the color pass; it is not pickable, it doesn't cast shadows, etc.
-        if (!frameState.passes.color) {
+        // The sky box is only rendered during the render pass; it is not pickable, it doesn't cast shadows, etc.
+        if (!frameState.passes.render) {
             return undefined;
         }
 
@@ -115,6 +115,7 @@ define([
             this._sources = this.sources;
             var sources = this.sources;
 
+            //>>includeStart('debug', pragmas.debug);
             if ((!defined(sources.positiveX)) ||
                 (!defined(sources.negativeX)) ||
                 (!defined(sources.positiveY)) ||
@@ -131,6 +132,7 @@ define([
                 (typeof sources.positiveX !== typeof sources.negativeZ)) {
                 throw new DeveloperError('sources properties must all be the same type.');
             }
+            //>>includeEnd('debug');
 
             if (typeof sources.positiveX === 'string') {
                 // Given urls for cube-map images.  Load them.
@@ -161,16 +163,16 @@ define([
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
             }));
-            var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+            var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry: geometry,
-                attributeIndices: attributeIndices,
+                attributeLocations: attributeLocations,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });

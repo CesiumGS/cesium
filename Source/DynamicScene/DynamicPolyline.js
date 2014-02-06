@@ -86,9 +86,12 @@ define(['../Core/defaultValue',
      * @exception {DeveloperError} source is required.
      */
     DynamicPolyline.prototype.merge = function(source) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
+        //>>includeEnd('debug');
+
         this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
         this.width = defaultValue(this.width, source.width);

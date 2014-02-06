@@ -11,31 +11,31 @@ defineSuite([
     it('discriminant throws without a', function() {
         expect(function() {
             QuarticRealPolynomial.discriminant();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without b', function() {
         expect(function() {
             QuarticRealPolynomial.discriminant(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without c', function() {
         expect(function() {
             QuarticRealPolynomial.discriminant(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without d', function() {
         expect(function() {
             QuarticRealPolynomial.discriminant(1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without e', function() {
         expect(function() {
             QuarticRealPolynomial.discriminant(1.0, 1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant', function() {
@@ -64,31 +64,31 @@ defineSuite([
     it('real roots throws without a', function() {
         expect(function() {
             QuarticRealPolynomial.realRoots();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without b', function() {
         expect(function() {
             QuarticRealPolynomial.realRoots(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without c', function() {
         expect(function() {
             QuarticRealPolynomial.realRoots(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without d', function() {
         expect(function() {
             QuarticRealPolynomial.realRoots(1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without e', function() {
         expect(function() {
             QuarticRealPolynomial.realRoots(1.0, 1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('four repeated roots', function() {

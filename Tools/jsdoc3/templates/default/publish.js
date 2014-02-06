@@ -460,7 +460,12 @@
         var url = helper.createLink(doclet);
         
         url = url.replace(/(#.+|$)/, hash);
-        return '<a href="'+url+'">'+hash+'</a>';
+        pos = url.indexOf('|')
+        if(pos === -1){
+            return '<a href="'+url+'" target="_self">'+hash.substr(1)+'</a>';
+        }
+        return '<a href="'+url.substr(0, pos)+'" target="_self">'+url.substr(pos+1)+'</a>';
+
     }
     
 })();

@@ -178,6 +178,7 @@ define([
                     billboard.setShow(label._show);
                     billboard.setPosition(label._position);
                     billboard.setEyeOffset(label._eyeOffset);
+                    billboard.setPixelOffset(label._pixelOffset);
                     billboard.setHorizontalOrigin(HorizontalOrigin.LEFT);
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
@@ -187,6 +188,7 @@ define([
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
                 glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
+                glyph.billboard.setPixelOffsetScaleByDistance(label._pixelOffsetScaleByDistance);
             }
         }
 
@@ -223,9 +225,7 @@ define([
             widthOffset -= totalWidth * scale;
         }
 
-        var pixelOffset = label._pixelOffset;
-
-        glyphPixelOffset.x = pixelOffset.x + widthOffset;
+        glyphPixelOffset.x = widthOffset;
         glyphPixelOffset.y = 0;
 
         var verticalOrigin = label._verticalOrigin;
@@ -234,15 +234,15 @@ define([
             dimensions = glyph.dimensions;
 
             if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                glyphPixelOffset.y = pixelOffset.y - dimensions.descent * scale;
+                glyphPixelOffset.y = -dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
+                glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
             if (defined(glyph.billboard)) {
-                glyph.billboard.setPixelOffset(glyphPixelOffset);
+                glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
             glyphPixelOffset.x += dimensions.width * scale;
@@ -288,7 +288,7 @@ define([
      *
      * @example
      * // Create a label collection with two labels
-     * var labels = new LabelCollection();
+     * var labels = new Cesium.LabelCollection();
      * labels.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
      *   text : 'A label'
@@ -328,22 +328,22 @@ define([
          * @see czm_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
-         * labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
-         *   position : new Cartesian3(0.0, 0.0, 0.0),
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
          *   text     : 'Center'
          * });
          * labels.add({
-         *   position : new Cartesian3(1000000.0, 0.0, 0.0),
+         *   position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
          *   text     : 'East'
          * });
          * labels.add({
-         *   position : new Cartesian3(0.0, 1000000.0, 0.0),
+         *   position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
          *   text     : 'North'
          * });
          * labels.add({
-         *   position : new Cartesian3(0.0, 0.0, 1000000.0),
+         *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
          *   text     : 'Up'
          * });
          */
@@ -352,7 +352,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -388,23 +388,23 @@ define([
      * // Example 1:  Add a label, specifying all the default values.
      * var l = labels.add({
      *   show : true,
-     *   position : Cartesian3.ZERO,
+     *   position : Cesium.Cartesian3.ZERO,
      *   text : '',
      *   font : '30px sans-serif',
      *   fillColor : 'white',
      *   outlineColor : 'white',
-     *   style : LabelStyle.FILL,
-     *   pixelOffset : Cartesian2.ZERO,
-     *   eyeOffset : Cartesian3.ZERO,
-     *   horizontalOrigin : HorizontalOrigin.LEFT,
-     *   verticalOrigin : VerticalOrigin.BOTTOM,
+     *   style : Cesium.LabelStyle.FILL,
+     *   pixelOffset : Cesium.Cartesian2.ZERO,
+     *   eyeOffset : Cesium.Cartesian3.ZERO,
+     *   horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+     *   verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
      *   scale : 1.0
      * });
      *
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
      * var l = labels.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cartographic(longitude, latitude, height)),
+     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height)),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
@@ -532,9 +532,11 @@ define([
      * }
      */
     LabelCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._labels[index];
     };

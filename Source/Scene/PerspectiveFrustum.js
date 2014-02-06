@@ -23,8 +23,8 @@ define([
      * @see PerspectiveOffCenterFrustum
      *
      * @example
-     * var frustum = new PerspectiveFrustum();
-     * frustum.fovy = CesiumMath.PI_OVER_THREE;
+     * var frustum = new Cesium.PerspectiveFrustum();
+     * frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
@@ -66,14 +66,17 @@ define([
     };
 
     function update(frustum) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
+        //>>includeEnd('debug');
 
         var f = frustum._offCenterFrustum;
 
         if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
+            //>>includeStart('debug', pragmas.debug);
             if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
                 throw new DeveloperError('fovy must be in the range [0, PI).');
             }
@@ -85,6 +88,7 @@ define([
             if (frustum.near < 0 || frustum.near > frustum.far) {
                 throw new DeveloperError('near must be greater than zero and less than far.');
             }
+            //>>includeEnd('debug');
 
             frustum._fovy = frustum.fovy;
             frustum._aspectRatio = frustum.aspectRatio;
@@ -162,12 +166,12 @@ define([
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
-     *
-     * @returns {Cartesian2} A {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @example
      * // Example 1
@@ -182,34 +186,45 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
-     * var toCenterProj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
-     * var distance = Cartesian3.magnitude(toCenterProj);
+     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
+     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
+     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize({
      *     width : canvas.clientWidth,
      *     height : canvas.clientHeight
      * }, distance);
      */
-    PerspectiveFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance) {
+    PerspectiveFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
         update(this);
-        return this._offCenterFrustum.getPixelSize(drawingBufferDimensions, distance);
+        return this._offCenterFrustum.getPixelSize(drawingBufferDimensions, distance, result);
     };
 
     /**
      * Returns a duplicate of a PerspectiveFrustum instance.
-     *
      * @memberof PerspectiveFrustum
      *
-     * @returns {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
+     * @param {PerspectiveFrustum} [result] The object onto which to store the result.
+     * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
      */
-    PerspectiveFrustum.prototype.clone = function() {
-        var frustum = new PerspectiveFrustum();
-        frustum.fovy = this.fovy;
-        frustum.aspectRatio = this.aspectRatio;
-        frustum.near = this.near;
-        frustum.far = this.far;
-        frustum._offCenterFrustum = this._offCenterFrustum.clone();
-        return frustum;
+    PerspectiveFrustum.prototype.clone = function(result) {
+        if (!defined(result)) {
+            result = new PerspectiveFrustum();
+        }
+
+        result.fovy = this.fovy;
+        result.aspectRatio = this.aspectRatio;
+        result.near = this.near;
+        result.far = this.far;
+
+        // force update of clone to compute matrices
+        result._fovy = undefined;
+        result._aspectRatio = undefined;
+        result._near = undefined;
+        result._far = undefined;
+
+        this._offCenterFrustum.clone(result._offCenterFrustum);
+
+        return result;
     };
 
     /**

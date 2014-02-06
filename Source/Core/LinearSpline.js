@@ -19,25 +19,34 @@ define([
      * @alias LinearSpline
      * @constructor
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     *                The values are in no way connected to the clock time. They are the parameterization for the curve.
+     * @param {Array} options.points The array of {@link Cartesian3} control points.
      *
-     * @exception {DeveloperError} points is required.
+     * @exception {DeveloperError} points and times are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
-     * @exception {DeveloperError} times is required.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
+     * @see BSpline
+     * @see BezierSpline
+     * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see QuaternionSpline
+     *
      * @example
-     * var spline = new LinearSpline({
+     * var spline = new Cesium.LinearSpline({
      *     times : [ 0.0, 1.5, 3.0, 4.5, 6.0 ],
      *     points : [
-     *         new Cartesian3(1235398.0, -4810983.0, 4146266.0),
-     *         new Cartesian3(1372574.0, -5345182.0, 4606657.0),
-     *         new Cartesian3(-757983.0, -5542796.0, 4514323.0),
-     *         new Cartesian3(-2821260.0, -5248423.0, 4021290.0),
-     *         new Cartesian3(-2539788.0, -4724797.0, 3620093.0)
+     *         new Cesium.Cartesian3(1235398.0, -4810983.0, 4146266.0),
+     *         new Cesium.Cartesian3(1372574.0, -5345182.0, 4606657.0),
+     *         new Cesium.Cartesian3(-757983.0, -5542796.0, 4514323.0),
+     *         new Cesium.Cartesian3(-2821260.0, -5248423.0, 4021290.0),
+     *         new Cesium.Cartesian3(-2539788.0, -4724797.0, 3620093.0)
      *     ]
      * });
+     *
+     * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
+     * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
      */
     var LinearSpline = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -45,21 +54,17 @@ define([
         var points = options.points;
         var times = options.times;
 
-        if (!defined(points)) {
-            throw new DeveloperError('points is required.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(points) || !defined(times)) {
+            throw new DeveloperError('points and times are required.');
         }
-
         if (points.length < 2) {
             throw new DeveloperError('points.length must be greater than or equal to 2.');
         }
-
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-
         if (times.length !== points.length) {
             throw new DeveloperError('times.length must be equal to points.length.');
         }
+        //>>includeEnd('debug');
 
         /**
          * An array of times for the control points.

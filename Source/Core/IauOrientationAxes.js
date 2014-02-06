@@ -2,7 +2,6 @@
 define([
         './Cartesian3',
         './defined',
-        './DeveloperError',
         './Iau2000Orientation',
         './JulianDate',
         './Math',
@@ -11,7 +10,6 @@ define([
     ], function(
         Cartesian3,
         defined,
-        DeveloperError,
         Iau2000Orientation,
         JulianDate,
         CesiumMath,

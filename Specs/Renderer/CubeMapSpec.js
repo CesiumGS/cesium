@@ -188,7 +188,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -254,7 +254,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -307,7 +307,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -389,7 +389,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -480,7 +480,7 @@ defineSuite([
             var fs =
                 'uniform samplerCube u_texture;' +
                 'uniform mediump vec3 u_direction;' +
-                'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+                'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
             sp = context.createShaderProgram(vs, fs, {
                 position : 0
             });
@@ -555,7 +555,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_texture;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_texture, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -613,7 +613,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -701,7 +701,7 @@ defineSuite([
         var fs =
             'uniform samplerCube u_cubeMap;' +
             'uniform mediump vec3 u_direction;' +
-            'void main() { gl_FragColor = textureCube(u_cubeMap, u_direction); }';
+            'void main() { gl_FragColor = textureCube(u_cubeMap, normalize(u_direction)); }';
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
@@ -885,13 +885,13 @@ defineSuite([
     it('fails to create (description)', function() {
         expect(function() {
             cubeMap = context.createCubeMap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source)', function() {
         expect(function() {
             cubeMap = context.createCubeMap({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (width, no height)', function() {
@@ -899,7 +899,7 @@ defineSuite([
             cubeMap = context.createCubeMap({
                 width : 16
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (width != height)', function() {
@@ -908,7 +908,7 @@ defineSuite([
                 width : 16,
                 height : 32
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (small width)', function() {
@@ -917,7 +917,7 @@ defineSuite([
                 width : 0,
                 height : 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (large width)', function() {
@@ -926,7 +926,7 @@ defineSuite([
                 width : context.getMaximumCubeMapSize() + 1,
                 height : context.getMaximumCubeMapSize() + 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (PixelFormat)', function() {
@@ -936,7 +936,7 @@ defineSuite([
                 height : 16,
                 pixelFormat : 'invalid PixelFormat'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws during creation if pixel format is depth or depth-stencil', function() {
@@ -946,7 +946,7 @@ defineSuite([
                 height : 16,
                 pixelFormat : PixelFormat.DEPTH_COMPONENT
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
@@ -957,7 +957,7 @@ defineSuite([
                     height : 16,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -969,7 +969,7 @@ defineSuite([
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : 'invalid pixelDatatype'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source)', function() {
@@ -977,7 +977,7 @@ defineSuite([
             cubeMap = context.createCubeMap({
                 source : {}
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (source width and height)', function() {
@@ -992,7 +992,7 @@ defineSuite([
                     negativeZ : blueOverRedImage // 1x2
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (source)', function() {
@@ -1003,7 +1003,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveX().copyFrom();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (xOffset)', function() {
@@ -1015,7 +1015,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveY().copyFrom(image, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (yOffset)', function() {
@@ -1027,7 +1027,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveZ().copyFrom(image, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (width)', function() {
@@ -1040,7 +1040,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeX().copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from an image (height)', function() {
@@ -1053,7 +1053,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeY().copyFrom(image);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (invalid data type)', function() {
@@ -1066,7 +1066,7 @@ defineSuite([
 
             expect(function() {
                 cubeMap.getPositiveX().copyFromFramebuffer();
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1078,7 +1078,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveX().copyFromFramebuffer(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (yOffset)', function() {
@@ -1089,7 +1089,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveY().copyFromFramebuffer(0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (framebufferXOffset)', function() {
@@ -1100,7 +1100,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getPositiveZ().copyFromFramebuffer(0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (framebufferYOffset)', function() {
@@ -1111,7 +1111,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeX().copyFromFramebuffer(0, 0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (width)', function() {
@@ -1122,7 +1122,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeY().copyFromFramebuffer(0, 0, 0, 0, cubeMap.getWidth() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to copy from the frame buffer (height)', function() {
@@ -1133,7 +1133,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.getNegativeZ().copyFromFramebuffer(0, 0, 0, 0, 0, cubeMap.getHeight() + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to generate mipmaps (width)', function() {
@@ -1144,7 +1144,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.generateMipmap();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to generate mipmaps (hint)', function() {
@@ -1155,7 +1155,7 @@ defineSuite([
 
         expect(function() {
             cubeMap.generateMipmap('invalid hint');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
@@ -1167,10 +1167,10 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 }));
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1183,10 +1183,10 @@ defineSuite([
             });
 
             expect(function() {
-                cubeMap.setSampler(context.createSample({
+                cubeMap.setSampler(context.createSampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 }));
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -1199,6 +1199,6 @@ defineSuite([
 
         expect(function() {
             c.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');
