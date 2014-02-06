@@ -77,8 +77,10 @@ defineSuite([
         model.readyToRender.addEventListener(function(model) {
             readyToRender = true;
 
+            // Always use initial bounding sphere, ignoring animations
+            var worldBoundingSphere = model.computeWorldBoundingSphere();
+
             model.zoomTo = function() {
-                var worldBoundingSphere = model.computeWorldBoundingSphere();
                 var center = worldBoundingSphere.center;
                 var transform = Transforms.eastNorthUpToFixedFrame(center);
 
@@ -382,10 +384,10 @@ defineSuite([
         var spyAdd = jasmine.createSpy('listener');
         animations.animationAdded.addEventListener(spyAdd);
         var a = animations.add({
-            name : 'animation_0'
+            name : 'animation_1'
         });
         expect(a).toBeDefined();
-        expect(a.name).toEqual('animation_0');
+        expect(a.name).toEqual('animation_1');
         expect(a.startTime).not.toBeDefined();
         expect(a.startOffset).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
@@ -416,7 +418,7 @@ defineSuite([
         var m = new Model();
         expect(function() {
             return m.activeAnimations.add({
-                name : 'animation_0'
+                name : 'animation_1'
             });
         }).toThrowDeveloperError();
     });
@@ -432,9 +434,16 @@ defineSuite([
     it('add throws when speedup is less than or equal to zero.', function() {
         expect(function() {
             return animBoxesModel.activeAnimations.add({
-                name : 'animation_0',
+                name : 'animation_1',
                 speedup : 0.0
             });
+        }).toThrowDeveloperError();
+    });
+
+    it('get throws without an index', function() {
+        var m = new Model();
+        expect(function() {
+            return m.activeAnimations.get();
         }).toThrowDeveloperError();
     });
 
@@ -662,6 +671,40 @@ defineSuite([
         expect(spyUpdate.calls[7].args[2]).toEqualEpsilon(0.416, CesiumMath.EPSILON3);
         expect(animations.remove(a)).toEqual(true);
         animBoxesModel.show = false;
+    });
+
+    it('Animates and renders', function() {
+        var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
+        var animations = animBoxesModel.activeAnimations;
+
+        var a = animations.add({
+            name : 'animation_1',
+            startTime : time,
+            update : updateEvent
+        });
+
+        var node = animBoxesModel.getNode('Geometry-mesh020Node');
+        var matrix;
+
+        var updateEvent = new Event();
+        updateEvent.addEventListener(function(model, animation, time) {
+            // Verify target node transform changes at each animation update
+            expect(!defined(matrix) || !Matrix4.equals(matrix, node.matrix)).toEqual(true);
+            matrix = Matrix4.clone(node.matrix);
+        });
+
+        animBoxesModel.zoomTo();
+
+        for (var i = 0; i < 4; ++i) {
+            var t = time.addSeconds(i);
+            expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
+
+            animBoxesModel.show = true;
+            expect(scene.renderForSpecs(t)).not.toEqual([0, 0, 0, 255]);
+            animBoxesModel.show = false;
+        }
+
+        expect(animations.remove(a)).toEqual(true);
     });
 
     ///////////////////////////////////////////////////////////////////////////
