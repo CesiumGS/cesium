@@ -11,7 +11,7 @@ Beta Releases
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
 * Added `Intersections2D` class containing operations on 2D triangles.
-* Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  
+* Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
 
 ### b25 - 2014-02-03
 
