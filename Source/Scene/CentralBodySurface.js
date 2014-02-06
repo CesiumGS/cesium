@@ -8,9 +8,10 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
+        '../Core/FeatureDetection',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -34,9 +35,10 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        FeatureDetection,
         DeveloperError,
         EllipsoidalOccluder,
+        FeatureDetection,
+        getTimestamp,
         Intersect,
         Matrix4,
         PrimitiveType,
@@ -631,8 +633,6 @@ define([
         surface._tileLoadQueue.push(tile);
     }
 
-    var timer = defined(window) && defined(window.performance) && defined(window.performance.now) ? window.performance : Date;
-
     function processTileLoadQueue(surface, context, frameState) {
         var tileLoadQueue = surface._tileLoadQueue;
         var terrainProvider = surface._terrainProvider;
@@ -646,7 +646,7 @@ define([
         // we're allowed to keep.
         surface._tileReplacementQueue.trimTiles(surface._tileCacheSize);
 
-        var startTime = timer.now();
+        var startTime = getTimestamp();
         var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
@@ -656,7 +656,7 @@ define([
 
             tile.processStateMachine(context, terrainProvider, imageryLayerCollection);
 
-            if (timer.now() >= endTime) {
+            if (getTimestamp() >= endTime) {
                 break;
             }
         }
