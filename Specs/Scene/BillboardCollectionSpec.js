@@ -1326,7 +1326,7 @@ defineSuite([
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         });
 
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = maxRadii * Math.PI;
         orthoFrustum.left = -orthoFrustum.right;

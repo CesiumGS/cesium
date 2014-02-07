@@ -73,7 +73,7 @@ define([
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
         this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025));
-        var innerRadius = ellipsoid.getMaximumRadius();
+        var innerRadius = ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
         var that = this;

@@ -82,7 +82,7 @@ defineSuite([
     function switchTo2D() {
         frameState.mode = SceneMode.SCENE2D;
         var frustum = new OrthographicFrustum();
-        frustum.right = Ellipsoid.WGS84.getMaximumRadius() * Math.PI;
+        frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;

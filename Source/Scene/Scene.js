@@ -446,7 +446,7 @@ define([
         var cb = scene._primitives.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.ellipsoid;
-            scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }

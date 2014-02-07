@@ -335,7 +335,7 @@ defineSuite([
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
         var frustum = new OrthographicFrustum();
-        frustum.right = Ellipsoid.WGS84.getMaximumRadius() * Math.PI;
+        frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;

@@ -27,7 +27,7 @@ defineSuite([
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        expect(occluder.getEllipsoid()).toEqual(ellipsoid);
+        expect(occluder.ellipsoid).toEqual(ellipsoid);
     });
 
     it('throws if ellipsoid is not provided to constructor', function() {
@@ -57,7 +57,7 @@ defineSuite([
     it('reports not visible when point is directly behind ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(-7000000, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
@@ -66,7 +66,7 @@ defineSuite([
     it('reports visible when point is in front of ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(6900000.0, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(true);
@@ -75,7 +75,7 @@ defineSuite([
     it('reports visible when point is in opposite direction from ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(7100000.0, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(true);
@@ -84,7 +84,7 @@ defineSuite([
     it('reports not visible when point is over horizon', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(4510635.0, 4510635.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);

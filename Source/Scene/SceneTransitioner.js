@@ -95,7 +95,7 @@ define([
         var context = scene.context;
 
         // Position camera and size frustum so the entire 2D map is visible
-        var maxRadii = this._ellipsoid.getMaximumRadius();
+        var maxRadii = this._ellipsoid.maximumRadius;
         var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         var direction = Cartesian3.normalize(Cartesian3.negate(position));
         var up = Cartesian3.UNIT_Y;
@@ -404,7 +404,7 @@ define([
         var startDir = camera.direction;
         var startUp = camera.up;
 
-        var maxRadii = transitioner._ellipsoid.getMaximumRadius();
+        var maxRadii = transitioner._ellipsoid.maximumRadius;
         var endPos = transitioner._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(endPos), 2.0 * maxRadii);
         var endDir = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, endPos));
@@ -489,7 +489,7 @@ define([
     function morphFromColumbusViewTo2D(transitioner, duration, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        var maxRadii = transitioner._ellipsoid.getMaximumRadius();
+        var maxRadii = transitioner._ellipsoid.maximumRadius;
 
         setCameraTransform(camera, transitioner._cameraCV.transform);
 
@@ -533,7 +533,7 @@ define([
     function morphFrom3DTo2D(transitioner, duration, onComplete) {
         duration = duration * 0.5;
 
-        var maxRadii = transitioner._ellipsoid.getMaximumRadius();
+        var maxRadii = transitioner._ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(transitioner._camera3D.frustum.fovy * 0.5);
         var tanTheta = transitioner._camera3D.frustum.aspectRatio * tanPhi;
@@ -553,7 +553,7 @@ define([
     function morphOrthographicToPerspective(transitioner, duration, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        var maxRadii = transitioner._ellipsoid.getMaximumRadius();
+        var maxRadii = transitioner._ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;

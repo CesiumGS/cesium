@@ -87,7 +87,7 @@ define([
 
     function createPath3D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
-        var radius = ellipsoid.getMaximumRadius();
+        var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
@@ -208,7 +208,7 @@ define([
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole map is visible
-        var radius = ellipsoid.getMaximumRadius();
+        var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, Math.PI * radius,  CesiumMath.PI_OVER_TWO * radius);
 

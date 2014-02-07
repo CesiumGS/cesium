@@ -552,7 +552,7 @@ define([
         }
 
         Cartesian3.clone(Cartesian3.ZERO, result.center);
-        result.radius = ellipsoid.getMaximumRadius();
+        result.radius = ellipsoid.maximumRadius;
         return result;
     };
 
