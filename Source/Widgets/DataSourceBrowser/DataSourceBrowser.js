@@ -155,11 +155,12 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
                        clickBubble: false, \
                        cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
                        css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
-        <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+        <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
             data-bind="visible: configure.canExecute, \
                        click: configure, \
                        clickBubble: false, \
-                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }">configure</span>\
+                       cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
+                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
     </span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
         data-bind="click: remove">&times;</span></span>\
@@ -178,11 +179,12 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
                        clickBubble: false, \
                        cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
                        css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
-        <span class="cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+        <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
             data-bind="visible: configure.canExecute, \
                        click: configure, \
                        clickBubble: false, \
-                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }">configure</span>\
+                       cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
+                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
     </span>\
     <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
         data-bind="click: remove">&times;</span></span>\

@@ -232,11 +232,8 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     line-height: 16px;
 }
 
+.cesium-dataSourceBrowser-item-clock,
 .cesium-dataSourceBrowser-item-configure {
-    padding: 0 10px;
-}
-
-.cesium-dataSourceBrowser-item-clock {
     display: inline-block;
     box-sizing: border-box;
     width: 18px;
