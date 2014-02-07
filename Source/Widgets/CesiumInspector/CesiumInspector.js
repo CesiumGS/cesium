@@ -210,16 +210,15 @@ define([
         seTile.setAttribute('data-bind', 'click: selectSE');
 
         var tileText = document.createElement('div');
-        tileText.style['padding-bottom'] = '10px';
-        tileText.style['border-bottom'] = '1px solid #aaa';
+        tileText.className = 'cesium-cesiumInspector-tileText';
         tileInfo.className = 'cesium-cesiumInspector-frustumStats';
         tileInfo.appendChild(tileText);
         tileInfo.setAttribute('data-bind', 'css: {"cesium-cesiumInspector-show" : hasPickedTile, "cesium-cesiumInspector-hide" : !hasPickedTile}');
         tileText.setAttribute('data-bind', 'html: tileText');
 
         var relativeText = document.createElement('div');
+        relativeText.className = 'cesium-cesiumInspector-relativeText';
         relativeText.textContent = 'Select relative:';
-        relativeText.style['padding-top'] = '10px';
         tileInfo.appendChild(relativeText);
 
         var table = document.createElement('table');

@@ -72,12 +72,13 @@ defineSuite([
         viewModel.performance = true;
         viewModel.showPerformance();
         scene.render();
-        expect(viewModel.scene.getPrimitives().getLength()).toBe(1);
+        var elements = document.getElementsByClassName('cesium-cesiumInspector-performanceDisplay');
+        expect(elements[0].innerHTML).not.toEqual('');
 
         viewModel.performance = false;
         viewModel.showPerformance();
         scene.render();
-        expect(viewModel.scene.getPrimitives().getLength()).toBe(0);
+        expect(elements[0].innerHTML).toEqual('');
     });
 
     it ('primitive bounding sphere', function() {

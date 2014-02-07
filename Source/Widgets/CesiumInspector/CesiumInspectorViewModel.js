@@ -57,9 +57,7 @@ define([
     var bc = new Color(0.15, 0.15, 0.15, 0.75);
 
     var performanceContainer = document.createElement('div');
-    performanceContainer.style.position = 'absolute';
-    performanceContainer.style.right= '10px';
-    performanceContainer.style.top = '50px';
+    performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
 
     /**
      * The view model for {@link CesiumInspector}.
@@ -84,6 +82,9 @@ define([
         this._tile = undefined;
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
+
+        var centralBody = this._scene.getPrimitives().getCentralBody();
+        centralBody.depthTestAgainstTerrain = true;
 
         /**
          * Gets or sets the show frustums state.  This property is observable.
@@ -325,7 +326,6 @@ define([
             return true;
         });
 
-        var centralBody = this._scene.getPrimitives().getCentralBody();
         this._showWireframe = createCommand(function() {
             centralBody._surface._debug.wireframe = that.wireframe;
             return true;
@@ -382,6 +382,8 @@ define([
                     }
 
                     centralBody._surface._tilesToRenderByTextureCount[readyTextureCount] = [that._tile];
+                    centralBody._surface._tileLoadQueue.push(that._tile);
+
                 }
             }
             return true;
@@ -408,7 +410,7 @@ define([
         var selectTile = function (e) {
             var selectedTile;
             var ellipsoid = centralBody.getEllipsoid();
-            var cartesian = that._scene.getCamera().controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
+            var cartesian = that._scene.getCamera().controller.pickEllipsoid({x: e.clientX, y: e.clientY}, ellipsoid);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);

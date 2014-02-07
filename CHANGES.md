@@ -15,7 +15,8 @@ Beta Releases
 * Added `Intersections2D` class containing operations on 2D triangles.
 * Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.  
-* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`. 
+* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
+* Added `CesiumInspector` widget, which can be seen in the CesiumViewer app using the query parameter "inspector=true". 
 
 ### b25 - 2014-02-03
 
@@ -81,7 +82,6 @@ Beta Releases
 * Added `BoundingSphere.transformsWithoutScale`
 * Added `fromArray` function to `Matrix2`, `Matrix3` and `Matrix4`
 * Added `Matrix4.multiplyTransformation`, `Matrix4.multiplyByPointAsVector`
-* Added `CesiumInspector` widget.
 
 ### b23 - 2013-12-02
 
