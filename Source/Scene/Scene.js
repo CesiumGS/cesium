@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
@@ -48,6 +49,7 @@ define([
         Color,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         GeographicProjection,
@@ -333,6 +335,95 @@ define([
 
         this._debugSphere = undefined;
 
+        defineProperties(Scene.prototype, {
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            canvas : {
+                get : function() {
+                    return this._canvas;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            context : {
+                get : function() {
+                    return this._context;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            primitives : {
+                get : function() {
+                    return this._primitives;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            camera : {
+                get : function() {
+                    return this._camera;
+                },
+                enumerable : true,
+                configurable : true
+            },
+            // TODO: setCamera
+
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            screenSpaceCameraController : {
+                get : function() {
+                    return this._screenSpaceCameraController;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+             * function, the previous frame's state is returned.
+             *
+             * @memberof Scene
+             */
+            frameState : {
+                get: function() {
+                    return this._frameState;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * DOC_TBA
+             * @memberof Scene
+             */
+            animations : {
+                get : function() {
+                    return this._animations;
+                },
+                enumerable : true,
+                configurable : true
+            }
+        });
+
         // initial guess at frustums.
         var near = this._camera.frustum.near;
         var far = this._camera.frustum.far;
@@ -344,72 +435,7 @@ define([
         this.initializeFrame();
     };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCanvas = function() {
-        return this._canvas;
-    };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getContext = function() {
-        return this._context;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getPrimitives = function() {
-        return this._primitives;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCamera = function() {
-        return this._camera;
-    };
-    // TODO: setCamera
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getScreenSpaceCameraController = function() {
-        return this._screenSpaceCameraController;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getUniformState = function() {
-        return this._context.getUniformState();
-    };
-
-    /**
-     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
-     * function, the previous frame's state is returned.
-     *
-     * @memberof Scene
-     */
-    Scene.prototype.getFrameState = function() {
-        return this._frameState;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getAnimations = function() {
-        return this._animations;
-    };
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -893,7 +919,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1058,7 +1084,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);

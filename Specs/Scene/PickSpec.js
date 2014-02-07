@@ -38,8 +38,8 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        primitives = scene.getPrimitives();
-        camera = scene.getCamera();
+        primitives = scene.primitives;
+        camera = scene.camera;
     });
 
     afterAll(function() {
@@ -159,7 +159,7 @@ defineSuite([
     });
 
     it('pick in 2D', function() {
-        var context = scene.getContext();
+        var context = scene.context;
         var ellipsoid = scene.scene2D.projection.getEllipsoid();
         var maxRadii = ellipsoid.getMaximumRadius();
 
@@ -190,7 +190,7 @@ defineSuite([
     });
 
     it('pick in 2D when rotated', function() {
-        var context = scene.getContext();
+        var context = scene.context;
         var ellipsoid = scene.scene2D.projection.getEllipsoid();
         var maxRadii = ellipsoid.getMaximumRadius();
 

@@ -366,16 +366,16 @@ defineSuite([
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        scene.getPrimitives().add(new Primitive({
+        scene.primitives.add(new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false,
             debugShowBoundingVolume : true
         }));
-        scene.getCamera().controller.viewExtent(extent1);
+        scene.camera.controller.viewExtent(extent1);
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

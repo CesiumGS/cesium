@@ -249,15 +249,15 @@ define(['../../Core/BoundingSphere',
 
         var trackedObjectSubscription = subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
             var scene = viewer.scene;
-            var sceneMode = scene.getFrameState().mode;
+            var sceneMode = scene.frameState.mode;
             var isTracking = defined(value);
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                scene.getScreenSpaceCameraController().enableTranslate = !isTracking;
+                scene.screenSpaceCameraController.enableTranslate = !isTracking;
             }
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                scene.getScreenSpaceCameraController().enableTilt = !isTracking;
+                scene.screenSpaceCameraController.enableTilt = !isTracking;
             }
 
             if (isTracking && defined(value.position)) {
