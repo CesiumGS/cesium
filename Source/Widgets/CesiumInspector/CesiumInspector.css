@@ -3,7 +3,7 @@
     -webkit-transition: width ease-in-out 0.25s;
     -moz-transition: width ease-in-out 0.25s;
     transition: width ease-in-out 0.25s;
-    background: #303336;
+    background: rgba(48, 51, 54, 0.8);
     border: 1px solid #444;
     color: #edffff;
     display: inline-block;
@@ -17,6 +17,7 @@
 
 .cesium-cesiumInspector-button {
     text-align: center;
+    font-size: 11pt;
 }
 
 .cesium-cesiumInspector-visible .cesium-cesiumInspector-button {
@@ -35,7 +36,7 @@
 
 .cesium-cesiumInspector-hidden {
     width: 122px;
-    height: 20px;
+    height: 17px;
 }
 
 .cesium-cesiumInspector-show {
@@ -91,7 +92,6 @@
 
 .cesium-cesiumInspector-sectionHeader {
     font-weight: bold;
-    font-size: 12pt;
 }
 
 .cesium-cesiumInspector-pickSection {
@@ -102,7 +102,7 @@
 }
 
 .cesium-cesiumInspector-section {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     -webkit-transition: max-height 0.25s;
     -moz-transition: max-height 0.25s;
     transition: max-height 0.25s;
