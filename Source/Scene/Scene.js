@@ -445,7 +445,7 @@ define([
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.getEllipsoid();
+            var ellipsoid = cb.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;

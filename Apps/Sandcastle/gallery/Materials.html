@@ -612,7 +612,7 @@ require(['Cesium'], function(Cesium) {
     function createPrimitives(widget) {
         var scene = widget.scene;
         var primitives = scene.primitives;
-        var ellipsoid = widget.centralBody.getEllipsoid();
+        var ellipsoid = widget.centralBody.ellipsoid;
 
         extent = new Cesium.ExtentPrimitive({
             extent : new Cesium.Extent(

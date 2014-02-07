@@ -131,7 +131,7 @@ require([
     function selectTile(event) {
         selectedTile = undefined;
 
-        var ellipsoid = centralBody.getEllipsoid();
+        var ellipsoid = centralBody.ellipsoid;
         var cartesian = scene.camera.controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
 
         if (Cesium.defined(cartesian)) {

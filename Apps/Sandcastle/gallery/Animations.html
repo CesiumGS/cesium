@@ -46,7 +46,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
+        var ellipsoid = widget.centralBody.ellipsoid;
         var scene = widget.scene;
         var primitives = scene.primitives;
 

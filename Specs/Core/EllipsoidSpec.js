@@ -32,7 +32,7 @@ defineSuite([
 
     it('default constructor creates zero Ellipsoid', function() {
         var ellipsoid = new Ellipsoid();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
@@ -43,7 +43,7 @@ defineSuite([
 
     it('fromCartesian3 creates zero Ellipsoid with no parameters', function() {
         var ellipsoid = Ellipsoid.fromCartesian3();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
         expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
@@ -54,7 +54,7 @@ defineSuite([
 
     it('constructor computes correct values', function() {
         var ellipsoid = new Ellipsoid(radii.x, radii.y, radii.z);
-        expect(ellipsoid.getRadii()).toEqual(radii);
+        expect(ellipsoid.radii).toEqual(radii);
         expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
         expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
         expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);
@@ -65,7 +65,7 @@ defineSuite([
 
     it('fromCartesian3 computes correct values', function() {
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        expect(ellipsoid.getRadii()).toEqual(radii);
+        expect(ellipsoid.radii).toEqual(radii);
         expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
         expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
         expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);

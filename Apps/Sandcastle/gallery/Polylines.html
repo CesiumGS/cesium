@@ -94,7 +94,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.getEllipsoid());
+    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
 
     Sandcastle.finishedLoading();
 });

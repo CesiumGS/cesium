@@ -3,6 +3,7 @@ define([
         './freezeObject',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Math',
         './Cartesian3',
@@ -11,6 +12,7 @@ define([
          freezeObject,
          defaultValue,
          defined,
+         defineProperties,
          DeveloperError,
          CesiumMath,
          Cartesian3,
@@ -72,6 +74,20 @@ define([
         this._maximumRadius = Math.max(x, y, z);
 
         this._centerToleranceSquared = CesiumMath.EPSILON1;
+
+        defineProperties(Ellipsoid.prototype, {
+            /**
+             * @memberof Ellipsoid
+             * @returns {Cartesian3} The radii of the ellipsoid.
+             */
+            radii : {
+                get: function() {
+                    return this._radii;
+                },
+                enumerable : true,
+                configurable : true
+            }
+        });
     };
 
     /**
@@ -143,14 +159,6 @@ define([
      * @memberof Ellipsoid
      */
     Ellipsoid.MOON = freezeObject(new Ellipsoid(CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS));
-
-    /**
-     * @memberof Ellipsoid
-     * @returns {Cartesian3} The radii of the ellipsoid.
-     */
-    Ellipsoid.prototype.getRadii = function() {
-        return this._radii;
-    };
 
     /**
      * @memberof Ellipsoid

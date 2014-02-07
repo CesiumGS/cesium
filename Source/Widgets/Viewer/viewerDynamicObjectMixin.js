@@ -261,7 +261,7 @@ define(['../../Core/BoundingSphere',
             }
 
             if (isTracking && defined(value.position)) {
-                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.getEllipsoid());
+                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.ellipsoid);
             } else {
                 dynamicObjectView = undefined;
             }

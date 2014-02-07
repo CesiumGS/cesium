@@ -316,7 +316,7 @@ define([
         var B_T = Matrix3.transpose(B);
 
         // Get the scaling matrix and its inverse.
-        var D_I = Matrix3.fromScale(ellipsoid.getRadii());
+        var D_I = Matrix3.fromScale(ellipsoid.radii);
         var D = Matrix3.fromScale(ellipsoid.getOneOverRadii());
 
         var C = new Matrix3(0.0, direction.z, -direction.y,

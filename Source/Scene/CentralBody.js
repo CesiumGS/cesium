@@ -5,6 +5,7 @@ define([
         '../Core/loadImage',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -49,6 +50,7 @@ define([
         loadImage,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         BoundingRectangle,
         BoundingSphere,
@@ -264,29 +266,40 @@ define([
                 return that._lightingFadeDistance;
             }
         };
+
+        defineProperties(CentralBody.prototype, {
+            /**
+             * Gets an ellipsoid describing the shape of this central body.
+             *
+             * @memberof CentralBody
+             *
+             * @returns {Ellipsoid}
+             */
+            ellipsoid : {
+                get: function() {
+                    return this._ellipsoid;
+                },
+                enumerable : true,
+                configurable : true
+            },
+
+            /**
+             * Gets the collection of image layers that will be rendered on this central body.
+             *
+             * @memberof CentralBody
+             *
+             * @returns {ImageryLayerCollection}
+             */
+            imageryLayerCollection : {
+                get : function() {
+                    return this._imageryLayerCollection;
+                },
+                enumerable : true,
+                configurable : true
+            }
+        });
     };
 
-    /**
-     * Gets an ellipsoid describing the shape of this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @returns {Ellipsoid}
-     */
-    CentralBody.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
-
-    /**
-     * Gets the collection of image layers that will be rendered on this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @returns {ImageryLayerCollection}
-     */
-    CentralBody.prototype.getImageryLayers = function() {
-        return this._imageryLayerCollection;
-    };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();
@@ -295,7 +308,7 @@ define([
     var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(centralBody, frameState) {
-        var radii = centralBody._ellipsoid.getRadii();
+        var radii = centralBody._ellipsoid.radii;
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
