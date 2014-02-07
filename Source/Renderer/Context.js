@@ -74,7 +74,6 @@ define([
         ClearCommand,
         PassState) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     function _errorToString(gl, error) {
         var message = 'OpenGL Error:  ';
@@ -2156,7 +2155,10 @@ define([
         }
     };
 
-    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    var scratchBackBufferArray;
+    if (defined(window.WebGLRenderingContext)) {
+        scratchBackBufferArray = [window.WebGLRenderingContext.BACK];
+    }
 
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
