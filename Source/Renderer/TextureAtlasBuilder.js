@@ -49,9 +49,6 @@ define([
      *
      * @param {String} url The url of the image to add to the atlas.
      * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
-     *
-     * @exception {DeveloperError} url is required.
-     * @exception {DeveloperError} textureAvailableCallback is required.
      */
     TextureAtlasBuilder.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -89,10 +86,6 @@ define([
      * retrieve and second, a function to call when the image is ready.  The function takes the image as its
      * only parameter.
      * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
-     *
-     * @exception {DeveloperError} id is required.
-     * @exception {DeveloperError} getImageCallback is required.
-     * @exception {DeveloperError} textureAvailableCallback is required.
      */
     TextureAtlasBuilder.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
         //>>includeStart('debug', pragmas.debug);

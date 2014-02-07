@@ -74,7 +74,6 @@ define([
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
      *
-     * @exception {DeveloperError} layer is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
@@ -114,8 +113,6 @@ define([
      *                         added on top of all existing layers.
      *
      * @returns {ImageryLayer} The newly created layer.
-     *
-     * @exception {DeveloperError} imageryProvider is required.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
         //>>includeStart('debug', pragmas.debug);
@@ -217,7 +214,6 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.get = function(index) {

@@ -25,11 +25,6 @@ define([
      * @param {String} description.iconUrl An icon representing the layer.
      * @param {Function|Command} description.creationFunction A function or Command which creates the ImageryProvider or array of ImageryProviders to be added to the layers collection.
      *
-     * @exception {DeveloperError} description.name is required.
-     * @exception {DeveloperError} description.tooltip is required.
-     * @exception {DeveloperError} description.iconUrl is required.
-     * @exception {DeveloperError} description.creationCommand is required.
-     *
      * @see BaseLayerPicker
      * @see ImageryProvider
      */

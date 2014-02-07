@@ -233,8 +233,6 @@ define([
      * @param {TimeStandard} [timeStandard = TimeStandard.UTC] The time standard in which the first two parameters are defined.
      *
      * @exception {DeveloperError} timeStandard is not a known TimeStandard.
-     * @exception {DeveloperError} julianDayNumber is required.
-     * @exception {DeveloperError} julianSecondsOfDay is required.
      *
      * @see JulianDate.fromDate
      * @see JulianDate.fromTotalDays
@@ -629,8 +627,6 @@ define([
      *
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
-     * @exception {DeveloperError} totalDays is required.
-     *
      * @see JulianDate
      * @see JulianDate.fromDate
      * @see JulianDate.fromIso8601
@@ -700,8 +696,6 @@ define([
      * @param {Number} epsilon The number of seconds that should separate the two JulianDates
      *
      * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      *
      * @see JulianDate#equals
      */
@@ -998,8 +992,6 @@ define([
      *
      * @returns {JulianDate} The modified result parameter or a new JulianDate instance if it was not provided.
      *
-     * @exception {DeveloperError} seconds is required and must be a number.
-     *
      * @see JulianDate#addMinutes
      * @see JulianDate#addHours
      * @see JulianDate#addDays
@@ -1030,8 +1022,6 @@ define([
      * @param {Number} duration An integer number of minutes to add or subtract.
      *
      * @returns {JulianDate} A new JulianDate object
-     *
-     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addSeconds
      * @see JulianDate#addHours
@@ -1065,8 +1055,6 @@ define([
      *
      * @returns {JulianDate} A new JulianDate object
      *
-     * @exception {DeveloperError} duration is required and must be a number.
-     *
      * @see JulianDate#addSeconds
      * @see JulianDate#addMinutes
      * @see JulianDate#addDays
@@ -1098,8 +1086,6 @@ define([
      * @param {Number} duration An integer number of days to add or subtract.
      *
      * @returns {JulianDate} A new JulianDate object
-     *
-     * @exception {DeveloperError} duration is required and must be a number.
      *
      * @see JulianDate#addSeconds
      * @see JulianDate#addMinutes
@@ -1258,8 +1244,6 @@ define([
      * @param {Number} epsilon The number of seconds that should separate the two JulianDates
      *
      * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      *
      * @see JulianDate#equals
      *

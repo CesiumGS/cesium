@@ -54,8 +54,6 @@ define([
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
      *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider

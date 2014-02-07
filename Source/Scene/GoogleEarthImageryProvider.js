@@ -72,8 +72,6 @@ define([
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     * @exception {DeveloperError} <code>description.channel</code> is required.
      * @exception {RuntimeError} Could not find layer with channel (id) of <code>description.channel</code>.
      * @exception {RuntimeError} Could not find a version in channel (id) <code>description.channel</code>.
      * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.

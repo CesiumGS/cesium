@@ -24,8 +24,6 @@ define([
      *
      * @constructor
      *
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} At least one attribute is required.
      * @exception {DeveloperError} Attribute must have a componentsPerAttribute.
      * @exception {DeveloperError} Attribute must have a valid componentDatatype or not specify it.
      * @exception {DeveloperError} Attribute must have a valid usage or not specify it.

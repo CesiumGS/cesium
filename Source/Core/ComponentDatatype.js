@@ -134,8 +134,6 @@ define([
      *
      * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
      *
-     * @exception {DeveloperError} componentDatatype is required.
-     * @exception {DeveloperError} valuesOrLength is required.
      * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
      *
      * @example
@@ -181,8 +179,6 @@ define([
      *
      * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array view of the buffer.
      *
-     * @exception {DeveloperError} componentDatatype is required.
-     * @exception {DeveloperError} buffer is required.
      * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
      */
     ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset, length) {

@@ -175,10 +175,6 @@ define([
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
      *
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
-     * @exception {DeveloperError} up is required.
-     *
      * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
@@ -321,7 +317,6 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *

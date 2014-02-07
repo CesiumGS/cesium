@@ -136,7 +136,6 @@ define(['../Core/Clock',
      * @memberof DynamicClock
      *
      * @param {DynamicClock} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicClock.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

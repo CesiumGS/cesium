@@ -40,9 +40,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     * @exception {DeveloperError} transitioner is required.
      *
      * @see SceneTransitioner
      *
