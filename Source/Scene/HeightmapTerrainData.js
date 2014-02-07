@@ -70,6 +70,7 @@ define([
      *                  otherwise, false.
      *
      * @see TerrainData
+     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...

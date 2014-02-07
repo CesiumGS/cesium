@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getTimestamp',
         '../Widgets/getElement'
     ], function(
         Color,
@@ -12,6 +13,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getTimestamp,
         getElement) {
     "use strict";
 
@@ -27,7 +29,7 @@ define([
 
         var container = getElement(description.container);
         if (!defined(container)) {
-            throw new DeveloperError('conatiner is required');
+            throw new DeveloperError('container is required');
         }
 
         this._container = container;
@@ -37,12 +39,16 @@ define([
         this._font = defaultValue(description.font, 'bold 12px Helvetica,Arial,sans-serif');
 
         var display = document.createElement('div');
-        this._fpsElement = document.createElement('div');
-        this._fpsElement.style.color = this._fpsColor;
-        this._msElement = document.createElement('div');
-        this._msElement.style.color = this._frameTimeColor;
-        display.appendChild(this._fpsElement);
-        display.appendChild(this._msElement);
+        var fpsElement = document.createElement('div');
+        this._fpsText = document.createTextNode("");
+        fpsElement.appendChild(this._fpsText);
+        fpsElement.style.color = this._fpsColor;
+        var msElement = document.createElement('div');
+        this._msText = document.createTextNode("");
+        msElement.style.color = this._frameTimeColor;
+        msElement.appendChild(this._msText);
+        display.appendChild(fpsElement);
+        display.appendChild(msElement);
         display.style['z-index'] = 1;
         display.style['background-color'] = this._backgroundColor;
         display.style.font = this._font;
@@ -54,6 +60,8 @@ define([
         this._lastFpsSampleTime = undefined;
         this._frameCount = 0;
         this._time = undefined;
+        this._fps = 0;
+        this._frameTime = 0;
     };
 
     /**
@@ -63,14 +71,14 @@ define([
     PerformanceDisplay.prototype.update = function() {
         if (!defined(this._time)) {
             //first update
-            this._lastFpsSampleTime = Date.now();
-            this._time = Date.now();
+            this._lastFpsSampleTime = getTimestamp();
+            this._time = getTimestamp();
             return;
         }
 
         var previousTime = this._time;
-        this._time = Date.now();
-        var time = this._time;
+        var time = getTimestamp();
+        this._time = time;
 
         var frameTime = time - previousTime;
 
@@ -84,13 +92,13 @@ define([
             this._frameCount = 0;
         }
 
-        if (fps !== this._fps && defined(fps)) {
-            this._fpsElement.textContent = fps + ' FPS';
+        if (fps !== this._fps) {
+            this._fpsText.nodeValue = fps + ' FPS';
             this._fps = fps;
         }
 
         if (frameTime !== this._frameTime) {
-            this._msElement.textContent = frameTime + ' MS';
+            this._msText.nodeValue = frameTime + ' MS';
             this._frameTime = frameTime;
         }
 

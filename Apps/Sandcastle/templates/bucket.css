@@ -125,9 +125,12 @@ option:disabled {
     background:linear-gradient(to bottom, #dedede 5%, #f9f9f9 100%);
 }
 
-button:active {
-    position:relative;
-    top:1px;
+.sandcastle-button:active {
+    -webkit-transform: translateY(1px);
+    -moz-transform: translateY(1px);
+    -ms-transform: translateY(1px);
+    -o-transform: translateY(1px);
+    transform: translateY(1px);
 }
 
 .claro .dijitTitlePaneContentOuter {
