@@ -183,7 +183,7 @@ define([
             creditDisplay.addDefaultCredit(cesiumCredit);
 
             var centralBody = new CentralBody(ellipsoid);
-            scene.primitives.setCentralBody(centralBody);
+            scene.primitives.centralBody = centralBody;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {

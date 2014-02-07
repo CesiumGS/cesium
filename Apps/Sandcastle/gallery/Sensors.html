@@ -133,7 +133,7 @@ require([
         
         var ellipsoid = viewer.centralBody.getEllipsoid();
         var scene = viewer.scene;
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         primitives.add(sensors);
 
         var sensorMenu = new DropDownMenu({ style: 'display: none;'});

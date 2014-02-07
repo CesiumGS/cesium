@@ -386,7 +386,7 @@ require(['Cesium'], function(Cesium) {
 
     function createButtons(widget) {
         var scene = widget.scene;
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
 
         function toggleExtentVisibility() {
             extent.show = true;
@@ -611,7 +611,7 @@ require(['Cesium'], function(Cesium) {
 
     function createPrimitives(widget) {
         var scene = widget.scene;
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         var ellipsoid = widget.centralBody.getEllipsoid();
 
         extent = new Cesium.ExtentPrimitive({

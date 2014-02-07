@@ -28,7 +28,7 @@ require(['Cesium'], function(Cesium) {
     "use strict";
 
     function createPrimitives(scene, ellipsoid) {
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         var polylines = new Cesium.PolylineCollection();
 
         // A simple polyline with two points.

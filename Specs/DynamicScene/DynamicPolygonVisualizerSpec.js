@@ -52,7 +52,7 @@ defineSuite([
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('update throws if no time specified.', function() {
@@ -83,7 +83,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no vertexPosition does not create a polygon.', function() {
@@ -95,7 +95,7 @@ defineSuite([
         polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with ellipse and no position does not create a polygon.', function() {
@@ -108,7 +108,7 @@ defineSuite([
         polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with ellipse and position properties and no ellipse properties does not create positions.', function() {
@@ -122,7 +122,7 @@ defineSuite([
         polygon.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var primitive = scene.primitives.get(0);
         expect(primitive.getPositions()).toBeUndefined();
     });
@@ -132,7 +132,7 @@ defineSuite([
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -146,7 +146,7 @@ defineSuite([
         ellipse.semiMinorAxis = new ConstantProperty(1000);
         visualizer.update(new JulianDate());
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var primitive = scene.primitives.get(0);
 
@@ -163,7 +163,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 910111)]);
@@ -174,7 +174,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var primitive = scene.primitives.get(0);
 
@@ -197,7 +197,7 @@ defineSuite([
     it('clear hides primitives.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
@@ -206,7 +206,7 @@ defineSuite([
         polygon.show = new ConstantProperty(true);
         visualizer.update(time);
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var primitive = scene.primitives.get(0);
 
         visualizer.update(time);
@@ -220,7 +220,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolygonVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.primitives.getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -231,7 +231,7 @@ defineSuite([
         polygon.show = new ConstantProperty(true);
 
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var primitive = scene.primitives.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);
     });
@@ -254,13 +254,13 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var primitive = scene.primitives.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         primitive = scene.primitives.get(0);
         expect(primitive.dynamicObject).toEqual(testObject2);
     });

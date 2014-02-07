@@ -28,7 +28,7 @@ require(['Cesium'], function(Cesium) {
     "use strict";
 
     function createPrimitives(scene, ellipsoid) {
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
 
         // Fill circle
         var circle = primitives.add(new Cesium.Polygon({

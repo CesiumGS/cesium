@@ -443,7 +443,7 @@ define([
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.getCentralBody();
+        var cb = scene._primitives.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();

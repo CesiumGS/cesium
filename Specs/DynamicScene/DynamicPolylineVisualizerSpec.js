@@ -56,7 +56,7 @@ defineSuite([
         visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
     });
 
     it('update throws if no time specified.', function() {
@@ -87,7 +87,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(0);
     });
@@ -101,7 +101,7 @@ defineSuite([
         polyline.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(0);
     });
@@ -116,7 +116,7 @@ defineSuite([
         polyline.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(0);
     });
@@ -132,7 +132,7 @@ defineSuite([
         polyline.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
         expect(primitive.getPositions().length).toEqual(0);
@@ -143,7 +143,7 @@ defineSuite([
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -156,7 +156,7 @@ defineSuite([
         ellipse.semiMinorAxis = new ConstantProperty(1000);
         visualizer.update(new JulianDate());
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
@@ -164,7 +164,7 @@ defineSuite([
 
 
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         polylineCollection = scene.primitives.get(0);
         primitive = polylineCollection.get(0);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
@@ -178,7 +178,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
@@ -190,7 +190,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
@@ -222,7 +222,7 @@ defineSuite([
     it('clear hides primitives.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
@@ -246,7 +246,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPolylineVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -281,7 +281,7 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
@@ -289,7 +289,7 @@ defineSuite([
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject2);
     });

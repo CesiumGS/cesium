@@ -52,7 +52,7 @@ defineSuite([
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.primitives.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection instanceof BillboardCollection).toEqual(true);
     });
