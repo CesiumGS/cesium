@@ -93,8 +93,6 @@ define([
      *
      * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
      *
-     * @exception {DeveloperError} show is required.
-     *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);

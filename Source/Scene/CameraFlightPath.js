@@ -362,8 +362,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
@@ -517,8 +515,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
      * @see Scene#getAnimations
@@ -564,8 +560,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
      * @see Scene#getAnimations

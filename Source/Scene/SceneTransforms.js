@@ -46,9 +46,6 @@ define([
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} position is required.
-     *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
@@ -96,9 +93,6 @@ define([
      * @param {Cartesian2} [result=undefined] An optional object to return the input position transformed to window coordinates.
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
-     *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} position is required.
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.

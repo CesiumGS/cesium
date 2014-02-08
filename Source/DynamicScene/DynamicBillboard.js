@@ -198,7 +198,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicBillboard
      *
      * @param {DynamicBillboard} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicBillboard.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

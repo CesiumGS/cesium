@@ -118,7 +118,6 @@ define(['./Property',
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {

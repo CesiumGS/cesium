@@ -25,8 +25,6 @@ define([
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
      * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom of an extruded circle.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *

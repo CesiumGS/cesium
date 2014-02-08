@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Fullscreen'
+             'Core/Fullscreen',
+             'Core/FeatureDetection'
          ],function(
-             Fullscreen) {
+             Fullscreen,
+             FeatureDetection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -43,21 +45,23 @@ defineSuite([
         Fullscreen.exitFullscreen();
     });
 
-    it('can get the fullscreen change event name', function() {
-        if (Fullscreen.supportsFullscreen()) {
-            // the property on the document is the event name, prefixed with 'on'.
-            expect(document['on' + Fullscreen.getFullscreenChangeEventName()]).toBeDefined();
-        } else {
-            expect(Fullscreen.getFullscreenChangeEventName()).toBeUndefined();
-        }
-    });
+    if (!FeatureDetection.isInternetExplorer()) {
+        it('can get the fullscreen change event name', function() {
+            if (Fullscreen.supportsFullscreen()) {
+                // the property on the document is the event name, prefixed with 'on'.
+                expect(document['on' + Fullscreen.getFullscreenChangeEventName()]).toBeDefined();
+            } else {
+                expect(Fullscreen.getFullscreenChangeEventName()).toBeUndefined();
+            }
+        });
 
-    it('can get the fullscreen error event name', function() {
-        if (Fullscreen.supportsFullscreen()) {
-            // the property on the document is the event name, prefixed with 'on'.
-            expect(document['on' + Fullscreen.getFullscreenErrorEventName()]).toBeDefined();
-        } else {
-            expect(Fullscreen.getFullscreenErrorEventName()).toBeUndefined();
-        }
-    });
+        it('can get the fullscreen error event name', function() {
+            if (Fullscreen.supportsFullscreen()) {
+                // the property on the document is the event name, prefixed with 'on'.
+                expect(document['on' + Fullscreen.getFullscreenErrorEventName()]).toBeDefined();
+            } else {
+                expect(Fullscreen.getFullscreenErrorEventName()).toBeUndefined();
+            }
+        });
+    }
 });

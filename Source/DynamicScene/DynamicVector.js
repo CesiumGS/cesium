@@ -101,7 +101,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicVector
      *
      * @param {DynamicVector} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicVector.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

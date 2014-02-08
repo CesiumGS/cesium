@@ -149,8 +149,6 @@ define(['../Core/Color',
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     PolylineOutlineMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {

@@ -108,8 +108,6 @@ define([
      *
      * @param {Boolean} value Indicates if this polyline will be shown.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Polyline#getShow
      */
     Polyline.prototype.setShow = function(value) {
@@ -144,8 +142,6 @@ define([
      * @memberof Polyline
      *
      * @param {Array} value The positions of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Polyline#getPositions
      *
@@ -233,8 +229,6 @@ define([
      *
      * @param {Material} material The material
      *
-     * @exception {DeveloperError} material is required.
-     *
      * @see Polyline#getMaterial
      */
     Polyline.prototype.setMaterial = function(material) {
@@ -273,8 +267,6 @@ define([
      * @memberof Polyline
      *
      * @param {Number} value The width of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Polyline#getWidth
      *

@@ -185,7 +185,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicLabel
      *
      * @param {DynamicLabel} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicLabel.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

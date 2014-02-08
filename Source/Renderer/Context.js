@@ -190,10 +190,10 @@ define([
      *
      * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
      * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
-     * @exception {DeveloperError} canvas is required.
      */
     var Context = function(canvas, options) {
-        if (!window.WebGLRenderingContext) {
+        // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+        if (typeof WebGLRenderingContext === 'undefined') {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
@@ -1165,7 +1165,7 @@ define([
      *     position : 0,
      *     normal   : 1
      * };
-     * sp = context.createShaderProgram(vs, fs, attributes);            *
+     * sp = context.createShaderProgram(vs, fs, attributes);
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
         return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
@@ -2156,7 +2156,11 @@ define([
         }
     };
 
-    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    var scratchBackBufferArray;
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    }
 
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
@@ -2254,10 +2258,6 @@ define([
      *
      * @memberof Context
      *
-     * @exception {DeveloperError} drawCommand is required.
-     * @exception {DeveloperError} drawCommand.primitiveType is required and must be valid.
-     * @exception {DeveloperError} drawCommand.shaderProgram is required.
-     * @exception {DeveloperError} drawCommand.vertexArray is required.
      * @exception {DeveloperError} drawCommand.offset must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} drawCommand.count must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
@@ -2666,8 +2666,6 @@ define([
      *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *
-     * @exception {DeveloperError} pickColor is required.
-     *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
      *
@@ -2705,7 +2703,6 @@ define([
      *
      * @returns {Object} A PickId object with a <code>color</code> property.
      *
-     * @exception {DeveloperError} object is required.
      * @exception {RuntimeError} Out of unique Pick IDs.
      *
      * @see Context#getObjectByPickColor

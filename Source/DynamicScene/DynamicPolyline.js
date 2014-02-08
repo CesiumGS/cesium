@@ -83,7 +83,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicPolyline
      *
      * @param {DynamicPolyline} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicPolyline.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

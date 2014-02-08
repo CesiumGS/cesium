@@ -164,7 +164,6 @@ define(['../Core/createGuid',
      * @memberof DynamicObjectCollection
      *
      * @param {DynamicObject} dynamicObject The object to be added.
-     * @exception {DeveloperError} dynamicObject is required.
      * @exception {DeveloperError} An object with <dynamicObject.id> already exists in this collection.
      */
     DynamicObjectCollection.prototype.add = function(dynamicObject) {
@@ -205,8 +204,6 @@ define(['../Core/createGuid',
      *
      * @param {DynamicObject} dynamicObject The object to be added.
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
-     *
-     * @exception {DeveloperError} dynamicObject is required.
      */
     DynamicObjectCollection.prototype.remove = function(dynamicObject) {
         //>>includeStart('debug', pragmas.debug);
@@ -224,8 +221,6 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to remove.
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.removeById = function(id) {
         //>>includeStart('debug', pragmas.debug);
@@ -299,8 +294,6 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getById = function(id) {
         //>>includeStart('debug', pragmas.debug);
@@ -329,8 +322,6 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve or create.
      * @returns {DynamicObject} The new or existing object.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getOrCreateObject = function(id) {
         //>>includeStart('debug', pragmas.debug);

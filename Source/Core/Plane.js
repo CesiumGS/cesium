@@ -28,9 +28,6 @@ define([
      * in the direction of the normal; if negative, the origin is in the half-space
      * opposite to the normal; if zero, the plane passes through the origin.
      *
-     * @exception {DeveloperError} normal is required.
-     * @exception {DeveloperError} distance is required.
-     *
      * @example
      * // The plane x=0
      * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
@@ -73,9 +70,6 @@ define([
      * @param {Plane} [result] The object onto which to store the result.
      * @returns {Plane} A new plane instance or the modified result parameter.
      *
-     * @exception {DeveloperError} point is required.
-     * @exception {DeveloperError} normal is required.
-     *
      * @example
      * var point = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 40.0));
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
@@ -113,9 +107,6 @@ define([
      * @param {Plane} plane The plane.
      * @param {Cartesian3} point The point.
      * @returns {Number} The signed shortest distance of the point to the plane.
-     *
-     * @exception {DeveloperError} plane is required.
-     * @exception {DeveloperError} point is required.
      */
     Plane.getPointDistance = function(plane, point) {
         //>>includeStart('debug', pragmas.debug);
@@ -141,8 +132,6 @@ define([
      *
      * @param {Cartesian3} point The point.
      * @returns {Number} The signed shortest distance of the point to this plane.
-     *
-     * @exception {DeveloperError} point is required.
      */
     Plane.prototype.getPointDistance = function(point) {
         return Plane.getPointDistance(this, point);

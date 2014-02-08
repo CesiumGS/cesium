@@ -50,9 +50,6 @@ define([
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
      * @param {CameraController} cameraController The camera controller used to modify the camera.
-     *
-     * @exception {DeveloperError} canvas is required.
-     * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
         //>>includeStart('debug', pragmas.debug);

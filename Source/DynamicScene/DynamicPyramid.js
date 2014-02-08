@@ -120,7 +120,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicPyramid
      *
      * @param {DynamicPyramid} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicPyramid.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

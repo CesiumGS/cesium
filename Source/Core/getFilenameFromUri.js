@@ -15,8 +15,6 @@ define(['./defined',
      * @param {String} uri The Uri.
      * @returns {String} The last segment of the Uri.
      *
-     * @exception {DeveloperError} uri is required.
-     *
      * @example
      * //fileName will be"simple.czml";
      * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');

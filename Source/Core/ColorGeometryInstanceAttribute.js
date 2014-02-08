@@ -104,8 +104,6 @@ define([
      *
      * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
      *
-     * @exception {DeveloperError} color is required.
-     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : // ...
@@ -131,8 +129,6 @@ define([
      * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
      *
      * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
-     *
-     * @exception {DeveloperError} color is required.
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');

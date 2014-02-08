@@ -25,8 +25,6 @@ define([
      * @constructor
      *
      * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
-     *
-     * @exception {DeveloperError} transitioner is required.
      */
     var SceneModePickerViewModel = function(transitioner) {
         //>>includeStart('debug', pragmas.debug);

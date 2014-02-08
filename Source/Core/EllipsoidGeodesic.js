@@ -246,9 +246,6 @@ define([
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
-     *
-     * @exception {DeveloperError} start cartographic position is required
-     * @exception {DeveloperError} end cartographic position is required
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
         //>>includeStart('debug', pragmas.debug);

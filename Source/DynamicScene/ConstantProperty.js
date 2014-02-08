@@ -23,6 +23,8 @@ define(['../Core/defaultValue',
      *
      * @param {Object|Number|String|Boolean} [value] The property value.
      *
+     * @see ConstantPositionProperty
+     *
      * @exception {DeveloperError} value.clone is a required function.
      * @exception {DeveloperError} value.equals is a required function.
      */

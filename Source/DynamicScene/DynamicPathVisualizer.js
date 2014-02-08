@@ -386,8 +386,6 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPath
      * @see Polyline
      * @see Scene
@@ -401,7 +399,6 @@ define([
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -458,8 +455,6 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicPathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);

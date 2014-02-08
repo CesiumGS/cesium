@@ -174,7 +174,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicCone
      *
      * @param {DynamicCone} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicCone.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

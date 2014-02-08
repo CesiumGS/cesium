@@ -150,7 +150,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicPolygon
      *
      * @param {DynamicPolygon} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicPolygon.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);
