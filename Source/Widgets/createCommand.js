@@ -27,8 +27,6 @@ define([
      *
      * @param {Function} func The function to execute.
      * @param {Boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.
-     *
-     * @exception {DeveloperError} func is required.
      */
     var createCommand = function(func, canExecute) {
         //>>includeStart('debug', pragmas.debug);

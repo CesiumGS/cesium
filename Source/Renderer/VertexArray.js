@@ -120,8 +120,6 @@ define([
      *
      * @internalConstructor
      *
-     * @exception {DeveloperError} attributes is required.
-     *
      * @see {@link Context#createVertexArray}
      * @see {@link Context#createVertexArrayFromGeometry}
      */
@@ -192,7 +190,6 @@ define([
      *
      * @memberof VertexArray
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getAttribute = function(index) {

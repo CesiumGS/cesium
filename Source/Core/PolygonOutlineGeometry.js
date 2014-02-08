@@ -201,8 +201,6 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
-     * @exception {DeveloperError} polygonHierarchy is required.
-     *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
      *
@@ -270,7 +268,6 @@ define([
      *     extrudedHeight: 300000
      * });
      * var geometry = PolygonOutlineGeometry.createGeometry(extrudedPolygon);
-     *
      */
     var PolygonOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -316,8 +313,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     *
-     * @exception {DeveloperError} options.positions is required.
      *
      * @see PolygonGeometry#createGeometry
      *

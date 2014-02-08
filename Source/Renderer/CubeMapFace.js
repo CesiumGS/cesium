@@ -38,7 +38,6 @@ define([
      * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
      * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
      *
-     * @exception {DeveloperError} source is required.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
      * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().

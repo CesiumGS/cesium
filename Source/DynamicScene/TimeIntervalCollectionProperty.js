@@ -25,9 +25,6 @@ define([
      * @param {Function} [clone=value.clone] A function which takes the value and a result parameter and clones it.
      * This parameter is only required if the value is not a number or string and does not have a clone function.
      *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} clone is a required function.
-     *
      * @example
      * //Create a Cartesian2 interval property which contains data on August 1st, 2012
      * //and uses a different value every 6 hours.
@@ -80,7 +77,6 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {

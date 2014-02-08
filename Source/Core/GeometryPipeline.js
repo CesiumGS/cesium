@@ -132,7 +132,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its triangle indices converted to lines.
      *
-     * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.
      *
      * @example
@@ -178,8 +177,6 @@ define([
      *
      * @returns {Geometry} A new <code>Geometry<code> instance with line segments for the vector.
      *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} geometry.attributes.position is required.
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
@@ -245,8 +242,6 @@ define([
      * @param {Geometry} geometry The geometry, which is not modified, to create the object for.
      *
      * @returns {Object} An object with attribute name / index pairs.
-     *
-     * @exception {DeveloperError} geometry is required.
      *
      * @example
      * var attributeLocations = Cesium.GeometryPipeline.createAttributeLocations(geometry);
@@ -321,7 +316,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
      *
-     * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
      * @example
@@ -409,7 +403,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
      *
-     * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
      * @example
@@ -494,7 +487,6 @@ define([
      *
      * @returns {Array} An array of geometries, each with indices that fit into unsigned shorts.
      *
-     * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
      *
@@ -600,10 +592,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with <code>position3D</code> and <code>position2D</code> attributes.
      *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} attributeName is required.
-     * @exception {DeveloperError} attributeName3D is required.
-     * @exception {DeveloperError} attributeName2D is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      * @exception {DeveloperError} Could not project a point to 2D.
@@ -690,10 +678,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its encoded attribute.
      *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} attributeName is required.
-     * @exception {DeveloperError} attributeHighName is required.
-     * @exception {DeveloperError} attributeLowName is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
@@ -793,8 +777,6 @@ define([
      * @param {GeometryInstance} instance The geometry instance to modify.
      *
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
-     *
-     * @exception {DeveloperError} instance is required.
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
@@ -912,7 +894,6 @@ define([
      *
      * @returns {Geometry} A single geometry created from the provided geometry instances.
      *
-     * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
      * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
@@ -1063,9 +1044,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>normal</code> attribute.
      *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} geometry.attributes.position.values is required.
-     * @exception {DeveloperError} geometry.indices is required.
      * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
@@ -1210,11 +1188,6 @@ define([
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
      *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} geometry.attributes.position.values is required.
-     * @exception {DeveloperError} geometry.attributes.normal.values is required.
-     * @exception {DeveloperError} geometry.attributes.st.values is required.
-     * @exception {DeveloperError} geometry.indices is required.
      * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
      * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
@@ -1913,8 +1886,6 @@ define([
      * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
-     *
-     * @exception {DeveloperError} geometry is required.
      *
      * @example
      * geometry = Cesium.GeometryPipeline.wrapLongitude(geometry);

@@ -39,9 +39,6 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
-     *
-     * @exception {DeveloperError} description.container is required.
-     * @exception {DeveloperError} description.scene is required.
      */
     var Geocoder = function(description) {
         //>>includeStart('debug', pragmas.debug);

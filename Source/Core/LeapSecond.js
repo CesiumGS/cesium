@@ -17,9 +17,6 @@ define([
      * @param {JulianDate} date A Julian date representing the time of the leap second.
      * @param {Number} offset The cumulative number of seconds, that TAI is ahead of UTC at provided date.
      *
-     * @exception {DeveloperError} <code>date</code> is required.
-     * @exception {DeveloperError} <code>offset</code> is required.
-     *
      * @see JulianDate
      * @see TimeStandard
      *

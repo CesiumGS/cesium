@@ -76,8 +76,6 @@ define([
      *
      * @param {Context} context The context to use to create textures when needed.
      *
-     * @exception {DeveloperError} description is required.
-     *
      * @see Context#createTexture2D
      */
     TexturePool.prototype.createTexture2D = function(context, description) {

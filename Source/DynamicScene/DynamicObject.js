@@ -241,7 +241,6 @@ define(['../Core/createGuid',
      * @memberof DynamicObject
      *
      * @param {JulianDate} time The time to check availability for.
-     * @exception {DeveloperError} time is required.
      * @returns true if the object should have data during the provided time, false otherwise.
      */
     DynamicObject.prototype.isAvailable = function(time) {
@@ -263,7 +262,6 @@ define(['../Core/createGuid',
      *
      * @param propertyName The name of the property to add.
      *
-     * @exception {DeveloperError} propertyName is required.
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is already a registered property.
      */
@@ -292,7 +290,6 @@ define(['../Core/createGuid',
      *
      * @param propertyName The name of the property to remove.
      *
-     * @exception {DeveloperError} propertyName is required.
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is not a registered property.
      */
@@ -321,7 +318,6 @@ define(['../Core/createGuid',
      * @memberof DynamicObject
      *
      * @param {DynamicObject} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicObject.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

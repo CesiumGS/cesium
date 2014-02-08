@@ -36,8 +36,6 @@ define([
      *
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
      * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.
-     *
-     * @exception {DeveloperError} boundingVolume is required.
      */
     CullingVolume.prototype.getVisibility = function(boundingVolume) {
         //>>includeStart('debug', pragmas.debug);

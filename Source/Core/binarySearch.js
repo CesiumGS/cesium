@@ -26,10 +26,6 @@ define([
      *        of the index before which the itemToFind should be inserted in order to maintain the
      *        sorted order of the array.
      *
-     * @exception {DeveloperError} <code>array</code> is required.
-     * @exception {DeveloperError} <code>toFind</code> is required.
-     * @exception {DeveloperError} <code>comparator</code> is required.
-     *
      * @example
      * // Create a comparator function to search through an array of numbers.
      * var comparator = function (a, b) {
