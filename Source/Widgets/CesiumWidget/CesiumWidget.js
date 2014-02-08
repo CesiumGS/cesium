@@ -12,6 +12,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Event',
         '../../Core/FeatureDetection',
+        '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
@@ -38,6 +39,7 @@ define([
         Ellipsoid,
         Event,
         FeatureDetection,
+        formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
@@ -73,13 +75,15 @@ define([
                 } else {
                     widget._renderLoopRunning = false;
                 }
-            } catch (e) {
+            } catch (error) {
                 widget._useDefaultRenderLoop = false;
                 widget._renderLoopRunning = false;
-                widget._renderLoopError.raiseEvent(widget, e);
+                widget._renderLoopError.raiseEvent(widget, error);
                 if (widget._showRenderLoopErrors) {
-                    widget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
-                    console.error(e);
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    widget.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
                 }
             }
         }
