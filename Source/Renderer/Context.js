@@ -1164,7 +1164,8 @@ define([
      *     position : 0,
      *     normal   : 1
      * };
-     * sp = context.createShaderProgram(vs, fs, attributes);            */
+     * sp = context.createShaderProgram(vs, fs, attributes);
+     */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
         return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
     };

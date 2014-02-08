@@ -787,7 +787,7 @@ define([
          * Cleans up a simple polygon by removing duplicate adjacent positions and making
          * the first position not equal the last position.
          *
-             * @exception {DeveloperError} At least three positions are required.
+         * @exception {DeveloperError} At least three positions are required.
          */
         removeDuplicates : function(positions) {
             //>>includeStart('debug', pragmas.debug);
@@ -818,7 +818,7 @@ define([
         /**
          * DOC_TBA
          *
-             * @exception {DeveloperError} At least three positions are required.
+         * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
             //>>includeStart('debug', pragmas.debug);
@@ -848,7 +848,7 @@ define([
          *
          * @returns {WindingOrder} DOC_TBA
          *
-             * @exception {DeveloperError} At least three positions are required.
+         * @exception {DeveloperError} At least three positions are required.
          */
         computeWindingOrder2D : function(positions) {
             var area = PolygonPipeline.computeArea2D(positions);
@@ -861,7 +861,7 @@ define([
          * @param {Array} positions - Cartesian2 array containing the vertices of the polygon
          * @returns {Array} - Index array representing triangles that fill the polygon
          *
-             * @exception {DeveloperError} At least three positions are required.
+         * @exception {DeveloperError} At least three positions are required.
          */
         triangulate : function(positions) {
             //>>includeStart('debug', pragmas.debug);
@@ -903,7 +903,7 @@ define([
          * @param {Array} indices An array of indices that determines the triangles in the polygon.
          * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
          *
-                 * @exception {DeveloperError} At least three indices are required.
+         * @exception {DeveloperError} At least three indices are required.
          * @exception {DeveloperError} The number of indices must be divisable by three.
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
@@ -1117,8 +1117,8 @@ define([
          *
          * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
          *
-             * @exception {DeveloperError} <code>outerRing</code> must not be empty.
-             *
+         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+         *
          * @example
          * // Simplifying a polygon with multiple holes.
          * outerRing = Cesium.PolygonPipeline.eliminateHoles(outerRing, innerRings);
