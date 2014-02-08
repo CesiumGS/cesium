@@ -103,9 +103,6 @@ define(['../Core/defaultValue',
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} referenceFrame is required.
      */
     PositionPropertyArray.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -146,8 +146,6 @@ define(['./PositionProperty',
      * @param {Object} options The options
      * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
-     *
-     * @exception {DeveloperError} options is required.
      */
     SampledPositionProperty.prototype.setInterpolationOptions = function(options) {
         this._property.setInterpolationOptions(options);

@@ -72,8 +72,6 @@ define(['../Core/defined',
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPolygon
      * @see Scene
      * @see DynamicObject
@@ -162,8 +160,6 @@ define(['../Core/defined',
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     GeometryVisualizer.prototype.update = function(time) {
         if (!defined(time)) {
