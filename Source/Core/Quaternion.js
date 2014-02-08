@@ -4,6 +4,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './FeatureDetection',
         './freezeObject',
         './Math',
         './Matrix3'
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        FeatureDetection,
         freezeObject,
         CesiumMath,
         Matrix3) {
@@ -976,10 +978,10 @@ define([
 
     var fastSlerpScratchQuaternion = new Quaternion();
     var opmu = 1.90110745351730037;
-    var u = new Float32Array(8);
-    var v = new Float32Array(8);
-    var bT = new Float32Array(8);
-    var bD = new Float32Array(8);
+    var u = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+    var v = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+    var bT = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
+    var bD = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
     for (var i = 0; i < 7; ++i) {
         var s = i + 1.0;

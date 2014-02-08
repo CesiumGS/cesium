@@ -193,7 +193,8 @@ define([
      * @exception {DeveloperError} canvas is required.
      */
     var Context = function(canvas, options) {
-        if (!window.WebGLRenderingContext) {
+        // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+        if (typeof WebGLRenderingContext === 'undefined') {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
@@ -2156,7 +2157,11 @@ define([
         }
     };
 
-    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    var scratchBackBufferArray;
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    }
 
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
