@@ -61,7 +61,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
+        this._url = defaultValue(description.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
