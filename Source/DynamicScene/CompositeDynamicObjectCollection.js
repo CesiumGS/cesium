@@ -264,7 +264,7 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} collection is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
-    CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
+    CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index, dontRecomposite) {
         var hasIndex = defined(index);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(collection)) {
@@ -285,8 +285,10 @@ define(['../Core/createGuid',
         } else {
             this._collections.splice(index, 0, collection);
         }
+        if(!dontRecomposite){
+            recomposite(this);
+        }
 
-        recomposite(this);
     };
 
     /**
@@ -298,11 +300,13 @@ define(['../Core/createGuid',
      * @returns {Boolean} true if the collection was in the composite and was removed,
      *                    false if the collection was not in the composite.
      */
-    CompositeDynamicObjectCollection.prototype.removeCollection = function(collection) {
+    CompositeDynamicObjectCollection.prototype.removeCollection = function(collection, dontRecomposite) {
         var index = this._collections.indexOf(collection);
         if (index !== -1) {
             this._collections.splice(index, 1);
-            recomposite(this);
+            if(!dontRecomposite){
+                recomposite(this);
+            }
             return true;
         }
         return false;
@@ -460,6 +464,10 @@ define(['../Core/createGuid',
         this._collections.splice(index, 1);
         this._collections.splice(0, 0, collection);
 
+        recomposite(this);
+    };
+
+    CompositeDynamicObjectCollection.prototype.recomposite = function() {
         recomposite(this);
     };
 
