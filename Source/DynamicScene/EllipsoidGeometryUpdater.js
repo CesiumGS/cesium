@@ -18,7 +18,7 @@ define(['../Core/Color',
         '../DynamicScene/ConstantProperty',
         '../DynamicScene/GeometryBatchType',
         '../DynamicScene/MaterialProperty',
-        '../Scene/EllipsoidSurfaceAppearance',
+        '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive'
     ], function(
@@ -41,7 +41,7 @@ define(['../Core/Color',
         ConstantProperty,
         GeometryBatchType,
         MaterialProperty,
-        EllipsoidSurfaceAppearance,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive) {
     "use strict";
@@ -87,7 +87,7 @@ define(['../Core/Color',
 
     EllipsoidGeometryUpdater.PerInstanceColorAppearanceType = PerInstanceColorAppearance;
 
-    EllipsoidGeometryUpdater.MaterialAppearanceType = EllipsoidSurfaceAppearance;
+    EllipsoidGeometryUpdater.MaterialAppearanceType = MaterialAppearance;
 
     defineProperties(EllipsoidGeometryUpdater.prototype, {
         id : {
@@ -264,7 +264,7 @@ define(['../Core/Color',
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : EllipsoidSurfaceAppearance.VERTEX_FORMAT;
+            options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.radii = radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
@@ -330,7 +330,7 @@ define(['../Core/Color',
         if (!defined(ellipsoid.fill) || ellipsoid.fill.getValue(time)) {
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
-            var appearance = new EllipsoidSurfaceAppearance({
+            var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
                 closed : true
