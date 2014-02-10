@@ -443,9 +443,11 @@ define([
         var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
         var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
-        Cartesian3.normalize(direction, direction);
 
-        cameraController.move(direction, distance);
+        if (distance > 0.0) {
+            Cartesian3.normalize(direction, direction);
+            cameraController.move(direction, distance);
+        }
     }
 
     function zoom2D(controller, movement) {
