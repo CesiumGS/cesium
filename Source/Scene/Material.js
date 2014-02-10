@@ -550,7 +550,7 @@ define([
         var cachedMaterial = Material._materialCache.getMaterial(result.type);
         if (defined(cachedMaterial)) {
             var template = clone(cachedMaterial.fabric, true);
-            result._template = combine([result._template, template]);
+            result._template = combine(result._template, template, true);
             translucent = cachedMaterial.translucent;
         }
 
@@ -903,7 +903,7 @@ define([
                 });
 
                 material._count = subMaterial._count;
-                material._uniforms = combine([material._uniforms, subMaterial._uniforms]);
+                material._uniforms = combine(material._uniforms, subMaterial._uniforms, true);
                 material.materials[subMaterialId] = subMaterial;
                 material._translucentFunctions = material._translucentFunctions.concat(subMaterial._translucentFunctions);
 
