@@ -16,7 +16,7 @@ Beta Releases
 * Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.  
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
-* Added `CesiumInspector` widget, which can be seen in the CesiumViewer app using the query parameter "inspector=true". 
+* Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`. 
 
 ### b25 - 2014-02-03
 
