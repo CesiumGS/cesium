@@ -63,12 +63,7 @@ define(['../Core/Color',
                     geometryInstances : geometry,
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
-                        translucent : this.translucent,
-                        renderState : {
-                            depthTest : {
-                                enabled : true
-                            }
-                        }
+                        translucent : this.translucent
                     })
                 });
 
