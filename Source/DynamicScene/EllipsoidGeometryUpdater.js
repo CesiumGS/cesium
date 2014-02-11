@@ -155,7 +155,7 @@ define(['../Core/Color',
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
-        if (this._geometryType === GeometryBatchType.COLOR) {
+        if (this._geometryType === GeometryBatchType.COLOR_CLOSED) {
             var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
@@ -274,7 +274,7 @@ define(['../Core/Color',
             orientationScratch = orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
             this._modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch);
             this._outlineEnabled = outlineEnabled;
-            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
+            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_CLOSED : GeometryBatchType.MATERIAL_CLOSED;
             this._geometryChanged.raiseEvent(this);
         }
     };

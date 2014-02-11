@@ -151,7 +151,7 @@ define(['../Core/Color',
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
-        if (this._geometryType === GeometryBatchType.COLOR) {
+        if (this._geometryType === GeometryBatchType.COLOR_OPEN || this._geometryType === GeometryBatchType.COLOR_CLOSED) {
             var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
@@ -266,8 +266,13 @@ define(['../Core/Color',
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
+            var isClosed = defined(options.extrudedHeight);
+            if (isClosed) {
+                this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_CLOSED : GeometryBatchType.MATERIAL_CLOSED;
+            } else {
+                this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_OPEN : GeometryBatchType.MATERIAL_OPEN;
+            }
             this._outlineEnabled = outlineEnabled;
-            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
             this._geometryChanged.raiseEvent(this);
         }
     };
@@ -324,7 +329,7 @@ define(['../Core/Color',
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : true
+                closed : defined(options.extrudedHeight)
             });
             options.vertexFormat = appearance.vertexFormat;
 

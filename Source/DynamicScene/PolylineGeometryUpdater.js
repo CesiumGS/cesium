@@ -134,7 +134,7 @@ define(['../Core/Color',
         var isAvailable = dynamicObject.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
 
-        if (this._geometryType === GeometryBatchType.COLOR) {
+        if (this._geometryType === GeometryBatchType.COLOR_OPEN) {
             var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
@@ -209,7 +209,7 @@ define(['../Core/Color',
             options.positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
             options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
-            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR : GeometryBatchType.MATERIAL;
+            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_OPEN : GeometryBatchType.MATERIAL_OPEN;
             this._geometryChanged.raiseEvent(this);
         }
     };
@@ -252,7 +252,7 @@ define(['../Core/Color',
         var appearance = new PolylineMaterialAppearance({
             material : material,
             translucent : material.isTranslucent(),
-            closed : true
+            closed : false
         });
         options.vertexFormat = appearance.vertexFormat;
 

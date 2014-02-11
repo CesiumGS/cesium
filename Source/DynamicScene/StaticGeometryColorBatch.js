@@ -16,9 +16,10 @@ define(['../Core/Color',
 
     var colorScratch = new Color();
 
-    var Batch = function(primitives, translucent, appearanceType) {
+    var Batch = function(primitives, translucent, appearanceType, closed) {
         this.translucent = translucent;
         this.appearanceType = appearanceType;
+        this.closed = closed;
         this.primitives = primitives;
         this.createPrimitive = false;
         this.primitive = undefined;
@@ -62,7 +63,7 @@ define(['../Core/Color',
                     geometryInstances : geometry,
                     appearance : new this.appearanceType({
                         translucent : this.translucent,
-                        closed : true
+                        closed : this.closed
                     })
                 });
 
@@ -110,9 +111,9 @@ define(['../Core/Color',
         }
     };
 
-    var StaticGeometryColorBatch = function(primitives, appearanceType) {
-        this._solidBatch = new Batch(primitives, false, appearanceType);
-        this._translucentBatch = new Batch(primitives, true, appearanceType);
+    var StaticGeometryColorBatch = function(primitives, appearanceType, closed) {
+        this._solidBatch = new Batch(primitives, false, appearanceType, closed);
+        this._translucentBatch = new Batch(primitives, true, appearanceType, closed);
     };
 
     StaticGeometryColorBatch.prototype.add = function(time, updater) {

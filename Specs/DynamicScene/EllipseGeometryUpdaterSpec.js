@@ -54,11 +54,11 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         //Default color
         ellipse.semiMajorAxis = new ConstantProperty(1);
         ellipse.semiMinorAxis = new ConstantProperty(2);
-        expect(updater.geometryType).toBe(GeometryBatchType.COLOR);
+        expect(updater.geometryType).toBe(GeometryBatchType.COLOR_OPEN);
 
         //Non-color material
         ellipse.material = new GridMaterialProperty();
-        expect(updater.geometryType).toBe(GeometryBatchType.MATERIAL);
+        expect(updater.geometryType).toBe(GeometryBatchType.MATERIAL_OPEN);
 
         //Dynamic position
         dynamicObject.position = new SampledPositionProperty();

@@ -107,8 +107,10 @@ define(['../Core/defined',
         this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
 
         this._batches = [];
-        this._batches[GeometryBatchType.COLOR.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType);
-        this._batches[GeometryBatchType.MATERIAL.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType);
+        this._batches[GeometryBatchType.COLOR_CLOSED.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, true);
+        this._batches[GeometryBatchType.MATERIAL_CLOSED.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, true);
+        this._batches[GeometryBatchType.COLOR_OPEN.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, false);
+        this._batches[GeometryBatchType.MATERIAL_OPEN.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, false);
         this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
 
         this._subscriptions = new Map();

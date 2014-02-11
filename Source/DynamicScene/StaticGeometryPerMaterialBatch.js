@@ -14,15 +14,16 @@ define(['../Core/defined',
         MaterialProperty) {
     "use strict";
 
-    var Batch = function(primitives, appearanceType, materialProperty) {
+    var Batch = function(primitives, appearanceType, materialProperty, closed) {
+        this.primitives = primitives;
+        this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
+        this.closed = closed;
         this.updaters = new Map();
         this.createPrimitive = true;
         this.primitive = undefined;
-        this.primitives = primitives;
         this.geometry = new Map();
         this.material = Material.fromType('Color');
-        this.appearanceType = appearanceType;
         this.updatersWithAttributes = new Map();
         this.attributes = new Map();
         this.invalidated = false;
@@ -79,7 +80,7 @@ define(['../Core/defined',
                         material : MaterialProperty.getValue(time, this.materialProperty, this.material),
                         faceForward : true,
                         translucent : this.material.isTranslucent(),
-                        closed : true
+                        closed : this.closed
                     })
                 });
 
