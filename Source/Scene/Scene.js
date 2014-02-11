@@ -435,8 +435,8 @@ define([
 
     function updateFrameState(scene, frameNumber, time) {
         var camera = scene._camera;
-        var frameState = scene._frameState;
 
+        var frameState = scene._frameState;
         frameState.mode = scene.mode;
         frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;

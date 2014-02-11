@@ -89,7 +89,7 @@ define([
         return model.basePath + ':' + animationName + ':' + samplerName;
     }
 
- // TODO Workaround: https://github.com/KhronosGroup/glTF/issues/185
+ // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
     var ConstantSpline = function(value) {
         this._value = value;
     };
@@ -97,7 +97,7 @@ define([
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };
- // END TODO Workaround
+ // END GLTF_SPEC
 
     ModelAnimationCache.getAnimationSpline = function(model, animationName, animation, samplerName, sampler, parameterValues) {
         var key = getAnimationSplineKey(model, animationName, samplerName);
@@ -108,11 +108,11 @@ define([
             var output = model.gltf.accessors[animation.parameters[sampler.output]];
             var controlPoints = parameterValues[sampler.output];
 
-// TODO Workaround: https://github.com/KhronosGroup/glTF/issues/185
+// GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
             if ((times.length === 1) && (controlPoints.length === 1)) {
                 spline = new ConstantSpline(controlPoints[0]);
             } else {
-// END TODO Workaround
+// END GLTF_SPEC
                 if (sampler.interpolation === 'LINEAR') {
                     if (output.type === WebGLRenderingContext.FLOAT_VEC3) {
                         spline = new LinearSpline({

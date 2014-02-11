@@ -1845,7 +1845,7 @@ define([
         // want to be able to progressively load models when they are shown,
         // and then have them visibile immediately when show is set to true.
         if (this.show) {
-// TODO: make this not so wasteful
+// PERFORMANCE_IDEA: This is terriable
             var passes = frameState.passes;
             var i;
             var length;
@@ -1864,7 +1864,6 @@ define([
                     commandList.push(commands[i]);
                 }
             }
-// END TODO
         }
     };
 
