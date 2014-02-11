@@ -214,19 +214,6 @@ defineSuite([
         expect(pick).not.toBeDefined();
     });
 
-// TODO: be able to set allowPicking?
-    xit('is not picked (allowPicking === false)', function() {
-        duckModel.show = true;
-        duckModel.allowPicking = false;
-        duckModel.zoomTo();
-
-        var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick).not.toBeDefined();
-
-        duckModel.show = false;
-        duckModel.allowPicking = true;
-    });
-
     it('getNode throws when model is not loaded', function() {
         var m = new Model();
         expect(function() {
