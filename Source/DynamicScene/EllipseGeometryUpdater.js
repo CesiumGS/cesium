@@ -370,12 +370,7 @@ define(['../Core/Color',
                 }),
                 appearance : new PerInstanceColorAppearance({
                     flat : true,
-                    translucent : false,
-                    renderState : {
-                        depthTest : {
-                            enabled : true
-                        }
-                    }
+                    translucent : outlineColor.alpha !== 1.0
                 }),
                 asynchronous : false
             });
