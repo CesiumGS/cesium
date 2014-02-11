@@ -36,9 +36,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-// TODO: Tests for all uniform semantics
-// TODO: Tests for all uniform types
-
     var duckUrl = './Data/Models/duck/duck.json';
     var customDuckUrl = './Data/Models/customDuck/duck.json';
     var superMurdochUrl = './Data/Models/SuperMurdoch/SuperMurdoch.json';
@@ -393,9 +390,8 @@ defineSuite([
     });
 
     it('addAll throws when speedup is less than or equal to zero.', function() {
-        var m = new Model();
         expect(function() {
-            return m.activeAnimations.addAll({
+            return animBoxesModel.activeAnimations.addAll({
                 speedup : 0.0
             });
         }).toThrowDeveloperError();
@@ -470,6 +466,10 @@ defineSuite([
         expect(function() {
             return m.activeAnimations.get();
         }).toThrowDeveloperError();
+    });
+
+    it('contains(undefined) returns false', function() {
+        expect(animBoxesModel.activeAnimations.contains(undefined)).toEqual(false);
     });
 
     it('raises animation start, update, and stop events when removeOnStop is true', function() {
