@@ -31,7 +31,7 @@ define([
                         }
 
                         if (!defined(node.rotation)) {
-                            // TODO: What is the default?  https://github.com/KhronosGroup/glTF/issues/197
+                            // GLTF_SPEC: What is the default?  https://github.com/KhronosGroup/glTF/issues/197
                             node.rotation = [1.0, 0.0, 0.0, 0.0];
                         }
 
@@ -45,9 +45,9 @@ define([
     }
 
     /**
-     * DOC_TBA
-     *
      * Modifies gltf in place.
+     *
+     * @private
      */
     var gltfDefaults = function(gltf) {
         if (!defined(gltf)) {
