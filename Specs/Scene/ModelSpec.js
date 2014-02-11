@@ -40,11 +40,13 @@ defineSuite([
 // TODO: Tests for all uniform types
 
     var duckUrl = './Data/Models/duck/duck.json';
+    var customDuckUrl = './Data/Models/customDuck/duck.json';
     var superMurdochUrl = './Data/Models/SuperMurdoch/SuperMurdoch.json';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
 
     var duckModel;
+    var customDuckModel;
     var superMurdochModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -295,6 +297,21 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    it('loads customDuck', function() {
+        customDuckModel = loadModel(customDuckUrl);
+    });
+
+    it('renders customDuckModel (NPOT textures and all uniform semantics)', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        customDuckModel.show = true;
+        customDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        customDuckModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
     it('loads superMurdoch', function() {
         superMurdochModel = loadModel(superMurdochUrl);
     });
@@ -416,6 +433,7 @@ defineSuite([
         expect(animations.remove(a)).toEqual(true);
         expect(animations.remove(a)).toEqual(false);
         expect(animations.remove()).toEqual(false);
+        expect(animations.contains(a)).toEqual(false);
         expect(animations.length).toEqual(0);
         expect(spyRemove).toHaveBeenCalledWith(animBoxesModel, a);
         animations.animationRemoved.removeEventListener(spyRemove);
