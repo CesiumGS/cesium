@@ -14,6 +14,7 @@ defineSuite([
          'Core/Transforms',
          'Core/Event',
          'Core/JulianDate',
+         'Core/PrimitiveType',
          'Scene/ModelAnimationLoop'
      ], function(
          Model,
@@ -30,6 +31,7 @@ defineSuite([
          Transforms,
          Event,
          JulianDate,
+         PrimitiveType,
          ModelAnimationLoop) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -153,14 +155,30 @@ defineSuite([
     });
 
     it('renders bounding volume', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
         duckModel.show = true;
         duckModel.debugShowBoundingVolume = true;
         duckModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         duckModel.show = false;
         duckModel.debugShowBoundingVolume = false;
+    });
+
+    it('renders in wireframe', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        duckModel.show = true;
+        duckModel.debugWireframe = true;
+        duckModel.zoomTo();
+        scene.renderForSpecs();
+
+        var commands = duckModel._renderCommands;
+        var length = commands.length;
+        for (var i = 0; i < length; ++i) {
+            expect(commands[i].primitiveType).toEqual(PrimitiveType.LINES);
+        }
+
+        duckModel.show = false;
+        duckModel.debugWireframe = false;
     });
 
     it('is picked', function() {
@@ -288,17 +306,6 @@ defineSuite([
         superMurdochModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         superMurdochModel.show = false;
-    });
-
-    it('renders superMurdoch in wireframe', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        superMurdochModel.show = true;
-        superMurdochModel.debugWireframe = true;
-        superMurdochModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        superMurdochModel.show = false;
-        superMurdochModel.debugWireframe = false;
     });
 
     it('picks superMurdoch', function() {
