@@ -35,7 +35,7 @@ define([
         './ModelAnimationCollection',
         './ModelNode',
         './SceneMode',
-        './gltfDefaults'
+        '../ThirdParty/gltfDefaults'
     ], function(
         combine,
         defined,
