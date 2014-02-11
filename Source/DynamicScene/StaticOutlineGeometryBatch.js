@@ -5,7 +5,8 @@ define(['../Core/Color',
         '../Core/Map',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        '../Scene/PrimitiveState'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -13,7 +14,8 @@ define(['../Core/Color',
         Map,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
-        Primitive) {
+        Primitive,
+        PrimitiveState) {
     "use strict";
 
     var Batch = function(primitives, translucent, appearanceType) {
@@ -59,7 +61,7 @@ define(['../Core/Color',
             var geometry = this.geometry.getValues();
             if (geometry.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
@@ -71,7 +73,7 @@ define(['../Core/Color',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else {
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
             var updatersWithAttributes = this.updatersWithAttributes.getValues();
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {

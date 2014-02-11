@@ -4,6 +4,7 @@ define(['../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         '../Scene/Material',
+        '../Scene/PrimitiveState',
         './MaterialProperty'
     ], function(
         defined,
@@ -11,6 +12,7 @@ define(['../Core/defined',
         ShowGeometryInstanceAttribute,
         Primitive,
         Material,
+        PrimitiveState,
         MaterialProperty) {
     "use strict";
 
@@ -74,7 +76,7 @@ define(['../Core/defined',
             }
             if (geometries.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : MaterialProperty.getValue(time, this.materialProperty, this.material),
@@ -88,7 +90,7 @@ define(['../Core/defined',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else {
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
             this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
             var updatersWithAttributes = this.updatersWithAttributes.getValues();

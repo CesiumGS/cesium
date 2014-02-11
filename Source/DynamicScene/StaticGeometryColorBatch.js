@@ -4,14 +4,16 @@ define(['../Core/Color',
         '../Core/defined',
         '../Core/Map',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        '../Scene/PrimitiveState'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         Map,
         ShowGeometryInstanceAttribute,
-        Primitive) {
+        Primitive,
+        PrimitiveState) {
     "use strict";
 
     var colorScratch = new Color();
@@ -59,7 +61,7 @@ define(['../Core/Color',
             var geometry = this.geometry.getValues();
             if (geometry.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new this.appearanceType({
                         translucent : this.translucent,
@@ -71,7 +73,7 @@ define(['../Core/Color',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else {
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
             var updatersWithAttributes = this.updatersWithAttributes.getValues();
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
