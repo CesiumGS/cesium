@@ -4,11 +4,6 @@ Change Log
 Beta Releases
 -------------
 
-### TODO
-
-* Added `Model` for drawing 3D models using glTF.
-* Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
-
 ### b26 - 2014-03-03
 
 * Breaking changes:
@@ -25,6 +20,8 @@ Beta Releases
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
+* Added `Model` for drawing 3D models using glTF.
+* Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
 ### b25 - 2014-02-03
 
