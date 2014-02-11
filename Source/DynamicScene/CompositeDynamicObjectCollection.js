@@ -261,7 +261,6 @@ define(['../Core/createGuid',
      * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
      *                         added on top of all existing collections.
      *
-     * @exception {DeveloperError} collection is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
     CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
@@ -344,8 +343,6 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {Number} index the index to retrieve.
-     *
-     * @exception {DeveloperError} index is required.
      */
     CompositeDynamicObjectCollection.prototype.getCollection = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -509,8 +506,6 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
         return this._composite.getById(id);

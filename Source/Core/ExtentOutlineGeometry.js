@@ -272,7 +272,6 @@ define([
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
      *
-     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].

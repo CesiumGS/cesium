@@ -26,8 +26,6 @@ define([
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *

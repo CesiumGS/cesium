@@ -178,10 +178,6 @@ define([
      *        the tile tree.
      * @returns {Array} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.
-     *
-     * @exception {DeveloperError} <code>tilingScheme</code> is required.
-     * @exception {DeveloperError} <code>numberOfLevelZeroTilesX</code> is required.
-     * @exception {DeveloperError} <code>numberOfLevelZeroTilesY</code> is required.
      */
     TilingScheme.createRectangleOfLevelZeroTiles = function(tilingScheme, numberOfLevelZeroTilesX, numberOfLevelZeroTilesY) {
         if (!defined(tilingScheme)) {

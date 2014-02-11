@@ -184,8 +184,6 @@ define([
      *
      * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
-     * @exception {DeveloperError} positions is required.
-     *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var positions = [
@@ -231,8 +229,6 @@ define([
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
      * @returns {Array} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
-     *
-     * @exception {DeveloperError} positions is required
      *
      * @example
      * var positions = ellipsoid.cartographicArrayToCartesianArray([

@@ -214,8 +214,6 @@ define([
      * @param {Extent} [other] The Extent to compare.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if the Extents are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Extent.prototype.equalsEpsilon = function(other, epsilon) {
         //>>includeStart('debug', pragmas.debug);
@@ -234,10 +232,6 @@ define([
     /**
      * Checks this Extent's properties and throws if they are not in valid ranges.
      *
-     * @exception {DeveloperError} <code>north</code> is required to be a number.
-     * @exception {DeveloperError} <code>south</code> is required to be a number.
-     * @exception {DeveloperError} <code>east</code> is required to be a number.
-     * @exception {DeveloperError} <code>west</code> is required to be a number.
      * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
@@ -375,8 +369,6 @@ define([
      * @param otherExtent The extent to intersect with this extent.
      * @param {Extent} [result] The object onto which to store the result.
      * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
-     *
-     * @exception {DeveloperError} otherExtent is required.
      */
     Extent.prototype.intersectWith = function(otherExtent, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -405,8 +397,6 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic to test.
      * @returns {Boolean} true if the provided cartographic is inside the extent, false otherwise.
-     *
-     * @exception {DeveloperError} cartographic is required.
      */
     Extent.prototype.contains = function(cartographic) {
         //>>includeStart('debug', pragmas.debug);

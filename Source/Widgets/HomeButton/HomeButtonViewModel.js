@@ -110,8 +110,6 @@ define([
      * @param {SceneTransitioner} [transitioner] The scene transitioner instance to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
      * @param {Number} [flightDuration=1500] The duration of the camera flight in milliseconds
-     *
-     * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
         //>>includeStart('debug', pragmas.debug);

@@ -89,8 +89,6 @@ define([
      * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.fromCartesian3 = Cartesian2.clone;
 
@@ -102,8 +100,6 @@ define([
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.fromCartesian4 = Cartesian2.clone;
 
@@ -120,9 +116,6 @@ define([
      * @param {Cartesian2} value The value to pack.
      * @param {Array} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} array is required.
      */
     Cartesian2.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -148,8 +141,6 @@ define([
      * @param {Array} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian2} [result] The object into which to store the result.
-     *
-     * @exception {DeveloperError} array is required.
      */
     Cartesian2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -178,8 +169,6 @@ define([
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
-     * @exception {DeveloperError} array is required.
-     *
      * @example
      * // Create a Cartesian2 with (1.0, 2.0)
      * var v = [1.0, 2.0];
@@ -197,8 +186,6 @@ define([
      *
      * @param {Cartesian2} The cartesian to use.
      * @returns {Number} The value of the maximum component.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.getMaximumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
@@ -216,8 +203,6 @@ define([
      *
      * @param {Cartesian2} The cartesian to use.
      * @returns {Number} The value of the minimum component.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.getMinimumComponent = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
@@ -237,9 +222,6 @@ define([
      * @param {Cartesian2} second A cartesian to compare.
      * @param {Cartesian2} [result] The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the minimum components.
-     *
-     * @exception {DeveloperError} first is required.
-     * @exception {DeveloperError} second is required.
      */
     Cartesian2.getMinimumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -269,9 +251,6 @@ define([
      * @param {Cartesian2} second A cartesian to compare.
      * @param {Cartesian2} [result] The object into which to store the result.
      * @returns {Cartesian2} A cartesian with the maximum components.
-     *
-     * @exception {DeveloperError} first is required.
-     * @exception {DeveloperError} second is required.
      */
     Cartesian2.getMaximumByComponent = function(first, second, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -298,8 +277,6 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian instance whose squared magnitude is to be computed.
      * @returns {Number} The squared magnitude.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.magnitudeSquared = function(cartesian) {
         //>>includeStart('debug', pragmas.debug);
@@ -317,8 +294,6 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian instance whose magnitude is to be computed.
      * @returns {Number} The magnitude.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.magnitude = function(cartesian) {
         return Math.sqrt(Cartesian2.magnitudeSquared(cartesian));
@@ -334,8 +309,6 @@ define([
      * @param {Cartesian2} right The second point to compute the distance to.
      *
      * @returns {Number} The distance between two points.
-     *
-     * @exception {DeveloperError} left and right are required.
      *
      * @example
      * // Returns 1.0
@@ -359,8 +332,6 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be normalized.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -385,9 +356,6 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Cartesian2.dot = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
@@ -410,9 +378,6 @@ define([
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -440,9 +405,6 @@ define([
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Cartesian2.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -470,9 +432,6 @@ define([
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Cartesian2.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -500,9 +459,6 @@ define([
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -530,9 +486,6 @@ define([
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian2.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -559,8 +512,6 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be negated.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -584,8 +535,6 @@ define([
      * @param {Cartesian2} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -612,10 +561,6 @@ define([
      * @param t The point along t at which to interpolate.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} start is required.
-     * @exception {DeveloperError} end is required.
-     * @exception {DeveloperError} t is required and must be a number.
      */
     Cartesian2.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -644,9 +589,6 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @returns {Number} The angle between the Cartesians.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Cartesian2.angleBetween = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
@@ -671,8 +613,6 @@ define([
      * @param {Cartesian2} cartesian The Cartesian on which to find the most orthogonal axis.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The most orthogonal axis.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.mostOrthogonalAxis = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -720,8 +660,6 @@ define([
      * @param {Cartesian2} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Cartesian2.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
@@ -787,8 +725,6 @@ define([
      * @param {Cartesian2} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Cartesian2.prototype.equalsEpsilon = function(right, epsilon) {
         return Cartesian2.equalsEpsilon(this, right, epsilon);

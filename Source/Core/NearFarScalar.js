@@ -86,9 +86,6 @@ define([
      * @param {NearFarScalar} value The value to pack.
      * @param {Array} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} array is required.
      */
     NearFarScalar.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -115,8 +112,6 @@ define([
      * @param {Array} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {NearFarScalar} [result] The object into which to store the result.
-     *
-     * @exception {DeveloperError} array is required.
      */
     NearFarScalar.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

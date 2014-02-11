@@ -116,8 +116,6 @@ define([
      *
      * @param {Boolean} value Indicates if this label will be shown.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
@@ -164,8 +162,6 @@ define([
      * @memberof Label
      *
      * @param {Cartesian3} value The Cartesian position.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getPosition
      *
@@ -221,8 +217,6 @@ define([
      *
      * @param {String} value The text.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
@@ -256,8 +250,6 @@ define([
      * @memberof Label
      *
      * @param {String} value The font.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getFont
      * @see Label#setFillColor
@@ -295,8 +287,6 @@ define([
      * @memberof Label
      *
      * @param {Color} value The fill color.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getFillColor
      * @see Label#setOutlineColor
@@ -336,8 +326,6 @@ define([
      *
      * @param {Color} value The fill color.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getOutlineColor
      * @see Label#setFillColor
      * @see Label#setFont
@@ -376,8 +364,6 @@ define([
      *
      * @param {Number} value The outline width.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getOutlineWidth
      * @see Label#setFillColor
      * @see Label#setFont
@@ -413,8 +399,6 @@ define([
      * @memberof Label
      *
      * @param {LabelStyle} value The style.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getStyle
      * @see Label#setOutlineColor
@@ -468,8 +452,6 @@ define([
      * @memberof Label
      *
      * @param {Cartesian2} value The 2D Cartesian pixel offset.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getPixelOffset
      * @see Billboard#setPixelOffset
@@ -645,8 +627,6 @@ define([
      *
      * @param {Cartesian3} value The 3D Cartesian offset in eye coordinates.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getEyeOffset
      */
     Label.prototype.setEyeOffset = function(value) {
@@ -695,8 +675,6 @@ define([
      *
      * @param {HorizontalOrigin} value The horizontal origin.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getHorizontalOrigin
      * @see Label#setVerticalOrigin
      *
@@ -742,8 +720,6 @@ define([
      * @memberof Label
      *
      * @param {VerticalOrigin} value The vertical origin.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Label#getVerticalOrigin
      * @see Label#setHorizontalOrigin
@@ -809,8 +785,6 @@ define([
      *
      * @param {Number} value The scale used to size the label.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Label#getScale
      * @see Label#setFont
      */
@@ -847,9 +821,6 @@ define([
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
      * @returns {Cartesian2} The screen-space position of the label.
-     *
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} frameState is required.
      *
      * @see Label#setEyeOffset
      * @see Label#setPixelOffset

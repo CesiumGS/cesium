@@ -34,9 +34,6 @@ define([
      * @param {Ray} ray The ray.
      * @param {Plane} plane The plane.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
-     *
-     * @exception {DeveloperError} ray is required.
-     * @exception {DeveloperError} plane is required.
      */
     IntersectionTests.rayPlane = function(ray, plane, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -78,9 +75,6 @@ define([
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
      * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
-     *
-     * @exception {DeveloperError} ray is required.
-     * @exception {DeveloperError} ellipsoid is required.
      */
     IntersectionTests.rayEllipsoid = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -277,9 +271,6 @@ define([
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
      * @returns {Cartesian} The nearest planetodetic point on the ray.
-     *
-     * @exception {DeveloperError} ray is required.
-     * @exception {DeveloperError} ellipsoid is required.
      */
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -370,10 +361,6 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersection.
      *
-     * @exception {DeveloperError} endPoint0 is required.
-     * @exception {DeveloperError} endPoint1 is required.
-     * @exception {DeveloperError} plane is required.
-     *
      * @example
      * var origin = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
      * var normal = ellipsoid.geodeticSurfaceNormal(origin);
@@ -435,8 +422,6 @@ define([
      *
      * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
      *
-     * @exception {DeveloperError} p0, p1, p2, and plane are required.
-     *
      * @example
      * var origin = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
      * var normal = ellipsoid.geodeticSurfaceNormal(origin);
@@ -448,7 +433,6 @@ define([
      *
      * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
      * var triangles = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, p2, plane);
-     *
      */
     IntersectionTests.trianglePlaneIntersection = function(p0, p1, p2, plane) {
         //>>includeStart('debug', pragmas.debug);

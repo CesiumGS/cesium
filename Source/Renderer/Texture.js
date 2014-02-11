@@ -65,7 +65,6 @@ define([
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
      *
      * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
-     * @exception {DeveloperError} source is required.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
      * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().

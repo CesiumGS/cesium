@@ -20,9 +20,6 @@ define([
      * @param {Object|Number|String} value The property value.
      * This parameter is only required if the value is not a number or string and does not have a clone function.
      *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} clone is a required function.
-     *
      * @see ConstantPositionProperty
      *
      * @example

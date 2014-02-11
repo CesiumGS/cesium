@@ -31,8 +31,6 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
          * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
          * @param {Array} [result] The object into which to store the result.
-         *
-         * @exception {DeveloperError} packedArray is required.
          */
         convertPackedArrayForInterpolation : throwInstantiationError,
 
@@ -46,9 +44,6 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
          * @param {Object} [result] The object into which to store the result.
-         *
-         * @exception {DeveloperError} array is required.
-         * @exception {DeveloperError} sourceArray is required.
          */
         unpackInterpolationResult : throwInstantiationError
     };
