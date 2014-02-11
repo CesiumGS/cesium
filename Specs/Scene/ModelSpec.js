@@ -163,17 +163,6 @@ defineSuite([
         duckModel.debugShowBoundingVolume = false;
     });
 
-    it('renders in wireframe', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-
-        duckModel.show = true;
-        duckModel.debugWireframe = true;
-        duckModel.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        duckModel.show = false;
-        duckModel.debugWireframe = false;
-    });
-
     it('is picked', function() {
         duckModel.show = true;
         duckModel.zoomTo();
@@ -299,6 +288,17 @@ defineSuite([
         superMurdochModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         superMurdochModel.show = false;
+    });
+
+    it('renders superMurdoch in wireframe', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        superMurdochModel.show = true;
+        superMurdochModel.debugWireframe = true;
+        superMurdochModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        superMurdochModel.show = false;
+        superMurdochModel.debugWireframe = false;
     });
 
     it('picks superMurdoch', function() {
