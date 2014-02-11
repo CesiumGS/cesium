@@ -332,6 +332,7 @@ define(['../Core/Color',
             var material = this._material;
             var appearance = new MaterialAppearance({
                 material : material,
+                faceForward : true,
                 translucent : material.isTranslucent(),
                 closed : true
             });

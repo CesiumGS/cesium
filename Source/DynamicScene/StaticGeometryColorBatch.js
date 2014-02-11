@@ -64,6 +64,7 @@ define(['../Core/Color',
                     asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new this.appearanceType({
+                        faceForward : true,
                         translucent : this.translucent,
                         closed : this.closed
                     })

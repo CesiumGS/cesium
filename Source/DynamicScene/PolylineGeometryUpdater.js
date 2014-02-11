@@ -251,6 +251,7 @@ define(['../Core/Color',
         var material = this._material;
         var appearance = new PolylineMaterialAppearance({
             material : material,
+            faceForward : true,
             translucent : material.isTranslucent(),
             closed : false
         });
