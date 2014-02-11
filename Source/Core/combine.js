@@ -50,9 +50,9 @@ define([
         for (property in object1) {
             if (object1.hasOwnProperty(property)) {
                 object1Value = object1[property];
-                if (deep && object2.hasOwnProperty(property)) {
+                if (deep && typeof object1Value === 'object' && object2.hasOwnProperty(property)) {
                     object2Value = object2[property];
-                    if (typeof object1Value === 'object' && typeof object2Value === 'object') {
+                    if (typeof object2Value === 'object') {
                         result[property] = combine(object1Value, object2Value, deep);
                     } else {
                         result[property] = object1Value;

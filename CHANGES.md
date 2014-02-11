@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes:
   * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
-  * `combine` now takes two objects instead of an array, and defaults to copying shallow references.
+  * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
