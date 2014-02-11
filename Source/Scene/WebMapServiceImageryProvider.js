@@ -39,9 +39,6 @@ define([
      * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     * @exception {DeveloperError} <code>description.layers</code> is required.
-     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -361,6 +358,23 @@ define([
      */
     WebMapServiceImageryProvider.prototype.isReady = function() {
         return this._ready;
+    };
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof WebMapServiceImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    WebMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
     };
 
     /**

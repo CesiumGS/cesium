@@ -55,8 +55,6 @@ define([
      *
      * @see Event#raiseEvent
      * @see Event#removeEventListener
-     *
-     * @exception {DeveloperError} listener is required and must be a function.
      */
     Event.prototype.addEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
@@ -84,7 +82,6 @@ define([
      * @see Event#addEventListener
      * @see Event#raiseEvent
      *
-     * @exception {DeveloperError} listener is required and must be a function.
      * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener, scope) {

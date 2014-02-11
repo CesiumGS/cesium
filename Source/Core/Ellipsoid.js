@@ -220,8 +220,6 @@ define([
      * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.geocentricSurfaceNormal = Cartesian3.normalize;
 
@@ -232,8 +230,6 @@ define([
      * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
      */
     Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -266,8 +262,6 @@ define([
      * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.geodeticSurfaceNormal = function(cartesian, result) {
         result = Cartesian3.multiplyComponents(cartesian, this._oneOverRadiiSquared, result);
@@ -284,8 +278,6 @@ define([
      * @param {Cartographic} cartographic The cartographic position.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
      *
      * @example
      * //Create a Cartographic and determine it's Cartesian representation on a WGS84 ellipsoid.
@@ -311,8 +303,6 @@ define([
      * @param {Array} cartographics An array of cartographic positions.
      * @param {Array} [result] The object onto which to store the result.
      * @returns {Array} The modified result parameter or a new Array instance if none was provided.
-     *
-     * @exception {DeveloperError} cartographics is required.
      *
      * @example
      * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
@@ -353,8 +343,6 @@ define([
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
      *
-     * @exception {DeveloperError} cartesian is required.
-     *
      * @example
      * //Create a Cartesian and determine it's Cartographic representation on a WGS84 ellipsoid.
      * var position = new Cesium.Cartesian(17832.12, 83234.52, 952313.73);
@@ -391,8 +379,6 @@ define([
      * @param {Array} cartesians An array of Cartesian positions.
      * @param {Array} [result] The object onto which to store the result.
      * @returns {Array} The modified result parameter or a new Array instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
      *
      * @example
      * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
@@ -432,8 +418,6 @@ define([
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -538,8 +522,6 @@ define([
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);

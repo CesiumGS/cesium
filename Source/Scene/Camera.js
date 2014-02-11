@@ -35,8 +35,6 @@ define([
      *
      * @alias Camera
      *
-     * @exception {DeveloperError} context is required.
-     *
      * @constructor
      *
      * @example
@@ -378,8 +376,6 @@ define([
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
      *
-     * @exception {DeveloperError} cartesian is required.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
@@ -398,8 +394,6 @@ define([
      *
      * @param {Cartesian4} vector The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} cartesian is required.
      *
      * @returns {Cartesian4} The transformed vector or point.
      */

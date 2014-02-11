@@ -32,8 +32,6 @@ define([
      * @param {Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
 
-     * @exception {DeveloperError} options.attributes is required.
-     * @exception {DeveloperError} options.primitiveType is required.
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
@@ -168,8 +166,6 @@ define([
      * @param {Cartesian3} geometry The geometry.
      *
      * @returns {Number} The number of vertices in the geometry.
-     *
-     * @exception {DeveloperError} geometries is required.
      *
      * @example
      * var numVertices = Cesium.Geometry.computeNumberOfVertices(geometry);

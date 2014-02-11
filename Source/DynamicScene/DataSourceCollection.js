@@ -39,8 +39,6 @@ define([
      * @memberof DataSourceCollection
      *
      * @param {DataSource} dataSource The data source to add.
-     *
-     * @exception {DeveloperError} dataSource is required.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
         //>>includeStart('debug', pragmas.debug);
@@ -127,7 +125,6 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     DataSourceCollection.prototype.get = function(index) {

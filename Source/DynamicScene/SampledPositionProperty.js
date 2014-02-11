@@ -85,8 +85,6 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     SampledPositionProperty.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
@@ -100,9 +98,6 @@ define([
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} referenceFrame is required.
      */
     SampledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -127,9 +122,6 @@ define([
      *
      * @param {JulianDate} time The sample time.
      * @param {Cartesian3} value The value at the provided time.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} value is required.
      */
     SampledPositionProperty.prototype.addSample = function(time, value) {
         this._property.addSample(time, value);
@@ -142,8 +134,6 @@ define([
      * @param {Array} times An array of JulianDate instances where each index is a sample time.
      * @param {Array} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
      *
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} values is required.
      * @exception {DeveloperError} times and values must be the same length..
      */
     SampledPositionProperty.prototype.addSamples = function(times, values) {
@@ -156,8 +146,6 @@ define([
      *
      * @param {Array} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
-     *
-     * @exception {DeveloperError} packedSamples is required.
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
         this._property.addSamplesPackedArray(data, epoch);

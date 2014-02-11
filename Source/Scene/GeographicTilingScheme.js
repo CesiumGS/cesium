@@ -127,8 +127,6 @@ define([
      *        should be created.
      * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
      *          is undefined.
-     *
-     * @exception {DeveloperError} <code>extent</code> is required.
      */
     GeographicTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
         //>>includeStart('debug', pragmas.debug);

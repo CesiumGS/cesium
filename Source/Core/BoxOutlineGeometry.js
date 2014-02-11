@@ -34,9 +34,6 @@ define([
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
-     * @exception {DeveloperError} options.minimumCorner is required.
-     * @exception {DeveloperError} options.maximumCorner is required.
-     *
      * @see BoxOutlineGeometry#fromDimensions
      * @see BoxOutlineGeometry#createGeometry
      *
@@ -73,7 +70,6 @@ define([
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      *
-     * @exception {DeveloperError} options.dimensions is required.
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
      * @see BoxOutlineGeometry#createGeometry

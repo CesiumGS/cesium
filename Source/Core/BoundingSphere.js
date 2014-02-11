@@ -501,8 +501,6 @@ define([
      *
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
-     * @exception {DeveloperError} corner and oppositeCorner are required.
-     *
      * @example
      * // Create a bounding sphere around the unit cube
      * var sphere = Cesium.BoundingSphere.fromCornerPoints(new Cesium.Cartesian3(-0.5, -0.5, -0.5), new Cesium.Cartesian3(0.5, 0.5, 0.5));
@@ -534,8 +532,6 @@ define([
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} ellipsoid is required.
      *
      * @example
      * var boundingSphere = Cesium.BoundingSphere.fromEllipsoid(ellipsoid);
@@ -588,9 +584,6 @@ define([
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     BoundingSphere.union = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -631,9 +624,6 @@ define([
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} point is required.
      */
     BoundingSphere.expand = function(sphere, point, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -667,9 +657,6 @@ define([
      * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.intersect = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
@@ -706,9 +693,6 @@ define([
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transform = function(sphere, transform, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -743,9 +727,6 @@ define([
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} transform is required.
      *
      * @example
      * var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
@@ -787,10 +768,6 @@ define([
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
      * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
-     *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -839,8 +816,6 @@ define([
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -969,8 +944,6 @@ define([
      * @param {BoundingSphere} right The sphere to enclose in this bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.prototype.union = function(right, result) {
         return BoundingSphere.union(this, right, result);
@@ -983,8 +956,6 @@ define([
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
-     *
-     * @exception {DeveloperError} point is required.
      */
     BoundingSphere.prototype.expand = function(point, result) {
         return BoundingSphere.expand(this, point, result);
@@ -1000,8 +971,6 @@ define([
      * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
-     *
-     * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
@@ -1019,9 +988,6 @@ define([
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
      * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
-     *
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.prototype.getPlaneDistances = function(position, direction, result) {
         return BoundingSphere.getPlaneDistances(this, position, direction, result);

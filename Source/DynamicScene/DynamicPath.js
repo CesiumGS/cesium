@@ -128,7 +128,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicPath
      *
      * @param {DynamicPath} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicPath.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

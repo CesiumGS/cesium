@@ -72,8 +72,6 @@ define([
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     * @exception {DeveloperError} <code>description.channel</code> is required.
      * @exception {RuntimeError} Could not find layer with channel (id) of <code>description.channel</code>.
      * @exception {RuntimeError} Could not find a version in channel (id) <code>description.channel</code>.
      * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
@@ -494,6 +492,23 @@ define([
      */
     GoogleEarthImageryProvider.prototype.isReady = function() {
         return this._ready;
+    };
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof GoogleEarthImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    GoogleEarthImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
     };
 
     /**
