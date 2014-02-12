@@ -278,25 +278,19 @@ define([
 
         var prevPickedNode;
         var prevPickedMesh;
-        var prevPickedPrimitiveIndex;
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
                 var pick = scene.pick(movement.endPosition);
                 if (defined(pick) && (pick.primitive === model)) {
-                    var gltf = pick.gltf;
-                    if ((prevPickedNode !== gltf.node) || (prevPickedMesh !== gltf.mesh) || (prevPickedPrimitiveIndex !== gltf.primitiveIndex)) {
+                    if ((prevPickedNode !== pick.node) || (prevPickedMesh !== pick.mesh)) {
 
-                        prevPickedNode = gltf.node;
-                        prevPickedMesh = gltf.mesh;
-                        prevPickedPrimitiveIndex = gltf.primitiveIndex;
+                        prevPickedNode = pick.node;
+                        prevPickedMesh = pick.mesh;
 
-                        var stats = statistics.meshStatistics[gltf.mesh.name];
-                        console.log('node: ' + gltf.node.name + '. mesh: ' + gltf.mesh.name + '. primitiveIndex: ' + prevPickedPrimitiveIndex);
+                        var stats = statistics.meshStatistics[pick.mesh.name];
+                        console.log('node: ' + pick.node.name + '. mesh: ' + pick.mesh.name);
                         console.log('   mesh triangles: ' + stats.numberOfTriangles.toLocaleString());
-                        if (gltf.mesh.primitives.length > 1) {
-                            console.log('   primitive triangles: ' + stats.primitives[gltf.primitiveIndex].numberOfTriangles.toLocaleString());
-                        }
                     }
                 }
             },

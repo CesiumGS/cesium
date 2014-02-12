@@ -34,7 +34,11 @@ define([
         this._runtimeNode = runtimeNode;
 
         /**
-         * DOC_TBA
+         * The value of the <code>name</code> property of this node.  This is the
+         * name assigned by the artist when the asset is created.  This can be
+         * different than the name of the node property, which is internal to glTF.
+         *
+         * @type {String}
          *
          * @readonly
          */
