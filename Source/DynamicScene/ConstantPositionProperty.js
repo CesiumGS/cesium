@@ -101,7 +101,7 @@ define(['./PositionProperty',
         }
         if (defined(referenceFrame) && this._referenceFrame !== referenceFrame) {
             definitionChanged = true;
-            this._referenceFrame = defaultValue(this._referenceFrame, referenceFrame);
+            this._referenceFrame = referenceFrame;
         }
         if (definitionChanged) {
             this._definitionChanged.raiseEvent(this);
