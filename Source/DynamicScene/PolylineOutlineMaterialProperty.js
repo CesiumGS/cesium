@@ -70,7 +70,7 @@ define(['../Core/Color',
             },
             set : function(value) {
                 if (this._color !== value) {
-                    if (this._colorSubscription) {
+                    if (defined(this._colorSubscription)) {
                         this._colorSubscription();
                         this._colorSubscription = undefined;
                     }
