@@ -20,9 +20,11 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
         expect(property.color).toBeDefined();
         expect(property.getType()).toEqual('Color');
         expect(property.isConstant).toBe(true);
+        expect(property.getValue().color).toEqual(Color.WHITE);
 
-        var result = property.getValue();
-        expect(result.color).toEqual(Color.WHITE);
+        property = new ColorMaterialProperty(Color.BLACK);
+        expect(property.color).toBeDefined();
+        expect(property.getValue().color).toEqual(Color.BLACK);
     });
 
     it('works with constant values', function() {

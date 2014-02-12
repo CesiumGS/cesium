@@ -18,6 +18,9 @@ define(['../Core/Color',
 
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
+     *
+     * @param {Color} [color=Color.WHITE] The material color.
+     *
      * @alias ColorMaterialProperty
      * @constructor
      */
@@ -115,14 +118,14 @@ define(['../Core/Color',
      */
     ColorMaterialProperty.prototype.equals = function(other) {
         return this === other || //
-        (other instanceof ColorMaterialProperty && //
-        Property.equals(this._color, other._color));
+               (other instanceof ColorMaterialProperty && //
+                Property.equals(this._color, other._color));
     };
 
     /**
      * @private
      */
-    ColorMaterialProperty.prototype._raiseDefinitionChanged = function(){
+    ColorMaterialProperty.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
 

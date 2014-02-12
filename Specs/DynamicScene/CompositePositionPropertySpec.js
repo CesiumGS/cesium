@@ -24,6 +24,7 @@ defineSuite(['DynamicScene/CompositePositionProperty',
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
         expect(property.referenceFrame).toBe(ReferenceFrame.FIXED);
+        expect(property.isConstant).toBe(true);
     });
 
     it('constructor sets expected values', function() {
@@ -45,6 +46,7 @@ defineSuite(['DynamicScene/CompositePositionProperty',
         var property = new CompositePositionProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var result1 = property.getValue(interval1.start);
         expect(result1).not.toBe(interval1.data.getValue(interval1.start));
@@ -62,6 +64,7 @@ defineSuite(['DynamicScene/CompositePositionProperty',
         var property = new CompositePositionProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var expected = new Cartesian3();
         var result1 = property.getValue(interval1.start, expected);

@@ -23,9 +23,7 @@ define(['../Core/defined',
     var CompositeMaterialProperty = function() {
         this._definitionChanged = new Event();
         this._composite = new CompositeProperty();
-        this._composite.definitionChanged.addEventListener(function() {
-            this._definitionChanged.raiseEvent(this);
-        }, this);
+        this._composite.definitionChanged.addEventListener(CompositeMaterialProperty.prototype._raiseDefinitionChanged, this);
     };
 
     defineProperties(CompositeMaterialProperty.prototype, {
@@ -120,6 +118,13 @@ define(['../Core/defined',
         return this === other || //
                (other instanceof CompositeMaterialProperty && //
                 this._composite.equals(other._composite, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    CompositeMaterialProperty.prototype._raiseDefinitionChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return CompositeMaterialProperty;

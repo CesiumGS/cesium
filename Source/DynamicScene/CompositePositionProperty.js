@@ -28,9 +28,7 @@ define(['../Core/defaultValue',
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
         this._definitionChanged = new Event();
         this._composite = new CompositeProperty();
-        this._composite.definitionChanged.addEventListener(function() {
-            this._definitionChanged.raiseEvent(this);
-        }, this);
+        this._composite.definitionChanged.addEventListener(CompositePositionProperty.prototype._raiseDefinitionChanged, this);
     };
 
     defineProperties(CompositePositionProperty.prototype, {
@@ -138,6 +136,13 @@ define(['../Core/defaultValue',
                (other instanceof CompositePositionProperty && //
                 this._referenceFrame === other._referenceFrame && //
                 this._composite.equals(other._composite, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    CompositePositionProperty.prototype._raiseDefinitionChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return CompositePositionProperty;
