@@ -21,6 +21,7 @@ Beta Releases
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
 * `RequestErrorEvent` now includes the headers that were returned with the error response.
+* Fix multifrustum translucent rendering artifact.
 
 ### b25 - 2014-02-03
 
