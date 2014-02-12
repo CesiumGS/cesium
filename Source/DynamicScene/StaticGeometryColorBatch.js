@@ -2,7 +2,7 @@
 define(['../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/Map',
+        '../Core/AssociativeArray',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         '../Scene/PrimitiveState'
@@ -10,7 +10,7 @@ define(['../Core/Color',
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        Map,
+        AssociativeArray,
         ShowGeometryInstanceAttribute,
         Primitive,
         PrimitiveState) {
@@ -25,10 +25,10 @@ define(['../Core/Color',
         this.primitives = primitives;
         this.createPrimitive = false;
         this.primitive = undefined;
-        this.geometry = new Map();
-        this.updaters = new Map();
-        this.updatersWithAttributes = new Map();
-        this.attributes = new Map();
+        this.geometry = new AssociativeArray();
+        this.updaters = new AssociativeArray();
+        this.updatersWithAttributes = new AssociativeArray();
+        this.attributes = new AssociativeArray();
         this.itemsToRemove = [];
     };
 

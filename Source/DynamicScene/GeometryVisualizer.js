@@ -2,7 +2,7 @@
 define(['../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Map',
+        '../Core/AssociativeArray',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/PolylineColorAppearance',
         '../Scene/MaterialAppearance',
@@ -16,7 +16,7 @@ define(['../Core/defined',
         defined,
         DeveloperError,
         destroyObject,
-        Map,
+        AssociativeArray,
         PerInstanceColorAppearance,
         PolylineColorAppearance,
         MaterialAppearance,
@@ -32,7 +32,7 @@ define(['../Core/defined',
 
     var DynamicGeometryBatch = function(primitives) {
         this._primitives = primitives;
-        this._dynamicUpdaters = new Map();
+        this._dynamicUpdaters = new AssociativeArray();
     };
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
@@ -113,8 +113,8 @@ define(['../Core/defined',
         this._batches[GeometryBatchType.MATERIAL_OPEN.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, false);
         this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
 
-        this._subscriptions = new Map();
-        this._updaters = new Map();
+        this._subscriptions = new AssociativeArray();
+        this._updaters = new AssociativeArray();
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 

@@ -1,6 +1,6 @@
 /*global define*/
 define(['../Core/defined',
-        '../Core/Map',
+        '../Core/AssociativeArray',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         '../Scene/Material',
@@ -8,7 +8,7 @@ define(['../Core/defined',
         './MaterialProperty'
     ], function(
         defined,
-        Map,
+        AssociativeArray,
         ShowGeometryInstanceAttribute,
         Primitive,
         Material,
@@ -21,13 +21,13 @@ define(['../Core/defined',
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.closed = closed;
-        this.updaters = new Map();
+        this.updaters = new AssociativeArray();
         this.createPrimitive = true;
         this.primitive = undefined;
-        this.geometry = new Map();
+        this.geometry = new AssociativeArray();
         this.material = Material.fromType('Color');
-        this.updatersWithAttributes = new Map();
-        this.attributes = new Map();
+        this.updatersWithAttributes = new AssociativeArray();
+        this.attributes = new AssociativeArray();
         this.invalidated = false;
         this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(Batch.prototype.onMaterialChanged, this);
     };

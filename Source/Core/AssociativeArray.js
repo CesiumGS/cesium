@@ -5,29 +5,30 @@ define(['./defined',
         defined, DeveloperError) {
     "use strict";
 
-    var Map = function() {
+    var AssociativeArray = function() {
         this._array = [];
         this._hash = {};
     };
 
-    Map.prototype.set = function(key, value) {
+    AssociativeArray.prototype.set = function(key, value) {
+        this.remove(key);
         this._hash[key] = value;
         this._array.push(value);
     };
 
-    Map.prototype.get = function(key) {
+    AssociativeArray.prototype.get = function(key) {
         return this._hash[key];
     };
 
-    Map.prototype.getCount = function() {
+    AssociativeArray.prototype.getCount = function() {
         return this._array.length;
     };
 
-    Map.prototype.getValues = function() {
+    AssociativeArray.prototype.getValues = function() {
         return this._array;
     };
 
-    Map.prototype.remove = function(key) {
+    AssociativeArray.prototype.remove = function(key) {
         var hasValue = defined(this._hash[key]);
         if (hasValue) {
             var array = this._array;
@@ -37,10 +38,10 @@ define(['./defined',
         return hasValue;
     };
 
-    Map.prototype.removeAll = function() {
+    AssociativeArray.prototype.removeAll = function() {
         this._hash = {};
         this._array.length = 0;
     };
 
-    return Map;
+    return AssociativeArray;
 });
