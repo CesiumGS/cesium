@@ -20,6 +20,7 @@ Beta Releases
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
+* `RequestErrorEvent` now includes the headers that were returned with the error response.
 * Added `Model` for drawing 3D models using glTF.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
