@@ -523,11 +523,6 @@ define([
             var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
             var curFar = Math.min(far, farToNearRatio * curNear);
 
-            if (m !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
-                curNear *= 0.99;
-            }
-
             var frustumCommands = frustumCommandsList[m];
             if (!defined(frustumCommands)) {
                 frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
@@ -1114,6 +1109,11 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
+            if (index !== 0) {
+                // Avoid tearing artifacts between adjacent frustums
+                frustum.near *= 0.99;
+            }
+
             us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
@@ -1122,6 +1122,9 @@ define([
             for (var j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
+
+            frustum.near = frustumCommands.near;
+            us.updateFrustum(frustum);
 
             executeTranslucentCommands(scene, passState, frustumCommands);
         }
