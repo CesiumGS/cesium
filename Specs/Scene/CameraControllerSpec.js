@@ -416,7 +416,7 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-0.75, CesiumMath.EPSILON10);
     });
 
-    it('clamps zoom in 2D', function() {
+    it('clamps zoom out in 2D', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -440,6 +440,29 @@ defineSuite([
         expect(frustum.left).toBeGreaterThan(-dx);
         expect(frustum.top).toEqual(frustum.right * ratio);
         expect(frustum.bottom).toEqual(-frustum.top);
+    });
+
+    it('clamps zoom in in 2D', function() {
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        controller.update(SceneMode.SCENE2D, { projection : projection });
+
+        var max = projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var factor = 1000.0;
+        var dx = max.x * factor;
+
+        controller.zoomIn(dx * 2.0);
+        expect(frustum.right).toEqual(1.0);
+        expect(frustum.left).toEqual(-1.0);
     });
 
     it('zooms in 3D', function() {

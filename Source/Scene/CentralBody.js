@@ -516,21 +516,21 @@ define([
 
         var that = centralBody;
         if (!defined(centralBody._northPoleCommand.uniformMap)) {
-            var northPoleUniforms = combine([drawUniforms, {
+            var northPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
-            }], false, false);
-            centralBody._northPoleCommand.uniformMap = combine([northPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._northPoleCommand.uniformMap = combine(northPoleUniforms, centralBody._drawUniforms);
         }
 
         if (!defined(centralBody._southPoleCommand.uniformMap)) {
-            var southPoleUniforms = combine([drawUniforms, {
+            var southPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
-            }], false, false);
-            centralBody._southPoleCommand.uniformMap = combine([southPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._southPoleCommand.uniformMap = combine(southPoleUniforms, centralBody._drawUniforms);
         }
     }
 

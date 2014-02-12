@@ -8,7 +8,9 @@ Beta Releases
 
 * Breaking changes:
   * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
+  * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
+* Fix developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
@@ -18,6 +20,7 @@ Beta Releases
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
+* `RequestErrorEvent` now includes the headers that were returned with the error response.
 
 ### b25 - 2014-02-03
 
