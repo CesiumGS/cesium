@@ -49,14 +49,14 @@ define(['../Core/defined',
     };
 
     DynamicGeometryBatch.prototype.update = function(time) {
-        var geometries = this._dynamicUpdaters.getValues();
+        var geometries = this._dynamicUpdaters.values;
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].update(time);
         }
     };
 
     DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
-        var geometries = this._dynamicUpdaters.getValues();
+        var geometries = this._dynamicUpdaters.values;
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].destroy();
         }
@@ -263,7 +263,7 @@ define(['../Core/defined',
         }
         this._outlineBatch.removeAllPrimitives();
 
-        var subscriptions = this._subscriptions.getValues();
+        var subscriptions = this._subscriptions.values;
         var len = subscriptions.length;
         for (var i = 0; i < len; i++) {
             subscriptions[i]();

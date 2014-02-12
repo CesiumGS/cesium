@@ -58,7 +58,7 @@ define(['../Core/Color',
             if (defined(primitive)) {
                 primitives.remove(primitive);
             }
-            var geometry = this.geometry.getValues();
+            var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
                     asynchronous : true,
@@ -74,7 +74,7 @@ define(['../Core/Color',
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
-            var updatersWithAttributes = this.updatersWithAttributes.getValues();
+            var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];

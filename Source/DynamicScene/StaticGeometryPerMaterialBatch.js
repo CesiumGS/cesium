@@ -69,7 +69,7 @@ define(['../Core/defined',
     Batch.prototype.update = function(time) {
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var geometries = this.geometry.getValues();
+        var geometries = this.geometry.values;
         if (this.createPrimitive) {
             if (defined(primitive)) {
                 primitives.remove(primitive);
@@ -93,7 +93,7 @@ define(['../Core/defined',
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
             this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
-            var updatersWithAttributes = this.updatersWithAttributes.getValues();
+            var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
@@ -148,7 +148,7 @@ define(['../Core/defined',
         for (var i = length - 1; i >= 0; i--) {
             var item = items[i];
             if (item.remove(updater)) {
-                if (item.updaters.getCount() === 0) {
+                if (item.updaters.count === 0) {
                     items.splice(i, 1);
                     item.destroy();
                 }
@@ -166,7 +166,7 @@ define(['../Core/defined',
             var item = items[i];
             if (item.invalidated) {
                 items.splice(i, 1);
-                var updaters = item.updaters.getValues();
+                var updaters = item.updaters.values;
                 var updatersLength = updaters.length;
                 for (var h = 0; h < updatersLength; i++) {
                     this.add(updaters[h]);
