@@ -37,7 +37,6 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
      *
-     * @exception {DeveloperError} origin is required.
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
     var EllipsoidTangentPlane = function(origin, ellipsoid) {
@@ -74,8 +73,6 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesians The list of positions surrounding the center point.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.fromPoints = function(cartesians, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -114,8 +111,6 @@ define([
      * @param {Cartesian3} cartesian The point to project.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -156,8 +151,6 @@ define([
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian2 instances onto which to store results.
      * @returns {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -192,8 +185,6 @@ define([
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian3 instances onto which to store results.
      * @returns {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);

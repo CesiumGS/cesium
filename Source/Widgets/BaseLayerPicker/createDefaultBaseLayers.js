@@ -36,7 +36,7 @@ define([
             tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
+                    url : '//dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL,
                     proxy : proxyIfNeeded
                 });
@@ -49,7 +49,7 @@ define([
             tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
+                    url : '//dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
                     proxy : proxyIfNeeded
                 });
@@ -62,7 +62,7 @@ define([
             tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
+                    url : '//dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD,
                     proxy : proxyIfNeeded
                 });

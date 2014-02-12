@@ -315,7 +315,6 @@ define([
      * DOC_TBA
      * @memberof UniformState
      *
-     *
      * @see czm_viewportOrthographic
      */
     UniformState.prototype.getViewportOrthographic = function() {

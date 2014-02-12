@@ -53,8 +53,6 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     var GeocoderViewModel = function(description) {
         //>>includeStart('debug', pragmas.debug);
@@ -63,7 +61,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
+        this._url = defaultValue(description.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }

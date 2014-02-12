@@ -27,9 +27,6 @@ define([
      * @param {Scene} scene The Scene instance to use.
      * @param {SceneTransitioner} [transitioner] The SceneTransitioner instance to use.
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
-     *
-     * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} scene is required.
      */
     var HomeButton = function(container, scene, transitioner, ellipsoid, flightDuration) {
         //>>includeStart('debug', pragmas.debug);

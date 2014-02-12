@@ -5,6 +5,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/Event',
+        '../../Core/formatError',
         '../../Core/TaskProcessor',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
@@ -14,6 +15,7 @@ define([
         defined,
         defineProperties,
         Event,
+        formatError,
         TaskProcessor,
         knockout,
         when) {
@@ -87,13 +89,9 @@ define([
                         if (that._descriptionRawHtml === value) {
                             that._descriptionSanitizedHtml = sanitized;
                         }
-                    }).otherwise(function(e) {
+                    }).otherwise(function(error) {
                         /*global console*/
-                        var message = defined(e.name) && defined(e.message) ? (e.name + ': ' + e.message) : e.toString();
-                        if (defined(e.stack)) {
-                            message += '\n' + e.stack;
-                        }
-                        console.log('An error occurred while sanitizing HTML: ' + message);
+                        console.log('An error occurred while sanitizing HTML: ' + formatError(error));
                     });
                 }
             }

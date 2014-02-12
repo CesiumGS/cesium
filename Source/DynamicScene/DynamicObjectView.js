@@ -293,11 +293,6 @@ define([
     * to the latest settings.
     * @param {JulianDate} time The current animation time.
     *
-    * @exception {DeveloperError} time is required.
-    * @exception {DeveloperError} DynamicObjectView.scene is required.
-    * @exception {DeveloperError} DynamicObjectView.dynamicObject is required.
-    * @exception {DeveloperError} DynamicObjectView.ellipsoid is required.
-    * @exception {DeveloperError} DynamicObjectView.dynamicObject.position is required.
     */
     DynamicObjectView.prototype.update = function(time) {
         var scene = this.scene;

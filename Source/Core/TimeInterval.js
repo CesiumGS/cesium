@@ -147,8 +147,6 @@ define([
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
      *
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be number.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
         //>>includeStart('debug', pragmas.debug);
@@ -310,8 +308,6 @@ define([
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
      *
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     TimeInterval.prototype.equalsEpsilon = function(other, epsilon, dataComparer) {
         return TimeInterval.equalsEpsilon(this, other, epsilon, dataComparer);

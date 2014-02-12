@@ -516,21 +516,21 @@ define([
 
         var that = centralBody;
         if (!defined(centralBody._northPoleCommand.uniformMap)) {
-            var northPoleUniforms = combine([drawUniforms, {
+            var northPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
-            }], false, false);
-            centralBody._northPoleCommand.uniformMap = combine([northPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._northPoleCommand.uniformMap = combine(northPoleUniforms, centralBody._drawUniforms);
         }
 
         if (!defined(centralBody._southPoleCommand.uniformMap)) {
-            var southPoleUniforms = combine([drawUniforms, {
+            var southPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
-            }], false, false);
-            centralBody._southPoleCommand.uniformMap = combine([southPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._southPoleCommand.uniformMap = combine(southPoleUniforms, centralBody._drawUniforms);
         }
     }
 
@@ -780,8 +780,6 @@ define([
                     this._rsColor,
                     this._projection);
 
-            displayCredits(this, frameState);
-
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 if (!this.depthTestAgainstTerrain) {
@@ -853,31 +851,6 @@ define([
 
         return destroyObject(this);
     };
-
-    function displayCredits(centralBody, frameState) {
-        var creditDisplay = frameState.creditDisplay;
-        var credit;
-
-        if (centralBody._surface._terrainProvider.isReady()) {
-            credit = centralBody._surface._terrainProvider.getCredit();
-            if (defined(credit)) {
-                creditDisplay.addCredit(credit);
-            }
-        }
-
-        var imageryLayerCollection = centralBody._imageryLayerCollection;
-        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
-            var layer = imageryLayerCollection.get(i);
-            if (layer.show) {
-                if (layer.getImageryProvider().isReady()) {
-                    credit = layer.getImageryProvider().getCredit();
-                    if (defined(credit)) {
-                        creditDisplay.addCredit(credit);
-                    }
-                }
-            }
-        }
-    }
 
     return CentralBody;
 });

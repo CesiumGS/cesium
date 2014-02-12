@@ -445,7 +445,6 @@ define([
      *
      * This method is technically incomplete, however, for the following case:
      *
-     *
      *  7_________6
      *  |         |
      *  |         |______4
@@ -788,7 +787,6 @@ define([
          * Cleans up a simple polygon by removing duplicate adjacent positions and making
          * the first position not equal the last position.
          *
-         * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         removeDuplicates : function(positions) {
@@ -820,7 +818,6 @@ define([
         /**
          * DOC_TBA
          *
-         * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
@@ -851,7 +848,6 @@ define([
          *
          * @returns {WindingOrder} DOC_TBA
          *
-         * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         computeWindingOrder2D : function(positions) {
@@ -865,7 +861,6 @@ define([
          * @param {Array} positions - Cartesian2 array containing the vertices of the polygon
          * @returns {Array} - Index array representing triangles that fill the polygon
          *
-         * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         triangulate : function(positions) {
@@ -908,8 +903,6 @@ define([
          * @param {Array} indices An array of indices that determines the triangles in the polygon.
          * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
          *
-         * @exception {DeveloperError} positions is required.
-         * @exception {DeveloperError} indices is required.
          * @exception {DeveloperError} At least three indices are required.
          * @exception {DeveloperError} The number of indices must be divisable by three.
          * @exception {DeveloperError} Granularity must be greater than zero.
@@ -1124,9 +1117,7 @@ define([
          *
          * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
          *
-         * @exception {DeveloperError} <code>outerRing</code> is required.
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.
-         * @exception {DeveloperError} <code>innerRings</code> is required.
          *
          * @example
          * // Simplifying a polygon with multiple holes.

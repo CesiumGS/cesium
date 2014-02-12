@@ -8,9 +8,10 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
+        '../Core/FeatureDetection',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -34,9 +35,10 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        FeatureDetection,
         DeveloperError,
         EllipsoidalOccluder,
+        FeatureDetection,
+        getTimestamp,
         Intersect,
         Matrix4,
         PrimitiveType,
@@ -644,7 +646,7 @@ define([
         // we're allowed to keep.
         surface._tileReplacementQueue.trimTiles(surface._tileCacheSize);
 
-        var startTime = Date.now();
+        var startTime = getTimestamp();
         var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
@@ -654,7 +656,7 @@ define([
 
             tile.processStateMachine(context, terrainProvider, imageryLayerCollection);
 
-            if (Date.now() >= endTime) {
+            if (getTimestamp() >= endTime) {
                 break;
             }
         }
@@ -794,6 +796,8 @@ define([
     var northeastScratch = new Cartesian3();
 
     function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState) {
+        displayCredits(surface, frameState);
+
         var viewMatrix = frameState.camera.viewMatrix;
 
         var maxTextures = context.getMaximumTextureImageUnits();
@@ -972,6 +976,14 @@ define([
                         }
                         applyGamma = applyGamma || uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
+                        if (defined(imagery.credits)) {
+                            var creditDisplay = frameState.creditDisplay;
+                            var credits = imagery.credits;
+                            for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
+                                creditDisplay.addCredit(credits[creditIndex]);
+                            }
+                        }
+
                         ++numberOfDayTextures;
                     }
 
@@ -1042,6 +1054,31 @@ define([
             }
             tile.meshForWireframePromise = undefined;
         });
+    }
+
+    function displayCredits(surface, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        var credit;
+
+        if (surface._terrainProvider.isReady()) {
+            credit = surface._terrainProvider.getCredit();
+            if (defined(credit)) {
+                creditDisplay.addCredit(credit);
+            }
+        }
+
+        var imageryLayerCollection = surface._imageryLayerCollection;
+        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+            var layer = imageryLayerCollection.get(i);
+            if (layer.show) {
+                if (layer.getImageryProvider().isReady()) {
+                    credit = layer.getImageryProvider().getCredit();
+                    if (defined(credit)) {
+                        creditDisplay.addCredit(credit);
+                    }
+                }
+            }
+        }
     }
 
     return CentralBodySurface;

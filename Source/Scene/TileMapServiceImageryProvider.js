@@ -386,6 +386,23 @@ define([
     };
 
     /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof TileMapServiceImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    TileMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link TileMapServiceImageryProvider#isReady} returns true.
      *

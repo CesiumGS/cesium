@@ -32,7 +32,6 @@ define([
      *                                     If not supplied, this value will be computed.
      * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
-     * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
@@ -111,7 +110,6 @@ define([
      *                                     If not supplied, this value will be computed.
      * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
-     * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
