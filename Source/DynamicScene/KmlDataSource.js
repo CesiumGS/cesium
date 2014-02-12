@@ -257,15 +257,17 @@ define(['../Core/createGuid',
         }
 
         if (defined(dynamicObject.vertexPositions)) {
-            //TODO KML polygons can take into account altitude for each point, we currently can't.
+            if (!defined(dynamicObject.polygon)) {
+                dynamicObject.polygon = new DynamicPolygon();
+            }
+
+            var altitudeMode = getStringValue(node, 'altitudeMode');
+            var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
+            dynamicObject.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
+
             var extrude = getNumericValue(node, 'extrude');
             if (extrude === 1) {
-                var tmp = dynamicObject.vertexPositions.getValue()[0];
-                if (!defined(dynamicObject.polygon)) {
-                    dynamicObject.polygon = new DynamicPolygon();
-                }
-                dynamicObject.polygon.height = new ConstantProperty(0);
-                dynamicObject.polygon.extrudedHeight = new ConstantProperty(Ellipsoid.WGS84.cartesianToCartographic(tmp).height);
+                dynamicObject.polygon.extrudedHeight = new ConstantProperty(0);
             }
         }
     }
