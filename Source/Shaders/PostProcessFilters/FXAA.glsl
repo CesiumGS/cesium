@@ -179,7 +179,7 @@ vec3 FxaaPixelShader(vec2 pos, sampler2D tex, vec2 rcpFrame)
     gradientN *= FXAA_SEARCH_THRESHOLD;
     
     vec2 posP = posN;
-    vec2 offNP = horzSpan ? vec2(rcpFrame.x, 0.0) : vec2(0.0f, rcpFrame.y); 
+    vec2 offNP = horzSpan ? vec2(rcpFrame.x, 0.0) : vec2(0.0, rcpFrame.y); 
     float lumaEndN = lumaN;
     float lumaEndP = lumaN;
     bool doneN = false;

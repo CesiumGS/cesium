@@ -55,6 +55,7 @@ define([
         './SunPostProcess',
         './CreditDisplay',
         '../Shaders/CompositeOITFS',
+        '../Shaders/PostProcessFilters/FXAA',
         '../Shaders/ViewportQuadVS'
     ], function(
         CesiumMath,
@@ -112,6 +113,7 @@ define([
         SunPostProcess,
         CreditDisplay,
         CompositeOITFS,
+        FXAA,
         ViewportQuadVS) {
     "use strict";
 
@@ -172,7 +174,7 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
-        this._clearColorCommand.owner = true;
+        this._clearColorCommand.owner = this;
 
         var opaqueClearCommand = new ClearCommand();
         opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
@@ -386,14 +388,17 @@ define([
         this._opaqueTexture = undefined;
         this._accumulationTexture = undefined;
         this._revealageTexture = undefined;
+        this._compositeTexture = undefined;
         this._depthTexture = undefined;
         this._depthRenderbuffer = undefined;
 
         this._opaqueFBO = undefined;
         this._translucentFBO = undefined;
         this._alphaFBO = undefined;
+        this._compositeFBO = undefined;
 
         this._compositeCommand = undefined;
+        this._fxaaCommand = undefined;
 
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};
@@ -1057,6 +1062,9 @@ define([
                 passState.framebuffer = scene._translucentFBO;
                 scene._translucentClearCommand.execute(context, passState);
 
+                passState.framebuffer = scene._compositeFBO;
+                clear.execute(context, passState);
+
                 if (scene._translucentMultipassSupport) {
                     passState.framebuffer = scene._alphaFBO;
                     scene._alphaClearCommand.execute(context, passState);
@@ -1130,8 +1138,10 @@ define([
         }
 
         if (sortTranslucent) {
-            passState.framebuffer = undefined;
+            passState.framebuffer = scene._compositeFBO;
             scene._compositeCommand.execute(context, passState);
+            passState.framebuffer = undefined;
+            scene._fxaaCommand.execute(context, passState);
         }
     }
 
@@ -1170,6 +1180,12 @@ define([
             pixelDatatype : PixelDatatype.FLOAT
         });
         revealageTexture.setSampler(sampler);
+        scene._compositeTexture = context.createTexture2D({
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGB,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+        });
 
         if (context.getDepthTexture()) {
             scene._depthTexture = context.createTexture2D({
@@ -1187,16 +1203,18 @@ define([
         }
     }
 
-    function updateCompositeCommand(scene) {
+    function updatePostCommands(scene) {
         var context = scene._context;
+        var command;
+        var fs;
 
         if (!defined(scene._compositeCommand)) {
-            var fs = createShaderSource({
+            fs = createShaderSource({
                 defines : [scene._translucentMRTSupport ? 'MRT' : ''],
                 sources : [CompositeOITFS]
             });
 
-            var command = new DrawCommand();
+            command = new DrawCommand();
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
             command.vertexArray = context.getViewportQuadVertexArray();
             command.renderState = context.createRenderState();
@@ -1217,6 +1235,33 @@ define([
             },
             u_revealage : function() {
                 return scene._revealageTexture;
+            }
+        };
+
+        if (!defined(scene._fxaaCommand)) {
+            fs = createShaderSource({
+                sources : [FXAA]
+            });
+
+            command = new DrawCommand();
+            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            command.vertexArray = context.getViewportQuadVertexArray();
+            command.renderState = context.createRenderState();
+            command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, {
+                position : 0,
+                textureCoordinates : 1
+            });
+
+            scene._fxaaCommand = command;
+        }
+
+        var step = new Cartesian2(1.0 / scene._compositeTexture.getWidth(), 1.0 / scene._compositeTexture.getHeight());
+        scene._fxaaCommand.uniformMap = {
+            u_texture : function() {
+                return scene._compositeTexture;
+            },
+            u_step : function() {
+                return step;
             }
         };
     }
@@ -1270,6 +1315,7 @@ define([
                     scene._opaqueTexture = scene._opaqueTexture && scene._opaqueTexture.destroy();
                     scene._accumulationTexture = scene._accumulationTexture && scene._accumulationTexture.destroy();
                     scene._revealageTexture = scene._revealageTexture && scene._revealageTexture.destroy();
+                    scene._compositeTexture = scene._compositeTexture && scene._compositeTexture.destroy();
                     scene._depthTexture = scene._depthTexture && scene._depthTexture.destroy();
                     scene._depthRenderbuffer = scene._depthRenderbuffer && scene._depthRenderbuffer.destroy();
 
@@ -1286,7 +1332,12 @@ define([
 
             supported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
             if (supported) {
-                updateCompositeCommand(scene);
+                scene._compositeFBO = context.createFramebuffer({
+                    colorTextures : [scene._compositeTexture]
+                });
+                scene._compositeFBO.destroyAttachments = false;
+
+                updatePostCommands(scene);
             }
         }
 
