@@ -11,8 +11,6 @@
 // EVEN IF NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 //
 
-// TODO: Get license information from NVidia at Imaged-Based Anti-Aliasing https://developer.nvidia.com/nvidia-graphics-sdk-11-direct3d
-
 /*
 FXAA_PRESET - Choose compile-in knob preset 0-5.
 ------------------------------------------------------------------------------
