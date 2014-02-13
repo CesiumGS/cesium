@@ -5,8 +5,7 @@ define(['./Property',
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/Event',
-        '../Core/TimeIntervalCollection',
-        '../Core/wrapFunction'
+        '../Core/TimeIntervalCollection'
     ], function(
         Property,
         defined,
@@ -14,8 +13,7 @@ define(['./Property',
         DeveloperError,
         Enumeration,
         Event,
-        TimeIntervalCollection,
-        wrapFunction) {
+        TimeIntervalCollection) {
     "use strict";
 
     /**
@@ -56,21 +54,9 @@ define(['./Property',
      * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, myObject2));
      */
     var TimeIntervalCollectionProperty = function() {
-        var intervals = new TimeIntervalCollection();
-        var definitionChanged = new Event();
-
-        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
-        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
-        var that = this;
-        var raiseDefinitionChanged = function() {
-            definitionChanged.raiseEvent(that);
-        };
-        intervals.addInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.addInterval);
-        intervals.removeInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.removeInterval);
-        intervals.clear = wrapFunction(intervals, raiseDefinitionChanged, intervals.clear);
-
-        this._intervals = intervals;
-        this._definitionChanged = definitionChanged;
+        this._definitionChanged = new Event();
+        this._intervals = new TimeIntervalCollection();
+        this._intervals.getChangedEvent().addEventListener(TimeIntervalCollectionProperty.prototype._intervalsChanged, this);
     };
 
     defineProperties(TimeIntervalCollectionProperty.prototype, {
@@ -146,6 +132,13 @@ define(['./Property',
         return this === other || //
                (other instanceof TimeIntervalCollectionProperty && //
                this._intervals.equals(other._intervals, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    TimeIntervalCollectionProperty.prototype._intervalsChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return TimeIntervalCollectionProperty;

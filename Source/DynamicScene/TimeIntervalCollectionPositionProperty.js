@@ -7,8 +7,7 @@ define(['./PositionProperty',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/ReferenceFrame',
-        '../Core/TimeIntervalCollection',
-        '../Core/wrapFunction'
+        '../Core/TimeIntervalCollection'
     ], function(
         PositionProperty,
         Property,
@@ -18,8 +17,7 @@ define(['./PositionProperty',
         DeveloperError,
         Event,
         ReferenceFrame,
-        TimeIntervalCollection,
-        wrapFunction) {
+        TimeIntervalCollection) {
     "use strict";
 
     /**
@@ -31,21 +29,9 @@ define(['./PositionProperty',
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
-        var intervals = new TimeIntervalCollection();
-        var definitionChanged = new Event();
-
-        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
-        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
-        var that = this;
-        var raiseDefinitionChanged = function() {
-            definitionChanged.raiseEvent(that);
-        };
-        intervals.addInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.addInterval);
-        intervals.removeInterval = wrapFunction(intervals, raiseDefinitionChanged, intervals.removeInterval);
-        intervals.clear = wrapFunction(intervals, raiseDefinitionChanged, intervals.clear);
-
-        this._intervals = intervals;
-        this._definitionChanged = definitionChanged;
+        this._definitionChanged = new Event();
+        this._intervals = new TimeIntervalCollection();
+        this._intervals.getChangedEvent().addEventListener(TimeIntervalCollectionPositionProperty.prototype._intervalsChanged, this);
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     };
 
@@ -147,6 +133,13 @@ define(['./PositionProperty',
                (other instanceof TimeIntervalCollectionPositionProperty && //
                 this._intervals.equals(other._intervals, Property.equals) && //
                 this._referenceFrame === other._referenceFrame);
+    };
+
+    /**
+     * @private
+     */
+    TimeIntervalCollectionPositionProperty.prototype._intervalsChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return TimeIntervalCollectionPositionProperty;

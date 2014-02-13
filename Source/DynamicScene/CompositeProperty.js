@@ -5,8 +5,7 @@ define(['./Property',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/EventHelper',
-        '../Core/TimeIntervalCollection',
-        '../Core/wrapFunction'
+        '../Core/TimeIntervalCollection'
     ], function(
         Property,
         defined,
@@ -14,8 +13,7 @@ define(['./Property',
         DeveloperError,
         Event,
         EventHelper,
-        TimeIntervalCollection,
-        wrapFunction) {
+        TimeIntervalCollection) {
     "use strict";
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
@@ -58,23 +56,10 @@ define(['./Property',
      * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
      */
     var CompositeProperty = function() {
-        var intervals = new TimeIntervalCollection();
-        var definitionChanged = new Event();
-
-        //For now, we patch our instance of TimeIntervalCollection to raise our definitionChanged event.
-        //We might want to consider adding events to TimeIntervalCollection itself for us to listen to,
-        var that = this;
-        var eventHelper = new EventHelper();
-        var intervalsChanged = function() {
-            subscribeAll(that, eventHelper, definitionChanged, intervals);
-            definitionChanged.raiseEvent(that);
-        };
-        intervals.addInterval = wrapFunction(intervals, intervalsChanged, intervals.addInterval);
-        intervals.removeInterval = wrapFunction(intervals, intervalsChanged, intervals.removeInterval);
-        intervals.clear = wrapFunction(intervals, intervalsChanged, intervals.clear);
-
-        this._intervals = intervals;
-        this._definitionChanged = definitionChanged;
+        this._eventHelper = new EventHelper();
+        this._definitionChanged = new Event();
+        this._intervals = new TimeIntervalCollection();
+        this._intervals.getChangedEvent().addEventListener(CompositeProperty.prototype._intervalsChanged, this);
     };
 
     defineProperties(CompositeProperty.prototype, {
@@ -148,6 +133,14 @@ define(['./Property',
         return this === other || //
                (other instanceof CompositeProperty && //
                 this._intervals.equals(other._intervals, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    CompositeProperty.prototype._intervalsChanged = function() {
+        subscribeAll(this, this._eventHelper, this._definitionChanged, this._intervals);
+        this._definitionChanged.raiseEvent(this);
     };
 
     return CompositeProperty;

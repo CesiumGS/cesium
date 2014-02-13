@@ -147,4 +147,4 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             return new GeometryVisualizer(EllipseGeometryUpdater, undefined, objects);
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');
