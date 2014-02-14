@@ -279,7 +279,6 @@ define([
                 get: function() {
                     return this._ellipsoid;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -294,7 +293,6 @@ define([
                 get : function() {
                     return this._imageryLayerCollection;
                 },
-                enumerable : true,
                 configurable : true
             }
         });

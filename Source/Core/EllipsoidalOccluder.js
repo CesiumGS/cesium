@@ -63,7 +63,6 @@ define([
                 get: function() {
                     return this._ellipsoid;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -87,7 +86,6 @@ define([
                 get : function() {
                     return this._cameraPosition;
                 },
-                enumerable : true,
                 configurable : true
             }
         });

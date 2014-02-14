@@ -101,7 +101,6 @@ define([
                     this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
                     this._centralBody = centralBody;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -127,7 +126,6 @@ define([
                 get : function() {
                     return this._primitives.length;
                 },
-                enumerable : true,
                 configurable : true
             }
         });

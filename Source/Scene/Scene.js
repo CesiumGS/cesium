@@ -344,7 +344,6 @@ define([
                 get : function() {
                     return this._canvas;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -356,7 +355,6 @@ define([
                 get : function() {
                     return this._context;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -368,7 +366,6 @@ define([
                 get : function() {
                     return this._primitives;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -380,7 +377,6 @@ define([
                 get : function() {
                     return this._camera;
                 },
-                enumerable : true,
                 configurable : true
             },
             // TODO: setCamera
@@ -393,7 +389,6 @@ define([
                 get : function() {
                     return this._screenSpaceCameraController;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -407,7 +402,6 @@ define([
                 get: function() {
                     return this._frameState;
                 },
-                enumerable : true,
                 configurable : true
             },
 
@@ -419,7 +413,6 @@ define([
                 get : function() {
                     return this._animations;
                 },
-                enumerable : true,
                 configurable : true
             }
         });
