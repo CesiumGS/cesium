@@ -43,7 +43,7 @@
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.getImageryLayers().addImageryProvider(imageryProvider);
+        cb.imageryLayerCollection.addImageryProvider(imageryProvider);
 
         primitives.centralBody = cb;
 

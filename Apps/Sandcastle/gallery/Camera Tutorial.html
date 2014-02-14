@@ -73,7 +73,7 @@ require(['Cesium'], function(Cesium) {
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.getImageryLayers().addImageryProvider(bing);
+    centralBody.imageryLayerCollection.addImageryProvider(bing);
 
     primitives.centralBody = centralBody;
 
