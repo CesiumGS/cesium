@@ -85,8 +85,6 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicCone
      * @see Scene
      * @see DynamicObject
@@ -100,7 +98,6 @@ define([
      * @see DynamicPolygonVisualizer
      * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -159,8 +156,6 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);

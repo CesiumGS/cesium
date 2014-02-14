@@ -34,7 +34,6 @@ define(['../../Core/BoundingSphere',
      *
      * @param {Viewer} viewer The viewer instance.
      *
-     * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
      * @exception {DeveloperError} selectedObject is already defined by another mixin.
      *

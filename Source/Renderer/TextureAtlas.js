@@ -49,7 +49,6 @@ define([
      *
      * @internalConstructor
      *
-     * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
      */
@@ -259,10 +258,7 @@ define([
      *
      * @returns {Number} The index of the newly added image.
      *
-     * @exception {DeveloperError} image is required.
-     *
      * @see TextureAtlas#addImages
-     *
      */
     TextureAtlas.prototype.addImage = function(image) {
         var index = this.getNumberOfImages();
@@ -285,10 +281,7 @@ define([
      *
      * @returns {Number} The first index of the newly added images.
      *
-     * @exception {DeveloperError} images is required and must have length greater than zero.
-     *
      * @see TextureAtlas#addImage
-     *
      */
     TextureAtlas.prototype.addImages = function(images) {
         //>>includeStart('debug', pragmas.debug);
@@ -336,8 +329,6 @@ define([
      * @param {Array} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
-     *
-     * @exception {DeveloperError} image is required.
      */
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
         var index = this.addImage(image);

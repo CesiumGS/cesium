@@ -30,9 +30,6 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Object} value The value to pack.
          * @param {Array} array The array to pack into.
          * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-         *
-         * @exception {DeveloperError} value is required.
-         * @exception {DeveloperError} array is required.
          */
         pack : throwInstantiationError,
 
@@ -44,8 +41,6 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Array} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
          * @param {Object} [result] The object into which to store the result.
-         *
-         * @exception {DeveloperError} array is required.
          */
         unpack : throwInstantiationError
     };

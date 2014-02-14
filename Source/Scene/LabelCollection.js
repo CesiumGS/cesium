@@ -518,7 +518,6 @@ define([
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see LabelCollection#getLength

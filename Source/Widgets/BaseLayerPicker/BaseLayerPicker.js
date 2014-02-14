@@ -36,9 +36,7 @@ define([
      * @param {Element} container The parent HTML container node for this widget.
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     * @exception {DeveloperError} imageryLayers is required.
      *
      * @see ImageryProvider
      * @see ImageryProviderViewModel

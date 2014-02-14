@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined'
+        '../Core/defined',
+        '../Core/formatError'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        formatError) {
     "use strict";
 
     /**
@@ -118,8 +120,7 @@ define([
             event.raiseEvent(error);
         } else {
             /*global console*/
-            console.log('An error occurred in "' + provider.constructor.name + '":');
-            console.log(message);
+            console.log('An error occurred in "' + provider.constructor.name + '": ' + formatError(message));
         }
 
         if (error.retry && defined(retryFunction)) {

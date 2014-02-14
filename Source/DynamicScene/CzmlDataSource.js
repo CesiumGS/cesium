@@ -1332,8 +1332,6 @@ define([
      *
      * @param {Object} czml The CZML to be processed.
      * @param {String} source The source of the CZML.
-     *
-     * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.process = function(czml, source) {
         //>>includeStart('debug', pragmas.debug);
@@ -1350,8 +1348,6 @@ define([
      *
      * @param {Object} czml The CZML to be processed.
      * @param {String} source The source of the CZML.
-     *
-     * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.load = function(czml, source) {
         //>>includeStart('debug', pragmas.debug);
@@ -1371,8 +1367,6 @@ define([
      * @param {Object} url The url to be processed.
      *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
-     *
-     * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
         //>>includeStart('debug', pragmas.debug);
@@ -1396,8 +1390,6 @@ define([
      * @param {Object} url The url to be processed.
      *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
-     *
-     * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
         //>>includeStart('debug', pragmas.debug);

@@ -38,8 +38,6 @@ define([
     /**
      * DOC_TBA
      * @memberof AnimationCollection
-     *
-     * @exception {DeveloperError} duration is required.
      */
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -85,7 +83,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} material is required.
      * @exception {DeveloperError} material has no properties with alpha components.
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
@@ -150,8 +147,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} object is required.
-     * @exception {DeveloperError} property is required.
      * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
@@ -199,7 +194,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} material is required.
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {

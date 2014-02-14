@@ -144,7 +144,6 @@ define([
      *
      * @returns {Object} The primitive added to the composite.
      *
-     * @exception {DeveloperError} primitive is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see CompositePrimitive#add
@@ -375,7 +374,6 @@ define([
      *
      * @memberof CompositePrimitive
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see CompositePrimitive#getLength

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'Core/defined',
+        'Core/formatError',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -11,6 +12,7 @@ define([
         'domReady!'
     ], function(
         defined,
+        formatError,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -49,11 +51,12 @@ define([
         } else {
             loadingIndicator.style.display = 'none';
         }
-    }).otherwise(function(e) {
+    }).otherwise(function(error) {
         loadingIndicator.style.display = 'none';
-        console.error(e);
+        var message = formatError(error);
+        console.error(message);
         if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
-            window.alert(e);
+            window.alert(message);
         }
     });
 
@@ -70,8 +73,9 @@ define([
 
         var showLoadError = function(name, error) {
             var title = 'An error occurred while loading the file: ' + name;
+            error = formatError(error);
             viewer.cesiumWidget.showErrorPanel(title, error);
-            console.error(error);
+            console.error(title + ': ' + error);
         };
 
         viewer.dropError.addEventListener(function(viewerArg, name, error) {

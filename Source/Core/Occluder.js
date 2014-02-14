@@ -29,9 +29,6 @@ define([
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
      *
-     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
-     * @exception {DeveloperError} <code>cameraPosition</code> is required.
-     *
      * @constructor
      *
      * @example
@@ -70,9 +67,6 @@ define([
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
      * @param {Occluder} [result] The object onto which to store the result.
      * @returns {Occluder} The occluder derived from an object's position and radius, as well as the camera position.
-     *
-     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
-     * @exception {DeveloperError} <code>cameraPosition</code> is required.
      */
     Occluder.fromBoundingSphere = function(occluderBoundingSphere, cameraPosition, result) {
         if (!defined(occluderBoundingSphere)) {
@@ -121,8 +115,6 @@ define([
      * @memberof Occluder
      *
      * @param {Cartesian3} cameraPosition The new position of the camera.
-     *
-     * @exception {DeveloperError} cameraPosition is required.
      */
     Occluder.prototype.setCameraPosition = function(cameraPosition) {
         if (!defined(cameraPosition)) {
@@ -255,8 +247,6 @@ define([
      *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
      *
-     * @exception {DeveloperError} occludeeBS is required.
-     *
      * @returns {Enumeration} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
@@ -334,8 +324,7 @@ define([
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
      * @param {Array} positions List of altitude points on the horizon near the surface of the occluder.
      *
-     * @exception {DeveloperError} <code>positions</code> is a required, non-empty array.
-     * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
+     * @exception {DeveloperError} <code>positions</code> must contain at least one element.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
      *
      * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
@@ -349,7 +338,6 @@ define([
      * var tileOccluderSphere = Cesium.BoundingSphere.fromPoints(positions);
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
-     *
      */
     Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         //>>includeStart('debug', pragmas.debug);
@@ -413,8 +401,6 @@ define([
      *
      * @param {Extent} extent The extent used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
-     *
-     * @exception {DeveloperError} extent is required.
      *
      * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.

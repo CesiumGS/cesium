@@ -63,8 +63,6 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
-     * @exception {DeveloperError} origin is required.
-     *
      * @example
      * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
      * var ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -169,8 +167,6 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
-     * @exception {DeveloperError} origin is required.
-     *
      * @example
      * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
      * var ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -271,8 +267,6 @@ define([
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
-     *
-     * @exception {DeveloperError} date is required.
      *
      * @example
      * //Set the view to in the inertial frame.
@@ -409,8 +403,6 @@ define([
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
-     * @exception {DeveloperError} date is required.
-     *
      * @see Transforms.preloadIcrfFixed
      *
      * @example
@@ -460,8 +452,6 @@ define([
      *                  not specified, a new instance is created and returned.
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
-     *
-     * @exception {DeveloperError} date is required.
      *
      * @see Transforms.preloadIcrfFixed
      *
@@ -587,10 +577,6 @@ define([
      * @param {Cartesian3} point The point to transform.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @exception {DeveloperError} modelViewProjectionMatrix is required.
-     * @exception {DeveloperError} viewportTransformation is required.
-     * @exception {DeveloperError} point is required.
      *
      * @see UniformState#getModelViewProjection
      * @see czm_modelViewProjection

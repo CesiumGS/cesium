@@ -138,7 +138,6 @@ define([
      * @param {Array} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
      * @param {Array} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
      *
-     * @exception {DeveloperError} times, points, inTangents, and outTangents are required.
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
      * @exception {DeveloperError} inTangents and outTangents must have a length equal to points.length - 1.
@@ -444,7 +443,6 @@ define([
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
@@ -462,7 +460,6 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new instance of the point on the curve at the given time.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.

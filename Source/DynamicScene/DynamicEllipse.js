@@ -95,7 +95,6 @@ define(['../Core/Cartesian3',
      * @memberof DynamicEllipse
      *
      * @param {DynamicEllipse} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicEllipse.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

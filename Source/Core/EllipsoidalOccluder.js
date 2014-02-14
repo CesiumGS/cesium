@@ -28,8 +28,6 @@ define([
      *        specified, {@link EllipsoidalOccluder#setCameraPosition} must be called before
      *        testing visibility.
      *
-     * @exception {DeveloperError} <code>ellipsoid</code> is required.
-     *
      * @constructor
      *
      * @example

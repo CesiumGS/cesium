@@ -50,7 +50,6 @@ define([
      *
      * @returns {Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
@@ -68,7 +67,6 @@ define([
      * @param {Number} startIndex The index from which to start the search.
      * @returns {Number} The index for the element at the start of the interval.
      *
-     * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.

@@ -46,8 +46,6 @@ define([
      * @param {Scene} scene The scene to be transitioned.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be transitioned.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see Scene
      * @see SceneMode
      */

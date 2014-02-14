@@ -219,7 +219,6 @@ define([
      *     new Cesium.Cartographic2(-77.02, 38.53)]),
      *     width : 1
      * });
-     *
      */
     PolylineCollection.prototype.add = function(polyline) {
         var p = new Polyline(polyline, this);
@@ -333,7 +332,6 @@ define([
      * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see PolylineCollection#getLength

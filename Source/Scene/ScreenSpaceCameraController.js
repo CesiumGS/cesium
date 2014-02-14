@@ -50,9 +50,6 @@ define([
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
      * @param {CameraController} cameraController The camera controller used to modify the camera.
-     *
-     * @exception {DeveloperError} canvas is required.
-     * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
         //>>includeStart('debug', pragmas.debug);
@@ -446,9 +443,11 @@ define([
         var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
         var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
-        Cartesian3.normalize(direction, direction);
 
-        cameraController.move(direction, distance);
+        if (distance > 0.0) {
+            Cartesian3.normalize(direction, direction);
+            cameraController.move(direction, distance);
+        }
     }
 
     function zoom2D(controller, movement) {

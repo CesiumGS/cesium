@@ -632,7 +632,6 @@ define([
      * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      *
-     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
