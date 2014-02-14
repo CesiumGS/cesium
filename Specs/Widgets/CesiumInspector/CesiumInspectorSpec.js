@@ -1,10 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/CesiumInspector/CesiumInspector',
+         'Scene/CentralBody',
+         'Core/Ellipsoid',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          CesiumInspector,
+         CentralBody,
+         Ellipsoid,
          createScene,
          destroyScene
      ) {
@@ -14,6 +18,11 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var cb = new CentralBody(ellipsoid);
+        var primitives = scene.getPrimitives();
+        primitives.setCentralBody(cb);
+
     });
 
     afterAll(function() {
@@ -27,7 +36,7 @@ defineSuite([
 
         var widget = new CesiumInspector('testContainer', scene);
         expect(widget.container).toBe(container);
-        expect(widget.viewModel.scene).toBe(scene   );
+        expect(widget.viewModel.scene).toBe(scene);
         expect(widget.isDestroyed()).toEqual(false);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
