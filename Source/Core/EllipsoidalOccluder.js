@@ -56,9 +56,9 @@ define([
 
     defineProperties(EllipsoidalOccluder.prototype, {
         /**
-         * Gets the occluding ellipsoid.
-         *
-         * @memberof EllipsoidalOccluder
+         * Gets the occluding ellipsoid
+         * @memberof EllipsoidalOccluder.prototype
+         * @type {Ellipsoid}
          */
         ellipsoid : {
             get: function() {
@@ -67,9 +67,9 @@ define([
         },
 
         /**
-         * Gets and sets the position of the camera.
-         *
-         * @memberof EllipsoidalOccluder
+         * Gets and sets the position of the camera
+         * @memberof EllipsoidalOccluder.prototype
+         * @type {Cartesian3}
          */
         cameraPosition : {
             set : function(cameraPosition) {

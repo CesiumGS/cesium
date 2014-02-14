@@ -349,7 +349,8 @@ define([
     defineProperties(Scene.prototype, {
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {Element}
          */
         canvas : {
             get : function() {
@@ -359,7 +360,8 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {Context}
          */
         context : {
             get : function() {
@@ -369,7 +371,8 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {CompositePrimitive}
          */
         primitives : {
             get : function() {
@@ -379,7 +382,8 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {Camera}
          */
         camera : {
             get : function() {
@@ -390,7 +394,8 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {ScreenSpaceCameraController}
          */
         screenSpaceCameraController : {
             get : function() {
@@ -401,8 +406,8 @@ define([
         /**
          * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
          * function, the previous frame's state is returned.
-         *
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {FrameState}
          */
         frameState : {
             get: function() {
@@ -412,7 +417,8 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Scene
+         * @memberof Scene.prototype
+         * @type {AnimationCollection}
          */
         animations : {
             get : function() {

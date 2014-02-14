@@ -271,10 +271,8 @@ define([
     defineProperties(CentralBody.prototype, {
         /**
          * Gets an ellipsoid describing the shape of this central body.
-         *
-         * @memberof CentralBody
-         *
-         * @returns {Ellipsoid}
+         * @memberof CentralBody.prototype
+         * @type {Ellipsoid}
          */
         ellipsoid : {
             get: function() {
@@ -284,10 +282,8 @@ define([
 
         /**
          * Gets the collection of image layers that will be rendered on this central body.
-         *
-         * @memberof CentralBody
-         *
-         * @returns {ImageryLayerCollection}
+         * @memberof CentralBody.prototype
+         * @type {ImageryLayerCollection}
          */
         imageryLayerCollection : {
             get : function() {

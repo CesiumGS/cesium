@@ -82,16 +82,9 @@ define([
     defineProperties(CompositePrimitive.prototype, {
 
         /**
-         * DOC_TBA
-         *
          * Gets and sets the depth-test ellipsoid.
-         *
-         * @memberof CompositePrimitive
-         * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-         *
-         * @example
-         * var primitives = new Cesium.CompositePrimitive();
-         * primitives.centralBody = new Cesium.CentralBody();
+         * @memberof CompositePrimitive.prototype
+         * @type {CentralBody}
          */
         centralBody : {
             get: function() {
@@ -105,22 +98,9 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
-         * @memberof CompositePrimitive
-         *
-         * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-         *
-         * @see CompositePrimitive#get
-         *
-         * @example
-         * // Toggle the show property of every primitive in the composite -
-         * // not recursive on child composites.
-         * var len = primitives.length;
-         * for (var i = 0; i < len; ++i) {
-         *   var p = primitives.get(i);
-         *   p.show = !p.show;
-         * }
+         * Gets the length of the list of primitives
+         * @memberof CompositePrimitive.prototype
+         * @type {Number}
          */
         length : {
             get : function() {

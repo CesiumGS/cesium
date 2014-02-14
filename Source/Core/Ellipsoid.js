@@ -78,8 +78,9 @@ define([
 
     defineProperties(Ellipsoid.prototype, {
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} The radii of the ellipsoid.
+         * Gets the radii of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Cartesian3}
          */
         radii : {
             get: function() {
@@ -88,8 +89,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} The squared radii of the ellipsoid.
+         * Gets the squared radii of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Cartesian3}
          */
         radiiSquared : {
             get : function() {
@@ -98,8 +100,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} The radii of the ellipsoid raised to the fourth power.
+         * Gets the radii of the ellipsoid raise to the fourth power
+         * @memberof Ellipsoid.prototype
+         * @type {Cartesian3}
          */
         radiiToTheFourth : {
             get : function() {
@@ -108,8 +111,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} One over the radii of the ellipsoid.
+         * Gets one over the radii of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Cartesian3}
          */
         oneOverRadii : {
             get : function() {
@@ -118,8 +122,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} One over the squared radii of the ellipsoid.
+         * Gets one over the squared radii of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Cartesian3}
          */
         oneOverRadiiSquared : {
             get : function() {
@@ -128,8 +133,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} The minimum radius of the ellipsoid.
+         * Gets the minimum radius of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Number}
          */
         minimumRadius : {
             get : function() {
@@ -138,8 +144,9 @@ define([
         },
 
         /**
-         * @memberof Ellipsoid
-         * @returns {Cartesian3} The maximum radius of the ellipsoid.
+         * Gets the maximum radius of the ellipsoid
+         * @memberof Ellipsoid.prototype
+         * @type {Number}
          */
         maximumRadius : {
             get : function() {
