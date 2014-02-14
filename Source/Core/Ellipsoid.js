@@ -74,86 +74,79 @@ define([
         this._maximumRadius = Math.max(x, y, z);
 
         this._centerToleranceSquared = CesiumMath.EPSILON1;
-
-        defineProperties(Ellipsoid.prototype, {
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} The radii of the ellipsoid.
-             */
-            radii : {
-                get: function() {
-                    return this._radii;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} The squared radii of the ellipsoid.
-             */
-            radiiSquared : {
-                get : function() {
-                    return this._radiiSquared;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} The radii of the ellipsoid raised to the fourth power.
-             */
-            radiiToTheFourth : {
-                get : function() {
-                    return this._radiiToTheFourth;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} One over the radii of the ellipsoid.
-             */
-            oneOverRadii : {
-                get : function() {
-                    return this._oneOverRadii;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} One over the squared radii of the ellipsoid.
-             */
-            oneOverRadiiSquared : {
-                get : function() {
-                    return this._oneOverRadiiSquared;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} The minimum radius of the ellipsoid.
-             */
-            minimumRadius : {
-                get : function() {
-                    return this._minimumRadius;
-                },
-                configurable : true
-            },
-
-            /**
-             * @memberof Ellipsoid
-             * @returns {Cartesian3} The maximum radius of the ellipsoid.
-             */
-            maximumRadius : {
-                get : function() {
-                    return this._maximumRadius;
-                },
-                configurable : true
-            }
-        });
     };
+
+    defineProperties(Ellipsoid.prototype, {
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} The radii of the ellipsoid.
+         */
+        radii : {
+            get: function() {
+                return this._radii;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} The squared radii of the ellipsoid.
+         */
+        radiiSquared : {
+            get : function() {
+                return this._radiiSquared;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} The radii of the ellipsoid raised to the fourth power.
+         */
+        radiiToTheFourth : {
+            get : function() {
+                return this._radiiToTheFourth;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} One over the radii of the ellipsoid.
+         */
+        oneOverRadii : {
+            get : function() {
+                return this._oneOverRadii;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} One over the squared radii of the ellipsoid.
+         */
+        oneOverRadiiSquared : {
+            get : function() {
+                return this._oneOverRadiiSquared;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} The minimum radius of the ellipsoid.
+         */
+        minimumRadius : {
+            get : function() {
+                return this._minimumRadius;
+            }
+        },
+
+        /**
+         * @memberof Ellipsoid
+         * @returns {Cartesian3} The maximum radius of the ellipsoid.
+         */
+        maximumRadius : {
+            get : function() {
+                return this._maximumRadius;
+            }
+        }
+    });
 
     /**
      * Duplicates an Ellipsoid instance.

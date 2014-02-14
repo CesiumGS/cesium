@@ -335,88 +335,6 @@ define([
 
         this._debugSphere = undefined;
 
-        defineProperties(Scene.prototype, {
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            canvas : {
-                get : function() {
-                    return this._canvas;
-                },
-                configurable : true
-            },
-
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            context : {
-                get : function() {
-                    return this._context;
-                },
-                configurable : true
-            },
-
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            primitives : {
-                get : function() {
-                    return this._primitives;
-                },
-                configurable : true
-            },
-
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            camera : {
-                get : function() {
-                    return this._camera;
-                },
-                configurable : true
-            },
-            // TODO: setCamera
-
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            screenSpaceCameraController : {
-                get : function() {
-                    return this._screenSpaceCameraController;
-                },
-                configurable : true
-            },
-
-            /**
-             * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
-             * function, the previous frame's state is returned.
-             *
-             * @memberof Scene
-             */
-            frameState : {
-                get: function() {
-                    return this._frameState;
-                },
-                configurable : true
-            },
-
-            /**
-             * DOC_TBA
-             * @memberof Scene
-             */
-            animations : {
-                get : function() {
-                    return this._animations;
-                },
-                configurable : true
-            }
-        });
-
         // initial guess at frustums.
         var near = this._camera.frustum.near;
         var far = this._camera.frustum.far;
@@ -428,7 +346,80 @@ define([
         this.initializeFrame();
     };
 
+    defineProperties(Scene.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        canvas : {
+            get : function() {
+                return this._canvas;
+            }
+        },
 
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        context : {
+            get : function() {
+                return this._context;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        primitives : {
+            get : function() {
+                return this._primitives;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        camera : {
+            get : function() {
+                return this._camera;
+            }
+        },
+        // TODO: setCamera
+
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        screenSpaceCameraController : {
+            get : function() {
+                return this._screenSpaceCameraController;
+            }
+        },
+
+        /**
+         * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+         * function, the previous frame's state is returned.
+         *
+         * @memberof Scene
+         */
+        frameState : {
+            get: function() {
+                return this._frameState;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Scene
+         */
+        animations : {
+            get : function() {
+                return this._animations;
+            }
+        }
+    });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;

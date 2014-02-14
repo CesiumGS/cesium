@@ -77,60 +77,57 @@ define([
          * @type Boolean
          */
         this.show = true;
-
-        defineProperties(CompositePrimitive.prototype, {
-
-            /**
-             * DOC_TBA
-             *
-             * Gets and sets the depth-test ellipsoid.
-             *
-             * @memberof CompositePrimitive
-             * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-             *
-             * @example
-             * var primitives = new Cesium.CompositePrimitive();
-             * primitives.centralBody = new Cesium.CentralBody();
-             */
-            centralBody : {
-                get: function() {
-                    return this._centralBody;
-                },
-
-                set: function(centralBody) {
-                    this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-                    this._centralBody = centralBody;
-                },
-                configurable : true
-            },
-
-            /**
-             * DOC_TBA
-             *
-             * @memberof CompositePrimitive
-             *
-             * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-             *
-             * @see CompositePrimitive#get
-             *
-             * @example
-             * // Toggle the show property of every primitive in the composite -
-             * // not recursive on child composites.
-             * var len = primitives.length;
-             * for (var i = 0; i < len; ++i) {
-             *   var p = primitives.get(i);
-             *   p.show = !p.show;
-             * }
-             */
-            length : {
-                get : function() {
-                    return this._primitives.length;
-                },
-                configurable : true
-            }
-        });
     };
 
+    defineProperties(CompositePrimitive.prototype, {
+
+        /**
+         * DOC_TBA
+         *
+         * Gets and sets the depth-test ellipsoid.
+         *
+         * @memberof CompositePrimitive
+         * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+         *
+         * @example
+         * var primitives = new Cesium.CompositePrimitive();
+         * primitives.centralBody = new Cesium.CentralBody();
+         */
+        centralBody : {
+            get: function() {
+                return this._centralBody;
+            },
+
+            set: function(centralBody) {
+                this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
+                this._centralBody = centralBody;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof CompositePrimitive
+         *
+         * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+         *
+         * @see CompositePrimitive#get
+         *
+         * @example
+         * // Toggle the show property of every primitive in the composite -
+         * // not recursive on child composites.
+         * var len = primitives.length;
+         * for (var i = 0; i < len; ++i) {
+         *   var p = primitives.get(i);
+         *   p.show = !p.show;
+         * }
+         */
+        length : {
+            get : function() {
+                return this._primitives.length;
+            }
+        }
+    });
 
     /**
      * Adds a primitive to a composite primitive.  When a composite is rendered

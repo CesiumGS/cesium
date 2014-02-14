@@ -266,38 +266,35 @@ define([
                 return that._lightingFadeDistance;
             }
         };
-
-        defineProperties(CentralBody.prototype, {
-            /**
-             * Gets an ellipsoid describing the shape of this central body.
-             *
-             * @memberof CentralBody
-             *
-             * @returns {Ellipsoid}
-             */
-            ellipsoid : {
-                get: function() {
-                    return this._ellipsoid;
-                },
-                configurable : true
-            },
-
-            /**
-             * Gets the collection of image layers that will be rendered on this central body.
-             *
-             * @memberof CentralBody
-             *
-             * @returns {ImageryLayerCollection}
-             */
-            imageryLayerCollection : {
-                get : function() {
-                    return this._imageryLayerCollection;
-                },
-                configurable : true
-            }
-        });
     };
 
+    defineProperties(CentralBody.prototype, {
+        /**
+         * Gets an ellipsoid describing the shape of this central body.
+         *
+         * @memberof CentralBody
+         *
+         * @returns {Ellipsoid}
+         */
+        ellipsoid : {
+            get: function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the collection of image layers that will be rendered on this central body.
+         *
+         * @memberof CentralBody
+         *
+         * @returns {ImageryLayerCollection}
+         */
+        imageryLayerCollection : {
+            get : function() {
+                return this._imageryLayerCollection;
+            }
+        }
+    });
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();

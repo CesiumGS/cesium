@@ -52,44 +52,42 @@ define([
         if (defined(cameraPosition)) {
             this.cameraPosition = cameraPosition;
         }
+    };
 
-        defineProperties(EllipsoidalOccluder.prototype, {
-            /**
-             * Gets the occluding ellipsoid.
-             *
-             * @memberof EllipsoidalOccluder
-             */
-            ellipsoid : {
-                get: function() {
-                    return this._ellipsoid;
-                },
-                configurable : true
+    defineProperties(EllipsoidalOccluder.prototype, {
+        /**
+         * Gets the occluding ellipsoid.
+         *
+         * @memberof EllipsoidalOccluder
+         */
+        ellipsoid : {
+            get: function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets and sets the position of the camera.
+         *
+         * @memberof EllipsoidalOccluder
+         */
+        cameraPosition : {
+            set : function(cameraPosition) {
+                // See http://cesiumjs.org/2013/04/25/Horizon-culling/
+                var ellipsoid = this._ellipsoid;
+                var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
+                var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
+
+                Cartesian3.clone(cameraPosition, this._cameraPosition);
+                this._cameraPositionInScaledSpace = cv;
+                this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
             },
 
-            /**
-             * Gets and sets the position of the camera.
-             *
-             * @memberof EllipsoidalOccluder
-             */
-            cameraPosition : {
-                set : function(cameraPosition) {
-                    // See http://cesiumjs.org/2013/04/25/Horizon-culling/
-                    var ellipsoid = this._ellipsoid;
-                    var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
-                    var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
-
-                    Cartesian3.clone(cameraPosition, this._cameraPosition);
-                    this._cameraPositionInScaledSpace = cv;
-                    this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
-                },
-
-                get : function() {
-                    return this._cameraPosition;
-                },
-                configurable : true
+            get : function() {
+                return this._cameraPosition;
             }
-        });
-    };
+        }
+    });
 
     var scratchCartesian = new Cartesian3();
 
