@@ -48,7 +48,7 @@ define([
         this._cameraPositionInScaledSpace = new Cartesian3();
         this._distanceToLimbInScaledSpaceSquared = 0.0;
 
-        // setCameraPosition fills in the above values
+        // cameraPosition fills in the above values
         if (defined(cameraPosition)) {
             this.cameraPosition = cameraPosition;
         }

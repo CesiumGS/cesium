@@ -33,7 +33,7 @@ Beta Releases
       * `getEllipsoid` -> `ellipsoid`
       * `getImageryLayers` -> `imageryLayerCollection`
     * `EllipsoidalOccluder`
-      * `geetEllipsoid` -> `ellipsoid`
+      * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
