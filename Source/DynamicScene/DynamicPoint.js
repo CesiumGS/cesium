@@ -111,7 +111,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicPoint
      *
      * @param {DynamicPoint} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicPoint.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

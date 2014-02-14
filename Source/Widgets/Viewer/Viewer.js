@@ -7,6 +7,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/Event',
         '../../Core/EventHelper',
+        '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
@@ -35,6 +36,7 @@ define([
         destroyObject,
         Event,
         EventHelper,
+        formatError,
         requestAnimationFrame,
         DataSourceCollection,
         DataSourceDisplay,
@@ -79,14 +81,16 @@ define([
                 } else {
                     viewer._renderLoopRunning = false;
                 }
-            } catch (e) {
+            } catch (error) {
                 viewer._useDefaultRenderLoop = false;
                 viewer._renderLoopRunning = false;
-                viewer._renderLoopError.raiseEvent(viewer, e);
+                viewer._renderLoopError.raiseEvent(viewer, error);
                 if (viewer._showRenderLoopErrors) {
                     /*global console*/
-                    viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
-                    console.error(e);
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    viewer.cesiumWidget.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
                 }
             }
         }
@@ -125,7 +129,6 @@ define([
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
      * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.

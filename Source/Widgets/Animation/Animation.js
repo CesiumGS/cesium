@@ -308,9 +308,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {AnimationViewModel} viewModel The view model used by this widget.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationViewModel
      * @see Clock

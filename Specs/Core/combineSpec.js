@@ -6,19 +6,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('combine throws with duplicate member', function() {
-        expect(function() {
-            combine([{
-                x : 1,
-                y : 2
-            },
-            {
-                x : 1
-            }], false, false);
-        }).toThrow();
-    });
-
-    it('shallow combine', function() {
+    it('can combine shallow references', function() {
         var obj1 = {
             x : 1,
             y : 2,
@@ -27,16 +15,24 @@ defineSuite([
             }
         };
         var obj2 = {
+            x : -1,
             z : 3,
             other : {
                 value2 : 1
             }
         };
-        var composite = combine([obj1, obj2], false, true);
-        expect(composite).toEqual({x : 1, y : 2, z : 3, other : {value1 : 0}});
+        var composite = combine(obj1, obj2);
+        expect(composite).toEqual({
+            x : 1,
+            y : 2,
+            z : 3,
+            other : {
+                value1 : 0
+            }
+        });
     });
 
-    it('deep combine', function() {
+    it('can combine deep references', function() {
         var object1 = {
             one : 1,
             deep : {
@@ -44,16 +40,44 @@ defineSuite([
             }
         };
         var object2 = {
-            two : 2
-        };
-        var object3 = {
+            two : 2,
             deep : {
                 value1 : 5,
-                value2 : 11
+                value2 : 11,
+                sub : {
+                    val : 'a'
+                }
             }
         };
 
-        var composite = combine([object1, object2, object3]);
-        expect(composite).toEqual({one : 1, two : 2, deep : {value1 : 10, value2 : 11}});
+        var composite = combine(object1, object2, true);
+        expect(composite).toEqual({
+            one : 1,
+            two : 2,
+            deep : {
+                value1 : 10,
+                value2 : 11,
+                sub : {
+                    val : 'a'
+                }
+            }
+        });
+    });
+
+    it('can accept undefined as either object', function() {
+        var object = {
+            one : 1,
+            deep : {
+                value1 : 10
+            }
+        };
+
+        expect(combine(undefined, object)).toEqual(object);
+        expect(combine(undefined, object, true)).toEqual(object);
+        expect(combine(object, undefined)).toEqual(object);
+        expect(combine(object, undefined, true)).toEqual(object);
+
+        expect(combine(undefined, undefined)).toEqual({});
+        expect(combine(undefined, undefined, true)).toEqual({});
     });
 });

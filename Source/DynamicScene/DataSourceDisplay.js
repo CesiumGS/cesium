@@ -54,9 +54,6 @@ define([
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
      * @param {Array} [visualizerTypes] The array of visualizer constructor functions that will be created for each data source.  If undefined, All standard visualizers will be used.
-     *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} dataSourceCollection is required.
      */
     var DataSourceDisplay = function(scene, dataSourceCollection, visualizerTypes) {
         //>>includeStart('debug', pragmas.debug);
@@ -157,8 +154,6 @@ define([
      * @param {JulianDate} time The simulation time.
      *
      * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);

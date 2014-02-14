@@ -46,8 +46,6 @@ define([
      * @param {Cartesian3} [result] The object in which the result will be stored.
      * @returns The modified result parameter, or a new instance if none was provided.
      *
-     * @exception {DeveloperError} t is a required number
-     *
      * @example
      * //Get the first intersection point of a ray and an ellipsoid.
      * var intersection = Cesium.IntersectionTests.rayEllipsoid(ray, ellipsoid);

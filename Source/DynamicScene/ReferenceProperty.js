@@ -32,10 +32,6 @@ define([
      * @param {DynamicObjectCollection} dynamicObjectCollection The object collection which will be used to resolve the reference.
      * @param {String} targetObjectId The id of the object which is being referenced.
      * @param {String} targetPropertyName The name of the property on the target object which we will use.
-     *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} targetObjectId is required.
-     * @exception {DeveloperError} targetPropertyName is required.
      */
     var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
         //>>includeStart('debug', pragmas.debug);
@@ -67,8 +63,6 @@ define([
      *
      * @returns A new instance of ReferenceProperty.
      *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} referenceString is required.
      * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
      */
     ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
@@ -100,8 +94,6 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      *
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);

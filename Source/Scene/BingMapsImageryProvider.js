@@ -49,6 +49,8 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        Bing Maps imagery without creating a separate key for your application.
+     * @param {String} [description.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+     *        By default, tiles are loaded using the same protocol as the page.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
@@ -63,8 +65,6 @@ define([
      *        parameter.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
-     *
-     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthImageryProvider
@@ -95,6 +95,7 @@ define([
         this._key = BingMapsApi.getKey(description.key);
 
         this._url = description.url;
+        this._tileProtocol = description.tileProtocol;
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
@@ -141,6 +142,15 @@ define([
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
+
+            var tileProtocol = that._tileProtocol;
+            if (!defined(tileProtocol)) {
+                // use the document's protocol, unless it's not http or https
+                var documentProtocol = document.location.protocol;
+                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
+            }
+
+            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
 
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {

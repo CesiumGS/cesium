@@ -34,7 +34,6 @@ define([
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *
-     * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
      * @exception {DeveloperError} dropTarget is already defined by another mixin.
      * @exception {DeveloperError} dropEnabled is already defined by another mixin.
@@ -86,7 +85,6 @@ define([
              */
             dropTarget : {
                 //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
-                //* @exception {DeveloperError} value is required.
                 get : function() {
                     return dropTarget;
                 },

@@ -125,8 +125,6 @@ define([
      *
      * @param {Object} type The type of property, which must be Number, String or implement {@link Packable}.
      *
-     * @exception {DeveloperError} type is required.
-     *
      * @see SampledPositionProperty
      *
      * @example
@@ -238,8 +236,6 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -341,9 +337,6 @@ define([
      *
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} value is required.
      */
     SampledProperty.prototype.addSample = function(time, value) {
         //>>includeStart('debug', pragmas.debug);
@@ -369,8 +362,6 @@ define([
      * @param {Array} times An array of JulianDate instances where each index is a sample time.
      * @param {Array} values The array of values, where each value corresponds to the provided times index.
      *
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} values is required.
      * @exception {DeveloperError} times and values must be the same length..
      */
     SampledProperty.prototype.addSamples = function(times, values) {
@@ -403,8 +394,6 @@ define([
      *
      * @param {Array} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
-     *
-     * @exception {DeveloperError} packedSamples is required.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
         //>>includeStart('debug', pragmas.debug);

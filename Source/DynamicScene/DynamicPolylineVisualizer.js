@@ -26,8 +26,6 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPolyline
      * @see Scene
      * @see DynamicObject
@@ -41,7 +39,6 @@ define([
      * @see DynamicPointVisualizer
      * @see DynamicPolygonVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicPolylineVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -101,8 +98,6 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicPolylineVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
