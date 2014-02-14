@@ -95,7 +95,9 @@ define([
             radiiSquared : {
                 get : function() {
                     return this._radiiSquared;
-                }
+                },
+                enumerable : true,
+                configurable : true
             },
 
             /**
@@ -105,7 +107,9 @@ define([
             radiiToTheFourth : {
                 get : function() {
                     return this._radiiToTheFourth;
-                }
+                },
+                enumerable : true,
+                configurable : true
             },
 
             /**
@@ -115,7 +119,9 @@ define([
             oneOverRadii : {
                 get : function() {
                     return this._oneOverRadii;
-                }
+                },
+                enumerable : true,
+                configurable : true
             },
 
             /**
@@ -125,7 +131,9 @@ define([
             oneOverRadiiSquared : {
                 get : function() {
                     return this._oneOverRadiiSquared;
-                }
+                },
+                enumerable : true,
+                configurable : true
             },
 
             /**
@@ -135,7 +143,9 @@ define([
             minimumRadius : {
                 get : function() {
                     return this._minimumRadius;
-                }
+                },
+                enumerable : true,
+                configurable : true
             },
 
             /**
@@ -145,7 +155,9 @@ define([
             maximumRadius : {
                 get : function() {
                     return this._maximumRadius;
-                }
+                },
+                enumerable : true,
+                configurable : true
             }
         });
     };
