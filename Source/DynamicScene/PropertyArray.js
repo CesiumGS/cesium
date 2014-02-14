@@ -100,7 +100,6 @@ define(['../Core/defaultValue',
 
     /**
      * Sets the value of the property.
-     * If the value is an object, the object must provide clone and equals functions.
      * @memberof PropertyArray
      *
      * @param {Array} value An array of Property instances.

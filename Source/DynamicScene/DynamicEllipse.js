@@ -28,18 +28,30 @@ define(['../Core/Cartesian3',
      */
     var DynamicEllipse = function() {
         this._semiMajorAxis = undefined;
+        this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
+        this._semiMinorAxisSubscription = undefined;
         this._rotation = undefined;
+        this._rotationSubscription = undefined;
         this._show = undefined;
+        this._showSubscription = undefined;
         this._material = undefined;
+        this._materialSubscription = undefined;
         this._height = undefined;
+        this._heightSubscription = undefined;
         this._extrudedHeight = undefined;
+        this._extrudedHeightSubscription = undefined;
         this._granularity = undefined;
+        this._granularitySubscription = undefined;
         this._stRotation = undefined;
-        this._definitionChanged = new Event();
+        this._stRotationSubscription = undefined;
         this._outline = undefined;
+        this._outlineSubscription = undefined;
         this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
         this._numberOfVerticalLines = undefined;
+        this._numberOfVerticalLinesSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicEllipse.prototype, {
@@ -59,35 +71,35 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        semiMajorAxis : createDynamicPropertyDescriptor('semiMajorAxis', '_semiMajorAxis'),
+        semiMajorAxis : createDynamicPropertyDescriptor('semiMajorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        semiMinorAxis : createDynamicPropertyDescriptor('semiMinorAxis', '_semiMinorAxis'),
+        semiMinorAxis : createDynamicPropertyDescriptor('semiMinorAxis'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the ellipse's rotation.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        rotation : createDynamicPropertyDescriptor('rotation', '_rotation'),
+        rotation : createDynamicPropertyDescriptor('rotation'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
          * @memberof DynamicEllipse.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material'),
+        material : createDynamicPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -95,7 +107,7 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        height : createDynamicPropertyDescriptor('height', '_height'),
+        height : createDynamicPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
@@ -104,7 +116,7 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight', '_extrudedHeight'),
+        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -112,7 +124,7 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        granularity : createDynamicPropertyDescriptor('granularity', '_granularity'),
+        granularity : createDynamicPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -120,28 +132,28 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        stRotation : createDynamicPropertyDescriptor('stRotation', '_stRotation'),
+        stRotation : createDynamicPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be filled.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill', '_fill'),
+        fill : createDynamicPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipse should be outlined.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline', '_outline'),
+        outline : createDynamicPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of vertical lines
@@ -149,7 +161,7 @@ define(['../Core/Cartesian3',
          * @memberof DynamicEllipse.prototype
          * @type {Property}
          */
-        numberOfVerticalLines : createDynamicPropertyDescriptor('numberOfVerticalLines', '_numberOfVerticalLines')
+        numberOfVerticalLines : createDynamicPropertyDescriptor('numberOfVerticalLines')
     });
 
     /**

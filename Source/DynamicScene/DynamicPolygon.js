@@ -22,13 +22,19 @@ define(['../Core/defaultValue',
      */
     var DynamicPolygon = function() {
         this._show = undefined;
+        this._showSubscription = undefined;
         this._material = undefined;
+        this._materialSubscription = undefined;
         this._height = undefined;
+        this._heightSubscription = undefined;
         this._extrudedHeight = undefined;
+        this._extrudedHeightSubscription = undefined;
         this._granularity = undefined;
+        this._granularitySubscription = undefined;
         this._stRotation = undefined;
+        this._stRotationSubscription = undefined;
         this._perPositionHeight = undefined;
-
+        this._perPositionHeightSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -49,14 +55,14 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
          * @memberof DynamicPolygon.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material'),
+        material : createDynamicPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the height of the polygon.
@@ -64,7 +70,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        height : createDynamicPropertyDescriptor('height', '_height'),
+        height : createDynamicPropertyDescriptor('height'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
@@ -73,7 +79,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight', '_extrudedHeight'),
+        extrudedHeight : createDynamicPropertyDescriptor('extrudedHeight'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the sampling distance, in radians,
@@ -81,7 +87,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        granularity : createDynamicPropertyDescriptor('granularity', '_granularity'),
+        granularity : createDynamicPropertyDescriptor('granularity'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the rotation of the texture coordinates,
@@ -89,35 +95,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        stRotation : createDynamicPropertyDescriptor('stRotation', '_stRotation'),
+        stRotation : createDynamicPropertyDescriptor('stRotation'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be filled.
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill', '_fill'),
+        fill : createDynamicPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon should be outlined.
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline', '_outline'),
+        outline : createDynamicPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
          * @memberof DynamicPolygon.prototype
          * @type {Property}
          */
-        perPositionHeight : createDynamicPropertyDescriptor('perPositionHeight', '_perPositionHeight')
+        perPositionHeight : createDynamicPropertyDescriptor('perPositionHeight')
     });
 
     /**

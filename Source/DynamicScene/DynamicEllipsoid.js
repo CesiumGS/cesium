@@ -22,11 +22,17 @@ define(['../Core/defaultValue',
      */
     var DynamicEllipsoid = function() {
         this._show = undefined;
+        this._showSubscription = undefined;
         this._radii = undefined;
+        this._radiiSubscription = undefined;
         this._material = undefined;
+        this._materialSubscription = undefined;
         this._stackPartitions = undefined;
+        this._stackPartitionsSubscription = undefined;
         this._slicePartitions = undefined;
+        this._slicePartitionsSubscription = undefined;
         this._subdivisions = undefined;
+        this._subdivisionsSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -47,63 +53,63 @@ define(['../Core/defaultValue',
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        radii : createDynamicPropertyDescriptor('radii', '_radii'),
+        radii : createDynamicPropertyDescriptor('radii'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
          * @memberof DynamicEllipsoid.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material'),
+        material : createDynamicPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be filled.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        fill : createDynamicPropertyDescriptor('fill', '_fill'),
+        fill : createDynamicPropertyDescriptor('fill'),
 
         /**
          * Gets or sets the Boolean {@link Property} specifying whether the ellipsoid should be outlined.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        outline : createDynamicPropertyDescriptor('outline', '_outline'),
+        outline : createDynamicPropertyDescriptor('outline'),
 
         /**
          * Gets or sets the Color {@link Property} specifying whether the color of the outline.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into stacks.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        stackPartitions : createDynamicPropertyDescriptor('stackPartitions', '_stackPartitions'),
+        stackPartitions : createDynamicPropertyDescriptor('stackPartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of times to partition the ellipsoid into radial slices.
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        slicePartitions : createDynamicPropertyDescriptor('slicePartitions', '_slicePartitions'),
+        slicePartitions : createDynamicPropertyDescriptor('slicePartitions'),
 
         /**
          * Gets or sets the Number {@link Property} specifying the number of points per line, determining the granularity of the curvature .
          * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        subdivisions : createDynamicPropertyDescriptor('subdivisions', '_subdivisions')
+        subdivisions : createDynamicPropertyDescriptor('subdivisions')
     });
 
     /**

@@ -40,7 +40,7 @@ define(['./PositionProperty',
         /**
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
-         * @memberof PositionProperty.prototype
+         * @memberof ConstantPositionProperty.prototype
          * @type {Boolean}
          */
         isConstant : {
@@ -52,7 +52,7 @@ define(['./PositionProperty',
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
-         * @memberof PositionProperty.prototype
+         * @memberof ConstantPositionProperty.prototype
          * @type {Event}
          */
         definitionChanged : {

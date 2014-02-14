@@ -6,14 +6,9 @@ define(['../Core/defaultValue',
         defined) {
     "use strict";
 
-    /**
-     * Used to consistently define all DynamicScene graphics objects.
-     * @private
-     */
-    function createDynamicPropertyDescriptor(name, privateName, configurable) {
-        var subscriptionName = privateName + 'Subsription';
+    function createProperty(name, privateName, subscriptionName, configurable) {
         return {
-            configurable : defaultValue(configurable, false),
+            configurable : configurable,
             get : function() {
                 return this[privateName];
             },
@@ -35,6 +30,16 @@ define(['../Core/defaultValue',
                 }
             }
         };
+    }
+
+    /**
+     * Used to consistently define all DynamicScene graphics objects.
+     * This is broken into two functions because the Chrome profiler does a better
+     * job of optimizing lookups if it notices that the string is constant throughout the function.
+     * @private
+     */
+    function createDynamicPropertyDescriptor(name, configurable) {
+        return createProperty(name, '_' + name, '_' + name + 'Subscription', defaultValue(configurable, false));
     }
 
     return createDynamicPropertyDescriptor;
