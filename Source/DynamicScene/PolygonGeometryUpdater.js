@@ -66,7 +66,6 @@ define(['../Core/Color',
             throw new DeveloperError('dynamicObject is required');
         }
 
-        this._id = dynamicObject.id;
         this._dynamicObject = dynamicObject;
         this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolygonGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
         this._geometryType = GeometryBatchType.NONE;
@@ -86,11 +85,6 @@ define(['../Core/Color',
     PolygonGeometryUpdater.MaterialAppearanceType = MaterialAppearance;
 
     defineProperties(PolygonGeometryUpdater.prototype, {
-        id : {
-            get : function() {
-                return this._id;
-            }
-        },
         dynamicObject :{
             get : function() {
                 return this._dynamicObject;
@@ -278,10 +272,10 @@ define(['../Core/Color',
     };
 
     PolygonGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        return new DynamicGeometryBatchItem(primitives, this);
+        return new DynamicGeometryUpdater(primitives, this);
     };
 
-    var DynamicGeometryBatchItem = function(primitives, geometryUpdater) {
+    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
@@ -289,7 +283,7 @@ define(['../Core/Color',
         this._options = new GeometryOptions(geometryUpdater._dynamicObject);
     };
 
-    DynamicGeometryBatchItem.prototype.update = function(time) {
+    DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
 
         if (defined(this._primitive)) {
@@ -367,7 +361,7 @@ define(['../Core/Color',
         }
     };
 
-    DynamicGeometryBatchItem.prototype.destroy = function() {
+    DynamicGeometryUpdater.prototype.destroy = function() {
         if (defined(this._primitive)) {
             this._primitives.remove(this._primitive);
         }

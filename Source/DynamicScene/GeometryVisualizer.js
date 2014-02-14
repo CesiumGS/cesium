@@ -36,11 +36,11 @@ define(['../Core/defined',
     };
 
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.id, updater.createDynamicUpdater(this._primitives));
+        this._dynamicUpdaters.set(updater.dynamicObject.id, updater.createDynamicUpdater(this._primitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {
-        var id = updater.id;
+        var id = updater.dynamicObject.id;
         var dynamicUpdater = this._dynamicUpdaters.get(id);
         if (defined(dynamicUpdater)) {
             this._dynamicUpdaters.remove(id);

@@ -49,7 +49,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.add = function(time, updater) {
-        var id = updater.id;
+        var id = updater.dynamicObject.id;
         this.updaters.set(id, updater);
         this.geometry.set(id, updater.createGeometryInstance(time));
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
@@ -59,7 +59,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.id;
+        var id = updater.dynamicObject.id;
         this.createPrimitive = this.updaters.remove(id);
         this.geometry.remove(id);
         this.updatersWithAttributes.remove(id);
@@ -97,7 +97,7 @@ define(['../Core/defined',
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.id);
+                var instance = this.geometry.get(updater.dynamicObject.id);
 
                 var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {

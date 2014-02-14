@@ -32,7 +32,7 @@ define(['../Core/Color',
     };
 
     Batch.prototype.add = function(updater, instance) {
-        var id = updater.id;
+        var id = updater.dynamicObject.id;
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
@@ -42,7 +42,7 @@ define(['../Core/Color',
     };
 
     Batch.prototype.remove = function(updater) {
-        var id = updater.id;
+        var id = updater.dynamicObject.id;
         this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
         this.updaters.remove(id);
         this.updatersWithAttributes.remove(id);
@@ -73,12 +73,12 @@ define(['../Core/Color',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
-                var instance = this.geometry.get(updater.id);
+                var instance = this.geometry.get(updater.dynamicObject.id);
 
                 var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
