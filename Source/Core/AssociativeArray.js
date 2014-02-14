@@ -49,13 +49,13 @@ define(['./defined',
      * exists in the array, it is overwritten.
      * @memberof AssociativeArray
      *
-     * @param {String} key A unique identifier.
+     * @param {String|Number} key A unique identifier.
      * @param {Object} value The value to associate with the provided key.
      */
     AssociativeArray.prototype.set = function(key, value) {
         //>>includeStart('debug', pragmas.debug);
-        if (typeof key !== 'string') {
-            throw new DeveloperError('key is required to be a string.');
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');
 

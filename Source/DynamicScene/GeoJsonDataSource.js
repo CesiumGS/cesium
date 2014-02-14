@@ -302,7 +302,7 @@ define([
         defaultPolygon.polygon = polygon;
 
         material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.25));
+        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.1));
         polygon.material = material;
 
         this._changed = new Event();
