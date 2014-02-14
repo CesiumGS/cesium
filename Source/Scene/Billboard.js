@@ -167,8 +167,6 @@ define([
      *
      * @param {Boolean} value Indicates if this billboard will be shown.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getShow
      */
     Billboard.prototype.setShow = function(value) {
@@ -208,8 +206,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian3} value The Cartesian position.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getPosition
      *
@@ -284,8 +280,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian2} value The 2D Cartesian pixel offset.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getPixelOffset
      * @see Label#setPixelOffset
@@ -530,8 +524,6 @@ define([
      *
      * @param {Cartesian3} value The 3D Cartesian offset in eye coordinates.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getEyeOffset
      */
     Billboard.prototype.setEyeOffset = function(value) {
@@ -572,8 +564,6 @@ define([
      * @memberof Billboard
      *
      * @param {HorizontalOrigin} value The horizontal origin.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getHorizontalOrigin
      * @see Billboard#setVerticalOrigin
@@ -620,8 +610,6 @@ define([
      * @memberof Billboard
      *
      * @param {VerticalOrigin} value The vertical origin.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getVerticalOrigin
      * @see Billboard#setHorizontalOrigin
@@ -672,8 +660,6 @@ define([
      * @memberof Billboard
      *
      * @param {Number} value The scale used to size the billboard.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getScale
      * @see Billboard#setImageIndex
@@ -760,8 +746,6 @@ define([
      *
      * @param {Object} value The color's red, green, blue, and alpha components.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getColor
      *
      * @example
@@ -817,8 +801,6 @@ define([
      *
      * @param {Number} value The rotation angle in radians.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getRotation
      * @see Billboard#getAlignedAxis
      * @see Billboard#setAlignedAxis
@@ -859,8 +841,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian3} value The aligned axis.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#setRotation
      * @see Billboard#getRotation
@@ -1026,8 +1006,6 @@ define([
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} frameState is required.
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset

@@ -28,7 +28,6 @@ define([
      * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
      *
-     * @exception {DeveloperError} options.attributeName is required.
      * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
      *
      * @example

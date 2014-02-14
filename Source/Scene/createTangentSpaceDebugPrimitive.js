@@ -35,9 +35,6 @@ define([
      *
      * @returns {Primitive} A new <code>Primitive<code> instance with geometry for the vectors.
      *
-     * @exception {DeveloperError} options.geometry is required.
-     * @exception {DeveloperError} options.geometry.attributes.position is required.
-     *
      * @example
      * scene.getPrimitives().add(Cesium.createTangentSpaceDebugPrimitive({
      *    geometry : instance.geometry,

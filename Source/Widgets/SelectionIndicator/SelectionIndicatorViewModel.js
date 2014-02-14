@@ -29,11 +29,6 @@ define([
      * @param {Scene} scene The scene instance to use for screen-space coordinate conversion.
      * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
      * @param {Element} container The DOM element that contains the widget.
-     *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} selectionIndicatorElement is required.
-     * @exception {DeveloperError} container is required.
-     *
      */
     var SelectionIndicatorViewModel = function(scene, selectionIndicatorElement, container) {
         //>>includeStart('debug', pragmas.debug);

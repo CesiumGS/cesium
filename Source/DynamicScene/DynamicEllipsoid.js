@@ -84,7 +84,6 @@ define(['../Core/defaultValue',
      * @memberof DynamicEllipsoid
      *
      * @param {DynamicEllipsoid} source The object to be merged into this object.
-     * @exception {DeveloperError} source is required.
      */
     DynamicEllipsoid.prototype.merge = function(source) {
         //>>includeStart('debug', pragmas.debug);

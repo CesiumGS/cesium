@@ -71,8 +71,6 @@ define([
      *
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
-     * @exception {DeveloperError} array is required.
-     *
      * @example
      * // Create the Matrix2:
      * // [1.0, 2.0]
@@ -113,8 +111,6 @@ define([
      * @param {Array} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
      */
     Matrix2.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -134,8 +130,6 @@ define([
      * @param {Array} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
      */
     Matrix2.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -162,8 +156,6 @@ define([
      * @param {Cartesian2} scale The x and y scale factors.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scale is required.
      *
      * @example
      * // Creates
@@ -199,8 +191,6 @@ define([
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      *
-     * @exception {DeveloperError} scale is required.
-     *
      * @example
      * // Creates
      * //   [2.0, 0.0]
@@ -234,8 +224,6 @@ define([
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      *
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} angle is required.
      *
      * @example
      * // Rotate a point 45 degrees counterclockwise.
@@ -273,8 +261,6 @@ define([
      * @param {Matrix2} matrix The matrix to use..
      * @param {Array} [result] The Array onto which to store the result.
      * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix2.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -301,8 +287,8 @@ define([
      * @param {Number} column The zero-based index of the column.
      * @returns {Number} The index of the element at the provided row and column.
      *
-     * @exception {DeveloperError} row is required and must be 0 or 1.
-     * @exception {DeveloperError} column is required and must be 0 or 1.
+     * @exception {DeveloperError} row must be 0 or 1.
+     * @exception {DeveloperError} column must be 0 or 1.
      *
      * @example
      * var myMatrix = new Cesium.Matrix2();
@@ -313,10 +299,10 @@ define([
     Matrix2.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 1) {
-            throw new DeveloperError('row is required and must be 0 or 1.');
+            throw new DeveloperError('row must be 0 or 1.');
         }
         if (typeof column !== 'number' || column < 0 || column > 1) {
-            throw new DeveloperError('column is required and must be 0 or 1.');
+            throw new DeveloperError('column must be 0 or 1.');
         }
         //>>includeEnd('debug');
 
@@ -332,8 +318,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 1.
+     * @exception {DeveloperError} index must be 0 or 1.
      *
      * @see Cartesian2
      */
@@ -344,7 +329,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index is required and must be 0 or 1.');
+            throw new DeveloperError('index must be 0 or 1.');
         }
         //>>includeEnd('debug');
 
@@ -370,9 +355,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 1.
+     * @exception {DeveloperError} index must be 0 or 1.
      *
      * @see Cartesian2
      */
@@ -385,7 +368,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index is required and must be 0 or 1.');
+            throw new DeveloperError('index must be 0 or 1.');
         }
         //>>includeEnd('debug');
 
@@ -405,8 +388,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0 or 1.
+     * @exception {DeveloperError} index must be 0 or 1.
      *
      * @see Cartesian2
      */
@@ -417,7 +399,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index is required and must be 0 or 1.');
+            throw new DeveloperError('index must be 0 or 1.');
         }
         //>>includeEnd('debug');
 
@@ -442,9 +424,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0 or 1.
+     * @exception {DeveloperError} index must be 0 or 1.
      *
      * @see Cartesian2
      */
@@ -457,7 +437,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 1) {
-            throw new DeveloperError('index is required and must be 0 or 1.');
+            throw new DeveloperError('index must be 0 or 1.');
         }
         //>>includeEnd('debug');
 
@@ -475,9 +455,6 @@ define([
      * @param {Matrix2} right The second matrix.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Matrix2.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -513,9 +490,6 @@ define([
      * @param {Cartesian2} cartesian The column.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
      */
     Matrix2.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -546,9 +520,6 @@ define([
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} scalar is required and must be a number.
      */
     Matrix2.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -578,8 +549,6 @@ define([
      * @param {Matrix2} matrix The matrix to negate.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix2.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -606,8 +575,6 @@ define([
      * @param {Matrix2} matrix The matrix to transpose.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix2.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -639,8 +606,6 @@ define([
      * @param {Matrix2} matrix The matrix with signed elements.
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix2.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -690,13 +655,11 @@ define([
      * @param {Matrix2} [right] The second matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Matrix2.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number');
+            throw new DeveloperError('epsilon must be a number');
         }
         //>>includeEnd('debug');
 
@@ -788,8 +751,6 @@ define([
      * @param {Matrix2} [right] The right hand side matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Matrix2.prototype.equalsEpsilon = function(right, epsilon) {
         return Matrix2.equalsEpsilon(this, right, epsilon);

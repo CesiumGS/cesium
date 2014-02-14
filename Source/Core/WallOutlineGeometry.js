@@ -51,7 +51,6 @@ define([
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      *
-     * @exception {DeveloperError} positions is required.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      *
@@ -115,8 +114,6 @@ define([
      * @param {Number} [minimumHeight] A constant that defines the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
-     *
-     * @exception {DeveloperError} positions is required.
      *
      * @see WallOutlineGeometry#createGeometry
      *

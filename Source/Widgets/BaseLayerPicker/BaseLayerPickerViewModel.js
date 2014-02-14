@@ -21,7 +21,6 @@ define([
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
      * @param {Array} [imageryProviderViewModels=[]] The array of ImageryProviderViewModel instances to use.
      *
-     * @exception {DeveloperError} imageryLayers is required.
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
      *
      * @see ImageryProviderViewModel
