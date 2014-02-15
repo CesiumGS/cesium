@@ -348,7 +348,7 @@ define([
 
     defineProperties(Scene.prototype, {
         /**
-         * DOC_TBA
+         * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype
          * @type {Element}
          */
@@ -359,7 +359,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the context.
          * @memberof Scene.prototype
          * @type {Context}
          */
@@ -370,7 +370,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the collection of primitives.
          * @memberof Scene.prototype
          * @type {CompositePrimitive}
          */
@@ -381,7 +381,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the camera.
          * @memberof Scene.prototype
          * @type {Camera}
          */
@@ -393,7 +393,7 @@ define([
         // TODO: setCamera
 
         /**
-         * DOC_TBA
+         * Gets the controller for camera input handling.
          * @memberof Scene.prototype
          * @type {ScreenSpaceCameraController}
          */
@@ -416,7 +416,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the collection of animations taking place in the scene.
          * @memberof Scene.prototype
          * @type {AnimationCollection}
          */

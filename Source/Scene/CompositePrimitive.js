@@ -82,7 +82,7 @@ define([
     defineProperties(CompositePrimitive.prototype, {
 
         /**
-         * Gets and sets the depth-test ellipsoid.
+         * Gets or sets the depth-test ellipsoid.
          * @memberof CompositePrimitive.prototype
          * @type {CentralBody}
          */

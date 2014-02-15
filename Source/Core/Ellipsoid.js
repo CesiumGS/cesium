@@ -78,7 +78,7 @@ define([
 
     defineProperties(Ellipsoid.prototype, {
         /**
-         * Gets the radii of the ellipsoid
+         * Gets the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
          */
@@ -87,9 +87,8 @@ define([
                 return this._radii;
             }
         },
-
         /**
-         * Gets the squared radii of the ellipsoid
+         * Gets the squared radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
          */
@@ -98,9 +97,8 @@ define([
                 return this._radiiSquared;
             }
         },
-
         /**
-         * Gets the radii of the ellipsoid raise to the fourth power
+         * Gets the radii of the ellipsoid raise to the fourth power.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
          */
@@ -109,9 +107,8 @@ define([
                 return this._radiiToTheFourth;
             }
         },
-
         /**
-         * Gets one over the radii of the ellipsoid
+         * Gets one over the radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
          */
@@ -120,9 +117,8 @@ define([
                 return this._oneOverRadii;
             }
         },
-
         /**
-         * Gets one over the squared radii of the ellipsoid
+         * Gets one over the squared radii of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Cartesian3}
          */
@@ -131,9 +127,8 @@ define([
                 return this._oneOverRadiiSquared;
             }
         },
-
         /**
-         * Gets the minimum radius of the ellipsoid
+         * Gets the minimum radius of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Number}
          */
@@ -142,9 +137,8 @@ define([
                 return this._minimumRadius;
             }
         },
-
         /**
-         * Gets the maximum radius of the ellipsoid
+         * Gets the maximum radius of the ellipsoid.
          * @memberof Ellipsoid.prototype
          * @type {Number}
          */

@@ -56,7 +56,7 @@ define([
 
     defineProperties(EllipsoidalOccluder.prototype, {
         /**
-         * Gets the occluding ellipsoid
+         * Gets the occluding ellipsoid.
          * @memberof EllipsoidalOccluder.prototype
          * @type {Ellipsoid}
          */
@@ -65,13 +65,15 @@ define([
                 return this._ellipsoid;
             }
         },
-
         /**
-         * Gets and sets the position of the camera
+         * Gets or sets the position of the camera.
          * @memberof EllipsoidalOccluder.prototype
          * @type {Cartesian3}
          */
         cameraPosition : {
+            get : function() {
+                return this._cameraPosition;
+            },
             set : function(cameraPosition) {
                 // See http://cesiumjs.org/2013/04/25/Horizon-culling/
                 var ellipsoid = this._ellipsoid;
@@ -81,10 +83,6 @@ define([
                 Cartesian3.clone(cameraPosition, this._cameraPosition);
                 this._cameraPositionInScaledSpace = cv;
                 this._distanceToLimbInScaledSpaceSquared = vhMagnitudeSquared;
-            },
-
-            get : function() {
-                return this._cameraPosition;
             }
         }
     });
