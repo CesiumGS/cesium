@@ -39,7 +39,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -58,7 +58,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.5, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -75,7 +75,7 @@ defineSuite([
         s.show = false;
 
         var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -88,7 +88,7 @@ defineSuite([
         var s = new SkyAtmosphere();
 
         var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.mode = SceneMode.SCENE2D;
@@ -102,7 +102,7 @@ defineSuite([
         var s = new SkyAtmosphere();
 
         var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.passes.render = false;

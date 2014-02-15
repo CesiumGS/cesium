@@ -542,11 +542,12 @@ define([
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
-                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                var uniforms = {
                     czm_pickColor : function() {
                         return that._pickId.color;
                     }
-                }], false, false);
+                };
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._material._uniforms), uniforms);
             }
 
             pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;

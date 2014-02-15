@@ -203,7 +203,7 @@ define([
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
-        scene.getPrimitives().add(this._polylineCollection);
+        scene.primitives.add(this._polylineCollection);
     };
 
     PolylineUpdater.prototype.update = function(time) {
@@ -373,7 +373,7 @@ define([
     };
 
     PolylineUpdater.prototype.destroy = function() {
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };
 

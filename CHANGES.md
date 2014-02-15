@@ -9,6 +9,33 @@ Beta Releases
 * Breaking changes:
   * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
   * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
+  * Replaced getter/setter functions with properties:
+    * `Scene`
+      * `getCanvas` -> `canvas`
+      * `getContext` -> `context`
+      * `getPrimitives` -> `primitives`
+      * `getCamera` -> `camera`
+      * `getScreenSpaceCameraController`  -> `screenSpaceController`
+      * `getFrameState` -> `frameState`
+      * `getAnimations` -> `animations`
+    * `CompositePrimitive`
+      * `getCentralBody`, `setCentralBody` -> `centralBody`
+      * `getLength` -> `length`
+    * `Ellipsoid`
+      * `getRadii` -> `radii`
+      * `getRadiiSquared` -> `radiiSquared`
+      * `getRadiiToTheFourth` -> `radiiToTheFourth`
+      * `getOneOverRadii` -> `oneOverRadii`
+      * `getOneOverRadiiSquared` -> `oneOverRadiiSquared`
+      * `getMinimumRadius` -> `minimumRadius`
+      * `getMaximumRadius` -> `maximumRadius`
+    * `CentralBody`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getImageryLayers` -> `imageryLayerCollection`
+    * `EllipsoidalOccluder`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
+  * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * Fix developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.

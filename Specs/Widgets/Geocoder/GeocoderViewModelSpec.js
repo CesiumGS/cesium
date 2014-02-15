@@ -68,14 +68,14 @@ defineSuite([
             scene : scene
         });
 
-        var cameraPosition = scene.getCamera().position;
+        var cameraPosition = scene.camera.position;
 
         viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
         viewModel.search();
 
         waitsFor(function() {
-            scene.getAnimations().update();
-            var newCameraPosition = scene.getCamera().position;
+            scene.animations.update();
+            var newCameraPosition = scene.camera.position;
             return cameraPosition.x !== newCameraPosition.x || cameraPosition.y !== newCameraPosition.y || cameraPosition.z !== newCameraPosition.z;
         });
     });

@@ -807,7 +807,7 @@ defineSuite([
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        var p = scene.getPrimitives().add(new PolylineCollection({
+        var p = scene.primitives.add(new PolylineCollection({
             debugShowBoundingVolume : true
         }));
         var material = Material.fromType('Color');
@@ -817,14 +817,14 @@ defineSuite([
             material : material
         });
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene(scene);
     });

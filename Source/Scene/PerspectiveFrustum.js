@@ -106,8 +106,8 @@ define([
 
     defineProperties(PerspectiveFrustum.prototype, {
         /**
-         * The perspective projection matrix computed from the view frustum.
-         * @memberof PerspectiveFrustum
+         * Gets the perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveFrustum#infiniteProjectionMatrix

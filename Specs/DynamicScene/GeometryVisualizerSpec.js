@@ -52,7 +52,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         expect(visualizer.getScene()).toBe(scene);
         expect(visualizer.getDynamicObjectCollection()).toBe(objects);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toBe(0);
+        expect(scene.primitives.length).toBe(0);
         expect(visualizer.isDestroyed()).toBe(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toBe(true);
@@ -60,7 +60,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene);
         expect(visualizer.getDynamicObjectCollection()).toBeUndefined();
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toBe(0);
+        expect(scene.primitives.length).toBe(0);
         visualizer.destroy();
     });
 
@@ -81,9 +81,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         visualizer.update(time);
         scene.render(time);
 
-        expect(scene.getPrimitives().getLength()).toBe(1);
+        expect(scene.primitives.length).toBe(1);
 
-        var primitive = scene.getPrimitives().get(0);
+        var primitive = scene.primitives.get(0);
         var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
@@ -95,7 +95,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         visualizer.update(time);
         scene.render(time);
 
-        expect(scene.getPrimitives().getLength()).toBe(0);
+        expect(scene.primitives.length).toBe(0);
 
         visualizer.destroy();
     });
@@ -124,7 +124,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         visualizer.update(time);
         scene.render(time);
 
-        var primitive = scene.getPrimitives().get(0);
+        var primitive = scene.primitives.get(0);
         var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
         expect(attributes).toBeDefined();
         expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));

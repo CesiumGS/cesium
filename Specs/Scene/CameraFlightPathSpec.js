@@ -29,7 +29,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        frameState = scene.getFrameState();
+        frameState = scene.frameState;
     });
 
     afterEach(function() {

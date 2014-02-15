@@ -96,7 +96,7 @@ define(['../Core/defined',
 
         this._type = type;
 
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         this._scene = scene;
         this._primitives = primitives;
         this._dynamicObjectCollection = undefined;
