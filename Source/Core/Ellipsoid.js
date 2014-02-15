@@ -563,7 +563,7 @@ define([
 
     /**
      * Transforms a Cartesian X, Y, Z position to the ellipsoid-scaled space by multiplying
-     * its components by the result of {@link Ellipsoid#getOneOverRadii}.
+     * its components by the result of {@link Ellipsoid#oneOverRadii}.
      *
      * @memberof Ellipsoid
      *
