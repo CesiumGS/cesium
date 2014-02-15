@@ -319,7 +319,7 @@ define([
 
         if (scene !== this._lastScene) {
             this._lastScene = scene;
-            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
+            this._screenSpaceCameraController = scene.screenSpaceCameraController;
         }
 
         var positionProperty = dynamicObject.position;
@@ -357,11 +357,11 @@ define([
 
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
+            update2D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         } else if (mode === SceneMode.SCENE3D) {
-            update3D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid);
+            update3D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            updateColumbus(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
+            updateColumbus(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         }
     };
 

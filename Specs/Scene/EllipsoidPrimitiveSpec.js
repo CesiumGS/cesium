@@ -134,19 +134,19 @@ defineSuite([
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        scene.getPrimitives().add(new EllipsoidPrimitive({
+        scene.primitives.add(new EllipsoidPrimitive({
             radii : new Cartesian3(1.0, 1.0, 1.0),
             debugShowBoundingVolume : true
         }));
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

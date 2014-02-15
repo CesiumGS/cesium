@@ -142,7 +142,7 @@ require(['Cesium'], function(Cesium) {
 
         // Zoom in a little closer...
         var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
-        viewer.scene.getCamera().controller.viewExtent(extent);
+        viewer.scene.camera.controller.viewExtent(extent);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');

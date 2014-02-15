@@ -87,7 +87,7 @@ define([
 
     function createPath3D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
-        var radius = ellipsoid.getMaximumRadius();
+        var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
@@ -208,7 +208,7 @@ define([
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
         // get minimum altitude from which the whole map is visible
-        var radius = ellipsoid.getMaximumRadius();
+        var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, Math.PI * radius,  CesiumMath.PI_OVER_TWO * radius);
 
@@ -386,14 +386,14 @@ define([
         if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
             throw new DeveloperError('If either direction or up is given, then both are required.');
         }
-        if (scene.getFrameState().mode === SceneMode.MORPHING) {
+        if (scene.frameState.mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
         //>>includeEnd('debug');
 
         var duration = defaultValue(description.duration, 3000.0);
-        var frameState = scene.getFrameState();
-        var controller = scene.getScreenSpaceCameraController();
+        var frameState = scene.frameState;
+        var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
         var wrapCallback = function(cb) {
             var wrapped = function() {
@@ -532,7 +532,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var frameState = scene.getFrameState();
+        var frameState = scene.frameState;
         var projection = frameState.scene2D.projection;
         if (frameState.mode === SceneMode.SCENE3D) {
             var ellipsoid = projection.getEllipsoid();
@@ -567,7 +567,7 @@ define([
     CameraFlightPath.createAnimationExtent = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.destination;
-        var frameState = scene.getFrameState();
+        var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(frameState)) {

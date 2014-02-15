@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
@@ -48,6 +49,7 @@ define([
         Color,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         GeographicProjection,
@@ -344,72 +346,86 @@ define([
         this.initializeFrame();
     };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCanvas = function() {
-        return this._canvas;
-    };
+    defineProperties(Scene.prototype, {
+        /**
+         * Gets the canvas element to which this scene is bound.
+         * @memberof Scene.prototype
+         * @type {Element}
+         */
+        canvas : {
+            get : function() {
+                return this._canvas;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getContext = function() {
-        return this._context;
-    };
+        /**
+         * Gets the context.
+         * @memberof Scene.prototype
+         * @type {Context}
+         */
+        context : {
+            get : function() {
+                return this._context;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getPrimitives = function() {
-        return this._primitives;
-    };
+        /**
+         * Gets the collection of primitives.
+         * @memberof Scene.prototype
+         * @type {CompositePrimitive}
+         */
+        primitives : {
+            get : function() {
+                return this._primitives;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCamera = function() {
-        return this._camera;
-    };
-    // TODO: setCamera
+        /**
+         * Gets the camera.
+         * @memberof Scene.prototype
+         * @type {Camera}
+         */
+        camera : {
+            get : function() {
+                return this._camera;
+            }
+        },
+        // TODO: setCamera
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getScreenSpaceCameraController = function() {
-        return this._screenSpaceCameraController;
-    };
+        /**
+         * Gets the controller for camera input handling.
+         * @memberof Scene.prototype
+         * @type {ScreenSpaceCameraController}
+         */
+        screenSpaceCameraController : {
+            get : function() {
+                return this._screenSpaceCameraController;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getUniformState = function() {
-        return this._context.getUniformState();
-    };
+        /**
+         * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+         * function, the previous frame's state is returned.
+         * @memberof Scene.prototype
+         * @type {FrameState}
+         */
+        frameState : {
+            get: function() {
+                return this._frameState;
+            }
+        },
 
-    /**
-     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
-     * function, the previous frame's state is returned.
-     *
-     * @memberof Scene
-     */
-    Scene.prototype.getFrameState = function() {
-        return this._frameState;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getAnimations = function() {
-        return this._animations;
-    };
+        /**
+         * Gets the collection of animations taking place in the scene.
+         * @memberof Scene.prototype
+         * @type {AnimationCollection}
+         */
+        animations : {
+            get : function() {
+                return this._animations;
+            }
+        }
+    });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -417,10 +433,10 @@ define([
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.getCentralBody();
+        var cb = scene._primitives.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.getEllipsoid();
-            scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
+            var ellipsoid = cb.ellipsoid;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
@@ -893,7 +909,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1057,7 +1073,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
