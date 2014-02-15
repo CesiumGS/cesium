@@ -266,10 +266,9 @@ define(['../Core/createGuid',
      * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
      *                         added on top of all existing collections.
      *
-     * @exception {DeveloperError} collection is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
-    CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index, dontRecomposite) {
+    CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
         var hasIndex = defined(index);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(collection)) {
@@ -290,10 +289,8 @@ define(['../Core/createGuid',
         } else {
             this._collections.splice(index, 0, collection);
         }
-        if(!dontRecomposite){
-            recomposite(this);
-        }
 
+            recomposite(this);
     };
 
     /**
@@ -305,13 +302,11 @@ define(['../Core/createGuid',
      * @returns {Boolean} true if the collection was in the composite and was removed,
      *                    false if the collection was not in the composite.
      */
-    CompositeDynamicObjectCollection.prototype.removeCollection = function(collection, dontRecomposite) {
+    CompositeDynamicObjectCollection.prototype.removeCollection = function(collection) {
         var index = this._collections.indexOf(collection);
         if (index !== -1) {
             this._collections.splice(index, 1);
-            if(!dontRecomposite){
-                recomposite(this);
-            }
+            recomposite(this);
             return true;
         }
         return false;
@@ -353,8 +348,6 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {Number} index the index to retrieve.
-     *
-     * @exception {DeveloperError} index is required.
      */
     CompositeDynamicObjectCollection.prototype.getCollection = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -469,10 +462,6 @@ define(['../Core/createGuid',
         this._collections.splice(index, 1);
         this._collections.splice(0, 0, collection);
 
-        recomposite(this);
-    };
-
-    CompositeDynamicObjectCollection.prototype.recomposite = function() {
         recomposite(this);
     };
 
