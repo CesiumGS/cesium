@@ -142,7 +142,7 @@ define(['../Core/createGuid',
     }
 
     function recomposite(that) {
-        that.shouldRecomposite = true;
+        that._shouldRecomposite = true;
         if (that._suspendCount === 0) {
             var collections = that._collections;
             var collectionsLength = collections.length;
@@ -229,7 +229,7 @@ define(['../Core/createGuid',
         this._id = createGuid();
         this._eventHash = {};
         recomposite(this);
-        this.shouldRecomposite = false;
+        this._shouldRecomposite = false;
     };
 
     defineProperties(CompositeDynamicObjectCollection.prototype, {
@@ -512,9 +512,9 @@ define(['../Core/createGuid',
 
         this._suspendCount--;
         // recomposite before triggering events (but only if required for performance) that might depend on a composited collection
-        if(this.shouldRecomposite && this._suspendCount === 0){
+        if(this._shouldRecomposite && this._suspendCount === 0){
             recomposite(this);
-            this.shouldRecomposite = false;
+            this._shouldRecomposite = false;
 
         }
 
