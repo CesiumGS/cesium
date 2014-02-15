@@ -319,10 +319,10 @@ define([
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
-            nodes : undefined,          // Indexed with the node property's name
+            nodes : undefined,          // Indexed with the node property's name, i.e., glTF id
             nodesByName : undefined,    // Indexed with name property in the node
             skinnedNodes : undefined,
-            meshesByName : undefined
+            meshesByName : undefined    // Indexed with the name property in the mesh
         };
         this._rendererResources = {
             buffers : {},
