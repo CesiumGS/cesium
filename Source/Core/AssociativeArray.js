@@ -70,28 +70,29 @@ define(['./defined',
      * Retrieve the value associated with the provided key.
      * @memberof AssociativeArray
      *
-     * @param {String} key The key whose value to retrieve.
+     * @param {String|Number} key The key whose value to retrieve.
      * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
      */
     AssociativeArray.prototype.get = function(key) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(key)) {
-            throw new DeveloperError('key is required.');
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');
         return this._hash[key];
     };
 
     /**
-     * Removes a value from the collection.
+     * Removes a key-value pair from the collection.
      * @memberof AssociativeArray
      *
-     * @returns {Boolean} True if the value was removed, false if the key was not in the collection.
+     * @param {String|Number} key The key to be removed.
+     * @returns {Boolean} True if it was removed, false if the key was not in the collection.
      */
     AssociativeArray.prototype.remove = function(key) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(key)) {
-            throw new DeveloperError('key is required.');
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');
 
