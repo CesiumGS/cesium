@@ -247,7 +247,7 @@ define(['../Core/Color',
     };
 
     PolylineGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        if (this._dynamic) {
+        if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
         }
 

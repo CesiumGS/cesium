@@ -73,7 +73,7 @@ defineSuite(['DynamicScene/PositionPropertyArray',
     it('works with undefined propertyvalue', function() {
         var property = new PositionPropertyArray();
         property.setValue([new ConstantPositionProperty()]);
-        expect(property.getValue(time)).toEqual([undefined]);
+        expect(property.getValue(time)).toEqual([]);
     });
 
     it('works with empty array', function() {

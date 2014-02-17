@@ -148,7 +148,7 @@ define(['../Core/defined',
         for (var i = length - 1; i >= 0; i--) {
             var item = items[i];
             if (item.remove(updater)) {
-                if (item.updaters.count === 0) {
+                if (item.updaters.length === 0) {
                     items.splice(i, 1);
                     item.destroy();
                 }

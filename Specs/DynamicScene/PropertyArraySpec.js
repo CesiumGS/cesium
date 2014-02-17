@@ -57,19 +57,19 @@ defineSuite(['DynamicScene/PropertyArray',
     it('works with undefined value', function() {
         var property = new PropertyArray();
         property.setValue(undefined);
-        expect(property.getValue()).toBeUndefined();
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('ignores undefined property values', function() {
         var property = new PropertyArray();
         property.setValue([new ConstantProperty()]);
-        expect(property.getValue()).toEqual([]);
+        expect(property.getValue(time)).toEqual([]);
     });
 
     it('works with empty array', function() {
         var property = new PropertyArray();
         property.setValue([]);
-        expect(property.getValue()).toEqual([]);
+        expect(property.getValue(time)).toEqual([]);
     });
 
     it('equals works', function() {
