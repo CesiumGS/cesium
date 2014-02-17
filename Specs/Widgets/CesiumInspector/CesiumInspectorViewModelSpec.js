@@ -36,12 +36,12 @@ defineSuite([
     });
 
     beforeEach(function() {
-        scene.getPrimitives().setCentralBody(new CentralBody());
+        scene.primitives.centralBody = new CentralBody();
         scene.initializeFrame();
     });
 
     afterEach(function() {
-        scene.getPrimitives().removeAll();
+        scene.primitives.removeAll();
     });
 
     it('constructor sets values', function() {
@@ -82,7 +82,7 @@ defineSuite([
     });
 
     it ('primitive bounding sphere', function() {
-        var p = scene.getPrimitives().add(new ExtentPrimitive({
+        var p = scene.primitives.add(new ExtentPrimitive({
             extent : new Extent(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
@@ -106,7 +106,7 @@ defineSuite([
     });
 
     it ('primitive filter', function() {
-        var p = scene.getPrimitives().add(new ExtentPrimitive({
+        var p = scene.primitives.add(new ExtentPrimitive({
             extent : new Extent(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
@@ -117,7 +117,7 @@ defineSuite([
             })
         );
 
-        var q = scene.getPrimitives().add(new ExtentPrimitive({
+        var q = scene.primitives.add(new ExtentPrimitive({
             extent : new Extent(
                     CesiumMath.toRadians(-10.0),
                     CesiumMath.toRadians(0.0),
@@ -142,7 +142,7 @@ defineSuite([
     });
 
     it ('primitive reference frame', function() {
-        var p = scene.getPrimitives().add(new ExtentPrimitive({
+        var p = scene.primitives.add(new ExtentPrimitive({
             extent : new Extent(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
@@ -157,47 +157,47 @@ defineSuite([
         viewModel.primitive = p;
         viewModel.primitiveReferenceFrame = true;
         viewModel.showPrimitiveReferenceFrame();
-        expect(scene.getPrimitives().getLength()).toEqual(2);
+        expect(scene.primitives.length).toEqual(2);
 
         viewModel.primitiveReferenceFrame = false;
         viewModel.showPrimitiveReferenceFrame();
         scene.render();
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
     });
 
     it('show wireframe', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
         viewModel.wireframe = true;
         viewModel.showWireframe();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.wireframe).toBe(true);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.wireframe).toBe(true);
 
         viewModel.wireframe = false;
         viewModel.showWireframe();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.wireframe).toBe(false);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.wireframe).toBe(false);
     });
 
     it('suspend updates', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
         viewModel.suspendUpdates = true;
         viewModel.doSuspendUpdates();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.suspendLodUpdate).toBe(true);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.suspendLodUpdate).toBe(true);
 
         viewModel.suspendUpdates = false;
         viewModel.doSuspendUpdates();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.suspendLodUpdate).toBe(false);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.suspendLodUpdate).toBe(false);
     });
 
     it('show tile coords', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
-        expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(0);
+        expect(viewModel.scene.primitives.centralBody.imageryLayerCollection.getLength()).toBe(0);
 
         viewModel.tileCoordinates  = true;
         viewModel.showTileCoordinates();
-        expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(1);
+        expect(viewModel.scene.primitives.centralBody.imageryLayerCollection.getLength()).toBe(1);
 
         viewModel.tileCoordinates = false;
         viewModel.showTileCoordinates();
-        expect(viewModel.scene.getPrimitives().getCentralBody().getImageryLayers().getLength()).toBe(0);
+        expect(viewModel.scene.primitives.centralBody.imageryLayerCollection.getLength()).toBe(0);
     });
 
     it('show tile bounding sphere', function() {
@@ -207,11 +207,11 @@ defineSuite([
 
         viewModel.tileBoundingSphere  = true;
         viewModel.showTileBoundingSphere();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.boundingSphereTile).toBe(tile);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.boundingSphereTile).toBe(tile);
 
         viewModel.tileBoundingSphere = false;
         viewModel.showTileBoundingSphere();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._debug.boundingSphereTile).toBe(undefined);
+        expect(viewModel.scene.primitives.centralBody._surface._debug.boundingSphereTile).toBe(undefined);
     });
 
     it('filter tile', function() {
@@ -221,7 +221,7 @@ defineSuite([
 
         viewModel.filterTile  = true;
         viewModel.doFilterTile();
-        expect(viewModel.scene.getPrimitives().getCentralBody()._surface._tilesToRenderByTextureCount[0][0]).toBe(tile);
+        expect(viewModel.scene.primitives.centralBody._surface._tilesToRenderByTextureCount[0][0]).toBe(tile);
         expect(viewModel.suspendUpdates).toBe(true);
 
         viewModel.filterTile = false;
