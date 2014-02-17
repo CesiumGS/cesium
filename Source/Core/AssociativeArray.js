@@ -10,7 +10,7 @@ define(['./defined',
 
     /**
      * A collection of key-value pairs that is stored as a hash for easy
-     * lookup but also provides as an array for fast iteration.
+     * lookup but also provides an array for fast iteration.
      * @alias AssociativeArray
      * @constructor
      */
@@ -67,10 +67,10 @@ define(['./defined',
     };
 
     /**
-     * Retrieve the value associated with the provided key.
+     * Retrieves the value associated with the provided key.
      * @memberof AssociativeArray
      *
-     * @param {String|Number} key The key whose value to retrieve.
+     * @param {String|Number} key The key whose value is to be retrieved.
      * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
      */
     AssociativeArray.prototype.get = function(key) {
