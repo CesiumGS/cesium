@@ -273,7 +273,7 @@ define([
      * function updateAndRender() {
      *     var now = new Cesium.JulianDate();
      *     scene.initializeFrame();
-     *     scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
+     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
      *     scene.render();
      *     Cesium.requestAnimationFrame(updateAndRender);
      * }
@@ -412,7 +412,7 @@ define([
      *     scene.initializeFrame();
      *     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(now);
      *     if (Cesium.defined(icrfToFixed)) {
-     *         scene.getCamera().transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
      *     }
      *     scene.render();
      *     Cesium.requestAnimationFrame(updateAndRender);

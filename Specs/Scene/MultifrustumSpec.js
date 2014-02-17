@@ -57,10 +57,10 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene.getContext();
-        primitives = scene.getPrimitives();
+        context = scene.context;
+        primitives = scene.primitives;
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.position = new Cartesian3();
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -330,7 +330,7 @@ defineSuite([
     });
 
     it('does not crash when near plane is greater than or equal to the far plane', function() {
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.frustum.far = 1000.0;
         camera.position = new Cartesian3(0.0, 0.0, 1e12);
 

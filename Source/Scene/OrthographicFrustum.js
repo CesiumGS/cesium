@@ -29,7 +29,7 @@ define([
      * @constructor
      *
      * @example
-     * var maxRadii = ellipsoid.getMaximumRadius();
+     * var maxRadii = ellipsoid.maximumRadius;
      *
      * var frustum = new Cesium.OrthographicFrustum();
      * frustum.right = maxRadii * Cesium.Math.PI;
@@ -129,8 +129,8 @@ define([
 
     defineProperties(OrthographicFrustum.prototype, {
         /**
-         * The orthographic projection matrix computed from the view frustum.
-         * @memberof OrthographicFrustum
+         * Gets the orthographic projection matrix computed from the view frustum.
+         * @memberof OrthographicFrustum.prototype
          * @type {Matrix4}
          */
         projectionMatrix : {

@@ -49,9 +49,9 @@ define([
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.getPrimitives().add(polylineCollection);
+        scene.primitives.add(polylineCollection);
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -168,7 +168,7 @@ define([
      */
     DynamicVectorVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };
 

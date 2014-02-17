@@ -48,7 +48,7 @@ define([
         this._scene = scene;
         this._screenPositionX = '-1000px';
         this._screenPositionY = '0';
-        this._animationCollection = scene.getAnimations();
+        this._animationCollection = scene.animations;
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
         this._computeScreenSpacePosition = function(position, result) {

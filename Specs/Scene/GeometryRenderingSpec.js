@@ -259,7 +259,7 @@ defineSuite([
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
         var frustum = new OrthographicFrustum();
-        frustum.right = ellipsoid.getMaximumRadius() * Math.PI;
+        frustum.right = ellipsoid.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;

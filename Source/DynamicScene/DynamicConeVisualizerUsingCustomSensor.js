@@ -108,7 +108,7 @@ define([
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
