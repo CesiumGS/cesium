@@ -21,10 +21,10 @@ define(['./defined',
 
     defineProperties(AssociativeArray.prototype, {
         /**
-         * Get the number of items in the collection.
+         * Gets the number of items in the collection.
          * @memberof AssociativeArray.prototype
          *
-         * @returns {Number} The number of items in the collection.
+         * @type {Number}
          */
         count : {
             get : function() {
@@ -32,10 +32,12 @@ define(['./defined',
             }
         },
         /**
-         * Get an unordered array of all values in the collection.
+         * Gets an unordered array of all values in the collection.
          * This is a live array that will automatically reflect the values in the collection,
          * it should not be modified directly.
          * @memberof AssociativeArray.prototype
+         *
+         * @type {Array}
          */
         values : {
             get : function() {
@@ -46,7 +48,7 @@ define(['./defined',
 
     /**
      * Associates the provided key with the provided value.  If the key already
-     * exists in the array, it is overwritten.
+     * exists, it is overwritten with the new value.
      * @memberof AssociativeArray
      *
      * @param {String|Number} key A unique identifier.
