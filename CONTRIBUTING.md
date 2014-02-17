@@ -2,7 +2,7 @@ This document describes how we merge pull requests.  See the [Contributor's Guid
 
 ## License
 
-We love pull requests.  We promptly [review](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Code-Review-Tips) them, provide feedback, and merge.  We use the [Apache 2.0 License](LICENSE.md).  Before we can merge a pull request, we require a signed [Contributor License Agreement](http://producingoss.com/en/copyright-assignment.html#copyright-assignment-cla) (CLA).  This can be emailed to cla@agi.com, and only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  There is a CLA for [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).  Please email completed CLAs and related questions to [cla@agi.com](mailto:cla@agi.com).
+We love pull requests.  We promptly [review](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Code-Review-Tips) them, provide feedback, and merge.  We use the [Apache 2.0 License](LICENSE.md).  Before we can merge a pull request, we require a signed Contributor License Agreement (CLA).  This can be emailed to cla@agi.com, and only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  There is a CLA for [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).  Please email completed CLAs and related questions to [cla@agi.com](mailto:cla@agi.com).
 
 ## Development Best Practices
 
