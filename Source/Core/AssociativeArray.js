@@ -10,7 +10,7 @@ define(['./defined',
 
     /**
      * A collection of key-value pairs that is stored as a hash for easy
-     * lookup but also provides as an array for fast iteration.
+     * lookup but also provides an array for fast iteration.
      * @alias AssociativeArray
      * @constructor
      */
@@ -26,7 +26,7 @@ define(['./defined',
          *
          * @type {Number}
          */
-        count : {
+        length : {
             get : function() {
                 return this._array.length;
             }
@@ -67,38 +67,40 @@ define(['./defined',
     };
 
     /**
-     * Retrieve the value associated with the provided key.
+     * Retrieves the value associated with the provided key.
      * @memberof AssociativeArray
      *
-     * @param {String} key The key whose value to retrieve.
+     * @param {String|Number} key The key whose value is to be retrieved.
      * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
      */
     AssociativeArray.prototype.get = function(key) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(key)) {
-            throw new DeveloperError('key is required.');
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');
         return this._hash[key];
     };
 
     /**
-     * Removes a value from the collection.
+     * Removes a key-value pair from the collection.
      * @memberof AssociativeArray
      *
-     * @returns {Boolean} True if the value was removed, false if the key was not in the collection.
+     * @param {String|Number} key The key to be removed.
+     * @returns {Boolean} True if it was removed, false if the key was not in the collection.
      */
     AssociativeArray.prototype.remove = function(key) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(key)) {
-            throw new DeveloperError('key is required.');
+        if (typeof key !== 'string' && typeof key !== 'number') {
+            throw new DeveloperError('key is required to be a string or number.');
         }
         //>>includeEnd('debug');
 
-        var hasValue = defined(this._hash[key]);
+        var value = this._hash[key];
+        var hasValue = defined(value);
         if (hasValue) {
             var array = this._array;
-            array.splice(array.indexOf(this._hash[key]), 1);
+            array.splice(array.indexOf(value), 1);
             this._hash[key] = undefined;
         }
         return hasValue;
