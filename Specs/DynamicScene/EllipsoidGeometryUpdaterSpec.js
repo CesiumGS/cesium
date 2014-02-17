@@ -1,10 +1,11 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/EllipseGeometryUpdater',
+defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
              'DynamicScene/DynamicObject',
-             'DynamicScene/DynamicEllipse',
+             'DynamicScene/DynamicEllipsoid',
              'Core/Cartesian3',
              'Core/Color',
              'Core/JulianDate',
+             'Core/Quaternion',
              'Core/TimeInterval',
              'Core/TimeIntervalCollection',
              'Core/ColorGeometryInstanceAttribute',
@@ -18,12 +19,13 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
              'DynamicScene/TimeIntervalCollectionProperty',
              'Scene/CompositePrimitive'
          ], function(
-             EllipseGeometryUpdater,
+             EllipsoidGeometryUpdater,
              DynamicObject,
-             DynamicEllipse,
+             DynamicEllipsoid,
              Cartesian3,
              Color,
              JulianDate,
+             Quaternion,
              TimeInterval,
              TimeIntervalCollection,
              ColorGeometryInstanceAttribute,
@@ -41,24 +43,24 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
 
     var time = new JulianDate();
 
-    function createBasicEllipse() {
-        var ellipse = new DynamicEllipse();
-        ellipse.semiMajorAxis = new ConstantProperty(2);
-        ellipse.semiMinorAxis = new ConstantProperty(1);
+    function createBasicEllipsoid() {
+        var ellipsoid = new DynamicEllipsoid();
+        ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantPositionProperty(Cartesian3.ZERO);
-        dynamicObject.ellipse = ellipse;
+        dynamicObject.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        dynamicObject.ellipsoid = ellipsoid;
         return dynamicObject;
     }
 
     it('Constructor sets expected defaults', function() {
         var dynamicObject = new DynamicObject();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
 
         expect(updater.isDestroyed()).toBe(false);
         expect(updater.dynamicObject).toBe(dynamicObject);
-        expect(updater.isClosed).toBe(false);
+        expect(updater.isClosed).toBe(true);
         expect(updater.fillEnabled).toBe(false);
         expect(updater.fillMaterialProperty).toBe(undefined);
         expect(updater.outlineEnabled).toBe(false);
@@ -72,30 +74,20 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         expect(updater.isDestroyed()).toBe(true);
     });
 
-    it('No geometry available when ellipse is undefined ', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse = undefined;
+    it('No geometry available when ellipsoid is undefined ', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid = undefined;
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.isDynamic).toBe(false);
     });
 
-    it('No geometry available when semiMajorAxis is undefined', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.semiMajorAxis = undefined;
-
-        expect(updater.fillEnabled).toBe(false);
-        expect(updater.outlineEnabled).toBe(false);
-        expect(updater.isDynamic).toBe(false);
-    });
-
-    it('No geometry available when semiMinorAxis is undefined', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.semiMinorAxis = undefined;
+    it('No geometry available when radii is undefined', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.radii = undefined;
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -103,10 +95,10 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
     });
 
     it('No geometry available when not filled or outline.', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.fill = new ConstantProperty(false);
-        dynamicObject.ellipse.outline = new ConstantProperty(false);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.fill = new ConstantProperty(false);
+        dynamicObject.ellipsoid.outline = new ConstantProperty(false);
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
@@ -114,10 +106,9 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
     });
 
     it('Values correct when using default graphics', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
 
-        expect(updater.isClosed).toBe(false);
         expect(updater.fillEnabled).toBe(true);
         expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
         expect(updater.outlineEnabled).toBe(false);
@@ -127,121 +118,79 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         expect(updater.isDynamic).toBe(false);
     });
 
-    it('Ellipse material is correctly exposed.', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.ellipse.material);
+    it('Ellipsoid material is correctly exposed.', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.material = new GridMaterialProperty(Color.BLUE);
+        expect(updater.fillMaterialProperty).toBe(dynamicObject.ellipsoid.material);
     });
 
-    it('Settings extrudedHeight causes geometry to be closed.', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.extrudedHeight = new ConstantProperty(1000);
-        expect(updater.isClosed).toBe(true);
-    });
-
-    it('Ellipse material is correctly exposed.', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.ellipse.material);
+    it('Ellipsoid material is correctly exposed.', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.material = new GridMaterialProperty(Color.BLUE);
+        expect(updater.fillMaterialProperty).toBe(dynamicObject.ellipsoid.material);
     });
 
     it('A time-varying position causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         dynamicObject.position = new SampledPositionProperty();
         dynamicObject.position.addSample(time, Cartesian3.ZERO);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying semiMinorAxis causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.semiMinorAxis = new SampledProperty(Number);
-        dynamicObject.ellipse.semiMinorAxis.addSample(time, 1);
+    it('A time-varying radii causes geometry to be dynamic', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.radii = new SampledProperty(Cartesian3);
+        dynamicObject.ellipsoid.radii.addSample(time, new Cartesian3(1, 2, 3));
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying semiMajorAxis causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
-        dynamicObject.ellipse.semiMajorAxis.addSample(time, 1);
+    it('A time-varying stackPartitions causes geometry to be dynamic', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.stackPartitions = new SampledProperty(Number);
+        dynamicObject.ellipsoid.stackPartitions.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying rotation causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.rotation = new SampledProperty(Number);
-        dynamicObject.ellipse.rotation.addSample(time, 1);
+    it('A time-varying slicePartitions causes geometry to be dynamic', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.slicePartitions = new SampledProperty(Number);
+        dynamicObject.ellipsoid.slicePartitions.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying height causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.height = new SampledProperty(Number);
-        dynamicObject.ellipse.height.addSample(time, 1);
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying extrudedHeight causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.extrudedHeight = new SampledProperty(Number);
-        dynamicObject.ellipse.extrudedHeight.addSample(time, 1);
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying granularity causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.granularity = new SampledProperty(Number);
-        dynamicObject.ellipse.granularity.addSample(time, 1);
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying stRotation causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.stRotation = new SampledProperty(Number);
-        dynamicObject.ellipse.stRotation.addSample(time, 1);
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying numberOfVerticalLines causes geometry to be dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.numberOfVerticalLines = new SampledProperty(Number);
-        dynamicObject.ellipse.numberOfVerticalLines.addSample(time, 1);
+    it('A time-varying subdivisions causes geometry to be dynamic', function() {
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
+        dynamicObject.ellipsoid.subdivisions = new SampledProperty(Number);
+        dynamicObject.ellipsoid.subdivisions.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
     function validateGeometryInstance(options) {
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantPositionProperty(options.center);
+        dynamicObject.position = new ConstantPositionProperty(options.position);
+        dynamicObject.orientation = new ConstantProperty(options.orientation);
 
-        var ellipse = new DynamicEllipse();
-        ellipse.show = new ConstantProperty(options.show);
-        ellipse.fill = new ConstantProperty(options.fill);
-        ellipse.material = options.material;
-        ellipse.outline = new ConstantProperty(options.outline);
-        ellipse.outlineColor = new ConstantProperty(options.outlineColor);
-        ellipse.numberOfVerticalLines = new ConstantProperty(options.numberOfVerticalLines);
+        var ellipsoid = new DynamicEllipsoid();
+        ellipsoid.show = new ConstantProperty(options.show);
+        ellipsoid.fill = new ConstantProperty(options.fill);
+        ellipsoid.material = options.material;
+        ellipsoid.outline = new ConstantProperty(options.outline);
+        ellipsoid.outlineColor = new ConstantProperty(options.outlineColor);
+        ellipsoid.numberOfVerticalLines = new ConstantProperty(options.numberOfVerticalLines);
+        ellipsoid.radii = new ConstantProperty(options.radii);
+        ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
+        ellipsoid.slicePartitions = new ConstantProperty(options.slicePartitions);
+        ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
+        dynamicObject.ellipsoid = ellipsoid;
 
-        ellipse.semiMajorAxis = new ConstantProperty(options.semiMajorAxis);
-        ellipse.semiMinorAxis = new ConstantProperty(options.semiMinorAxis);
-        ellipse.rotation = new ConstantProperty(options.rotation);
-        ellipse.stRotation = new ConstantProperty(options.stRotation);
-        ellipse.height = new ConstantProperty(options.height);
-        ellipse.extrudedHeight = new ConstantProperty(options.extrudedHeight);
-        ellipse.granularity = new ConstantProperty(options.granularity);
-        dynamicObject.ellipse = ellipse;
-
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
 
         var instance;
         var geometry;
@@ -250,13 +199,9 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
             instance = updater.createGeometryInstance(time);
             geometry = instance.geometry;
             expect(geometry._center).toEqual(options.center);
-            expect(geometry._semiMajorAxis).toEqual(options.semiMajorAxis);
-            expect(geometry._semiMinorAxis).toEqual(options.semiMinorAxis);
-            expect(geometry._rotation).toEqual(options.rotation);
-            expect(geometry._stRotation).toEqual(options.stRotation);
-            expect(geometry._height).toEqual(options.height);
-            expect(geometry._granularity).toEqual(options.granularity);
-            expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+            expect(geometry._radii).toEqual(options.radii);
+            expect(geometry._stackPartitions).toEqual(options.stackPartitions);
+            expect(geometry._slicePartitions).toEqual(options.slicePartitions);
 
             attributes = instance.attributes;
             if (options.material instanceof ColorMaterialProperty) {
@@ -271,13 +216,10 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
             instance = updater.createOutlineGeometryInstance(time);
             geometry = instance.geometry;
             expect(geometry._center).toEqual(options.center);
-            expect(geometry._semiMajorAxis).toEqual(options.semiMajorAxis);
-            expect(geometry._semiMinorAxis).toEqual(options.semiMinorAxis);
-            expect(geometry._rotation).toEqual(options.rotation);
-            expect(geometry._height).toEqual(options.height);
-            expect(geometry._granularity).toEqual(options.granularity);
-            expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
-            expect(geometry._numberOfVerticalLines).toEqual(options.numberOfVerticalLines);
+            expect(geometry._radii).toEqual(options.radii);
+            expect(geometry._stackPartitions).toEqual(options.stackPartitions);
+            expect(geometry._slicePartitions).toEqual(options.slicePartitions);
+            expect(geometry._subdivisions).toEqual(options.subdivisions);
 
             attributes = instance.attributes;
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
@@ -287,39 +229,33 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
 
     it('Creates expected per-color geometry', function() {
         validateGeometryInstance({
-            center : new Cartesian3(4, 5, 6),
-            rotation : 1,
-            semiMajorAxis : 3,
-            semiMinorAxis : 2,
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
             show : true,
             material : new ColorMaterialProperty(Color.RED),
-            height : 123,
-            extrudedHeight : 431,
-            granularity : 0.97,
-            stRotation : 12,
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            numberOfVerticalLines : 15
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15
         });
     });
 
     it('Creates expected per-material geometry', function() {
         validateGeometryInstance({
-            center : new Cartesian3(4, 5, 6),
-            rotation : 1,
-            semiMajorAxis : 3,
-            semiMinorAxis : 2,
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
             show : true,
             material : new GridMaterialProperty(),
-            height : 123,
-            extrudedHeight : 431,
-            granularity : 0.97,
-            stRotation : 12,
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            numberOfVerticalLines : 15
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15
         });
     });
 
@@ -347,13 +283,13 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         outlineColor.addSample(time2, Color.RED);
         outlineColor.addSample(time3, Color.YELLOW);
 
-        var dynamicObject = createBasicEllipse();
-        dynamicObject.ellipse.fill = fill;
-        dynamicObject.ellipse.material = colorMaterial;
-        dynamicObject.ellipse.outline = outline;
-        dynamicObject.ellipse.outlineColor = outlineColor;
+        var dynamicObject = createBasicEllipsoid();
+        dynamicObject.ellipsoid.fill = fill;
+        dynamicObject.ellipsoid.material = colorMaterial;
+        dynamicObject.ellipsoid.outline = outline;
+        dynamicObject.ellipsoid.outlineColor = outlineColor;
 
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
 
         var instance = updater.createGeometryInstance(time2);
         var attributes = instance.attributes;
@@ -379,18 +315,18 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
             return property;
         }
 
-        var ellipse = new DynamicEllipse();
-        ellipse.semiMajorAxis = makeProperty(2, 12);
-        ellipse.semiMinorAxis = makeProperty(1, 11);
-        ellipse.outline = makeProperty(true, false);
-        ellipse.fill = makeProperty(false, true);
+        var ellipsoid = new DynamicEllipsoid();
+        ellipsoid.radii = makeProperty(new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6));
+        ellipsoid.outline = makeProperty(true, false);
+        ellipsoid.fill = makeProperty(false, true);
 
         var dynamicObject = new DynamicObject();
         dynamicObject.availability = new TimeIntervalCollection();
         dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
         dynamicObject.position = makeProperty(Cartesian3.UNIT_Z, Cartesian3.UNIT_Y);
-        dynamicObject.ellipse = ellipse;
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        dynamicObject.orientation = makeProperty(Quaternion.IDENTITY, new Quaternion(0, 1, 0, 0));
+        dynamicObject.ellipsoid = ellipsoid;
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
         expect(dynamicUpdater.isDestroyed()).toBe(false);
 
@@ -403,46 +339,42 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
     });
 
     it('geometryChanged event is raised when expected', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         var geometryChanged = updater.geometryChanged;
         spyOn(geometryChanged, 'raiseEvent');
 
         dynamicObject.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
         expect(geometryChanged.raiseEvent.callCount).toEqual(1);
 
-        dynamicObject.ellipse.semiMajorAxis = new ConstantProperty(82);
+        dynamicObject.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
         expect(geometryChanged.raiseEvent.callCount).toEqual(2);
 
         dynamicObject.availability = new TimeIntervalCollection();
         expect(geometryChanged.raiseEvent.callCount).toEqual(3);
 
-        dynamicObject.ellipse.semiMajorAxis = undefined;
+        dynamicObject.ellipsoid.radii = undefined;
         expect(geometryChanged.raiseEvent.callCount).toEqual(4);
-
-        //Since there's no valid geometry, changing another property should not raise the event.
-        dynamicObject.ellipse.semiMinorAxis = undefined;
 
         //Modifying an unrelated property should not have any effect.
         dynamicObject.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         expect(geometryChanged.raiseEvent.callCount).toEqual(4);
 
-        dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
-        dynamicObject.ellipse.semiMinorAxis = new SampledProperty(Number);
+        dynamicObject.ellipsoid.radii = new SampledProperty(Cartesian3);
         expect(geometryChanged.raiseEvent.callCount).toEqual(5);
     });
 
     it('createGeometryInstance throws if object is not filled', function() {
         var dynamicObject = new DynamicObject();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(function() {
             return updater.createGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createGeometryInstance throws if no time provided', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(function() {
             return updater.createGeometryInstance(undefined);
         }).toThrowDeveloperError();
@@ -450,34 +382,34 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
 
     it('createOutlineGeometryInstance throws if object is not outlined', function() {
         var dynamicObject = new DynamicObject();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(function() {
             return updater.createOutlineGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
     it('createOutlineGeometryInstance throws if no time provided', function() {
-        var dynamicObject = createBasicEllipse();
-        dynamicObject.ellipse.outline = new ConstantProperty(true);
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        dynamicObject.ellipsoid.outline = new ConstantProperty(true);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(function() {
             return updater.createOutlineGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if not dynamic', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(function() {
             return updater.createDynamicUpdater(new CompositePrimitive());
         }).toThrowDeveloperError();
     });
 
     it('createDynamicUpdater throws if primitives undefined', function() {
-        var dynamicObject = createBasicEllipse();
-        dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
-        dynamicObject.ellipse.semiMajorAxis.addSample(time, 4);
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        dynamicObject.ellipsoid.radii = new SampledProperty(Number);
+        dynamicObject.ellipsoid.radii.addSample(time, 4);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         expect(updater.isDynamic).toBe(true);
         expect(function() {
             return updater.createDynamicUpdater(undefined);
@@ -485,10 +417,10 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
     });
 
     it('dynamicUpdater.update throws if no time specified', function() {
-        var dynamicObject = createBasicEllipse();
-        dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
-        dynamicObject.ellipse.semiMajorAxis.addSample(time, 4);
-        var updater = new EllipseGeometryUpdater(dynamicObject);
+        var dynamicObject = createBasicEllipsoid();
+        dynamicObject.ellipsoid.radii = new SampledProperty(Number);
+        dynamicObject.ellipsoid.radii.addSample(time, 4);
+        var updater = new EllipsoidGeometryUpdater(dynamicObject);
         var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
         expect(function() {
             dynamicUpdater.update(undefined);
@@ -497,7 +429,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
 
     it('Constructor throws if no DynamicObject supplied', function() {
         expect(function() {
-            return new EllipseGeometryUpdater(undefined);
+            return new EllipsoidGeometryUpdater(undefined);
         }).toThrowDeveloperError();
     });
 });

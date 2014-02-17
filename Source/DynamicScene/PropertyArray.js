@@ -78,6 +78,12 @@ define(['../Core/defaultValue',
      * @returns {Array} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PropertyArray.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(this._value)) {
             return undefined;
         }
@@ -86,15 +92,18 @@ define(['../Core/defaultValue',
         if (!defined(result)) {
             result = new Array(length);
         }
-        for (var i = 0; i < length; i++) {
+        var i = 0;
+        var x = 0;
+        while (i < length) {
             var property = this._value[i];
-            if (defined(property)) {
-                result[i] = property.getValue(time, result[i]);
-            } else {
-                result[i] = undefined;
+            var value = property.getValue(time, result[i]);
+            if (defined(value)) {
+                result[x] = value;
+                x++;
             }
+            i++;
         }
-        result.length = length;
+        result.length = x;
         return result;
     };
 

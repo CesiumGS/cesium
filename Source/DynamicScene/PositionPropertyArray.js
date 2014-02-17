@@ -122,15 +122,18 @@ define(['../Core/defaultValue',
         if (!defined(result)) {
             result = new Array(length);
         }
-        for (var i = 0; i < length; i++) {
+        var i = 0;
+        var x = 0;
+        while (i < length) {
             var property = this._value[i];
-            if (defined(property)) {
-                result[i] = property.getValueInReferenceFrame(time, referenceFrame, result[i]);
-            } else {
-                result[i] = undefined;
+            var value = property.getValueInReferenceFrame(time, referenceFrame, result[i]);
+            if (defined(value)) {
+                result[x] = value;
+                x++;
             }
+            i++;
         }
-        result.length = length;
+        result.length = x;
         return result;
     };
 

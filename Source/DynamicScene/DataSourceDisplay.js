@@ -46,15 +46,15 @@ define([
     }, function(scene) {
         return new GeometryVisualizer(EllipsoidGeometryUpdater, scene);
     }, function(scene) {
+        return new GeometryVisualizer(PolygonGeometryUpdater, scene);
+    }, function(scene) {
+        return new GeometryVisualizer(PolylineGeometryUpdater, scene);
+    }, function(scene) {
         return new DynamicConeVisualizerUsingCustomSensor(scene);
     }, function(scene) {
         return new DynamicLabelVisualizer(scene);
     }, function(scene) {
         return new DynamicPointVisualizer(scene);
-    }, function(scene) {
-        return new GeometryVisualizer(PolygonGeometryUpdater, scene);
-    }, function(scene) {
-        return new GeometryVisualizer(PolylineGeometryUpdater, scene);
     }, function(scene) {
         return new DynamicVectorVisualizer(scene);
     }, function(scene) {
