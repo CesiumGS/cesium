@@ -365,7 +365,7 @@ define([
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
-     * @see Scene#getAnimations
+     * @see Scene#animations
      */
     var dirScratch = new Cartesian3();
     var rightScratch = new Cartesian3();
@@ -517,7 +517,7 @@ define([
      *
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
-     * @see Scene#getAnimations
+     * @see Scene#animations
      */
     CameraFlightPath.createAnimationCartographic = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -562,7 +562,7 @@ define([
      *
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
-     * @see Scene#getAnimations
+     * @see Scene#animations
      */
     CameraFlightPath.createAnimationExtent = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
