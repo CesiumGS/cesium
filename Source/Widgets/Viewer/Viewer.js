@@ -383,7 +383,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }));
 
         var onDataSourceChanged = function(dataSource) {
-            if (this.clockTrackedDataSource === dataSource) {
+            if (that.clockTrackedDataSource === dataSource) {
                 trackDataSourceClock(dataSource);
             }
         };
