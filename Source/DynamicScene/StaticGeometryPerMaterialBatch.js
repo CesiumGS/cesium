@@ -51,7 +51,7 @@ define(['../Core/defined',
     Batch.prototype.add = function(time, updater) {
         var id = updater.dynamicObject.id;
         this.updaters.set(id, updater);
-        this.geometry.set(id, updater.createGeometryInstance(time));
+        this.geometry.set(id, updater.createFillGeometryInstance(time));
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
             this.updatersWithAttributes.set(id, updater);
         }

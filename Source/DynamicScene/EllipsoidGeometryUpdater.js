@@ -155,7 +155,7 @@ define(['../Core/Color',
         return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
-    EllipsoidGeometryUpdater.prototype.createGeometryInstance = function(time) {
+    EllipsoidGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         if (!defined(time)) {
             throw new DeveloperError();
         }
@@ -319,17 +319,20 @@ define(['../Core/Color',
     };
 
     EllipsoidGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        if (!this._dynamic) {
-            throw new DeveloperError();
+        if (this._dynamic) {
+            throw new DeveloperError('This instance does not represent dynamic geometry.');
         }
 
         if (!defined(primitives)) {
-            throw new DeveloperError();
+            throw new DeveloperError('primitives is required.');
         }
 
         return new DynamicGeometryUpdater(primitives, this);
     };
 
+    /**
+     * @private
+     */
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;

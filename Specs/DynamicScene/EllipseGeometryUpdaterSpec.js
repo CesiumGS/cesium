@@ -247,7 +247,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         var geometry;
         var attributes;
         if (options.fill) {
-            instance = updater.createGeometryInstance(time);
+            instance = updater.createFillGeometryInstance(time);
             geometry = instance.geometry;
             expect(geometry._center).toEqual(options.center);
             expect(geometry._semiMajorAxis).toEqual(options.semiMajorAxis);
@@ -355,7 +355,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
 
         var updater = new EllipseGeometryUpdater(dynamicObject);
 
-        var instance = updater.createGeometryInstance(time2);
+        var instance = updater.createFillGeometryInstance(time2);
         var attributes = instance.attributes;
         expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(colorMaterial.color.getValue(time2)));
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(fill.getValue(time2)));
@@ -432,19 +432,19 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         expect(geometryChanged.raiseEvent.callCount).toEqual(5);
     });
 
-    it('createGeometryInstance throws if object is not filled', function() {
+    it('createFillGeometryInstance throws if object is not filled', function() {
         var dynamicObject = new DynamicObject();
         var updater = new EllipseGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createGeometryInstance(time);
+            return updater.createFillGeometryInstance(time);
         }).toThrowDeveloperError();
     });
 
-    it('createGeometryInstance throws if no time provided', function() {
+    it('createFillGeometryInstance throws if no time provided', function() {
         var dynamicObject = createBasicEllipse();
         var updater = new EllipseGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createGeometryInstance(undefined);
+            return updater.createFillGeometryInstance(undefined);
         }).toThrowDeveloperError();
     });
 

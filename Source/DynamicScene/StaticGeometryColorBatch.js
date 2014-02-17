@@ -120,7 +120,7 @@ define(['../Core/Color',
     };
 
     StaticGeometryColorBatch.prototype.add = function(time, updater) {
-        var instance = updater.createGeometryInstance(time);
+        var instance = updater.createFillGeometryInstance(time);
         if (instance.attributes.color.value[3] === 255) {
             this._solidBatch.add(updater, instance);
         } else {
@@ -150,7 +150,7 @@ define(['../Core/Color',
             for (i = 0; i < solidsToMoveLength; i++) {
                 updater = itemsToRemove[i];
                 this._solidBatch.remove(updater);
-                this._translucentBatch.add(updater, updater.createGeometryInstance(time));
+                this._translucentBatch.add(updater, updater.createFillGeometryInstance(time));
             }
         }
 
@@ -161,7 +161,7 @@ define(['../Core/Color',
             for (i = 0; i < translucentToMoveLength; i++) {
                 updater = itemsToRemove[i];
                 this._translucentBatch.remove(updater);
-                this._solidBatch.add(updater, updater.createGeometryInstance(time));
+                this._solidBatch.add(updater, updater.createFillGeometryInstance(time));
             }
         }
 
