@@ -16,7 +16,6 @@ define(['../Core/Color',
         '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
-        '../DynamicScene/GeometryBatchType',
         '../DynamicScene/MaterialProperty',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -39,7 +38,6 @@ define(['../Core/Color',
         ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         ConstantProperty,
-        GeometryBatchType,
         MaterialProperty,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -71,17 +69,17 @@ define(['../Core/Color',
 
         this._dynamicObject = dynamicObject;
         this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(EllipsoidGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
-        this._geometryType = GeometryBatchType.NONE;
+        this._fillEnabled = false;
+        this._dynamic = false;
+        this._outlineEnabled = false;
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
-        this._outlineEnabled = false;
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._options = new GeometryOptions(dynamicObject);
         this._onDynamicObjectPropertyChanged(dynamicObject, 'ellipsoid', dynamicObject.ellipsoid, undefined);
-        this._modelMatrix = undefined;
     };
 
     EllipsoidGeometryUpdater.PerInstanceColorAppearanceType = PerInstanceColorAppearance;
@@ -94,14 +92,17 @@ define(['../Core/Color',
                 return this._dynamicObject;
             }
         },
-        geometryType : {
+        fillEnabled : {
             get : function() {
-                return this._geometryType;
+                return this._fillEnabled;
             }
         },
-        geometryChanged : {
+        hasConstantFill : {
             get : function() {
-                return this._geometryChanged;
+                return !this._fillEnabled ||
+                       (!defined(this._dynamicObject.availability) &&
+                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
+                        (!defined(this._fillProperty) || this._fillProperty.isConstant));
             }
         },
         fillMaterialProperty : {
@@ -114,34 +115,55 @@ define(['../Core/Color',
                 return this._outlineEnabled;
             }
         },
-        hasConstantFill : {
-            get : function() {
-                return !defined(this._dynamicObject.availability) && this._showProperty.isConstant && this._fillProperty.isConstant;
-            }
-        },
         hasConstantOutline : {
             get : function() {
-                return !defined(this._dynamicObject.availability) && this._showProperty.isConstant && this._showOutlineProperty.isConstant;
+                return !this._outlineEnabled ||
+                       (!defined(this._dynamicObject.availability) &&
+                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
+                        (!defined(this._showOutlineProperty) || this._showOutlineProperty.isConstant));
             }
         },
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
             }
+        },
+        isDynamic : {
+            get : function() {
+                return this._dynamic;
+            }
+        },
+        isClosed : {
+            get : function() {
+                return true;
+            }
+        },
+        geometryChanged : {
+            get : function() {
+                return this._geometryChanged;
+            }
         }
     });
 
     EllipsoidGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var dynamicObject = this._dynamicObject;
-        return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return this._outlineEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
     EllipsoidGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
-        return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
     EllipsoidGeometryUpdater.prototype.createGeometryInstance = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
+        if (!this._fillEnabled) {
+            throw new DeveloperError();
+        }
+
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
 
@@ -149,8 +171,11 @@ define(['../Core/Color',
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
-        if (this._geometryType === GeometryBatchType.COLOR_CLOSED) {
-            var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
+        if (this._materialProperty instanceof ColorMaterialProperty) {
+            var currentColor = Color.WHITE;
+            if (defined(defined(this._materialProperty.color)) && (this._materialProperty.color.isConstant || isAvailable)) {
+                currentColor = this._materialProperty.color.getValue(time);
+            }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
@@ -162,27 +187,45 @@ define(['../Core/Color',
             };
         }
 
+        positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+
         return new GeometryInstance({
             id : dynamicObject,
             geometry : new EllipsoidGeometry(this._options),
-            attributes : attributes,
-            modelMatrix : this._modelMatrix
+            modelMatrix : Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch),
+            attributes : attributes
         });
     };
 
     EllipsoidGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
+        if (!this._outlineEnabled) {
+            throw new DeveloperError();
+        }
+
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
+
+        positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
+        orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
 
         return new GeometryInstance({
             id : dynamicObject,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : this._modelMatrix,
+            modelMatrix : Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
             }
         });
+    };
+
+    EllipsoidGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
     };
 
     EllipsoidGeometryUpdater.prototype.destroy = function() {
@@ -198,16 +241,16 @@ define(['../Core/Color',
         var ellipsoid = this._dynamicObject.ellipsoid;
 
         if (!defined(ellipsoid)) {
-            if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
                 this._outlineEnabled = false;
-                this._geometryType = GeometryBatchType.NONE;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
         }
 
         var fillProperty = ellipsoid.fill;
-        var isFilled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
+        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
         var outlineProperty = ellipsoid.outline;
         var outlineEnabled = defined(outlineProperty);
@@ -215,7 +258,12 @@ define(['../Core/Color',
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
         }
 
-        if (!isFilled && !outlineEnabled) {
+        if (!fillEnabled && !outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
+                this._outlineEnabled = false;
+                this._geometryChanged.raiseEvent(this);
+            }
             return;
         }
 
@@ -226,9 +274,9 @@ define(['../Core/Color',
         var show = ellipsoid.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
             (!defined(position) || !defined(orientation) || !defined(radii))) {
-            if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
                 this._outlineEnabled = false;
-                this._geometryType = GeometryBatchType.NONE;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
@@ -240,7 +288,9 @@ define(['../Core/Color',
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipsoid.outline, defaultOutline);
-        this._outlineColorProperty = defaultValue(ellipsoid.outlineColor, defaultOutlineColor);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(ellipsoid.outlineColor, defaultOutlineColor) : undefined;
+        this._fillEnabled = fillEnabled;
+        this._outlineEnabled = outlineEnabled;
 
         var stackPartitions = ellipsoid.stackPartitions;
         var slicePartitions = ellipsoid.slicePartitions;
@@ -252,8 +302,8 @@ define(['../Core/Color',
             defined(stackPartitions) && !stackPartitions.isConstant || //
             defined(slicePartitions) && !slicePartitions.isConstant || //
             defined(subdivisions) && !subdivisions.isConstant) {
-            if (this._geometryType !== GeometryBatchType.DYNAMIC) {
-                this._geometryType = GeometryBatchType.DYNAMIC;
+            if (!this._dynamic) {
+                this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
@@ -263,17 +313,20 @@ define(['../Core/Color',
             options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.subdivisions = defined(subdivisions) ? subdivisions.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-
-            positionScratch = position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
-            orientationScratch = orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
-            this._modelMatrix = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch);
-            this._outlineEnabled = outlineEnabled;
-            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_CLOSED : GeometryBatchType.MATERIAL_CLOSED;
+            this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
     };
 
     EllipsoidGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+        if (!this._dynamic) {
+            throw new DeveloperError();
+        }
+
+        if (!defined(primitives)) {
+            throw new DeveloperError();
+        }
+
         return new DynamicGeometryUpdater(primitives, this);
     };
 
@@ -286,6 +339,10 @@ define(['../Core/Color',
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
         var geometryUpdater = this._geometryUpdater;
 
         if (defined(this._primitive)) {
@@ -365,6 +422,10 @@ define(['../Core/Color',
             });
             this._primitives.add(this._outlinePrimitive);
         }
+    };
+
+    DynamicGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {

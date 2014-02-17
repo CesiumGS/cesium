@@ -13,7 +13,6 @@ define(['../Core/Color',
         '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
-        '../DynamicScene/GeometryBatchType',
         '../DynamicScene/MaterialProperty',
         '../Scene/PolylineMaterialAppearance',
         '../Scene/PolylineColorAppearance',
@@ -33,7 +32,6 @@ define(['../Core/Color',
         ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         ConstantProperty,
-        GeometryBatchType,
         MaterialProperty,
         PolylineMaterialAppearance,
         PolylineColorAppearance,
@@ -58,7 +56,8 @@ define(['../Core/Color',
 
         this._dynamicObject = dynamicObject;
         this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolylineGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
-        this._geometryType = GeometryBatchType.NONE;
+        this._fillEnabled = false;
+        this._dynamic = false;
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
@@ -76,14 +75,16 @@ define(['../Core/Color',
                 return this._dynamicObject;
             }
         },
-        geometryType : {
+        fillEnabled : {
             get : function() {
-                return this._geometryType;
+                return this._fillEnabled;
             }
         },
-        geometryChanged : {
+        hasConstantFill : {
             get : function() {
-                return this._geometryChanged;
+                return !this._fillEnabled ||
+                       (!defined(this._dynamicObject.availability) &&
+                        (!defined(this._showProperty) || this._showProperty.isConstant));
             }
         },
         fillMaterialProperty : {
@@ -96,11 +97,6 @@ define(['../Core/Color',
                 return false;
             }
         },
-        hasConstantFill : {
-            get : function() {
-                return true;
-            }
-        },
         hasConstantOutline : {
             get : function() {
                 return true;
@@ -110,6 +106,21 @@ define(['../Core/Color',
             get : function() {
                 return undefined;
             }
+        },
+        isDynamic : {
+            get : function() {
+                return this._dynamic;
+            }
+        },
+        isClosed : {
+            get : function() {
+                return false;
+            }
+        },
+        geometryChanged : {
+            get : function() {
+                return this._geometryChanged;
+            }
         }
     });
 
@@ -118,18 +129,30 @@ define(['../Core/Color',
     };
 
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
-        return true;
+        var dynamicObject = this._dynamicObject;
+        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time);
     };
 
     PolylineGeometryUpdater.prototype.createGeometryInstance = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
+        if (!this._fillEnabled) {
+            throw new DeveloperError();
+        }
+
         var color;
         var attributes;
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
 
-        if (this._geometryType === GeometryBatchType.COLOR_OPEN) {
-            var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
+        if (this._materialProperty instanceof ColorMaterialProperty) {
+            var currentColor = Color.WHITE;
+            if (defined(defined(this._materialProperty.color)) && (this._materialProperty.color.isConstant || isAvailable)) {
+                currentColor = this._materialProperty.color.getValue(time);
+            }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
@@ -152,6 +175,10 @@ define(['../Core/Color',
         throw new DeveloperError();
     };
 
+    PolylineGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
+    };
+
     PolylineGeometryUpdater.prototype.destroy = function() {
         this._dynamicObjectSubscription();
         destroyObject(this);
@@ -165,8 +192,8 @@ define(['../Core/Color',
         var polyline = this._dynamicObject.polyline;
 
         if (!defined(polyline)) {
-            if (this._geometryType !== GeometryBatchType.NONE) {
-                this._geometryType = GeometryBatchType.NONE;
+            if (this._fillEnabled) {
+                this._fillEnabled = false;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
@@ -177,8 +204,8 @@ define(['../Core/Color',
         var show = polyline.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
             (!defined(vertexPositions))) {
-            if (this._geometryType !== GeometryBatchType.NONE) {
-                this._geometryType = GeometryBatchType.NONE;
+            if (this._fillEnabled) {
+                this._fillEnabled = false;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
@@ -188,27 +215,45 @@ define(['../Core/Color',
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._showProperty = defaultValue(show, defaultShow);
+        this._fillEnabled = true;
 
         var width = polyline.width;
 
-        if (!vertexPositions.isConstant || //
-            defined(width) && !width.isConstant) {
-            if (this._geometryType !== GeometryBatchType.DYNAMIC) {
-                this._geometryType = GeometryBatchType.DYNAMIC;
+        if (!vertexPositions.isConstant || (defined(width) && !width.isConstant)) {
+            if (!this._dynamic) {
+                this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
             var options = this._options;
-            options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
-            options.positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
-            options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            var positions = vertexPositions.getValue(Iso8601.MINIMUM_VALUE, options.positions);
 
-            this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_OPEN : GeometryBatchType.MATERIAL_OPEN;
+            //Because of the way we currently handle reference properties,
+            //we can't automatically assume the positions are  always valid.
+            if (!defined(positions) || positions.length < 2) {
+                if (this._fillEnabled) {
+                    this._fillEnabled = false;
+                    this._geometryChanged.raiseEvent(this);
+                }
+                return;
+            }
+
+            options.vertexFormat = isColorMaterial ? PolylineColorAppearance.VERTEX_FORMAT : PolylineMaterialAppearance.VERTEX_FORMAT;
+            options.positions = positions;
+            options.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
     };
 
     PolylineGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+        if (!this._dynamic) {
+            throw new DeveloperError();
+        }
+
+        if (!defined(primitives)) {
+            throw new DeveloperError();
+        }
         return new DynamicGeometryUpdater(primitives, this);
     };
 
@@ -236,9 +281,17 @@ define(['../Core/Color',
 
         var options = this._options;
         var vertexPositions = dynamicObject.vertexPositions;
-        var width = polyline.width;
 
-        options.positions = vertexPositions.getValue(time, options.positions);
+        var positions = vertexPositions.getValue(time, options.positions);
+        //Because of the way we currently handle reference properties,
+        //we can't automatically assume the positions are  always valid.
+        if (!defined(positions) || positions.length < 2) {
+            return;
+        }
+
+        options.positions = positions;
+
+        var width = polyline.width;
         options.width = defined(width) ? width.getValue(time) : undefined;
 
         this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);

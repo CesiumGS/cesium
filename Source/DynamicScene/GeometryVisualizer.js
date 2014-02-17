@@ -7,8 +7,8 @@ define(['../Core/defined',
         '../Scene/PolylineColorAppearance',
         '../Scene/MaterialAppearance',
         '../Scene/PolylineMaterialAppearance',
+        './ColorMaterialProperty',
         './DynamicObjectCollection',
-        './GeometryBatchType',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch'
@@ -21,8 +21,8 @@ define(['../Core/defined',
         PolylineColorAppearance,
         MaterialAppearance,
         PolylineMaterialAppearance,
+        ColorMaterialProperty,
         DynamicObjectCollection,
-        GeometryBatchType,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch) {
@@ -105,13 +105,11 @@ define(['../Core/defined',
         this._changedObjects = new DynamicObjectCollection();
 
         this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
-
-        this._batches = [];
-        this._batches[GeometryBatchType.COLOR_CLOSED.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, true);
-        this._batches[GeometryBatchType.MATERIAL_CLOSED.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, true);
-        this._batches[GeometryBatchType.COLOR_OPEN.value] = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, false);
-        this._batches[GeometryBatchType.MATERIAL_OPEN.value] = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, false);
-        this._batches[GeometryBatchType.DYNAMIC.value] = new DynamicGeometryBatch(primitives);
+        this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, true);
+        this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, true);
+        this._openColorBatch = new StaticGeometryColorBatch(primitives, type.PerInstanceColorAppearanceType, false);
+        this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.MaterialAppearanceType, false);
+        this._dynamicBatch = new DynamicGeometryBatch(primitives);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
@@ -157,6 +155,43 @@ define(['../Core/defined',
         }
     };
 
+    function removeUpdater(that, updater) {
+        //We don't keep track of which batch an updater is in, so just remove it from all of them.
+        that._outlineBatch.remove(updater);
+        that._closedColorBatch.remove(updater);
+        that._closedMaterialBatch.remove(updater);
+        that._openColorBatch.remove(updater);
+        that._openMaterialBatch.remove(updater);
+        that._dynamicBatch.remove(updater);
+    }
+
+    function insertUpdaterIntoBatch(that, time, updater) {
+        if (updater.isDynamic) {
+            that._dynamicBatch.add(time, updater);
+            return;
+        }
+
+        if (updater.outlineEnabled) {
+            that._outlineBatch.add(time, updater);
+        }
+
+        if (updater.fillEnabled) {
+            if (updater.isClosed) {
+                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                    that._closedColorBatch.add(time, updater);
+                } else {
+                    that._closedMaterialBatch.add(time, updater);
+                }
+            } else {
+                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                    that._openColorBatch.add(time, updater);
+                } else {
+                    that._openMaterialBatch.add(time, updater);
+                }
+            }
+        }
+    }
+
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
@@ -181,20 +216,12 @@ define(['../Core/defined',
         var id;
         var updater;
         var batch;
-        var batches = this._batches;
-        var batchesLength = batches.length;
 
         for (i = removed.length - 1; i > -1; i--) {
             dynamicObject = removed[i];
             id = dynamicObject.id;
             updater = this._updaters.get(id);
-            batch = batches[updater.geometryType.value];
-            if (defined(batch)) {
-                batch.remove(updater);
-            }
-
-            this._outlineBatch.remove(updater);
-
+            removeUpdater(this, updater);
             updater.destroy();
             this._updaters.remove(id);
             this._subscriptions.get(id)();
@@ -206,15 +233,7 @@ define(['../Core/defined',
             id = dynamicObject.id;
             updater = new this._type(dynamicObject);
             this._updaters.set(id, updater);
-
-            batch = batches[updater.geometryType.value];
-            if (defined(batch)) {
-                batch.add(time, updater);
-            }
-
-            if (updater.outlineEnabled) {
-                this._outlineBatch.add(time, updater);
-            }
+            insertUpdaterIntoBatch(this, time, updater);
             this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometyChanged, this));
         }
 
@@ -222,31 +241,20 @@ define(['../Core/defined',
             dynamicObject = changed[i];
             id = dynamicObject.id;
             updater = this._updaters.get(id);
-            for (g = 0; g < batchesLength; g++) {
-                if (batches[g].remove(updater)) {
-                    break;
-                }
-            }
-            this._outlineBatch.remove(updater);
-
-            batch = batches[updater.geometryType.value];
-            if (defined(batch)) {
-                batch.add(time, updater);
-            }
-
-            if (updater.outlineEnabled) {
-                this._outlineBatch.add(time, updater);
-            }
+            removeUpdater(this, updater);
+            insertUpdaterIntoBatch(this, time, updater);
         }
 
         addedObjects.removeAll();
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        for (g = 0; g < batches.length; g++) {
-            batches[g].update(time);
-        }
         this._outlineBatch.update(time);
+        this._closedColorBatch.update(time);
+        this._closedMaterialBatch.update(time);
+        this._openColorBatch.update(time);
+        this._openMaterialBatch.update(time);
+        this._dynamicBatch.update(time);
     };
 
     /**
@@ -256,12 +264,12 @@ define(['../Core/defined',
         this._addedObjects.removeAll();
         this._removedObjects.removeAll();
 
-        var batches = this._batches;
-        var batchesLength = batches.length;
-        for (var g = 0; g < batchesLength; g++) {
-            batches[g].removeAllPrimitives();
-        }
         this._outlineBatch.removeAllPrimitives();
+        this._closedColorBatch.removeAllPrimitives();
+        this._closedMaterialBatch.removeAllPrimitives();
+        this._openColorBatch.removeAllPrimitives();
+        this._openMaterialBatch.removeAllPrimitives();
+        this._dynamicBatch.removeAllPrimitives();
 
         var subscriptions = this._subscriptions.values;
         var len = subscriptions.length;

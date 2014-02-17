@@ -16,12 +16,12 @@ define(['../Core/defineProperties', '../Core/DeveloperError'], function(definePr
                 DeveloperError.throwInstantiationError();
             }
         },
-        geometryType : {
+        fillEnabled : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
-        geometryChanged : {
+        hasConstantFill : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -36,17 +36,27 @@ define(['../Core/defineProperties', '../Core/DeveloperError'], function(definePr
                 DeveloperError.throwInstantiationError();
             }
         },
-        hasConstantFill : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
-        },
         hasConstantOutline : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
         },
         outlineColorProperty : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+        isDynamic : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+        isClosed : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+        geometryChanged : {
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
@@ -69,6 +79,10 @@ define(['../Core/defineProperties', '../Core/DeveloperError'], function(definePr
         DeveloperError.throwInstantiationError();
     };
 
+    GeometryUpdater.prototype.isDestroyed = function() {
+        DeveloperError.throwInstantiationError();
+    };
+
     GeometryUpdater.prototype.destroy = function() {
         DeveloperError.throwInstantiationError();
     };
@@ -82,6 +96,10 @@ define(['../Core/defineProperties', '../Core/DeveloperError'], function(definePr
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    DynamicGeometryUpdater.prototype.isDestroyed = function() {
         DeveloperError.throwInstantiationError();
     };
 

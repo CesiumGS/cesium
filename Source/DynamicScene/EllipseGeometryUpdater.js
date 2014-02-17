@@ -14,7 +14,6 @@ define(['../Core/Color',
         '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
-        '../DynamicScene/GeometryBatchType',
         '../DynamicScene/MaterialProperty',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -35,7 +34,6 @@ define(['../Core/Color',
         ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         ConstantProperty,
-        GeometryBatchType,
         MaterialProperty,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -69,11 +67,13 @@ define(['../Core/Color',
 
         this._dynamicObject = dynamicObject;
         this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(EllipseGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
-        this._geometryType = GeometryBatchType.NONE;
+        this._fillEnabled = false;
+        this._isClosed = false;
+        this._dynamic = false;
+        this._outlineEnabled = false;
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
-        this._outlineEnabled = false;
         this._hasConstantOutline = true;
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
@@ -91,14 +91,17 @@ define(['../Core/Color',
                 return this._dynamicObject;
             }
         },
-        geometryType : {
+        fillEnabled : {
             get : function() {
-                return this._geometryType;
+                return this._fillEnabled;
             }
         },
-        geometryChanged : {
+        hasConstantFill : {
             get : function() {
-                return this._geometryChanged;
+                return !this._fillEnabled ||
+                       (!defined(this._dynamicObject.availability) &&
+                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
+                        (!defined(this._fillProperty) || this._fillProperty.isConstant));
             }
         },
         fillMaterialProperty : {
@@ -111,34 +114,55 @@ define(['../Core/Color',
                 return this._outlineEnabled;
             }
         },
-        hasConstantFill : {
-            get : function() {
-                return !defined(this._dynamicObject.availability) && this._showProperty.isConstant && this._fillProperty.isConstant;
-            }
-        },
         hasConstantOutline : {
             get : function() {
-                return !defined(this._dynamicObject.availability) && this._showProperty.isConstant && this._showOutlineProperty.isConstant;
+                return !this._outlineEnabled ||
+                       (!defined(this._dynamicObject.availability) &&
+                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
+                        (!defined(this._showOutlineProperty) || this._showOutlineProperty.isConstant));
             }
         },
         outlineColorProperty : {
             get : function() {
                 return this._outlineColorProperty;
             }
+        },
+        isDynamic : {
+            get : function() {
+                return this._dynamic;
+            }
+        },
+        isClosed : {
+            get : function() {
+                return this._isClosed;
+            }
+        },
+        geometryChanged : {
+            get : function() {
+                return this._geometryChanged;
+            }
         }
     });
 
     EllipseGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var dynamicObject = this._dynamicObject;
-        return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return this._outlineEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
     EllipseGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
-        return dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
     EllipseGeometryUpdater.prototype.createGeometryInstance = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
+        if (!this._fillEnabled) {
+            throw new DeveloperError();
+        }
+
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
 
@@ -146,8 +170,11 @@ define(['../Core/Color',
 
         var color;
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
-        if (this._geometryType === GeometryBatchType.COLOR_OPEN || this._geometryType === GeometryBatchType.COLOR_CLOSED) {
-            var currentColor = (isAvailable && defined(this._materialProperty.color)) ? this._materialProperty.color.getValue(time) : Color.WHTE;
+        if (this._materialProperty instanceof ColorMaterialProperty) {
+            var currentColor = Color.WHITE;
+            if (defined(defined(this._materialProperty.color)) && (this._materialProperty.color.isConstant || isAvailable)) {
+                currentColor = this._materialProperty.color.getValue(time);
+            }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
             attributes = {
                 show : show,
@@ -167,6 +194,14 @@ define(['../Core/Color',
     };
 
     EllipseGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
+        if (!this._outlineEnabled) {
+            throw new DeveloperError();
+        }
+
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
 
@@ -178,6 +213,10 @@ define(['../Core/Color',
                 color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
             }
         });
+    };
+
+    EllipseGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
     };
 
     EllipseGeometryUpdater.prototype.destroy = function() {
@@ -193,16 +232,16 @@ define(['../Core/Color',
         var ellipse = this._dynamicObject.ellipse;
 
         if (!defined(ellipse)) {
-            if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
                 this._outlineEnabled = false;
-                this._geometryType = GeometryBatchType.NONE;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
         }
 
         var fillProperty = ellipse.fill;
-        var isFilled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
+        var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
         var outlineProperty = ellipse.outline;
         var outlineEnabled = defined(outlineProperty);
@@ -210,7 +249,12 @@ define(['../Core/Color',
             outlineEnabled = outlineProperty.getValue(Iso8601.MINIMUM_VALUE);
         }
 
-        if (!isFilled && !outlineEnabled) {
+        if (!fillEnabled && !outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
+                this._outlineEnabled = false;
+                this._geometryChanged.raiseEvent(this);
+            }
             return;
         }
 
@@ -221,9 +265,9 @@ define(['../Core/Color',
         var show = ellipse.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
             (!defined(position) || !defined(semiMajorAxis) || !defined(semiMinorAxis))) {
-            if (this._geometryType !== GeometryBatchType.NONE || this._outlineEnabled) {
+            if (this._fillEnabled || this._outlineEnabled) {
+                this._fillEnabled = false;
                 this._outlineEnabled = false;
-                this._geometryType = GeometryBatchType.NONE;
                 this._geometryChanged.raiseEvent(this);
             }
             return;
@@ -235,7 +279,7 @@ define(['../Core/Color',
         this._fillProperty = defaultValue(fillProperty, defaultFill);
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(ellipse.outline, defaultOutline);
-        this._outlineColorProperty = defaultValue(ellipse.outlineColor, defaultOutlineColor);
+        this._outlineColorProperty = outlineEnabled ? defaultValue(ellipse.outlineColor, defaultOutlineColor) : undefined;
 
         var rotation = ellipse.rotation;
         var height = ellipse.height;
@@ -243,6 +287,10 @@ define(['../Core/Color',
         var granularity = ellipse.granularity;
         var stRotation = ellipse.stRotation;
         var numberOfVerticalLines = ellipse.numberOfVerticalLines;
+
+        this._isClosed = defined(extrudedHeight);
+        this._fillEnabled = fillEnabled;
+        this._outlineEnabled = outlineEnabled;
 
         if (!position.isConstant || //
             !semiMajorAxis.isConstant || //
@@ -253,8 +301,8 @@ define(['../Core/Color',
             defined(granularity) && !granularity.isConstant || //
             defined(stRotation) && !stRotation.isConstant || //
             defined(numberOfVerticalLines) && !numberOfVerticalLines.isConstant) {
-            if (this._geometryType !== GeometryBatchType.DYNAMIC) {
-                this._geometryType = GeometryBatchType.DYNAMIC;
+            if (!this._dynamic) {
+                this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
             }
         } else {
@@ -269,19 +317,20 @@ define(['../Core/Color',
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.numberOfVerticalLines = defined(numberOfVerticalLines) ? numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-
-            var isClosed = defined(options.extrudedHeight);
-            if (isClosed) {
-                this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_CLOSED : GeometryBatchType.MATERIAL_CLOSED;
-            } else {
-                this._geometryType = isColorMaterial ? GeometryBatchType.COLOR_OPEN : GeometryBatchType.MATERIAL_OPEN;
-            }
-            this._outlineEnabled = outlineEnabled;
+            this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
     };
 
     EllipseGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+        if (!this._dynamic) {
+            throw new DeveloperError();
+        }
+
+        if (!defined(primitives)) {
+            throw new DeveloperError();
+        }
+
         return new DynamicGeometryUpdater(primitives, this);
     };
 
@@ -294,6 +343,10 @@ define(['../Core/Color',
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
+        if (!defined(time)) {
+            throw new DeveloperError();
+        }
+
         var geometryUpdater = this._geometryUpdater;
 
         if (defined(this._primitive)) {
@@ -376,6 +429,10 @@ define(['../Core/Color',
             });
             this._primitives.add(this._outlinePrimitive);
         }
+    };
+
+    DynamicGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
     };
 
     DynamicGeometryUpdater.prototype.destroy = function() {
