@@ -74,7 +74,7 @@ define([
         }
 
         var that = this;
-        var canvas = scene.getCanvas();
+        var canvas = scene.canvas;
         canvas.parentNode.appendChild(performanceContainer);
         this._scene = scene;
         this._canvas = canvas;
@@ -83,7 +83,7 @@ define([
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
 
-        var centralBody = this._scene.getPrimitives().getCentralBody();
+        var centralBody = this._scene.primitives.centralBody;
         centralBody.depthTestAgainstTerrain = true;
 
         /**
@@ -302,9 +302,9 @@ define([
             if (that.primitiveReferenceFrame) {
                 var modelMatrix = that._primitive.modelMatrix;
                 that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
-                that._scene.getPrimitives().add(that._modelMatrixPrimitive);
+                that._scene.primitives.add(that._modelMatrixPrimitive);
             } else if (defined(that._modelMatrixPrimitive)){
-                that._scene.getPrimitives().remove(that._modelMatrixPrimitive);
+                that._scene.primitives.remove(that._modelMatrixPrimitive);
                 that._modelMatrixPrimitive = undefined;
             }
             return true;
@@ -342,11 +342,11 @@ define([
         var tileBoundariesLayer;
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new TileCoordinatesImageryProvider({
+                tileBoundariesLayer = centralBody.imageryLayerCollection.addImageryProvider(new TileCoordinatesImageryProvider({
                     tilingScheme : centralBody.terrainProvider.getTilingScheme()
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
-                centralBody.getImageryLayers().remove(tileBoundariesLayer);
+                centralBody.imageryLayerCollection.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
             return true;
@@ -409,8 +409,8 @@ define([
 
         var selectTile = function (e) {
             var selectedTile;
-            var ellipsoid = centralBody.getEllipsoid();
-            var cartesian = that._scene.getCamera().controller.pickEllipsoid({x: e.clientX, y: e.clientY}, ellipsoid);
+            var ellipsoid = centralBody.ellipsoid;
+            var cartesian = that._scene.camera.controller.pickEllipsoid({x: e.clientX, y: e.clientY}, ellipsoid);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
@@ -743,7 +743,7 @@ define([
                     }
                     this._scene.debugCommandFilter = undefined;
                     if (defined(this._modelMatrixPrimitive)) {
-                        this._scene.getPrimitives().remove(this._modelMatrixPrimitive);
+                        this._scene.primitives.remove(this._modelMatrixPrimitive);
                         this._modelMatrixPrimitive = undefined;
                     }
                     this._primitive = newPrimitive;

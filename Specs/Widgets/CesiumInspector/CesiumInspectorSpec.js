@@ -20,8 +20,8 @@ defineSuite([
         scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var cb = new CentralBody(ellipsoid);
-        var primitives = scene.getPrimitives();
-        primitives.setCentralBody(cb);
+        var primitives = scene.primitives;
+        primitives.centralBody = cb;
 
     });
 
