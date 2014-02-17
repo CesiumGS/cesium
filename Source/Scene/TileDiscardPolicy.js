@@ -16,7 +16,7 @@ define([
      * @see NeverTileDiscardPolicy
      */
     var TileDiscardPolicy = function(description) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -24,7 +24,7 @@ define([
      * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
      */
     TileDiscardPolicy.prototype.isReady = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -35,7 +35,7 @@ define([
      * @returns {Boolean} A promise that will resolve to true if the tile should be discarded.
      */
     TileDiscardPolicy.prototype.shouldDiscardImage = function(image) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     return TileDiscardPolicy;

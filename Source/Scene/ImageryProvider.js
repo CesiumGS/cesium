@@ -116,7 +116,7 @@ define([
          */
         this.defaultGamma = undefined;
 
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -125,7 +125,7 @@ define([
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
     ImageryProvider.prototype.isReady = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -137,7 +137,7 @@ define([
      * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getExtent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -149,7 +149,7 @@ define([
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileWidth = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -161,7 +161,7 @@ define([
      * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileHeight = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -173,7 +173,7 @@ define([
      * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getMaximumLevel = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -189,7 +189,7 @@ define([
      * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getMinimumLevel = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -203,7 +203,7 @@ define([
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTilingScheme = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -222,7 +222,7 @@ define([
      * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileDiscardPolicy = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -235,7 +235,7 @@ define([
      * @returns {Event} The event.
      */
     ImageryProvider.prototype.getErrorEvent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -247,7 +247,7 @@ define([
      * @returns {Credit} The credit, or undefined if no credit exists
      */
     ImageryProvider.prototype.getCredit = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -260,7 +260,7 @@ define([
      * @see DefaultProxy
      */
     ImageryProvider.prototype.getProxy = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -277,7 +277,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -298,7 +298,7 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     ImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**

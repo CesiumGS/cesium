@@ -2,10 +2,6 @@
 define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
      * Base interface for objects which can store their values as packed
      * elements in an array.
@@ -31,7 +27,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Array} array The array to pack into.
          * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
          */
-        pack : throwInstantiationError,
+        pack : DeveloperError.throwInstantiationError,
 
         /**
          * Retrieves an instance from a packed array.
@@ -42,7 +38,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
          * @param {Object} [result] The object into which to store the result.
          */
-        unpack : throwInstantiationError
+        unpack : DeveloperError.throwInstantiationError
     };
 
     return Packable;

@@ -34,7 +34,7 @@ define([
      * @returns {Ellipsoid} The ellipsoid.
      */
     TilingScheme.prototype.getEllipsoid = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -45,7 +45,7 @@ define([
      * @returns {Extent} The extent.
      */
     TilingScheme.prototype.getExtent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -56,7 +56,7 @@ define([
      * @returns {Projection} The map projection.
      */
     TilingScheme.prototype.getProjection = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -68,7 +68,7 @@ define([
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
     TilingScheme.prototype.getNumberOfXTilesAtLevel = function(level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -80,7 +80,7 @@ define([
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
     TilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -92,7 +92,7 @@ define([
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
     TilingScheme.prototype.createLevelZeroTiles = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -108,7 +108,7 @@ define([
      *          is undefined.
      */
     TilingScheme.prototype.extentToNativeExtent = function(extent, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -127,7 +127,7 @@ define([
      *          if 'result' is undefined.
      */
     TilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -145,7 +145,7 @@ define([
      *          if 'result' is undefined.
      */
     TilingScheme.prototype.tileXYToExtent = function(x, y, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -163,7 +163,7 @@ define([
      *          if 'result' is undefined.
      */
     TilingScheme.prototype.positionToTileXY = function(position, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**

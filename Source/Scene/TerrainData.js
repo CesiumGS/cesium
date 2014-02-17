@@ -16,7 +16,7 @@ define([
      * @see QuantizedMeshTerrainData
      */
     var TerrainData = function TerrainData() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -32,7 +32,7 @@ define([
      *          incorrect for positions far outside the extent.
      */
     TerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -50,7 +50,7 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     TerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -63,7 +63,7 @@ define([
      *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
      */
     TerrainData.prototype.getWaterMask = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -80,7 +80,7 @@ define([
      *          be retried later.
      */
     TerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -101,7 +101,7 @@ define([
      *          deferred.
      */
     TerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
@@ -115,7 +115,7 @@ define([
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
      */
     TerrainData.prototype.wasCreatedByUpsampling = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     return TerrainData;
