@@ -26,7 +26,7 @@ define(['./defined',
          *
          * @type {Number}
          */
-        count : {
+        length : {
             get : function() {
                 return this._array.length;
             }
@@ -95,10 +95,11 @@ define(['./defined',
         }
         //>>includeEnd('debug');
 
-        var hasValue = defined(this._hash[key]);
+        var value = this._hash[key];
+        var hasValue = defined(value);
         if (hasValue) {
             var array = this._array;
-            array.splice(array.indexOf(this._hash[key]), 1);
+            array.splice(array.indexOf(value), 1);
             this._hash[key] = undefined;
         }
         return hasValue;
