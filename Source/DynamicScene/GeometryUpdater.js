@@ -9,15 +9,14 @@ define(['../Core/defineProperties',
     /**
      * Defines the interface for a geometry updater.  A GeometryUpdater maps
      * geometry defined as part of a {@link DynamicObject} into {@link Geometry}
-     * and {@link Appearance} instances.  These instances are then visualized by
-     * {@link GeometryVisualizer}.
+     * instances.  These instances are then visualized by {@link GeometryVisualizer}.
      *
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias GeometryUpdater
      * @constructor
      *
-     * @param {DynamicObject} dynamicObject The instance containing the geometry to be visualized.
+     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
      *
      * @see EllipseGeometryUpdater
      * @see EllipsoidGeometryUpdater
@@ -30,7 +29,7 @@ define(['../Core/defineProperties',
 
     defineProperties(GeometryUpdater, {
         /**
-         * Gets the type of Appearance to use for simple color-based material geometry.
+         * Gets the type of Appearance to use for simple color-based geometry.
          * @memberof GeometryUpdater
          * @type {Appearance}
          */
@@ -117,6 +116,7 @@ define(['../Core/defineProperties',
         },
         /**
          * Gets a value indicating if the geometry is closed.
+         * This property is only valid for static geometry.
          * @memberof GeometryUpdater.prototype
          * @type {Boolean}
          */
@@ -137,6 +137,7 @@ define(['../Core/defineProperties',
     /**
      * Checks if the geometry is outlined at the provided time.
      * @memberof GeometryUpdater
+     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
@@ -146,6 +147,7 @@ define(['../Core/defineProperties',
     /**
      * Checks if the geometry is filled at the provided time.
      * @memberof GeometryUpdater
+     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
@@ -155,6 +157,7 @@ define(['../Core/defineProperties',
     /**
      * Creates the geometry instance which represents the fill of the geometry.
      * @memberof GeometryUpdater
+     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
@@ -166,6 +169,7 @@ define(['../Core/defineProperties',
     /**
      * Creates the geometry instance which represents the outline of the geometry.
      * @memberof GeometryUpdater
+     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
@@ -177,6 +181,7 @@ define(['../Core/defineProperties',
     /**
      * Returns true if this object was destroyed; otherwise, false.
      * @memberof GeometryUpdater
+     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -185,6 +190,7 @@ define(['../Core/defineProperties',
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
      * @memberof GeometryUpdater
+     * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
@@ -193,6 +199,7 @@ define(['../Core/defineProperties',
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      * @memberof GeometryUpdater
+     * @function
      *
      * @param {CompositePrimitive} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.

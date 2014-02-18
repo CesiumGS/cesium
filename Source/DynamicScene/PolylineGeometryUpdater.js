@@ -40,7 +40,6 @@ define(['../Core/Color',
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
-    var defaultFill = new ConstantProperty(true);
 
     var GeometryOptions = function(dynamicObject) {
         this.id = dynamicObject;
@@ -50,9 +49,11 @@ define(['../Core/Color',
     };
 
     var PolylineGeometryUpdater = function(dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required');
         }
+        //>>includeEnd('debug');
 
         this._dynamicObject = dynamicObject;
         this._dynamicObjectSubscription = dynamicObject.definitionChanged.addEventListener(PolylineGeometryUpdater.prototype._onDynamicObjectPropertyChanged, this);
@@ -134,13 +135,15 @@ define(['../Core/Color',
     };
 
     PolylineGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError();
+            throw new DeveloperError('time is required.');
         }
 
         if (!this._fillEnabled) {
-            throw new DeveloperError();
+            throw new DeveloperError('This instance does not represent a filled geometry.');
         }
+        //>>includeEnd('debug');
 
         var color;
         var attributes;
@@ -172,7 +175,9 @@ define(['../Core/Color',
     };
 
     PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
-        throw new DeveloperError();
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('This instance does not represent an outlined geometry.');
+        //>>includeEnd('debug');
     };
 
     PolylineGeometryUpdater.prototype.isDestroyed = function() {
@@ -247,6 +252,7 @@ define(['../Core/Color',
     };
 
     PolylineGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+        //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
         }
@@ -254,6 +260,7 @@ define(['../Core/Color',
         if (!defined(primitives)) {
             throw new DeveloperError('primitives is required.');
         }
+        //>>includeEnd('debug');
 
         return new DynamicGeometryUpdater(primitives, this);
     };
