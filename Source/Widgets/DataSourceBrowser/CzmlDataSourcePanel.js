@@ -3,6 +3,7 @@ define([
         '../../Core/createGuid',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/getFilenameFromUri',
         '../../DynamicScene/CzmlDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
@@ -10,6 +11,7 @@ define([
         createGuid,
         defined,
         defineProperties,
+        getFilenameFromUri,
         CzmlDataSource,
         knockout,
         when) {
@@ -88,13 +90,11 @@ define([
             return false;
         }
 
-        var dataSource = new CzmlDataSource();
-        return when(dataSource.loadUrl(url), function() {
-            dataSourceCollection.add(dataSource);
-            return true;
-        }, function(error) {
-            return when.reject(error);
-        });
+        var dataSource = new CzmlDataSource(getFilenameFromUri(url));
+        dataSource.loadUrl(url);
+        dataSourceCollection.add(dataSource);
+
+        return true;
     };
 
     return CzmlDataSourcePanel;

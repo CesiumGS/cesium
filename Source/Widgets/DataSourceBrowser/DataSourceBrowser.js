@@ -20,6 +20,7 @@ define([
     "use strict";
 
     var DataSourceBrowser = function(container, dataSourceCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -27,13 +28,11 @@ define([
         if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
 
-        this._container = container;
-
         var viewModel = new DataSourceBrowserViewModel(dataSourceCollection);
-        this._viewModel = viewModel;
 
         // This is the main element of the widget.
         var element = document.createElement('div');
@@ -43,7 +42,8 @@ define([
         var layerButton = document.createElement('div');
         layerButton.className = 'cesium-dataSourceBrowser-layerButton cesium-button cesium-toolbar-button';
         layerButton.innerHTML = '&raquo;';
-        layerButton.setAttribute('data-bind', 'click: toggleVisibility,\
+        layerButton.setAttribute('data-bind', '\
+click: toggleVisibility,\
 css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         element.appendChild(layerButton);
 
@@ -52,21 +52,23 @@ css: { "cesium-dataSourceBrowser-layerButton-hidden" : visible }');
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
         templateElement.id = templateID;
-        templateElement.textContent = '<li \
-data-bind="css : { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+        templateElement.textContent = '\
+<li data-bind="css: { \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <!-- ko if: hasChildren -->\
-<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
+<div data-bind="css: { \'cesium-dataSourceBrowser-item-collapsed\': !expanded }">\
 <span class="cesium-dataSourceBrowser-item" data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="html: expandIndicator, click: toggleExpanded"></span>\
-    <span data-bind="event: { dblclick: doubleClick}, click: select, text: displayName, attr: { title: displayName }"></span></span>\
-<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
+  <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+  <span data-bind="html: expandIndicator, click: toggleExpanded"></span>\
+  <span data-bind="event: { dblclick: doubleClick }, click: select, text: displayName, attr: { title: displayName }"></span>\
+</span>\
+<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul>\
+</div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <div>\
 <span class="cesium-dataSourceBrowser-item" data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
     <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="event: { dblclick: doubleClick}, click: select, text: displayName, attr: { title: displayName }"></span>\
+    <span data-bind="event: { dblclick: doubleClick }, click: select, text: displayName, attr: { title: displayName }"></span>\
 </span>\
 </div>\
 <!-- /ko -->';
@@ -89,7 +91,8 @@ css: { "cesium-dataSourceBrowser-dataSourcesContainer-visible" : visible,\
         var dataSourcesContainerHide = document.createElement('div');
         dataSourcesContainerHide.className = 'cesium-dataSourceBrowser-dataSourcesContainerHide cesium-dataSourceBrowser-button';
         dataSourcesContainerHide.innerHTML = '&laquo;';
-        dataSourcesContainerHide.setAttribute('data-bind', 'click: toggleVisibility');
+        dataSourcesContainerHide.setAttribute('data-bind', '\
+click: toggleVisibility');
         dataSourcesContainer.appendChild(dataSourcesContainerHide);
 
         // Add button to reveal the add data source panel.
@@ -121,78 +124,85 @@ valueUpdate: \'afterkeydown\'');
         // Info message, if there are no data sources.
         var dataSourcesInfo = document.createElement('div');
         dataSourcesInfo.className = 'cesium-dataSourceBrowser-dataSourcesInfo';
-        dataSourcesInfo.setAttribute('data-bind', 'text: infoText');
+        dataSourcesInfo.setAttribute('data-bind', '\
+text: infoText');
         dataSourcesContainerHeader.appendChild(dataSourcesInfo);
 
         // This is the container for the complete list of data sources.
         var dataSourcesContainerBody = document.createElement('div');
         dataSourcesContainerBody.className = 'cesium-dataSourceBrowser-dataSourcesContainerBody';
         dataSourcesContainerBody.setAttribute('data-bind', '\
-style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "block" : "none") },');
+style: { maxHeight : maxHeightOffset(40),\
+         display : dataSourcesLength > 0 ? "block" : "none" }');
         dataSourcesContainer.appendChild(dataSourcesContainerBody);
 
         // The root UL of the actual list of data sources, that uses the template.
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
-        dataSourcesRootElement.setAttribute('data-bind', 'foreach: dataSourceViewModels');
+        dataSourcesRootElement.setAttribute('data-bind', '\
+foreach: dataSourceViewModels');
         dataSourcesContainerBody.appendChild(dataSourcesRootElement);
 
         // The template LI of a prototype data source.
         var dataSourceListItem = document.createElement('li');
         dataSourceListItem.innerHTML = '\
 <!-- ko if: hasChildren -->\
-<div data-bind="css : { \'cesium-dataSourceBrowser-item-collapsed\': !expanded,\
-                        \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+<div data-bind="css: { \'cesium-dataSourceBrowser-item-collapsed\': !expanded,\
+                       \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
-    data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected }">\
-    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="click: toggleExpanded, html: expandIndicator"></span>\
-    <span data-bind="click: toggleExpanded, text: displayName"></span>\
-    <span class="cesium-dataSourceBrowser-item-buttons">\
-        <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
-            data-bind="visible: !isSoleSource || !clockTracking, \
-                       click: trackClock, \
-                       clickBubble: false, \
-                       cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
-                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
-        <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
-            data-bind="visible: configure.canExecute, \
-                       click: configure, \
-                       clickBubble: false, \
-                       cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
-                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
-    </span>\
-    <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
-        data-bind="click: remove">&times;</span></span>\
-<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul></div>\
+      data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
+                        \'cesium-dataSourceBrowser-item-loading\': isLoading }">\
+  <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+  <span data-bind="click: toggleExpanded, html: expandIndicator"></span>\
+  <span data-bind="click: toggleExpanded, text: displayName"></span>\
+  <span class="cesium-dataSourceBrowser-item-loadingIndicator"></span>\
+  <span class="cesium-dataSourceBrowser-item-buttons">\
+    <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+          data-bind="visible: !isSoleSource || !clockTracking, \
+                     click: trackClock, \
+                     clickBubble: false, \
+                     cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
+                     css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
+    <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+          data-bind="visible: configure.canExecute, \
+                     click: configure, \
+                     clickBubble: false, \
+                     cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
+                     css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
+  </span>\
+  <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
+        data-bind="click: remove">&times;</span>\
+</span>\
+<ul data-bind="template: { if: expanded, name: \'' + templateID + '\', foreach: children }"></ul>\
+</div>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
 <span class="cesium-dataSourceBrowser-item cesium-dataSourceBrowser-dataSource" \
-    data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
-                      \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
-    <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
-    <span data-bind="text: displayName"></span>\
-    <span class="cesium-dataSourceBrowser-item-buttons">\
-        <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
-            data-bind="visible: !isSoleSource || !clockTracking, \
-                       click: trackClock, \
-                       clickBubble: false, \
-                       cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
-                       css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
-        <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
-            data-bind="visible: configure.canExecute, \
-                       click: configure, \
-                       clickBubble: false, \
-                       cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
-                       css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
-    </span>\
-    <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
-        data-bind="click: remove">&times;</span></span>\
+      data-bind="css: { \'cesium-dataSourceBrowser-item-selected\': isSelected,\
+                        \'cesium-dataSourceBrowser-item-excluded\' : isFilteredOut }">\
+  <label><input type="checkbox" data-bind="checked: uiShow"><span></span></label>\
+  <span data-bind="text: displayName"></span>\
+  <span class="cesium-dataSourceBrowser-item-buttons">\
+    <span class="cesium-button cesium-dataSourceBrowser-item-clock cesium-dataSourceBrowser-button" \
+          data-bind="visible: !isSoleSource || !clockTracking, \
+                     click: trackClock, \
+                     clickBubble: false, \
+                     cesiumSvgPath: { path: _clockPath, width: 32, height: 32 },\
+                     css: { \'cesium-dataSourceBrowser-clock-selected\': clockTracking }"></span>\
+    <span class="cesium-button cesium-dataSourceBrowser-item-configure cesium-dataSourceBrowser-button" \
+          data-bind="visible: configure.canExecute, \
+                     click: configure, \
+                     clickBubble: false, \
+                     cesiumSvgPath: { path: _configurePath, width: 32, height: 32 },\
+                     css: { \'cesium-dataSourceBrowser-configure-selected\': isConfiguring }"></span>\
+  </span>\
+  <span class="cesium-dataSourceBrowser-item-remove cesium-dataSourceBrowser-button" \
+        data-bind="click: remove">&times;</span>\
+</span>\
 <!-- /ko -->';
         dataSourcesRootElement.appendChild(dataSourceListItem);
 
         container.appendChild(element);
-        this._element = element;
 
         // === Add Data Source Panel ===
 
@@ -203,7 +213,6 @@ style : { maxHeight : maxHeightOffset(40), display : (dataSourcesLength > 0 ? "b
 with: dataSourcePanelViewModel,\
 css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourcePanelViewModel.visible }');
         container.appendChild(dataSourcePanelContainer);
-        this._dataSourcePanelContainer = dataSourcePanelContainer;
 
         // The header of the add new data source panel.
         var dataSourcePanelHeader = document.createElement('div');
@@ -321,6 +330,11 @@ click: doneCommand');
 
         knockout.applyBindings(viewModel, element);
         knockout.applyBindings(viewModel, dataSourcePanelContainer);
+
+        this._container = container;
+        this._viewModel = viewModel;
+        this._element = element;
+        this._dataSourcePanelContainer = dataSourcePanelContainer;
     };
 
     defineProperties(DataSourceBrowser.prototype, {
@@ -363,10 +377,13 @@ click: doneCommand');
      * @memberof DataSourceBrowser
      */
     DataSourceBrowser.prototype.destroy = function() {
-        var container = this._container;
-        knockout.cleanNode(container);
-        container.removeChild(this._element);
-        container.removeChild(this._dataSourcePanelContainer);
+        this._viewModel.destroy();
+
+        knockout.cleanNode(this._element);
+        knockout.cleanNode(this._dataSourcePanelContainer);
+        this._container.removeChild(this._element);
+        this._container.removeChild(this._dataSourcePanelContainer);
+
         return destroyObject(this);
     };
 

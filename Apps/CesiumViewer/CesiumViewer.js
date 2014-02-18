@@ -118,9 +118,9 @@ define([
             }
 
             if (defined(source)) {
-                source.loadUrl(endUserOptions.source).then(function() {
-                    viewer.dataSources.add(source);
+                viewer.dataSources.add(source);
 
+                source.loadUrl(endUserOptions.source).then(function() {
                     if (defined(endUserOptions.lookAt)) {
                         var dynamicObject = source.getDynamicObjectCollection().getById(endUserOptions.lookAt);
                         if (defined(dynamicObject)) {

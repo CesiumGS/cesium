@@ -179,33 +179,32 @@ define([
     });
 
     ListDataSourcePanel.prototype.finish = function(dataSourceCollection) {
-        if (!defined(this.viewModel.selectedItem)) {
+        var selectedItem = this.viewModel.selectedItem;
+
+        if (!defined(selectedItem)) {
             return false;
         }
-        var url = this.viewModel.selectedItem.url;
+
+        var url = selectedItem.url;
         if (url === '') {
             return false;
         }
 
-        var format = this.viewModel.selectedItem.format;
         var dataSource;
-        switch(format) {
+        switch (selectedItem.format) {
         case 'czml':
-            dataSource = new CzmlDataSource();
+            dataSource = new CzmlDataSource(selectedItem.name);
             break;
         case 'json':
-            dataSource = new GeoJsonDataSource();
+            dataSource = new GeoJsonDataSource(selectedItem.name);
             break;
         default:
             return false;
         }
 
-        return when(dataSource.loadUrl(url), function() {
-            dataSourceCollection.add(dataSource);
-            return true;
-        }, function(error) {
-            return when.reject(error);
-        });
+        dataSource.loadUrl(url);
+        dataSourceCollection.add(dataSource);
+        return true;
     };
 
     return ListDataSourcePanel;

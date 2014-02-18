@@ -3,6 +3,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/EventHelper',
@@ -16,6 +17,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Event,
         EventHelper,
@@ -38,9 +40,11 @@ define([
      * @exception {DeveloperError} dataSourceCollection is required.
      */
     var DataSourceBrowserViewModel = function(dataSourceCollection, dataSourcePanels) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+        //>>includeEnd('debug');
 
         this._dataSourceCollection = dataSourceCollection;
 
@@ -67,6 +71,7 @@ define([
 
         /**
          * Gets or sets the maximum height of the widget in pixels.  This property is observable.
+         *
          * @type {Number}
          */
         this.maxHeight = 500;
@@ -99,8 +104,9 @@ define([
         knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels',
                               'maxHeight', 'visible', '_dataSourcesLength', 'searchText']);
 
-        this.selectedViewModel = undefined;
         var selectedViewModel = knockout.observable();
+
+        this.selectedViewModel = undefined;
         knockout.defineProperty(this, 'selectedViewModel', {
             get : function() {
                 return selectedViewModel();
@@ -108,16 +114,17 @@ define([
             set : function(value) {
                 selectedViewModel(value);
                 if (defined(value) && defined(value.dynamicObject)) {
-                    that._onObjectSelected.raiseEvent(value.dynamicObject);
+                    this._onObjectSelected.raiseEvent(value.dynamicObject);
                 }
             }
         });
 
         /**
-         * Gets he current search text as a regular expression.
+         * Gets the current search text as a regular expression.
          *
          * @type String
          */
+        this.searchTextRegex = undefined;
         knockout.defineProperty(this, 'searchTextRegex', {
             get : function() {
                 if (defined(this.searchText)) {
@@ -130,8 +137,9 @@ define([
             throttle : 10
         });
 
-        this.clockTrackedDataSource = undefined;
         var clockTrackedDataSource = knockout.observable();
+
+        this.clockTrackedDataSource = undefined;
         knockout.defineProperty(this, 'clockTrackedDataSource', {
             get : function() {
                 return clockTrackedDataSource();
@@ -140,7 +148,7 @@ define([
                 if (clockTrackedDataSource() !== dataSource) {
                     clockTrackedDataSource(dataSource);
                     if (defined(dataSource)) {
-                        that._onClockSelected.raiseEvent(dataSource);
+                        this._onClockSelected.raiseEvent(dataSource);
                     }
                 }
             }
@@ -153,11 +161,12 @@ define([
          */
         this.dataSourceViewModels = undefined;
         knockout.defineProperty(this, 'dataSourceViewModels', function() {
-            return that._dataSourceViewModels;
+            return this._dataSourceViewModels;
         });
 
         /**
          * Gets the number of data sources.  This property is observable.
+         *
          * @type {Number}
          */
         this.dataSourcesLength = undefined;
@@ -167,6 +176,7 @@ define([
 
         /**
          * Gets a message if there are no data sources.  This property is observable.
+         *
          * @type {String}
          */
         this.infoText = undefined;
@@ -174,7 +184,7 @@ define([
             return this._dataSourceViewModels.length > 0 ? '' : 'Empty globe.';
         });
 
-        for ( var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+        for (var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
     };
@@ -266,7 +276,7 @@ define([
 
         // If any child is visible, we must be visible.
         var len = node.children.length;
-        for ( var i = 0; i < len; ++i) {
+        for (var i = 0; i < len; ++i) {
             var kidFilteredOut = node.children[i].isFilteredOut;
             if (!kidFilteredOut) {
                 return false;
@@ -311,8 +321,26 @@ define([
         }
     };
 
+    /**
+     * @memberof DataSourceBrowserViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    DataSourceBrowserViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the view model.  Should be called to
+     * properly clean up the view model when it is no longer needed.
+     * @memberof DataSourceBrowserViewModel
+     */
     DataSourceBrowserViewModel.prototype.destroy = function() {
+        this._dataSourcePanelViewModel.destroy();
+        this._dataSourceConfigurationPanelViewModel.destroy();
+
         this._eventHelper.removeAll();
+
+        destroyObject(this);
     };
 
     function insertIntoTree(browserViewModel, rootViewModel, object, dataSourceViewModelHash, dataSource) {

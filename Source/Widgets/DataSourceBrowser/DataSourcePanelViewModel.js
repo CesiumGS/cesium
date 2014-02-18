@@ -154,6 +154,7 @@ define([
      */
     DataSourcePanelViewModel.prototype.destroy = function() {
         this._activeDataSourcePanelSubscription.dispose();
+
         destroyObject(this);
     };
 

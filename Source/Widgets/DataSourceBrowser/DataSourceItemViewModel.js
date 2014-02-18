@@ -16,12 +16,14 @@ define([
     "use strict";
 
     var DataSourceItemViewModel = function(name, rootViewModel, dataSource, dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(rootViewModel)) {
             throw new DeveloperError('rootViewModel is required.');
         }
         if (!defined(dataSource)) {
             throw new DeveloperError('dataSource is required.');
         }
+        //>>includeEnd('debug');
 
         this._dataSource = dataSource;
         this._rootViewModel = rootViewModel;

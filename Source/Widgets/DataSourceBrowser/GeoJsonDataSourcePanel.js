@@ -3,6 +3,7 @@ define([
         '../../Core/createGuid',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/getFilenameFromUri',
         '../../DynamicScene/GeoJsonDataSource',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
@@ -10,6 +11,7 @@ define([
         createGuid,
         defined,
         defineProperties,
+        getFilenameFromUri,
         GeoJsonDataSource,
         knockout,
         when) {
@@ -88,13 +90,11 @@ define([
             return false;
         }
 
-        var dataSource = new GeoJsonDataSource();
-        return when(dataSource.loadUrl(url), function() {
-            dataSourceCollection.add(dataSource);
-            return true;
-        }, function(error) {
-            return when.reject(error);
-        });
+        var dataSource = new GeoJsonDataSource(getFilenameFromUri(url));
+        dataSource.loadUrl(url);
+        dataSourceCollection.add(dataSource);
+
+        return true;
     };
 
     return GeoJsonDataSourcePanel;

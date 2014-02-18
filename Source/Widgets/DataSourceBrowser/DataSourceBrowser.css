@@ -222,6 +222,19 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     color: #ff0;
 }
 
+.cesium-dataSourceBrowser-item-loadingIndicator {
+    display: none;
+    width: 16px;
+    height: 11px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../Images/small-ajax-loader.gif);
+}
+
+.cesium-dataSourceBrowser-item-loading .cesium-dataSourceBrowser-item-loadingIndicator {
+    display: inline-block;
+}
+
 .cesium-dataSourceBrowser-item-buttons {
     display: block;
     position: absolute;

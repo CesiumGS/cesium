@@ -10,8 +10,6 @@ define([
     "use strict";
 
     var ListDataSourceItemViewModel = function(name, rootViewModel, description, url, format) {
-        var that = this;
-
         this.rootViewModel = rootViewModel;
 
         this.id = 'cesium-dataSourceBrowser-listNode-' + createGuid();
@@ -26,11 +24,12 @@ define([
 
         this.hasChildren = undefined;
         knockout.defineProperty(this, 'hasChildren', function() {
-            return that.children.length > 0;
+            return this.children.length > 0;
         });
 
+        this.isSelected = undefined;
         knockout.defineProperty(this, 'isSelected', function() {
-            return rootViewModel.selectedItem === that;
+            return rootViewModel.selectedItem === this;
         });
     };
 

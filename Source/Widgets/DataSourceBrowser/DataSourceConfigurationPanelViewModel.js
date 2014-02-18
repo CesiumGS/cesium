@@ -1,14 +1,10 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
-        defaultValue,
-        defined,
         defineProperties,
         destroyObject,
         createCommand,
