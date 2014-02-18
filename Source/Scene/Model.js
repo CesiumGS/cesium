@@ -490,9 +490,11 @@ define([
      * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
      */
     Model.prototype.computeWorldBoundingSphere = function(result) {
+        //>>includeStart('debug', pragmas.debug);
         if (this._state !== ModelState.LOADED) {
             throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new BoundingSphere();
