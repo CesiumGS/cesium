@@ -44,7 +44,7 @@ define([
         this.name = dataSource.getName();
         this.children = [];
         this.expanded = true;
-        this._isLoading = false;
+        this._isLoading = dataSource.getIsLoading();
         this._uiShow = true;
 
         knockout.track(this, ['name', 'children', 'expanded', '_isLoading', '_uiShow']);
