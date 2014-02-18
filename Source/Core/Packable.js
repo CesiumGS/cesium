@@ -3,15 +3,15 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 
     /**
-     * Base interface for objects which can store their values as packed
-     * elements in an array.
+     * Static interface for types which can store their values as packed
+     * elements in an array.  These methods and properties are expected to be 
+     * defined on a constructor function.
      *
      * @exports Packable
      *
-     * @see {PackableForInterpolation}
+     * @see PackableForInterpolation
      */
     var Packable = {
-
         /**
          * The number of elements used to pack the object into an array.
          * @Type {Number}
