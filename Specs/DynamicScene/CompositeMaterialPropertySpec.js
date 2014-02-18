@@ -82,8 +82,8 @@ defineSuite(['DynamicScene/CompositeMaterialProperty',
     });
 
     it('raises definitionChanged event in all cases', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ColorMaterialProperty());
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ColorMaterialProperty());
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, ColorMaterialProperty.fromColor(Color.RED));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, ColorMaterialProperty.fromColor(Color.YELLOW));
 
         var property = new CompositeMaterialProperty();
         var listener = jasmine.createSpy('listener');
@@ -111,8 +111,8 @@ defineSuite(['DynamicScene/CompositeMaterialProperty',
     });
 
     it('does not raise definitionChanged for an overwritten interval', function() {
-        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, new ColorMaterialProperty());
-        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, new ColorMaterialProperty());
+        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, ColorMaterialProperty.fromColor(Color.RED));
+        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, ColorMaterialProperty.fromColor(Color.YELLOW));
 
         var property = new CompositeMaterialProperty();
         var listener = jasmine.createSpy('listener');

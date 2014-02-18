@@ -768,7 +768,7 @@ define(['../Core/Cartesian2',
         }
 
         if (defined(existingInterval)) {
-        existingInterval.data = existingMaterial;
+            existingInterval.data = existingMaterial;
         } else {
             object[propertyName] = existingMaterial;
         }

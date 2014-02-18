@@ -87,7 +87,6 @@ define(['./PositionProperty',
 
     /**
      * Sets the value of the property.
-     * If the value is an object, the object must provide clone and equals functions.
      * @memberof ConstantPositionProperty
      *
      * @param {Cartesian3} value The property value.

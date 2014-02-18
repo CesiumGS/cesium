@@ -6,9 +6,9 @@ define(['../../Core/BoundingSphere',
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../DynamicScene/DynamicObject',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
-        '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
@@ -19,9 +19,9 @@ define(['../../Core/BoundingSphere',
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        DynamicObject,
         SceneMode,
         subscribeAndEvaluate,
-        DynamicObject,
         DynamicObjectView,
         knockout) {
     "use strict";
@@ -162,8 +162,17 @@ define(['../../Core/BoundingSphere',
             }
         }
 
+        function trackObject(dynamicObject) {
+            if (defined(dynamicObject) && defined(dynamicObject.position)) {
+                viewer.trackedObject = dynamicObject;
+            }
+        }
+
         function pickAndTrackObject(e) {
-            viewer.trackedObject = defaultValue(pickDynamicObject(e), viewer.trackedObject);
+            var dynamicObject = pickDynamicObject(e);
+            if (defined(dynamicObject)) {
+                trackObject(dynamicObject);
+            }
         }
 
         function pickAndSelectObject(e) {

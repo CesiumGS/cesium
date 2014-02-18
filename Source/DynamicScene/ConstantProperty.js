@@ -16,12 +16,12 @@ define(['../Core/defaultValue',
 
     /**
      * A {@link Property} whose value does not change with respect to simulation time.
-     * If the value is an object, the object must provide clone and equals functions.
+     * If the value is a non-basic type, then it must provide clone and equals functions.
      *
      * @alias ConstantProperty
      * @constructor
      *
-     * @param {Object|Number|String|Boolean} [value] The property value.
+     * @param {Object} [value] The property value.
      *
      * @see ConstantPositionProperty
      *
@@ -75,10 +75,10 @@ define(['../Core/defaultValue',
 
     /**
      * Sets the value of the property.
-     * If the value is an object, the object must provide clone and equals functions.
+     * If the value is a non-basic type, then it must provide clone and equals functions.
      * @memberof ConstantProperty
      *
-     * @param {Object|Number|String|Boolean} value The property value.
+     * @param {Object} value The property value.
      *
      * @exception {DeveloperError} value.clone is a required function.
      * @exception {DeveloperError} value.equals is a required function.

@@ -17,14 +17,18 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
 
     it('constructor provides the expected defaults', function() {
         var property = new ColorMaterialProperty();
-        expect(property.color).toBeDefined();
+        expect(property.color).toBeUndefined();
         expect(property.getType()).toEqual('Color');
         expect(property.isConstant).toBe(true);
-        expect(property.getValue().color).toEqual(Color.WHITE);
 
-        property = new ColorMaterialProperty(Color.BLACK);
-        expect(property.color).toBeDefined();
-        expect(property.getValue().color).toEqual(Color.BLACK);
+        var colorProperty = new ConstantProperty(Color.BLUE);
+        property = new ColorMaterialProperty(colorProperty);
+        expect(property.color).toBe(colorProperty);
+        expect(property.getType()).toEqual('Color');
+        expect(property.isConstant).toBe(true);
+
+        property = ColorMaterialProperty.fromColor(Color.BLUE);
+        expect(property.color).toEqual(colorProperty);
     });
 
     it('works with constant values', function() {
@@ -37,7 +41,7 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
 
     it('works with undefined values', function() {
         var property = new ColorMaterialProperty();
-        property.color.setValue(undefined);
+        property.color = new ConstantProperty();
 
         var result = property.getValue();
         expect(result.hasOwnProperty('color')).toEqual(true);
