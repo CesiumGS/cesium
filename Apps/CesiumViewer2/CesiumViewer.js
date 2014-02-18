@@ -16,7 +16,7 @@ define([
         'Core/ScreenSpaceEventType',
         'Scene/DebugModelMatrixPrimitive',
         'Core/JulianDate',
-        'Scene/gltfStatistics',
+        './gltfStatistics',
         ///////////////////////////////////////////////////////////////////////
         'Core/defined',
         'DynamicScene/CzmlDataSource',
