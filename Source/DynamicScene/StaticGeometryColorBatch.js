@@ -114,6 +114,9 @@ define(['../Core/Color',
         }
     };
 
+    /**
+     * @private
+     */
     var StaticGeometryColorBatch = function(primitives, appearanceType, closed) {
         this._solidBatch = new Batch(primitives, false, appearanceType, closed);
         this._translucentBatch = new Batch(primitives, true, appearanceType, closed);

@@ -64,26 +64,13 @@ define(['../Core/defined',
     };
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPolygon instance
-     * in DynamicObject.polygon to a Polygon primitive.
+     * A general purpose visualizer for all graphics which can be represented by {@link Primitive} instances.
      * @alias GeometryVisualizer
      * @constructor
      *
+     * @param {GeometryUpdater} type The updater to be used for creating the geometry.
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicPolygon
-     * @see Scene
-     * @see DynamicObject
-     * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
      */
     var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
         if (!defined(type)) {
@@ -118,6 +105,7 @@ define(['../Core/defined',
 
     /**
      * Returns the scene being used by this visualizer.
+     * @memberof GeometryVisualizer
      *
      * @returns {Scene} The scene being used by this visualizer.
      */
@@ -127,6 +115,7 @@ define(['../Core/defined',
 
     /**
      * Gets the DynamicObjectCollection being visualized.
+     * @memberof GeometryVisualizer
      *
      * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
      */
@@ -136,8 +125,9 @@ define(['../Core/defined',
 
     /**
      * Sets the DynamicObjectCollection to visualize.
+     * @memberof GeometryVisualizer
      *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to visualizer.
      */
     GeometryVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
@@ -195,6 +185,7 @@ define(['../Core/defined',
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof GeometryVisualizer
      *
      * @param {JulianDate} time The time to update to.
      */
@@ -259,6 +250,7 @@ define(['../Core/defined',
 
     /**
      * Removes all primitives from the scene.
+     * @memberof GeometryVisualizer
      */
     GeometryVisualizer.prototype.removeAllPrimitives = function() {
         this._addedObjects.removeAll();
@@ -284,12 +276,9 @@ define(['../Core/defined',
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
      * @memberof GeometryVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see GeometryVisualizer#destroy
      */
     GeometryVisualizer.prototype.isDestroyed = function() {
         return false;
@@ -302,23 +291,18 @@ define(['../Core/defined',
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
      * @memberof GeometryVisualizer
      *
-     * @returns {undefined}
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see GeometryVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
      */
     GeometryVisualizer.prototype.destroy = function() {
         this.removeAllPrimitives();
         return destroyObject(this);
     };
 
+    /**
+     * @private
+     */
     GeometryVisualizer._onGeometyChanged = function(updater) {
         var removedObjects = this._removedObjects;
         var changedObjects = this._changedObjects;
@@ -331,6 +315,9 @@ define(['../Core/defined',
         }
     };
 
+    /**
+     * @private
+     */
     GeometryVisualizer.prototype._onCollectionChanged = function(dynamicObjectCollection, added, removed) {
         var addedObjects = this._addedObjects;
         var removedObjects = this._removedObjects;

@@ -121,6 +121,9 @@ define(['../Core/defined',
         this.removeMaterialSubscription();
     };
 
+    /**
+     * @private
+     */
     var StaticGeometryPerMaterialBatch = function(primitives, appearanceType) {
         this._items = [];
         this._primitives = primitives;
