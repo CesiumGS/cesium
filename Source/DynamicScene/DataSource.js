@@ -81,7 +81,7 @@ define([
      *
      * @returns {Boolean} True if this data source is actively loading data, false otherwise.
      */
-    DataSource.prototype.getIsLoading = throwInstantiationError;
+    DataSource.prototype.getIsLoading = DeveloperError.throwInstantiationError;
 
     /**
      * Gets an event that will be raised when the data source either starts or stops loading.
@@ -90,7 +90,7 @@ define([
      *
      * @returns {Event} The event.
      */
-    DataSource.prototype.getLoadingEvent = throwInstantiationError;
+    DataSource.prototype.getLoadingEvent = DeveloperError.throwInstantiationError;
 
     /**
      * Updates the data source to the provided time.
@@ -101,7 +101,7 @@ define([
      *
      * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
      */
-    DataSource.prototype.update = throwInstantiationError;
+    DataSource.prototype.update = DeveloperError.throwInstantiationError;
 
     return DataSource;
 });
