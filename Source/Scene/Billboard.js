@@ -29,8 +29,6 @@ define([
         SceneTransforms) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
      * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
@@ -65,7 +63,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
-        options = defaultValue(options, EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
