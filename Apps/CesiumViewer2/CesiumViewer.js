@@ -300,7 +300,7 @@ define([
         handler.setInputAction(
             function () {
                 var n = prevPickedNode;
-                n.matrix = Matrix4.multiplyByUniformScale(defaultValue(n.matrix, Matrix4.IDENTITY.clone()), 2.0, n.matrix);
+                n.matrix = Matrix4.multiplyByUniformScale(n.matrix, 2.0, n.matrix);
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

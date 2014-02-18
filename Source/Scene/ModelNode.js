@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/Matrix4',
         '../Core/Quaternion'
     ], function(
+        defaultValue,
         defineProperties,
         Cartesian3,
         Matrix4,
@@ -44,12 +46,18 @@ define([
          */
         this.name = node.name;
 
-        this._matrix = undefined;
+        /**
+         * @private
+         */
+        this.useMatrix = false;
+
+        this._matrix = Matrix4.clone(defaultValue(node.matrix, Matrix4.IDENTITY));
     };
 
     defineProperties(ModelNode.prototype, {
         /**
-         * DOC_TBA
+         * The node's 4x4 matrix transform from its local coordinates to
+         * its parent's.
          * <p>
          * For changes to take affect, this property must be assigned to;
          * setting individual elements of the matrix will not work.
@@ -64,6 +72,7 @@ define([
             },
             set : function(value) {
                 this._matrix = Matrix4.clone(value, this._matrix);
+                this.useMatrix = true;
 
                 var model = this._model;
                 model._cesiumAnimationsDirty = true;

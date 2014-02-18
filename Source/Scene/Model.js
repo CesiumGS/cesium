@@ -1673,18 +1673,16 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getNodeMatrix(node, result) {
-        var m;
-        if (defined(node.matrix)) {
-            m = Matrix4.clone(node.matrix, result);
-        } else {
-            m = Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
-        }
+        var publicNode = node.publicNode;
+        var publicMatrix = publicNode.matrix;
 
-        var customMatrix = node.publicNode.matrix;
-        if (defined(customMatrix)) {
-// TODO: what exactly to expose?
-// TODO: bounding sphere for stick figure
-            m = Matrix4.multiplyTransformation(m, customMatrix, m);
+        if (publicNode.useMatrix && defined(publicMatrix)) {
+            // Public matrix overrides orginial glTF matrix and glTF animations
+            Matrix4.clone(publicMatrix, result);
+        } else if (defined(node.matrix)) {
+            Matrix4.clone(node.matrix, result);
+        } else {
+            Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale, result);
         }
     }
 
