@@ -35,9 +35,7 @@ define(['../Core/defineProperties',
          * @type {Appearance}
          */
         PerInstanceColorAppearanceType : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets the type of Appearance to use for material-based geometry.
@@ -45,9 +43,7 @@ define(['../Core/defineProperties',
          * @type {Appearance}
          */
         MaterialAppearanceType : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         }
     });
 
@@ -58,9 +54,7 @@ define(['../Core/defineProperties',
          * @type {DynamicObject}
          */
         dynamicObject : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if the geometry has a fill component.
@@ -68,9 +62,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         fillEnabled : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
@@ -78,9 +70,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         hasConstantFill : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets the material property used to fill the geometry.
@@ -88,9 +78,7 @@ define(['../Core/defineProperties',
          * @type {MaterialProperty}
          */
         fillMaterialProperty : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if the geometry has an outline component.
@@ -98,9 +86,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         outlineEnabled : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
@@ -108,9 +94,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         hasConstantOutline : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets the {@link Color} property for the geometry outline.
@@ -118,9 +102,7 @@ define(['../Core/defineProperties',
          * @type {Property}
          */
         outlineColorProperty : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
@@ -131,9 +113,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         isDynamic : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if the geometry is closed.
@@ -141,9 +121,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         isClosed : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets an event that is raised whenever the public properties
@@ -152,9 +130,7 @@ define(['../Core/defineProperties',
          * @type {Boolean}
          */
         geometryChanged : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
+            get : DeveloperError.throwInstantiationError
         }
     });
 
@@ -165,9 +141,7 @@ define(['../Core/defineProperties',
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
      */
-    GeometryUpdater.prototype.isOutlineVisible = function(time) {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.isOutlineVisible = DeveloperError.throwInstantiationError;
 
     /**
      * Checks if the geometry is filled at the provided time.
@@ -176,9 +150,7 @@ define(['../Core/defineProperties',
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
      */
-    GeometryUpdater.prototype.isFilled = function(time) {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.isFilled = DeveloperError.throwInstantiationError;
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
@@ -189,9 +161,7 @@ define(['../Core/defineProperties',
      *
      * @exception {DeveloperError} This instance does not represent a filled geometry.
      */
-    GeometryUpdater.prototype.createFillGeometryInstance = function(time) {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.createFillGeometryInstance = DeveloperError.throwInstantiationError;
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
@@ -202,9 +172,7 @@ define(['../Core/defineProperties',
      *
      * @exception {DeveloperError} This instance does not represent an outlined geometry.
      */
-    GeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.createOutlineGeometryInstance = DeveloperError.throwInstantiationError;
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -212,9 +180,7 @@ define(['../Core/defineProperties',
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    GeometryUpdater.prototype.isDestroyed = function() {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.isDestroyed = DeveloperError.throwInstantiationError;
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
@@ -222,9 +188,7 @@ define(['../Core/defineProperties',
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    GeometryUpdater.prototype.destroy = function() {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.destroy = DeveloperError.throwInstantiationError;
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
@@ -235,9 +199,7 @@ define(['../Core/defineProperties',
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    GeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
-        DeveloperError.throwInstantiationError();
-    };
+    GeometryUpdater.prototype.createDynamicUpdater = DeveloperError.throwInstantiationError;
 
     return GeometryUpdater;
 });

@@ -26,9 +26,7 @@ define(['../Core/DeveloperError'
      *
      * @param {JulianDate} time The current time.
      */
-    DynamicGeometryUpdater.prototype.update = function(time) {
-        DeveloperError.throwInstantiationError();
-    };
+    DynamicGeometryUpdater.prototype.update = DeveloperError.throwInstantiationError;
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
@@ -36,9 +34,7 @@ define(['../Core/DeveloperError'
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    DynamicGeometryUpdater.prototype.isDestroyed = function() {
-        DeveloperError.throwInstantiationError();
-    };
+    DynamicGeometryUpdater.prototype.isDestroyed = DeveloperError.throwInstantiationError;
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
@@ -46,9 +42,7 @@ define(['../Core/DeveloperError'
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
-    DynamicGeometryUpdater.prototype.destroy = function() {
-        DeveloperError.throwInstantiationError();
-    };
+    DynamicGeometryUpdater.prototype.destroy = DeveloperError.throwInstantiationError;
 
     return DynamicGeometryUpdater;
 });

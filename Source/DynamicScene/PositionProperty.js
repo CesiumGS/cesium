@@ -29,7 +29,7 @@ define(['../Core/Cartesian3',
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = function(){
+    var PositionProperty = function() {
         DeveloperError.throwInstantiationError();
     };
 
