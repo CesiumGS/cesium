@@ -573,19 +573,20 @@ defineSuite([
         var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true);
 
         var intervals = new TimeIntervalCollection();
-        var changedEvent = intervals.getChangedEvent();
-        spyOn(changedEvent, 'raiseEvent');
+
+        var listener = jasmine.createSpy('listener');
+        intervals.getChangedEvent().addEventListener(listener);
 
         intervals.addInterval(interval);
-        expect(changedEvent.raiseEvent).toHaveBeenCalledWith(intervals);
-        changedEvent.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(intervals);
+        listener.reset();
 
         intervals.removeInterval(interval);
-        expect(changedEvent.raiseEvent).toHaveBeenCalledWith(intervals);
+        expect(listener).toHaveBeenCalledWith(intervals);
 
         intervals.addInterval(interval);
-        changedEvent.raiseEvent.reset();
+        listener.reset();
         intervals.clear();
-        expect(changedEvent.raiseEvent).toHaveBeenCalledWith(intervals);
+        expect(listener).toHaveBeenCalledWith(intervals);
     });
 });
