@@ -9575,7 +9575,10 @@
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
+        "extras": {
+            "premultipliedAlpha": true
+        },
+        "generator": "collada2gltf@8037062997389f5714154c03f692356ce78a30c0"
     },
     "bufferViews": {
         "bufferView_5085": {
@@ -9589,11 +9592,6 @@
             "byteLength": 81816,
             "byteOffset": 390864,
             "target": 34963
-        },
-        "bufferView_5087": {
-            "buffer": "SuperMurdoch",
-            "byteLength": 0,
-            "byteOffset": 472680
         }
     },
     "buffers": {
@@ -13432,6 +13430,24 @@
         },
         "ID295": {
             "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "ID296",
                 "ID302",
@@ -13502,6 +13518,24 @@
         },
         "ID422": {
             "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "ID423",
                 "ID429",
@@ -13856,6 +13890,24 @@
                 "ID65",
                 "ID84"
             ],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "name": "SketchUp"
         }
     },
@@ -13888,16 +13940,20 @@
     },
     "shaders": {
         "SuperMurdoch0FS": {
-            "path": "SuperMurdoch0FS.glsl"
+            "path": "SuperMurdoch0FS.glsl",
+            "type": 35632
         },
         "SuperMurdoch0VS": {
-            "path": "SuperMurdoch0VS.glsl"
+            "path": "SuperMurdoch0VS.glsl",
+            "type": 35633
         },
         "SuperMurdoch2FS": {
-            "path": "SuperMurdoch2FS.glsl"
+            "path": "SuperMurdoch2FS.glsl",
+            "type": 35632
         },
         "SuperMurdoch2VS": {
-            "path": "SuperMurdoch2VS.glsl"
+            "path": "SuperMurdoch2VS.glsl",
+            "type": 35633
         }
     },
     "skins": {},
@@ -14035,10 +14091,10 @@
                         "blendEquation": 32774,
                         "blendFunc": {
                             "dfactor": 771,
-                            "sfactor": 770
+                            "sfactor": 1
                         },
                         "cullFaceEnable": 1,
-                        "depthMask": 0,
+                        "depthMask": 1,
                         "depthTestEnable": 1
                     }
                 }

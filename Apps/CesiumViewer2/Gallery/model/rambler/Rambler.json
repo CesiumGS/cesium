@@ -28949,7 +28949,10 @@
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
+        "extras": {
+            "premultipliedAlpha": true
+        },
+        "generator": "collada2gltf@8037062997389f5714154c03f692356ce78a30c0"
     },
     "bufferViews": {
         "bufferView_15637": {
@@ -28963,11 +28966,6 @@
             "byteLength": 1197492,
             "byteOffset": 10344480,
             "target": 34963
-        },
-        "bufferView_15639": {
-            "buffer": "Rambler",
-            "byteLength": 0,
-            "byteOffset": 11541972
         }
     },
     "buffers": {
@@ -42700,6 +42698,24 @@
                 "ID5631",
                 "ID5644"
             ],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "ID5657",
                 "ID5663",
@@ -42787,6 +42803,24 @@
         },
         "ID5688": {
             "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "ID5689",
                 "ID5695"
@@ -42843,6 +42877,24 @@
         },
         "ID5703": {
             "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "ID5704",
                 "ID5710"
@@ -43163,6 +43215,24 @@
                 "ID5717",
                 "ID5718"
             ],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "name": "SketchUp"
         }
     },
@@ -43187,10 +43257,12 @@
     },
     "shaders": {
         "Rambler0FS": {
-            "path": "Rambler0FS.glsl"
+            "path": "Rambler0FS.glsl",
+            "type": 35632
         },
         "Rambler0VS": {
-            "path": "Rambler0VS.glsl"
+            "path": "Rambler0VS.glsl",
+            "type": 35633
         }
     },
     "skins": {},

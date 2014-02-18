@@ -58,7 +58,10 @@
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@d42009773b99cb8242af401409875263fab3a09a"
+        "extras": {
+            "premultipliedAlpha": true
+        },
+        "generator": "collada2gltf@8037062997389f5714154c03f692356ce78a30c0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -72,11 +75,6 @@
             "byteLength": 25272,
             "byteOffset": 76768,
             "target": 34963
-        },
-        "bufferView_31": {
-            "buffer": "duck",
-            "byteLength": 0,
-            "byteOffset": 102040
         }
     },
     "buffers": {
@@ -164,6 +162,24 @@
     "nodes": {
         "LOD3sp": {
             "children": [],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
             "meshes": [
                 "LOD3spShape-lib"
             ],
@@ -248,10 +264,12 @@
     },
     "shaders": {
         "duck0FS": {
-            "path": "duck0FS.glsl"
+            "path": "duck0FS.glsl",
+            "type": 35632
         },
         "duck0VS": {
-            "path": "duck0VS.glsl"
+            "path": "duck0VS.glsl",
+            "type": 35633
         }
     },
     "skins": {},
@@ -373,7 +391,8 @@
             "internalFormat": 6408,
             "sampler": "sampler_0",
             "source": "image_0",
-            "target": 3553
+            "target": 3553,
+            "type": 5121
         }
     }
 }

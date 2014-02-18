@@ -252,10 +252,12 @@
     },
     "shaders": {
         "duck0FS": {
-            "path": "duck0FS.glsl"
+            "path": "duck0FS.glsl",
+            "type": 35632
         },
         "duck0VS": {
-            "path": "duck0VS.glsl"
+            "path": "duck0VS.glsl",
+            "type": 35633
         }
     },
     "skins": {},
@@ -420,7 +422,8 @@
             "internalFormat": 6408,
             "sampler": "sampler_0",
             "source": "image_0",
-            "target": 3553
+            "target": 3553,
+            "type": 5121
         }
     }
 }
