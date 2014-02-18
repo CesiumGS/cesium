@@ -111,18 +111,19 @@ defineSuite(['DynamicScene/TimeIntervalCollectionProperty',
         var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
 
         var property = new TimeIntervalCollectionProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.intervals.addInterval(interval);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.intervals.removeInterval(interval);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
 
         property.intervals.addInterval(interval);
-        property.definitionChanged.raiseEvent.reset();
+        listener.reset();
         property.intervals.clear();
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 });

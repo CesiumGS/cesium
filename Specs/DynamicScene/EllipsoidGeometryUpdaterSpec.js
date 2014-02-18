@@ -341,27 +341,28 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
     it('geometryChanged event is raised when expected', function() {
         var dynamicObject = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(dynamicObject);
-        var geometryChanged = updater.geometryChanged;
-        spyOn(geometryChanged, 'raiseEvent');
+
+        var listener = jasmine.createSpy('listener');
+        updater.geometryChanged.addEventListener(listener);
 
         dynamicObject.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
-        expect(geometryChanged.raiseEvent.callCount).toEqual(1);
+        expect(listener.callCount).toEqual(1);
 
         dynamicObject.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
-        expect(geometryChanged.raiseEvent.callCount).toEqual(2);
+        expect(listener.callCount).toEqual(2);
 
         dynamicObject.availability = new TimeIntervalCollection();
-        expect(geometryChanged.raiseEvent.callCount).toEqual(3);
+        expect(listener.callCount).toEqual(3);
 
         dynamicObject.ellipsoid.radii = undefined;
-        expect(geometryChanged.raiseEvent.callCount).toEqual(4);
+        expect(listener.callCount).toEqual(4);
 
         //Modifying an unrelated property should not have any effect.
         dynamicObject.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        expect(geometryChanged.raiseEvent.callCount).toEqual(4);
+        expect(listener.callCount).toEqual(4);
 
         dynamicObject.ellipsoid.radii = new SampledProperty(Cartesian3);
-        expect(geometryChanged.raiseEvent.callCount).toEqual(5);
+        expect(listener.callCount).toEqual(5);
     });
 
     it('createFillGeometryInstance throws if object is not filled', function() {

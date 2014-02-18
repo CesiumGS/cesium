@@ -98,30 +98,31 @@ defineSuite([
 
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new ImageMaterialProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.image = new ConstantProperty('http://test.invalid/image.png');
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.image.setValue('http://test.invalid/image2.png');
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.image = property.image;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener.callCount).toEqual(0);
+        listener.reset();
 
         property.repeat = new ConstantProperty(new Cartesian2(1.5, 1.5));
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.repeat.setValue(new Cartesian2(1.0, 1.0));
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.repeat = property.repeat;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        expect(listener.callCount).toEqual(0);
     });
 
     it('isConstant is only true when all properties are constant or undefined', function() {

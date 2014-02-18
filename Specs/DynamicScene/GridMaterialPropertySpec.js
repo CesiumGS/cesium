@@ -140,54 +140,55 @@ defineSuite(['DynamicScene/GridMaterialProperty',
 
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new GridMaterialProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.color = new ConstantProperty(Color.WHITE);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color.setValue(Color.BLACK);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color = property.color;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener.callCount).toEqual(0);
+        listener.reset();
 
         property.cellAlpha = new ConstantProperty(0.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.cellAlpha.setValue(1.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.cellAlpha = property.cellAlpha;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener.callCount).toEqual(0);
+        listener.reset();
 
         property.lineCount = new ConstantProperty(5.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.lineCount.setValue(10.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.lineCount = property.lineCount;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener.callCount).toEqual(0);
+        listener.reset();
 
         property.lineThickness = new ConstantProperty(5.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.lineThickness.setValue(10.0);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.lineThickness = property.lineThickness;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        expect(listener.callCount).toEqual(0);
     });
 
     it('isConstant is only true when all properties are constant or undefined', function() {

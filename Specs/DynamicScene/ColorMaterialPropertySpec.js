@@ -84,17 +84,19 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
 
     it('raises definitionChanged when a color property is assigned or modified', function() {
         var property = new ColorMaterialProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.color = new ConstantProperty(Color.WHITE);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color.setValue(Color.BLACK);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color = property.color;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        expect(listener.callCount).toEqual(0);
     });
 });

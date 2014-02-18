@@ -32,18 +32,20 @@ defineSuite(['DynamicScene/PositionPropertyArray',
 
     it('setValue rasies definitionChanged event', function() {
         var property = new PositionPropertyArray();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue([]);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 
     it('changing array member raises definitionChanged event', function() {
         var property = new PositionPropertyArray();
         var item = new ConstantPositionProperty(Cartesian3.UNIT_X);
         property.setValue([item]);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         item.setValue(Cartesian3.UNIT_Z);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 
     it('works with result parameter', function() {

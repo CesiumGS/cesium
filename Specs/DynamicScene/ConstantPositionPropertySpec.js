@@ -82,23 +82,26 @@ defineSuite(['DynamicScene/ConstantPositionProperty',
 
     it('setValue rasies definitionChanged event', function() {
         var property = new ConstantPositionProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(1, 2, 3));
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 
     it('setValue does not raise definitionChanged event with equal data', function() {
         var property = new ConstantPositionProperty(new Cartesian3(0, 0, 0));
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(property.definitionChanged.raiseEvent.callCount).toBe(0);
+        expect(listener.callCount).toBe(0);
     });
 
     it('setValue raises definitionChanged when referenceFrame changes', function() {
         var property = new ConstantPositionProperty(new Cartesian3(0, 0, 0), ReferenceFrame.FIXED);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0), ReferenceFrame.INERTIAL);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 
     it('equals works', function() {

@@ -57,7 +57,8 @@ defineSuite([
         var propertyNames = dynamicObject.propertyNames;
         var propertyNamesLength = propertyNames.length;
 
-        spyOn(dynamicObject.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        dynamicObject.definitionChanged.addEventListener(listener);
 
         var i;
         var name;
@@ -70,7 +71,7 @@ defineSuite([
                 newValue = new ConstantProperty(1);
                 oldValue = dynamicObject[propertyNames[i]];
                 dynamicObject[name] = newValue;
-                expect(dynamicObject.definitionChanged.raiseEvent).toHaveBeenCalledWith(dynamicObject, name, newValue, oldValue);
+                expect(listener).toHaveBeenCalledWith(dynamicObject, name, newValue, oldValue);
             }
         }
     });

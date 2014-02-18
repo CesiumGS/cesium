@@ -32,11 +32,12 @@ defineSuite(['DynamicScene/SampledProperty',
         var epoch = new JulianDate(0, 0);
 
         var property = new SampledProperty(Number);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.addSamplesPackedArray(data, epoch);
 
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(7.5);
     });
@@ -46,19 +47,20 @@ defineSuite(['DynamicScene/SampledProperty',
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
         var property = new SampledProperty(Number);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.addSample(times[0], values[0]);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.addSample(times[1], values[1]);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.addSample(times[2], values[2]);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
@@ -71,10 +73,11 @@ defineSuite(['DynamicScene/SampledProperty',
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
         var property = new SampledProperty(Number);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.addSamples(times, values);
 
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
@@ -160,7 +163,8 @@ defineSuite(['DynamicScene/SampledProperty',
         };
 
         var property = new SampledProperty(Number);
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.addSamplesPackedArray(data, epoch);
 
@@ -172,7 +176,7 @@ defineSuite(['DynamicScene/SampledProperty',
             interpolationDegree : 2
         });
 
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 3))).toEqual(2);
 

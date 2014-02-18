@@ -28,16 +28,18 @@ defineSuite(['DynamicScene/ConstantProperty',
 
     it('setValue rasies definitionChanged event', function() {
         var property = new ConstantProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue(5);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property);
     });
 
     it('setValue does not raise definitionChanged event with equal data', function() {
         var property = new ConstantProperty(new Cartesian3(0, 0, 0));
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.setValue(new Cartesian3(0, 0, 0));
-        expect(property.definitionChanged.raiseEvent.callCount).toBe(0);
+        expect(listener.callCount).toBe(0);
     });
 
     it('works with objects with result parameter', function() {

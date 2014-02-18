@@ -103,41 +103,42 @@ defineSuite(['DynamicScene/PolylineOutlineMaterialProperty',
 
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new PolylineOutlineMaterialProperty();
-        spyOn(property.definitionChanged, 'raiseEvent');
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
 
         property.color = new ConstantProperty(Color.RED);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color.setValue(Color.YELLOW);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.color = property.color;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener.callCount).toEqual(0);
+        listener.reset();
 
         property.outlineColor = new ConstantProperty(Color.BLUE);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.outlineColor.setValue(Color.GREEN);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.outlineColor = property.outlineColor;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        expect(listener.callCount).toEqual(0);
 
         property.outlineWidth = new ConstantProperty(2.5);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.outlineWidth.setValue(1.5);
-        expect(property.definitionChanged.raiseEvent).toHaveBeenCalledWith(property);
-        property.definitionChanged.raiseEvent.reset();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         property.outlineWidth = property.outlineWidth;
-        expect(property.definitionChanged.raiseEvent.callCount).toEqual(0);
+        expect(listener.callCount).toEqual(0);
     });
 
     it('isConstant is only true when all properties are constant or undefined', function() {
