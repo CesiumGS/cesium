@@ -182,7 +182,7 @@ define([
     var position;
     var orientation;
     DynamicModelVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.getContext();
+        var context = this._scene.context;
         var dynamicModel = dynamicObject.model;
         if (!defined(dynamicModel)) {
             return;
