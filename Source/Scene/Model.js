@@ -138,7 +138,7 @@ define([
      * with {@link Model#getNode}.  glTF cameras and lights are not currently supported.
      * </p>
      * <p>
-     * An external glTF asset is created with {@link Model#fromGltf}.  glTF JSON can also be
+     * An external glTF asset is created with {@link Model.fromGltf}.  glTF JSON can also be
      * created at runtime and passed to this constructor function.  In either case, the
      * {@link Model#readyToRender} event is fired when the model is ready to render, i.e.,
      * when the external binary, image, and shader files are downloaded and the WebGL
@@ -159,7 +159,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
-     * @see Model#fromGltf
+     * @see Model.fromGltf
      * @see Model#readyToRender
      */
     var Model = function(options) {
@@ -423,7 +423,6 @@ define([
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> was found.
      *
      * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
-     * @exception {DeveloperError} name is required.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -455,7 +454,6 @@ define([
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no node with <code>name</code> was found.
      *
      * @exception {DeveloperError} Mesh are not loaded.  Wait for the model's readyToRender event.
-     * @exception {DeveloperError} name is required.
      */
     Model.prototype.getMesh = function(name) {
         //>>includeStart('debug', pragmas.debug);

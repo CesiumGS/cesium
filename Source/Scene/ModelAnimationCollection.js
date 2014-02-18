@@ -89,6 +89,8 @@ define([
      * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
      * </p>
      *
+     * @memberof ModelAnimationCollection
+     *
      * @param {String} options.name The glTF animation name that identifies the animation.
      * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
@@ -178,6 +180,8 @@ define([
      * <p>
      * This raises the {@link ModelAnimationCollection#animationAdded} event for each model so, for example, a UI can stay in sync.
      * </p>
+     *
+     * @memberof ModelAnimationCollection
      *
      * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
@@ -305,9 +309,8 @@ define([
     /**
      * Returns the animation in the collection at the specified index.  Indices are zero-based
      * and increase as animations are added.  Removing an animation shifts all animations after
-     * it to the left, changing their indices.  This function is commonly used with
-     * {@link ModelAnimationCollection#length} to iterate over all the animations
-     * in the collection.
+     * it to the left, changing their indices.  This function is commonly used to iterate over
+     * all the animations in the collection.
      *
      * @memberof ModelAnimationCollection
      *
@@ -322,8 +325,6 @@ define([
      * for (var i = 0; i < length; ++i) {
      *   console.log(animations.get(i).name);
      * }
-     *
-     * @see ModelAnimationCollection#length
      */
     ModelAnimationCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);

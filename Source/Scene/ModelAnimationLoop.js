@@ -5,7 +5,7 @@ define(function() {
     /**
      * Determines if and how a glTF animation is looped.
      *
-     * @alias ComponentDatatype
+     * @alias ModelAnimationLoop
      * @enumeration
      *
      * @see ModelAnimationCollection#add
