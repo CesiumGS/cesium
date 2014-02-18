@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
@@ -11,6 +12,7 @@ define([
         defined,
         defineProperties,
         Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -58,48 +60,14 @@ define([
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
-        image : {
-            get : function() {
-                return this._image;
-            },
-            set : function(value) {
-                if (this._image !== value) {
-                    if (this._imageSubscription) {
-                        this._imageSubscription();
-                        this._imageSubscription = undefined;
-                    }
-                    this._image = value;
-                    if (defined(value)) {
-                        this._imageSubscription = value.definitionChanged.addEventListener(ImageMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        image : createDynamicPropertyDescriptor('image'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1, 1))
          */
-        repeat : {
-            get : function() {
-                return this._repeat;
-            },
-            set : function(value) {
-                if (this._repeat !== value) {
-                    if (this._repeatSubscription) {
-                        this._repeatSubscription();
-                        this._repeatSubscription = undefined;
-                    }
-                    this._repeat = value;
-                    if (defined(value)) {
-                        this._repeatSubscription = value.definitionChanged.addEventListener(ImageMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        }
+        repeat : createDynamicPropertyDescriptor('repeat')
     });
 
     /**

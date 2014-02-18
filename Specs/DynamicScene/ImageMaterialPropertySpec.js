@@ -101,24 +101,26 @@ defineSuite([
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
+        var oldValue = property.image;
         property.image = new ConstantProperty('http://test.invalid/image.png');
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'image', property.image, oldValue);
         listener.reset();
 
         property.image.setValue('http://test.invalid/image2.png');
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'image', property.image, property.image);
         listener.reset();
 
         property.image = property.image;
         expect(listener.callCount).toEqual(0);
         listener.reset();
 
+        oldValue = property.repeat;
         property.repeat = new ConstantProperty(new Cartesian2(1.5, 1.5));
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'repeat', property.repeat, oldValue);
         listener.reset();
 
         property.repeat.setValue(new Cartesian2(1.0, 1.0));
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'repeat', property.repeat, property.repeat);
         listener.reset();
 
         property.repeat = property.repeat;

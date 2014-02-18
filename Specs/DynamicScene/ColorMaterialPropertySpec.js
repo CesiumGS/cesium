@@ -17,7 +17,7 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
 
     it('constructor provides the expected defaults', function() {
         var property = new ColorMaterialProperty();
-        expect(property.color).toBeUndefined();
+        expect(property.color).toEqual(new ConstantProperty(Color.WHITE));
         expect(property.getType()).toEqual('Color');
         expect(property.isConstant).toBe(true);
 
@@ -92,12 +92,13 @@ defineSuite(['DynamicScene/ColorMaterialProperty',
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
+        var oldValue = property.color;
         property.color = new ConstantProperty(Color.WHITE);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
         listener.reset();
 
         property.color.setValue(Color.BLACK);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
         listener.reset();
 
         property.color = property.color;

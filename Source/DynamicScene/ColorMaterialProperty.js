@@ -5,6 +5,7 @@ define(['../Core/Color',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
@@ -14,6 +15,7 @@ define(['../Core/Color',
         defineProperties,
         DeveloperError,
         Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -30,7 +32,7 @@ define(['../Core/Color',
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = colorProperty;
+        this.color = defaultValue(colorProperty, new ConstantProperty(Color.WHITE));
     };
 
     /**
@@ -77,24 +79,7 @@ define(['../Core/Color',
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
          */
-        color : {
-            get : function() {
-                return this._color;
-            },
-            set : function(value) {
-                if (this._color !== value) {
-                    if (defined(this._colorSubscription)) {
-                        this._colorSubscription();
-                        this._colorSubscription = undefined;
-                    }
-                    this._color = value;
-                    if (defined(value)) {
-                        this._colorSubscription = value.definitionChanged.addEventListener(ColorMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        }
+        color : createDynamicPropertyDescriptor('color')
     });
 
     /**

@@ -3,6 +3,7 @@ define(['../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
@@ -10,6 +11,7 @@ define(['../Core/Color',
         defined,
         defineProperties,
         Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -64,71 +66,20 @@ define(['../Core/Color',
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        color : {
-            get : function() {
-                return this._color;
-            },
-            set : function(value) {
-                if (this._color !== value) {
-                    if (defined(this._colorSubscription)) {
-                        this._colorSubscription();
-                        this._colorSubscription = undefined;
-                    }
-                    this._color = value;
-                    if (defined(value)) {
-                        this._colorSubscription = value.definitionChanged.addEventListener(PolylineOutlineMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        color : createDynamicPropertyDescriptor('color'),
         /**
          * Gets or sets the {@link Color} property which determines the polyline's outline color.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.BLACK)
          */
-        outlineColor : {
-            get : function() {
-                return this._outlineColor;
-            },
-            set : function(value) {
-                if (this._outlineColor !== value) {
-                    if (this._outlineColorSubscription) {
-                        this._outlineColorSubscription();
-                        this._outlineColorSubscription = undefined;
-                    }
-                    this._outlineColor = value;
-                    if (defined(value)) {
-                        this._outlineColorSubscription = value.definitionChanged.addEventListener(PolylineOutlineMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
         /**
          * Gets or sets the numberic property which determines the polyline's outline width.
          * @type {Property}
          * @default new ConstantProperty(0)
          */
-        outlineWidth : {
-            get : function() {
-                return this._outlineWidth;
-            },
-            set : function(value) {
-                if (this._outlineWidth !== value) {
-                    if (this._outlineWidthSubscription) {
-                        this._outlineWidthSubscription();
-                        this._outlineWidthSubscription = undefined;
-                    }
-                    this._outlineWidth = value;
-                    if (defined(value)) {
-                        this._outlineWidthSubscription = value.definitionChanged.addEventListener(PolylineOutlineMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        }
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth')
     });
 
     /**

@@ -106,35 +106,38 @@ defineSuite(['DynamicScene/PolylineOutlineMaterialProperty',
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
+        var oldValue = property.color;
         property.color = new ConstantProperty(Color.RED);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
         listener.reset();
 
         property.color.setValue(Color.YELLOW);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
         listener.reset();
 
         property.color = property.color;
         expect(listener.callCount).toEqual(0);
         listener.reset();
 
+        oldValue = property.outlineColor;
         property.outlineColor = new ConstantProperty(Color.BLUE);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'outlineColor', property.outlineColor, oldValue);
         listener.reset();
 
         property.outlineColor.setValue(Color.GREEN);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'outlineColor', property.outlineColor, property.outlineColor);
         listener.reset();
 
         property.outlineColor = property.outlineColor;
         expect(listener.callCount).toEqual(0);
 
+        oldValue = property.outlineWidth;
         property.outlineWidth = new ConstantProperty(2.5);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'outlineWidth', property.outlineWidth, oldValue);
         listener.reset();
 
         property.outlineWidth.setValue(1.5);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'outlineWidth', property.outlineWidth, property.outlineWidth);
         listener.reset();
 
         property.outlineWidth = property.outlineWidth;

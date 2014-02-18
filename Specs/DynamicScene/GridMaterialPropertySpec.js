@@ -143,48 +143,52 @@ defineSuite(['DynamicScene/GridMaterialProperty',
         var listener = jasmine.createSpy('listener');
         property.definitionChanged.addEventListener(listener);
 
+        var oldValue = property.color;
         property.color = new ConstantProperty(Color.WHITE);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
         listener.reset();
 
         property.color.setValue(Color.BLACK);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
         listener.reset();
 
         property.color = property.color;
         expect(listener.callCount).toEqual(0);
         listener.reset();
 
+        oldValue = property.cellAlpha;
         property.cellAlpha = new ConstantProperty(0.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'cellAlpha', property.cellAlpha, oldValue);
         listener.reset();
 
         property.cellAlpha.setValue(1.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'cellAlpha', property.cellAlpha, property.cellAlpha);
         listener.reset();
 
         property.cellAlpha = property.cellAlpha;
         expect(listener.callCount).toEqual(0);
         listener.reset();
 
+        oldValue = property.lineCount;
         property.lineCount = new ConstantProperty(5.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'lineCount', property.lineCount, oldValue);
         listener.reset();
 
         property.lineCount.setValue(10.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'lineCount', property.lineCount, property.lineCount);
         listener.reset();
 
         property.lineCount = property.lineCount;
         expect(listener.callCount).toEqual(0);
         listener.reset();
 
+        oldValue = property.lineThickness;
         property.lineThickness = new ConstantProperty(5.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'lineThickness', property.lineThickness, oldValue);
         listener.reset();
 
         property.lineThickness.setValue(10.0);
-        expect(listener).toHaveBeenCalledWith(property);
+        expect(listener).toHaveBeenCalledWith(property, 'lineThickness', property.lineThickness, property.lineThickness);
         listener.reset();
 
         property.lineThickness = property.lineThickness;

@@ -4,6 +4,7 @@ define(['../Core/Cartesian2',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
@@ -12,6 +13,7 @@ define(['../Core/Cartesian2',
         defined,
         defineProperties,
         Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -71,93 +73,25 @@ define(['../Core/Cartesian2',
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        color : {
-            get : function() {
-                return this._color;
-            },
-            set : function(value) {
-                if (this._color !== value) {
-                    if (defined(this._colorSubscription)) {
-                        this._colorSubscription();
-                        this._colorSubscription = undefined;
-                    }
-                    this._color = value;
-                    if (defined(value)) {
-                        this._colorSubscription = value.definitionChanged.addEventListener(GridMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        color : createDynamicPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
-        cellAlpha : {
-            get : function() {
-                return this._cellAlpha;
-            },
-            set : function(value) {
-                if (this._cellAlpha !== value) {
-                    if (this._cellAlphaSubscription) {
-                        this._cellAlphaSubscription();
-                        this._cellAlphaSubscription = undefined;
-                    }
-                    this._cellAlpha = value;
-                    if (defined(value)) {
-                        this._cellAlphaSubscription = value.definitionChanged.addEventListener(GridMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        cellAlpha : createDynamicPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
-        lineCount : {
-            get : function() {
-                return this._lineCount;
-            },
-            set : function(value) {
-                if (this._lineCount !== value) {
-                    if (this._lineCountSubscription) {
-                        this._lineCountSubscription();
-                        this._lineCountSubscription = undefined;
-                    }
-                    this._lineCount = value;
-                    if (defined(value)) {
-                        this._lineCountSubscription = value.definitionChanged.addEventListener(GridMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
+        lineCount : createDynamicPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
-        lineThickness : {
-            get : function() {
-                return this._lineThickness;
-            },
-            set : function(value) {
-                if (this._lineThickness !== value) {
-                    if (this._lineThicknessSubscription) {
-                        this._lineThicknessSubscription();
-                        this._lineThicknessSubscription = undefined;
-                    }
-                    this._lineThickness = value;
-                    if (defined(value)) {
-                        this._lineThicknessSubscription = value.definitionChanged.addEventListener(GridMaterialProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        }
+        lineThickness : createDynamicPropertyDescriptor('lineThickness')
     });
 
     /**
