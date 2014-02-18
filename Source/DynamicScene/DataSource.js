@@ -12,7 +12,7 @@ define([
      * @alias DataSource
      * @constructor
      */
-    var DataSource = function(){
+    var DataSource = function() {
         DeveloperError.throwInstantiationError();
     };
 

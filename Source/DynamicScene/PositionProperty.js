@@ -31,7 +31,7 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = function(){
+    var PositionProperty = function() {
         DeveloperError.throwInstantiationError();
     };
 

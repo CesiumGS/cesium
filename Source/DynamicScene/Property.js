@@ -22,7 +22,7 @@ define(['../Core/defined',
      * @see PositionProperty
      * @see RefereenceProperty
      */
-    var Property = function(){
+    var Property = function() {
         DeveloperError.throwInstantiationError();
     };
 
