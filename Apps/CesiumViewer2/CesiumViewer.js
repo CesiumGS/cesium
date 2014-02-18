@@ -117,7 +117,7 @@ define([
         });
 
         var scene = viewer.scene;
-        var context = scene.getContext();
+        var context = scene.context;
         if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);
             context.setValidateFramebuffer(true);
@@ -164,7 +164,7 @@ define([
         }
 
         if (endUserOptions.stats) {
-            scene.getPrimitives().add(new PerformanceDisplay());
+            scene.debugShowFramesPerSecond = true;
         }
 
         var theme = endUserOptions.theme;
@@ -191,10 +191,10 @@ define([
         //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/wine/wine.json
         //  http://localhost:8080/Apps/CesiumViewer2/index.html?model=Gallery/model/duck/duck.json
 
-        scene.getScreenSpaceCameraController().minimumZoomDistance = 1.0;
-        var ellipsoid = viewer.centralBody.getEllipsoid();
+        scene.screenSpaceCameraController.minimumZoomDistance = 1.0;
+        var ellipsoid = viewer.centralBody.ellipsoid;
 
-        //scene.getPrimitives().setCentralBody(undefined);
+        //scene.primitives.centralBody = undefined;
         scene.debugShowCommands = endUserOptions.showCommands;
         scene.skyBox = undefined;
         scene.skyAtmosphere = undefined;
@@ -203,7 +203,7 @@ define([
         var rotateX = Matrix4.fromRotationTranslation(Matrix3.fromRotationX(CesiumMath.toRadians(90.0)), Cartesian3.ZERO);
         var modelMatrix = Matrix4.multiply(Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-123.0744619, 44.0503706, 100.0))), rotateX);
 
-        var model = scene.getPrimitives().add(Model.fromGltf({
+        var model = scene.primitives.add(Model.fromGltf({
             url : defaultValue(endUserOptions.model, './Gallery/model/duck/duck.json'),
             modelMatrix : modelMatrix,
             scale : 1.0,
@@ -260,11 +260,11 @@ define([
             var transform = Transforms.eastNorthUpToFixedFrame(center);
 
             // View in east-north-up frame
-            var camera = scene.getCamera();
+            var camera = scene.camera;
             camera.transform = transform;
             camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-            var controller = scene.getScreenSpaceCameraController();
+            var controller = scene.screenSpaceCameraController;
             controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
             controller.enableTilt = false;
 
@@ -278,7 +278,7 @@ define([
 
         var prevPickedNode;
         var prevPickedMesh;
-        var handler = new ScreenSpaceEventHandler(scene.getCanvas());
+        var handler = new ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(
             function (movement) {
                 var pick = scene.pick(movement.endPosition);
@@ -308,7 +308,7 @@ define([
 //      scene.debugCommandFilter = function(command) { return command.owner.instance === model; };
 
 // /*
-        scene.getPrimitives().add(new DebugModelMatrixPrimitive({
+        scene.primitives.add(new DebugModelMatrixPrimitive({
             modelMatrix : modelMatrix,
             scale : 100000.0,
             width : 10.0

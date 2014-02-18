@@ -100,6 +100,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._id = options.id;
+        this._collection = defaultValue(options.collection, billboardCollection);
 
         this._pickId = undefined;
         this._pickIdThis = options._pickIdThis;
@@ -136,6 +137,7 @@ define([
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
                 primitive : defaultValue(this._pickIdThis, this),
+                collection : this._collection,
                 id : this._id
             });
         }
@@ -1009,7 +1011,7 @@ define([
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.context, scene.frameState).toString());
      */
     var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {

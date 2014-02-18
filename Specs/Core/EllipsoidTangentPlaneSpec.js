@@ -15,7 +15,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor defaults to WGS84', function() {
-        var origin = new Cartesian3(Ellipsoid.WGS84.getRadii().x, 0, 0);
+        var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0, 0);
         var tangentPlane = new EllipsoidTangentPlane(origin);
         expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.WGS84);
         expect(tangentPlane.getOrigin()).toEqual(origin);

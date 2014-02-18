@@ -260,7 +260,7 @@ define([
             var east = bbox[3];
             var extent = Extent.fromDegrees(west, south, east, north);
 
-            var camera = viewModel._scene.getCamera();
+            var camera = viewModel._scene.camera;
             var position = camera.controller.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
@@ -271,7 +271,7 @@ define([
                 destination : position,
                 duration : viewModel._flightDuration,
                 onComplete : function() {
-                    var screenSpaceCameraController = viewModel._scene.getScreenSpaceCameraController();
+                    var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 }
@@ -296,7 +296,7 @@ define([
             }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
-            viewModel._scene.getAnimations().add(flight);
+            viewModel._scene.animations.add(flight);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

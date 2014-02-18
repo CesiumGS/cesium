@@ -53,7 +53,7 @@ define([
             this._extentSouthwestInMeters = description.extentSouthwestInMeters;
             this._extentNortheastInMeters = description.extentNortheastInMeters;
         } else {
-            var semimajorAxisTimesPi = this._ellipsoid.getMaximumRadius() * Math.PI;
+            var semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
             this._extentSouthwestInMeters = new Cartesian2(-semimajorAxisTimesPi, -semimajorAxisTimesPi);
             this._extentNortheastInMeters = new Cartesian2(semimajorAxisTimesPi, semimajorAxisTimesPi);
         }

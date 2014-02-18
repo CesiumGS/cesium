@@ -53,7 +53,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        primitives = scene.getPrimitives();
+        primitives = scene.primitives;
     });
 
     afterAll(function() {
@@ -86,11 +86,11 @@ defineSuite([
                 var transform = Transforms.eastNorthUpToFixedFrame(center);
 
                 // View in east-north-up frame
-                var camera = scene.getCamera();
+                var camera = scene.camera;
                 camera.transform = transform;
                 camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-                var controller = scene.getScreenSpaceCameraController();
+                var controller = scene.screenSpaceCameraController;
                 controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
                 controller.enableTilt = false;
 

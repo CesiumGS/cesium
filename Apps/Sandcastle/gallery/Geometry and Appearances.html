@@ -30,8 +30,8 @@ require(['Cesium'], function(Cesium) {
     Cesium.Math.setRandomNumberSeed(1234);
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var primitives = scene.getPrimitives();
-    var ellipsoid = viewer.centralBody.getEllipsoid();
+    var primitives = scene.primitives;
+    var ellipsoid = viewer.centralBody.ellipsoid;
     var solidWhite = Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE);
 
     // Combine instances for an extent, polygon, ellipse, and circle into a single primitive.
@@ -136,7 +136,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
@@ -279,7 +279,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
@@ -393,7 +393,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
@@ -429,7 +429,7 @@ require(['Cesium'], function(Cesium) {
         }
     });
 
-    scene.getPrimitives().add(new Cesium.Primitive({
+    scene.primitives.add(new Cesium.Primitive({
         geometryInstances : wallInstance,
         appearance : new Cesium.PerInstanceColorAppearance()
     }));
@@ -441,7 +441,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
@@ -738,7 +738,7 @@ require(['Cesium'], function(Cesium) {
                 },
                 // Override the appearance render state to change the
                 // line width on system's that support it (Linx/Mac).
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
@@ -820,7 +820,7 @@ require(['Cesium'], function(Cesium) {
     var wallMaterial = Cesium.Material.fromType('Checkerboard');
     wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
 
-    scene.getPrimitives().add(new Cesium.Primitive({
+    scene.primitives.add(new Cesium.Primitive({
         geometryInstances : wallInstance,
         appearance : new Cesium.MaterialAppearance({
             material : wallMaterial,
@@ -899,7 +899,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));

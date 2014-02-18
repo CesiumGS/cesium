@@ -80,7 +80,7 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, true);
 
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
-            radii : this.ellipsoid.getRadii(),
+            radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
             onlySunLighting : this.onlySunLighting,
             _owner : this

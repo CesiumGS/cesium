@@ -824,9 +824,8 @@ define([
 
     defineProperties(CameraController.prototype, {
         /**
-         * The camera heading in radians.
-         * @memberof CameraController
-         *
+         * Gets or sets the camera heading in radians.
+         * @memberof CameraController.prototype
          * @type {Number}
          */
         heading : {
@@ -857,9 +856,8 @@ define([
         },
 
         /**
-         * The the camera tilt in radians
-         * @memberof CameraController
-         *
+         * Gets or sets the camera tilt in radians
+         * @memberof CameraController.prototype
          * @type {Number}
          */
         tilt : {

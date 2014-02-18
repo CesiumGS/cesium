@@ -58,7 +58,7 @@ define([
         //>>includeEnd('debug');
 
         this._scene = scene;
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         this._modelCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);

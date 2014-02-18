@@ -150,10 +150,16 @@ define(['../../Core/BoundingSphere',
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
+        function trackObject(dynamicObject) {
+            if (defined(dynamicObject) && defined(dynamicObject.position)) {
+                viewer.trackedObject = dynamicObject;
+            }
+        }
+
         function pickAndTrackObject(e) {
             var picked = viewer.scene.pick(e.position);
-            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
-                viewer.trackedObject = picked.primitive.dynamicObject;
+            if (defined(picked) && defined(picked.primitive)) {
+                trackObject(picked.primitive.dynamicObject);
             }
         }
 
@@ -246,31 +252,34 @@ define(['../../Core/BoundingSphere',
 
         knockout.track(viewer, ['trackedObject', 'selectedObject']);
 
-        var trackedObjectSubscription = subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
+        var knockoutSubscriptions = [];
+
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
             var scene = viewer.scene;
-            var sceneMode = scene.getFrameState().mode;
+            var sceneMode = scene.frameState.mode;
             var isTracking = defined(value);
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                scene.getScreenSpaceCameraController().enableTranslate = !isTracking;
+                scene.screenSpaceCameraController.enableTranslate = !isTracking;
             }
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                scene.getScreenSpaceCameraController().enableTilt = !isTracking;
+                scene.screenSpaceCameraController.enableTilt = !isTracking;
             }
 
             if (isTracking && defined(value.position)) {
-                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.getEllipsoid());
+                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.ellipsoid);
             } else {
                 dynamicObjectView = undefined;
             }
-        });
+        }));
 
-        var selectedObjectSubscription = subscribeAndEvaluate(viewer, 'selectedObject', function(value) {
+        knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'selectedObject', function(value) {
             if (defined(value)) {
                 if (defined(infoBoxViewModel)) {
                     infoBoxViewModel.titleText = defined(value.name) ? value.name : value.id;
                 }
+
                 if (defined(selectionIndicatorViewModel)) {
                     selectionIndicatorViewModel.animateAppear();
                 }
@@ -280,20 +289,24 @@ define(['../../Core/BoundingSphere',
                     selectionIndicatorViewModel.animateDepart();
                 }
             }
-        });
+        }));
 
         // Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
             eventHelper.removeAll();
-            trackedObjectSubscription.dispose();
-            selectedObjectSubscription.dispose();
+
+            var i;
+            for (i = 0; i < knockoutSubscriptions.length; i++) {
+                knockoutSubscriptions[i].dispose();
+            }
+
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
             // Unsubscribe from data sources
             var dataSources = viewer.dataSources;
             var dataSourceLength = dataSources.getLength();
-            for (var i = 0; i < dataSourceLength; i++) {
+            for (i = 0; i < dataSourceLength; i++) {
                 dataSourceRemoved(dataSources, dataSources.get(i));
             }
         });

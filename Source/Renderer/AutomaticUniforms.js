@@ -1507,7 +1507,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getFrameState().frameNumber;
+                return uniformState.frameState.frameNumber;
             }
         }),
 
@@ -1535,7 +1535,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getFrameState().morphTime;
+                return uniformState.frameState.morphTime;
             }
         }),
 
@@ -1571,7 +1571,7 @@ define([
             },
 
             getValue : function(uniformState) {
-                return uniformState.getFrameState().mode.value;
+                return uniformState.frameState.mode.value;
             }
         }),
 

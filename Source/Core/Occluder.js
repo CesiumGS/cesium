@@ -419,7 +419,7 @@ define([
         // TODO: get correct ellipsoid center
         var ellipsoidCenter = Cartesian3.ZERO;
         if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
-            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
+            return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.minimumRadius), bs.center, positions);
         }
 
         return undefined;

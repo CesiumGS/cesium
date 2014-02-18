@@ -360,7 +360,7 @@ define([
      *
      * @example
      * // Example 1. Create a model from a glTF asset
-     * var model = scene.getPrimitives().add(Model.fromGltf({
+     * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json'
      * }));
      *
@@ -375,7 +375,7 @@ define([
      *   model.activeAnimations.addAll();
      * });
      *
-     * var model = scene.getPrimitives().add(Model.fromGltf({
+     * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,

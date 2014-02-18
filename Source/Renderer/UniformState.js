@@ -54,7 +54,19 @@ define([
         this._currentFrustum = new Cartesian2();
         this._pixelSize = 0.0;
 
-        this._frameState = undefined;
+        /**
+         * Gets the current frame state.
+         *
+         * @type {FrameState}
+         *
+         * @default undefined
+         *
+         * @readonly
+         *
+         * @see czm_frameNumber
+         */
+        this.frameState = undefined;
+
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
@@ -279,7 +291,7 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this._frameState = frameState;
+        this.frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
     };
 
@@ -1152,19 +1164,6 @@ define([
     UniformState.prototype.getEncodedCameraPositionMCLow = function() {
         cleanEncodedCameraPositionMC(this);
         return this._encodedCameraPositionMC.low;
-    };
-
-    /**
-     * Gets the current frame state.
-     *
-     * @memberof UniformState
-     *
-     * @returns {FrameState} The current frame state.
-     *
-     * @see czm_frameNumber
-     */
-    UniformState.prototype.getFrameState = function() {
-        return this._frameState;
     };
 
     /**
