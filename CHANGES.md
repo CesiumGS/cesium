@@ -36,6 +36,7 @@ Beta Releases
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`
+  * `PixelDatatype` properties are now JavaScript numbers, not `Enumeration` instances.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * Fix developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
