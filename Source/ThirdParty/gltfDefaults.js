@@ -44,6 +44,20 @@ define([
         }
     }
 
+    function textureDefaults(textures) {
+        if (!defined(textures)) {
+            return;
+        }
+
+        for (var name in textures) {
+            if (textures.hasOwnProperty(name)) {
+                var texture = textures[name];
+                // GLTF_SPEC: All optional properties
+                texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
+            }
+        }
+    }
+
     /**
      * Modifies gltf in place.
      *
@@ -55,6 +69,7 @@ define([
         }
 
         nodeDefaults(gltf.nodes);
+        textureDefaults(gltf.textures);
 
         return gltf;
     };

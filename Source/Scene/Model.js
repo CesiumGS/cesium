@@ -868,6 +868,7 @@ define([
                 tx = context.createTexture2D({
                     source : source,
                     pixelFormat : texture.internalFormat,
+                    pixelDatatype : texture.type,
                     flipY : false
                 });
             }
