@@ -116,65 +116,65 @@ define([
          */
         this.defaultGamma = undefined;
 
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     /**
      * Gets a value indicating whether or not the provider is ready for use.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Boolean} True if the provider is ready to use; otherwise, false.
      */
-    ImageryProvider.prototype.isReady = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.isReady = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the extent, in radians, of the imagery provided by this instance.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Extent} The extent.
      *
      * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getExtent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getExtent = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the width of each tile, in pixels.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Number} The width.
      *
      * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getTileWidth = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getTileWidth = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the height of each tile, in pixels.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Number} The height.
      *
      * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getTileHeight = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getTileHeight = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the maximum level-of-detail that can be requested.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Number} The maximum level, or undefined if there is no maximum level.
      *
      * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getMaximumLevel = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getMaximumLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
@@ -183,18 +183,20 @@ define([
      * enough that the number of tiles at the minimum level is small.  An imagery
      * provider with more than a few tiles at the minimum level will lead to
      * rendering problems.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {Number} The minimum level, or undefined if there is no minimum level.
      *
      * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getMinimumLevel = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getMinimumLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
+     * @memberof ImageryProvider
+     * @function
      *
      * @returns {TilingScheme} The tiling scheme.
      * @see WebMercatorTilingScheme
@@ -202,17 +204,15 @@ define([
      *
      * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getTilingScheme = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getTilingScheme = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
      * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
      * returns undefined, no tiles are filtered.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @returns {TileDiscardPolicy} The discard policy.
      *
@@ -221,52 +221,44 @@ define([
      *
      * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getTileDiscardPolicy = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getTileDiscardPolicy = DeveloperError.throwInstantiationError;
 
     /**
      * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @returns {Event} The event.
      */
-    ImageryProvider.prototype.getErrorEvent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getErrorEvent = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link ImageryProvider#isReady} returns true.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @returns {Credit} The credit, or undefined if no credit exists
      */
-    ImageryProvider.prototype.getCredit = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getCredit = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the proxy used by this provider.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @returns {Proxy} The proxy.
      *
      * @see DefaultProxy
      */
-    ImageryProvider.prototype.getProxy = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getProxy = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -276,15 +268,13 @@ define([
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.getTileCredits = DeveloperError.throwInstantiationError;
 
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
-     *
      * @memberof ImageryProvider
+     * @function
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -297,15 +287,12 @@ define([
      *
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
-    ImageryProvider.prototype.requestImage = function(hostnames, hostnameIndex, x, y, level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    ImageryProvider.prototype.requestImage = DeveloperError.throwInstantiationError;
 
     /**
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
-     *
      * @memberof ImageryProvider
      *
      * @param url {String} The URL of the image.

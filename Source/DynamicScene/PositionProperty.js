@@ -17,10 +17,6 @@ define([
         Transforms) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
      * The interface for all position {@link Property} objects. Position properties
      * represent a world location as a {@link Cartesian3} with an associated
@@ -35,7 +31,9 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = throwInstantiationError;
+    var PositionProperty = function() {
+        DeveloperError.throwInstantiationError();
+    };
 
     defineProperties(PositionProperty.prototype, {
         /**
@@ -44,7 +42,7 @@ define([
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
-            get : throwInstantiationError
+            get : DeveloperError.throwInstantiationError
         }
     });
 
@@ -57,7 +55,7 @@ define([
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    PositionProperty.prototype.getValue = throwInstantiationError;
+    PositionProperty.prototype.getValue = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
@@ -69,7 +67,7 @@ define([
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    PositionProperty.prototype.getValueInReferenceFrame = throwInstantiationError;
+    PositionProperty.prototype.getValueInReferenceFrame = DeveloperError.throwInstantiationError;
 
     /**
      * Compares this property to the provided property and returns
@@ -79,7 +77,7 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    PositionProperty.prototype.equals = throwInstantiationError;
+    PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
     var scratchMatrix3 = new Matrix3();
 

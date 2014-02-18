@@ -42,7 +42,7 @@ define([
          */
         this.afterExecute = undefined;
 
-        throw new DeveloperError('This type should not be instantiated directly.');
+        DeveloperError.throwInstantiationError();
     };
 
     return Command;

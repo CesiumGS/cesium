@@ -2,12 +2,14 @@
 define([
         './defined',
         './DeveloperError',
+        './Event',
         './binarySearch',
         './TimeInterval',
         './JulianDate'
     ], function(
         defined,
         DeveloperError,
+        Event,
         binarySearch,
         TimeInterval,
         JulianDate) {
@@ -28,6 +30,17 @@ define([
      */
     var TimeIntervalCollection = function() {
         this._intervals = [];
+        this._intervalsChanged =  new Event();
+    };
+
+    /**
+     * Gets an event that is raised whenever the collection of intervals change.
+     * @memberof TimeIntervalCollection
+     *
+     * @returns {Event} The event
+     */
+    TimeIntervalCollection.prototype.getChangedEvent = function() {
+        return this._intervalsChanged;
     };
 
     /**
@@ -117,7 +130,10 @@ define([
      * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.clear = function() {
-        this._intervals = [];
+        if (this._intervals.length > 0) {
+            this._intervals.length = 0;
+            this._intervalsChanged.raiseEvent(this);
+        }
     };
 
     /**
@@ -267,6 +283,7 @@ define([
             if (thisIntervals.length === 0 ||
                 interval.start.greaterThan(thisIntervals[thisIntervals.length - 1].stop)) {
                 thisIntervals.push(interval);
+                this._intervalsChanged.raiseEvent(this);
                 return;
             }
 
@@ -382,6 +399,7 @@ define([
 
             // Add the new interval
             thisIntervals.splice(index, 0, interval);
+            this._intervalsChanged.raiseEvent(this);
         }
     };
 
@@ -487,6 +505,10 @@ define([
               indexInterval.isStartIncluded))) {
             result = true;
             thisIntervals[index] = new TimeInterval(intervalStop, indexInterval.stop, !intervalIsStopIncluded, indexInterval.isStopIncluded, indexInterval.data);
+        }
+
+        if (result) {
+            this._intervalsChanged.raiseEvent(this);
         }
 
         return result;
