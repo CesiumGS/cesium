@@ -33,10 +33,10 @@ require(['Cesium'], function(Cesium) {
        
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var centralBody = scene.getPrimitives().getCentralBody();
+    var centralBody = scene.primitives.centralBody;
     centralBody.depthTestAgainstTerrain = true;
-    var ellipsoid = centralBody.getEllipsoid();
-    var primitives = scene.getPrimitives();
+    var ellipsoid = centralBody.ellipsoid;
+    var primitives = scene.primitives;
 
     var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
         url : 'http://cesiumjs.org/smallterrain',
@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = scene.getContext().createTextureAtlas({
+        var textureAtlas = scene.context.createTextureAtlas({
             image : image
         });
         billboards.setTextureAtlas(textureAtlas);
@@ -93,7 +93,7 @@ require(['Cesium'], function(Cesium) {
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 150000)),
             imageIndex : 0
         });
-        scene.getPrimitives().add(billboards);
+        scene.primitives.add(billboards);
     };
     image.src = '../images/Cesium_Logo_overlay.png';
 
