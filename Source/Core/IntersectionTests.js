@@ -86,7 +86,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var inverseRadii = ellipsoid.getOneOverRadii();
+        var inverseRadii = ellipsoid.oneOverRadii;
         var q = Cartesian3.multiplyComponents(inverseRadii, ray.origin, scratchQ);
         var w = Cartesian3.multiplyComponents(inverseRadii, ray.direction, scratchW);
 
@@ -307,8 +307,8 @@ define([
         var B_T = Matrix3.transpose(B);
 
         // Get the scaling matrix and its inverse.
-        var D_I = Matrix3.fromScale(ellipsoid.getRadii());
-        var D = Matrix3.fromScale(ellipsoid.getOneOverRadii());
+        var D_I = Matrix3.fromScale(ellipsoid.radii);
+        var D = Matrix3.fromScale(ellipsoid.oneOverRadii);
 
         var C = new Matrix3(0.0, direction.z, -direction.y,
                             -direction.z, 0.0, direction.x,

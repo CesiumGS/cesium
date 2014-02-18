@@ -36,15 +36,15 @@ define([
     function viewHome(scene, ellipsoid, transitioner, flightDuration) {
         var mode = scene.mode;
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var controller = scene.getScreenSpaceCameraController();
+        var controller = scene.screenSpaceCameraController;
 
         controller.setEllipsoid(ellipsoid);
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
-        var context = scene.getContext();
+        var context = scene.context;
         if (defined(transitioner) && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
@@ -61,7 +61,7 @@ define([
                 duration : flightDuration
             };
             flight = CameraFlightPath.createAnimationExtent(scene, description);
-            scene.getAnimations().add(flight);
+            scene.animations.add(flight);
         } else if (mode === SceneMode.SCENE3D) {
             Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
             var rotation = Matrix4.getRotation(camera.transform);
@@ -77,13 +77,13 @@ define([
                 direction : defaultCamera.direction
             };
             flight = CameraFlightPath.createAnimation(scene, description);
-            scene.getAnimations().add(flight);
+            scene.animations.add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                            1.0, 0.0, 0.0, 0.0,
                                            0.0, 1.0, 0.0, 0.0,
                                            0.0, 0.0, 0.0, 1.0);
-            var maxRadii = ellipsoid.getMaximumRadius();
+            var maxRadii = ellipsoid.maximumRadius;
             var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
             var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
             var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
@@ -97,7 +97,7 @@ define([
             };
 
             flight = CameraFlightPath.createAnimation(scene, description);
-            scene.getAnimations().add(flight);
+            scene.animations.add(flight);
         }
     }
 

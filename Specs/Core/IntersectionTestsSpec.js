@@ -132,7 +132,7 @@ defineSuite([
 
         var expected = {
                 start : 0.0,
-                stop : ellipsoid.getRadii().x + origin.x
+                stop : ellipsoid.radii.x + origin.x
         };
         var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 
@@ -150,7 +150,7 @@ defineSuite([
 
         var expected = {
                 start : 0.0,
-                stop : ellipsoid.getRadii().x - origin.x
+                stop : ellipsoid.radii.x - origin.x
         };
         var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 

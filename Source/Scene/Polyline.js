@@ -306,6 +306,7 @@ define([
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
                 primitive : defaultValue(this._pickIdThis, this),
+                collection: this._polylineCollection,
                 id : this._id
             });
         }

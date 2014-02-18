@@ -2,6 +2,7 @@
 @import url(./Animation/Animation.css);
 @import url(./BaseLayerPicker/BaseLayerPicker.css);
 @import url(./CesiumWidget/CesiumWidget.css);
+@import url(./CesiumInspector/CesiumInspector.css);
 @import url(./checkForChromeFrame.css);
 @import url(./FullscreenButton/FullscreenButton.css);
 @import url(./Geocoder/Geocoder.css);

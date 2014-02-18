@@ -287,7 +287,7 @@ defineSuite([
     it('fromExtent3D', function() {
         var extent = Extent.MAX_VALUE;
         var ellipsoid = Ellipsoid.WGS84;
-        var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
     });
 
@@ -328,7 +328,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var sphere = BoundingSphere.fromEllipsoid(ellipsoid);
         expect(sphere.center).toEqual(Cartesian3.ZERO);
-        expect(sphere.radius).toEqual(ellipsoid.getMaximumRadius());
+        expect(sphere.radius).toEqual(ellipsoid.maximumRadius);
     });
 
     it('fromEllipsoid with a result parameter', function() {
@@ -336,7 +336,7 @@ defineSuite([
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = BoundingSphere.fromEllipsoid(ellipsoid, sphere);
         expect(result).toBe(sphere);
-        expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius()));
+        expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius));
     });
 
     it('fromEllipsoid throws without ellipsoid', function() {

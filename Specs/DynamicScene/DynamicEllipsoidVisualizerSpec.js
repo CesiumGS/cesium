@@ -91,7 +91,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a primitive.', function() {
@@ -103,7 +103,7 @@ defineSuite([
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
         ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no radii does not create a primitive.', function() {
@@ -115,7 +115,7 @@ defineSuite([
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         testObject.ellipsoid = new DynamicEllipsoid();
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no orientation does not create a primitive.', function() {
@@ -127,7 +127,7 @@ defineSuite([
         testObject.ellipsoid = new DynamicEllipsoid();
         testObject.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicEllipsoid causes a EllipsoidPrimitive to be created and updated.', function() {
@@ -146,8 +146,8 @@ defineSuite([
         ellipsoid.material = new ColorMaterialProperty();
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var p = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var p = scene.primitives.get(0);
         expect(p.radii).toEqual(testObject.ellipsoid.radii.getValue(time));
         expect(p.show).toEqual(testObject.ellipsoid.show.getValue(time));
         expect(p.material.uniforms).toEqual(testObject.ellipsoid.material.getValue(time));
@@ -169,14 +169,14 @@ defineSuite([
         ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var time = new JulianDate();
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(true);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(true);
         dynamicObjectCollection.removeAll();
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(false);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
@@ -191,7 +191,7 @@ defineSuite([
 
         var time = new JulianDate();
         visualizer.update(time);
-        expect(scene.getPrimitives().get(0).dynamicObject).toEqual(testObject);
+        expect(scene.primitives.get(0).dynamicObject).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -214,14 +214,14 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var ellipsoidPrimitive = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var ellipsoidPrimitive = scene.primitives.get(0);
         expect(ellipsoidPrimitive.dynamicObject).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        ellipsoidPrimitive = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        ellipsoidPrimitive = scene.primitives.get(0);
         expect(ellipsoidPrimitive.dynamicObject).toEqual(testObject2);
     });
 }, 'WebGL');

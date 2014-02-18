@@ -168,7 +168,7 @@ defineSuite([
         var expectedMid = new Cartographic(thirtyDegrees, 0);
 
         var geodesic = new EllipsoidGeodesic(start, end);
-        var distance = Ellipsoid.WGS84.getRadii().x * fifteenDegrees;
+        var distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
 
         var midpoint = geodesic.interpolateUsingSurfaceDistance(distance);
 
@@ -235,7 +235,7 @@ defineSuite([
         var expectedMid = new Cartographic(thirtyDegrees, 0);
 
         var geodesic = new EllipsoidGeodesic(start, end);
-        var distance = Ellipsoid.WGS84.getRadii().x * fifteenDegrees;
+        var distance = Ellipsoid.WGS84.radii.x * fifteenDegrees;
 
         var result = new Cartographic();
         var midpoint = geodesic.interpolateUsingSurfaceDistance(distance, result);

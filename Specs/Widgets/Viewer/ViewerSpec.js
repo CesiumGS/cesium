@@ -298,7 +298,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene.getContext();
+        var context = viewer.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -321,8 +321,8 @@ defineSuite([
         viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayerCollection.getLength()).toEqual(1);
+        expect(viewer.centralBody.imageryLayerCollection.get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
     });
 
@@ -331,8 +331,8 @@ defineSuite([
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayerCollection.getLength()).toEqual(1);
+        expect(viewer.centralBody.imageryLayerCollection.get(0).getImageryProvider()).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -341,8 +341,8 @@ defineSuite([
         viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayerCollection.getLength()).toEqual(1);
+        expect(viewer.centralBody.imageryLayerCollection.get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });
@@ -475,6 +475,36 @@ defineSuite([
         viewer.dataSources.remove(dataSource1);
         expect(viewer.clockTrackedDataSource).toBe(dataSource2);
         expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+    });
+
+    it('updates the clock when the data source changes', function() {
+        var dataSource = new MockDataSource();
+        dataSource.clock = new DynamicClock();
+        dataSource.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+        dataSource.clock.clockRange = ClockRange.CLAMPED;
+        dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
+        dataSource.clock.multiplier = 20.0;
+
+        viewer = new Viewer(container);
+        viewer.dataSources.add(dataSource);
+
+        dataSource.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+        dataSource.clock.clockRange = ClockRange.UNBOUNDED;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 20.0;
+
+        dataSource.changedEvent.raiseEvent(dataSource);
+
+        expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
+        expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
+        expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
+        expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
     });
 
     it('can manually control the clock tracking', function() {

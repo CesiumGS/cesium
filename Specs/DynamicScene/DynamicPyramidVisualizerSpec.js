@@ -91,7 +91,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a primitive.', function() {
@@ -103,7 +103,7 @@ defineSuite([
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no orientation does not create a primitive.', function() {
@@ -115,7 +115,7 @@ defineSuite([
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicPyramid causes a CustomSensor to be created and updated.', function() {
@@ -137,8 +137,8 @@ defineSuite([
         pyramid.material = new ColorMaterialProperty();
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var p = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var p = scene.primitives.get(0);
         expect(p.intersectionColor).toEqual(testObject.pyramid.intersectionColor.getValue(time));
         expect(p.intersectionWidth).toEqual(testObject.pyramid.intersectionWidth.getValue(time));
         expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
@@ -163,14 +163,14 @@ defineSuite([
         pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = new JulianDate();
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(true);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(true);
         dynamicObjectCollection.removeAll();
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(false);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
@@ -185,7 +185,7 @@ defineSuite([
 
         var time = new JulianDate();
         visualizer.update(time);
-        expect(scene.getPrimitives().get(0).dynamicObject).toEqual(testObject);
+        expect(scene.primitives.get(0).dynamicObject).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -208,14 +208,14 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var pyramidPrimitive = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var pyramidPrimitive = scene.primitives.get(0);
         expect(pyramidPrimitive.dynamicObject).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        pyramidPrimitive = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        pyramidPrimitive = scene.primitives.get(0);
         expect(pyramidPrimitive.dynamicObject).toEqual(testObject2);
     });
 }, 'WebGL');

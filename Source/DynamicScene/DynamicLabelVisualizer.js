@@ -58,7 +58,7 @@ define([
         this._dynamicObjectCollection = undefined;
 
         var labelCollection = this._labelCollection = new LabelCollection();
-        scene.getPrimitives().add(labelCollection);
+        scene.primitives.add(labelCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -171,7 +171,7 @@ define([
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._labelCollection);
+        this._scene.primitives.remove(this._labelCollection);
         return destroyObject(this);
     };
 

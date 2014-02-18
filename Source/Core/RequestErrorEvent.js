@@ -1,5 +1,10 @@
 /*global define*/
-define(['./defined'], function(defined) {
+define([
+        './defined',
+        './parseResponseHeaders'
+    ], function(
+        defined,
+        parseResponseHeaders) {
     "use strict";
 
     /**
@@ -10,8 +15,10 @@ define(['./defined'], function(defined) {
      *
      * @param {Number} [statusCode] The HTTP error status code, such as 404.
      * @param {Object} [response] The response included along with the error.
+     * @param {String|Object} [responseHeaders] The response headers, represented either as an object literal or as a
+     *                        string in the format returned by XMLHttpRequest's getAllResponseHeaders() function.
      */
-    var RequestErrorEvent = function RequestErrorEvent(statusCode, response) {
+    var RequestErrorEvent = function RequestErrorEvent(statusCode, response, responseHeaders) {
         /**
          * The HTTP error status code, such as 404.  If the error does not have a particular
          * HTTP code, this property will be undefined.
@@ -27,6 +34,18 @@ define(['./defined'], function(defined) {
          * @type {Object}
          */
         this.response = response;
+
+        /**
+         * The headers included in the response, represented as an object literal of key/value pairs.
+         * If the error does not include any headers, this property will be undefined.
+         *
+         * @type {Object}
+         */
+        this.responseHeaders = responseHeaders;
+
+        if (typeof this.responseHeaders === 'string') {
+            this.responseHeaders = parseResponseHeaders(this.responseHeaders);
+        }
     };
 
     /**
