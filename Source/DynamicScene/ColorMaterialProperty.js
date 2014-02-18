@@ -3,6 +3,7 @@ define(['../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Event',
         './ConstantProperty',
         './Property'
@@ -11,6 +12,7 @@ define(['../Core/Color',
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Event,
         ConstantProperty,
         Property) {
@@ -19,16 +21,31 @@ define(['../Core/Color',
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
      *
-     * @param {Color} [color=Color.WHITE] The material color.
+     * @param {Property} [color] The {@link Color} property to be used.
      *
      * @alias ColorMaterialProperty
      * @constructor
      */
-    var ColorMaterialProperty = function(color) {
+    var ColorMaterialProperty = function(colorProperty) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-        this.color = new ConstantProperty(defaultValue(color, Color.WHITE));
+        this.color = colorProperty;
+    };
+
+    /**
+     * Creates a new instance that represents a constant color.
+     *
+     * @param {Color} color The color.
+     * @returns {ColorMaterialProperty} A new instance configured to represent the provided color.
+     */
+    ColorMaterialProperty.fromColor = function(color) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required');
+        }
+        //>>includeEnd('debug');
+        return new ColorMaterialProperty(new ConstantProperty(color));
     };
 
     defineProperties(ColorMaterialProperty.prototype, {
@@ -59,7 +76,6 @@ define(['../Core/Color',
          * A {@link Color} {@link Property} which determines the material's color.
          * @memberof ColorMaterialProperty.prototype
          * @type {Property}
-         * @default new ConstantProperty(Color.WHITE)
          */
         color : {
             get : function() {

@@ -16,8 +16,7 @@ define([
         './PolylineGeometryUpdater',
         './DynamicPyramidVisualizer',
         './DynamicVectorVisualizer',
-        './GeometryVisualizer',
-        './VisualizerCollection'
+        './GeometryVisualizer'
     ], function(
         defaultValue,
         defined,
@@ -35,33 +34,23 @@ define([
         PolylineGeometryUpdater,
         DynamicPyramidVisualizer,
         DynamicVectorVisualizer,
-        GeometryVisualizer,
-        VisualizerCollection) {
+        GeometryVisualizer) {
     "use strict";
 
-    var defaultVisualizerTypes = [function(scene) {
-        return new DynamicBillboardVisualizer(scene);
-    }, function(scene) {
-        return new GeometryVisualizer(EllipseGeometryUpdater, scene);
-    }, function(scene) {
-        return new GeometryVisualizer(EllipsoidGeometryUpdater, scene);
-    }, function(scene) {
-        return new GeometryVisualizer(PolygonGeometryUpdater, scene);
-    }, function(scene) {
-        return new GeometryVisualizer(PolylineGeometryUpdater, scene);
-    }, function(scene) {
-        return new DynamicConeVisualizerUsingCustomSensor(scene);
-    }, function(scene) {
-        return new DynamicLabelVisualizer(scene);
-    }, function(scene) {
-        return new DynamicPointVisualizer(scene);
-    }, function(scene) {
-        return new DynamicVectorVisualizer(scene);
-    }, function(scene) {
-        return new DynamicPyramidVisualizer(scene);
-    }, function(scene) {
-        return new DynamicPathVisualizer(scene);
-    }];
+    var createDefaultVisualizers = function(scene, dataSource) {
+        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        return [new DynamicBillboardVisualizer(scene, dynamicObjects),
+                new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
+                new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
+                new DynamicLabelVisualizer(scene, dynamicObjects),
+                new DynamicPointVisualizer(scene, dynamicObjects),
+                new DynamicVectorVisualizer(scene, dynamicObjects),
+                new DynamicPyramidVisualizer(scene, dynamicObjects),
+                new DynamicPathVisualizer(scene, dynamicObjects)];
+    };
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -70,9 +59,9 @@ define([
      *
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {Array} [visualizerTypes] The array of visualizer constructor functions that will be created for each data source.  If undefined, All standard visualizers will be used.
+     * @param {Array} [visualizersCallback] A function which takes a scene and returns the array of visualizers to be used for the display.
      */
-    var DataSourceDisplay = function(scene, dataSourceCollection, visualizerTypes) {
+    var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -90,9 +79,9 @@ define([
         this._scene = scene;
         this._timeVaryingSources = [];
         this._staticSourcesToUpdate = [];
-        this._visualizersTypes = defaultValue(visualizerTypes, defaultVisualizerTypes).slice(0);
+        this._visualizersCallback = defaultValue(visualizersCallback, createDefaultVisualizers);
 
-        for ( var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+        for (var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
     };
@@ -103,14 +92,6 @@ define([
      */
     DataSourceDisplay.prototype.getScene = function() {
         return this._scene;
-    };
-
-    /**
-     * Gets the types of visualizers being used for display.
-     * @returns {Array} A copy of the visualizer types being used for display.
-     */
-    DataSourceDisplay.prototype.getVisualizerTypes = function() {
-        return this._visualizersTypes.slice(0);
     };
 
     /**
@@ -156,7 +137,7 @@ define([
         this._eventHelper.removeAll();
 
         var dataSourceCollection = this._dataSourceCollection;
-        for ( var i = 0, length = dataSourceCollection.getLength(); i < length; ++i) {
+        for (var i = 0, length = dataSourceCollection.getLength(); i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
 
@@ -177,34 +158,36 @@ define([
         }
         //>>includeEnd('debug');
 
-        var timeVaryingSources = this._timeVaryingSources;
         var i;
+        var x;
+        var visualizers;
+        var vLength;
+
+        var timeVaryingSources = this._timeVaryingSources;
         var length = timeVaryingSources.length;
         for (i = 0; i < length; i++) {
-            timeVaryingSources[i]._visualizerCollection.update(time);
+            visualizers = timeVaryingSources[i]._visualizers;
+            vLength = visualizers.length;
+            for (x = 0; x < vLength; x++) {
+                visualizers[x].update(time);
+            }
         }
 
         var staticSourcesToUpdate = this._staticSourcesToUpdate;
         length = staticSourcesToUpdate.length;
-        if (length > 0) {
-            for (i = 0; i < length; i++) {
-                staticSourcesToUpdate[i]._visualizerCollection.update(time);
+        for (i = 0; i < length; i++) {
+            visualizers = staticSourcesToUpdate[i]._visualizers;
+            vLength = visualizers.length;
+            for (x = 0; x < vLength; x++) {
+                visualizers[x].update(time);
             }
-            staticSourcesToUpdate.length = 0;
         }
+        staticSourcesToUpdate.length = 0;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizerTypes = this._visualizersTypes;
-        var length = visualizerTypes.length;
-        var visualizers = new Array(length);
-        var scene = this._scene;
-        for ( var i = 0; i < length; i++) {
-            visualizers[i] = visualizerTypes[i](scene);
-        }
-
-        var vCollection = new VisualizerCollection(visualizers, dataSource.getDynamicObjectCollection());
-        dataSource._visualizerCollection = vCollection;
+        var visualizers = this._visualizersCallback(this._scene, dataSource);
+        dataSource._visualizers = visualizers;
         dataSource.getChangedEvent().addEventListener(this._onDataSourceChanged, this);
         this._onDataSourceChanged(dataSource);
     };
@@ -222,8 +205,12 @@ define([
             this._staticSourcesToUpdate.splice(staticIndex, 1);
         }
 
-        dataSource._visualizerCollection.destroy();
-        dataSource._visualizerCollection = undefined;
+        var visualizers = dataSource._visualizers;
+        var length = visualizers.length;
+        for (var i = 0; i < length; i++) {
+            visualizers[i].destroy();
+            dataSource._visualizers = undefined;
+        }
     };
 
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {

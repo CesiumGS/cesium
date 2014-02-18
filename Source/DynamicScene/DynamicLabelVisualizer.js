@@ -37,7 +37,6 @@ define([
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
      * @see DynamicConeVisualizerUsingCustomSensorr

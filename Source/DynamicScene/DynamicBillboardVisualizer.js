@@ -54,7 +54,6 @@ define([
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicConeVisualizer
      * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
