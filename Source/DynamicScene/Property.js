@@ -20,7 +20,7 @@ define(['../Core/defined',
      * @see TimeIntervalCollectionProperty
      * @see MaterialProperty
      * @see PositionProperty
-     * @see RefereenceProperty
+     * @see ReferenceProperty
      */
     var Property = function() {
         DeveloperError.throwInstantiationError();
