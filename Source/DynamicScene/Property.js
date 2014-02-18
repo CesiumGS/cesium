@@ -6,10 +6,6 @@ define(['../Core/defined',
         DeveloperError) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
      * The interface for all properties, which represent a value that can
      * optionally vary over time.
@@ -24,9 +20,11 @@ define(['../Core/defined',
      * @see TimeIntervalCollectionProperty
      * @see MaterialProperty
      * @see PositionProperty
-     * @see RefereenceProperty
+     * @see ReferenceProperty
      */
-    var Property = throwInstantiationError;
+    var Property = function() {
+        DeveloperError.throwInstantiationError();
+    };
 
     /**
      * Gets the value of the property at the provided time.
@@ -37,7 +35,7 @@ define(['../Core/defined',
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    Property.prototype.getValue = throwInstantiationError;
+    Property.prototype.getValue = DeveloperError.throwInstantiationError;
 
     /**
      * Compares this property to the provided property and returns
@@ -47,7 +45,7 @@ define(['../Core/defined',
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    Property.prototype.equals = throwInstantiationError;
+    Property.prototype.equals = DeveloperError.throwInstantiationError;
 
     /**
      * @private

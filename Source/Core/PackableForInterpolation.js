@@ -2,20 +2,16 @@
 define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
-     * Interface for {@link Packable} objects which are interpolated in a
-     * different representation than their packed value.
+     * Static interface for {@link Packable} types which are interpolated in a
+     * different representation than their packed value.  These methods and
+     * properties are expected to be defined on a constructor function.
      *
      * @exports PackableForInterpolation
      *
-     * @see {Packable}
+     * @see Packable
      */
     var PackableForInterpolation = {
-
         /**
          * The number of elements used to store the object into an array in its interpolatable form.
          * @Type {Number}
@@ -32,7 +28,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
          * @param {Array} [result] The object into which to store the result.
          */
-        convertPackedArrayForInterpolation : throwInstantiationError,
+        convertPackedArrayForInterpolation : DeveloperError.throwInstantiationError,
 
         /**
          * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
@@ -45,7 +41,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
          * @param {Object} [result] The object into which to store the result.
          */
-        unpackInterpolationResult : throwInstantiationError
+        unpackInterpolationResult : DeveloperError.throwInstantiationError
     };
 
     return PackableForInterpolation;
