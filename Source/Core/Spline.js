@@ -44,6 +44,7 @@ define([
     /**
      * Evaluates the curve at a given time.
      * @memberof Spline
+     * @function
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
@@ -54,9 +55,7 @@ define([
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
      *                             in the array <code>times</code>.
      */
-    Spline.prototype.evaluate = function(time, result) {
-        DeveloperError.throwInstantiationError();
-    };
+    Spline.prototype.evaluate = DeveloperError.throwInstantiationError;
 
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
