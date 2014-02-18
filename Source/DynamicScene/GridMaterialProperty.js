@@ -66,7 +66,7 @@ define(['../Core/Cartesian2',
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the grid's color.
+         * Gets or sets the {@link Color} property which determines the grid's color.
          * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
@@ -90,7 +90,7 @@ define(['../Core/Cartesian2',
             }
         },
         /**
-         * A numeric {@link Property} which determines the grid cells alpha value, when combined with the color alpha.
+         * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
@@ -113,7 +113,7 @@ define(['../Core/Cartesian2',
             }
         },
         /**
-         * A {@link Cartesian2} {@link Property} which determines the number of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
@@ -136,7 +136,7 @@ define(['../Core/Cartesian2',
             }
         },
         /**
-         * A {@link Cartesian2} {@link Property} which determines the thickness of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */

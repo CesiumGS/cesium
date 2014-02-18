@@ -86,7 +86,6 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicCone
-     * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection

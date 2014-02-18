@@ -11,7 +11,7 @@ define(['../Core/defined',
     "use strict";
 
     /**
-     * The interface for all {@link MaterialProperty} objects that represent {@link Material} uniforms.
+     * The interface for all {@link Property} objects that represent {@link Material} uniforms.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias MaterialProperty

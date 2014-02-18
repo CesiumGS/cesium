@@ -27,9 +27,7 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicPolyline
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer

@@ -59,7 +59,7 @@ define(['../Core/Color',
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the polyline's color.
+         * Gets or sets {@link Color} property which determines the polyline's color.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
@@ -83,7 +83,7 @@ define(['../Core/Color',
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the polyline's outline color.
+         * Gets or sets the {@link Color} property which determines the polyline's outline color.
          * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.BLACK)
@@ -107,7 +107,7 @@ define(['../Core/Color',
             }
         },
         /**
-         * A Number {@link Property} which determines the polyline's outline width.
+         * Gets or sets the numberic property which determines the polyline's outline width.
          * @type {Property}
          * @default new ConstantProperty(0)
          */

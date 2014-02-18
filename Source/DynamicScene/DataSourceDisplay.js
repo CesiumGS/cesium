@@ -1,22 +1,21 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './DynamicBillboardVisualizer',
-        './EllipseGeometryUpdater',
-        './EllipsoidGeometryUpdater',
         './DynamicConeVisualizerUsingCustomSensor',
         './DynamicLabelVisualizer',
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
-        './PolygonGeometryUpdater',
-        './PolylineGeometryUpdater',
         './DynamicPyramidVisualizer',
         './DynamicVectorVisualizer',
-        './GeometryVisualizer'
+        './EllipseGeometryUpdater',
+        './EllipsoidGeometryUpdater',
+        './GeometryVisualizer',
+        './PolygonGeometryUpdater',
+        './PolylineGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -24,17 +23,17 @@ define([
         DeveloperError,
         EventHelper,
         DynamicBillboardVisualizer,
-        EllipseGeometryUpdater,
-        EllipsoidGeometryUpdater,
         DynamicConeVisualizerUsingCustomSensor,
         DynamicLabelVisualizer,
         DynamicPathVisualizer,
         DynamicPointVisualizer,
-        PolygonGeometryUpdater,
-        PolylineGeometryUpdater,
         DynamicPyramidVisualizer,
         DynamicVectorVisualizer,
-        GeometryVisualizer) {
+        EllipseGeometryUpdater,
+        EllipsoidGeometryUpdater,
+        GeometryVisualizer,
+        PolygonGeometryUpdater,
+        PolylineGeometryUpdater) {
     "use strict";
 
     var createDefaultVisualizers = function(scene, dataSource) {
@@ -59,7 +58,7 @@ define([
      *
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {Array} [visualizersCallback] A function which takes a scene and returns the array of visualizers to be used for the display.
+     * @param {Visaulizer[]} [visualizersCallback] A function which takes a scene and dataSource and returns the array of visualizers used for visualization.  If left undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
         //>>includeStart('debug', pragmas.debug);

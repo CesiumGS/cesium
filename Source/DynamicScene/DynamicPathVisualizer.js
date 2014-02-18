@@ -388,9 +388,7 @@ define([
      *
      * @see DynamicPath
      * @see Polyline
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer

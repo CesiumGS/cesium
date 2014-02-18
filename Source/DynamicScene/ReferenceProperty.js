@@ -138,6 +138,16 @@ define([
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
+    /**
+     * Gets the value of the property at the provided time and in the provided reference frame.
+     * This method is only valid if the property being referenced is a {@link PositionProperty}.
+     * @memberof ReferenceProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
+     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     */
     ReferenceProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {

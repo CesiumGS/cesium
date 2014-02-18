@@ -54,7 +54,7 @@ define([
             }
         },
         /**
-         * A string {@link Property} which is the url of the desired image.
+         * Gets or sets the string property which is the url of the desired image.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
@@ -77,7 +77,7 @@ define([
             }
         },
         /**
-         * A {@link Cartesian2} {@link Property} which determines the number of times the image repeats in each direction.
+         * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1, 1))

@@ -50,7 +50,6 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicBillboard
-     * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
