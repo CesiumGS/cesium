@@ -98,8 +98,8 @@ define([
         this.creditDisplay = creditDisplay;
 
         /**
-         * An array of objects with {@link Event} instances to raise at the end
-         * of the frame and arguments to pass to the event.
+         * An array of functions to be called at the end of the frame.  This array
+         * will be cleared after each frame.
          * <p>
          * This allows queueing up events in <code>update</code> functions and
          * firing them at a time when the subscribers are free to change the
@@ -108,15 +108,13 @@ define([
          * </p>
          *
          * @type {Array}
-         * @default []
          *
          * @example
-         * frameState.events.push({
-         *   event : animationRemoved,
-         *   eventArguments : [removedAnimation]
+         * frameState.afterRender.push(function() {
+         *   // take some action, raise an event, etc.
          * });
          */
-        this.events = [];
+        this.afterRender = [];
     };
 
     return FrameState;

@@ -77,7 +77,7 @@ define([
          * @readonly
          */
         length : {
-            get : function () {
+            get : function() {
                 return this._scheduledAnimations.length;
             }
         }
@@ -335,6 +335,12 @@ define([
 
     var animationsToRemove = [];
 
+    function createAnimationRemovedFunction(modelAnimationCollection, model, animation) {
+        return function() {
+            modelAnimationCollection.animationRemoved.raiseEvent(model, animation);
+        };
+    }
+
     /**
      * @private
      */
@@ -347,7 +353,6 @@ define([
 
         var animationOccured = false;
         var sceneTime = frameState.time;
-        var events = frameState.events;
 
         var model = this._model;
         var scheduledAnimations = this._scheduledAnimations;
@@ -388,12 +393,11 @@ define([
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
                     if (scheduledAnimation.start.getNumberOfListeners() > 0) {
-                        scheduledAnimation._startEvent.event = scheduledAnimation.start;
-                        events.push(scheduledAnimation._startEvent);
+                        frameState.afterRender.push(scheduledAnimation._raiseStartEvent);
                     }
                 }
 
-                // Trunicate to [0.0, 1.0] for repeating animations
+                // Truncate to [0.0, 1.0] for repeating animations
                 if (scheduledAnimation.loop === ModelAnimationLoop.REPEAT) {
                     delta = delta - Math.floor(delta);
                 } else if (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT) {
@@ -414,9 +418,8 @@ define([
                 animateChannels(runtimeAnimation, localAnimationTime);
 
                 if (scheduledAnimation.update.getNumberOfListeners() > 0) {
-                    scheduledAnimation._updateEvent.event = scheduledAnimation.update;
-                    scheduledAnimation._updateEvent.eventArguments[2] = localAnimationTime;
-                    events.push(scheduledAnimation._updateEvent);
+                    scheduledAnimation._updateEventTime = localAnimationTime;
+                    frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
                 }
                 animationOccured = true;
             } else {
@@ -424,8 +427,7 @@ define([
                 if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
                     if (scheduledAnimation.stop.getNumberOfListeners() > 0) {
-                        scheduledAnimation._stopEvent.event = scheduledAnimation.stop;
-                        events.push(scheduledAnimation._stopEvent);
+                        frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
                     }
 
                     if (scheduledAnimation.removeOnStop) {
@@ -440,10 +442,7 @@ define([
         for (var j = 0; j < length; ++j) {
             var animationToRemove = animationsToRemove[j];
             scheduledAnimations.splice(scheduledAnimations.indexOf(animationToRemove), 1);
-            events.push({
-                event : this.animationRemoved,
-                eventArguments : [model, animationToRemove]
-            });
+            frameState.afterRender.push(createAnimationRemovedFunction(this, model, animationToRemove));
         }
         animationsToRemove.length = 0;
 
