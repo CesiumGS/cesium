@@ -39,7 +39,7 @@ define([
          * example, to keep a UI in sync.
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
          * model.activeAnimations.animationAdded.addEventListener(function(model, animation) {
@@ -53,7 +53,7 @@ define([
          * example, to keep a UI in sync.
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
          * model.activeAnimations.animationRemoved.addEventListener(function(model, animation) {
@@ -99,9 +99,6 @@ define([
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
-     * @param {Event} [options.start=undefined] The event fired when the animation is started.
-     * @param {Event} [options.update=undefined] The event fired when on each frame when the animation is updated.
-     * @param {Event} [options.stop=undefined] The event fired when the animation is stopped.
      *
      * @returns {ModelAnimation} The animation that was added to the collection.
      *
@@ -117,20 +114,8 @@ define([
      *
      * // Example 2. Add an animation and provide all properties and events
      * var startTime = new JulianDate();
-     * var start = new Event();
-     * start.addEventListener(function(model, animation) {
-     *   console.log('Animation started: ' + animation.name);
-     * });
-     * var update = new Event();
-     * update.addEventListener(function(model, animation, time) {
-     *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
-     * });
-     * var stop = new Event();
-     * stop.addEventListener(function(model, animation) {
-     *   console.log('Animation stopped: ' + animation.name);
-     * });
      *
-     * model.activeAnimations.add({
+     * var animation = model.activeAnimations.add({
      *   name : 'another animation name',
      *   startTime : startTime,
      *   startOffset : 0.0,                    // Play at startTime (default)
@@ -138,10 +123,17 @@ define([
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
      *   speedup : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
-     *   loop : ModelAnimationLoop.REPEAT,     // Loop the animation
-     *   start : start,
-     *   update : update,
-     *   stop : stop
+     *   loop : ModelAnimationLoop.REPEAT      // Loop the animation
+     * });
+     *
+     * animation.start.addEventListener(function(model, animation) {
+     *   console.log('Animation started: ' + animation.name);
+     * });
+     * animation.update.addEventListener(function(model, animation, time) {
+     *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
+     * });
+     * animation.stop.addEventListener(function(model, animation) {
+     *   console.log('Animation stopped: ' + animation.name);
      * });
      */
     ModelAnimationCollection.prototype.add = function(options) {
@@ -190,11 +182,8 @@ define([
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
-     * @param {Event} [options.start=undefined] The event fired when each animation is started.
-     * @param {Event} [options.update=undefined] The event fired when on each frame when each animation is updated.
-     * @param {Event} [options.stop=undefined] The event fired when each animation is stopped.
      *
-     * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.
+     * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
      * @exception {DeveloperError} options.speedup must be greater than zero.
@@ -398,7 +387,7 @@ define([
                 // STOPPED -> ANIMATING state transition?
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
-                    if (defined(scheduledAnimation.start)) {
+                    if (scheduledAnimation.start.getNumberOfListeners() > 0) {
                         scheduledAnimation._startEvent.event = scheduledAnimation.start;
                         events.push(scheduledAnimation._startEvent);
                     }
@@ -424,7 +413,7 @@ define([
 
                 animateChannels(runtimeAnimation, localAnimationTime);
 
-                if (defined(scheduledAnimation.update)) {
+                if (scheduledAnimation.update.getNumberOfListeners() > 0) {
                     scheduledAnimation._updateEvent.event = scheduledAnimation.update;
                     scheduledAnimation._updateEvent.eventArguments[2] = localAnimationTime;
                     events.push(scheduledAnimation._updateEvent);
@@ -434,7 +423,7 @@ define([
                 // ANIMATING -> STOPPED state transition?
                 if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
-                    if (defined(scheduledAnimation.stop)) {
+                    if (scheduledAnimation.stop.getNumberOfListeners() > 0) {
                         scheduledAnimation._stopEvent.event = scheduledAnimation.stop;
                         events.push(scheduledAnimation._stopEvent);
                     }

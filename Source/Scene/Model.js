@@ -80,7 +80,8 @@ define([
     var ModelState = {
         NEEDS_LOAD : 0,
         LOADING : 1,
-        LOADED : 2
+        LOADED : 2,
+        FAILED : 3
     };
 
     function LoadResources() {
@@ -155,7 +156,6 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Event} [options.readyToRender=new Event()] The event fired when this model is ready to render.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -264,7 +264,7 @@ define([
          * </p>
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
          * // Play all animations at half-speed when the model is ready to render
@@ -274,7 +274,7 @@ define([
          *   });
          * });
          */
-        this.readyToRender = defaultValue(options.readyToRender, new Event());
+        this.readyToRender = new Event();
 
         /**
          * The currently playing glTF animations.
@@ -311,6 +311,7 @@ define([
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
         this._state = ModelState.NEEDS_LOAD;
+        this._loadError = undefined;
         this._loadResources = undefined;
 
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
@@ -352,7 +353,6 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Event} [options.readyToRender=new Event()] The event fired when this model is ready to render.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -369,22 +369,20 @@ define([
      *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
      *
-     * var readyToRender = new Event();
-     * readyToRender.addEventListener(function(model) {
-     *   // Play all animations when the model is ready to render
-     *   model.activeAnimations.addAll();
-     * });
-     *
      * var model = scene.primitives.add(Model.fromGltf({
      *   url : './duck/duck.json',
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
      *   allowPicking : false,            // not pickable
-     *   readyToRender : readyToRender,
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
      * }));
+     *
+     * model.readyToRender.addEventListener(function(model) {
+     *   // Play all animations when the model is ready to render
+     *   model.activeAnimations.addAll();
+     * });
      *
      * @see Model#readyToRender
      */
@@ -538,9 +536,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function getFailedLoadFunction(type, path) {
+    function getFailedLoadFunction(model, type, path) {
         return function() {
-            throw new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._loadError = new RuntimeError('Failed to load external ' + type + ': ' + path);
+            model._state = ModelState.FAILED;
         };
     }
 
@@ -558,7 +557,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
                 var bufferPath = model.basePath + buffers[name].path;
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction('buffer', bufferPath));
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
     }
@@ -586,7 +585,7 @@ define([
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shaderPath = model.basePath + shaders[name].path;
-                loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction('shader', shaderPath));
+                loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
     }
@@ -618,7 +617,7 @@ define([
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
                 var imagePath = model.basePath + images[textures[name].source].path;
-                loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction('image', imagePath));
+                loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
             }
         }
     }
@@ -1837,6 +1836,10 @@ define([
         }
 
         var justLoaded = false;
+
+        if (this._state === ModelState.FAILED) {
+            throw this._loadError;
+        }
 
         if (this._state === ModelState.LOADING) {
             // Incrementally create WebGL resources as buffers/shaders/textures are downloaded

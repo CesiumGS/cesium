@@ -35,8 +35,14 @@ require(['Cesium'], function(Cesium) {
         var rotateX = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90.0)), Cesium.Cartesian3.ZERO);
         var modelMatrix = Cesium.Matrix4.multiply(Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, 0.0))), rotateX);
         
-        var readyToRender = new Cesium.Event();
-        readyToRender.addEventListener(function(model) {
+        scene.primitives.removeAll(); // Remove previous model
+        var model = scene.primitives.add(Cesium.Model.fromGltf({
+            url : url,
+            modelMatrix : modelMatrix,
+            scale : 20.0
+        }));
+        
+        model.readyToRender.addEventListener(function(model) {
             // Play and loop all animations at half-spead
             model.activeAnimations.addAll({
                 speedup : 0.5,
@@ -56,14 +62,6 @@ require(['Cesium'], function(Cesium) {
             var r = 2.0 * Math.max(worldBoundingSphere.radius, camera.frustum.near);
             camera.controller.lookAt(new Cesium.Cartesian3(0.0, -r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });
-        
-        scene.primitives.removeAll(); // Remove previous model
-        scene.primitives.add(Cesium.Model.fromGltf({
-            url : url,
-            modelMatrix : modelMatrix,
-            scale : 20.0,
-            readyToRender : readyToRender
-        }));
     }
     
     var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);

@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/Event',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
+        Event,
         ModelAnimationLoop,
         ModelAnimationState) {
     "use strict";
@@ -119,16 +121,14 @@ define([
          * </p>
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
-         * var start = new Event();
-         * start.addEventListener(function(model, animation) {
+         * animation.start.addEventListener(function(model, animation) {
          *   console.log('Animation started: ' + animation.name);
          * });
-         * animation.start = start;
          */
-        this.start = options.start;
+        this.start = new Event();
 
         /**
          * The event fired when on each frame when this animation is updated.  The
@@ -140,16 +140,14 @@ define([
          * </p>
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
-         * var update = new Event();
-         * update.addEventListener(function(model, animation, time) {
+         * animation.update.addEventListener(function(model, animation, time) {
          *   console.log('Animation updated: ' + animation.name + '. glTF animation time: ' + time);
          * });
-         * animation.update = update;
          */
-        this.update = options.update;
+        this.update = new Event();
 
         /**
          * The event fired when this animation is stopped.  This can be used, for
@@ -159,16 +157,14 @@ define([
          * </p>
          *
          * @type {Event}
-         * @default undefined
+         * @default new Event()
          *
          * @example
-         * var stop = new Event();
-         * stop.addEventListener(function(model, animation) {
+         * animation.stop.addEventListener(function(model, animation) {
          *   console.log('Animation stopped: ' + animation.name);
          * });
-         * animation.stop = stop;
          */
-        this.stop = options.stop;
+        this.stop = new Event();
 
         this._state = ModelAnimationState.STOPPED;
         this._runtimeAnimation = runtimeAnimation;

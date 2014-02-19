@@ -426,9 +426,9 @@ defineSuite([
         expect(a.speedup).toEqual(1.0);
         expect(a.reverse).toEqual(false);
         expect(a.loop).toEqual(ModelAnimationLoop.NONE);
-        expect(a.start).not.toBeDefined();
-        expect(a.update).not.toBeDefined();
-        expect(a.stop).not.toBeDefined();
+        expect(a.start).toBeDefined();
+        expect(a.update).toBeDefined();
+        expect(a.stop).toBeDefined();
         expect(spyAdd).toHaveBeenCalledWith(animBoxesModel, a);
         animations.animationAdded.removeEventListener(spyAdd);
 
@@ -484,32 +484,26 @@ defineSuite([
     });
 
     it('raises animation start, update, and stop events when removeOnStop is true', function() {
-        var startEvent = new Event();
-        var spyStart = jasmine.createSpy('listener');
-        startEvent.addEventListener(spyStart);
-
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
-        var stopped = false;
-        var stopEvent = new Event();
-        stopEvent.addEventListener(function(model, animation) {
-            stopped = true;
-        });
-        var spyStop = jasmine.createSpy('listener');
-        stopEvent.addEventListener(spyStop);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            removeOnStop : true,
-            start : startEvent,
-            update : updateEvent,
-            stop : stopEvent
+            removeOnStop : true
         });
+
+        var spyStart = jasmine.createSpy('listener');
+        a.start.addEventListener(spyStart);
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
+
+        var stopped = false;
+        a.stop.addEventListener(function(model, animation) {
+            stopped = true;
+        });
+        var spyStop = jasmine.createSpy('listener');
+        a.stop.addEventListener(spyStop);
 
         animBoxesModel.show = true;
 
@@ -537,19 +531,17 @@ defineSuite([
     });
 
     it('Animates with a startOffset', function() {
-        var startEvent = new Event();
-        var spyStart = jasmine.createSpy('listener');
-        startEvent.addEventListener(spyStart);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            startOffset : 1.0,
-            start : startEvent
+            startOffset : 1.0
         });
+
+        var spyStart = jasmine.createSpy('listener');
+        a.start.addEventListener(spyStart);
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time); // Does not fire start
@@ -562,10 +554,6 @@ defineSuite([
     });
 
     it('Animates with an explicit stopTime', function() {
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var stopTime = JulianDate.fromDate(new Date('January 1, 2014 12:00:01 UTC'));
 
@@ -573,9 +561,11 @@ defineSuite([
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            stopTime : stopTime,
-            update : updateEvent
+            stopTime : stopTime
         });
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
@@ -590,18 +580,16 @@ defineSuite([
     });
 
     it('Animates with a speedup', function() {
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            speedup : 1.5,
-            update : updateEvent
+            speedup : 1.5
         });
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
@@ -617,18 +605,16 @@ defineSuite([
     });
 
     it('Animates in reverse', function() {
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            reverse : true,
-            update : updateEvent
+            reverse : true
         });
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
@@ -646,18 +632,16 @@ defineSuite([
     });
 
     it('Animates with REPEAT', function() {
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            loop : ModelAnimationLoop.REPEAT,
-            update : updateEvent
+            loop : ModelAnimationLoop.REPEAT
         });
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
 
         animBoxesModel.show = true;
         for (var i = 0; i < 8; ++i) {
@@ -678,18 +662,16 @@ defineSuite([
     });
 
     it('Animates with MIRRORED_REPEAT', function() {
-        var updateEvent = new Event();
-        var spyUpdate = jasmine.createSpy('listener');
-        updateEvent.addEventListener(spyUpdate);
-
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            loop : ModelAnimationLoop.MIRRORED_REPEAT,
-            update : updateEvent
+            loop : ModelAnimationLoop.MIRRORED_REPEAT
         });
+
+        var spyUpdate = jasmine.createSpy('listener');
+        a.update.addEventListener(spyUpdate);
 
         animBoxesModel.show = true;
         for (var i = 0; i < 8; ++i) {

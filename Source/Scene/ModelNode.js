@@ -59,7 +59,7 @@ define([
          * The node's 4x4 matrix transform from its local coordinates to
          * its parent's.
          * <p>
-         * For changes to take affect, this property must be assigned to;
+         * For changes to take effect, this property must be assigned to;
          * setting individual elements of the matrix will not work.
          * </p>
          *

@@ -87,7 +87,6 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
-        //Firefox bug: texSubImage2D has overloads and can't resolve our enums, so we use + to explicitly convert to a number.
         if (source.arrayBufferView) {
             gl.texSubImage2D(this._targetFace, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
         } else {
