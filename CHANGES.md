@@ -36,6 +36,7 @@ Beta Releases
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`
+  * Modified `CameraFlightPath` functions to take place in the camera's current reference frame. The arguments to the function now need to be given in world coordinates and an optional reference frame can be given when the flight is completed.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * Fix developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
