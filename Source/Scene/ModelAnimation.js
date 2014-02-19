@@ -172,17 +172,16 @@ define([
         this._duration = undefined;
 
         // To avoid allocations in ModelAnimationCollection.update
-        this._startEvent = {
-            event : undefined,
-            eventArguments : [model, this]
+        var that = this;
+        this._raiseStartEvent = function() {
+            that.start.raiseEvent(model, that);
         };
-        this._updateEvent = {
-            event : undefined,
-            eventArguments : [model, this, 0.0]
+        this._updateEventTime = 0.0;
+        this._raiseUpdateEvent = function() {
+            that.update.raiseEvent(model, that, that._updateEventTime);
         };
-        this._stopEvent = {
-            event : undefined,
-            eventArguments : [model, this]
+        this._raiseStopEvent = function() {
+            that.stop.raiseEvent(model, that);
         };
     };
 
