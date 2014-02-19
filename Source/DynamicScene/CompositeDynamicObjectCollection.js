@@ -22,7 +22,7 @@ define(['../Core/createGuid',
     function clean(dynamicObject) {
         var propertyNames = dynamicObject.propertyNames;
         var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
+        for (var i = 0; i < propertyNamesLength; i++) {
             dynamicObject[propertyNames[i]] = undefined;
         }
     }
@@ -35,7 +35,7 @@ define(['../Core/createGuid',
             var compositeProperty = compositeObject[propertyName];
             var collections = that._collectionsCopy;
             var collectionsLength = collections.length;
-            for ( var q = collectionsLength - 1; q >= 0; q--) {
+            for (var q = collectionsLength - 1; q >= 0; q--) {
                 var object = collections[q].getById(dynamicObject.id);
                 if (defined(object)) {
                     var objectProperty = object[propertyName];
@@ -66,7 +66,7 @@ define(['../Core/createGuid',
             var collections = that._collectionsCopy;
             var collectionsLength = collections.length;
             var firstTime = true;
-            for ( var q = collectionsLength - 1; q >= 0; q--) {
+            for (var q = collectionsLength - 1; q >= 0; q--) {
                 var object = collections[q].getById(dynamicObject.id);
                 if (defined(object)) {
                     var property = object[propertyName];
@@ -120,7 +120,7 @@ define(['../Core/createGuid',
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var propertyName = properties[i];
             subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
         }
@@ -135,7 +135,7 @@ define(['../Core/createGuid',
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var propertyName = properties[i];
             unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
         }
@@ -143,69 +143,70 @@ define(['../Core/createGuid',
 
     function recomposite(that) {
         that._shouldRecomposite = true;
-        if (that._suspendCount === 0) {
-            var collections = that._collections;
-            var collectionsLength = collections.length;
-
-            var collectionsCopy = that._collectionsCopy;
-            var collectionsCopyLength = collectionsCopy.length;
-
-            var i;
-            var object;
-            var objects;
-            var iObjects;
-            var collection;
-            var composite = that._composite;
-            var newObjects = new DynamicObjectCollection();
-            var eventHash = that._eventHash;
-            var collectionId;
-
-            for (i = 0; i < collectionsCopyLength; i++) {
-                collection = collectionsCopy[i];
-                collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
-                objects = collection.getObjects();
-                collectionId = collection.id;
-                for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                    object = objects[iObjects];
-                    unsubscribeFromDynamicObject(that, eventHash, collectionId, object);
-                }
-            }
-
-            for (i = collectionsLength - 1; i >= 0; i--) {
-                collection = collections[i];
-                collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
-
-                //Merge all of the existing objects.
-                objects = collection.getObjects();
-                collectionId = collection.id;
-                for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                    object = objects[iObjects];
-                    subscribeToDynamicObject(that, eventHash, collectionId, object);
-
-                    var compositeObject = newObjects.getById(object.id);
-                    if (!defined(compositeObject)) {
-                        compositeObject = composite.getById(object.id);
-                        if (!defined(compositeObject)) {
-                            compositeObject = new DynamicObject(object.id);
-                        } else {
-                            clean(compositeObject);
-                        }
-                        newObjects.add(compositeObject);
-                    }
-                    compositeObject.merge(object);
-                }
-            }
-            that._collectionsCopy = collections.slice(0);
-
-            composite.suspendEvents();
-            composite.removeAll();
-            var newObjectsArray = newObjects.getObjects();
-            for (i = 0; i < newObjectsArray.length; i++) {
-                composite.add(newObjectsArray[i]);
-            }
-            composite.resumeEvents();
+        if (that._suspendCount !== 0) {
+            return;
         }
-        return true;
+
+        var collections = that._collections;
+        var collectionsLength = collections.length;
+
+        var collectionsCopy = that._collectionsCopy;
+        var collectionsCopyLength = collectionsCopy.length;
+
+        var i;
+        var object;
+        var objects;
+        var iObjects;
+        var collection;
+        var composite = that._composite;
+        var newObjects = new DynamicObjectCollection();
+        var eventHash = that._eventHash;
+        var collectionId;
+
+        for (i = 0; i < collectionsCopyLength; i++) {
+            collection = collectionsCopy[i];
+            collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+            objects = collection.getObjects();
+            collectionId = collection.id;
+            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                unsubscribeFromDynamicObject(that, eventHash, collectionId, object);
+            }
+        }
+
+        for (i = collectionsLength - 1; i >= 0; i--) {
+            collection = collections[i];
+            collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+
+            //Merge all of the existing objects.
+            objects = collection.getObjects();
+            collectionId = collection.id;
+            for (iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                subscribeToDynamicObject(that, eventHash, collectionId, object);
+
+                var compositeObject = newObjects.getById(object.id);
+                if (!defined(compositeObject)) {
+                    compositeObject = composite.getById(object.id);
+                    if (!defined(compositeObject)) {
+                        compositeObject = new DynamicObject(object.id);
+                    } else {
+                        clean(compositeObject);
+                    }
+                    newObjects.add(compositeObject);
+                }
+                compositeObject.merge(object);
+            }
+        }
+        that._collectionsCopy = collections.slice(0);
+
+        composite.suspendEvents();
+        composite.removeAll();
+        var newObjectsArray = newObjects.getObjects();
+        for (i = 0; i < newObjectsArray.length; i++) {
+            composite.add(newObjectsArray[i]);
+        }
+        composite.resumeEvents();
     }
 
     /**
@@ -501,7 +502,7 @@ define(['../Core/createGuid',
 
         this._suspendCount--;
         // recomposite before triggering events (but only if required for performance) that might depend on a composited collection
-        if(this._shouldRecomposite && this._suspendCount === 0){
+        if (this._shouldRecomposite && this._suspendCount === 0) {
             recomposite(this);
             this._shouldRecomposite = false;
 
