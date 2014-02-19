@@ -124,13 +124,6 @@ defineSuite(['DynamicScene/PolygonGeometryUpdater',
         expect(updater.isClosed).toBe(true);
     });
 
-    it('Polygon material is correctly exposed.', function() {
-        var dynamicObject = createBasicPolygon();
-        var updater = new PolygonGeometryUpdater(dynamicObject);
-        dynamicObject.polygon.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.polygon.material);
-    });
-
     it('A time-varying vertexPositions causes geometry to be dynamic', function() {
         var dynamicObject = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(dynamicObject);
@@ -312,7 +305,7 @@ defineSuite(['DynamicScene/PolygonGeometryUpdater',
     });
 
     it('dynamic updater sets properties', function() {
-        //Finish this test
+        //This test is mostly a smoke screen for now.
         var time1 = new JulianDate(0, 0);
         var time2 = new JulianDate(1, 0);
         var time3 = new JulianDate(2, 0);

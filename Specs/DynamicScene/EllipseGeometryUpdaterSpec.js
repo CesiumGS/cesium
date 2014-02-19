@@ -141,13 +141,6 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         expect(updater.isClosed).toBe(true);
     });
 
-    it('Ellipse material is correctly exposed.', function() {
-        var dynamicObject = createBasicEllipse();
-        var updater = new EllipseGeometryUpdater(dynamicObject);
-        dynamicObject.ellipse.material = new GridMaterialProperty(Color.BLUE);
-        expect(updater.fillMaterialProperty).toBe(dynamicObject.ellipse.material);
-    });
-
     it('A time-varying position causes geometry to be dynamic', function() {
         var dynamicObject = createBasicEllipse();
         var updater = new EllipseGeometryUpdater(dynamicObject);
@@ -367,7 +360,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
     });
 
     it('dynamic updater sets properties', function() {
-        //Finish this test
+        //This test is mostly a smoke screen for now.
         var time1 = new JulianDate(0, 0);
         var time2 = new JulianDate(1, 0);
         var time3 = new JulianDate(2, 0);
