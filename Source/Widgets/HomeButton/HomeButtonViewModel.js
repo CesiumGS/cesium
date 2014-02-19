@@ -37,8 +37,6 @@ define([
         var mode = scene.mode;
 
         var camera = scene.camera;
-        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
-
         var controller = scene.screenSpaceCameraController;
 
         controller.setEllipsoid(ellipsoid);
