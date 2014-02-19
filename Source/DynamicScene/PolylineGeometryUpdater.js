@@ -48,6 +48,14 @@ define(['../Core/Color',
         this.width = undefined;
     };
 
+    /**
+     * A {@link GeometryUpdater} for polylines.
+     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDsplay}.
+     * @alias PolygonGeometryUpdater
+     * @constructor
+     *
+     * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     */
     var PolylineGeometryUpdater = function(dynamicObject) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
@@ -66,21 +74,55 @@ define(['../Core/Color',
         this._onDynamicObjectPropertyChanged(dynamicObject, 'polyline', dynamicObject.polyline, undefined);
     };
 
-    PolylineGeometryUpdater.PerInstanceColorAppearanceType = PolylineColorAppearance;
-
-    PolylineGeometryUpdater.MaterialAppearanceType = PolylineMaterialAppearance;
+    defineProperties(PolylineGeometryUpdater, {
+        /**
+         * Gets the type of Appearance to use for simple color-based geometry.
+         * @memberof PolylineGeometryUpdater
+         * @type {Appearance}
+         */
+        PerInstanceColorAppearanceType : {
+            get : function() {
+                return PolylineColorAppearance;
+            }
+        },
+        /**
+         * Gets the type of Appearance to use for material-based geometry.
+         * @memberof PolylineGeometryUpdater
+         * @type {Appearance}
+         */
+        MaterialAppearanceType : {
+            get : function() {
+                return PolylineMaterialAppearance;
+            }
+        }
+    });
 
     defineProperties(PolylineGeometryUpdater.prototype, {
+        /**
+         * Gets the object associated with this geometry.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {DynamicObject}
+         */
         dynamicObject :{
             get : function() {
                 return this._dynamicObject;
             }
         },
+        /**
+         * Gets a value indicating if the geometry has a fill component.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         fillEnabled : {
             get : function() {
                 return this._fillEnabled;
             }
         },
+        /**
+         * Gets a value indicating if fill visibility varies with simulation time.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         hasConstantFill : {
             get : function() {
                 return !this._fillEnabled ||
@@ -88,36 +130,76 @@ define(['../Core/Color',
                         (!defined(this._showProperty) || this._showProperty.isConstant));
             }
         },
+        /**
+         * Gets the material property used to fill the geometry.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {MaterialProperty}
+         */
         fillMaterialProperty : {
             get : function() {
                 return this._materialProperty;
             }
         },
+        /**
+         * Gets a value indicating if the geometry has an outline component.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         outlineEnabled : {
             get : function() {
                 return false;
             }
         },
+        /**
+         * Gets a value indicating if outline visibility varies with simulation time.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         hasConstantOutline : {
             get : function() {
                 return true;
             }
         },
+        /**
+         * Gets the {@link Color} property for the geometry outline.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Property}
+         */
         outlineColorProperty : {
             get : function() {
                 return undefined;
             }
         },
+        /**
+         * Gets a value indicating if the geometry is time-varying.
+         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * returned by GeometryUpdater#createDynamicUpdater.
+         *
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         isDynamic : {
             get : function() {
                 return this._dynamic;
             }
         },
+        /**
+         * Gets a value indicating if the geometry is closed.
+         * This property is only valid for static geometry.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         isClosed : {
             get : function() {
                 return false;
             }
         },
+        /**
+         * Gets an event that is raised whenever the public properties
+         * of this updater change.
+         * @memberof PolylineGeometryUpdater.prototype
+         * @type {Boolean}
+         */
         geometryChanged : {
             get : function() {
                 return this._geometryChanged;
@@ -125,15 +207,41 @@ define(['../Core/Color',
         }
     });
 
+    /**
+     * Checks if the geometry is outlined at the provided time.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @param {JulianDate} time The time for which to retrieve visibility.
+     * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
+     */
     PolylineGeometryUpdater.prototype.isOutlineVisible = function(time) {
         return false;
     };
 
+    /**
+     * Checks if the geometry is filled at the provided time.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @param {JulianDate} time The time for which to retrieve visibility.
+     * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
+     */
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
         return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time);
     };
 
+    /**
+     * Creates the geometry instance which represents the fill of the geometry.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @param {JulianDate} time The time to use when retrieving initial attribute values.
+     * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
+     *
+     * @exception {DeveloperError} This instance does not represent a filled geometry.
+     */
     PolylineGeometryUpdater.prototype.createFillGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
@@ -174,16 +282,40 @@ define(['../Core/Color',
         });
     };
 
+    /**
+     * Creates the geometry instance which represents the outline of the geometry.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @param {JulianDate} time The time to use when retrieving initial attribute values.
+     * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
+     *
+     * @exception {DeveloperError} This instance does not represent an outlined geometry.
+     */
     PolylineGeometryUpdater.prototype.createOutlineGeometryInstance = function(time) {
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('This instance does not represent an outlined geometry.');
         //>>includeEnd('debug');
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
     PolylineGeometryUpdater.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
     PolylineGeometryUpdater.prototype.destroy = function() {
         this._dynamicObjectSubscription();
         destroyObject(this);
@@ -251,6 +383,16 @@ define(['../Core/Color',
         }
     };
 
+    /**
+     * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
+     * @memberof PolylineGeometryUpdater
+     * @function
+     *
+     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
+     *
+     * @exception {DeveloperError} This instance does not represent dynamic geometry.
+     */
     PolylineGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
