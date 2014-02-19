@@ -197,7 +197,7 @@ define([
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time);
+            camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
@@ -455,8 +455,6 @@ define([
 
                 if (frameState.mode === SceneMode.SCENE2D) {
                     var zoom = frameState.camera.position.z;
-
-
                     var ratio = frustum.top / frustum.right;
 
                     var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
