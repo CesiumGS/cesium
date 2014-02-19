@@ -553,6 +553,35 @@ defineSuite([
         expect(composite2.getById(id).position).toBe(dynamicObject2.position);
     });
 
+    it('suspend events suspends recompositing', function() {
+        var id = 'test';
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject1 = new DynamicObject(id);
+        collection1.add(dynamicObject1);
+
+        var collection2 = new DynamicObjectCollection();
+        var dynamicObject2 = new DynamicObject(id);
+        collection2.add(dynamicObject2);
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(collection2);
+
+        // suspend events
+        composite.suspendEvents();
+        composite.addCollection(collection1);
+
+        // add a billboard
+        var compositeObject = composite.getById(id);
+        dynamicObject1.billboard = new DynamicBillboard();
+        dynamicObject1.billboard.show = new ConstantProperty(false);
+        // should be undefined because we haven't recomposited
+        expect(compositeObject.billboard).toBeUndefined();
+        // resume events
+        composite.resumeEvents();
+
+        expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
+    });
+
     it('prevents names from colliding between property events and object events', function() {
         var id = 'test';
         var collection1 = new DynamicObjectCollection();
