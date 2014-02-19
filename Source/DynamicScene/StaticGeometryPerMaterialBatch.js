@@ -124,10 +124,11 @@ define(['../Core/defined',
     /**
      * @private
      */
-    var StaticGeometryPerMaterialBatch = function(primitives, appearanceType) {
+    var StaticGeometryPerMaterialBatch = function(primitives, appearanceType, closed) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
+        this._closed = closed;
     };
 
     StaticGeometryPerMaterialBatch.prototype.add = function(time, updater) {
@@ -140,7 +141,7 @@ define(['../Core/defined',
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._closed);
         batch.add(time, updater);
         items.push(batch);
     };

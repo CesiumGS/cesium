@@ -8,11 +8,13 @@ defineSuite(['DynamicScene/GeometryVisualizer',
              'DynamicScene/ConstantPositionProperty',
              'DynamicScene/DynamicObject',
              'DynamicScene/GridMaterialProperty',
+             'DynamicScene/SampledProperty',
              'Core/Cartesian3',
              'Core/Color',
              'Core/ColorGeometryInstanceAttribute',
              'Core/ShowGeometryInstanceAttribute',
              'Core/JulianDate',
+             'Scene/PrimitiveState',
              'Specs/createScene',
              'Specs/destroyScene'
             ], function(
@@ -25,11 +27,13 @@ defineSuite(['DynamicScene/GeometryVisualizer',
               ConstantPositionProperty,
               DynamicObject,
               GridMaterialProperty,
+              SampledProperty,
               Cartesian3,
               Color,
               ColorGeometryInstanceAttribute,
               ShowGeometryInstanceAttribute,
               JulianDate,
+              PrimitiveState,
               createScene,
               destroyScene) {
     "use strict";
@@ -64,74 +68,306 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         visualizer.destroy();
     });
 
-    it('Creates and removes static color primitives', function() {
+    it('Creates and removes static color open geometry', function() {
         var objects = new DynamicObjectCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
         var ellipse = new DynamicEllipse();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
         dynamicObject.ellipse = ellipse;
         objects.add(dynamicObject);
 
-        scene.initializeFrame();
-        visualizer.update(time);
-        scene.render(time);
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
 
-        expect(scene.primitives.length).toBe(1);
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance.closed).toBe(false);
 
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
-        expect(attributes).toBeDefined();
-        expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
-        expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-        expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
 
-        objects.remove(dynamicObject);
-        scene.initializeFrame();
-        visualizer.update(time);
-        scene.render(time);
+            expect(scene.primitives.length).toBe(0);
 
-        expect(scene.primitives.length).toBe(0);
-
-        visualizer.destroy();
+            visualizer.destroy();
+        });
     });
 
-
-    it('Correctly handles changing appearance type', function() {
+    it('Creates and removes static material open geometry', function() {
         var objects = new DynamicObjectCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
 
         var ellipse = new DynamicEllipse();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new GridMaterialProperty();
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
         dynamicObject.ellipse = ellipse;
         objects.add(dynamicObject);
 
-        scene.initializeFrame();
-        visualizer.update(time);
-        scene.render(time);
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
 
-        dynamicObject.ellipse.material = new GridMaterialProperty();
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toBeUndefined();
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(primitive.appearance.closed).toBe(false);
 
-        scene.initializeFrame();
-        visualizer.update(time);
-        scene.render(time);
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
 
-        var primitive = scene.primitives.get(0);
-        var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
-        expect(attributes).toBeDefined();
-        expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
-        expect(attributes.color).toBeUndefined();
-        expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(scene.primitives.length).toBe(0);
 
-        visualizer.destroy();
+            visualizer.destroy();
+        });
+    });
+
+    it('Creates and removes static color closed geometry', function() {
+        var objects = new DynamicObjectCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new DynamicEllipse();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+        ellipse.extrudedHeight = new ConstantProperty(1000);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        dynamicObject.ellipse = ellipse;
+        objects.add(dynamicObject);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance.closed).toBe(true);
+
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+
+            expect(scene.primitives.length).toBe(0);
+
+            visualizer.destroy();
+        });
+    });
+
+    it('Creates and removes static material closed geometry', function() {
+        var objects = new DynamicObjectCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new DynamicEllipse();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new GridMaterialProperty();
+        ellipse.extrudedHeight = new ConstantProperty(1000);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        dynamicObject.ellipse = ellipse;
+        objects.add(dynamicObject);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toBeUndefined();
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(primitive.appearance.closed).toBe(true);
+
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+
+            expect(scene.primitives.length).toBe(0);
+
+            visualizer.destroy();
+        });
+    });
+
+    it('Creates and removes static outline geometry', function() {
+        var objects = new DynamicObjectCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new DynamicEllipse();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.outline = new ConstantProperty(true);
+        ellipse.outlineColor = new ConstantProperty(Color.BLUE);
+        ellipse.fill = new ConstantProperty(false);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        dynamicObject.ellipse = ellipse;
+        objects.add(dynamicObject);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        runs(function() {
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLUE));
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+
+            expect(scene.primitives.length).toBe(0);
+
+            visualizer.destroy();
+        });
+    });
+
+    it('Correctly handles geometry changing batches', function() {
+        var objects = new DynamicObjectCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new DynamicEllipse();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        dynamicObject.ellipse = ellipse;
+        objects.add(dynamicObject);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        var primitive;
+        var attributes;
+
+        runs(function() {
+            primitive = scene.primitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+
+            ellipse.material = new GridMaterialProperty();
+        });
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        runs(function() {
+            primitive = scene.primitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
+            expect(attributes).toBeDefined();
+            expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
+            expect(attributes.color).toBeUndefined();
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+
+            expect(scene.primitives.length).toBe(0);
+
+            visualizer.destroy();
+        });
+
+    });
+
+    it('Creates and removes dynamic geometry', function() {
+        var objects = new DynamicObjectCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new DynamicEllipse();
+        ellipse.semiMajorAxis = new SampledProperty(Number);
+        ellipse.semiMajorAxis.addSample(time, 2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        dynamicObject.ellipse = ellipse;
+        objects.add(dynamicObject);
+
+        waitsFor(function() {
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+        });
+
+        runs(function() {
+            objects.remove(dynamicObject);
+            scene.initializeFrame();
+            visualizer.update(time);
+            scene.render(time);
+            expect(scene.primitives.length).toBe(0);
+            visualizer.destroy();
+        });
     });
 
     it('Constructor throws without type', function() {
@@ -145,6 +381,13 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         var objects = new DynamicObjectCollection();
         expect(function() {
             return new GeometryVisualizer(EllipseGeometryUpdater, undefined, objects);
+        }).toThrowDeveloperError();
+    });
+
+    it('Update throws without time parameter', function() {
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, new DynamicObjectCollection());
+        expect(function() {
+            visualizer.update(undefined);
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
