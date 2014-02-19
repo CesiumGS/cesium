@@ -7,6 +7,24 @@ define([
         defined) {
     "use strict";
 
+    function accessorDefaults(accessors) {
+        if (!defined(accessors)) {
+            return;
+        }
+
+        for (var name in accessors) {
+            if (accessors.hasOwnProperty(name)) {
+                var accessor = accessors[name];
+                accessor.byteStride = defaultValue(accessor.byteStride, 0);
+            }
+        }
+    }
+
+    function assetDefaults(gltf) {
+        gltf.asset = defaultValue(gltf.asset, {});
+        gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+    }
+
     function nodeDefaults(nodes) {
         if (!defined(nodes)) {
             return;
@@ -68,8 +86,13 @@ define([
             return undefined;
         }
 
+        accessorDefaults(gltf.accessors);
+        assetDefaults(gltf);
         nodeDefaults(gltf.nodes);
         textureDefaults(gltf.textures);
+
+        gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
+        gltf.version = defaultValue(gltf.version, '1.0');
 
         return gltf;
     };
