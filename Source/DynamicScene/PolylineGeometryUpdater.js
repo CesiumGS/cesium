@@ -468,6 +468,10 @@ define(['../Core/Color',
         this._primitives.add(this._primitive);
     };
 
+    DynamicGeometryUpdater.prototype.isDestroyed = function() {
+        return false;
+    };
+
     DynamicGeometryUpdater.prototype.destroy = function() {
         if (defined(this._primitive)) {
             this._primitives.remove(this._primitive);

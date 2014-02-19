@@ -337,15 +337,16 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
         dynamicObject.position = makeProperty(Cartesian3.UNIT_Z, Cartesian3.UNIT_Y);
         dynamicObject.orientation = makeProperty(Quaternion.IDENTITY, new Quaternion(0, 1, 0, 0));
         dynamicObject.ellipsoid = ellipsoid;
+
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var primitives = new CompositePrimitive();
+        var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
-
+        expect(primitives.length).toBe(0);
         dynamicUpdater.update(time1);
-        dynamicUpdater.update(time2);
-        dynamicUpdater.update(time3);
-
+        expect(primitives.length).toBe(1);
         dynamicUpdater.destroy();
+        expect(primitives.length).toBe(0);
         updater.destroy();
     });
 
