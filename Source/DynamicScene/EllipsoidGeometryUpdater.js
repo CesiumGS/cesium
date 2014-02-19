@@ -54,7 +54,6 @@ define(['../Core/Cartesian3',
 
     var positionScratch;
     var orientationScratch;
-    var radiiScratch;
     var matrix3Scratch;
 
     var GeometryOptions = function(dynamicObject) {
@@ -305,11 +304,12 @@ define(['../Core/Cartesian3',
 
         positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
         orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         return new GeometryInstance({
             id : dynamicObject,
             geometry : new EllipsoidGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch),
+            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : attributes
         });
     };
@@ -340,11 +340,12 @@ define(['../Core/Cartesian3',
 
         positionScratch = dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE, positionScratch);
         orientationScratch = dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE, orientationScratch);
+        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         return new GeometryInstance({
             id : dynamicObject,
             geometry : new EllipsoidOutlineGeometry(this._options),
-            modelMatrix : Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientationScratch), positionScratch),
+            modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
             attributes : {
                 show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
@@ -488,17 +489,11 @@ define(['../Core/Cartesian3',
      * @private
      */
     var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
-        this._dynamicObject = geometryUpdater._dynamicObject;
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._dynamicObject);
-        this._options.radii = new Cartesian3(1, 1, 1);
-        this._modelMatrix = new Matrix4();
-        this._material = undefined;
-        this._attributes = undefined;
-        this._outlineAttributes = undefined;
     };
 
     DynamicGeometryUpdater.prototype.update = function(time) {
@@ -508,50 +503,46 @@ define(['../Core/Cartesian3',
         }
         //>>includeEnd('debug');
 
-        var dynamicObject = this._dynamicObject;
+        var geometryUpdater = this._geometryUpdater;
+
+        if (defined(this._primitive)) {
+            this._primitives.remove(this._primitive);
+        }
+
+        if (defined(this._outlinePrimitive)) {
+            this._primitives.remove(this._outlinePrimitive);
+        }
+
+        var dynamicObject = geometryUpdater._dynamicObject;
         var ellipsoid = dynamicObject.ellipsoid;
         var show = ellipsoid.show;
 
         if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
-            if (defined(this._primitive)) {
-                this._primitive.show = false;
-            }
-
-            if (defined(this._outlinePrimitive)) {
-                this._outlinePrimitive.show = false;
-            }
             return;
         }
 
-        //Compute attributes and material.
-        var appearance;
-        var showFill = !defined(ellipsoid.fill) || ellipsoid.fill.getValue(time);
-        var showOutline = defined(ellipsoid.outline) && ellipsoid.outline.getValue(time);
-        var outlineColor = defined(ellipsoid.outlineColor) ? ellipsoid.outlineColor.getValue(time) : Color.BLACK;
-        var material = MaterialProperty.getValue(time, defaultValue(ellipsoid.material, defaultMaterial), this._material);
-        this._material = material;
-
-        // Check properties that could trigger a primitive rebuild.
-        var stackPartitionsProperty = ellipsoid.stackPartitions;
-        var slicePartitionsProperty = ellipsoid.slicePartitions;
-        var subdivisionsProperty = ellipsoid.subdivisions;
-        var stackPartitions = defined(stackPartitionsProperty) ? stackPartitionsProperty.getValue(time) : undefined;
-        var slicePartitions = defined(slicePartitionsProperty) ? slicePartitionsProperty.getValue(time) : undefined;
-        var subdivisions = defined(subdivisionsProperty) ? subdivisionsProperty.getValue(time) : undefined;
-
         var options = this._options;
+        var position = dynamicObject.position;
+        var orientation = dynamicObject.orientation;
+        var radii = ellipsoid.radii;
+        var stackPartitions = ellipsoid.stackPartitions;
+        var slicePartitions = ellipsoid.slicePartitions;
+        var subdivisions = ellipsoid.subdivisions;
 
-        //We only rebuild the primitive if something other than the radii has changed
-        //For the radii, we use unit sphere and then deform it with a scale matrix.
-        var rebuildPrimitives = !defined(this._primitive) || options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || options.subdivisions !== subdivisions;
-        if (rebuildPrimitives) {
-            options.stackPartitions = stackPartitions;
-            options.slicePartitions = slicePartitions;
-            options.subdivisions = subdivisions;
+        positionScratch = position.getValue(time, positionScratch);
+        orientationScratch = orientation.getValue(time, orientationScratch);
+        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
+        var modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch);
 
-            this._material = material;
-            material = this._material;
-            appearance = new MaterialAppearance({
+        options.radii = radii.getValue(time, options.radii);
+        options.stackPartitions = defined(stackPartitions) ? stackPartitions.getValue(time, options) : undefined;
+        options.slicePartitions = defined(slicePartitions) ? slicePartitions.getValue(time, options) : undefined;
+        options.subdivisions = defined(subdivisions) ? subdivisions.getValue(time) : undefined;
+
+        if (!defined(ellipsoid.fill) || ellipsoid.fill.getValue(time)) {
+            this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var material = this._material;
+            var appearance = new MaterialAppearance({
                 material : material,
                 faceForward : true,
                 translucent : material.isTranslucent(),
@@ -562,23 +553,25 @@ define(['../Core/Cartesian3',
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
-                    geometry : new EllipsoidGeometry(options)
+                    geometry : new EllipsoidGeometry(options),
+                    modelMatrix : modelMatrix
                 }),
                 appearance : appearance,
-                asynchronous : false,
-                attributes : {
-                    show : new ShowGeometryInstanceAttribute(showFill)
-                }
+                asynchronous : false
             });
             this._primitives.add(this._primitive);
+        }
 
+        if (defined(ellipsoid.outline) && ellipsoid.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+
+            var outlineColor = defined(ellipsoid.outlineColor) ? ellipsoid.outlineColor.getValue(time) : Color.BLACK;
             this._outlinePrimitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
                     geometry : new EllipsoidOutlineGeometry(options),
+                    modelMatrix : modelMatrix,
                     attributes : {
-                        show : new ShowGeometryInstanceAttribute(showOutline),
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
                 }),
@@ -589,46 +582,7 @@ define(['../Core/Cartesian3',
                 asynchronous : false
             });
             this._primitives.add(this._outlinePrimitive);
-
-        } else {
-            //Update attributes only.
-            var primitive = this._primitive;
-            appearance = primitive.appearance;
-            appearance.material = material;
-
-            var attributes = this._attributes;
-            if (!defined(attributes)) {
-                attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
-                this._attributes = attributes;
-            }
-            attributes.show = ShowGeometryInstanceAttribute.toValue(showFill, attributes.show);
-
-            var outlinePrimitive = this._outlinePrimitive;
-
-            var outlineAttributes = this._outlineAttributes;
-            if (!defined(outlineAttributes)) {
-                outlineAttributes = outlinePrimitive.getGeometryInstanceAttributes(dynamicObject);
-                this._outlineAttributes = outlineAttributes;
-            }
-            outlineAttributes.show = ShowGeometryInstanceAttribute.toValue(showOutline, outlineAttributes.show);
-            outlineAttributes.color = ColorGeometryInstanceAttribute.toValue(outlineColor, outlineAttributes.color);
         }
-
-        //Finally, compute and set the model matrices
-        var positionProperty = dynamicObject.position;
-        var orientationProperty = dynamicObject.orientation;
-        var radiiProperty = ellipsoid.radii;
-
-        positionScratch = positionProperty.getValue(time, positionScratch);
-        orientationScratch = orientationProperty.getValue(time, orientationScratch);
-        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
-        radiiScratch = radiiProperty.getValue(time, radiiScratch);
-
-        var modelMatrix = this._modelMatrix;
-        modelMatrix = Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch, modelMatrix);
-        modelMatrix = Matrix4.multiplyByScale(modelMatrix, radiiScratch, modelMatrix);
-        this._primitive.modelMatrix = modelMatrix;
-        this._outlinePrimitive.modelMatrix = modelMatrix;
     };
 
     DynamicGeometryUpdater.prototype.isDestroyed = function() {
