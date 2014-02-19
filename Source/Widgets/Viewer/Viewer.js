@@ -372,14 +372,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                         timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
                     }
                 }
+
+                if (defined(that._dataSourceBrowser)) {
+                    that._dataSourceBrowser.viewModel.clockTrackedDataSource = dataSource;
+                }
             }
         }
 
         this._knockoutSubscriptions.push(subscribeAndEvaluate(this, 'clockTrackedDataSource', function(value) {
             trackDataSourceClock(value);
-            if (defined(that._dataSourceBrowser)) {
-                that._dataSourceBrowser.viewModel.clockTrackedDataSource = value;
-            }
         }));
 
         var onDataSourceChanged = function(dataSource) {

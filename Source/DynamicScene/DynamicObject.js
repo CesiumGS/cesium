@@ -69,7 +69,7 @@ define(['../Core/createGuid',
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', //
-                               'uiShow', 'description'];
+                               '_uiShow', 'description'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -129,19 +129,7 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Boolean}
          */
-        uiShow : {
-            configurable : false,
-            get : function() {
-                return this._uiShow;
-            },
-            set : function(value) {
-                var oldValue = this._uiShow;
-                if (oldValue !== value) {
-                    this._uiShow = value;
-                    this._propertyChanged.raiseEvent(this, 'uiShow', value, oldValue);
-                }
-            }
-        },
+        uiShow : createDynamicPropertyDescriptor('uiShow', '_uiShow'),
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
