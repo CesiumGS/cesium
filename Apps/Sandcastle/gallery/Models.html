@@ -78,14 +78,14 @@ require(['Cesium'], function(Cesium) {
     
     ///////////////////////////////////////////////////////////////////////////
     
-    createModel('../models/rigged-figure/rigged-figure-test.json');
+    createModel('../models/CesiumMan/CesiumMan.json');
     
     var options = [{
         text : 'Skinned character',
-        url : '../models/rigged-figure/rigged-figure-test.json'
+        url : '../models/CesiumMan/CesiumMan.json'
     }, {
         text : 'Skinned character',
-        url : '../models/rigged-figure/rigged-figure-test.json'
+        url : '../models/CesiumMan/CesiumMan.json'
     }];
     Sandcastle.addToolbarMenu(options, function() {
         createModel(options[this.selectedIndex].url);
