@@ -1381,25 +1381,25 @@ define([
      * Processes the provided CZML without clearing any existing data.
      *
      * @param {Object} czml The CZML to be processed.
-     * @param {String} source The source of the CZML.
+     * @param {String} sourceUri The source URI of the CZML.
      */
-    CzmlDataSource.prototype.process = function(czml, source) {
+    CzmlDataSource.prototype.process = function(czml, sourceUri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
         //>>includeEnd('debug');
 
-        loadCzml(this, czml, source);
+        loadCzml(this, czml, sourceUri);
     };
 
     /**
      * Replaces any existing data with the provided CZML.
      *
      * @param {Object} czml The CZML to be processed.
-     * @param {String} source The source of the CZML.
+     * @param {String} source The source URI of the CZML.
      */
-    CzmlDataSource.prototype.load = function(czml, source) {
+    CzmlDataSource.prototype.load = function(czml, sourceUri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
@@ -1408,7 +1408,7 @@ define([
 
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
-        loadCzml(this, czml, source);
+        loadCzml(this, czml, sourceUri);
     };
 
     /**

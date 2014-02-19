@@ -129,7 +129,7 @@ define([
     }
 
     // GeoJSON processing functions
-    function processFeature(dataSource, feature, notUsed, crsFunction, source) {
+    function processFeature(dataSource, feature, notUsed, crsFunction, sourceUri) {
         if (!defined(feature.geometry)) {
             throw new RuntimeError('feature.geometry is required.');
         }
@@ -143,18 +143,18 @@ define([
             if (!defined(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
-            geometryHandler(dataSource, feature, feature.geometry, crsFunction, source);
+            geometryHandler(dataSource, feature, feature.geometry, crsFunction, sourceUri);
         }
     }
 
-    function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, source) {
+    function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, sourceUri) {
         var features = featureCollection.features;
         for ( var i = 0, len = features.length; i < len; i++) {
-            processFeature(dataSource, features[i], undefined, crsFunction, source);
+            processFeature(dataSource, features[i], undefined, crsFunction, sourceUri);
         }
     }
 
-    function processGeometryCollection(dataSource, geoJson, geometryCollection, crsFunction, source) {
+    function processGeometryCollection(dataSource, geoJson, geometryCollection, crsFunction, sourceUri) {
         var geometries = geometryCollection.geometries;
         for ( var i = 0, len = geometries.length; i < len; i++) {
             var geometry = geometries[i];
@@ -163,17 +163,17 @@ define([
             if (!defined(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
-            geometryHandler(dataSource, geoJson, geometry, crsFunction, source);
+            geometryHandler(dataSource, geoJson, geometry, crsFunction, sourceUri);
         }
     }
 
-    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
+    function processPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPoint);
         dynamicObject.position = new ConstantProperty(crsFunction(geometry.coordinates));
     }
 
-    function processMultiPoint(dataSource, geoJson, geometry, crsFunction, source) {
+    function processMultiPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var coordinates = geometry.coordinates;
         for ( var i = 0; i < coordinates.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
@@ -182,13 +182,13 @@ define([
         }
     }
 
-    function processLineString(dataSource, geoJson, geometry, crsFunction, source) {
+    function processLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultLine);
         dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
     }
 
-    function processMultiLineString(dataSource, geoJson, geometry, crsFunction, source) {
+    function processMultiLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var lineStrings = geometry.coordinates;
         for ( var i = 0; i < lineStrings.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
@@ -197,24 +197,24 @@ define([
         }
     }
 
-    function processPolygon(dataSource, geoJson, geometry, crsFunction, source) {
+    function processPolygon(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         //TODO Holes
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPolygon);
         dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
-    function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
+    function processTopology(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         for ( var property in geometry.objects) {
             if (geometry.objects.hasOwnProperty(property)) {
                 var feature = topojson.feature(geometry, geometry.objects[property]);
                 var typeHandler = geoJsonObjectTypes[feature.type];
-                typeHandler(dataSource, feature, feature, crsFunction, source);
+                typeHandler(dataSource, feature, feature, crsFunction, sourceUri);
             }
         }
     }
 
-    function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
+    function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         //TODO holes
         var polygons = geometry.coordinates;
         for ( var i = 0; i < polygons.length; i++) {
@@ -340,8 +340,6 @@ define([
          * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
-
-        this._name = undefined;
     };
 
     /**
@@ -471,7 +469,7 @@ define([
      * Asynchronously loads the provided GeoJSON object, replacing any existing data.
      *
      * @param {Object} geoJson The object to be processed.
-     * @param {String} [source] The base URI of any relative links in the geoJson object.
+     * @param {String} [sourceUri] The base URI of any relative links in the geoJson object.
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      *
@@ -482,16 +480,21 @@ define([
      * @exception {RuntimeError} Unable to resolve crs link.
      * @exception {RuntimeError} Unknown crs type.
      */
-    GeoJsonDataSource.prototype.load = function(geoJson, source) {
+    GeoJsonDataSource.prototype.load = function(geoJson, sourceUri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(geoJson)) {
             throw new DeveloperError('geoJson is required.');
         }
         //>>includeEnd('debug');
 
-        this._name = undefined;
-        if (defined(source)) {
-            this._name = getFilenameFromUri(source);
+        var name;
+        if (defined(sourceUri)) {
+            name = getFilenameFromUri(sourceUri);
+        }
+
+        if (defined(name) && this._name !== name) {
+            this._name = name;
+            this._changed.raiseEvent(this);
         }
 
         var typeHandler = geoJsonObjectTypes[geoJson.type];
@@ -543,7 +546,7 @@ define([
 
         var dataSource = this;
         return when(crsFunction, function(crsFunction) {
-            typeHandler(dataSource, geoJson, geoJson, crsFunction, source);
+            typeHandler(dataSource, geoJson, geoJson, crsFunction, sourceUri);
             dataSource._changed.raiseEvent(dataSource);
             setLoading(dataSource, false);
         }, function(error) {
