@@ -28,6 +28,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [David Hudlow](https://github.com/DavidHudlow)
 * [Evax Software](http://www.evax.fr)
    * [Evax Software](https://github.com/evax)
+* [Aviture](http://aviture.us.com)
+   * [Mike Macaulay](https://github.com/mmacaula)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
