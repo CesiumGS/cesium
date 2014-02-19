@@ -337,7 +337,7 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
         dynamicUpdater.update(time1);
-        expect(primitives.length).toBe(1);
+        expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives.
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
         updater.destroy();
