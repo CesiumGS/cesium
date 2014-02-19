@@ -20,6 +20,26 @@ define([
         }
     }
 
+    function animationDefaults(animations) {
+        if (!defined(animations)) {
+            return;
+        }
+
+        for (var name in animations) {
+            if (animations.hasOwnProperty(name)) {
+                var animation = animations[name];
+                var samplers = animations.samplers;
+
+                for (var samplerName in samplers) {
+                    if (samplers.hasOwnProperty(samplerName)) {
+                        var sampler = samplers[samplerName];
+                        sampler.interpolation = defaultValue(sampler.interpolation, 'LINEAR');
+                    }
+                }
+            }
+        }
+    }
+
     function assetDefaults(gltf) {
         gltf.asset = defaultValue(gltf.asset, {});
         gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
@@ -87,6 +107,7 @@ define([
         }
 
         accessorDefaults(gltf.accessors);
+        animationDefaults(gltf.accessors);
         assetDefaults(gltf);
         nodeDefaults(gltf.nodes);
         textureDefaults(gltf.textures);
