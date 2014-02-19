@@ -17,13 +17,14 @@ define(['../Core/defineProperties',
      * @constructor
      *
      * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
+     * @param {Scene} scene The scene where visualization is taking place.
      *
      * @see EllipseGeometryUpdater
      * @see EllipsoidGeometryUpdater
      * @see PolygonGeometryUpdater
      * @see PolylineGeometryUpdater
      */
-    var GeometryUpdater = function(dynamicObject) {
+    var GeometryUpdater = function(dynamicObject, scene) {
         DeveloperError.throwInstantiationError();
     };
 

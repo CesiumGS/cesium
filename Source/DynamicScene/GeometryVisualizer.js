@@ -222,7 +222,7 @@ define(['../Core/defined',
         for (i = added.length - 1; i > -1; i--) {
             dynamicObject = added[i];
             id = dynamicObject.id;
-            updater = new this._type(dynamicObject);
+            updater = new this._type(dynamicObject, this._scene);
             this._updaters.set(id, updater);
             insertUpdaterIntoBatch(this, time, updater);
             this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometyChanged, this));
