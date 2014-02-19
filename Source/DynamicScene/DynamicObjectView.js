@@ -187,8 +187,6 @@ define([
             controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
             controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
-            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
-
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);
             that._lastDistance = Cartesian3.magnitude(position);
@@ -200,7 +198,6 @@ define([
 
     function update3DController(that, camera, objectChanged, offset) {
         var scene = that.scene;
-        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
             camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);

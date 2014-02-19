@@ -50,6 +50,7 @@ Beta Releases
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
 * `RequestErrorEvent` now includes the headers that were returned with the error response.
 * Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`. 
+* Fixed `WallGeometry` bug that failed by removing positions that were less close together by less than 6 decimal places. [#1483](https://github.com/AnalyticalGraphicsInc/cesium/pull/1483)
 * Added `Model` for drawing 3D models using glTF.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
