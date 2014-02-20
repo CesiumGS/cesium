@@ -14,6 +14,7 @@ define(['../Core/Cartesian2',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
+        '../Core/isArray',
         '../Core/Iso8601',
         '../Core/JulianDate',
         '../Core/LagrangePolynomialApproximation',
@@ -77,6 +78,7 @@ define(['../Core/Cartesian2',
         Event,
         getFilenameFromUri,
         HermitePolynomialApproximation,
+        isArray,
         Iso8601,
         JulianDate,
         LagrangePolynomialApproximation,
@@ -522,7 +524,7 @@ define(['../Core/Cartesian2',
             return;
         }
 
-        if (Array.isArray(packetData)) {
+        if (isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processProperty(type, object, propertyName, packetData[i], interval, sourceUri);
             }
@@ -664,7 +666,7 @@ define(['../Core/Cartesian2',
             return;
         }
 
-        if (Array.isArray(packetData)) {
+        if (isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processPositionProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
@@ -747,7 +749,7 @@ define(['../Core/Cartesian2',
             return;
         }
 
-        if (Array.isArray(packetData)) {
+        if (isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
                 processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
@@ -853,7 +855,7 @@ define(['../Core/Cartesian2',
         }
 
         var intervals;
-        if (Array.isArray(packetData)) {
+        if (isArray(packetData)) {
             var length = packetData.length;
             for (var i = 0; i < length; i++) {
                 if (!defined(intervals)) {
@@ -1568,7 +1570,7 @@ define(['../Core/Cartesian2',
     CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions, dataSource) {
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
-        if (Array.isArray(czml)) {
+        if (isArray(czml)) {
             for (var i = 0, len = czml.length; i < len; i++) {
                 processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
             }

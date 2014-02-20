@@ -9,6 +9,7 @@ define([
         './Ellipsoid',
         './EllipsoidGeodesic',
         './IntersectionTests',
+        './isArray',
         './Math',
         './Matrix4',
         './Plane'
@@ -22,6 +23,7 @@ define([
         Ellipsoid,
         EllipsoidGeodesic,
         IntersectionTests,
+        isArray,
         CesiumMath,
         Matrix4,
         Plane) {
@@ -326,7 +328,7 @@ define([
         }
 
         var h;
-        if (Array.isArray(height)) {
+        if (isArray(height)) {
             if (height.length !== length/3) {
                 throw new DeveloperError('height.length must be equal to positions.length');
             }

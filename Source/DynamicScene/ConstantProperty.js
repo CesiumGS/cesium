@@ -4,14 +4,16 @@ define(['../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration',
-        '../Core/Event'
+        '../Core/Event',
+        '../Core/isArray'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Enumeration,
-        Event) {
+        Event,
+        isArray) {
     "use strict";
 
     /**
@@ -85,7 +87,7 @@ define(['../Core/defaultValue',
         var oldValue = this._value;
         var simple = this._simple;
         if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
-            simple = typeof value !== 'object' || Array.isArray(value) || value instanceof Enumeration;
+            simple = typeof value !== 'object' || isArray(value) || value instanceof Enumeration;
 
             //>>includeStart('debug', pragmas.debug);
             if (!simple) {

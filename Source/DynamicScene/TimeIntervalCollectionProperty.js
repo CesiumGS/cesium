@@ -5,6 +5,7 @@ define(['./Property',
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/Event',
+        '../Core/isArray',
         '../Core/TimeIntervalCollection'
     ], function(
         Property,
@@ -13,6 +14,7 @@ define(['./Property',
         DeveloperError,
         Enumeration,
         Event,
+        isArray,
         TimeIntervalCollection) {
     "use strict";
 
@@ -114,7 +116,7 @@ define(['./Property',
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration))) {
+        if (defined(value) && (typeof value === 'object' && !isArray(value) && !(value instanceof Enumeration))) {
             return value.clone(result);
         }
         return value;
