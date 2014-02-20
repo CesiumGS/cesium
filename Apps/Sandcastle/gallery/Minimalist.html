@@ -25,7 +25,7 @@
     document.getElementById('cesiumContainer').appendChild(canvas);
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var scene = new Cesium.Scene(canvas);
-    var primitives = scene.getPrimitives();
+    var primitives = scene.primitives;
 
     var imageryUrl = '../../../Source/Assets/Textures/';
     var imageryProvider = new Cesium.TileMapServiceImageryProvider({
@@ -33,8 +33,8 @@
     });
 
     var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.getImageryLayers().addImageryProvider(imageryProvider);
-    primitives.setCentralBody(centralBody);
+    centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
+    primitives.centralBody = centralBody;
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     var skyBoxBaseUrl = imageryUrl + 'SkyBox/tycho2t3_80';
     scene.skyBox = new Cesium.SkyBox({
@@ -76,7 +76,7 @@
 
         canvas.width = width;
         canvas.height = height;
-        scene.getCamera().frustum.aspectRatio = width / height;
+        scene.camera.frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
     onResize();

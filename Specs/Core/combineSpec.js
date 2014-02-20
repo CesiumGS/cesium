@@ -63,4 +63,21 @@ defineSuite([
             }
         });
     });
+
+    it('can accept undefined as either object', function() {
+        var object = {
+            one : 1,
+            deep : {
+                value1 : 10
+            }
+        };
+
+        expect(combine(undefined, object)).toEqual(object);
+        expect(combine(undefined, object, true)).toEqual(object);
+        expect(combine(object, undefined)).toEqual(object);
+        expect(combine(object, undefined, true)).toEqual(object);
+
+        expect(combine(undefined, undefined)).toEqual({});
+        expect(combine(undefined, undefined, true)).toEqual({});
+    });
 });

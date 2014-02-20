@@ -148,7 +148,7 @@ define([
         var isGeographic = defaultValue(description.isGeographic, true);
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
 
-        var oneOverCentralBodySemimajorAxis = 1.0 / ellipsoid.getMaximumRadius();
+        var oneOverCentralBodySemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
         var nativeExtent = description.nativeExtent;
 
@@ -190,7 +190,7 @@ define([
         var granularityX = (nativeExtent.east - nativeExtent.west) / (width - 1);
         var granularityY = (nativeExtent.north - nativeExtent.south) / (height - 1);
 
-        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquared = ellipsoid.radiiSquared;
         var radiiSquaredX = radiiSquared.x;
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;

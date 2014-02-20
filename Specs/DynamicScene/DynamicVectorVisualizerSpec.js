@@ -58,7 +58,7 @@ defineSuite([
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
     });
 
     it('update throws if no time specified.', function() {
@@ -89,8 +89,8 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(0);
     });
 
@@ -103,8 +103,8 @@ defineSuite([
         vector.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(0);
     });
 
@@ -114,7 +114,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -128,9 +128,9 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
@@ -161,7 +161,7 @@ defineSuite([
     it('clear hides primitives.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
@@ -174,7 +174,7 @@ defineSuite([
         vector.direction = new ConstantProperty(new Cartesian3(1, 2, 3));
         visualizer.update(time);
 
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
 
@@ -189,7 +189,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -204,7 +204,7 @@ defineSuite([
         vector.direction = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         visualizer.update(time);
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);
@@ -236,15 +236,15 @@ defineSuite([
         var time = new JulianDate();
 
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
         primitive = polylineCollection.get(0);
         expect(primitive.dynamicObject).toEqual(testObject2);
     });

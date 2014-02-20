@@ -373,7 +373,7 @@ define([
         var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCamera);
 
-        surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
+        surface._ellipsoidalOccluder.cameraPosition = cameraPosition;
 
         var tile;
 

@@ -268,14 +268,14 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             geocoder = new Geocoder({
                 container : geocoderContainer,
                 scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget.centralBody.getEllipsoid()
+                ellipsoid : cesiumWidget.centralBody.ellipsoid
             });
         }
 
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.ellipsoid);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;
@@ -297,7 +297,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var baseLayerPicker;
         if (createBaseLayerPicker) {
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
+            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.imageryLayerCollection, providerViewModels);
             baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
 
             //Grab the dropdown for resize code.
@@ -377,7 +377,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }));
 
         var onDataSourceChanged = function(dataSource) {
-            if (this.clockTrackedDataSource === dataSource) {
+            if (that.clockTrackedDataSource === dataSource) {
                 trackDataSourceClock(dataSource);
             }
         };

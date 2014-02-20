@@ -10,6 +10,7 @@ define([
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerCesiumInspectorMixin',
         'domReady!'
     ], function(
         defined,
@@ -21,7 +22,8 @@ define([
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin) {
+        viewerDynamicObjectMixin,
+        viewerCesiumInspectorMixin) {
     "use strict";
     /*global console*/
 
@@ -72,6 +74,9 @@ define([
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
+        if (endUserOptions.inspector) {
+            viewer.extend(viewerCesiumInspectorMixin);
+        }
 
         var showLoadError = function(name, error) {
             var title = 'An error occurred while loading the file: ' + name;
@@ -85,7 +90,7 @@ define([
         });
 
         var scene = viewer.scene;
-        var context = scene.getContext();
+        var context = scene.context;
         if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);
             context.setValidateFramebuffer(true);

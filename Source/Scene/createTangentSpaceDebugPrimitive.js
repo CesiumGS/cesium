@@ -36,7 +36,7 @@ define([
      * @returns {Primitive} A new <code>Primitive<code> instance with geometry for the vectors.
      *
      * @example
-     * scene.getPrimitives().add(Cesium.createTangentSpaceDebugPrimitive({
+     * scene.primitives.add(Cesium.createTangentSpaceDebugPrimitive({
      *    geometry : instance.geometry,
      *    length : 100000.0,
      *    modelMatrix : instance.modelMatrix

@@ -177,16 +177,16 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
-            var creditDisplay = scene.getFrameState().creditDisplay;
+            var creditDisplay = scene.frameState.creditDisplay;
 
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
             var centralBody = new CentralBody(ellipsoid);
-            scene.getPrimitives().setCentralBody(centralBody);
+            scene.primitives.centralBody = centralBody;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -219,7 +219,7 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+                centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
@@ -520,7 +520,7 @@ define([
         this._canRender = canRender;
 
         if (canRender) {
-            var frustum = this._scene.getCamera().frustum;
+            var frustum = this._scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {

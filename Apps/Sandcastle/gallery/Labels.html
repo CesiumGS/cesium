@@ -34,7 +34,7 @@ require(['Cesium'], function(Cesium) {
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57)),
             text     : 'Philadelphia'
         });
-        scene.getPrimitives().add(labels);
+        scene.primitives.add(labels);
     }
 
     function setLabelFont(scene, ellipsoid) {
@@ -50,7 +50,7 @@ require(['Cesium'], function(Cesium) {
             outlineWidth : 2,
             style : Cesium.LabelStyle.FILL_AND_OUTLINE
         });
-        scene.getPrimitives().add(labels);
+        scene.primitives.add(labels);
     }
 
     function setLabelProperties(scene, ellipsoid) {
@@ -63,7 +63,7 @@ require(['Cesium'], function(Cesium) {
 
         l.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57, 300000.0)));
         l.setScale(2.0);
-        scene.getPrimitives().add(labels);
+        scene.primitives.add(labels);
     }
 
     function addLabelsInReferenceFrame(scene, ellipsoid) {
@@ -87,7 +87,7 @@ require(['Cesium'], function(Cesium) {
             position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
             text     : 'Up'
         });
-        scene.getPrimitives().add(labels);
+        scene.primitives.add(labels);
     }
 
     function labelPixelOffsetByDistance(scene, ellipsoid) {
@@ -97,7 +97,7 @@ require(['Cesium'], function(Cesium) {
         image.onload = function() {
             var labels = new Cesium.LabelCollection();
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -117,8 +117,8 @@ require(['Cesium'], function(Cesium) {
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
             });
 
-            scene.getPrimitives().add(billboards);
-            scene.getPrimitives().add(labels);
+            scene.primitives.add(billboards);
+            scene.primitives.add(labels);
         };
         image.src = '../images/facility.gif';
     }
@@ -136,14 +136,14 @@ require(['Cesium'], function(Cesium) {
             text     : 'Atlanta',
             translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
         });
-        scene.getPrimitives().add(labels);
+        scene.primitives.add(labels);
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.getEllipsoid();
+    var ellipsoid = widget.centralBody.ellipsoid;
     var scene = widget.scene;
-    var primitives = scene.getPrimitives();
+    var primitives = scene.primitives;
 
     addLabel(scene, ellipsoid);
 

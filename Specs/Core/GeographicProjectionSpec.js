@@ -35,7 +35,7 @@ defineSuite([
     it('project1', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
-        var expected = new Cartesian3(Math.PI * ellipsoid.getRadii().x, CesiumMath.PI_OVER_TWO * ellipsoid.getRadii().x, 0.0);
+        var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
         var projection = new GeographicProjection(ellipsoid);
         expect(projection.project(cartographic)).toEqual(expected);
     });
@@ -51,7 +51,7 @@ defineSuite([
     it('project3', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
-        var expected = new Cartesian3(Math.PI * ellipsoid.getRadii().x, CesiumMath.PI_OVER_TWO * ellipsoid.getRadii().x, 0.0);
+        var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
         var projection = new GeographicProjection(ellipsoid);
         var result = new Cartesian3(0.0, 0.0, 0.0);
         var returnValue = projection.project(cartographic, result);
