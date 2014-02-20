@@ -475,7 +475,7 @@ define([
      * Computes the bounding sphere around the entire model in world coordinates using the
      * previous frame's {@link Model#modelMatrix} and node transforms.  This can be used in
      * {@link readyToRender} to zoom to the model.  This can't be called before the
-     * {@link readyToRender} event fires because it requires that the glTF nodes are loaded.
+     * {@link readyToRender} event is raised because it requires that the glTF nodes are loaded.
      *
      * @memberof Model
      *
@@ -1881,9 +1881,9 @@ define([
 
         if (justLoaded) {
             // Called after modelMatrix update.
-            frameState.events.push({
-                event : this.readyToRender,
-                eventArguments : [this]
+            var model = this;
+            frameState.afterRender.push(function() {
+                model.readyToRender.raiseEvent(model);
             });
             return;
         }

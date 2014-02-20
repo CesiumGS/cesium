@@ -53,7 +53,7 @@ define([
         display.style['background-color'] = this._backgroundColor;
         display.style.font = this._font;
         display.style.padding = '7px';
-        display.style['border-radius']= '5px';
+        display.style['border-radius'] = '5px';
         display.style.border = '1px solid #444';
         this._container.appendChild(display);
 
@@ -98,7 +98,7 @@ define([
         }
 
         if (frameTime !== this._frameTime) {
-            this._msText.nodeValue = frameTime + ' MS';
+            this._msText.nodeValue = frameTime.toFixed(2) + ' MS';
             this._frameTime = frameTime;
         }
 
