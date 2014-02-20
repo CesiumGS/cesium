@@ -421,11 +421,10 @@ define([
         //>>includeEnd('debug');
 
         var duration = defaultValue(description.duration, 3000.0);
-        var referenceFrame = description.endReferenceFrame;
-
         var frameState = scene.frameState;
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
+
         var wrapCallback = function(cb) {
             var wrapped = function() {
                 if (typeof cb === 'function') {
@@ -433,18 +432,18 @@ define([
                 }
 
                 controller.enableInputs = true;
-
-                if (defined(referenceFrame)) {
-                    scene.camera.controller.setTransform(referenceFrame);
-                }
             };
             return wrapped;
         };
         var onComplete = wrapCallback(description.onComplete);
         var onCancel = wrapCallback(description.onCancel);
 
-        var frustum = frameState.camera.frustum;
+        var referenceFrame = description.endReferenceFrame;
+        if (defined(referenceFrame)) {
+            scene.camera.controller.setTransform(referenceFrame);
+        }
 
+        var frustum = frameState.camera.frustum;
         if (frameState.mode === SceneMode.SCENE2D) {
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
