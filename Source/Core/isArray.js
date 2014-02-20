@@ -1,4 +1,4 @@
-/*global define,performance*/
+/*global define*/
 define(['./defined'
     ], function(
         defined) {

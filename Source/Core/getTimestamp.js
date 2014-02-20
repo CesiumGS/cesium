@@ -1,9 +1,10 @@
-/*global define,performance*/
+/*global define*/
 define([
         './defined'
     ], function(
         defined) {
     "use strict";
+    /*global performance*/
 
     /**
      * Gets a timestamp that can be used in measuring the time between events.  Timestamps
