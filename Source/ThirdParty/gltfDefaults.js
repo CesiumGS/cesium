@@ -45,6 +45,44 @@ define([
         gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
     }
 
+    function bufferDefaults(buffers) {
+        if (!defined(buffers)) {
+            return;
+        }
+
+        for (var name in buffers) {
+            if (buffers.hasOwnProperty(name)) {
+                var buffer = buffers[name];
+                buffer.type = defaultValue(buffer.type, 'arraybuffer');
+            }
+        }
+    }
+
+    function lightDefaults(lights) {
+        if (!defined(lights)) {
+            return;
+        }
+
+        for (var name in lights) {
+            if (lights.hasOwnProperty(name)) {
+                var light = lights[name];
+                if (light.type === 'point') {
+                    var pointLight = light.point;
+                    pointLight.constantAttenuation = defaultValue(pointLight.constantAttenuation, 1.0);
+                    pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
+                    pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
+                } else if (light.type === 'spot') {
+                    var spotLight = light.spot;
+                    spotLight.constantAttenuation = defaultValue(spotLight.constantAttenuation, 1.0);
+                    spotLight.fallOffAngle = defaultValue(spotLight.fallOffAngle, 3.14159265);
+                    spotLight.fallOffExponent = defaultValue(spotLight.fallOffExponent, 0.0);
+                    spotLight.linearAttenuation = defaultValue(spotLight.linearAttenuation, 0.0);
+                    spotLight.quadraticAttenuation = defaultValue(spotLight.quadraticAttenuation, 0.0);
+                }
+            }
+        }
+    }
+
     function nodeDefaults(nodes) {
         if (!defined(nodes)) {
             return;
@@ -107,8 +145,10 @@ define([
         }
 
         accessorDefaults(gltf.accessors);
-        animationDefaults(gltf.accessors);
+        animationDefaults(gltf.animations);
         assetDefaults(gltf);
+        bufferDefaults(gltf.buffers);
+        lightDefaults(gltf.lights);
         nodeDefaults(gltf.nodes);
         textureDefaults(gltf.textures);
 
