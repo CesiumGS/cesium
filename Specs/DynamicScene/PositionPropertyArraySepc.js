@@ -92,6 +92,10 @@ defineSuite(['DynamicScene/PositionPropertyArray',
 
         right = new PositionPropertyArray([new ConstantPositionProperty(Cartesian3.UNIT_Z)]);
         expect(left.equals(right)).toEqual(false);
+
+        left = new PositionPropertyArray();
+        right = new PositionPropertyArray();
+        expect(left.equals(right)).toEqual(true);
     });
 
     it('isConstant is true only if all members are constant', function() {

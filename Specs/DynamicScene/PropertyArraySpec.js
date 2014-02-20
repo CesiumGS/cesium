@@ -82,6 +82,10 @@ defineSuite(['DynamicScene/PropertyArray',
 
         right = new PropertyArray([new ConstantProperty(2)]);
         expect(left.equals(right)).toEqual(false);
+
+        left = new PropertyArray();
+        right = new PropertyArray();
+        expect(left.equals(right)).toEqual(true);
     });
 
     it('isConstant is true only if all members are constant', function() {

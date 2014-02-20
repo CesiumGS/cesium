@@ -29,7 +29,6 @@ define(['../Core/defaultValue',
      */
     var PropertyArray = function(value) {
         this._value = undefined;
-        this._length = 0;
         this._definitionChanged = new Event();
         this._eventHelper = new EventHelper();
         this.setValue(value);
@@ -44,12 +43,16 @@ define(['../Core/defaultValue',
          */
         isConstant : {
             get : function() {
-                var length = this._length;
                 var value = this._value;
+                if (!defined(value)) {
+                    return true;
+                }
+                var length = value.length;
                 for (var i = 0; i < length; i++) {
                     if (!Property.isConstant(value[i])) {
                         return false;
-                    }                }
+                    }
+                }
                 return true;
             }
         },
@@ -82,11 +85,12 @@ define(['../Core/defaultValue',
         }
         //>>includeEnd('debug');
 
-        if (!defined(this._value)) {
+        var value = this._value;
+        if (!defined(value)) {
             return undefined;
         }
 
-        var length = this._length;
+        var length = value.length;
         if (!defined(result)) {
             result = new Array(length);
         }
@@ -94,9 +98,9 @@ define(['../Core/defaultValue',
         var x = 0;
         while (i < length) {
             var property = this._value[i];
-            var value = property.getValue(time, result[i]);
-            if (defined(value)) {
-                result[x] = value;
+            var itemValue = property.getValue(time, result[i]);
+            if (defined(itemValue)) {
+                result[x] = itemValue;
                 x++;
             }
             i++;
@@ -118,8 +122,6 @@ define(['../Core/defaultValue',
         if (defined(value)) {
             this._value = value.slice();
             var length = value.length;
-            this._length = length;
-
             for (var i = 0; i < length; i++) {
                 var property = value[i];
                 if (defined(property)) {
@@ -128,7 +130,6 @@ define(['../Core/defaultValue',
             }
         } else {
             this._value = undefined;
-            this._length = 0;
         }
         this._definitionChanged.raiseEvent(this);
     };
@@ -144,7 +145,7 @@ define(['../Core/defaultValue',
     PropertyArray.prototype.equals = function(other) {
         return this === other || //
                (other instanceof PropertyArray && //
-                (this._length === other._length && Property.arrayEquals(this._value, other._value)));
+                Property.arrayEquals(this._value, other._value));
     };
 
     PropertyArray.prototype._raiseDefinitionChanged = function() {

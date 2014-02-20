@@ -81,6 +81,12 @@ define(['../Core/defined',
      * @private
      */
     Property.arrayEquals = function(left, right) {
+        if (left === right) {
+            return true;
+        }
+        if ((!defined(left) || !defined(right)) || (left.length !== right.length)) {
+            return false;
+        }
         var length = left.length;
         for (var i = 0; i < length; i++) {
             if (!Property.equals(left[i], right[i])) {
