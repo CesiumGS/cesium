@@ -95,7 +95,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
             expect(primitive.appearance.closed).toBe(false);
 
             objects.remove(dynamicObject);
@@ -136,7 +136,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
             expect(primitive.appearance.closed).toBe(false);
 
             objects.remove(dynamicObject);
@@ -178,7 +178,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
             expect(primitive.appearance.closed).toBe(true);
 
             objects.remove(dynamicObject);
@@ -220,7 +220,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
             expect(primitive.appearance.closed).toBe(true);
 
             objects.remove(dynamicObject);
@@ -263,7 +263,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLUE));
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
@@ -306,7 +306,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toEqual(ColorGeometryInstanceAttribute.toValue(Color.WHITE));
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.PerInstanceColorAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.perInstanceColorAppearanceType);
 
             ellipse.material = new GridMaterialProperty();
         });
@@ -324,7 +324,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
             expect(attributes).toBeDefined();
             expect(attributes.show).toEqual(ShowGeometryInstanceAttribute.toValue(true));
             expect(attributes.color).toBeUndefined();
-            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.MaterialAppearanceType);
+            expect(primitive.appearance).toBeInstanceOf(EllipseGeometryUpdater.materialAppearanceType);
 
             objects.remove(dynamicObject);
             scene.initializeFrame();

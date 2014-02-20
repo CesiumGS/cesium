@@ -50,7 +50,7 @@ define(['../Core/Color',
 
     /**
      * A {@link GeometryUpdater} for polylines.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDsplay}.
+     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
      * @alias PolygonGeometryUpdater
      * @constructor
      *
@@ -80,7 +80,7 @@ define(['../Core/Color',
          * @memberof PolylineGeometryUpdater
          * @type {Appearance}
          */
-        PerInstanceColorAppearanceType : {
+        perInstanceColorAppearanceType : {
             get : function() {
                 return PolylineColorAppearance;
             }
@@ -90,7 +90,7 @@ define(['../Core/Color',
          * @memberof PolylineGeometryUpdater
          * @type {Appearance}
          */
-        MaterialAppearanceType : {
+        materialAppearanceType : {
             get : function() {
                 return PolylineMaterialAppearance;
             }

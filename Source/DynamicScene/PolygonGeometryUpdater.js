@@ -61,7 +61,7 @@ define(['../Core/Color',
 
     /**
      * A {@link GeometryUpdater} for polygons.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDsplay}.
+     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
      * @alias PolygonGeometryUpdater
      * @constructor
      *
@@ -96,7 +96,7 @@ define(['../Core/Color',
          * @memberof PolygonGeometryUpdater
          * @type {Appearance}
          */
-        PerInstanceColorAppearanceType : {
+        perInstanceColorAppearanceType : {
             get : function() {
                 return PerInstanceColorAppearance;
             }
@@ -106,7 +106,7 @@ define(['../Core/Color',
          * @memberof PolygonGeometryUpdater
          * @type {Appearance}
          */
-        MaterialAppearanceType : {
+        materialAppearanceType : {
             get : function() {
                 return MaterialAppearance;
             }

@@ -34,7 +34,7 @@ define(['../Core/defineProperties',
          * @memberof GeometryUpdater
          * @type {Appearance}
          */
-        PerInstanceColorAppearanceType : {
+        perInstanceColorAppearanceType : {
             get : DeveloperError.throwInstantiationError
         },
         /**
@@ -42,7 +42,7 @@ define(['../Core/defineProperties',
          * @memberof GeometryUpdater
          * @type {Appearance}
          */
-        MaterialAppearanceType : {
+        materialAppearanceType : {
             get : DeveloperError.throwInstantiationError
         }
     });

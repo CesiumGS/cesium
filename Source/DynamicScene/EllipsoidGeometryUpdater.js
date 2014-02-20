@@ -73,7 +73,7 @@ define(['../Core/Cartesian3',
 
     /**
      * A {@link GeometryUpdater} for ellipsoids.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDsplay}.
+     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
      * @alias EllipsoidGeometryUpdater
      * @constructor
      *
@@ -112,7 +112,7 @@ define(['../Core/Cartesian3',
          * @memberof EllipsoidGeometryUpdater
          * @type {Appearance}
          */
-        PerInstanceColorAppearanceType : {
+        perInstanceColorAppearanceType : {
             get : function() {
                 return PerInstanceColorAppearance;
             }
@@ -122,7 +122,7 @@ define(['../Core/Cartesian3',
          * @memberof EllipsoidGeometryUpdater
          * @type {Appearance}
          */
-        MaterialAppearanceType : {
+        materialAppearanceType : {
             get : function() {
                 return MaterialAppearance;
             }
