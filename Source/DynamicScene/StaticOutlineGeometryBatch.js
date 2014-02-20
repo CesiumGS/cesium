@@ -153,7 +153,6 @@ define(['../Core/Color',
 
         itemsToRemove = this._translucentBatch.itemsToRemove;
         var translucentToMoveLength = itemsToRemove.length;
-        var removedTranslucentLength = itemsToRemove.length;
         if (translucentToMoveLength > 0) {
             for (i = 0; i < translucentToMoveLength; i++) {
                 updater = itemsToRemove[i];
@@ -163,7 +162,7 @@ define(['../Core/Color',
         }
 
         //If we moved anything around, we need to re-build the primitive
-        if (translucentToMoveLength > 0 || removedTranslucentLength > 0) {
+        if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
             this._solidBatch.update(time);
             this._translucentBatch.update(time);
         }
