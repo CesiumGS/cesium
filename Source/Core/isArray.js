@@ -11,11 +11,8 @@ define(['./defined'
      * @param {Object} value The value to test.
      * @returns {Boolean} true if the value is an array, false otherwise.
      */
-    var isArray;
-
-    if (defined(Array.isArray)) {
-        isArray = Array.isArray;
-    } else {
+    var isArray = Array.isArray;
+    if (!defined(isArray)) {
         isArray = function(value) {
             return Object.prototype.toString.call(value) === '[object Array]';
         };
