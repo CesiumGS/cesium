@@ -8,7 +8,7 @@ define(['../Core/DeveloperError'
      * Defines the interface for a dynamic geometry updater.  A DynamicGeometryUpdater
      * is responsible for handling visualization of a specific type of geometry
      * that needs to be recomputed based on simulation time.
-     * This classes is never used directly by client code, but is instead created by
+     * This object is never used directly by client code, but is instead created by
      * {@link GeometryUpdater} implementations which contain dynamic geometry.
      *
      * This type defines an interface and cannot be instantiated directly.

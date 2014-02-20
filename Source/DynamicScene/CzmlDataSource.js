@@ -34,6 +34,7 @@ define(['../Core/Cartesian2',
         './CompositeProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './DynamicBillboard',
         './DynamicClock',
         './ColorMaterialProperty',
@@ -96,6 +97,7 @@ define(['../Core/Cartesian2',
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         DynamicBillboard,
         DynamicClock,
         ColorMaterialProperty,
@@ -147,42 +149,8 @@ define(['../Core/Cartesian2',
                 return this._definitionChanged;
             }
         },
-        x : {
-            get : function() {
-                return this._x;
-            },
-            set : function(value) {
-                if (this._x !== value) {
-                    if (this._xSubscription) {
-                        this._xSubscription();
-                        this._xSubscription = undefined;
-                    }
-                    this._x = value;
-                    if (defined(value)) {
-                        this._xSubscription = value.definitionChanged.addEventListener(Cartesian2WrapperProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        },
-        y : {
-            get : function() {
-                return this._y;
-            },
-            set : function(value) {
-                if (this._y !== value) {
-                    if (this._ySubscription) {
-                        this._ySubscription();
-                        this._ySubscription = undefined;
-                    }
-                    this._y = value;
-                    if (defined(value)) {
-                        this._ySubscription = value.definitionChanged.addEventListener(Cartesian2WrapperProperty.prototype._raiseDefinitionChanged, this);
-                    }
-                    this._raiseDefinitionChanged(this);
-                }
-            }
-        }
+        x : createDynamicPropertyDescriptor('x'),
+        y : createDynamicPropertyDescriptor('y')
     });
 
     Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
@@ -231,7 +199,7 @@ define(['../Core/Cartesian2',
 
         var len = rgba.length;
         rgbaf = new Array(len);
-        for ( var i = 0; i < len; i += 5) {
+        for (var i = 0; i < len; i += 5) {
             rgbaf[i] = rgba[i];
             rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
             rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
@@ -555,7 +523,7 @@ define(['../Core/Cartesian2',
         }
 
         if (Array.isArray(packetData)) {
-            for ( var i = 0, len = packetData.length; i < len; i++) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
                 processProperty(type, object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
@@ -697,7 +665,7 @@ define(['../Core/Cartesian2',
         }
 
         if (Array.isArray(packetData)) {
-            for ( var i = 0, len = packetData.length; i < len; i++) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
                 processPositionProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
@@ -723,20 +691,20 @@ define(['../Core/Cartesian2',
 
         if (defined(combinedInterval)) {
             if (!(property instanceof CompositeMaterialProperty)) {
-            property = new CompositeMaterialProperty();
-            object[propertyName] = property;
-        //See if we already have data at that interval.
-        var thisIntervals = property.intervals;
+                property = new CompositeMaterialProperty();
+                object[propertyName] = property;
+                //See if we already have data at that interval.
+                var thisIntervals = property.intervals;
                 existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
-        if (defined(existingInterval)) {
-            //We have an interval, but we need to make sure the
-            //new data is the same type of material as the old data.
-            existingMaterial = existingInterval.data;
-        } else {
-            //If not, create it.
-            existingInterval = combinedInterval.clone();
-            thisIntervals.addInterval(existingInterval);
-        }
+                if (defined(existingInterval)) {
+                    //We have an interval, but we need to make sure the
+                    //new data is the same type of material as the old data.
+                    existingMaterial = existingInterval.data;
+                } else {
+                    //If not, create it.
+                    existingInterval = combinedInterval.clone();
+                    thisIntervals.addInterval(existingInterval);
+                }
             }
         } else {
             existingMaterial = property;
@@ -780,7 +748,7 @@ define(['../Core/Cartesian2',
         }
 
         if (Array.isArray(packetData)) {
-            for ( var i = 0, len = packetData.length; i < len; i++) {
+            for (var i = 0, len = packetData.length; i < len; i++) {
                 processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri);
             }
         } else {
@@ -1601,7 +1569,7 @@ define(['../Core/Cartesian2',
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
-            for ( var i = 0, len = czml.length; i < len; i++) {
+            for (var i = 0, len = czml.length; i < len; i++) {
                 processCzmlPacket(czml[i], dynamicObjectCollection, updaterFunctions, sourceUri, dataSource);
             }
         } else {
