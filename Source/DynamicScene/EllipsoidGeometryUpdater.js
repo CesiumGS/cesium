@@ -113,9 +113,7 @@ define(['../Core/Cartesian3',
          * @type {Appearance}
          */
         perInstanceColorAppearanceType : {
-            get : function() {
-                return PerInstanceColorAppearance;
-            }
+            value : PerInstanceColorAppearance
         },
         /**
          * Gets the type of Appearance to use for material-based geometry.
@@ -123,9 +121,7 @@ define(['../Core/Cartesian3',
          * @type {Appearance}
          */
         materialAppearanceType : {
-            get : function() {
-                return MaterialAppearance;
-            }
+            value : MaterialAppearance
         }
     });
 
@@ -226,9 +222,7 @@ define(['../Core/Cartesian3',
          * @type {Boolean}
          */
         isClosed : {
-            get : function() {
-                return true;
-            }
+            value : true
         },
         /**
          * Gets an event that is raised whenever the public properties
@@ -299,7 +293,7 @@ define(['../Core/Cartesian3',
         var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
-            if (defined(defined(this._materialProperty.color)) && (this._materialProperty.color.isConstant || isAvailable)) {
+            if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
                 currentColor = this._materialProperty.color.getValue(time);
             }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);

@@ -1,28 +1,26 @@
 /*global define*/
-define(['../Core/defined',
+define(['../Core/AssociativeArray',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/AssociativeArray',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/PolylineColorAppearance',
         '../Scene/MaterialAppearance',
         '../Scene/PolylineMaterialAppearance',
         './ColorMaterialProperty',
-        './DynamicObjectCollection',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
         './StaticOutlineGeometryBatch'
     ], function(
+        AssociativeArray,
         defined,
         DeveloperError,
         destroyObject,
-        AssociativeArray,
         PerInstanceColorAppearance,
         PolylineColorAppearance,
         MaterialAppearance,
         PolylineMaterialAppearance,
         ColorMaterialProperty,
-        DynamicObjectCollection,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch) {
@@ -88,9 +86,9 @@ define(['../Core/defined',
         this._scene = scene;
         this._primitives = primitives;
         this._dynamicObjectCollection = undefined;
-        this._addedObjects = new DynamicObjectCollection();
-        this._removedObjects = new DynamicObjectCollection();
-        this._changedObjects = new DynamicObjectCollection();
+        this._addedObjects = new AssociativeArray();
+        this._removedObjects = new AssociativeArray();
+        this._changedObjects = new AssociativeArray();
 
         this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
         this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true);
@@ -196,11 +194,11 @@ define(['../Core/defined',
         }
 
         var addedObjects = this._addedObjects;
-        var added = addedObjects.getObjects();
+        var added = addedObjects.values;
         var removedObjects = this._removedObjects;
-        var removed = removedObjects.getObjects();
+        var removed = removedObjects.values;
         var changedObjects = this._changedObjects;
-        var changed = changedObjects.getObjects();
+        var changed = changedObjects.values;
 
         var i;
         var g;
@@ -226,7 +224,7 @@ define(['../Core/defined',
             updater = new this._type(dynamicObject, this._scene);
             this._updaters.set(id, updater);
             insertUpdaterIntoBatch(this, time, updater);
-            this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometyChanged, this));
+            this._subscriptions.set(id, updater.geometryChanged.addEventListener(GeometryVisualizer._onGeometryChanged, this));
         }
 
         for (i = changed.length - 1; i > -1; i--) {
@@ -304,15 +302,15 @@ define(['../Core/defined',
     /**
      * @private
      */
-    GeometryVisualizer._onGeometyChanged = function(updater) {
+    GeometryVisualizer._onGeometryChanged = function(updater) {
         var removedObjects = this._removedObjects;
         var changedObjects = this._changedObjects;
 
         var dynamicObject = updater.dynamicObject;
         var id = dynamicObject.id;
 
-        if (!defined(removedObjects.getById(id)) && !defined(this._changedObjects.getById(id))) {
-            this._changedObjects.add(dynamicObject);
+        if (!defined(removedObjects.get(id)) && !defined(this._changedObjects.get(id))) {
+            this._changedObjects.set(id, dynamicObject);
         }
     };
 
@@ -325,21 +323,24 @@ define(['../Core/defined',
         var changedObjects = this._changedObjects;
 
         var i;
+        var id;
         var dynamicObject;
         for (i = removed.length - 1; i > -1; i--) {
             dynamicObject = removed[i];
-            if (!addedObjects.remove(dynamicObject)) {
-                removedObjects.add(dynamicObject);
-                changedObjects.remove(dynamicObject);
+            id = dynamicObject.id;
+            if (!addedObjects.remove(id)) {
+                removedObjects.set(id, dynamicObject);
+                changedObjects.remove(id);
             }
         }
 
         for (i = added.length - 1; i > -1; i--) {
             dynamicObject = added[i];
-            if (removedObjects.remove(dynamicObject)) {
-                changedObjects.add(dynamicObject);
+            id = dynamicObject.id;
+            if (removedObjects.remove(id)) {
+                changedObjects.set(id, dynamicObject);
             } else {
-                addedObjects.add(dynamicObject);
+                addedObjects.set(id, dynamicObject);
             }
         }
     };

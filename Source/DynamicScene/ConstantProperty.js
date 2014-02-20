@@ -43,9 +43,7 @@ define(['../Core/defaultValue',
          * @type {Boolean}
          */
         isConstant : {
-            get : function() {
-                return true;
-            }
+            value : true
         },
         /**
          * Gets the event that is raised whenever the definition of this property changes.

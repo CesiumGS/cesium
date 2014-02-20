@@ -81,9 +81,7 @@ define(['../Core/Color',
          * @type {Appearance}
          */
         perInstanceColorAppearanceType : {
-            get : function() {
-                return PolylineColorAppearance;
-            }
+            value : PolylineColorAppearance
         },
         /**
          * Gets the type of Appearance to use for material-based geometry.
@@ -91,9 +89,7 @@ define(['../Core/Color',
          * @type {Appearance}
          */
         materialAppearanceType : {
-            get : function() {
-                return PolylineMaterialAppearance;
-            }
+            value : PolylineMaterialAppearance
         }
     });
 
@@ -146,9 +142,7 @@ define(['../Core/Color',
          * @type {Boolean}
          */
         outlineEnabled : {
-            get : function() {
-                return false;
-            }
+            value : false
         },
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
@@ -156,9 +150,7 @@ define(['../Core/Color',
          * @type {Boolean}
          */
         hasConstantOutline : {
-            get : function() {
-                return true;
-            }
+            value : true
         },
         /**
          * Gets the {@link Color} property for the geometry outline.
@@ -166,9 +158,7 @@ define(['../Core/Color',
          * @type {Property}
          */
         outlineColorProperty : {
-            get : function() {
-                return undefined;
-            }
+            value : undefined
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
@@ -190,9 +180,7 @@ define(['../Core/Color',
          * @type {Boolean}
          */
         isClosed : {
-            get : function() {
-                return false;
-            }
+            value : false
         },
         /**
          * Gets an event that is raised whenever the public properties
@@ -261,7 +249,7 @@ define(['../Core/Color',
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
-            if (defined(defined(this._materialProperty.color)) && (this._materialProperty.color.isConstant || isAvailable)) {
+            if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
                 currentColor = this._materialProperty.color.getValue(time);
             }
             color = ColorGeometryInstanceAttribute.fromColor(currentColor);
