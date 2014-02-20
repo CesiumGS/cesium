@@ -513,22 +513,20 @@ define([
         if (spheres.length > 0) {
             // Compute bounding sphere around the model
             var radiusSquared = 0;
-            var index = 0;
 
             length = spheres.length;
             Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
             for (i = 0; i < length; ++i) {
                 var bbs = spheres[i];
-                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract));
+                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract)) + bbs.radius * bbs.radius;
 
                 if (r > radiusSquared) {
                     radiusSquared = r;
-                    index = i;
                 }
             }
 
             Cartesian3.clone(scratchSphereCenter, result.center);
-            result.radius = Math.sqrt(radiusSquared) + spheres[index].radius;
+            result.radius = Math.sqrt(radiusSquared);
         }
 
         return result;
