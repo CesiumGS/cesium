@@ -73,13 +73,14 @@ define(['../Core/defined',
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      */
     var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
-
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
 
         this._type = type;
 
