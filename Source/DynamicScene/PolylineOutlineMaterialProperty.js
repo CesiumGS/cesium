@@ -43,9 +43,7 @@ define(['../Core/Color',
          */
         isConstant : {
             get : function() {
-                return (!defined(this._color) || this._color.isConstant) &&
-                       (!defined(this._outlineColor) || this._outlineColor.isConstant) &&
-                       (!defined(this._outlineWidth) || this._outlineWidth.isConstant);
+                return Property.isConstant(this._color) && Property.isConstant(this._outlineColor) && Property.isConstant(this._outlineWidth);
             }
         },
         /**

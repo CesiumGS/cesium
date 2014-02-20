@@ -59,7 +59,7 @@ define(['../Core/Color',
          */
         isConstant : {
             get : function() {
-                return !defined(this._color) || this._color.isConstant;
+                return Property.isConstant(this._color);
             }
         },
         /**

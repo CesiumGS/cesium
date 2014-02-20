@@ -49,10 +49,10 @@ define(['../Core/Cartesian2',
          */
         isConstant : {
             get : function() {
-                return (!defined(this._color) || this._color.isConstant) && //
-                       (!defined(this._cellAlpha) || this._cellAlpha.isConstant) && //
-                       (!defined(this._lineCount) || this._lineCount.isConstant) && //
-                       (!defined(this._lineThickness) || this._lineThickness.isConstant);
+                return Property.isConstant(this._color) &&
+                       Property.isConstant(this._cellAlpha) &&
+                       Property.isConstant(this._lineCount) &&
+                       Property.isConstant(this._lineThickness);
             }
         },
         /**

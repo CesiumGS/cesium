@@ -50,8 +50,7 @@ define(['../Core/defaultValue',
                 var length = this._length;
                 var value = this._value;
                 for (var i = 0; i < length; i++) {
-                    var property = value[i];
-                    if (defined(property) && !property.isConstant) {
+                    if (!Property.isConstant(value[i])) {
                         return false;
                     }
                 }

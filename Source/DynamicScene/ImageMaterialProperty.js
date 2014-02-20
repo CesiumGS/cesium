@@ -40,7 +40,7 @@ define([
          */
         isConstant : {
             get : function() {
-                return (!defined(this._image) || this._image.isConstant) && (!defined(this._repeat) || this._repeat.isConstant);
+                return Property.isConstant(this._image) && Property.isConstant(this._repeat);
             }
         },
         /**

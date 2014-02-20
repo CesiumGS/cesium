@@ -15,6 +15,7 @@ define(['../Core/Color',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
         '../DynamicScene/MaterialProperty',
+        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive'
@@ -35,6 +36,7 @@ define(['../Core/Color',
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
+        Property,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive) {
@@ -139,8 +141,8 @@ define(['../Core/Color',
             get : function() {
                 return !this._fillEnabled ||
                        (!defined(this._dynamicObject.availability) &&
-                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
-                        (!defined(this._fillProperty) || this._fillProperty.isConstant));
+                        Property.isConstant(this._showProperty) &&
+                        Property.isConstant(this._fillProperty));
             }
         },
         /**
@@ -172,8 +174,8 @@ define(['../Core/Color',
             get : function() {
                 return !this._outlineEnabled ||
                        (!defined(this._dynamicObject.availability) &&
-                        (!defined(this._showProperty) || this._showProperty.isConstant) &&
-                        (!defined(this._showOutlineProperty) || this._showOutlineProperty.isConstant));
+                        Property.isConstant(this._showProperty) &&
+                        Property.isConstant(this._showOutlineProperty));
             }
         },
         /**
@@ -423,11 +425,11 @@ define(['../Core/Color',
         this._outlineEnabled = outlineEnabled;
 
         if (!vertexPositions.isConstant || //
-            defined(height) && !height.isConstant || //
-            defined(extrudedHeight) && !extrudedHeight.isConstant || //
-            defined(granularity) && !granularity.isConstant || //
-            defined(stRotation) && !stRotation.isConstant || //
-            defined(perPositionHeight) && !perPositionHeight.isConstant) {
+            !Property.isConstant(height) || //
+            !Property.isConstant(extrudedHeight) || //
+            !Property.isConstant(granularity) || //
+            !Property.isConstant(stRotation) || //
+            !Property.isConstant(perPositionHeight)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);

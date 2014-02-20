@@ -4,13 +4,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        '../DynamicScene/Property'
        ], function(
          defaultValue,
          defined,
          defineProperties,
          DeveloperError,
-         Event) {
+         Event,
+         Property) {
     "use strict";
 
     function resolve(referenceProperty) {
@@ -67,8 +69,7 @@ define([
          */
         isConstant : {
             get : function() {
-                var targetProperty = resolve(this);
-                return !defined(targetProperty) || targetProperty.isConstant;
+                return Property.isConstant(resolve(this));
             }
         },
         /**

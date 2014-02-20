@@ -14,6 +14,7 @@ define(['../Core/Color',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
         '../DynamicScene/MaterialProperty',
+        '../DynamicScene/Property',
         '../Scene/PolylineMaterialAppearance',
         '../Scene/PolylineColorAppearance',
         '../Scene/Primitive'
@@ -33,6 +34,7 @@ define(['../Core/Color',
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
+        Property,
         PolylineMaterialAppearance,
         PolylineColorAppearance,
         Primitive) {
@@ -121,9 +123,7 @@ define(['../Core/Color',
          */
         hasConstantFill : {
             get : function() {
-                return !this._fillEnabled ||
-                       (!defined(this._dynamicObject.availability) &&
-                        (!defined(this._showProperty) || this._showProperty.isConstant));
+                return !this._fillEnabled || (!defined(this._dynamicObject.availability) && Property.isConstant(this._showProperty));
             }
         },
         /**
@@ -344,7 +344,7 @@ define(['../Core/Color',
 
         var width = polyline.width;
 
-        if (!vertexPositions.isConstant || (defined(width) && !width.isConstant)) {
+        if (!vertexPositions.isConstant || !Property.isConstant(width)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);

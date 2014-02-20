@@ -90,5 +90,12 @@ define(['../Core/defined',
         return true;
     };
 
+    /**
+     * @private
+     */
+    Property.isConstant = function(property) {
+        return !defined(property) || property.isConstant;
+    };
+
     return Property;
 });
