@@ -206,7 +206,7 @@ define([
 
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     var tangent = scratchTangent;
-                    if (i === 0 || i === vertexCount - 1) {
+                    if (i < slicePartitions || i > vertexCount - slicePartitions - 1) {
                         Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
                         Cartesian3.normalize(tangent, tangent);
                     } else {
