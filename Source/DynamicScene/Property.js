@@ -1,14 +1,15 @@
 /*global define*/
 define(['../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defined,
+        defineProperties,
         DeveloperError) {
     "use strict";
 
     /**
-     * The interface for all properties, which represent a value that can
-     * optionally vary over time.
+     * The interface for all properties, which represent a value that can optionally vary over time.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias Property
@@ -25,6 +26,28 @@ define(['../Core/defined',
     var Property = function() {
         DeveloperError.throwInstantiationError();
     };
+
+    defineProperties(Property.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof Property.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof Property.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the value of the property at the provided time.
@@ -52,6 +75,32 @@ define(['../Core/defined',
      */
     Property.equals = function(left, right) {
         return left === right || (defined(left) && left.equals(right));
+    };
+
+    /**
+     * @private
+     */
+    Property.arrayEquals = function(left, right) {
+        if (left === right) {
+            return true;
+        }
+        if ((!defined(left) || !defined(right)) || (left.length !== right.length)) {
+            return false;
+        }
+        var length = left.length;
+        for (var i = 0; i < length; i++) {
+            if (!Property.equals(left[i], right[i])) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    /**
+     * @private
+     */
+    Property.isConstant = function(property) {
+        return !defined(property) || property.isConstant;
     };
 
     return Property;

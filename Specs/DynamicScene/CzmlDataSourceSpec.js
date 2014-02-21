@@ -1305,6 +1305,10 @@ defineSuite([
                         }
                     }
                 },
+                height : 1,
+                extrudedHeight : 2,
+                granularity : 3,
+                stRotation : 4,
                 show : true
             }
         };
@@ -1316,6 +1320,10 @@ defineSuite([
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(dynamicObject.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        expect(dynamicObject.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
+        expect(dynamicObject.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+        expect(dynamicObject.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
     });
 
     it('CZML adds data for constrained polygon.', function() {

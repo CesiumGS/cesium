@@ -11,6 +11,7 @@ define([
         '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
+        '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Ray',
@@ -32,6 +33,7 @@ define([
         KeyboardEventModifier,
         FAR,
         IntersectionTests,
+        isArray,
         CesiumMath,
         Matrix4,
         Ray,
@@ -368,7 +370,7 @@ define([
 
         var aggregator = controller._aggregator;
 
-        if (!Array.isArray(eventTypes)) {
+        if (!isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }

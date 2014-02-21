@@ -21,11 +21,16 @@ define(['../Core/defaultValue',
      */
     var DynamicVector = function() {
         this._color = undefined;
+        this._colorSubscription = undefined;
         this._show = undefined;
+        this._showSubscription = undefined;
         this._width = undefined;
+        this._widthSubscription = undefined;
         this._direction = undefined;
+        this._directionSubscription = undefined;
         this._length = undefined;
-        this._propertyChanged = new Event();
+        this._lengthSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicVector.prototype, {
@@ -34,9 +39,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicVector.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -45,35 +50,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color', '_color'),
+        color : createDynamicPropertyDescriptor('color'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the vector's visibility.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's width.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width', '_width'),
+        width : createDynamicPropertyDescriptor('width'),
 
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the the vector's direction.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        direction : createDynamicPropertyDescriptor('direction', '_direction'),
+        direction : createDynamicPropertyDescriptor('direction'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's graphical length in meters.
          * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        length : createDynamicPropertyDescriptor('length', '_length')
+        length : createDynamicPropertyDescriptor('length')
     });
 
     /**
