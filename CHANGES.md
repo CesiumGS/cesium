@@ -63,6 +63,7 @@ Beta Releases
 * `ConstantProperty` is now mutable; it's value can be updated via `ConstantProperty.setValue`.
 * Added `AssociativeArray`, which is a helper class for maintaining a hash of objects that also needs to be iterated often.
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
+* Fixed `EllipsoidGeometry` texture coordinates. [#1454](https://github.com/AnalyticalGraphicsInc/cesium/issues/1454)
 
 ### b25 - 2014-02-03
 
