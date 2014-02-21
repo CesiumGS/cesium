@@ -22,19 +22,32 @@ define(['../Core/defaultValue',
      */
     var DynamicCone = function() {
         this._minimumClockAngle = undefined;
+        this._minimumClockAngleSubscription = undefined;
         this._maximumClockAngle = undefined;
+        this._maximumClockAngleSubscription = undefined;
         this._innerHalfAngle = undefined;
+        this._innerHalfAngleSubscription = undefined;
         this._outerHalfAngle = undefined;
+        this._outerHalfAngleSubscription = undefined;
         this._capMaterial = undefined;
+        this._capMaterialSubscription = undefined;
         this._innerMaterial = undefined;
+        this._innerMaterialSubscription = undefined;
         this._outerMaterial = undefined;
+        this._outerMaterialSubscription = undefined;
         this._silhouetteMaterial = undefined;
+        this._silhouetteMaterialSubscription = undefined;
         this._intersectionColor = undefined;
+        this._intersectionColorSubscription = undefined;
         this._intersectionWidth = undefined;
+        this._intersectionWidthSubscription = undefined;
         this._showIntersection = undefined;
+        this._showIntersectionSubscription = undefined;
         this._radius = undefined;
+        this._radiusSubscription = undefined;
         this._show = undefined;
-        this._propertyChanged = new Event();
+        this._showSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicCone.prototype, {
@@ -43,9 +56,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicCone.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -54,91 +67,91 @@ define(['../Core/defaultValue',
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        minimumClockAngle : createDynamicPropertyDescriptor('minimumClockAngle', '_minimumClockAngle'),
+        minimumClockAngle : createDynamicPropertyDescriptor('minimumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's maximum clock angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        maximumClockAngle : createDynamicPropertyDescriptor('maximumClockAngle', '_maximumClockAngle'),
+        maximumClockAngle : createDynamicPropertyDescriptor('maximumClockAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's inner half-angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        innerHalfAngle : createDynamicPropertyDescriptor('innerHalfAngle', '_innerHalfAngle'),
+        innerHalfAngle : createDynamicPropertyDescriptor('innerHalfAngle'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's outer half-angle.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        outerHalfAngle : createDynamicPropertyDescriptor('outerHalfAngle', '_outerHalfAngle'),
+        outerHalfAngle : createDynamicPropertyDescriptor('outerHalfAngle'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        capMaterial : createDynamicPropertyDescriptor('capMaterial', '_capMaterial'),
+        capMaterial : createDynamicPropertyDescriptor('capMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        innerMaterial : createDynamicPropertyDescriptor('innerMaterial', '_innerMaterial'),
+        innerMaterial : createDynamicPropertyDescriptor('innerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        outerMaterial : createDynamicPropertyDescriptor('outerMaterial', '_outerMaterial'),
+        outerMaterial : createDynamicPropertyDescriptor('outerMaterial'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
          * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        silhouetteMaterial : createDynamicPropertyDescriptor('silhouetteMaterial', '_silhouetteMaterial'),
+        silhouetteMaterial : createDynamicPropertyDescriptor('silhouetteMaterial'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        intersectionColor : createDynamicPropertyDescriptor('intersectionColor', '_intersectionColor'),
+        intersectionColor : createDynamicPropertyDescriptor('intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth', '_intersectionWidth'),
+        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the cone and other central bodies.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        showIntersection : createDynamicPropertyDescriptor('showIntersection', '_showIntersection'),
+        showIntersection : createDynamicPropertyDescriptor('showIntersection'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the cone's projection.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        radius : createDynamicPropertyDescriptor('radius', '_radius'),
+        radius : createDynamicPropertyDescriptor('radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the cone.
          * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show')
+        show : createDynamicPropertyDescriptor('show')
     });
 
     /**

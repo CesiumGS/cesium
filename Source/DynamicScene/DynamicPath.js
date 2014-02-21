@@ -21,14 +21,23 @@ define(['../Core/defaultValue',
      */
     var DynamicPath = function() {
         this._color = undefined;
+        this._colorSubscription = undefined;
         this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._show = undefined;
+        this._showSubscription = undefined;
         this._width = undefined;
+        this._widthSubscription = undefined;
         this._resolution = undefined;
+        this._resolutionSubscription = undefined;
         this._leadTime = undefined;
+        this._leadTimeSubscription = undefined;
         this._trailTime = undefined;
-        this._propertyChanged = new Event();
+        this._trailTimeSubscription = undefined;
+
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPath.prototype, {
@@ -37,9 +46,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPath.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -48,56 +57,56 @@ define(['../Core/defaultValue',
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color', '_color'),
+        color : createDynamicPropertyDescriptor('color'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the path's outline color.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's outline width.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width', '_width'),
+        width : createDynamicPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        resolution : createDynamicPropertyDescriptor('resolution', '_resolution'),
+        resolution : createDynamicPropertyDescriptor('resolution'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        leadTime : createDynamicPropertyDescriptor('leadTime', '_leadTime'),
+        leadTime : createDynamicPropertyDescriptor('leadTime'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
          * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        trailTime : createDynamicPropertyDescriptor('trailTime', '_trailTime')
+        trailTime : createDynamicPropertyDescriptor('trailTime')
     });
 
     /**

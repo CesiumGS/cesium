@@ -39,18 +39,13 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicPyramid
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      */
     var DynamicPyramidVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -113,7 +108,7 @@ define([
     DynamicPyramidVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -238,7 +233,7 @@ define([
                 dynamicPyramidVisualizer._primitives.add(pyramid);
             }
             dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
-            pyramid.dynamicObject = dynamicObject;
+            pyramid.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             pyramid.radius = Number.POSITIVE_INFINITY;

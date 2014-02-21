@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './isArray'
     ], function(
         defined,
-        DeveloperError) {
+        DeveloperError,
+        isArray) {
     "use strict";
 
     /**
@@ -77,7 +79,7 @@ define([
      */
     LeapSecond.setLeapSeconds = function(leapSeconds) {
         //>>includeStart('debug', pragmas.debug);
-        if (!Array.isArray(leapSeconds)) {
+        if (!isArray(leapSeconds)) {
             throw new DeveloperError("leapSeconds is required and must be an array.");
         }
         //>>includeEnd('debug');
