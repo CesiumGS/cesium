@@ -1,15 +1,16 @@
 /*global define*/
-define([
-        '../Core/defined',
+define(['../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/TimeIntervalCollection',
+        '../Core/Event',
+        './CompositeProperty',
         './Property'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        TimeIntervalCollection,
+        Event,
+        CompositeProperty,
         Property) {
     "use strict";
 
@@ -20,10 +21,35 @@ define([
      * @constructor
      */
     var CompositeMaterialProperty = function() {
-        this._intervals = new TimeIntervalCollection();
+        this._definitionChanged = new Event();
+        this._composite = new CompositeProperty();
+        this._composite.definitionChanged.addEventListener(CompositeMaterialProperty.prototype._raiseDefinitionChanged, this);
     };
 
     defineProperties(CompositeMaterialProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof CompositeMaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._composite.isConstant;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof CompositeMaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the interval collection.
          * @memberof CompositeMaterialProperty.prototype
@@ -32,7 +58,7 @@ define([
          */
         intervals : {
             get : function() {
-                return this._intervals;
+                return this._composite._intervals;
             }
         }
     });
@@ -51,7 +77,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+        var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {
             return innerProperty.getType(time);
         }
@@ -73,7 +99,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+        var innerProperty = this._composite._intervals.findDataForIntervalContainingDate(time);
         if (defined(innerProperty)) {
             return innerProperty.getValue(time, result);
         }
@@ -91,7 +117,14 @@ define([
     CompositeMaterialProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof CompositeMaterialProperty && //
-                this._intervals.equals(other._intervals, Property.equals));
+                this._composite.equals(other._composite, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    CompositeMaterialProperty.prototype._raiseDefinitionChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return CompositeMaterialProperty;

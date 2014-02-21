@@ -22,9 +22,12 @@ define(['../Core/defaultValue',
      */
     var DynamicModel = function() {
         this._show = undefined;
+        this._showSubscription = undefined;
         this._scale = undefined;
+        this._scaleSubscription = undefined;
         this._uri = undefined;
-        this._propertyChanged = new Event();
+        this._uriSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicModel.prototype, {
@@ -33,9 +36,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolygon.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -44,19 +47,19 @@ define(['../Core/defaultValue',
          * @memberof DynamicModel.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
         /**
          * Gets or sets the {@Cartesian3} {@link Property} specifying the model's scale.
          * @memberof DynamicModel.prototype
          * @type {Property}
          */
-        scale : createDynamicPropertyDescriptor('scale', '_scale'),
+        scale : createDynamicPropertyDescriptor('scale'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
          * @memberof DynamicModel.prototype
          * @type {Property}
          */
-        uri : createDynamicPropertyDescriptor('uri', '_uri')
+        uri : createDynamicPropertyDescriptor('uri')
     });
 
     /**

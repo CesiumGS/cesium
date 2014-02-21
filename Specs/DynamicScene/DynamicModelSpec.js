@@ -3,14 +3,12 @@ defineSuite([
              'DynamicScene/DynamicModel',
              'DynamicScene/ColorMaterialProperty',
              'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicVertexPositionsProperty',
              'Core/Color',
              'Core/Cartesian3'
          ], function(
              DynamicModel,
              ColorMaterialProperty,
              ConstantProperty,
-             DynamicVertexPositionsProperty,
              Color,
              Cartesian3) {
     "use strict";

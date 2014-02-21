@@ -22,13 +22,20 @@ define(['../Core/defaultValue',
      */
     var DynamicPyramid = function() {
         this._show = undefined;
+        this._showSubscription = undefined;
         this._directions = undefined;
+        this._directionsSubscription = undefined;
         this._radius = undefined;
+        this._radiusSubscription = undefined;
         this._showIntersection = undefined;
+        this._showIntersectionSubscription = undefined;
         this._intersectionColor = undefined;
+        this._intersectionColorSubscription = undefined;
         this._intersectionWidth = undefined;
+        this._intersectionWidthSubscription = undefined;
         this._material = undefined;
-        this._propertyChanged = new Event();
+        this._materialSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPyramid.prototype, {
@@ -37,9 +44,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPyramid.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -48,49 +55,49 @@ define(['../Core/defaultValue',
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        directions : createDynamicPropertyDescriptor('directions', '_directions'),
+        directions : createDynamicPropertyDescriptor('directions'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        radius : createDynamicPropertyDescriptor('radius', '_radius'),
+        radius : createDynamicPropertyDescriptor('radius'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        showIntersection : createDynamicPropertyDescriptor('showIntersection', '_showIntersection'),
+        showIntersection : createDynamicPropertyDescriptor('showIntersection'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        intersectionColor : createDynamicPropertyDescriptor('intersectionColor', '_intersectionColor'),
+        intersectionColor : createDynamicPropertyDescriptor('intersectionColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the pyramid and other central bodies.
          * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth', '_intersectionWidth'),
+        intersectionWidth : createDynamicPropertyDescriptor('intersectionWidth'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
          * @memberof DynamicPyramid.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material')
+        material : createDynamicPropertyDescriptor('material')
     });
 
     /**

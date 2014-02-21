@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/Cartesian3',
+define(['../Core/Cartesian3',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -18,9 +17,8 @@ define([
     "use strict";
 
     /**
-     * The interface for all position {@link Property} objects. Position properties
-     * represent a world location as a {@link Cartesian3} with an associated
-     * {@link ReferenceFrame}.
+     * The interface for all {@link Property} objects that define a world
+     * location as a {@link Cartesian3} with an associated {@link ReferenceFrame}.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias PositionProperty
@@ -37,6 +35,25 @@ define([
 
     defineProperties(PositionProperty.prototype, {
         /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof PositionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof PositionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
          * Gets the reference frame that the position is defined in.
          * @memberof PositionProperty.prototype
          * @Type {ReferenceFrame}
@@ -47,7 +64,7 @@ define([
     });
 
     /**
-     * Gets the value of the property at the provided time.
+     * Gets the value of the property at the provided time in the fixed frame.
      * @memberof PositionProperty
      * @function
      *
@@ -85,6 +102,10 @@ define([
      * @private
      */
     PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
+        if (!defined(value)) {
+            return value;
+        }
+
         if (inputFrame === outputFrame) {
             return Cartesian3.clone(value, result);
         }
