@@ -343,7 +343,7 @@ define([
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
                 tileBoundariesLayer = centralBody.imageryLayerCollection.addImageryProvider(new TileCoordinatesImageryProvider({
-                    tilingScheme : centralBody.terrainProvider.getTilingScheme()
+                    tilingScheme : centralBody.terrainProvider.tilingScheme
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
                 centralBody.imageryLayerCollection.remove(tileBoundariesLayer);

@@ -182,7 +182,7 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link TerrainProvider#isReady} returns true.  The result must include terrain data and
+     * {@link TerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      * @memberof TerrainProvider
      * @function
@@ -200,19 +200,8 @@ define([
     TerrainProvider.prototype.requestTileGeometry = DeveloperError.throwInstantiationError;
 
     /**
-     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     * @memberof TerrainProvider
-     * @function
-     *
-     * @returns {Event} The event.
-     */
-    TerrainProvider.prototype.getErrorEvent = DeveloperError.throwInstantiationError;
-
-    /**
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
-     * called before {@link TerrainProvider#isReady} returns true.
+     * called before {@link TerrainProvider#ready} returns true.
      * @memberof TerrainProvider
      * @function
      *
@@ -222,49 +211,16 @@ define([
     TerrainProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
 
     /**
-     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link TerrainProvider#isReady} returns true.
-     * @memberof TerrainProvider
-     * @function
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    TerrainProvider.prototype.getCredit = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link TerrainProvider#isReady} returns true.
-     * @memberof TerrainProvider
-     * @function
-     *
-     * @returns {GeographicTilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
-     */
-    TerrainProvider.prototype.getTilingScheme = DeveloperError.throwInstantiationError;
-
-    /**
      * Gets a value indicating whether or not the provider includes a water mask.  The water mask
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.  This function should not be
-     * called before {@link TerrainProvider#isReady} returns true.
+     * called before {@link TerrainProvider#ready} returns true.
      * @memberof TerrainProvider
      * @function
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      */
     TerrainProvider.prototype.hasWaterMask = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     * @memberof TerrainProvider
-     * @function
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    TerrainProvider.prototype.isReady = DeveloperError.throwInstantiationError;
 
     return TerrainProvider;
 });
