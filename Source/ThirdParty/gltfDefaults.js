@@ -83,6 +83,24 @@ define([
         }
     }
 
+    function meshDefaults(meshes) {
+        if (!defined(meshes)) {
+            return;
+        }
+
+        for (var name in meshes) {
+            if (meshes.hasOwnProperty(name)) {
+                var mesh = meshes[name];
+                var primitives = mesh.primitives.length;
+                var length = primitives.length;
+                for (var i = 0; i < length; ++i) {
+                    var primitive = primitives[i];
+                    primitive.primitive = defaultValue(primitive.primitive, 4); // TRIANGLES
+                }
+            }
+        }
+    }
+
     function nodeDefaults(nodes) {
         if (!defined(nodes)) {
             return;
@@ -149,6 +167,7 @@ define([
         assetDefaults(gltf);
         bufferDefaults(gltf.buffers);
         lightDefaults(gltf.lights);
+        meshDefaults(gltf.meshes);
         nodeDefaults(gltf.nodes);
         textureDefaults(gltf.textures);
 
