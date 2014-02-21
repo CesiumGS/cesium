@@ -207,7 +207,7 @@ defineSuite([
         visualizer.update(updateTime);
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -255,13 +255,13 @@ defineSuite([
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.getLength()).toEqual(1);
         var primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(updateTime);
         expect(scene.primitives.length).toEqual(1);
         polylineCollection = scene.primitives.get(0);
         primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject2);
+        expect(primitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

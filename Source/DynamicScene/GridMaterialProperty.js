@@ -1,14 +1,19 @@
 /*global define*/
-define([
-        '../Core/Cartesian2',
+define(['../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
         Cartesian2,
         Color,
         defined,
+        defineProperties,
+        Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -19,34 +24,75 @@ define([
      * @constructor
      */
     var GridMaterialProperty = function() {
+        this._definitionChanged = new Event();
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._cellAlpha = undefined;
+        this._cellAlphaSubscription = undefined;
+        this._lineCount = undefined;
+        this._lineCountSubscription = undefined;
+        this._lineThickness = undefined;
+        this._lineThicknessSubscription = undefined;
+
+        this.color = new ConstantProperty(Color.WHITE);
+        this.cellAlpha = new ConstantProperty(0.1);
+        this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
+        this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
+    };
+
+    defineProperties(GridMaterialProperty.prototype, {
         /**
-         * A {@link Color} {@link Property} which determines the grid's color.
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof GridMaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return Property.isConstant(this._color) &&
+                       Property.isConstant(this._cellAlpha) &&
+                       Property.isConstant(this._lineCount) &&
+                       Property.isConstant(this._lineThickness);
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof GridMaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
+        /**
+         * Gets or sets the {@link Color} property which determines the grid's color.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        this.color = new ConstantProperty(Color.WHITE);
-
+        color : createDynamicPropertyDescriptor('color'),
         /**
-         * A numeric {@link Property} which determines the grid cells alpha value, when combined with the color alpha.
+         * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
-        this.cellAlpha = new ConstantProperty(0.1);
-
+        cellAlpha : createDynamicPropertyDescriptor('cellAlpha'),
         /**
-         * A {@link Cartesian2} {@link Property} which determines the number of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
-        this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
-
+        lineCount : createDynamicPropertyDescriptor('lineCount'),
         /**
-         * A {@link Cartesian2} {@link Property} which determines the thickness of rows and columns in the grid.
+         * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
-        this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
-    };
+        lineThickness : createDynamicPropertyDescriptor('lineThickness')
+    });
 
     /**
      * Gets the {@link Material} type at the provided time.
@@ -71,10 +117,10 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
-        result.cellAlpha = defined(this.cellAlpha) ? this.cellAlpha.getValue(time) : undefined;
-        result.lineCount = defined(this.lineCount) ? this.lineCount.getValue(time, result.lineCount) : undefined;
-        result.lineThickness = defined(this.lineThickness) ? this.lineThickness.getValue(time, result.lineThickness) : undefined;
+        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
+        result.cellAlpha = defined(this._cellAlpha) ? this._cellAlpha.getValue(time) : undefined;
+        result.lineCount = defined(this._lineCount) ? this._lineCount.getValue(time, result.lineCount) : undefined;
+        result.lineThickness = defined(this._lineThickness) ? this._lineThickness.getValue(time, result.lineThickness) : undefined;
         return result;
     };
 
@@ -88,11 +134,18 @@ define([
      */
     GridMaterialProperty.prototype.equals = function(other) {
         return this === other || //
-               (other instanceof GridMaterialProperty && //
-                Property.equals(this.color, other.color) && //
-                Property.equals(this.cellAlpha, other.cellAlpha) && //
-                Property.equals(this.lineCount, other.lineCount) && //
-                Property.equals(this.lineThickness, other.lineThickness));
+        (other instanceof GridMaterialProperty && //
+        Property.equals(this._color, other._color) && //
+        Property.equals(this._cellAlpha, other._cellAlpha) && //
+        Property.equals(this._lineCount, other._lineCount) && //
+        Property.equals(this._lineThickness, other._lineThickness));
+    };
+
+    /**
+     * @private
+     */
+    GridMaterialProperty.prototype._raiseDefinitionChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return GridMaterialProperty;
