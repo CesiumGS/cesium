@@ -224,7 +224,7 @@ define(['../Core/Cartesian2',
     }
 
     function unwrapUriInterval(czmlInterval, sourceUri) {
-        var result = czmlInterval;
+        var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
@@ -1068,27 +1068,22 @@ define(['../Core/Cartesian2',
     function processModel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var modelData = packet.model;
         if (typeof modelData === 'undefined') {
-            return false;
-        }
-
-        var modelUpdated = false;
-        var model = dynamicObject.model;
-        modelUpdated = typeof model === 'undefined';
-        if (modelUpdated) {
-            dynamicObject.model = model = new DynamicModel();
+            return;
         }
 
         var interval = modelData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        modelUpdated = processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri) || modelUpdated;
-        modelUpdated = processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri) || modelUpdated;
-        if (defined(modelData.uri) && defined(modelData.uri.gltf)) {
-            modelUpdated = processPacketData(Uri, model, 'uri', modelData.uri.gltf, interval, sourceUri) || modelUpdated;
+        var model = dynamicObject.model;
+        if (!defined(model)) {
+            dynamicObject.model = model = new DynamicModel();
         }
-        return modelUpdated;
+
+        processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri);
+        processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri);
+        processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri);
     }
 
     function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
