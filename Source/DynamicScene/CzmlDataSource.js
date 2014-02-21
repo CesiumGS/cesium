@@ -559,7 +559,7 @@ define(['../Core/Cartesian2',
             combinedInterval = constrainedInterval;
         }
 
-        var referenceFrame = ReferenceFrame[defaultValue(packetData.referenceFrame, "FIXED")];
+        var referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
         var unwrappedInterval = unwrapCartesianInterval(packetData);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = Cartesian3.packedLength;
@@ -584,7 +584,7 @@ define(['../Core/Cartesian2',
         //Without an interval, any sampled value is infinite, meaning it completely
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
-            if (!(property instanceof SampledPositionProperty) || property.referenceFrame !== referenceFrame) {
+            if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
                 property = new SampledPositionProperty(referenceFrame);
                 object[propertyName] = property;
                 propertyCreated = true;
@@ -611,7 +611,7 @@ define(['../Core/Cartesian2',
                 propertyCreated = true;
             }
 
-            if (property instanceof TimeIntervalCollectionPositionProperty && property.referenceFrame === referenceFrame) {
+            if (property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
@@ -664,7 +664,7 @@ define(['../Core/Cartesian2',
         //Check if the interval already exists in the composite
         var intervals = property.intervals;
         interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
-        if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || interval.data.referenceFrame !== referenceFrame) {
+        if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
             //If not, create a SampledPositionProperty for it.
             interval = combinedInterval.clone();
             interval.data = new SampledPositionProperty(referenceFrame);
