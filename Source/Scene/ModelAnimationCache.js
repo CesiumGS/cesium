@@ -1,4 +1,4 @@
-/*global define,WebGLRenderingContext*/
+/*global define*/
 define([
         '../Core/defined',
         '../Core/Cartesian3',
@@ -14,6 +14,7 @@ define([
         QuaternionSpline,
         ModelTypes) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     /**
      * @private
