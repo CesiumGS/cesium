@@ -95,14 +95,18 @@ define([
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        var stackPartitions = ellipsoidGeometry._stackPartitions;
-        var slicePartitions = ellipsoidGeometry._slicePartitions;
         var vertexFormat = ellipsoidGeometry._vertexFormat;
+        var stackPartitions = ellipsoidGeometry._stackPartitions;
+
+        // The extra slice is for duplicating points at the x axis.
+        // We need the texture coordinates to interpolate from (2 * pi - delta) to 2 * pi instead of
+        // (2 * pi - delta) to 0.
+        var slicePartitions = ellipsoidGeometry._slicePartitions + 1;
 
         var vertexCount = 2 + (stackPartitions - 1) * slicePartitions;
         var positions = new Float64Array(vertexCount * 3);
 
-        var numIndices = 6 * slicePartitions * (stackPartitions - 1);
+        var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 1);
         var indices = IndexDatatype.createTypedArray(vertexCount, numIndices);
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
@@ -116,7 +120,7 @@ define([
         var i;
         var j;
         for (i = 0; i < slicePartitions; i++) {
-            var theta = CesiumMath.TWO_PI * i / slicePartitions;
+            var theta = CesiumMath.TWO_PI * i / (slicePartitions - 1);
             cosTheta[i] = cos(theta);
             sinTheta[i] = sin(theta);
         }
@@ -165,7 +169,7 @@ define([
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
 
                 if (vertexFormat.st) {
-                    st[stIndex++] = (Math.atan2(normal.y, normal.x) / CesiumMath.TWO_PI) + 0.5;
+                    st[stIndex++] = (Math.atan2(-normal.y, -normal.x) / CesiumMath.TWO_PI) + 0.5;
                     st[stIndex++] = (Math.asin(normal.z) / Math.PI) + 0.5;
                 }
 
@@ -242,10 +246,6 @@ define([
             indices[index++] = i + 1;
         }
 
-        indices[index++] = 0;
-        indices[index++] = slicePartitions;
-        indices[index++] = 1;
-
         for (i = 0; i < stackPartitions - 2; i++) {
             var topOffset = (i * slicePartitions) + 1;
             var bottomOffset = ((i + 1) * slicePartitions) + 1;
@@ -259,13 +259,6 @@ define([
                 indices[index++] = topOffset + j + 1;
                 indices[index++] = topOffset + j;
             }
-
-            indices[index++] = bottomOffset + slicePartitions - 1;
-            indices[index++] = bottomOffset;
-            indices[index++] = topOffset;
-            indices[index++] = bottomOffset + slicePartitions - 1;
-            indices[index++] = topOffset;
-            indices[index++] = topOffset + slicePartitions - 1;
         }
 
         var lastPos = vertexCount - 1;
@@ -274,10 +267,6 @@ define([
             indices[index++] = i;
             indices[index++] = i - 1;
         }
-
-        indices[index++] = lastPos;
-        indices[index++] = lastPos - slicePartitions;
-        indices[index++] = lastPos - 1;
 
         return new Geometry({
             attributes : attributes,
