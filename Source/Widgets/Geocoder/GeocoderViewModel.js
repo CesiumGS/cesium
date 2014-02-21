@@ -272,7 +272,7 @@ define([
                 duration : viewModel._flightDuration,
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
-                    screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
+                    screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 }
             };

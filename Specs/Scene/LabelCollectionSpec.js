@@ -1294,7 +1294,7 @@ defineSuite([
 
     it('computes bounding sphere in 3D', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
@@ -1317,7 +1317,7 @@ defineSuite([
 
     it('computes bounding sphere in Columbus view', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
@@ -1347,7 +1347,7 @@ defineSuite([
 
     it('computes bounding sphere in 2D', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),

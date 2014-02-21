@@ -390,7 +390,7 @@ define([
         if (!terrainProvider.isReady()) {
             return;
         }
-        var terrainMaxExtent = terrainProvider.getTilingScheme().getExtent();
+        var terrainMaxExtent = terrainProvider.getTilingScheme().extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewport = viewportScratch;

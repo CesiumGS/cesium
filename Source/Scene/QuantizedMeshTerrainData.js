@@ -240,7 +240,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
@@ -331,7 +331,7 @@ define([
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var childExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({

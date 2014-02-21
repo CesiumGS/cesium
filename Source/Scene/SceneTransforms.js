@@ -143,7 +143,7 @@ define([
         }
 
         var projection = frameState.scene2D.projection;
-        projection.getEllipsoid().cartesianToCartographic(position, positionInCartographic);
+        projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
         if (!defined(positionInCartographic)) {
             result = undefined;
             return result;

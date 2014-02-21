@@ -1504,7 +1504,7 @@ defineSuite([
 
     function test2DBoundingSphere(testMode) {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = polylines.add({
             positions : [

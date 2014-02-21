@@ -27,33 +27,6 @@ define([
     };
 
     /**
-     * Gets the ellipsoid that is tiled by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    TilingScheme.prototype.getEllipsoid = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets the extent, in radians, covered by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Extent} The extent.
-     */
-    TilingScheme.prototype.getExtent = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets the map projection used by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Projection} The map projection.
-     */
-    TilingScheme.prototype.getProjection = DeveloperError.throwInstantiationError;
-
-    /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
      * @memberof TilingScheme
      * @function
