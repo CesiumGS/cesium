@@ -138,6 +138,22 @@ define([
         }
     }
 
+    function samplerDefaults(samplers) {
+        if (!defined(samplers)) {
+            return;
+        }
+
+        for (var name in samplers) {
+            if (samplers.hasOwnProperty(name)) {
+                var sampler = samplers[name];
+                sampler.magFilter = defaultValue(sampler.magFilter, 9729);  // LINEAR
+                sampler.minFilter = defaultValue(sampler.minFilter, 9986);  // NEAREST_MIPMAP_LINEAR
+                sampler.wrapS = defaultValue(sampler.wrapS, 10497);  // REPEAT
+                sampler.wrapT = defaultValue(sampler.wrapT, 10497);  // REPEAT
+            }
+        }
+    }
+
     function textureDefaults(textures) {
         if (!defined(textures)) {
             return;
@@ -169,6 +185,7 @@ define([
         lightDefaults(gltf.lights);
         meshDefaults(gltf.meshes);
         nodeDefaults(gltf.nodes);
+        samplerDefaults(gltf.samplers);
         textureDefaults(gltf.textures);
 
         gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
