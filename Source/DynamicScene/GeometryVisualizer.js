@@ -189,9 +189,12 @@ define(['../Core/AssociativeArray',
      * @param {JulianDate} time The time to update to.
      */
     GeometryVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
+
 
         var addedObjects = this._addedObjects;
         var added = addedObjects.values;

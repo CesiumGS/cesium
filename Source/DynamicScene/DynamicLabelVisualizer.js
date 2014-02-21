@@ -105,7 +105,7 @@ define([
     DynamicLabelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
