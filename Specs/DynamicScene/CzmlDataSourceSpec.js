@@ -11,6 +11,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Quaternion',
+        'Core/ReferenceFrame',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicObject',
@@ -35,6 +36,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Quaternion,
+        ReferenceFrame,
         Spherical,
         DynamicBillboard,
         DynamicObject,
@@ -769,6 +771,62 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(new JulianDate());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+    });
+
+    it('Can set reference frame', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        czml = {
+            position : {
+                referenceFrame : "FIXED",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('Default reference frame on existing interval does not reset value to FIXED.', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.process(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        var czml2 = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+        dataSource.process(czml2);
+
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
     });
 
     it('CZML sampled cartographicRadians positions work.', function() {
