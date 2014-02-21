@@ -442,20 +442,19 @@ define([
         return this._inverseModel;
     };
 
-    var inverseTransposeModelScratch = new Matrix4();
-
     /**
      * @private
      */
     UniformState.prototype.getInverseTranposeModel = function() {
+        var m = this._inverseTransposeModel;
         if (this._inverseTransposeModelDirty) {
             this._inverseTransposeModelDirty = false;
 
-            Matrix4.transpose(this.getInverseModel(), inverseTransposeModelScratch);
-            Matrix4.getRotation(inverseTransposeModelScratch, this._inverseTransposeModel);
+            Matrix4.getRotation(this.getInverseModel(), m);
+            Matrix3.transpose(m, m);
         }
 
-        return this._inverseTransposeModel;
+        return m;
     };
 
     /**
@@ -899,14 +898,13 @@ define([
         return this._modelViewInfiniteProjection;
     };
 
-    var normalScratch = new Matrix4();
-
     function cleanNormal(uniformState) {
         if (uniformState._normalDirty) {
             uniformState._normalDirty = false;
 
-            Matrix4.transpose(uniformState.getInverseModelView(), normalScratch);
-            Matrix4.getRotation(normalScratch, uniformState._normal);
+            var m = uniformState._normal;
+            Matrix4.getRotation(uniformState.getInverseModelView(), m);
+            Matrix3.transpose(m, m);
         }
     }
 
@@ -929,8 +927,9 @@ define([
         if (uniformState._normal3DDirty) {
             uniformState._normal3DDirty = false;
 
-            Matrix4.transpose(uniformState.getInverseModelView3D(), normalScratch);
-            Matrix4.getRotation(normalScratch, uniformState._normal3D);
+            var m = uniformState._normal3D;
+            Matrix4.getRotation(uniformState.getInverseModelView3D(), m);
+            Matrix3.transpose(m, m);
         }
     }
 

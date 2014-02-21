@@ -155,7 +155,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
-     * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -246,7 +246,7 @@ define([
         this._id = options.id;
 
         /**
-         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
          *
          * @type {Boolean}
          *
@@ -260,7 +260,7 @@ define([
          * The event fired when this model is ready to render, i.e., when the external binary, image,
          * and shader files were downloaded and the WebGL resources were created.
          * <p>
-         * This is event is fired at the end of the frame before the first frame the model is rendered in.
+         * This event is fired at the end of the frame before the first frame the model is rendered in.
          * </p>
          *
          * @type {Event}
@@ -343,7 +343,7 @@ define([
     };
 
     /**
-     * Creates a model from a glTF assets.  When the model is ready to render, i.e., when the external binary, image,
+     * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
      * @memberof Model
@@ -352,7 +352,8 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Object} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
