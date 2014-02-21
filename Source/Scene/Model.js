@@ -1,4 +1,4 @@
-/*global define,WebGLRenderingContext*/
+/*global define*/
 define([
         '../Core/combine',
         '../Core/defined',
@@ -76,6 +76,7 @@ define([
         SceneMode,
         gltfDefaults) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     var ModelState = {
         NEEDS_LOAD : 0,
@@ -1320,26 +1321,28 @@ define([
         };
     }
 
-    var gltfUniformFunctions = {
-    };
+    var gltfUniformFunctions = {};
 
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.INT] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.INT_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.INT_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.INT_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.BOOL] = getScalarUniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC2] = getVec2UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC3] = getVec3UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC4] = getVec4UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT2] = getMat2UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
-    gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
-    // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.INT] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.INT_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.INT_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.INT_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.BOOL] = getScalarUniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC2] = getVec2UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC3] = getVec3UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.BOOL_VEC4] = getVec4UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT2] = getMat2UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT3] = getMat3UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.FLOAT_MAT4] = getMat4UniformFunction;
+        gltfUniformFunctions[WebGLRenderingContext.SAMPLER_2D] = getTextureUniformFunction;
+        // GLTF_SPEC: Support SAMPLER_CUBE. https://github.com/KhronosGroup/glTF/issues/40
+    }
 
     function getUniformFunctionFromSource(source, model) {
         var runtimeNode = model._runtime.nodes[source];

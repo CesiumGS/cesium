@@ -1,15 +1,21 @@
-/*global define,WebGLRenderingContext*/
+/*global define*/
 define([
         '../Core/ComponentDatatype'
     ], function(
         ComponentDatatype) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     /**
      * @private
      */
-    var ModelTypes = {
-    };
+    var ModelTypes = {};
+
+    // Bail out if the browser doesn't support WebGL, to prevent the setup function from crashing.
+    // This check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext === 'undefined') {
+        return ModelTypes;
+    }
 
     ModelTypes[WebGLRenderingContext.FLOAT] = {
         componentsPerAttribute : 1,
