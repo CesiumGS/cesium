@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartesian2',
         './Cartesian3',
         './Math',
         './Ellipsoid',
@@ -16,6 +17,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
+        Cartesian2,
         Cartesian3,
         CesiumMath,
         Ellipsoid,
@@ -33,6 +35,7 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchBinormal = new Cartesian3();
+    var scratchNormalST = new Cartesian3();
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
     var cos = Math.cos;
@@ -96,14 +99,14 @@ define([
         var radii = ellipsoidGeometry._radii;
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
-        var stackPartitions = ellipsoidGeometry._stackPartitions;
 
-        // The extra slice is for duplicating points at the x axis.
+        // The extra slice and stack are for duplicating points at the x axis and poles.
         // We need the texture coordinates to interpolate from (2 * pi - delta) to 2 * pi instead of
         // (2 * pi - delta) to 0.
         var slicePartitions = ellipsoidGeometry._slicePartitions + 1;
+        var stackPartitions = ellipsoidGeometry._stackPartitions + 1;
 
-        var vertexCount = 2 + (stackPartitions - 1) * slicePartitions;
+        var vertexCount = stackPartitions * slicePartitions;
         var positions = new Float64Array(vertexCount * 3);
 
         var numIndices = 6 * (slicePartitions - 1) * (stackPartitions - 1);
@@ -119,19 +122,22 @@ define([
 
         var i;
         var j;
+        var index = 0;
+
         for (i = 0; i < slicePartitions; i++) {
             var theta = CesiumMath.TWO_PI * i / (slicePartitions - 1);
             cosTheta[i] = cos(theta);
             sinTheta[i] = sin(theta);
+
+            // duplicate first point for correct
+            // texture coordinates at the north pole.
+            positions[index++] = 0.0;
+            positions[index++] = 0.0;
+            positions[index++] = radii.z;
         }
 
-        var index = 0;
-        positions[index++] = 0; // first point
-        positions[index++] = 0;
-        positions[index++] = radii.z;
-
-        for (i = 1; i < stackPartitions; i++) {
-            var phi = Math.PI * i / stackPartitions;
+        for (i = 1; i < stackPartitions - 1; i++) {
+            var phi = Math.PI * i / (stackPartitions - 1);
             var sinPhi = sin(phi);
 
             var xSinPhi = radii.x * sinPhi;
@@ -144,9 +150,14 @@ define([
                 positions[index++] = zCosPhi;
             }
         }
-        positions[index++] = 0; // last point
-        positions[index++] = 0;
-        positions[index++] = -radii.z;
+
+        for (i = 0; i < slicePartitions; i++) {
+            // duplicate first point for correct
+            // texture coordinates at the north pole.
+            positions[index++] = 0.0;
+            positions[index++] = 0.0;
+            positions[index++] = -radii.z;
+        }
 
         var attributes = new GeometryAttributes();
 
@@ -169,7 +180,21 @@ define([
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
 
                 if (vertexFormat.st) {
-                    st[stIndex++] = (Math.atan2(-normal.y, -normal.x) / CesiumMath.TWO_PI) + 0.5;
+                    var normalST = Cartesian2.negate(normal, scratchNormalST);
+
+                    // if the point is at or close to the pole, find a point along the same longitude
+                    // close to the xy-plane for the s coordinate.
+                    if (Cartesian2.magnitude(normalST) < CesiumMath.EPSILON6) {
+                        index = (i + slicePartitions * Math.floor(stackPartitions * 0.5)) * 3;
+                        if (index > positions.length) {
+                            index = (i - slicePartitions * Math.floor(stackPartitions * 0.5)) * 3;
+                        }
+                        Cartesian3.fromArray(positions, index, normalST);
+                        ellipsoid.geodeticSurfaceNormal(normalST, normalST);
+                        Cartesian2.negate(normalST, normalST);
+                    }
+
+                    st[stIndex++] = (Math.atan2(normalST.y, normalST.x) / CesiumMath.TWO_PI) + 0.5;
                     st[stIndex++] = (Math.asin(normal.z) / Math.PI) + 0.5;
                 }
 
@@ -240,15 +265,9 @@ define([
         }
 
         index = 0;
-        for (i = 1; i < slicePartitions; i++) { //top row
-            indices[index++] = 0;
-            indices[index++] = i;
-            indices[index++] = i + 1;
-        }
-
-        for (i = 0; i < stackPartitions - 2; i++) {
-            var topOffset = (i * slicePartitions) + 1;
-            var bottomOffset = ((i + 1) * slicePartitions) + 1;
+        for (i = 0; i < stackPartitions; i++) {
+            var topOffset = i * slicePartitions;
+            var bottomOffset = (i + 1) * slicePartitions;
 
             for (j = 0; j < slicePartitions - 1; j++) {
                 indices[index++] = bottomOffset + j;
@@ -259,13 +278,6 @@ define([
                 indices[index++] = topOffset + j + 1;
                 indices[index++] = topOffset + j;
             }
-        }
-
-        var lastPos = vertexCount - 1;
-        for (i = lastPos - 1; i > lastPos - slicePartitions; i--) {
-            indices[index++] = lastPos;
-            indices[index++] = i;
-            indices[index++] = i - 1;
         }
 
         return new Geometry({
