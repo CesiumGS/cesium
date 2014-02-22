@@ -20,7 +20,7 @@ define(['../Core/createGuid',
         createDynamicPropertyDescriptor) {
     "use strict";
 
-    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyChanged', //
+    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'definitionChanged', //
                                  'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
 
     /**
@@ -45,26 +45,43 @@ define(['../Core/createGuid',
 
         this._id = id;
         this._availability = undefined;
-        this._position = undefined;
-        this._orientation = undefined;
-        this._billboard = undefined;
-        this._cone = undefined;
-        this._ellipsoid = undefined;
-        this._ellipse = undefined;
-        this._label = undefined;
-        this._name = undefined;
         this._parent = undefined;
-        this._path = undefined;
-        this._point = undefined;
-        this._polygon = undefined;
-        this._polyline = undefined;
-        this._pyramid = undefined;
-        this._vertexPositions = undefined;
-        this._vector = undefined;
-        this._viewFrom = undefined;
-        this._description = undefined;
+        this._name = undefined;
+        this._definitionChanged = new Event();
 
-        this._propertyChanged = new Event();
+        this._position = undefined;
+        this._positionSubscription = undefined;
+        this._orientation = undefined;
+        this._orientationSubscription = undefined;
+        this._billboard = undefined;
+        this._billboardSubscription = undefined;
+        this._cone = undefined;
+        this._coneSubscription = undefined;
+        this._ellipsoid = undefined;
+        this._ellipsoidSubscription = undefined;
+        this._ellipse = undefined;
+        this._ellipseSubscription = undefined;
+        this._label = undefined;
+        this._labelSubscription = undefined;
+        this._path = undefined;
+        this._pathSubscription = undefined;
+        this._point = undefined;
+        this._pointSubscription = undefined;
+        this._polygon = undefined;
+        this._polygonSubscription = undefined;
+        this._polyline = undefined;
+        this._polylineSubscription = undefined;
+        this._pyramid = undefined;
+        this._pyramidSubscription = undefined;
+        this._vertexPositions = undefined;
+        this._vertexPositionsSubscription = undefined;
+        this._vector = undefined;
+        this._vectorSubscription = undefined;
+        this._viewFrom = undefined;
+        this._viewFromSubscription = undefined;
+        this._description = undefined;
+        this._descriptionSubscription = undefined;
+
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
@@ -76,9 +93,9 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
         /**
@@ -116,7 +133,7 @@ define(['../Core/createGuid',
                 var oldValue = this._name;
                 if (oldValue !== value) {
                     this._name = value;
-                    this._propertyChanged.raiseEvent(this, 'name', value, oldValue);
+                    this._definitionChanged.raiseEvent(this, 'name', value, oldValue);
                 }
             }
         },
@@ -129,111 +146,111 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {TimeIntervalCollection}
          */
-        availability : createDynamicPropertyDescriptor('availability', '_availability'),
+        availability : createDynamicPropertyDescriptor('availability'),
         /**
          * Gets or sets the position.
          * @memberof DynamicObject.prototype
          * @type {PositionProperty}
          */
-        position : createDynamicPropertyDescriptor('position', '_position'),
+        position : createDynamicPropertyDescriptor('position'),
         /**
          * Gets or sets the orientation.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        orientation : createDynamicPropertyDescriptor('orientation', '_orientation'),
+        orientation : createDynamicPropertyDescriptor('orientation'),
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @memberof DynamicObject.prototype
          * @type {Cartesian3}
          */
-        viewFrom : createDynamicPropertyDescriptor('viewFrom', '_viewFrom'),
+        viewFrom : createDynamicPropertyDescriptor('viewFrom'),
         /**
          * Gets or sets the billboard.
          * @memberof DynamicObject.prototype
          * @type {DynamicBillboard}
          */
-        billboard : createDynamicPropertyDescriptor('billboard', '_billboard'),
+        billboard : createDynamicPropertyDescriptor('billboard'),
         /**
          * Gets or sets the cone.
          * @memberof DynamicObject.prototype
          * @type {DynamicCone}
          */
-        cone : createDynamicPropertyDescriptor('cone', '_cone'),
+        cone : createDynamicPropertyDescriptor('cone'),
 
         /**
          * Gets or sets the ellipsoid.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipsoid}
          */
-        ellipsoid : createDynamicPropertyDescriptor('ellipsoid', '_ellipsoid'),
+        ellipsoid : createDynamicPropertyDescriptor('ellipsoid'),
         /**
          * Gets or sets the ellipse.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipse}
          */
-        ellipse : createDynamicPropertyDescriptor('ellipse', '_ellipse'),
+        ellipse : createDynamicPropertyDescriptor('ellipse'),
         /**
          * Gets or sets the label.
          * @memberof DynamicObject.prototype
          * @type {DynamicLabel}
          */
-        label : createDynamicPropertyDescriptor('label', '_label'),
+        label : createDynamicPropertyDescriptor('label'),
         /**
          * Gets or sets the parent object.
          * @memberof DynamicObject.prototype
          * @type {DynamicObject}
          */
-        parent : createDynamicPropertyDescriptor('parent', '_parent'),
+        parent : createDynamicPropertyDescriptor('parent'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
          * @type {DynamicPath}
          */
-        path : createDynamicPropertyDescriptor('path', '_path'),
+        path : createDynamicPropertyDescriptor('path'),
         /**
          * Gets or sets the point graphic.
          * @memberof DynamicObject.prototype
          * @type {DynamicPoint}
          */
-        point : createDynamicPropertyDescriptor('point', '_point'),
+        point : createDynamicPropertyDescriptor('point'),
         /**
          * Gets or sets the polygon.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolygon}
          */
-        polygon : createDynamicPropertyDescriptor('polygon', '_polygon'),
+        polygon : createDynamicPropertyDescriptor('polygon'),
         /**
          * Gets or sets the polyline.
          * @memberof DynamicObject.prototype
          * @type {DynamicPolyline}
          */
-        polyline : createDynamicPropertyDescriptor('polyline', '_polyline'),
+        polyline : createDynamicPropertyDescriptor('polyline'),
         /**
          * Gets or sets the pyramid.
          * @memberof DynamicObject.prototype
          * @type {DynamicPyramid}
          */
-        pyramid : createDynamicPropertyDescriptor('pyramid', '_pyramid'),
+        pyramid : createDynamicPropertyDescriptor('pyramid'),
         /**
          * Gets or sets the vertex positions.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        vertexPositions : createDynamicPropertyDescriptor('vertexPositions', '_vertexPositions'),
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
         /**
          * Gets or sets the vector.
          * @memberof DynamicObject.prototype
          * @type {DynamicVector}
          */
-        vector : createDynamicPropertyDescriptor('vector', '_vector'),
+        vector : createDynamicPropertyDescriptor('vector'),
         /**
          * Gets or sets the description.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        description : createDynamicPropertyDescriptor('description', '_description')
+        description : createDynamicPropertyDescriptor('description')
     });
 
     /**
@@ -256,7 +273,7 @@ define(['../Core/createGuid',
 
     /**
      * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link DynamicObject.propertyChanged} and composited
+     * observed with {@link DynamicObject.definitionChanged} and composited
      * with {@link CompositeDynamicObjectCollection}
      * @memberof DynamicObject
      *
@@ -281,7 +298,7 @@ define(['../Core/createGuid',
         //>>includeEnd('debug');
 
         propertyNames.push(propertyName);
-        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, '_' + propertyName, true));
+        Object.defineProperty(this, propertyName, createDynamicPropertyDescriptor(propertyName, true));
     };
 
     /**

@@ -2,11 +2,17 @@
 define([
         '../Core/Cartesian2',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
         Cartesian2,
         defined,
+        defineProperties,
+        Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -17,18 +23,52 @@ define([
      * @constructor
      */
     var ImageMaterialProperty = function() {
+        this._definitionChanged = new Event();
+        this._image = undefined;
+        this._imageSubscription = undefined;
+        this._repeat = undefined;
+        this._repeatSubscription = undefined;
+        this.repeat = new ConstantProperty(new Cartesian2(1, 1));
+    };
+
+    defineProperties(ImageMaterialProperty.prototype, {
         /**
-         * A string {@link Property} which is the url of the desired image.
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return Property.isConstant(this._image) && Property.isConstant(this._repeat);
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
+        /**
+         * Gets or sets the string property which is the url of the desired image.
+         * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
-        this.image = undefined;
+        image : createDynamicPropertyDescriptor('image'),
         /**
-         * A {@link Cartesian2} {@link Property} which determines the number of times the image repeats in each direction.
+         * Gets or sets the {@link Cartesian2} property which determines the number of times the image repeats in each direction.
+         * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1, 1))
          */
-        this.repeat = new ConstantProperty(new Cartesian2(1, 1));
-    };
+        repeat : createDynamicPropertyDescriptor('repeat')
+    });
 
     /**
      * Gets the {@link Material} type at the provided time.
@@ -54,8 +94,8 @@ define([
             result = {};
         }
 
-        result.image = defined(this.image) ? this.image.getValue(time) : undefined;
-        result.repeat = defined(this.repeat) ? this.repeat.getValue(time, result.repeat) : undefined;
+        result.image = defined(this._image) ? this._image.getValue(time) : undefined;
+        result.repeat = defined(this._repeat) ? this._repeat.getValue(time, result.repeat) : undefined;
         return result;
     };
 
@@ -70,8 +110,15 @@ define([
     ImageMaterialProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof ImageMaterialProperty && //
-                Property.equals(this.image, other.image) && //
-                Property.equals(this.repeat, other.repeat));
+                Property.equals(this._image, other._image) && //
+                Property.equals(this._repeat, other._repeat));
+    };
+
+    /**
+     * @private
+     */
+    ImageMaterialProperty.prototype._raiseDefinitionChanged = function(){
+        this._definitionChanged.raiseEvent(this);
     };
 
     return ImageMaterialProperty;
