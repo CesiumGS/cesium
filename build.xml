@@ -481,7 +481,7 @@
 		<property name="relativeDocOutputDirectory" location="${buildDocumentationDirectory}" relative="true" basedir="${jsdoc3Directory}" />
 		<property name="relativeSourceFilesPath" location="${sourceDirectory}" relative="true" basedir="${jsdoc3Directory}" />
 
-		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true" failonerror="true" maxmemory="1536m">
+		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true" failonerror="true" maxmemory="1024m">
 			<arg line="-modules node_modules" />
 			<arg line="-modules rhino_modules" />
 			<arg line="-modules ." />

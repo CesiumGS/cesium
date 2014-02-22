@@ -571,7 +571,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {

@@ -29,8 +29,6 @@ define([
         SceneTransforms) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
      * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
@@ -65,7 +63,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
-        options = defaultValue(options, EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
@@ -100,6 +98,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._id = options.id;
+        this._collection = defaultValue(options.collection, billboardCollection);
 
         this._pickId = undefined;
         this._pickIdThis = options._pickIdThis;
@@ -136,6 +135,7 @@ define([
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
                 primitive : defaultValue(this._pickIdThis, this),
+                collection : this._collection,
                 id : this._id
             });
         }
@@ -1009,7 +1009,7 @@ define([
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.context, scene.frameState).toString());
      */
     var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {

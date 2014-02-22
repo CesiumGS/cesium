@@ -1,24 +1,25 @@
 /*global define*/
-define([
+define(['./PositionProperty',
+        './Property',
+        './SampledProperty',
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/ReferenceFrame',
-        './PositionProperty',
-        './Property',
-        './SampledProperty'
+        '../Core/Event',
+        '../Core/ReferenceFrame'
        ], function(
+        PositionProperty,
+        Property,
+        SampledProperty,
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        ReferenceFrame,
-        PositionProperty,
-        Property,
-        SampledProperty) {
+        Event,
+        ReferenceFrame) {
     "use strict";
 
     /**
@@ -31,10 +32,38 @@ define([
      */
     var SampledPositionProperty = function(referenceFrame) {
         this._property = new SampledProperty(Cartesian3);
+        this._definitionChanged = new Event();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+
+        this._property._definitionChanged.addEventListener(function() {
+            this._definitionChanged.raiseEvent(this);
+        }, this);
     };
 
     defineProperties(SampledPositionProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof SampledPositionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._property.isConstant;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof SampledPositionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof SampledPositionProperty.prototype
@@ -47,7 +76,7 @@ define([
             }
         },
         /**
-         * Gets or sets the degree of interpolation to perform when retrieving a value.
+         * Gets the degree of interpolation to perform when retrieving a value.
          * @memberof SampledPositionProperty.prototype
          *
          * @type {Object}
@@ -56,13 +85,10 @@ define([
         interpolationDegree : {
             get : function() {
                 return this._property.interpolationDegree;
-            },
-            set : function(value) {
-                this._property.interpolationDegree = value;
             }
         },
         /**
-         * Gets or sets the interpolation algorithm to use when retrieving a value.
+         * Gets the interpolation algorithm to use when retrieving a value.
          * @memberof SampledPositionProperty.prototype
          *
          * @type {InterpolationAlgorithm}
@@ -71,9 +97,6 @@ define([
         interpolationAlgorithm : {
             get : function() {
                 return this._property.interpolationAlgorithm;
-            },
-            set : function(value) {
-                this._property.interpolationAlgorithm = value;
             }
         }
     });
@@ -114,6 +137,18 @@ define([
             return PositionProperty.convertToReferenceFrame(time, result, this._referenceFrame, referenceFrame, result);
         }
         return result;
+    };
+
+    /**
+     * Sets the algorithm and degree to use when interpolating a position.
+     * @memberof SampledPositionProperty
+     *
+     * @param {Object} options The options
+     * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
+     * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
+     */
+    SampledPositionProperty.prototype.setInterpolationOptions = function(options) {
+        this._property.setInterpolationOptions(options);
     };
 
     /**

@@ -42,7 +42,7 @@ defineSuite([
 
     it('returns correct window position', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var positionCartographic = ellipsoid.cartesianToCartographic(scene.getCamera().position);
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
         positionCartographic.height = 0.0;
         var position = ellipsoid.cartographicToCartesian(positionCartographic);
 
@@ -56,7 +56,7 @@ defineSuite([
 
     it('returns correct drawing buffer position', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var positionCartographic = ellipsoid.cartesianToCartographic(scene.getCamera().position);
+        var positionCartographic = ellipsoid.cartesianToCartographic(scene.camera.position);
         positionCartographic.height = 0.0;
         var position = ellipsoid.cartographicToCartesian(positionCartographic);
 

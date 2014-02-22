@@ -32,12 +32,12 @@ require(['Cesium'], function(Cesium) {
 
     function addAlphaAnimation(primitive, scene) {
         Sandcastle.declare(addAlphaAnimation); // For highlighting in Sandcastle.
-        scene.getAnimations().addAlpha(primitive.material, 0.0, 0.5);
+        scene.animations.addAlpha(primitive.material, 0.0, 0.5);
     }
 
     function addStripeAnimation(primitive, scene) {
         Sandcastle.declare(addStripeAnimation); // For highlighting in Sandcastle.
-        scene.getAnimations().addOffsetIncrement(primitive.material);
+        scene.animations.addOffsetIncrement(primitive.material);
     }
 
     function resetExtentPropeties(extent) {
@@ -46,9 +46,9 @@ require(['Cesium'], function(Cesium) {
     }
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
+        var ellipsoid = widget.centralBody.ellipsoid;
         var scene = widget.scene;
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
 
         extent = new Cesium.ExtentPrimitive({
             extent : new Cesium.Extent(
@@ -86,14 +86,14 @@ require(['Cesium'], function(Cesium) {
     createPrimitives(widget);
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
-        scene.getAnimations().removeAll();
+        scene.animations.removeAll();
         resetExtentPropeties(extent);
         addAlphaAnimation(extent, scene);
         Sandcastle.highlight(addAlphaAnimation);
     });
 
     Sandcastle.addToolbarButton('Stripe Animation', function() {
-        scene.getAnimations().removeAll();
+        scene.animations.removeAll();
         addStripeAnimation(rectangularSensor, scene);
         Sandcastle.highlight(addStripeAnimation);
     });

@@ -826,7 +826,7 @@ define([
      * @see Label#setPixelOffset
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
+     * console.log(l.computeScreenSpacePosition(scene.context, scene.frameState).toString());
      */
     Label.prototype.computeScreenSpacePosition = function(context, frameState) {
         //>>includeStart('debug', pragmas.debug);

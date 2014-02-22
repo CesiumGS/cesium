@@ -60,5 +60,12 @@ define(['./defined'], function(defined) {
         return str;
     };
 
+    /**
+     * @private
+     */
+    DeveloperError.throwInstantiationError = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
     return DeveloperError;
 });

@@ -28,78 +28,66 @@ define([
 
     /**
      * Gets the ellipsoid that is tiled by this tiling scheme.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @returns {Ellipsoid} The ellipsoid.
      */
-    TilingScheme.prototype.getEllipsoid = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.getEllipsoid = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the extent, in radians, covered by this tiling scheme.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @returns {Extent} The extent.
      */
-    TilingScheme.prototype.getExtent = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.getExtent = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the map projection used by this tiling scheme.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @returns {Projection} The map projection.
      */
-    TilingScheme.prototype.getProjection = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.getProjection = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
-    TilingScheme.prototype.getNumberOfXTilesAtLevel = function(level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.getNumberOfXTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the total number of tiles in the Y direction at a specified level-of-detail.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
      */
-    TilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
      * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @returns {Array} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
-    TilingScheme.prototype.createLevelZeroTiles = function() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.createLevelZeroTiles = DeveloperError.throwInstantiationError;
 
     /**
      * Transforms an extent specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Extent} extent The extent to transform.
      * @param {Extent} [result] The instance to which to copy the result, or undefined if a new instance
@@ -107,15 +95,13 @@ define([
      * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
      *          is undefined.
      */
-    TilingScheme.prototype.extentToNativeExtent = function(extent, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.extentToNativeExtent = DeveloperError.throwInstantiationError;
 
     /**
      * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
      * of the tiling scheme.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
@@ -126,14 +112,12 @@ define([
      * @returns {Extent} The specified 'result', or a new object containing the extent
      *          if 'result' is undefined.
      */
-    TilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.tileXYToNativeExtent = DeveloperError.throwInstantiationError;
 
     /**
      * Converts tile x, y coordinates and level to a cartographic extent in radians.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
@@ -144,15 +128,13 @@ define([
      * @returns {Extent} The specified 'result', or a new object containing the extent
      *          if 'result' is undefined.
      */
-    TilingScheme.prototype.tileXYToExtent = function(x, y, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.tileXYToExtent = DeveloperError.throwInstantiationError;
 
     /**
      * Calculates the tile x, y coordinates of the tile containing
      * a given cartographic position.
-     *
      * @memberof TilingScheme
+     * @function
      *
      * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
@@ -162,9 +144,7 @@ define([
      * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates
      *          if 'result' is undefined.
      */
-    TilingScheme.prototype.positionToTileXY = function(position, level, result) {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    };
+    TilingScheme.prototype.positionToTileXY = DeveloperError.throwInstantiationError;
 
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.

@@ -86,17 +86,13 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicCone
-     * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      */
     var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
@@ -108,7 +104,7 @@ define([
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         this._coneCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
@@ -160,7 +156,7 @@ define([
     DynamicConeVisualizerUsingCustomSensor.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -280,7 +276,7 @@ define([
                 dynamicConeVisualizerUsingCustomSensor._primitives.add(cone);
             }
             dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
-            cone.dynamicObject = dynamicObject;
+            cone.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(Material.ColorType);
