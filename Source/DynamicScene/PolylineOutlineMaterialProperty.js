@@ -1,12 +1,17 @@
 /*global define*/
-define([
-        '../Core/Color',
+define(['../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Event',
+        './createDynamicPropertyDescriptor',
         './ConstantProperty',
         './Property'
     ], function(
         Color,
         defined,
+        defineProperties,
+        Event,
+        createDynamicPropertyDescriptor,
         ConstantProperty,
         Property) {
     "use strict";
@@ -17,25 +22,63 @@ define([
      * @constructor
      */
     var PolylineOutlineMaterialProperty = function() {
+        this._definitionChanged = new Event();
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
+        this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
+        this.color = new ConstantProperty(Color.WHITE);
+        this.outlineColor = new ConstantProperty(Color.BLACK);
+        this.outlineWidth = new ConstantProperty(0.0);
+    };
+
+    defineProperties(PolylineOutlineMaterialProperty.prototype, {
         /**
-         * A {@link Color} {@link Property} which determines the polyline's color.
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof PolylineOutlineMaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return Property.isConstant(this._color) && Property.isConstant(this._outlineColor) && Property.isConstant(this._outlineWidth);
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof PolylineOutlineMaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
+        /**
+         * Gets or sets {@link Color} property which determines the polyline's color.
+         * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.WHITE)
          */
-        this.color = new ConstantProperty(Color.WHITE);
+        color : createDynamicPropertyDescriptor('color'),
         /**
-         * A {@link Color} {@link Property} which determines the polyline's outline color.
+         * Gets or sets the {@link Color} property which determines the polyline's outline color.
+         * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(Color.BLACK)
          */
-        this.outlineColor = new ConstantProperty(Color.BLACK);
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
         /**
-         * A Number {@link Property} which determines the polyline's outline width.
+         * Gets or sets the numberic property which determines the polyline's outline width.
          * @type {Property}
          * @default new ConstantProperty(0)
          */
-        this.outlineWidth = new ConstantProperty(0);
-    };
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth')
+    });
 
     /**
      * Gets the {@link Material} type at the provided time.
@@ -60,9 +103,9 @@ define([
         if (!defined(result)) {
             result = {};
         }
-        result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
-        result.outlineColor = defined(this.outlineColor) ? this.outlineColor.getValue(time, result.outlineColor) : undefined;
-        result.outlineWidth = defined(this.outlineWidth) ? this.outlineWidth.getValue(time) : undefined;
+        result.color = defined(this._color) ? this._color.getValue(time, result.color) : undefined;
+        result.outlineColor = defined(this._outlineColor) ? this._outlineColor.getValue(time, result.outlineColor) : undefined;
+        result.outlineWidth = defined(this._outlineWidth) ? this._outlineWidth.getValue(time) : undefined;
         return result;
     };
 
@@ -77,9 +120,16 @@ define([
     PolylineOutlineMaterialProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof PolylineOutlineMaterialProperty && //
-                Property.equals(this.color, other.color) && //
-                Property.equals(this.outlineColor, other.outlineColor) && //
-                Property.equals(this.outlineWidth, other.outlineWidth));
+                Property.equals(this._color, other._color) && //
+                Property.equals(this._outlineColor, other._outlineColor) && //
+                Property.equals(this._outlineWidth, other._outlineWidth));
+    };
+
+    /**
+     * @private
+     */
+    PolylineOutlineMaterialProperty.prototype._raiseDefinitionChanged = function(){
+        this._definitionChanged.raiseEvent(this);
     };
 
     return PolylineOutlineMaterialProperty;

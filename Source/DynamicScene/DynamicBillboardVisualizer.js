@@ -50,17 +50,13 @@ define([
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
      * @see DynamicBillboard
-     * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicConeVisualizer
      * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      */
     var DynamicBillboardVisualizer = function(scene, dynamicObjectCollection) {
@@ -75,10 +71,10 @@ define([
         this._dynamicObjectCollection = undefined;
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.setTextureAtlas(atlas);
-        scene.getPrimitives().add(billboardCollection);
+        scene.primitives.add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -128,7 +124,7 @@ define([
     DynamicBillboardVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -191,7 +187,7 @@ define([
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
@@ -245,7 +241,7 @@ define([
                 billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
-            billboard.dynamicObject = dynamicObject;
+            billboard.id = dynamicObject;
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
 

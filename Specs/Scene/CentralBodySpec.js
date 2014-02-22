@@ -62,7 +62,7 @@ defineSuite([
     it('renders with enableLighting', function() {
         cb.enableLighting = true;
 
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 

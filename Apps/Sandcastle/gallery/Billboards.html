@@ -32,7 +32,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -41,7 +41,7 @@ require(['Cesium'], function(Cesium) {
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 imageIndex : 0
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
@@ -51,7 +51,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -71,7 +71,7 @@ require(['Cesium'], function(Cesium) {
                 width : 100, // default: undefined
                 height : 25 // default: undefined
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
@@ -81,7 +81,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -97,7 +97,7 @@ require(['Cesium'], function(Cesium) {
             b.setScale(3.0);
             b.setColor(new Cesium.Color(1.0, 1.0, 1.0, 0.25));
 
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
@@ -115,7 +115,7 @@ require(['Cesium'], function(Cesium) {
             // references an image in the texture atlas.
 
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 images : images
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -138,7 +138,7 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 1
             });
 
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         });
     }
 
@@ -147,7 +147,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -157,7 +157,7 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 0,
                 scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/facility.gif';
     }
@@ -167,7 +167,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -177,7 +177,7 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 0,
                 translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e7, 0.2)
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/Cesium_Logo_overlay.png';
     }
@@ -191,7 +191,7 @@ require(['Cesium'], function(Cesium) {
                         ],
                         function(images) {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 images : images
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -216,7 +216,7 @@ require(['Cesium'], function(Cesium) {
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
                 translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         });
     }
 
@@ -239,7 +239,7 @@ require(['Cesium'], function(Cesium) {
         context2D.fill();
 
         var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = scene.getContext().createTextureAtlas({
+        var textureAtlas = scene.context.createTextureAtlas({
             image : canvas
         });
         billboards.setTextureAtlas(textureAtlas);
@@ -264,7 +264,7 @@ require(['Cesium'], function(Cesium) {
             imageIndex : 0
         });
 
-        scene.getPrimitives().add(billboards);
+        scene.primitives.add(billboards);
     }
 
     function addMarkerBillboards(scene, ellipsoid) {
@@ -272,7 +272,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 borderWidthInPixels : 0
             });
 
@@ -361,7 +361,7 @@ require(['Cesium'], function(Cesium) {
                 scale : 1,
                 color : Cesium.Color.YELLOW
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/whiteShapes.png';
     }
@@ -371,7 +371,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.getContext().createTextureAtlas({
+            var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
             billboards.setTextureAtlas(textureAtlas);
@@ -398,16 +398,16 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 0,
                 position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0)
             });
-            scene.getPrimitives().add(billboards);
+            scene.primitives.add(billboards);
         };
         image.src = '../images/facility.gif';
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.getEllipsoid();
+    var ellipsoid = widget.centralBody.ellipsoid;
     var scene = widget.scene;
-    var primitives = scene.getPrimitives();
+    var primitives = scene.primitives;
 
     addBillboard(scene, ellipsoid);
 

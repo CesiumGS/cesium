@@ -2,11 +2,13 @@
 define([
         '../Core/createGuid',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError'
     ], function(
         createGuid,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError) {
     "use strict";
@@ -22,7 +24,7 @@ define([
      * @example
      * // Example 1. Add primitives to a composite.
      * var primitives = new Cesium.CompositePrimitive();
-     * primitives.setCentralBody(new Cesium.CentralBody());
+     * primitives.centralBody = new Cesium.CentralBody();
      * primitives.add(billboards);
      * primitives.add(labels);
      *
@@ -47,7 +49,6 @@ define([
          * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
          *
          * @see CompositePrimitive#destroy
-         * @see CompositePrimitive#setCentralBody
          * @see CompositePrimitive#remove
          * @see CompositePrimitive#removeAll
          *
@@ -78,38 +79,35 @@ define([
         this.show = true;
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof CompositePrimitive
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see CompositePrimitive#setCentralBody
-     */
-    CompositePrimitive.prototype.getCentralBody = function() {
-        return this._centralBody;
-    };
+    defineProperties(CompositePrimitive.prototype, {
 
-    /**
-     * DOC_TBA
-     *
-     * Implicitly sets the depth-test ellipsoid.
-     *
-     * @memberof CompositePrimitive
-     *
-     * @see CompositePrimitive#depthTestEllipsoid
-     * @see CompositePrimitive#getCentralBody
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * var primitives = new Cesium.CompositePrimitive();
-     * primitives.setCentralBody(new Cesium.CentralBody());
-     */
-    CompositePrimitive.prototype.setCentralBody = function(centralBody) {
-        this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-        this._centralBody = centralBody;
-    };
+        /**
+         * Gets or sets the depth-test ellipsoid.
+         * @memberof CompositePrimitive.prototype
+         * @type {CentralBody}
+         */
+        centralBody : {
+            get: function() {
+                return this._centralBody;
+            },
+
+            set: function(centralBody) {
+                this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
+                this._centralBody = centralBody;
+            }
+        },
+
+        /**
+         * Gets the length of the list of primitives
+         * @memberof CompositePrimitive.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._primitives.length;
+            }
+        }
+    });
 
     /**
      * Adds a primitive to a composite primitive.  When a composite is rendered
@@ -358,7 +356,7 @@ define([
      * @example
      * // Toggle the show property of every primitive in the composite -
      * // not recursive on child composites.
-     * var len = primitives.getLength();
+     * var len = primitives.length;
      * for (var i = 0; i < len; ++i) {
      *   var p = primitives.get(i);
      *   p.show = !p.show;
@@ -372,28 +370,6 @@ define([
         //>>includeEnd('debug');
 
         return this._primitives[index];
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof CompositePrimitive
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see CompositePrimitive#get
-     *
-     * @example
-     * // Toggle the show property of every primitive in the composite -
-     * // not recursive on child composites.
-     * var len = primitives.getLength();
-     * for (var i = 0; i < len; ++i) {
-     *   var p = primitives.get(i);
-     *   p.show = !p.show;
-     * }
-     */
-    CompositePrimitive.prototype.getLength = function() {
-        return this._primitives.length;
     };
 
     /**

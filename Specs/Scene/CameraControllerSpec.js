@@ -816,7 +816,7 @@ defineSuite([
 
     it('pick ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
@@ -842,7 +842,7 @@ defineSuite([
     it('pick map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
@@ -872,7 +872,7 @@ defineSuite([
     it('pick rotated map in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
@@ -908,7 +908,7 @@ defineSuite([
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, camera.position));
@@ -948,7 +948,7 @@ defineSuite([
     it('set position cartographic in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
@@ -1175,7 +1175,7 @@ defineSuite([
     it('gets magnitude in 2D', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection(ellipsoid);
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
 
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
@@ -1297,7 +1297,7 @@ defineSuite([
     });
 
     it('animates position to visible map in Columbus view', function() {
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
@@ -1347,7 +1347,7 @@ defineSuite([
     });
 
     it('animates position to visible map in Columbus view with web mercator projection', function() {
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();

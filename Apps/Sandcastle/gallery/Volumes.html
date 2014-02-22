@@ -28,7 +28,7 @@ require(['Cesium'], function(Cesium) {
     "use strict";
 
     function createPrimitives(scene, ellipsoid) {
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
 
         var e = primitives.add(new Cesium.EllipsoidPrimitive({
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
@@ -53,7 +53,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.getEllipsoid());
+    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
 
     Sandcastle.finishedLoading();
 });

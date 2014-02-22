@@ -21,9 +21,12 @@ define(['../Core/defaultValue',
      */
     var DynamicPolyline = function() {
         this._show = undefined;
+        this._showSubscription = undefined;
         this._material = undefined;
+        this._materialSubscription = undefined;
         this._width = undefined;
-        this._propertyChanged = new Event();
+        this._widthSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPolyline.prototype, {
@@ -32,9 +35,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolyline.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -43,21 +46,21 @@ define(['../Core/defaultValue',
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polyline.
          * @memberof DynamicPolyline.prototype
          * @type {MaterialProperty}
          */
-        material : createDynamicPropertyDescriptor('material', '_material'),
+        material : createDynamicPropertyDescriptor('material'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
          * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        width : createDynamicPropertyDescriptor('width', '_width')
+        width : createDynamicPropertyDescriptor('width')
     });
 
     /**

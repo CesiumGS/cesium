@@ -95,7 +95,7 @@ defineSuite([
                 projection : projection
             }
         };
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
@@ -407,7 +407,7 @@ defineSuite([
             }
         };
 
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         camera.position = new Cartesian3(0.0, 0.0, maxRadii);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -836,7 +836,7 @@ defineSuite([
 
     it('pans with constrained axis other than z-axis', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
@@ -875,7 +875,7 @@ defineSuite([
 
     it('pans with constrained axis and is tilted', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
@@ -897,7 +897,7 @@ defineSuite([
 
     it('rotates with constrained axis and is tilted', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);

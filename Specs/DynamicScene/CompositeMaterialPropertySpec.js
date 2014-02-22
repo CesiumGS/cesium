@@ -1,17 +1,16 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/CompositeMaterialProperty',
-             'DynamicScene/ConstantProperty',
+defineSuite(['DynamicScene/CompositeMaterialProperty',
              'DynamicScene/ColorMaterialProperty',
              'DynamicScene/GridMaterialProperty',
+             'Core/Color',
              'Core/JulianDate',
              'Core/TimeInterval',
              'Core/TimeIntervalCollection'
      ], function(
              CompositeMaterialProperty,
-             ConstantProperty,
              ColorMaterialProperty,
              GridMaterialProperty,
+             Color,
              JulianDate,
              TimeInterval,
              TimeIntervalCollection) {
@@ -21,6 +20,7 @@ defineSuite([
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
+        expect(property.isConstant).toBe(true);
         expect(property.getType(new JulianDate())).toBeUndefined();
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
@@ -32,6 +32,7 @@ defineSuite([
         var property = new CompositeMaterialProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var result1 = property.getValue(interval1.start);
         expect(property.getType(interval1.start)).toEqual('Color');
@@ -51,6 +52,7 @@ defineSuite([
         var property = new CompositeMaterialProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var expected = {};
         var result1 = property.getValue(interval1.start, expected);
@@ -77,6 +79,52 @@ defineSuite([
 
         right.intervals.addInterval(interval2);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged event in all cases', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, ColorMaterialProperty.fromColor(Color.RED));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, ColorMaterialProperty.fromColor(Color.YELLOW));
+
+        var property = new CompositeMaterialProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval1);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.addInterval(interval2);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.removeInterval(interval2);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        interval1.data.color.setValue(Color.BLUE);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.clear();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+    });
+
+    it('does not raise definitionChanged for an overwritten interval', function() {
+        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, ColorMaterialProperty.fromColor(Color.RED));
+        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, ColorMaterialProperty.fromColor(Color.YELLOW));
+
+        var property = new CompositeMaterialProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+        expect(listener.callCount).toBe(2);
+
+        //interval2 overwrites interval1, so callCount should not increase.
+        interval1.data.color.setValue(Color.BLUE);
+        expect(listener.callCount).toBe(2);
     });
 
     it('getValue throws with no time parameter', function() {

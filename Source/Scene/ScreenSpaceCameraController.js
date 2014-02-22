@@ -11,6 +11,7 @@ define([
         '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
+        '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Ray',
@@ -32,6 +33,7 @@ define([
         KeyboardEventModifier,
         FAR,
         IntersectionTests,
+        isArray,
         CesiumMath,
         Matrix4,
         Ray,
@@ -247,7 +249,7 @@ define([
         this._horizontalRotationAxis = undefined;
 
         // Constants, Make any of these public?
-        var radius = this._ellipsoid.getMaximumRadius();
+        var radius = this._ellipsoid.maximumRadius;
         this._zoomFactor = 5.0;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
@@ -274,7 +276,7 @@ define([
      */
     ScreenSpaceCameraController.prototype.setEllipsoid = function(ellipsoid) {
         ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var radius = ellipsoid.getMaximumRadius();
+        var radius = ellipsoid.maximumRadius;
         this._ellipsoid = ellipsoid;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
@@ -368,7 +370,7 @@ define([
 
         var aggregator = controller._aggregator;
 
-        if (!Array.isArray(eventTypes)) {
+        if (!isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }

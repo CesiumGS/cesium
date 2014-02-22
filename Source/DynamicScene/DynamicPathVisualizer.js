@@ -203,7 +203,7 @@ define([
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
-        scene.getPrimitives().add(this._polylineCollection);
+        scene.primitives.add(this._polylineCollection);
     };
 
     PolylineUpdater.prototype.update = function(time) {
@@ -310,7 +310,7 @@ define([
                 polyline = this._polylineCollection.add();
             }
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);
@@ -373,7 +373,7 @@ define([
     };
 
     PolylineUpdater.prototype.destroy = function() {
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };
 
@@ -388,17 +388,13 @@ define([
      *
      * @see DynamicPath
      * @see Polyline
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPyramidVisualizer
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
@@ -460,7 +456,7 @@ define([
     DynamicPathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 

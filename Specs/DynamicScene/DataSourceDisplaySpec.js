@@ -65,11 +65,13 @@ defineSuite([
         this.destroyed = true;
     };
 
+    var visualizerCallback = function() {
+        return [new MockVisualizer()];
+    };
+
     it('constructor sets expected values', function() {
-        var visualizerTypes = [MockVisualizer];
-        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerTypes);
+        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerCallback);
         expect(display.getScene()).toBe(scene);
-        expect(display.getVisualizerTypes()).toEqual(visualizerTypes);
         expect(display.getDataSources()).toBe(dataSourceCollection);
         expect(display.isDestroyed()).toEqual(false);
         display.destroy();
@@ -94,14 +96,14 @@ defineSuite([
         var dynamicSource = new MockDataSource();
         dynamicSource.isTimeVarying = true;
 
-        var display = new DataSourceDisplay(scene, dataSourceCollection, [MockVisualizer]);
+        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerCallback);
         dataSourceCollection.add(staticSource);
         dataSourceCollection.add(dynamicSource);
 
-        var staticSourceVisualizer = staticSource._visualizerCollection.getVisualizers()[0];
+        var staticSourceVisualizer = staticSource._visualizers[0];
         expect(staticSourceVisualizer).toBeInstanceOf(MockVisualizer);
 
-        var dynamicSourceVisualizer = dynamicSource._visualizerCollection.getVisualizers()[0];
+        var dynamicSourceVisualizer = dynamicSource._visualizers[0];
         expect(dynamicSourceVisualizer).toBeInstanceOf(MockVisualizer);
 
         //Nothing should have happened yet because we haven't called update.
@@ -139,9 +141,9 @@ defineSuite([
         var source = new MockDataSource();
         dataSourceCollection.add(source);
 
-        var display = new DataSourceDisplay(scene, dataSourceCollection, [MockVisualizer]);
+        var display = new DataSourceDisplay(scene, dataSourceCollection, visualizerCallback);
 
-        var sourceVisualizer = source._visualizerCollection.getVisualizers()[0];
+        var sourceVisualizer = source._visualizers[0];
         expect(sourceVisualizer).toBeInstanceOf(MockVisualizer);
 
         //Nothing should have happened yet because we haven't called update.

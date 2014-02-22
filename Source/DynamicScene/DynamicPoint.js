@@ -21,12 +21,18 @@ define(['../Core/defaultValue',
      */
     var DynamicPoint = function() {
         this._color = undefined;
+        this._colorSubscription = undefined;
         this._pixelSize = undefined;
+        this._pixelSizeSubscription = undefined;
         this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._show = undefined;
+        this._showSubscription = undefined;
         this._scaleByDistance = undefined;
-        this._propertyChanged = new Event();
+        this._scaleByDistanceSubscription = undefined;
+        this._definitionChanged = new Event();
     };
 
     defineProperties(DynamicPoint.prototype, {
@@ -35,9 +41,9 @@ define(['../Core/defaultValue',
          * @memberof DynamicPoint.prototype
          * @type {Event}
          */
-        propertyChanged : {
+        definitionChanged : {
             get : function() {
-                return this._propertyChanged;
+                return this._definitionChanged;
             }
         },
 
@@ -46,35 +52,35 @@ define(['../Core/defaultValue',
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        color : createDynamicPropertyDescriptor('color', '_color'),
+        color : createDynamicPropertyDescriptor('color'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        pixelSize : createDynamicPropertyDescriptor('pixelSize', '_pixelSize'),
+        pixelSize : createDynamicPropertyDescriptor('pixelSize'),
 
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor', '_outlineColor'),
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth', '_outlineWidth'),
+        outlineWidth : createDynamicPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
          * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        show : createDynamicPropertyDescriptor('show', '_show'),
+        show : createDynamicPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
@@ -82,7 +88,7 @@ define(['../Core/defaultValue',
          * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance', '_scaleByDistance')
+        scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance')
     });
 
     /**

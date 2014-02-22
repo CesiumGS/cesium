@@ -9,7 +9,7 @@ define([
 
     function destroyScene(scene) {
         if (defined(scene) && !scene.isDestroyed()) {
-            var canvas = scene.getCanvas();
+            var canvas = scene.canvas;
             scene.destroy();
             destroyCanvas(canvas);
         }

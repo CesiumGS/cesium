@@ -11,6 +11,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Quaternion',
+        'Core/ReferenceFrame',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicObject',
@@ -35,6 +36,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Quaternion,
+        ReferenceFrame,
         Spherical,
         DynamicBillboard,
         DynamicObject,
@@ -771,6 +773,62 @@ defineSuite([
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
+    it('Can set reference frame', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        czml = {
+            position : {
+                referenceFrame : "FIXED",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('Default reference frame on existing interval does not reset value to FIXED.', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.process(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        var czml2 = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+        dataSource.process(czml2);
+
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+    });
+
     it('CZML sampled cartographicRadians positions work.', function() {
         var epoch = new JulianDate();
 
@@ -1305,6 +1363,10 @@ defineSuite([
                         }
                     }
                 },
+                height : 1,
+                extrudedHeight : 2,
+                granularity : 3,
+                stRotation : 4,
                 show : true
             }
         };
@@ -1316,6 +1378,10 @@ defineSuite([
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(dynamicObject.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        expect(dynamicObject.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
+        expect(dynamicObject.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+        expect(dynamicObject.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
     });
 
     it('CZML adds data for constrained polygon.', function() {

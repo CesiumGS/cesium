@@ -1,68 +1,109 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration'
+        '../Core/Enumeration',
+        '../Core/Event',
+        '../Core/isArray'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
-        Enumeration) {
+        Enumeration,
+        Event,
+        isArray) {
     "use strict";
 
     /**
-     * A {@link Property} whose value never changes.
+     * A {@link Property} whose value does not change with respect to simulation time.
+     * If the value is a non-basic type, then it must provide clone and equals functions.
      *
      * @alias ConstantProperty
      * @constructor
      *
-     * @param {Object|Number|String} value The property value.
-     * This parameter is only required if the value is not a number or string and does not have a clone function.
+     * @param {Object} [value] The property value.
      *
      * @see ConstantPositionProperty
      *
-     * @example
-     * //Create a constant value from a Cartesian2 instance.
-     * var constantProperty = new ConstantProperty(new Cartesian2(10, 12));
+     * @exception {DeveloperError} value.clone is a required function.
+     * @exception {DeveloperError} value.equals is a required function.
      */
     var ConstantProperty = function(value) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
-        //>>includeEnd('debug');
-
-        var simple = typeof value !== 'object' || Array.isArray(value) || value instanceof Enumeration;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!simple) {
-            if (typeof value.clone !== 'function') {
-                throw new DeveloperError('clone is a required function.');
-            }
-            if (typeof value.equals !== 'function') {
-                throw new DeveloperError('equals is a required function.');
-            }
-        }
-        //>>includeEnd('debug');
-
-        this._value = value;
-        this._simple = simple;
+        this._value = undefined;
+        this._simple = true;
+        this._definitionChanged = new Event();
+        this.setValue(value);
     };
 
+    defineProperties(ConstantProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.
+         * This property always returns <code>true</code>.
+         * @memberof ConstantProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            value : true
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof ConstantProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        }
+    });
+
     /**
-     * Gets the value of the property at the provided time.
-     * @memberof CompositeProperty
+     * Gets the value of the property.
+     * @memberof ConstantProperty
      *
-     * @param {JulianDate} time The time for which to retrieve the value.  This parameter is unused since the value never changes.
+     * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantProperty.prototype.getValue = function(time, result) {
-        if (this._simple) {
-            return this._value;
+        return this._simple ? this._value : this._value.clone(result);
+    };
+
+    /**
+     * Sets the value of the property.
+     * If the value is a non-basic type, then it must provide clone and equals functions.
+     * @memberof ConstantProperty
+     *
+     * @param {Object} value The property value.
+     *
+     * @exception {DeveloperError} value.clone is a required function.
+     * @exception {DeveloperError} value.equals is a required function.
+     */
+    ConstantProperty.prototype.setValue = function(value) {
+        var oldValue = this._value;
+        var simple = this._simple;
+        if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
+            simple = typeof value !== 'object' || isArray(value) || value instanceof Enumeration;
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!simple) {
+                if (typeof value.clone !== 'function') {
+                    throw new DeveloperError('clone is a required function.');
+                }
+                if (typeof value.equals !== 'function') {
+                    throw new DeveloperError('equals is a required function.');
+                }
+            }
+            //>>includeEnd('debug');
+
+            this._value = simple ? value : value.clone();
+            this._simple = simple;
+            this._definitionChanged.raiseEvent(this);
         }
-        return this._value.clone(result);
     };
 
     /**

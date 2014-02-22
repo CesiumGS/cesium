@@ -134,8 +134,8 @@ define([
 
     defineProperties(PerspectiveOffCenterFrustum.prototype, {
         /**
-         * The perspective projection matrix computed from the view frustum.
-         * @memberof PerspectiveOffCenterFrustum
+         * Gets the perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
@@ -148,8 +148,8 @@ define([
         },
 
         /**
-         * The perspective projection matrix computed from the view frustum with an infinite far plane.
-         * @memberof PerspectiveOffCenterFrustum
+         * Gets the perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveOffCenterFrustum#projectionMatrix

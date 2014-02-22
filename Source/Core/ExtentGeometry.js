@@ -723,7 +723,7 @@ define([
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquared = ellipsoid.radiiSquared;
 
         Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);

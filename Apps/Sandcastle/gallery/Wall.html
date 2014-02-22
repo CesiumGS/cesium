@@ -29,8 +29,8 @@ require(['Cesium'], function(Cesium) {
     
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var primitives = scene.getPrimitives();
-    var ellipsoid = viewer.centralBody.getEllipsoid();
+    var primitives = scene.primitives;
+    var ellipsoid = viewer.centralBody.ellipsoid;
    
     // Red wall,constant min and max heights
     var positions = ellipsoid.cartographicArrayToCartesianArray([
@@ -98,7 +98,7 @@ require(['Cesium'], function(Cesium) {
     });
    
     // Add wall instances to primitives
-    scene.getPrimitives().add(new Cesium.Primitive({
+    primitives.add(new Cesium.Primitive({
         geometryInstances : [blueWallInstance, redWallInstance, greenWallInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : false
