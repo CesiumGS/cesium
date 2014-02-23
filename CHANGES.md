@@ -63,6 +63,7 @@ Beta Releases
 * `ConstantProperty` is now mutable; it's value can be updated via `ConstantProperty.setValue`.
 * Added `AssociativeArray`, which is a helper class for maintaining a hash of objects that also needs to be iterated often.
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
 
 ### b25 - 2014-02-03
 
