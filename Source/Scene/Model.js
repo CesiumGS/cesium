@@ -1599,11 +1599,6 @@ define([
         var stack = [];
         var axis = new Cartesian3();
 
-        var matrix;
-        var translation;
-        var rotation;
-        var scale;
-
         for (var i = 0; i < length; ++i) {
             stack.push({
                 parentRuntimeNode : undefined,
