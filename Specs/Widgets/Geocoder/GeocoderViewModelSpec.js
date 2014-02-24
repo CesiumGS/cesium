@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/Geocoder/GeocoderViewModel',
+         'Core/Cartesian3',
          'Core/Ellipsoid',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          GeocoderViewModel,
+         Cartesian3,
          Ellipsoid,
          createScene,
          destroyScene) {
@@ -68,7 +70,7 @@ defineSuite([
             scene : scene
         });
 
-        var cameraPosition = scene.camera.position;
+        var cameraPosition = Cartesian3.clone(scene.camera.position);
 
         viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
         viewModel.search();
