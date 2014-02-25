@@ -184,6 +184,7 @@ define([
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
                     billboard._id = label._id;
+                    billboard._collection = label._labelCollection;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
@@ -518,7 +519,6 @@ define([
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see LabelCollection#getLength

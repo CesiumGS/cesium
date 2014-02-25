@@ -3,12 +3,14 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/isArray',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        isArray,
         createCommand,
         knockout) {
     "use strict";
@@ -21,7 +23,6 @@ define([
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
      * @param {Array} [imageryProviderViewModels=[]] The array of ImageryProviderViewModel instances to use.
      *
-     * @exception {DeveloperError} imageryLayers is required.
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
      *
      * @see ImageryProviderViewModel
@@ -35,7 +36,7 @@ define([
 
         if (!defined(imageryProviderViewModels)) {
             imageryProviderViewModels = [];
-        } else if (!Array.isArray(imageryProviderViewModels)) {
+        } else if (!isArray(imageryProviderViewModels)) {
             throw new DeveloperError('imageryProviderViewModels must be an array');
         }
 
@@ -109,7 +110,7 @@ define([
 
                 if (defined(value)) {
                     var newProviders = value.creationCommand();
-                    if (Array.isArray(newProviders)) {
+                    if (isArray(newProviders)) {
                         var newProvidersLength = newProviders.length;
                         for (i = newProvidersLength - 1; i >= 0; i--) {
                             imageryLayers.addImageryProvider(newProviders[i], 0);

@@ -497,14 +497,16 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
-                var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
+                var fsSource = createShaderSource({
+                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
+                });
 
                 frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
-                frontFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
                 backFaceColorCommand.shaderProgram = frontFaceColorCommand.shaderProgram;
-                backFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                backFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
                 backFaceColorCommand.uniformMap.u_normalDirection = function() {
                     return -1.0;
                 };
@@ -540,11 +542,12 @@ define([
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
-                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                var uniforms = {
                     czm_pickColor : function() {
                         return that._pickId.color;
                     }
-                }], false, false);
+                };
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._material._uniforms), uniforms);
             }
 
             pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;

@@ -2,12 +2,14 @@
 define([
         './defined',
         './DeveloperError',
+        './Event',
         './binarySearch',
         './TimeInterval',
         './JulianDate'
     ], function(
         defined,
         DeveloperError,
+        Event,
         binarySearch,
         TimeInterval,
         JulianDate) {
@@ -25,10 +27,20 @@ define([
      *
      * @see TimeInterval
      * @see JulianDate
-     *
      */
     var TimeIntervalCollection = function() {
         this._intervals = [];
+        this._intervalsChanged =  new Event();
+    };
+
+    /**
+     * Gets an event that is raised whenever the collection of intervals change.
+     * @memberof TimeIntervalCollection
+     *
+     * @returns {Event} The event
+     */
+    TimeIntervalCollection.prototype.getChangedEvent = function() {
+        return this._intervalsChanged;
     };
 
     /**
@@ -118,7 +130,10 @@ define([
      * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.clear = function() {
-        this._intervals = [];
+        if (this._intervals.length > 0) {
+            this._intervals.length = 0;
+            this._intervalsChanged.raiseEvent(this);
+        }
     };
 
     /**
@@ -140,8 +155,6 @@ define([
      * @memberof TimeIntervalCollection
      *
      * @returns The interval containing the specified date, undefined if no such interval exists.
-     *
-     * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.findIntervalContainingDate = function(date) {
         var index = this.indexOf(date);
@@ -156,8 +169,6 @@ define([
      * @memberof TimeIntervalCollection
      *
      * @returns The data for the interval containing the specified date, or undefined if no such interval exists.
-     *
-     * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function(date) {
         var index = this.indexOf(date);
@@ -172,8 +183,6 @@ define([
      * @memberof TimeIntervalCollection
      *
      * @returns True if the specified date is contained in the interval collection, undefined otherwise.
-     *
-     * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.contains = function(date) {
         return this.indexOf(date) >= 0;
@@ -190,8 +199,6 @@ define([
      * it returns a negative number which is the bitwise complement of the index of the next interval that
      * starts after the date, or if no interval starts after the specified date, the bitwise complement of
      * the length of the collection.
-     *
-     * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.indexOf = function(date) {
         //>>includeStart('debug', pragmas.debug);
@@ -260,8 +267,6 @@ define([
      * is not provided, the Javascript equality operator is used.
      *
      * @memberof TimeIntervalCollection
-     *
-     * @exception {DeveloperError} interval is required.
      */
     TimeIntervalCollection.prototype.addInterval = function(interval, equalsCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -278,6 +283,7 @@ define([
             if (thisIntervals.length === 0 ||
                 interval.start.greaterThan(thisIntervals[thisIntervals.length - 1].stop)) {
                 thisIntervals.push(interval);
+                this._intervalsChanged.raiseEvent(this);
                 return;
             }
 
@@ -393,6 +399,7 @@ define([
 
             // Add the new interval
             thisIntervals.splice(index, 0, interval);
+            this._intervalsChanged.raiseEvent(this);
         }
     };
 
@@ -405,8 +412,6 @@ define([
      * @memberof TimeIntervalCollection
      *
      * @returns true if the interval was removed, false if no part of the interval was in the collection.
-     *
-     * @exception {DeveloperError} interval is required.
      */
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);
@@ -502,6 +507,10 @@ define([
             thisIntervals[index] = new TimeInterval(intervalStop, indexInterval.stop, !intervalIsStopIncluded, indexInterval.isStopIncluded, indexInterval.data);
         }
 
+        if (result) {
+            this._intervalsChanged.raiseEvent(this);
+        }
+
         return result;
     };
 
@@ -520,8 +529,6 @@ define([
      * @returns A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
      *
      * @memberof TimeIntervalCollection
-     *
-     * @exception {DeveloperError} timeIntervalCollection is required.
      */
     TimeIntervalCollection.prototype.intersect = function(timeIntervalCollection, equalsCallback, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -548,8 +555,6 @@ define([
      * @returns A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
      *
      * @memberof TimeIntervalCollection
-     *
-     * @exception {DeveloperError} timeIntervalCollection is required.
      */
     TimeIntervalCollection.prototype.intersectInterval = function(interval, equalsCallback, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);

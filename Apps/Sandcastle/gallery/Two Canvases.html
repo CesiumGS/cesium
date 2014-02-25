@@ -36,16 +36,16 @@
 
     function createScene(canvas) {
         var scene = new Cesium.Scene(canvas);
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
 
         var imageryProvider = new Cesium.TileMapServiceImageryProvider({
             url : imageryUrl + 'NaturalEarthII'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);
-        cb.getImageryLayers().addImageryProvider(imageryProvider);
+        cb.imageryLayerCollection.addImageryProvider(imageryProvider);
 
-        primitives.setCentralBody(cb);
+        primitives.centralBody = cb;
 
         // Prevent right-click from opening a context menu.
         canvas.oncontextmenu = function () {
@@ -100,7 +100,7 @@
 
         canvas.width = width;
         canvas.height = height;
-        scene.getCamera().frustum.aspectRatio = width / height;
+        scene.camera.frustum.aspectRatio = width / height;
     };
     var onResize = function () {
         onResizeScene(canvas3D, scene3D);

@@ -48,23 +48,20 @@ define([
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.level The tile level-of-detail.
      * @param {Tile} description.parent The parent of this tile in a tile tree system.
-     *
-     * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
-     * @exception {DeveloperError} description.level is required.
      */
     var Tile = function(description) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(description)) {
             throw new DeveloperError('description is required.');
         }
-        if (!defined(description.x) || !defined(description.y)) {
-            if (!defined(description.extent)) {
-                throw new DeveloperError('Either description.extent is required or description.x and description.y are required.');
-            }
+        if (!defined(description.x)) {
+            throw new DeveloperError('description.x is required.');
+        } else if (!defined(description.y)) {
+            throw new DeveloperError('description.y is required.');
         } else if (description.x < 0 || description.y < 0) {
             throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
         }
-        if (!defined(description.level) || description.zoom < 0) {
+        if (!defined(description.level)) {
             throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
         }
         if (!defined(description.tilingScheme)) {

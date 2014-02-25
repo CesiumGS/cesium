@@ -134,8 +134,8 @@ define([
 
     defineProperties(PerspectiveOffCenterFrustum.prototype, {
         /**
-         * The perspective projection matrix computed from the view frustum.
-         * @memberof PerspectiveOffCenterFrustum
+         * Gets the perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
@@ -148,8 +148,8 @@ define([
         },
 
         /**
-         * The perspective projection matrix computed from the view frustum with an infinite far plane.
-         * @memberof PerspectiveOffCenterFrustum
+         * Gets the perspective projection matrix computed from the view frustum with an infinite far plane.
+         * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveOffCenterFrustum#projectionMatrix
@@ -174,10 +174,6 @@ define([
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
-     *
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
-     * @exception {DeveloperError} up is required.
      *
      * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
@@ -321,7 +317,6 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *

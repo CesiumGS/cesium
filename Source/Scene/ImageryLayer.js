@@ -628,6 +628,10 @@ define([
                 return;
             }
 
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
+            }
+
             when(imagePromise, success, failure);
         }
 
@@ -951,9 +955,9 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.getTilingScheme();
         var ellipsoid = tilingScheme.getEllipsoid();
-        var latitudeFactor = Math.cos(latitudeClosestToEquator);
+        var latitudeFactor = !(layer._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeExtent = tilingScheme.getExtent();
-        var levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
+        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);

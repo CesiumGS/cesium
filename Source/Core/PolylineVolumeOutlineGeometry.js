@@ -105,9 +105,6 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @exception {DeveloperError} options.polylinePositions is required.
-     * @exception {DeveloperError} options.shapePositions is required.
-     *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
      * @example

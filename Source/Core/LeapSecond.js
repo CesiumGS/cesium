@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './isArray'
     ], function(
         defined,
-        DeveloperError) {
+        DeveloperError,
+        isArray) {
     "use strict";
 
     /**
@@ -16,9 +18,6 @@ define([
      *
      * @param {JulianDate} date A Julian date representing the time of the leap second.
      * @param {Number} offset The cumulative number of seconds, that TAI is ahead of UTC at provided date.
-     *
-     * @exception {DeveloperError} <code>date</code> is required.
-     * @exception {DeveloperError} <code>offset</code> is required.
      *
      * @see JulianDate
      * @see TimeStandard
@@ -80,7 +79,7 @@ define([
      */
     LeapSecond.setLeapSeconds = function(leapSeconds) {
         //>>includeStart('debug', pragmas.debug);
-        if (!Array.isArray(leapSeconds)) {
+        if (!isArray(leapSeconds)) {
             throw new DeveloperError("leapSeconds is required and must be an array.");
         }
         //>>includeEnd('debug');

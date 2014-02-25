@@ -29,8 +29,8 @@ require(['Cesium'], function(Cesium) {
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var primitives = scene.getPrimitives();
-    var ellipsoid = viewer.centralBody.getEllipsoid();
+    var primitives = scene.primitives;
+    var ellipsoid = viewer.centralBody.ellipsoid;
 
     function starPositions(arms, rOuter, rInner) {
         var angle = Math.PI / arms;
@@ -130,7 +130,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));
