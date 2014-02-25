@@ -562,16 +562,18 @@ defineSuite([
     });
 
     it('throws when created with a color texture with a non-color pixel format', function() {
-        expect(function() {
-            framebuffer = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
-                    width : 1,
-                    height : 1,
-                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                })]
-            });
-        }).toThrowDeveloperError();
+        if (context.getDepthTexture()) {
+            expect(function() {
+                framebuffer = context.createFramebuffer({
+                    colorTextures : [context.createTexture2D({
+                        width : 1,
+                        height : 1,
+                        pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                        pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                    })]
+                });
+            }).toThrowDeveloperError();
+        }
     });
 
     it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {
