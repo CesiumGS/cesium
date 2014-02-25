@@ -217,7 +217,7 @@ define(['../Core/Color',
      */
     PolylineGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
-        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time);
+        return this._fillEnabled && dynamicObject.uiShow && dynamicObject.isAvailable(time) && this._showProperty.getValue(time);
     };
 
     /**
@@ -245,7 +245,7 @@ define(['../Core/Color',
         var attributes;
         var dynamicObject = this._dynamicObject;
         var isAvailable = dynamicObject.isAvailable(time);
-        var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time));
+        var show = new ShowGeometryInstanceAttribute(isAvailable && dynamicObject.uiShow && this._showProperty.getValue(time));
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
@@ -416,7 +416,7 @@ define(['../Core/Color',
         var polyline = dynamicObject.polyline;
         var show = polyline.show;
 
-        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!dynamicObject.isAvailable(time) || !dynamicObject.uiShow || (defined(show) && !show.getValue(time))) {
             return;
         }
 

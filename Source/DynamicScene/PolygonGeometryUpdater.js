@@ -235,7 +235,7 @@ define(['../Core/Color',
      */
     PolygonGeometryUpdater.prototype.isOutlineVisible = function(time) {
         var dynamicObject = this._dynamicObject;
-        return this._outlineEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return this._outlineEnabled && dynamicObject.uiShow && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
     };
 
     /**
@@ -248,7 +248,7 @@ define(['../Core/Color',
      */
     PolygonGeometryUpdater.prototype.isFilled = function(time) {
         var dynamicObject = this._dynamicObject;
-        return this._fillEnabled && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return this._fillEnabled && dynamicObject.uiShow && dynamicObject.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
     };
 
     /**
@@ -278,7 +278,7 @@ define(['../Core/Color',
         var attributes;
 
         var color;
-        var show = new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
+        var show = new ShowGeometryInstanceAttribute(isAvailable && dynamicObject.uiShow && this._showProperty.getValue(time) && this._fillProperty.getValue(time));
         if (this._materialProperty instanceof ColorMaterialProperty) {
             var currentColor = Color.WHITE;
             if (defined(this._materialProperty.color) && (this._materialProperty.color.isConstant || isAvailable)) {
@@ -330,7 +330,7 @@ define(['../Core/Color',
             id : dynamicObject,
             geometry : new PolygonOutlineGeometry(this._options),
             attributes : {
-                show : new ShowGeometryInstanceAttribute(isAvailable && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
+                show : new ShowGeometryInstanceAttribute(isAvailable && dynamicObject.uiShow && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time)),
                 color : ColorGeometryInstanceAttribute.fromColor(isAvailable ? this._outlineColorProperty.getValue(time) : Color.BLACK)
             }
         });
@@ -504,7 +504,7 @@ define(['../Core/Color',
         var polygon = dynamicObject.polygon;
         var show = polygon.show;
 
-        if (!dynamicObject.isAvailable(time) || (defined(show) && !show.getValue(time))) {
+        if (!dynamicObject.isAvailable(time) || !dynamicObject.uiShow || (defined(show) && !show.getValue(time))) {
             return;
         }
 

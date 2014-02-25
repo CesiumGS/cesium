@@ -156,7 +156,7 @@ define(['../Core/createGuid',
                 var oldValue = this._uiShow;
                 if (oldValue !== value) {
                     this._uiShow = value;
-                    this._propertyChanged.raiseEvent(this, 'uiShow', value, oldValue);
+                    this._definitionChanged.raiseEvent(this, 'uiShow', value, oldValue);
                 }
             }
         },
