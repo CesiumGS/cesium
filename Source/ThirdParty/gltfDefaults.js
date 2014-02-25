@@ -95,7 +95,7 @@ define([
                 var length = primitives.length;
                 for (var i = 0; i < length; ++i) {
                     var primitive = primitives[i];
-                    primitive.primitive = defaultValue(primitive.primitive, 4); // TRIANGLES
+                    primitive.primitive = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
                 }
             }
         }
@@ -146,10 +146,10 @@ define([
         for (var name in samplers) {
             if (samplers.hasOwnProperty(name)) {
                 var sampler = samplers[name];
-                sampler.magFilter = defaultValue(sampler.magFilter, 9729);  // LINEAR
-                sampler.minFilter = defaultValue(sampler.minFilter, 9986);  // NEAREST_MIPMAP_LINEAR
-                sampler.wrapS = defaultValue(sampler.wrapS, 10497);  // REPEAT
-                sampler.wrapT = defaultValue(sampler.wrapT, 10497);  // REPEAT
+                sampler.magFilter = defaultValue(sampler.magFilter, WebGLRenderingContext.LINEAR);
+                sampler.minFilter = defaultValue(sampler.minFilter, WebGLRenderingContext.NEAREST_MIPMAP_LINEAR);
+                sampler.wrapS = defaultValue(sampler.wrapS, WebGLRenderingContext.REPEAT);
+                sampler.wrapT = defaultValue(sampler.wrapT, WebGLRenderingContext.REPEAT);
             }
         }
     }
@@ -162,7 +162,9 @@ define([
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
                 var texture = textures[name];
-                // GLTF_SPEC: All optional properties
+                texture.format = defaultValue(texture.format, WebGLRenderingContext.RGBA);
+                texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
+                texture.target = defaultValue(texture.target, WebGLRenderingContext.TEXTURE_2D);
                 texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
             }
         }
