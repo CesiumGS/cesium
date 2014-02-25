@@ -62,9 +62,8 @@ define(['../Core/defined',
         this.geometry.set(id, updater.createFillGeometryInstance(time));
         if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant) {
             this.updatersWithAttributes.set(id, updater);
-        } else {
-            this.subscriptions.set(id, updater.dynamicObject.definitionChanged.addEventListener(Batch.prototype.uiShowChanged, this));
         }
+        this.subscriptions.set(id, updater.dynamicObject.definitionChanged.addEventListener(Batch.prototype.uiShowChanged, this));
         this.createPrimitive = true;
     };
 
@@ -120,7 +119,7 @@ define(['../Core/defined',
             for (i = 0; i < length; i++) {
                 updater = updatersWithAttributes[i];
                 dynamicObject = updater.dynamicObject;
-                id = dynamicObject.od;
+                id = dynamicObject.id;
                 attributes = this.attributes.get(id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
@@ -128,7 +127,7 @@ define(['../Core/defined',
                 }
 
                 if (!updater.hasConstantFill) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time) && dynamicObject.uiShow, attributes.show);
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
                 }
             }
 
@@ -144,9 +143,9 @@ define(['../Core/defined',
                     attributes = primitive.getGeometryInstanceAttributes(dynamicObject);
                     this.attributes.set(id, attributes);
                 }
-                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time) && dynamicObject.uiShow, attributes.show);
+                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time) && dynamicObject.uiShow, attributes.show);
             }
-            toggledObjects.length = 0;
+            this.toggledObjects.removeAll();
         }
     };
 

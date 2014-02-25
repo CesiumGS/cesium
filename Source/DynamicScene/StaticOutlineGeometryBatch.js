@@ -46,9 +46,8 @@ define(['../Core/Color',
         this.updaters.set(id, updater);
         if (!updater.hasConstantOutline || !updater.outlineColorProperty.isConstant) {
             this.updatersWithAttributes.set(id, updater);
-        } else {
-            this.subscriptions.set(id, updater.dynamicObject.definitionChanged.addEventListener(Batch.prototype.uiShowChanged, this));
         }
+        this.subscriptions.set(id, updater.dynamicObject.definitionChanged.addEventListener(Batch.prototype.uiShowChanged, this));
     };
 
     Batch.prototype.remove = function(updater) {
@@ -116,7 +115,7 @@ define(['../Core/Color',
                     this.itemsToRemove[removedCount++] = updater;
                 }
                 if (!updater.hasConstantOutline) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time) && dynamicObject.uiShow, attributes.show);
+                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time), attributes.show);
                 }
             }
 
@@ -134,7 +133,7 @@ define(['../Core/Color',
                 }
                 attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time) && dynamicObject.uiShow, attributes.show);
             }
-            toggledObjects.length = 0;
+            this.toggledObjects.removeAll();
         }
         this.itemsToRemove.length = removedCount;
     };
