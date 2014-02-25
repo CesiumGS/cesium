@@ -957,7 +957,7 @@ defineSuite([
                     height : 16,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrowDeveloperError();
+            }).toThrow();
         }
     });
 

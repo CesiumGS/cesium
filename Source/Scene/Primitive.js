@@ -16,6 +16,7 @@ define([
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
         '../Core/clone',
+        '../Core/isArray',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/DrawCommand',
@@ -43,6 +44,7 @@ define([
         TaskProcessor,
         GeographicProjection,
         clone,
+        isArray,
         BufferUsage,
         VertexLayout,
         DrawCommand,
@@ -523,7 +525,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {
@@ -554,7 +556,7 @@ define([
                 if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
                 } else if (this._state === PrimitiveState.READY) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
                     var promises = [];
@@ -587,7 +589,7 @@ define([
                         that._state = PrimitiveState.FAILED;
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
                     geometries = this._geometries.concat(this._createdGeometries);
@@ -633,7 +635,7 @@ define([
                     });
                 }
             } else {
-                instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                 length = instances.length;
                 geometries = this._createdGeometries;
 

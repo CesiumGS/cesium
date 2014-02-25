@@ -6,6 +6,7 @@ define(['../../Core/BoundingSphere',
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../DynamicScene/DynamicObject',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
         '../../DynamicScene/DynamicObjectView',
@@ -18,6 +19,7 @@ define(['../../Core/BoundingSphere',
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        DynamicObject,
         SceneMode,
         subscribeAndEvaluate,
         DynamicObjectView,
@@ -152,6 +154,16 @@ define(['../../Core/BoundingSphere',
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
+        function pickDynamicObject(e) {
+            var picked = viewer.scene.pick(e.position);
+            if (defined(picked)) {
+                var id = defaultValue(picked.id, picked.primitive.id);
+                if (id instanceof DynamicObject) {
+                    return id;
+                }
+            }
+        }
+
         function trackObject(dynamicObject) {
             if (defined(dynamicObject) && defined(dynamicObject.position)) {
                 viewer.trackedObject = dynamicObject;
@@ -159,19 +171,14 @@ define(['../../Core/BoundingSphere',
         }
 
         function pickAndTrackObject(e) {
-            var picked = viewer.scene.pick(e.position);
-            if (defined(picked) && defined(picked.primitive)) {
-                trackObject(picked.primitive.dynamicObject);
+            var dynamicObject = pickDynamicObject(e);
+            if (defined(dynamicObject)) {
+                trackObject(dynamicObject);
             }
         }
 
         function pickAndSelectObject(e) {
-            var picked = viewer.scene.pick(e.position);
-            if (defined(picked) && defined(picked.primitive) && defined(picked.primitive.dynamicObject)) {
-                viewer.selectedObject = picked.primitive.dynamicObject;
-            } else {
-                viewer.selectedObject = undefined;
-            }
+            viewer.selectedObject = pickDynamicObject(e);
         }
 
         // Subscribe to the home button beforeExecute event if it exists,

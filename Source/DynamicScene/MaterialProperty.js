@@ -1,10 +1,11 @@
 /*global define*/
-define([
-        '../Core/defined',
+define(['../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         Material) {
     "use strict";
@@ -24,6 +25,28 @@ define([
     var MaterialProperty = function() {
         DeveloperError.throwInstantiationError();
     };
+
+    defineProperties(MaterialProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof MaterialProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof MaterialProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the {@link Material} type at the provided time.

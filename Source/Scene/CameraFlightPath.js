@@ -9,6 +9,7 @@ define([
         '../Core/HermiteSpline',
         '../Core/Math',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Scene/PerspectiveFrustum',
@@ -25,6 +26,7 @@ define([
         HermiteSpline,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Quaternion,
         QuaternionSpline,
         PerspectiveFrustum,
@@ -85,7 +87,7 @@ define([
         return Math.max(dx, dy);
     }
 
-    function createPath3D(camera, ellipsoid, start, end, duration) {
+    function createPath3D(camera, ellipsoid, start, up, right, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
@@ -102,8 +104,8 @@ define([
         } else {
             var diff = Cartesian3.subtract(start, end);
             altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5), end));
-            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.up, Cartesian3.dot(diff, camera.up)));
-            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.right, Cartesian3.dot(diff, camera.right)));
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up)));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right)));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
@@ -154,10 +156,10 @@ define([
     var up3D = new Cartesian3();
     var quat3D = new Quaternion();
 
-    function createOrientations3D(camera, path, endDirection, endUp) {
+    function createOrientations3D(path, startDirection, startUp, endDirection, endUp) {
         var points = path.points;
         var orientations = new Array(points.length);
-        orientations[0] = createQuaternion(camera.direction, camera.up);
+        orientations[0] = createQuaternion(startDirection, startUp);
 
         var point;
         var length = points.length - 1;
@@ -185,22 +187,38 @@ define([
         });
     }
 
+    var scratchStartPosition = new Cartesian3();
+    var scratchStartDirection = new Cartesian3();
+    var scratchStartUp = new Cartesian3();
+    var scratchStartRight = new Cartesian3();
+    var currentFrame = new Matrix4();
+
     function createUpdate3D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
 
-        var path = createPath3D(camera, ellipsoid, camera.position, destination, duration);
-        var orientations = createOrientations3D(camera, path, direction, up);
+        var start = Matrix4.multiplyByPoint(camera.transform, camera.position, scratchStartPosition);
+        var startDirection = Matrix4.multiplyByPointAsVector(camera.transform, camera.direction, scratchStartDirection);
+        var startUp = Matrix4.multiplyByPointAsVector(camera.transform, camera.up, scratchStartUp);
+        var startRight = Cartesian3.cross(startDirection, startUp, scratchStartRight);
+
+        var path = createPath3D(camera, ellipsoid, start, startUp, startRight, destination, duration);
+        var orientations = createOrientations3D(path, startDirection, startUp, direction, up);
 
         var update = function(value) {
             var time = value.time;
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
-            camera.position = path.evaluate(time);
+            Matrix4.clone(camera.transform, currentFrame);
+            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
+
+            camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
+
+            camera.controller.setTransform(currentFrame);
         };
 
         return update;
@@ -289,6 +307,11 @@ define([
         });
     }
 
+    var transform2D = new Matrix4(0, 0, 1, 0,
+                                  1, 0, 0, 0,
+                                  0, 1, 0, 0,
+                                  0, 0, 0, 1);
+
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.getEllipsoid();
@@ -301,10 +324,15 @@ define([
             var orientation = orientations.evaluate(time);
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
+            Matrix4.clone(camera.transform, currentFrame);
+            Matrix4.clone(transform2D, camera.transform);
+
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
+
+            camera.controller.setTransform(currentFrame);
         };
 
         return update;
@@ -350,7 +378,7 @@ define([
 
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
-     * be in the current camera reference frame.
+     * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Cartesian3} description.destination The final position of the camera.
@@ -359,6 +387,7 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
+     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
@@ -395,11 +424,13 @@ define([
         var frameState = scene.frameState;
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
+
         var wrapCallback = function(cb) {
             var wrapped = function() {
                 if (typeof cb === 'function') {
                     cb();
                 }
+
                 controller.enableInputs = true;
             };
             return wrapped;
@@ -407,8 +438,12 @@ define([
         var onComplete = wrapCallback(description.onComplete);
         var onCancel = wrapCallback(description.onCancel);
 
-        var frustum = frameState.camera.frustum;
+        var referenceFrame = description.endReferenceFrame;
+        if (defined(referenceFrame)) {
+            scene.camera.controller.setTransform(referenceFrame);
+        }
 
+        var frustum = frameState.camera.frustum;
         if (frameState.mode === SceneMode.SCENE2D) {
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
@@ -455,8 +490,6 @@ define([
 
                 if (frameState.mode === SceneMode.SCENE2D) {
                     var zoom = frameState.camera.position.z;
-
-
                     var ratio = frustum.top / frustum.right;
 
                     var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
@@ -502,8 +535,8 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. Keep in mind that the animation
-     * will happen in the camera's current reference frame.
+     * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. All arguments should
+     * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Cartographic} description.destination The final position of the camera.
@@ -512,6 +545,7 @@ define([
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
+     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
@@ -549,14 +583,15 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position in which the entire extent will be visible. Keep in mind that the animation
-     * will happen in the camera's current reference frame.
+     * Creates an animation to fly the camera from it's current position to a position in which the entire extent will be visible. All arguments should
+     * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Extent} description.destination The final position of the camera.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
+     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *

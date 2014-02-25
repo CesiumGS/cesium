@@ -211,8 +211,6 @@ define([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 1.0);
-    var inverseTransform2D = Matrix4.inverseTransformation(transform2D);
-    var scratchTransform = new Matrix4();
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
@@ -274,26 +272,9 @@ define([
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
-                }
+                },
+                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
             };
-
-            if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-                var transform = Matrix4.clone(camera.transform, scratchTransform);
-
-                if (viewModel._scene.mode !== SceneMode.SCENE3D) {
-                    Matrix4.clone(transform2D, camera.transform);
-                    Matrix4.multiply(inverseTransform2D, transform, transform);
-                } else {
-                    Matrix4.clone(Matrix4.IDENTITY, camera.transform);
-                }
-
-                Matrix4.multiplyByPoint(transform, camera.position, camera.position);
-
-                var rotation = Matrix4.getRotation(transform);
-                Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
-                Matrix3.multiplyByVector(rotation, camera.up, camera.up);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-            }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
             viewModel._scene.animations.add(flight);

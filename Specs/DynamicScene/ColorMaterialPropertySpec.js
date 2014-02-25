@@ -1,30 +1,34 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/ColorMaterialProperty',
+defineSuite(['DynamicScene/ColorMaterialProperty',
              'DynamicScene/ConstantProperty',
              'DynamicScene/TimeIntervalCollectionProperty',
              'Core/Color',
              'Core/JulianDate',
-             'Core/TimeInterval',
-             'Specs/UndefinedProperty'
+             'Core/TimeInterval'
      ], function(
              ColorMaterialProperty,
              ConstantProperty,
              TimeIntervalCollectionProperty,
              Color,
              JulianDate,
-             TimeInterval,
-             UndefinedProperty) {
+             TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('works with basic types', function() {
+    it('constructor provides the expected defaults', function() {
         var property = new ColorMaterialProperty();
-        expect(property.color).toBeDefined();
+        expect(property.color).toEqual(new ConstantProperty(Color.WHITE));
         expect(property.getType()).toEqual('Color');
+        expect(property.isConstant).toBe(true);
 
-        var result = property.getValue();
-        expect(result.color).toEqual(Color.WHITE);
+        var colorProperty = new ConstantProperty(Color.BLUE);
+        property = new ColorMaterialProperty(colorProperty);
+        expect(property.color).toBe(colorProperty);
+        expect(property.getType()).toEqual('Color');
+        expect(property.isConstant).toBe(true);
+
+        property = ColorMaterialProperty.fromColor(Color.BLUE);
+        expect(property.color).toEqual(colorProperty);
     });
 
     it('works with constant values', function() {
@@ -37,7 +41,7 @@ defineSuite([
 
     it('works with undefined values', function() {
         var property = new ColorMaterialProperty();
-        property.color = new UndefinedProperty();
+        property.color = new ConstantProperty();
 
         var result = property.getValue();
         expect(result.hasOwnProperty('color')).toEqual(true);
@@ -51,6 +55,8 @@ defineSuite([
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
         property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
+
+        expect(property.isConstant).toBe(false);
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
@@ -78,5 +84,24 @@ defineSuite([
 
         right.color = new ConstantProperty(Color.BLACK);
         expect(left.equals(right)).toEqual(false);
+    });
+
+    it('raises definitionChanged when a color property is assigned or modified', function() {
+        var property = new ColorMaterialProperty();
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        var oldValue = property.color;
+        property.color = new ConstantProperty(Color.WHITE);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, oldValue);
+        listener.reset();
+
+        property.color.setValue(Color.BLACK);
+        expect(listener).toHaveBeenCalledWith(property, 'color', property.color, property.color);
+        listener.reset();
+
+        property.color = property.color;
+        expect(listener.callCount).toEqual(0);
     });
 });
