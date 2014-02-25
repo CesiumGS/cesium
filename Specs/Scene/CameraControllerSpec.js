@@ -100,6 +100,28 @@ defineSuite([
         }).toThrow();
     });
 
+    it('setTransform', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var cartOrigin = Cartographic.fromDegrees(-75.59777, 40.03883);
+        var origin = ellipsoid.cartographicToCartesian(cartOrigin);
+        var transform = Transforms.eastNorthUpToFixedFrame(origin);
+
+        var height = 1000.0;
+        cartOrigin.height = height;
+
+        camera.position = ellipsoid.cartographicToCartesian(cartOrigin);
+        camera.direction = Cartesian3.negate(Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 2)));
+        camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1));
+        camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0));
+
+        controller.setTransform(transform);
+
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, height), CesiumMath.EPSILON9);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z), CesiumMath.EPSILON9);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON9);
+        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON9);
+    });
+
     it('move throws without an axis', function() {
         expect(function() {
             expect(controller.move());
