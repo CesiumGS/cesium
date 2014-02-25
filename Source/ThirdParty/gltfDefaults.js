@@ -114,10 +114,10 @@ define([
                     // Add default identity matrix if there is no matrix property and no TRS properties
                     if (!(defined(node.translation) && defined(node.rotation) && defined(node.scale))) {
                         node.matrix = [
-                            1, 0, 0, 0,
-                            0, 1, 0, 0,
-                            0, 0, 1, 0,
-                            0, 0, 0, 1
+                            1.0, 0.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0, 0.0,
+                            0.0, 0.0, 1.0, 0.0,
+                            0.0, 0.0, 0.0, 1.0
                         ];
                     } else {
                         if (!defined(node.translation)) {
@@ -170,6 +170,26 @@ define([
         }
     }
 
+    function skinDefaults(skins) {
+        if (!defined(skins)) {
+            return;
+        }
+
+        for (var name in skins) {
+            if (skins.hasOwnProperty(name)) {
+                var skin = skins[name];
+                if (defined(skin.bindShapeMatrix)) {
+                    skin.bindShapeMatrix = [
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0
+                    ];
+                }
+            }
+        }
+    }
+
     /**
      * Modifies gltf in place.
      *
@@ -189,6 +209,7 @@ define([
         nodeDefaults(gltf.nodes);
         samplerDefaults(gltf.samplers);
         textureDefaults(gltf.textures);
+        skinDefaults(gltf.skins);
 
         gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
         gltf.version = defaultValue(gltf.version, '1.0');
