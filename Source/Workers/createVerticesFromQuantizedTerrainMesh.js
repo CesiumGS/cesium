@@ -4,6 +4,7 @@ define([
         '../Core/Cartographic',
         '../Core/Ellipsoid',
         '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
@@ -11,6 +12,7 @@ define([
         Cartographic,
         Ellipsoid,
         Extent,
+        FeatureDetection,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";
