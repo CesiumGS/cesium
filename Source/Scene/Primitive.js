@@ -401,7 +401,11 @@ define([
             var name = match[1];
 
             var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
-            forwardDecl += functionName + ';\n';
+
+            // Don't forward-declare czm_computePosition because computePosition.glsl already does.
+            if (functionName !== 'vec4 czm_computePosition()') {
+                forwardDecl += functionName + ';\n';
+            }
 
             if (!primitive.allow3DOnly) {
                 attributes +=
