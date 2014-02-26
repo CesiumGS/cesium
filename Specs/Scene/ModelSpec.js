@@ -38,13 +38,13 @@ defineSuite([
 
     var duckUrl = './Data/Models/duck/duck.json';
     var customDuckUrl = './Data/Models/customDuck/duck.json';
-    var superMurdochUrl = './Data/Models/SuperMurdoch/SuperMurdoch.json';
+    var cesiumAirUrl = './Data/Models/CesiumAir/CesiumAir.json';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
 
     var duckModel;
     var customDuckModel;
-    var superMurdochModel;
+    var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
 
@@ -319,30 +319,30 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    it('loads superMurdoch', function() {
-        superMurdochModel = loadModel(superMurdochUrl);
+    it('loads cesiumAir', function() {
+        cesiumAirModel = loadModel(cesiumAirUrl);
     });
 
-    it('renders superMurdoch (many meshes, including translucent ones)', function() {
+    it('renders cesiumAir (has translucency)', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        superMurdochModel.show = true;
-        superMurdochModel.zoomTo();
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
-        superMurdochModel.show = false;
+        cesiumAirModel.show = false;
     });
 
-    it('picks superMurdoch', function() {
-        superMurdochModel.show = true;
-        superMurdochModel.zoomTo();
+    it('picks cesiumAir', function() {
+        cesiumAirModel.show = true;
+        cesiumAirModel.zoomTo();
 
         var pick = scene.pick(new Cartesian2(0, 0));
-        expect(pick.primitive).toEqual(superMurdochModel);
-        expect(pick.id).toEqual(superMurdochUrl);
+        expect(pick.primitive).toEqual(cesiumAirModel);
+        expect(pick.id).toEqual(cesiumAirUrl);
         expect(pick.node).toBeDefined();
         expect(pick.mesh).toBeDefined();
 
-        superMurdochModel.show = false;
+        cesiumAirModel.show = false;
     });
 
     ///////////////////////////////////////////////////////////////////////////
