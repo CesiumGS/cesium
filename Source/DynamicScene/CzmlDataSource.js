@@ -695,18 +695,18 @@ define(['../Core/Cartesian2',
             if (!(property instanceof CompositeMaterialProperty)) {
                 property = new CompositeMaterialProperty();
                 object[propertyName] = property;
-                //See if we already have data at that interval.
-                var thisIntervals = property.intervals;
-                existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
-                if (defined(existingInterval)) {
-                    //We have an interval, but we need to make sure the
-                    //new data is the same type of material as the old data.
-                    existingMaterial = existingInterval.data;
-                } else {
-                    //If not, create it.
-                    existingInterval = combinedInterval.clone();
-                    thisIntervals.addInterval(existingInterval);
-                }
+            }
+            //See if we already have data at that interval.
+            var thisIntervals = property.intervals;
+            existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
+            if (defined(existingInterval)) {
+                //We have an interval, but we need to make sure the
+                //new data is the same type of material as the old data.
+                existingMaterial = existingInterval.data;
+            } else {
+                //If not, create it.
+                existingInterval = combinedInterval.clone();
+                thisIntervals.addInterval(existingInterval);
             }
         } else {
             existingMaterial = property;
