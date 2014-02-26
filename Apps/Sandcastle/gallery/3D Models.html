@@ -41,7 +41,6 @@ require(['Cesium'], function(Cesium) {
         var model = scene.primitives.add(Cesium.Model.fromGltf({
             url : url,
             modelMatrix : modelMatrix
-//            scale : 20.0
         }));
         
         model.readyToRender.addEventListener(function(model) {
@@ -62,7 +61,7 @@ require(['Cesium'], function(Cesium) {
             controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
             controller.enableTilt = false;
             var r = 2.0 * Math.max(worldBoundingSphere.radius, camera.frustum.near);
-            controller.minimumZoomDistance = r;            
+            controller.minimumZoomDistance = r * 0.25;
             camera.controller.lookAt(new Cesium.Cartesian3(0.0, -r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });
     }
