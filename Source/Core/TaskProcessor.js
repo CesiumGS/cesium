@@ -25,6 +25,11 @@ define([
         var data = event.data;
         var id = data.id;
 
+        if (!defined(id)) {
+            // This is not one of ours.
+            return;
+        }
+
         var deferreds = processor._deferreds;
         var deferred = deferreds[id];
 
