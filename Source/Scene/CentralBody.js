@@ -640,11 +640,11 @@ define([
         var shaderCache = context.getShaderCache();
 
         if (!defined(this._depthCommand.shaderProgram)) {
-            /*this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                 CentralBodyVSDepth,
                 CentralBodyFSDepth, {
                     position : 0
-                });*/
+                });
         }
 
         if (this._surface._terrainProvider.isReady() &&
@@ -730,11 +730,11 @@ define([
             });
             this._surfaceShaderSet.invalidateShaders();
 
-//            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-//                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeLocations);
+            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeLocations);
 
-            //this._northPoleCommand.shaderProgram = poleShaderProgram;
-            //this._southPoleCommand.shaderProgram = poleShaderProgram;
+            this._northPoleCommand.shaderProgram = poleShaderProgram;
+            this._southPoleCommand.shaderProgram = poleShaderProgram;
 
             this._showingPrettyOcean = defined(this._oceanNormalMap);
             this._hasWaterMask = hasWaterMask;
@@ -789,7 +789,7 @@ define([
                 if (!this.depthTestAgainstTerrain) {
                     commandList.push(this._clearDepthCommand);
                     if (mode === SceneMode.SCENE3D) {
-//                        commandList.push(this._depthCommand);
+                        commandList.push(this._depthCommand);
                     }
                 }
             }
@@ -798,7 +798,7 @@ define([
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-//            commandList.push(this._depthCommand);
+            commandList.push(this._depthCommand);
         }
     };
 

@@ -588,19 +588,19 @@ define([
             return directionsVertexBuffer;
         }
 
-        var directions = new Float32Array(sixteenK * 4 * 2);
+        var directions = new Uint8Array(sixteenK * 4 * 2);
         for (var i = 0, j = 0; i < sixteenK; ++i) {
             directions[j++] = 0;
             directions[j++] = 0;
 
-            directions[j++] = 1.0;
+            directions[j++] = 255;
             directions[j++] = 0.0;
 
-            directions[j++] = 1.0;
-            directions[j++] = 1.0;
+            directions[j++] = 255;
+            directions[j++] = 255;
 
             directions[j++] = 0.0;
-            directions[j++] = 1.0;
+            directions[j++] = 255;
         }
 
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
@@ -685,28 +685,28 @@ define([
         }, {
             index : attributeLocations.pickColor,
             componentsPerAttribute : 4,
-            //normalize : true,
-            componentDatatype : ComponentDatatype.FLOAT,
+            normalize : true,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
             usage : BufferUsage.STATIC_DRAW,
             purpose : pickPassPurpose
         }, {
             index : attributeLocations.color,
             componentsPerAttribute : 4,
-            //normalize : true,
-            componentDatatype : ComponentDatatype.FLOAT,
+            normalize : true,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
             usage : buffersUsage[COLOR_INDEX],
             purpose : colorPassPurpose
         }, {
             index : attributeLocations.originAndShow,
             componentsPerAttribute : 3,
-            componentDatatype : ComponentDatatype.FLOAT,
+            componentDatatype : ComponentDatatype.BYTE,
             usage : buffersUsage[SHOW_INDEX] // buffersUsage[HORIZONTAL_ORIGIN_INDEX] and buffersUsage[VERTICAL_ORIGIN_INDEX] ignored
         }, {
             index : attributeLocations.direction,
             vertexBuffer : directionVertexBuffer,
             componentsPerAttribute : 2,
-            //normalize : true,
-            componentDatatype : ComponentDatatype.FLOAT
+            normalize : true,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE
         }, {
             index : attributeLocations.rotationAndAlignedAxis,
             componentsPerAttribute : 4,
@@ -820,14 +820,10 @@ define([
         var writer = colorWriters[attributeLocations.color];
 
         var color = billboard.getColor();
-//        var red = Color.floatToByte(color.red);
-//        var green = Color.floatToByte(color.green);
-//        var blue = Color.floatToByte(color.blue);
-//        var alpha = Color.floatToByte(color.alpha);
-        var red = color.red;
-        var green = color.green;
-        var blue = color.blue;
-        var alpha = color.alpha;
+        var red = Color.floatToByte(color.red);
+        var green = Color.floatToByte(color.green);
+        var blue = Color.floatToByte(color.blue);
+        var alpha = Color.floatToByte(color.alpha);
 
         writer(i + 0, red, green, blue, alpha);
         writer(i + 1, red, green, blue, alpha);
