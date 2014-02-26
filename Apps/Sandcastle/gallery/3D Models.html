@@ -62,7 +62,7 @@ require(['Cesium'], function(Cesium) {
             controller.enableTilt = false;
             var r = 2.0 * Math.max(worldBoundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.25;
-            camera.controller.lookAt(new Cesium.Cartesian3(0.0, -r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+            camera.controller.lookAt(new Cesium.Cartesian3(0.0, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });
     }
     
