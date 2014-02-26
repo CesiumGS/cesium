@@ -616,7 +616,7 @@
             "bufferView": "bufferView_463",
             "byteOffset": 0,
             "byteStride": 12,
-            "count": 6292,
+            "count": 6299,
             "max": [
                 0.566288,
                 1.50514,
@@ -631,12 +631,12 @@
         },
         "attribute_445": {
             "bufferView": "bufferView_463",
-            "byteOffset": 75504,
+            "byteOffset": 75588,
             "byteStride": 12,
-            "count": 6292,
+            "count": 6299,
             "max": [
                 1,
-                0.99261,
+                0.995491,
                 1
             ],
             "min": [
@@ -648,9 +648,9 @@
         },
         "attribute_447": {
             "bufferView": "bufferView_463",
-            "byteOffset": 151008,
+            "byteOffset": 151176,
             "byteStride": 8,
-            "count": 6292,
+            "count": 6299,
             "max": [
                 0.990806,
                 0.987661
@@ -663,9 +663,9 @@
         },
         "attribute_456": {
             "bufferView": "bufferView_463",
-            "byteOffset": 201344,
+            "byteOffset": 201568,
             "byteStride": 16,
-            "count": 6292,
+            "count": 6299,
             "max": [
                 1,
                 0.989966,
@@ -682,9 +682,9 @@
         },
         "attribute_459": {
             "bufferView": "bufferView_463",
-            "byteOffset": 302016,
+            "byteOffset": 302352,
             "byteStride": 16,
-            "count": 6292,
+            "count": 6299,
             "max": [
                 18,
                 18,
@@ -1312,25 +1312,25 @@
     "bufferViews": {
         "bufferView_463": {
             "buffer": "CesiumMan",
-            "byteLength": 402688,
+            "byteLength": 403136,
             "byteOffset": 0,
             "target": 34962
         },
         "bufferView_464": {
             "buffer": "CesiumMan",
             "byteLength": 68496,
-            "byteOffset": 402688,
+            "byteOffset": 403136,
             "target": 34963
         },
         "bufferView_465": {
             "buffer": "CesiumMan",
             "byteLength": 7532,
-            "byteOffset": 471184
+            "byteOffset": 471632
         }
     },
     "buffers": {
         "CesiumMan": {
-            "byteLength": 478716,
+            "byteLength": 479164,
             "path": "CesiumMan.bin",
             "type": "arraybuffer"
         }
@@ -1426,6 +1426,31 @@
                 1
             ],
             "name": "Cesium_Man"
+        },
+        "locator001Node": {
+            "children": [
+                "Geometry-mesh019Node",
+                "locator047Node"
+            ],
+            "matrix": [
+                -1,
+                0,
+                -8.97932e-11,
+                0,
+                0,
+                1,
+                0,
+                0,
+                8.97932e-11,
+                0,
+                -1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "Locator"
         },
         "locator047Node": {
             "children": [
@@ -2037,8 +2062,7 @@
     "scenes": {
         "defaultScene": {
             "nodes": [
-                "locator047Node",
-                "Geometry-mesh019Node"
+                "locator001Node"
             ]
         }
     },
