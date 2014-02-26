@@ -4,34 +4,34 @@
         <contributor>
             <authoring_tool>modo 701 [Build 66614], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
             <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: No; Save Animation: Yes; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 120; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
-            <source_data>file:///C:/Users/bcoker/Documents/Models/Miscellaneous/Cesium/Cesium%20Air/Cesium%20Air-export.lxo</source_data>
+            <source_data>file:///C:/Users/bcoker/Documents/Models/Miscellaneous/Cesium/Cesium%20Air/Cesium_Air.lxo</source_data>
         </contributor>
-        <created>2014-02-26T16:11:47Z</created>
-        <modified>2014-02-26T16:11:47Z</modified>
+        <created>2014-02-26T16:40:05Z</created>
+        <modified>2014-02-26T16:40:05Z</modified>
         <up_axis>Y_UP</up_axis>
     </asset>
     <library_animations>
         <animation id="Geometry-mesh097_rotation098X.ANGLE">
             <source id="Geometry-mesh097_rotation098X.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098X.ANGLE-input-array" count="1">0</float_array>
+                <float_array id="Geometry-mesh097_rotation098X.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098X.ANGLE-input-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098X.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098X.ANGLE-output-array" count="1">0</float_array>
+                <float_array id="Geometry-mesh097_rotation098X.ANGLE-output-array" count="2">0 0</float_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098X.ANGLE-output-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098X.ANGLE-interpolations">
-                <Name_array id="Geometry-mesh097_rotation098X.ANGLE-interpolations-array" count="1">LINEAR</Name_array>
+                <Name_array id="Geometry-mesh097_rotation098X.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098X.ANGLE-interpolations-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -45,25 +45,25 @@
         </animation>
         <animation id="Geometry-mesh097_rotation098Y.ANGLE">
             <source id="Geometry-mesh097_rotation098Y.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-input-array" count="1">0</float_array>
+                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098Y.ANGLE-input-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098Y.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-output-array" count="1">0</float_array>
+                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-output-array" count="2">0 0</float_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098Y.ANGLE-output-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098Y.ANGLE-interpolations">
-                <Name_array id="Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" count="1">LINEAR</Name_array>
+                <Name_array id="Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
                 <technique_common>
-                    <accessor count="1" source="#Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" stride="1">
+                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -77,7 +77,7 @@
         </animation>
         <animation id="Geometry-mesh097_rotation098Z.ANGLE">
             <source id="Geometry-mesh097_rotation098Z.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-input-array" count="2">0 1.66667</float_array>
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
                     <accessor count="2" source="#Geometry-mesh097_rotation098Z.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
@@ -85,7 +85,7 @@
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098Z.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-output-array" count="2">20 200</float_array>
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-output-array" count="2">20 375.5</float_array>
                 <technique_common>
                     <accessor count="2" source="#Geometry-mesh097_rotation098Z.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
@@ -109,25 +109,25 @@
         </animation>
         <animation id="meshInst384Node_rotation386X.ANGLE">
             <source id="meshInst384Node_rotation386X.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386X.ANGLE-input-array" count="1">0</float_array>
+                <float_array id="meshInst384Node_rotation386X.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386X.ANGLE-input-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386X.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386X.ANGLE-output-array" count="1">0</float_array>
+                <float_array id="meshInst384Node_rotation386X.ANGLE-output-array" count="2">0 0</float_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386X.ANGLE-output-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386X.ANGLE-interpolations">
-                <Name_array id="meshInst384Node_rotation386X.ANGLE-interpolations-array" count="1">LINEAR</Name_array>
+                <Name_array id="meshInst384Node_rotation386X.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386X.ANGLE-interpolations-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -141,25 +141,25 @@
         </animation>
         <animation id="meshInst384Node_rotation386Y.ANGLE">
             <source id="meshInst384Node_rotation386Y.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386Y.ANGLE-input-array" count="1">0</float_array>
+                <float_array id="meshInst384Node_rotation386Y.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386Y.ANGLE-input-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386Y.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386Y.ANGLE-output-array" count="1">0</float_array>
+                <float_array id="meshInst384Node_rotation386Y.ANGLE-output-array" count="2">0 0</float_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386Y.ANGLE-output-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386Y.ANGLE-interpolations">
-                <Name_array id="meshInst384Node_rotation386Y.ANGLE-interpolations-array" count="1">LINEAR</Name_array>
+                <Name_array id="meshInst384Node_rotation386Y.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
                 <technique_common>
-                    <accessor count="1" source="#meshInst384Node_rotation386Y.ANGLE-interpolations-array" stride="1">
+                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -173,7 +173,7 @@
         </animation>
         <animation id="meshInst384Node_rotation386Z.ANGLE">
             <source id="meshInst384Node_rotation386Z.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386Z.ANGLE-input-array" count="2">0 1.66667</float_array>
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-input-array" count="2">0 3.29167</float_array>
                 <technique_common>
                     <accessor count="2" source="#meshInst384Node_rotation386Z.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
@@ -181,7 +181,7 @@
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386Z.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386Z.ANGLE-output-array" count="2">50 230</float_array>
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-output-array" count="2">50 405.5</float_array>
                 <technique_common>
                     <accessor count="2" source="#meshInst384Node_rotation386Z.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
@@ -208,10 +208,16 @@
         <image id="Image0001" name="Image0001">
             <init_from>CesiumAir.png</init_from>
         </image>
+        <image id="Image0002" name="Image0002">
+            <init_from>CesiumAir_Prop.png</init_from>
+        </image>
     </library_images>
     <library_materials>
         <material id="Material-cesium_air" name="cesium_air">
             <instance_effect url="#Effect-cesium_air" />
+        </material>
+        <material id="Material-prop" name="prop">
+            <instance_effect url="#Effect-prop" />
         </material>
     </library_materials>
     <library_effects>
@@ -234,6 +240,36 @@
                     <phong>
                         <diffuse>
                             <texture texture="Image0001-sampler" texcoord="Texture" />
+                        </diffuse>
+                        <specular>
+                            <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
+                        </specular>
+                        <shininess>
+                            <float sid="specular_effect_rgb">256</float>
+                        </shininess>
+                    </phong>
+                </technique>
+            </profile_COMMON>
+        </effect>
+        <effect id="Effect-prop" name="prop">
+            <profile_COMMON>
+                <newparam sid="Image0002-surface">
+                    <surface type="2D">
+                        <init_from>Image0002</init_from>
+                        <format>A8R8G8B8</format>
+                    </surface>
+                </newparam>
+                <newparam sid="Image0002-sampler">
+                    <sampler2D>
+                        <source>Image0002-surface</source>
+                        <minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+                        <magfilter>LINEAR</magfilter>
+                    </sampler2D>
+                </newparam>
+                <technique sid="common">
+                    <phong>
+                        <diffuse>
+                            <texture texture="Image0002-sampler" texcoord="Texture" />
                         </diffuse>
                         <specular>
                             <color sid="specular_effect_rgb">0.2 0.2 0.2 1</color>
@@ -312,7 +348,7 @@
                     </technique_common>
                 </source>
                 <source id="Geometry-mesh097-Texture" name="Texture">
-                    <float_array id="Geometry-mesh097-Texture-array" count="206">0.526906 0.422304 0.530068 0.419783 0.530496 0.425509 0.532671 0.422287 0.52347 0.425683 0.528081 0.429513 0.520313 0.429132 0.525766 0.433556 0.517439 0.432257 0.523562 0.437254 0.541127 0.415986 0.54133 0.415695 0.541412 0.416179 0.541569 0.415895 0.540288 0.415438 0.540834 0.415793 0.540115 0.416188 0.540693 0.41607 0.533243 0.417809 0.534858 0.419499 0.542684 0.423797 0.541519 0.420524 0.545829 0.422177 0.543576 0.419433 0.534714 0.42755 0.535821 0.423845 0.533443 0.432042 0.532253 0.436499 0.531171 0.440606 0.540575 0.416822 0.540931 0.416275 0.54513 0.417727 0.54195 0.416519 0.541282 0.417142 0.536915 0.42055 0.538094 0.417496 0.537081 0.417153 0.524118 0.418203 0.528307 0.416495 0.519666 0.420883 0.515808 0.423845 0.512471 0.426543 0.541212 0.416425 0.540925 0.414977 0.541043 0.415562 0.536408 0.416548 0.540301 0.417486 0.543867 0.427483 0.539297 0.42823 0.539267 0.424369 0.545167 0.431974 0.539297 0.432897 0.546458 0.436378 0.539366 0.437491 0.547723 0.44042 0.539428 0.441732 0.541326 0.416989 0.545911 0.415573 0.542166 0.415782 0.53923 0.42083 0.539189 0.417712 0.551563 0.422094 0.548066 0.425379 0.548345 0.419637 0.550565 0.429392 0.555083 0.425392 0.552908 0.433327 0.558319 0.428783 0.555081 0.436915 0.56128 0.431864 0.541677 0.415144 0.532427 0.415683 0.536149 0.415802 0.549992 0.416357 0.554196 0.417918 0.558749 0.420469 0.562734 0.423351 0.56614 0.42604 0.934 0.149734 0.918281 0.147664 0.934 0.089 0.903633 0.141597 0.891055 0.131945 0.881403 0.119367 0.875336 0.104719 0.873266 0.089 0.875336 0.073281 0.881403 0.0586332 0.891055 0.0460548 0.903633 0.0364031 0.918281 0.0303358 0.934 0.0282664 0.949719 0.0303358 0.964367 0.0364031 0.976945 0.0460548 0.986597 0.0586332 0.992664 0.073281 0.994734 0.089 0.992664 0.104719 0.986597 0.119367 0.976945 0.131945 0.964367 0.141597 0.949719 0.147664</float_array>
+                    <float_array id="Geometry-mesh097-Texture-array" count="206">0.526906 0.422304 0.530068 0.419783 0.530496 0.425509 0.532671 0.422287 0.52347 0.425683 0.528081 0.429513 0.520313 0.429132 0.525766 0.433556 0.517439 0.432257 0.523562 0.437254 0.541127 0.415986 0.54133 0.415695 0.541412 0.416179 0.541569 0.415895 0.540288 0.415438 0.540834 0.415793 0.540115 0.416188 0.540693 0.41607 0.533243 0.417809 0.534858 0.419499 0.542684 0.423797 0.541519 0.420524 0.545829 0.422177 0.543576 0.419433 0.534714 0.42755 0.535821 0.423845 0.533443 0.432042 0.532253 0.436499 0.531171 0.440606 0.540575 0.416822 0.540931 0.416275 0.54513 0.417727 0.54195 0.416519 0.541282 0.417142 0.536915 0.42055 0.538094 0.417496 0.537081 0.417153 0.524118 0.418203 0.528307 0.416495 0.519666 0.420883 0.515808 0.423845 0.512471 0.426543 0.541212 0.416425 0.540925 0.414977 0.541043 0.415562 0.536408 0.416548 0.540301 0.417486 0.543867 0.427483 0.539297 0.42823 0.539267 0.424369 0.545167 0.431974 0.539297 0.432897 0.546458 0.436378 0.539366 0.437491 0.547723 0.44042 0.539428 0.441732 0.541326 0.416989 0.545911 0.415573 0.542166 0.415782 0.53923 0.42083 0.539189 0.417712 0.551563 0.422094 0.548066 0.425379 0.548345 0.419637 0.550565 0.429392 0.555083 0.425392 0.552908 0.433327 0.558319 0.428783 0.555081 0.436915 0.56128 0.431864 0.541677 0.415144 0.532427 0.415683 0.536149 0.415802 0.549992 0.416357 0.554196 0.417918 0.558749 0.420469 0.562734 0.423351 0.56614 0.42604 0.635417 0.872055 0.534508 0.894426 0.5 0.5 0.431247 0.889918 0.332672 0.858837 0.245499 0.803302 0.175671 0.727098 0.127945 0.635417 0.105574 0.534508 0.110082 0.431247 0.141163 0.332672 0.196698 0.245499 0.272902 0.175671 0.364583 0.127945 0.465492 0.105574 0.568753 0.110082 0.667328 0.141163 0.754501 0.196698 0.824329 0.272902 0.872055 0.364583 0.894426 0.465492 0.889918 0.568753 0.858837 0.667328 0.803302 0.754501 0.727098 0.824329</float_array>
                     <technique_common>
                         <accessor count="103" source="#Geometry-mesh097-Texture-array" stride="2">
                             <param name="S" type="float" />
@@ -323,11 +359,17 @@
                 <vertices id="Geometry-mesh097-vertices">
                     <input semantic="POSITION" source="#Geometry-mesh097-positions" />
                 </vertices>
-                <triangles count="144" material="Material-cesium_air">
+                <triangles count="24" material="Material-prop">
                     <input semantic="VERTEX" source="#Geometry-mesh097-vertices" offset="0" />
                     <input semantic="NORMAL" source="#Geometry-mesh097-normals" offset="1" />
                     <input semantic="TEXCOORD" source="#Geometry-mesh097-Texture" offset="2" set="0" />
-                    <p>19 0 0 11 1 1 20 2 2 12 3 3 20 2 2 11 1 1 27 4 4 19 0 0 28 5 5 20 2 2 28 5 5 19 0 0 35 6 6 27 4 4 36 7 7 28 5 5 36 7 7 27 4 4 43 8 8 35 6 6 44 9 9 36 7 7 44 9 9 35 6 6 56 10 10 53 11 11 51 12 12 52 13 13 51 12 12 53 11 11 5 14 14 55 15 15 6 16 16 48 17 17 6 16 16 55 15 15 11 1 1 60 18 18 12 3 3 61 19 19 12 3 3 60 18 18 15 20 20 64 21 21 8 22 22 58 23 23 8 22 22 64 21 21 21 24 24 20 2 2 13 25 25 12 3 3 13 25 25 20 2 2 29 26 26 28 5 5 21 24 24 20 2 2 21 24 24 28 5 5 37 27 27 36 7 7 29 26 26 28 5 5 29 26 26 36 7 7 45 28 28 44 9 9 37 27 27 36 7 7 37 27 27 44 9 9 7 29 29 6 16 16 49 30 30 48 17 17 49 30 30 6 16 16 57 31 31 58 23 23 1 32 32 0 33 33 1 32 32 58 23 23 62 34 34 61 19 19 5 14 35 4 35 36 5 14 35 61 19 19 18 36 37 10 37 38 19 0 0 11 1 1 19 0 0 10 37 38 26 38 39 18 36 37 27 4 4 19 0 0 27 4 4 18 36 37 34 39 40 26 38 39 35 6 6 27 4 4 35 6 6 26 38 39 42 40 41 34 39 40 43 8 8 35 6 6 43 8 8 34 39 40 56 10 10 51 12 12 49 30 30 50 41 42 49 30 30 51 12 12 5 14 14 4 35 43 55 15 15 54 42 44 55 15 15 4 35 43 60 18 18 3 43 45 61 19 19 4 35 36 61 19 19 3 43 45 64 21 21 7 29 46 58 23 23 0 33 33 58 23 23 7 29 46 23 44 47 22 45 48 15 20 20 14 46 49 15 20 20 22 45 48 31 47 50 30 48 51 23 44 47 22 45 48 23 44 47 30 48 51 39 49 52 38 50 53 31 47 50 30 48 51 31 47 50 38 50 53 47 51 54 46 52 55 39 49 52 38 50 53 39 49 52 46 52 55 1 32 32 0 33 56 51 12 12 50 41 42 51 12 12 0 33 56 57 31 31 1 32 32 59 53 57 2 54 58 59 53 57 1 32 32 62 34 34 5 14 35 63 55 59 6 16 60 63 55 59 5 14 35 17 56 61 16 57 62 9 58 63 8 22 22 9 58 63 16 57 62 24 59 64 16 57 62 25 60 65 17 56 61 25 60 65 16 57 62 32 61 66 24 59 64 33 62 67 25 60 65 33 62 67 24 59 64 40 63 68 32 61 66 41 64 69 33 62 67 41 64 69 32 61 66 56 10 10 49 30 30 55 15 15 48 17 17 55 15 15 49 30 30 3 43 70 2 54 58 53 11 11 52 13 13 53 11 11 2 54 58 60 18 18 59 53 71 3 43 45 2 54 72 3 43 45 59 53 71 64 21 21 63 55 59 7 29 46 6 16 60 7 29 46 63 55 59 16 57 62 23 44 47 8 22 22 15 20 20 8 22 22 23 44 47 24 59 64 31 47 50 16 57 62 23 44 47 16 57 62 31 47 50 32 61 66 39 49 52 24 59 64 31 47 50 24 59 64 39 49 52 40 63 68 47 51 54 32 61 66 39 49 52 32 61 66 47 51 54 1 32 32 51 12 12 2 54 58 52 13 13 2 54 58 51 12 12 9 58 63 57 31 31 10 37 73 59 53 57 10 37 73 57 31 31 13 25 25 62 34 34 14 46 49 63 55 59 14 46 49 62 34 34 17 56 61 9 58 63 18 36 74 10 37 73 18 36 74 9 58 63 25 60 65 17 56 61 26 38 75 18 36 74 26 38 75 17 56 61 33 62 67 25 60 65 34 39 76 26 38 75 34 39 76 25 60 65 41 64 69 33 62 67 42 40 77 34 39 76 42 40 77 33 62 67 56 10 10 55 15 15 53 11 11 54 42 44 53 11 11 55 15 15 3 43 70 53 11 11 4 35 43 54 42 44 4 35 43 53 11 11 11 1 1 10 37 38 60 18 18 59 53 71 60 18 18 10 37 38 15 20 20 14 46 49 64 21 21 63 55 59 64 21 21 14 46 49 22 45 48 21 24 24 14 46 49 13 25 25 14 46 49 21 24 24 30 48 51 29 26 26 22 45 48 21 24 24 22 45 48 29 26 26 38 50 53 37 27 27 30 48 51 29 26 26 30 48 51 37 27 27 46 52 55 45 28 28 38 50 53 37 27 27 38 50 53 45 28 28 7 29 29 49 30 30 0 33 56 50 41 42 0 33 56 49 30 30 9 58 63 8 22 22 57 31 31 58 23 23 57 31 31 8 22 22 13 25 25 12 3 3 62 34 34 61 19 19 62 34 34 12 3 3 65 65 78 88 65 79 89 65 80 88 65 79 87 65 81 89 65 80 87 65 81 86 65 82 89 65 80 86 65 82 85 65 83 89 65 80 85 65 83 84 65 84 89 65 80 84 65 84 83 65 85 89 65 80 83 65 85 82 65 86 89 65 80 82 65 86 81 65 87 89 65 80 81 65 87 80 65 88 89 65 80 80 65 88 79 65 89 89 65 80 79 65 89 78 65 90 89 65 80 78 65 90 77 65 91 89 65 80 77 65 91 76 65 92 89 65 80 76 65 92 75 65 93 89 65 80 75 65 93 74 65 94 89 65 80 74 65 94 73 65 95 89 65 80 73 65 95 72 65 96 89 65 80 72 65 96 71 65 97 89 65 80 71 65 97 70 65 98 89 65 80 70 65 98 69 65 99 89 65 80 69 65 99 68 65 100 89 65 80 68 65 100 67 65 101 89 65 80 67 65 101 66 65 102 89 65 80 66 65 102 65 65 78 89 65 80</p>
+                    <p>65 65 78 88 65 79 89 65 80 88 65 79 87 65 81 89 65 80 87 65 81 86 65 82 89 65 80 86 65 82 85 65 83 89 65 80 85 65 83 84 65 84 89 65 80 84 65 84 83 65 85 89 65 80 83 65 85 82 65 86 89 65 80 82 65 86 81 65 87 89 65 80 81 65 87 80 65 88 89 65 80 80 65 88 79 65 89 89 65 80 79 65 89 78 65 90 89 65 80 78 65 90 77 65 91 89 65 80 77 65 91 76 65 92 89 65 80 76 65 92 75 65 93 89 65 80 75 65 93 74 65 94 89 65 80 74 65 94 73 65 95 89 65 80 73 65 95 72 65 96 89 65 80 72 65 96 71 65 97 89 65 80 71 65 97 70 65 98 89 65 80 70 65 98 69 65 99 89 65 80 69 65 99 68 65 100 89 65 80 68 65 100 67 65 101 89 65 80 67 65 101 66 65 102 89 65 80 66 65 102 65 65 78 89 65 80</p>
+                </triangles>
+                <triangles count="120" material="Material-cesium_air">
+                    <input semantic="VERTEX" source="#Geometry-mesh097-vertices" offset="0" />
+                    <input semantic="NORMAL" source="#Geometry-mesh097-normals" offset="1" />
+                    <input semantic="TEXCOORD" source="#Geometry-mesh097-Texture" offset="2" set="0" />
+                    <p>19 0 0 11 1 1 20 2 2 12 3 3 20 2 2 11 1 1 27 4 4 19 0 0 28 5 5 20 2 2 28 5 5 19 0 0 35 6 6 27 4 4 36 7 7 28 5 5 36 7 7 27 4 4 43 8 8 35 6 6 44 9 9 36 7 7 44 9 9 35 6 6 56 10 10 53 11 11 51 12 12 52 13 13 51 12 12 53 11 11 5 14 14 55 15 15 6 16 16 48 17 17 6 16 16 55 15 15 11 1 1 60 18 18 12 3 3 61 19 19 12 3 3 60 18 18 15 20 20 64 21 21 8 22 22 58 23 23 8 22 22 64 21 21 21 24 24 20 2 2 13 25 25 12 3 3 13 25 25 20 2 2 29 26 26 28 5 5 21 24 24 20 2 2 21 24 24 28 5 5 37 27 27 36 7 7 29 26 26 28 5 5 29 26 26 36 7 7 45 28 28 44 9 9 37 27 27 36 7 7 37 27 27 44 9 9 7 29 29 6 16 16 49 30 30 48 17 17 49 30 30 6 16 16 57 31 31 58 23 23 1 32 32 0 33 33 1 32 32 58 23 23 62 34 34 61 19 19 5 14 35 4 35 36 5 14 35 61 19 19 18 36 37 10 37 38 19 0 0 11 1 1 19 0 0 10 37 38 26 38 39 18 36 37 27 4 4 19 0 0 27 4 4 18 36 37 34 39 40 26 38 39 35 6 6 27 4 4 35 6 6 26 38 39 42 40 41 34 39 40 43 8 8 35 6 6 43 8 8 34 39 40 56 10 10 51 12 12 49 30 30 50 41 42 49 30 30 51 12 12 5 14 14 4 35 43 55 15 15 54 42 44 55 15 15 4 35 43 60 18 18 3 43 45 61 19 19 4 35 36 61 19 19 3 43 45 64 21 21 7 29 46 58 23 23 0 33 33 58 23 23 7 29 46 23 44 47 22 45 48 15 20 20 14 46 49 15 20 20 22 45 48 31 47 50 30 48 51 23 44 47 22 45 48 23 44 47 30 48 51 39 49 52 38 50 53 31 47 50 30 48 51 31 47 50 38 50 53 47 51 54 46 52 55 39 49 52 38 50 53 39 49 52 46 52 55 1 32 32 0 33 56 51 12 12 50 41 42 51 12 12 0 33 56 57 31 31 1 32 32 59 53 57 2 54 58 59 53 57 1 32 32 62 34 34 5 14 35 63 55 59 6 16 60 63 55 59 5 14 35 17 56 61 16 57 62 9 58 63 8 22 22 9 58 63 16 57 62 24 59 64 16 57 62 25 60 65 17 56 61 25 60 65 16 57 62 32 61 66 24 59 64 33 62 67 25 60 65 33 62 67 24 59 64 40 63 68 32 61 66 41 64 69 33 62 67 41 64 69 32 61 66 56 10 10 49 30 30 55 15 15 48 17 17 55 15 15 49 30 30 3 43 70 2 54 58 53 11 11 52 13 13 53 11 11 2 54 58 60 18 18 59 53 71 3 43 45 2 54 72 3 43 45 59 53 71 64 21 21 63 55 59 7 29 46 6 16 60 7 29 46 63 55 59 16 57 62 23 44 47 8 22 22 15 20 20 8 22 22 23 44 47 24 59 64 31 47 50 16 57 62 23 44 47 16 57 62 31 47 50 32 61 66 39 49 52 24 59 64 31 47 50 24 59 64 39 49 52 40 63 68 47 51 54 32 61 66 39 49 52 32 61 66 47 51 54 1 32 32 51 12 12 2 54 58 52 13 13 2 54 58 51 12 12 9 58 63 57 31 31 10 37 73 59 53 57 10 37 73 57 31 31 13 25 25 62 34 34 14 46 49 63 55 59 14 46 49 62 34 34 17 56 61 9 58 63 18 36 74 10 37 73 18 36 74 9 58 63 25 60 65 17 56 61 26 38 75 18 36 74 26 38 75 17 56 61 33 62 67 25 60 65 34 39 76 26 38 75 34 39 76 25 60 65 41 64 69 33 62 67 42 40 77 34 39 76 42 40 77 33 62 67 56 10 10 55 15 15 53 11 11 54 42 44 53 11 11 55 15 15 3 43 70 53 11 11 4 35 43 54 42 44 4 35 43 53 11 11 11 1 1 10 37 38 60 18 18 59 53 71 60 18 18 10 37 38 15 20 20 14 46 49 64 21 21 63 55 59 64 21 21 14 46 49 22 45 48 21 24 24 14 46 49 13 25 25 14 46 49 21 24 24 30 48 51 29 26 26 22 45 48 21 24 24 22 45 48 29 26 26 38 50 53 37 27 27 30 48 51 29 26 26 30 48 51 37 27 27 46 52 55 45 28 28 38 50 53 37 27 27 38 50 53 45 28 28 7 29 29 49 30 30 0 33 56 50 41 42 0 33 56 49 30 30 9 58 63 8 22 22 57 31 31 58 23 23 57 31 31 8 22 22 13 25 25 12 3 3 62 34 34 61 19 19 62 34 34 12 3 3</p>
                 </triangles>
             </mesh>
         </geometry>
@@ -356,6 +398,9 @@
                                 <instance_material symbol="Material-cesium_air" target="#Material-cesium_air">
                                     <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
                                 </instance_material>
+                                <instance_material symbol="Material-prop" target="#Material-prop">
+                                    <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
                             </technique_common>
                         </bind_material>
                     </instance_geometry>
@@ -372,18 +417,28 @@
                                 <instance_material symbol="Material-cesium_air" target="#Material-cesium_air">
                                     <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
                                 </instance_material>
+                                <instance_material symbol="Material-prop" target="#Material-prop">
+                                    <bind_vertex_input semantic="Texture" input_semantic="TEXCOORD" input_set="0" />
+                                </instance_material>
                             </technique_common>
                         </bind_material>
                     </instance_geometry>
                 </node>
             </node>
             <node id="groupLocator008Node" name="Texture_Group" type="NODE">
-                <node id="txtrLocator389Node" name="Cesium_Air__2___Image___Texture_" type="NODE">
-                    <translate sid="translation392">0 0 0</translate>
-                    <rotate sid="rotation391Y">0 1 0 0</rotate>
-                    <rotate sid="rotation391X">1 0 0 0</rotate>
-                    <rotate sid="rotation391Z">0 0 1 0</rotate>
-                    <scale sid="scale390">1 1 1</scale>
+                <node id="txtrLocator017Node" name="Cesium_Air_Prop__Image___Texture_" type="NODE">
+                    <translate sid="translation020">0 0 0</translate>
+                    <rotate sid="rotation019Y">0 1 0 0</rotate>
+                    <rotate sid="rotation019X">1 0 0 0</rotate>
+                    <rotate sid="rotation019Z">0 0 1 0</rotate>
+                    <scale sid="scale018">1 1 1</scale>
+                </node>
+                <node id="txtrLocator010Node" name="Cesium_Air__Image___Texture_" type="NODE">
+                    <translate sid="translation013">0 0 0</translate>
+                    <rotate sid="rotation012Y">0 1 0 0</rotate>
+                    <rotate sid="rotation012X">1 0 0 0</rotate>
+                    <rotate sid="rotation012Z">0 0 1 0</rotate>
+                    <scale sid="scale011">1 1 1</scale>
                 </node>
             </node>
         </visual_scene>
