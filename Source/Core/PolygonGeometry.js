@@ -473,8 +473,6 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
      *
-     * @exception {DeveloperError} polygonHierarchy is required.
-     *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
      *
@@ -593,8 +591,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     *
-     * @exception {DeveloperError} options.positions is required.
      *
      * @see PolygonGeometry#createGeometry
      *

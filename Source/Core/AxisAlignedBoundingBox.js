@@ -171,9 +171,6 @@ define([
      * @returns {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
      *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
      *                     if the box intersects the plane.
-     *
-     * @exception {DeveloperError} box is required.
-     * @exception {DeveloperError} plane is required.
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
         //>>includeStart('debug', pragmas.debug);
@@ -223,8 +220,6 @@ define([
      * @returns {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
      *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
      *                     if the box intersects the plane.
-     *
-     * @exception {DeveloperError} plane is required.
      */
     AxisAlignedBoundingBox.prototype.intersect = function(plane) {
         return AxisAlignedBoundingBox.intersect(this, plane);

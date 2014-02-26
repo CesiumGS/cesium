@@ -17,8 +17,6 @@ define([
      * @param {Object} [headers] HTTP headers to send with the request.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
-     * @exception {DeveloperError} url is required.
-     *
      * @example
      * // load text from a URL, setting a custom header
      * Cesium.loadText('http://someUrl.com/someJson.txt', {

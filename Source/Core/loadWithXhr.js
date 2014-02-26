@@ -30,8 +30,6 @@ define([
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
-     * @exception {DeveloperError} options.url is required.
-     *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      *
@@ -95,7 +93,7 @@ define([
             if (xhr.status === 200) {
                 deferred.resolve(xhr.response);
             } else {
-                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
+                deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }
         };
 

@@ -3,27 +3,17 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/clone',
+        '../Core/getTimestamp',
         '../ThirdParty/Tween',
         '../Core/defaultValue'
     ], function(
         defined,
         DeveloperError,
         clone,
+        getTimestamp,
         Tween,
         defaultValue) {
     "use strict";
-
-    // this logic should match the logic in TWEEN.update and TWEEN.Tween.start
-    var getTime;
-    if (defined(window) && defined(window.performance) && defined(window.performance.now)) {
-        getTime = function() {
-            return window.performance.now();
-        };
-    } else {
-        getTime = function() {
-            return Date.now();
-        };
-    }
 
     /**
      * DOC_TBA
@@ -48,8 +38,6 @@ define([
     /**
      * DOC_TBA
      * @memberof AnimationCollection
-     *
-     * @exception {DeveloperError} duration is required.
      */
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -95,7 +83,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} material is required.
      * @exception {DeveloperError} material has no properties with alpha components.
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
@@ -160,8 +147,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} object is required.
-     * @exception {DeveloperError} property is required.
      * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
@@ -209,7 +194,6 @@ define([
      * DOC_TBA
      * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} material is required.
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
@@ -310,7 +294,7 @@ define([
         }
 
         var i = 0;
-        var time = getTime();
+        var time = getTimestamp();
         while (i < tweens.length) {
             if (tweens[i].update(time)) {
                 i++;

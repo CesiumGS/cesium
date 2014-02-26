@@ -5,6 +5,7 @@ define([
         '../Core/loadImage',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -49,6 +50,7 @@ define([
         loadImage,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         BoundingRectangle,
         BoundingSphere,
@@ -116,7 +118,7 @@ define([
             imageryLayerCollection : imageryLayerCollection
         });
 
-        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), Cartesian3.ZERO);
+        this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
 
         this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeLocations);
 
@@ -131,7 +133,7 @@ define([
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
         this._depthCommand.pass = Pass.OPAQUE;
         this._depthCommand.owner = this;
 
@@ -266,27 +268,29 @@ define([
         };
     };
 
-    /**
-     * Gets an ellipsoid describing the shape of this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @returns {Ellipsoid}
-     */
-    CentralBody.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(CentralBody.prototype, {
+        /**
+         * Gets an ellipsoid describing the shape of this central body.
+         * @memberof CentralBody.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get: function() {
+                return this._ellipsoid;
+            }
+        },
 
-    /**
-     * Gets the collection of image layers that will be rendered on this central body.
-     *
-     * @memberof CentralBody
-     *
-     * @returns {ImageryLayerCollection}
-     */
-    CentralBody.prototype.getImageryLayers = function() {
-        return this._imageryLayerCollection;
-    };
+        /**
+         * Gets the collection of image layers that will be rendered on this central body.
+         * @memberof CentralBody.prototype
+         * @type {ImageryLayerCollection}
+         */
+        imageryLayerCollection : {
+            get : function() {
+                return this._imageryLayerCollection;
+            }
+        }
+    });
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();
@@ -295,11 +299,11 @@ define([
     var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(centralBody, frameState) {
-        var radii = centralBody._ellipsoid.getRadii();
+        var radii = centralBody._ellipsoid.radii;
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p, scratchCartesian1);
+        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.oneOverRadii, p, scratchCartesian1);
 
         var qMagnitude = Cartesian3.magnitude(q);
         var qUnit = Cartesian3.normalize(q, scratchCartesian2);
@@ -516,21 +520,21 @@ define([
 
         var that = centralBody;
         if (!defined(centralBody._northPoleCommand.uniformMap)) {
-            var northPoleUniforms = combine([drawUniforms, {
+            var northPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
-            }], false, false);
-            centralBody._northPoleCommand.uniformMap = combine([northPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._northPoleCommand.uniformMap = combine(northPoleUniforms, centralBody._drawUniforms);
         }
 
         if (!defined(centralBody._southPoleCommand.uniformMap)) {
-            var southPoleUniforms = combine([drawUniforms, {
+            var southPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
-            }], false, false);
-            centralBody._southPoleCommand.uniformMap = combine([southPoleUniforms, centralBody._drawUniforms], false, false);
+            });
+            centralBody._southPoleCommand.uniformMap = combine(southPoleUniforms, centralBody._drawUniforms);
         }
     }
 

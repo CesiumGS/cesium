@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/ConstantProperty',
+defineSuite(['DynamicScene/ConstantProperty',
              'Core/Cartesian3',
              'Core/JulianDate'
      ], function(
@@ -18,7 +17,7 @@ defineSuite([
         expect(property.getValue(time)).toBe(expected);
     });
 
-    it('works with clonable objects', function() {
+    it('works with objects', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
 
@@ -27,7 +26,23 @@ defineSuite([
         expect(result).toEqual(value);
     });
 
-    it('works with clonable objects with result parameter', function() {
+    it('setValue rasies definitionChanged event', function() {
+        var property = new ConstantProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+        property.setValue(5);
+        expect(listener).toHaveBeenCalledWith(property);
+    });
+
+    it('setValue does not raise definitionChanged event with equal data', function() {
+        var property = new ConstantProperty(new Cartesian3(0, 0, 0));
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+        property.setValue(new Cartesian3(0, 0, 0));
+        expect(listener.callCount).toBe(0);
+    });
+
+    it('works with objects with result parameter', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
 
@@ -37,10 +52,9 @@ defineSuite([
         expect(expected).toEqual(value);
     });
 
-    it('constructor throws with undefined value', function() {
-        expect(function() {
-            return new ConstantProperty(undefined);
-        }).toThrowDeveloperError();
+    it('works with undefined value', function() {
+        var property = new ConstantProperty(undefined);
+        expect(property.getValue()).toBeUndefined();
     });
 
     it('constructor throws with undefined clone function on non-basic type', function() {

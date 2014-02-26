@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/getTimestamp',
         '../Widgets/getElement'
     ], function(
         Color,
@@ -12,6 +13,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getTimestamp,
         getElement) {
     "use strict";
 
@@ -51,7 +53,7 @@ define([
         display.style['background-color'] = this._backgroundColor;
         display.style.font = this._font;
         display.style.padding = '7px';
-        display.style['border-radius']= '5px';
+        display.style['border-radius'] = '5px';
         display.style.border = '1px solid #444';
         this._container.appendChild(display);
 
@@ -69,13 +71,13 @@ define([
     PerformanceDisplay.prototype.update = function() {
         if (!defined(this._time)) {
             //first update
-            this._lastFpsSampleTime = Date.now();
-            this._time = Date.now();
+            this._lastFpsSampleTime = getTimestamp();
+            this._time = getTimestamp();
             return;
         }
 
         var previousTime = this._time;
-        var time = Date.now();
+        var time = getTimestamp();
         this._time = time;
 
         var frameTime = time - previousTime;
@@ -96,7 +98,7 @@ define([
         }
 
         if (frameTime !== this._frameTime) {
-            this._msText.nodeValue = frameTime + ' MS';
+            this._msText.nodeValue = frameTime.toFixed(2) + ' MS';
             this._frameTime = frameTime;
         }
 

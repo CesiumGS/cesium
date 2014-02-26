@@ -8,9 +8,10 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
+        '../Core/FeatureDetection',
+        '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -34,9 +35,10 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
-        FeatureDetection,
         DeveloperError,
         EllipsoidalOccluder,
+        FeatureDetection,
+        getTimestamp,
         Intersect,
         Matrix4,
         PrimitiveType,
@@ -371,7 +373,7 @@ define([
         var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCamera);
 
-        surface._ellipsoidalOccluder.setCameraPosition(cameraPosition);
+        surface._ellipsoidalOccluder.cameraPosition = cameraPosition;
 
         var tile;
 
@@ -644,7 +646,7 @@ define([
         // we're allowed to keep.
         surface._tileReplacementQueue.trimTiles(surface._tileCacheSize);
 
-        var startTime = Date.now();
+        var startTime = getTimestamp();
         var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
@@ -654,7 +656,7 @@ define([
 
             tile.processStateMachine(context, terrainProvider, imageryLayerCollection);
 
-            if (Date.now() >= endTime) {
+            if (getTimestamp() >= endTime) {
                 break;
             }
         }

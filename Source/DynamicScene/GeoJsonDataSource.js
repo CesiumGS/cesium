@@ -302,7 +302,7 @@ define([
         defaultPolygon.polygon = polygon;
 
         material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.1));
+        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.2));
         polygon.material = material;
 
         this._changed = new Event();
@@ -397,8 +397,6 @@ define([
      * @param {Object} url The url to be processed.
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
-     *
-     * @exception {DeveloperError} url is required.
      */
     GeoJsonDataSource.prototype.loadUrl = function(url) {
         //>>includeStart('debug', pragmas.debug);
@@ -424,7 +422,6 @@ define([
      *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      *
-     * @exception {DeveloperError} geoJson is required.
      * @exception {DeveloperError} Unsupported GeoJSON object type.
      * @exception {RuntimeError} crs is null.
      * @exception {RuntimeError} crs.properties is undefined.

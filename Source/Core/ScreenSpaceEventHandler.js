@@ -81,9 +81,6 @@ define([
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
-     * @exception {DeveloperError} action is required.
-     * @exception {DeveloperError} type is required.
-     *
      * @see ScreenSpaceEventHandler#getInputAction
      * @see ScreenSpaceEventHandler#removeInputAction
      */
@@ -110,8 +107,6 @@ define([
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
-     * @exception {DeveloperError} type is required.
-     *
      * @see ScreenSpaceEventHandler#setInputAction
      * @see ScreenSpaceEventHandler#removeInputAction
      */
@@ -134,8 +129,6 @@ define([
      * @param {Enumeration} type The ScreenSpaceEventType of input event.
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
-     *
-     * @exception {DeveloperError} type is required.
      *
      * @see ScreenSpaceEventHandler#getInputAction
      * @see ScreenSpaceEventHandler#setInputAction

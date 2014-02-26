@@ -53,8 +53,6 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     var GeocoderViewModel = function(description) {
         //>>includeStart('debug', pragmas.debug);
@@ -63,7 +61,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
+        this._url = defaultValue(description.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
@@ -213,8 +211,6 @@ define([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 1.0);
-    var inverseTransform2D = Matrix4.inverseTransformation(transform2D);
-    var scratchTransform = new Matrix4();
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
@@ -262,7 +258,7 @@ define([
             var east = bbox[3];
             var extent = Extent.fromDegrees(west, south, east, north);
 
-            var camera = viewModel._scene.getCamera();
+            var camera = viewModel._scene.camera;
             var position = camera.controller.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
@@ -273,32 +269,15 @@ define([
                 destination : position,
                 duration : viewModel._flightDuration,
                 onComplete : function() {
-                    var screenSpaceCameraController = viewModel._scene.getScreenSpaceCameraController();
+                    var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
-                }
+                },
+                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
             };
 
-            if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-                var transform = Matrix4.clone(camera.transform, scratchTransform);
-
-                if (viewModel._scene.mode !== SceneMode.SCENE3D) {
-                    Matrix4.clone(transform2D, camera.transform);
-                    Matrix4.multiply(inverseTransform2D, transform, transform);
-                } else {
-                    Matrix4.clone(Matrix4.IDENTITY, camera.transform);
-                }
-
-                Matrix4.multiplyByPoint(transform, camera.position, camera.position);
-
-                var rotation = Matrix4.getRotation(transform);
-                Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
-                Matrix3.multiplyByVector(rotation, camera.up, camera.up);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-            }
-
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
-            viewModel._scene.getAnimations().add(flight);
+            viewModel._scene.animations.add(flight);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;
