@@ -127,7 +127,7 @@ define([
         this._nextID = 0;
     };
 
-    var empyTransferableObjectArray = [];
+    var emptyTransferableObjectArray = [];
 
     /**
      * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
@@ -167,7 +167,7 @@ define([
         ++this._activeTasks;
 
         if (!defined(transferableObjects)) {
-            transferableObjects = empyTransferableObjectArray;
+            transferableObjects = emptyTransferableObjectArray;
         }
 
         var id = this._nextID++;
