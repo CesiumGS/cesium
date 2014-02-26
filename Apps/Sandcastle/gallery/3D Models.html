@@ -33,9 +33,11 @@ require(['Cesium'], function(Cesium) {
     
     function createModel(url, height) {
         height = Cesium.defaultValue(height, 0.0);
-        console.log(height);
-        var rotateX = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90.0)), Cesium.Cartesian3.ZERO);
-        var modelMatrix = Cesium.Matrix4.multiply(Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, height))), rotateX);
+
+//        var rotateX = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromRotationX(Cesium.Math.toRadians(90.0)), Cesium.Cartesian3.ZERO);
+//        var modelMatrix = Cesium.Matrix4.multiply(Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, height))), rotateX);
+
+        var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, height)));
         
         scene.primitives.removeAll(); // Remove previous model
         var model = scene.primitives.add(Cesium.Model.fromGltf({
@@ -82,14 +84,14 @@ require(['Cesium'], function(Cesium) {
     
     var options = [{
         text : 'Aircraft',
-        url : '../models/CesiumAir/CesiumAir.json',
+        url : '../models/CesiumAir/Cesium_Air.json',
         height : 5000.0
     }, {
         text : 'Ground vehicle',
-        url : '../models/CesiumGround/CesiumGround.json',
+        url : '../models/CesiumGround/Cesium_Ground.json',
     }, {
         text : 'Skinned character',
-        url : '../models/CesiumMan/CesiumMan.json'
+        url : '../models/CesiumMan/Cesium_Man.json'
     }];
     createModel(options[0].url, options[0].height);
     
