@@ -7,6 +7,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
         '../Core/Math',
@@ -19,6 +20,7 @@ define([
         Ellipsoid,
         EllipsoidalOccluder,
         Extent,
+        FeatureDetection,
         HeightmapTessellator,
         Intersections2D,
         CesiumMath,
@@ -243,8 +245,10 @@ define([
 
         var indicesTypedArray = new Uint16Array(indices);
 
-        transferableObjects.push(vertices.buffer);
-        transferableObjects.push(indicesTypedArray.buffer);
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(vertices.buffer);
+            transferableObjects.push(indicesTypedArray.buffer);
+        }
 
         return {
             vertices : vertices.buffer,
