@@ -901,19 +901,6 @@ define([
         '    float ai = czm_gl_FragColor.a;\n' +
         '    gl_FragColor = vec4(ai);\n';
 
-    var lightingSource =
-        'vec4 czm_clamped_phong(vec3 toEye, czm_material material)\n' +
-        '{\n' +
-        '    float diffuse = czm_getLambertDiffuse(vec3(0.0, 0.0, 1.0), material.normal) + czm_getLambertDiffuse(vec3(0.0, 1.0, 0.0), material.normal);\n' +
-        '    diffuse = clamp(diffuse, 0.0, 1.0);\n' +
-        '    float specular = czm_getSpecular(czm_sunDirectionEC, toEye, material.normal, material.shininess);\n' +
-        '    specular += czm_getSpecular(czm_moonDirectionEC, toEye, material.normal, material.shininess);\n' +
-        '    vec3 color = material.emission;\n' +
-        '    color += material.diffuse * diffuse;\n' +
-        '    color += material.specular * specular;\n' +
-        '    return vec4(color, material.alpha);\n' +
-        '}\n\n';
-
     function getTranslucentShaderProgram(scene, shaderProgram, cache, source) {
         var id = shaderProgram.id;
         var shader = cache[id];
@@ -925,7 +912,7 @@ define([
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
-            renamedFS = renamedFS.replace(/czm_phong/g, 'czm_clamped_phong');
+            renamedFS = renamedFS.replace(/czm_phong/g, 'czm_translucentPhong');
 
             // Discarding the fragment in main is a workaround for ANGLE D3D9
             // shader compilation errors.
@@ -933,7 +920,6 @@ define([
                 (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
                 'vec4 czm_gl_FragColor;\n' +
                 'bool czm_discard = false;\n' +
-                lightingSource +
                 renamedFS + '\n\n' +
                 'void main()\n' +
                 '{\n' +
