@@ -56,6 +56,7 @@ Beta Releases
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
 * `RequestErrorEvent` now includes the headers that were returned with the error response.
+* Fix multifrustum translucent rendering artifact.
 * Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`.
 * Fixed `WallGeometry` bug that failed by removing positions that were less close together by less than 6 decimal places. [#1483](https://github.com/AnalyticalGraphicsInc/cesium/pull/1483)
 * `DynamicEllipse`, `DynamicPolygon`, and `DynamicEllipsoid` now have properties matching their geometry counterpart, i.e. `EllipseGeometry`, `EllipseOutlineGeometry`, etc. These properties are also available in CZML.
