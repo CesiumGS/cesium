@@ -1,31 +1,31 @@
 {
     "accessors": {
         "accessor_10": {
-            "bufferView": "bufferView_103",
-            "byteOffset": 48,
-            "count": 2,
+            "bufferView": "bufferView_87",
+            "byteOffset": 640,
+            "count": 80,
             "type": 35666
         },
         "accessor_11": {
-            "bufferView": "bufferView_103",
-            "byteOffset": 24,
-            "count": 2,
+            "bufferView": "bufferView_87",
+            "byteOffset": 320,
+            "count": 80,
             "type": 5126
         },
         "accessor_12": {
-            "bufferView": "bufferView_103",
-            "byteOffset": 80,
-            "count": 2,
+            "bufferView": "bufferView_87",
+            "byteOffset": 1920,
+            "count": 80,
             "type": 35666
         },
         "accessor_9": {
-            "bufferView": "bufferView_103",
+            "bufferView": "bufferView_87",
             "byteOffset": 0,
-            "count": 2,
+            "count": 80,
             "type": 5126
         },
-        "attribute_47": {
-            "bufferView": "bufferView_101",
+        "attribute_31": {
+            "bufferView": "bufferView_85",
             "byteOffset": 0,
             "byteStride": 12,
             "count": 4180,
@@ -41,8 +41,8 @@
             ],
             "type": 35665
         },
-        "attribute_49": {
-            "bufferView": "bufferView_101",
+        "attribute_33": {
+            "bufferView": "bufferView_85",
             "byteOffset": 50160,
             "byteStride": 12,
             "count": 4180,
@@ -58,8 +58,8 @@
             ],
             "type": 35665
         },
-        "attribute_51": {
-            "bufferView": "bufferView_101",
+        "attribute_35": {
+            "bufferView": "bufferView_85",
             "byteOffset": 100320,
             "byteStride": 8,
             "count": 4180,
@@ -73,8 +73,8 @@
             ],
             "type": 35664
         },
-        "attribute_94": {
-            "bufferView": "bufferView_101",
+        "attribute_78": {
+            "bufferView": "bufferView_85",
             "byteOffset": 133760,
             "byteStride": 12,
             "count": 103,
@@ -90,8 +90,8 @@
             ],
             "type": 35665
         },
-        "attribute_96": {
-            "bufferView": "bufferView_101",
+        "attribute_80": {
+            "bufferView": "bufferView_85",
             "byteOffset": 134996,
             "byteStride": 12,
             "count": 103,
@@ -107,8 +107,8 @@
             ],
             "type": 35665
         },
-        "attribute_98": {
-            "bufferView": "bufferView_101",
+        "attribute_82": {
+            "bufferView": "bufferView_85",
             "byteOffset": 136232,
             "byteStride": 8,
             "count": 103,
@@ -122,20 +122,20 @@
             ],
             "type": 35664
         },
-        "indices_45": {
-            "bufferView": "bufferView_102",
+        "indices_29": {
+            "bufferView": "bufferView_86",
             "byteOffset": 0,
             "count": 17088,
             "type": 5123
         },
-        "indices_89": {
-            "bufferView": "bufferView_102",
+        "indices_73": {
+            "bufferView": "bufferView_86",
             "byteOffset": 34176,
             "count": 72,
             "type": 5123
         },
-        "indices_92": {
-            "bufferView": "bufferView_102",
+        "indices_76": {
+            "bufferView": "bufferView_86",
             "byteOffset": 34320,
             "count": 360,
             "type": 5123
@@ -152,7 +152,7 @@
                     }
                 }
             ],
-            "count": 2,
+            "count": 80,
             "parameters": {
                 "TIME": "accessor_9",
                 "rotation": "accessor_10"
@@ -165,23 +165,23 @@
                 }
             }
         },
-        "animation_3": {
+        "animation_1": {
             "channels": [
                 {
-                    "sampler": "animation_3_rotation_sampler",
+                    "sampler": "animation_1_rotation_sampler",
                     "target": {
                         "id": "meshInst384Node",
                         "path": "rotation"
                     }
                 }
             ],
-            "count": 2,
+            "count": 80,
             "parameters": {
                 "TIME": "accessor_11",
                 "rotation": "accessor_12"
             },
             "samplers": {
-                "animation_3_rotation_sampler": {
+                "animation_1_rotation_sampler": {
                     "input": "TIME",
                     "interpolation": "LINEAR",
                     "output": "rotation"
@@ -193,37 +193,37 @@
         "generator": "collada2gltf@1b9793fc50310c7532ba229f759f6a9882e3febc"
     },
     "bufferViews": {
-        "bufferView_101": {
+        "bufferView_85": {
             "buffer": "CesiumAir",
             "byteLength": 137056,
             "byteOffset": 0,
             "target": 34962
         },
-        "bufferView_102": {
+        "bufferView_86": {
             "buffer": "CesiumAir",
             "byteLength": 35040,
             "byteOffset": 137056,
             "target": 34963
         },
-        "bufferView_103": {
+        "bufferView_87": {
             "buffer": "CesiumAir",
-            "byteLength": 112,
+            "byteLength": 3200,
             "byteOffset": 172096
         }
     },
     "buffers": {
         "CesiumAir": {
-            "byteLength": 172208,
+            "byteLength": 175296,
             "path": "CesiumAir.bin",
             "type": "arraybuffer"
         }
     },
     "images": {
         "image_0": {
-            "path": "CesiumAir.png"
+            "path": "Cesium_Air.png"
         },
         "image_1": {
-            "path": "CesiumAir_Prop.png"
+            "path": "Cesium_Air_Prop.png"
         }
     },
     "materials": {
@@ -266,11 +266,11 @@
             "primitives": [
                 {
                     "attributes": {
-                        "NORMAL": "attribute_49",
-                        "POSITION": "attribute_47",
-                        "TEXCOORD_0": "attribute_51"
+                        "NORMAL": "attribute_33",
+                        "POSITION": "attribute_31",
+                        "TEXCOORD_0": "attribute_35"
                     },
-                    "indices": "indices_45",
+                    "indices": "indices_29",
                     "material": "Effect-cesium_air",
                     "primitive": 4
                 }
@@ -281,21 +281,21 @@
             "primitives": [
                 {
                     "attributes": {
-                        "NORMAL": "attribute_96",
-                        "POSITION": "attribute_94",
-                        "TEXCOORD_0": "attribute_98"
+                        "NORMAL": "attribute_80",
+                        "POSITION": "attribute_78",
+                        "TEXCOORD_0": "attribute_82"
                     },
-                    "indices": "indices_89",
+                    "indices": "indices_73",
                     "material": "Effect-prop",
                     "primitive": 4
                 },
                 {
                     "attributes": {
-                        "NORMAL": "attribute_96",
-                        "POSITION": "attribute_94",
-                        "TEXCOORD_0": "attribute_98"
+                        "NORMAL": "attribute_80",
+                        "POSITION": "attribute_78",
+                        "TEXCOORD_0": "attribute_82"
                     },
-                    "indices": "indices_92",
+                    "indices": "indices_76",
                     "material": "Effect-cesium_air",
                     "primitive": 4
                 }

@@ -6,96 +6,50 @@
             <comments>Plug-in: [Build 66614]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: No; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: No; Save Animation: Yes; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 120; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
             <source_data>file:///C:/Users/bcoker/Documents/Models/Miscellaneous/Cesium/Cesium%20Air/Cesium_Air.lxo</source_data>
         </contributor>
-        <created>2014-02-26T16:40:05Z</created>
-        <modified>2014-02-26T16:40:05Z</modified>
+        <created>2014-02-26T19:21:10Z</created>
+        <modified>2014-02-26T19:21:10Z</modified>
         <up_axis>Y_UP</up_axis>
     </asset>
     <library_animations>
-        <animation id="Geometry-mesh097_rotation098X.ANGLE">
-            <source id="Geometry-mesh097_rotation098X.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098X.ANGLE-input-array" count="2">0 3.29167</float_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-input-array" stride="1">
-                        <param name="TIME" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="Geometry-mesh097_rotation098X.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098X.ANGLE-output-array" count="2">0 0</float_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-output-array" stride="1">
-                        <param name="ANGLE" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="Geometry-mesh097_rotation098X.ANGLE-interpolations">
-                <Name_array id="Geometry-mesh097_rotation098X.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098X.ANGLE-interpolations-array" stride="1">
-                        <param name="INTERPOLATION" type="Name" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <sampler id="Geometry-mesh097_rotation098X.ANGLE-sampler">
-                <input semantic="INPUT" source="#Geometry-mesh097_rotation098X.ANGLE-input" />
-                <input semantic="OUTPUT" source="#Geometry-mesh097_rotation098X.ANGLE-output" />
-                <input semantic="INTERPOLATION" source="#Geometry-mesh097_rotation098X.ANGLE-interpolations" />
-            </sampler>
-            <channel source="#Geometry-mesh097_rotation098X.ANGLE-sampler" target="Geometry-mesh097Node/rotation098X.ANGLE" />
-        </animation>
-        <animation id="Geometry-mesh097_rotation098Y.ANGLE">
-            <source id="Geometry-mesh097_rotation098Y.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-input-array" count="2">0 3.29167</float_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-input-array" stride="1">
-                        <param name="TIME" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="Geometry-mesh097_rotation098Y.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098Y.ANGLE-output-array" count="2">0 0</float_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-output-array" stride="1">
-                        <param name="ANGLE" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="Geometry-mesh097_rotation098Y.ANGLE-interpolations">
-                <Name_array id="Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
-                <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Y.ANGLE-interpolations-array" stride="1">
-                        <param name="INTERPOLATION" type="Name" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <sampler id="Geometry-mesh097_rotation098Y.ANGLE-sampler">
-                <input semantic="INPUT" source="#Geometry-mesh097_rotation098Y.ANGLE-input" />
-                <input semantic="OUTPUT" source="#Geometry-mesh097_rotation098Y.ANGLE-output" />
-                <input semantic="INTERPOLATION" source="#Geometry-mesh097_rotation098Y.ANGLE-interpolations" />
-            </sampler>
-            <channel source="#Geometry-mesh097_rotation098Y.ANGLE-sampler" target="Geometry-mesh097Node/rotation098Y.ANGLE" />
-        </animation>
         <animation id="Geometry-mesh097_rotation098Z.ANGLE">
             <source id="Geometry-mesh097_rotation098Z.ANGLE-input">
-                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-input-array" count="2">0 3.29167</float_array>
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-input-array" count="80">0 0.0416667 0.0833333 0.125 0.166667 0.208333 0.25 0.291667 0.333333 0.375 0.416667 0.458333 0.5 0.541667 0.583333 0.625 0.666667 0.708333 0.75 0.791667 0.833333 0.875 0.916667 0.958333 1 1.04167 1.08333 1.125 1.16667 1.20833 1.25 1.29167 1.33333 1.375 1.41667 1.45833 1.5 1.54167 1.58333 1.625 1.66667 1.70833 1.75 1.79167 1.83333 1.875 1.91667 1.95833 2 2.04167 2.08333 2.125 2.16667 2.20833 2.25 2.29167 2.33333 2.375 2.41667 2.45833 2.5 2.54167 2.58333 2.625 2.66667 2.70833 2.75 2.79167 2.83333 2.875 2.91667 2.95833 3 3.04167 3.08333 3.125 3.16667 3.20833 3.25 3.29167</float_array>
                 <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Z.ANGLE-input-array" stride="1">
+                    <accessor count="80" source="#Geometry-mesh097_rotation098Z.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="Geometry-mesh097_rotation098Z.ANGLE-output">
-                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-output-array" count="2">20 375.5</float_array>
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-output-array" count="80">20 24.5 29 33.5 38 42.5 47 51.5 56 60.5 65 69.5 74 78.5 83 87.5 92 96.5 101 105.5 110 114.5 119 123.5 128 132.5 137 141.5 146 150.5 155 159.5 164 168.5 173 177.5 182 186.5 191 195.5 200 204.5 209 213.5 218 222.5 227 231.5 236 240.5 245 249.5 254 258.5 263 267.5 272 276.5 281 285.5 290 294.5 299 303.5 308 312.5 317 321.5 326 330.5 335 339.5 344 348.5 353 357.5 362 366.5 371 375.5</float_array>
                 <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Z.ANGLE-output-array" stride="1">
+                    <accessor count="80" source="#Geometry-mesh097_rotation098Z.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
-            <source id="Geometry-mesh097_rotation098Z.ANGLE-interpolations">
-                <Name_array id="Geometry-mesh097_rotation098Z.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
+            <source id="Geometry-mesh097_rotation098Z.ANGLE-intangents">
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-intangents-array" count="160">-0.029636 20 0.0277778 23 0.0694444 27.5 0.111111 32 0.152778 36.5 0.194444 41 0.236111 47 0.277778 51.5 0.319444 56 0.361111 60.5 0.402778 65 0.444444 69.5 0.486111 74 0.527778 78.5 0.569444 83 0.611111 87.5 0.652778 92 0.694444 96.5 0.736111 101 0.777778 105.5 0.819444 110 0.861111 114.5 0.902778 119 0.944444 123.5 0.986111 128 1.02778 132.5 1.06944 137 1.11111 141.5 1.15278 146 1.19444 150.5 1.23611 155 1.27778 159.5 1.31944 164 1.36111 168.5 1.40278 173 1.44444 177.5 1.48611 182 1.52778 186.5 1.56944 191 1.61111 195.5 1.65278 200 1.69444 204.5 1.73611 209 1.77778 213.5 1.81944 218 1.86111 222.5 1.90278 227 1.94444 231.5 1.98611 236 2.02778 240.5 2.06944 245 2.11111 249.5 2.15278 254 2.19444 258.5 2.23611 263 2.27778 267.5 2.31944 272 2.36111 276.5 2.40278 281 2.44444 285.5 2.48611 290 2.52778 294.5 2.56944 299 2.61111 303.5 2.65278 308 2.69444 312.5 2.73611 317 2.77778 321.5 2.81944 326 2.86111 330.5 2.90278 335 2.94444 339.5 2.98611 344 3.02778 348.5 3.06944 353 3.11111 357.5 3.15278 362 3.19444 366.5 3.23611 371 3.27778 375.5</float_array>
                 <technique_common>
-                    <accessor count="2" source="#Geometry-mesh097_rotation098Z.ANGLE-interpolations-array" stride="1">
+                    <accessor count="80" source="#Geometry-mesh097_rotation098Z.ANGLE-intangents-array" stride="2">
+                        <param name="X" type="float" />
+                        <param name="Y" type="float" />
+                    </accessor>
+                </technique_common>
+            </source>
+            <source id="Geometry-mesh097_rotation098Z.ANGLE-outtangents">
+                <float_array id="Geometry-mesh097_rotation098Z.ANGLE-outtangents-array" count="160">0.0138889 21.5 0.0555556 26 0.0972222 30.5 0.138889 35 0.180556 39.5 0.222222 44 0.263889 47 0.305556 51.5 0.347222 56 0.388889 60.5 0.430556 65 0.472222 69.5 0.513889 74 0.555556 78.5 0.597222 83 0.638889 87.5 0.680556 92 0.722222 96.5 0.763889 101 0.805556 105.5 0.847222 110 0.888889 114.5 0.930556 119 0.972222 123.5 1.01389 128 1.05556 132.5 1.09722 137 1.13889 141.5 1.18056 146 1.22222 150.5 1.26389 155 1.30556 159.5 1.34722 164 1.38889 168.5 1.43056 173 1.47222 177.5 1.51389 182 1.55556 186.5 1.59722 191 1.63889 195.5 1.68056 200 1.72222 204.5 1.76389 209 1.80556 213.5 1.84722 218 1.88889 222.5 1.93056 227 1.97222 231.5 2.01389 236 2.05556 240.5 2.09722 245 2.13889 249.5 2.18056 254 2.22222 258.5 2.26389 263 2.30556 267.5 2.34722 272 2.38889 276.5 2.43056 281 2.47222 285.5 2.51389 290 2.55556 294.5 2.59722 299 2.63889 303.5 2.68056 308 2.72222 312.5 2.76389 317 2.80556 321.5 2.84722 326 2.88889 330.5 2.93056 335 2.97222 339.5 3.01389 344 3.05556 348.5 3.09722 353 3.13889 357.5 3.18056 362 3.22222 366.5 3.26389 371 3.30556 375.5</float_array>
+                <technique_common>
+                    <accessor count="80" source="#Geometry-mesh097_rotation098Z.ANGLE-outtangents-array" stride="2">
+                        <param name="X" type="float" />
+                        <param name="Y" type="float" />
+                    </accessor>
+                </technique_common>
+            </source>
+            <source id="Geometry-mesh097_rotation098Z.ANGLE-interpolations">
+                <Name_array id="Geometry-mesh097_rotation098Z.ANGLE-interpolations-array" count="80">LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
+                <technique_common>
+                    <accessor count="80" source="#Geometry-mesh097_rotation098Z.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -104,94 +58,50 @@
                 <input semantic="INPUT" source="#Geometry-mesh097_rotation098Z.ANGLE-input" />
                 <input semantic="OUTPUT" source="#Geometry-mesh097_rotation098Z.ANGLE-output" />
                 <input semantic="INTERPOLATION" source="#Geometry-mesh097_rotation098Z.ANGLE-interpolations" />
+                <input semantic="IN_TANGENT" source="#Geometry-mesh097_rotation098Z.ANGLE-intangents" />
+                <input semantic="OUT_TANGENT" source="#Geometry-mesh097_rotation098Z.ANGLE-outtangents" />
             </sampler>
             <channel source="#Geometry-mesh097_rotation098Z.ANGLE-sampler" target="Geometry-mesh097Node/rotation098Z.ANGLE" />
         </animation>
-        <animation id="meshInst384Node_rotation386X.ANGLE">
-            <source id="meshInst384Node_rotation386X.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386X.ANGLE-input-array" count="2">0 3.29167</float_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-input-array" stride="1">
-                        <param name="TIME" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="meshInst384Node_rotation386X.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386X.ANGLE-output-array" count="2">0 0</float_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-output-array" stride="1">
-                        <param name="ANGLE" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="meshInst384Node_rotation386X.ANGLE-interpolations">
-                <Name_array id="meshInst384Node_rotation386X.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386X.ANGLE-interpolations-array" stride="1">
-                        <param name="INTERPOLATION" type="Name" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <sampler id="meshInst384Node_rotation386X.ANGLE-sampler">
-                <input semantic="INPUT" source="#meshInst384Node_rotation386X.ANGLE-input" />
-                <input semantic="OUTPUT" source="#meshInst384Node_rotation386X.ANGLE-output" />
-                <input semantic="INTERPOLATION" source="#meshInst384Node_rotation386X.ANGLE-interpolations" />
-            </sampler>
-            <channel source="#meshInst384Node_rotation386X.ANGLE-sampler" target="meshInst384Node/rotation386X.ANGLE" />
-        </animation>
-        <animation id="meshInst384Node_rotation386Y.ANGLE">
-            <source id="meshInst384Node_rotation386Y.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386Y.ANGLE-input-array" count="2">0 3.29167</float_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-input-array" stride="1">
-                        <param name="TIME" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="meshInst384Node_rotation386Y.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386Y.ANGLE-output-array" count="2">0 0</float_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-output-array" stride="1">
-                        <param name="ANGLE" type="float" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <source id="meshInst384Node_rotation386Y.ANGLE-interpolations">
-                <Name_array id="meshInst384Node_rotation386Y.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
-                <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Y.ANGLE-interpolations-array" stride="1">
-                        <param name="INTERPOLATION" type="Name" />
-                    </accessor>
-                </technique_common>
-            </source>
-            <sampler id="meshInst384Node_rotation386Y.ANGLE-sampler">
-                <input semantic="INPUT" source="#meshInst384Node_rotation386Y.ANGLE-input" />
-                <input semantic="OUTPUT" source="#meshInst384Node_rotation386Y.ANGLE-output" />
-                <input semantic="INTERPOLATION" source="#meshInst384Node_rotation386Y.ANGLE-interpolations" />
-            </sampler>
-            <channel source="#meshInst384Node_rotation386Y.ANGLE-sampler" target="meshInst384Node/rotation386Y.ANGLE" />
-        </animation>
         <animation id="meshInst384Node_rotation386Z.ANGLE">
             <source id="meshInst384Node_rotation386Z.ANGLE-input">
-                <float_array id="meshInst384Node_rotation386Z.ANGLE-input-array" count="2">0 3.29167</float_array>
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-input-array" count="80">0 0.0416667 0.0833333 0.125 0.166667 0.208333 0.25 0.291667 0.333333 0.375 0.416667 0.458333 0.5 0.541667 0.583333 0.625 0.666667 0.708333 0.75 0.791667 0.833333 0.875 0.916667 0.958333 1 1.04167 1.08333 1.125 1.16667 1.20833 1.25 1.29167 1.33333 1.375 1.41667 1.45833 1.5 1.54167 1.58333 1.625 1.66667 1.70833 1.75 1.79167 1.83333 1.875 1.91667 1.95833 2 2.04167 2.08333 2.125 2.16667 2.20833 2.25 2.29167 2.33333 2.375 2.41667 2.45833 2.5 2.54167 2.58333 2.625 2.66667 2.70833 2.75 2.79167 2.83333 2.875 2.91667 2.95833 3 3.04167 3.08333 3.125 3.16667 3.20833 3.25 3.29167</float_array>
                 <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Z.ANGLE-input-array" stride="1">
+                    <accessor count="80" source="#meshInst384Node_rotation386Z.ANGLE-input-array" stride="1">
                         <param name="TIME" type="float" />
                     </accessor>
                 </technique_common>
             </source>
             <source id="meshInst384Node_rotation386Z.ANGLE-output">
-                <float_array id="meshInst384Node_rotation386Z.ANGLE-output-array" count="2">50 405.5</float_array>
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-output-array" count="80">50 54.5 59 63.5 68 72.5 77 81.5 86 90.5 95 99.5 104 108.5 113 117.5 122 126.5 131 135.5 140 144.5 149 153.5 158 162.5 167 171.5 176 180.5 185 189.5 194 198.5 203 207.5 212 216.5 221 225.5 230 234.5 239 243.5 248 252.5 257 261.5 266 270.5 275 279.5 284 288.5 293 297.5 302 306.5 311 315.5 320 324.5 329 333.5 338 342.5 347 351.5 356 360.5 365 369.5 374 378.5 383 387.5 392 396.5 401 405.5</float_array>
                 <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Z.ANGLE-output-array" stride="1">
+                    <accessor count="80" source="#meshInst384Node_rotation386Z.ANGLE-output-array" stride="1">
                         <param name="ANGLE" type="float" />
                     </accessor>
                 </technique_common>
             </source>
-            <source id="meshInst384Node_rotation386Z.ANGLE-interpolations">
-                <Name_array id="meshInst384Node_rotation386Z.ANGLE-interpolations-array" count="2">LINEAR LINEAR</Name_array>
+            <source id="meshInst384Node_rotation386Z.ANGLE-intangents">
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-intangents-array" count="160">-0.029636 50 0.0277778 53 0.0694444 57.5 0.111111 62 0.152778 66.5 0.194444 71 0.236111 77 0.277778 81.5 0.319444 86 0.361111 90.5 0.402778 95 0.444444 99.5 0.486111 104 0.527778 108.5 0.569444 113 0.611111 117.5 0.652778 122 0.694444 126.5 0.736111 131 0.777778 135.5 0.819444 140 0.861111 144.5 0.902778 149 0.944444 153.5 0.986111 158 1.02778 162.5 1.06944 167 1.11111 171.5 1.15278 176 1.19444 180.5 1.23611 185 1.27778 189.5 1.31944 194 1.36111 198.5 1.40278 203 1.44444 207.5 1.48611 212 1.52778 216.5 1.56944 221 1.61111 225.5 1.65278 230 1.69444 234.5 1.73611 239 1.77778 243.5 1.81944 248 1.86111 252.5 1.90278 257 1.94444 261.5 1.98611 266 2.02778 270.5 2.06944 275 2.11111 279.5 2.15278 284 2.19444 288.5 2.23611 293 2.27778 297.5 2.31944 302 2.36111 306.5 2.40278 311 2.44444 315.5 2.48611 320 2.52778 324.5 2.56944 329 2.61111 333.5 2.65278 338 2.69444 342.5 2.73611 347 2.77778 351.5 2.81944 356 2.86111 360.5 2.90278 365 2.94444 369.5 2.98611 374 3.02778 378.5 3.06944 383 3.11111 387.5 3.15278 392 3.19444 396.5 3.23611 401 3.27778 405.5</float_array>
                 <technique_common>
-                    <accessor count="2" source="#meshInst384Node_rotation386Z.ANGLE-interpolations-array" stride="1">
+                    <accessor count="80" source="#meshInst384Node_rotation386Z.ANGLE-intangents-array" stride="2">
+                        <param name="X" type="float" />
+                        <param name="Y" type="float" />
+                    </accessor>
+                </technique_common>
+            </source>
+            <source id="meshInst384Node_rotation386Z.ANGLE-outtangents">
+                <float_array id="meshInst384Node_rotation386Z.ANGLE-outtangents-array" count="160">0.0138889 51.5 0.0555556 56 0.0972222 60.5 0.138889 65 0.180556 69.5 0.222222 74 0.263889 77 0.305556 81.5 0.347222 86 0.388889 90.5 0.430556 95 0.472222 99.5 0.513889 104 0.555556 108.5 0.597222 113 0.638889 117.5 0.680556 122 0.722222 126.5 0.763889 131 0.805556 135.5 0.847222 140 0.888889 144.5 0.930556 149 0.972222 153.5 1.01389 158 1.05556 162.5 1.09722 167 1.13889 171.5 1.18056 176 1.22222 180.5 1.26389 185 1.30556 189.5 1.34722 194 1.38889 198.5 1.43056 203 1.47222 207.5 1.51389 212 1.55556 216.5 1.59722 221 1.63889 225.5 1.68056 230 1.72222 234.5 1.76389 239 1.80556 243.5 1.84722 248 1.88889 252.5 1.93056 257 1.97222 261.5 2.01389 266 2.05556 270.5 2.09722 275 2.13889 279.5 2.18056 284 2.22222 288.5 2.26389 293 2.30556 297.5 2.34722 302 2.38889 306.5 2.43056 311 2.47222 315.5 2.51389 320 2.55556 324.5 2.59722 329 2.63889 333.5 2.68056 338 2.72222 342.5 2.76389 347 2.80556 351.5 2.84722 356 2.88889 360.5 2.93056 365 2.97222 369.5 3.01389 374 3.05556 378.5 3.09722 383 3.13889 387.5 3.18056 392 3.22222 396.5 3.26389 401 3.30556 405.5</float_array>
+                <technique_common>
+                    <accessor count="80" source="#meshInst384Node_rotation386Z.ANGLE-outtangents-array" stride="2">
+                        <param name="X" type="float" />
+                        <param name="Y" type="float" />
+                    </accessor>
+                </technique_common>
+            </source>
+            <source id="meshInst384Node_rotation386Z.ANGLE-interpolations">
+                <Name_array id="meshInst384Node_rotation386Z.ANGLE-interpolations-array" count="80">LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
+                <technique_common>
+                    <accessor count="80" source="#meshInst384Node_rotation386Z.ANGLE-interpolations-array" stride="1">
                         <param name="INTERPOLATION" type="Name" />
                     </accessor>
                 </technique_common>
@@ -200,16 +110,18 @@
                 <input semantic="INPUT" source="#meshInst384Node_rotation386Z.ANGLE-input" />
                 <input semantic="OUTPUT" source="#meshInst384Node_rotation386Z.ANGLE-output" />
                 <input semantic="INTERPOLATION" source="#meshInst384Node_rotation386Z.ANGLE-interpolations" />
+                <input semantic="IN_TANGENT" source="#meshInst384Node_rotation386Z.ANGLE-intangents" />
+                <input semantic="OUT_TANGENT" source="#meshInst384Node_rotation386Z.ANGLE-outtangents" />
             </sampler>
             <channel source="#meshInst384Node_rotation386Z.ANGLE-sampler" target="meshInst384Node/rotation386Z.ANGLE" />
         </animation>
     </library_animations>
     <library_images>
         <image id="Image0001" name="Image0001">
-            <init_from>CesiumAir.png</init_from>
+            <init_from>Cesium_Air.png</init_from>
         </image>
         <image id="Image0002" name="Image0002">
-            <init_from>CesiumAir_Prop.png</init_from>
+            <init_from>Cesium_Air_Prop.png</init_from>
         </image>
     </library_images>
     <library_materials>
