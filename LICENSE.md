@@ -188,7 +188,7 @@ https://gist.github.com/banksean/300494
 Tests
 =====
 
-The Cesium tests use the following third-party libraries.
+The Cesium tests use the following third-party libraries and data.
 
 ### Jasmine
 
@@ -213,6 +213,18 @@ https://github.com/kriskowal/es5-shim
 > The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+### duck.dae
+
+https://github.com/KhronosGroup/glTF/tree/master/model/duck
+
+> Copyright 2006 Sony Computer Entertainment Inc.
+>
+> Licensed under the SCEA Shared Source License, Version 1.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at:
+>
+> http://research.scea.com/scea_shared_source_license.html
+>
+> Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
 Example Applications
 ====================
