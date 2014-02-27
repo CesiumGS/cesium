@@ -28,7 +28,7 @@ defineSuite([
 
     it('has error event', function() {
         var provider = new EllipsoidTerrainProvider();
-        expect(provider.getErrorEvent()).toBeDefined();
-        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+        expect(provider.errorEvent).toBeDefined();
+        expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 }, 'WebGL');

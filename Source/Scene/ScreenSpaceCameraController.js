@@ -274,9 +274,11 @@ define([
                 return this._ellipsoid;
             },
             set : function(ellipsoid) {
+                //>>includeStart('debug', pragmas.debug);
                 if (!defined(ellipsoid)) {
                     throw new DeveloperError('ellipsoid is required');
                 }
+                //>>includeEnd('debug');
                 var radius = ellipsoid.maximumRadius;
                 this._ellipsoid = ellipsoid;
                 this._rotateFactor = 1.0 / radius;
