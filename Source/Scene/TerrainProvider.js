@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype',
         '../Renderer/BufferUsage',
         '../Core/IndexDatatype'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         ComponentDatatype,
         BufferUsage,
@@ -28,6 +30,49 @@ define([
     var TerrainProvider = function() {
         DeveloperError.throwInstantiationError();
     };
+
+    defineProperties(TerrainProvider.prototype, {
+        /**
+         * Gets an event that is raised when the terrain provider encounters an asynchronous error..  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof TerrainProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain. This function should
+         * not be called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the tiling scheme used by the provider.  This function should
+         * not be called before {@link TerrainProvider#ready} returns true.
+         * @memberof TerrainProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof TerrainProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Specifies the indices of the attributes of the terrain geometry.

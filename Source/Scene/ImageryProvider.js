@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
         '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
         defined,
+        defineProperties,
         loadImage,
         loadImageViaBlob,
         DeveloperError,
@@ -118,6 +120,124 @@ define([
 
         DeveloperError.throwInstantiationError();
     };
+
+    defineProperties(ImageryProvider.prototype, {
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof ImageryProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the extent, in radians, of the imagery provided by the instance.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {Extent}
+         */
+        extent: {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the width of each tile, in pixels.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {Number}
+         */
+        tileWidth : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {Number}
+         */
+        tileHeight : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {Number}
+         */
+        maximumLevel : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true. Generally,
+         * a minimum level should only be used when the extent of the imagery is small
+         * enough that the number of tiles at the minimum level is small.  An imagery
+         * provider with more than a few tiles at the minimum level will lead to
+         * rendering problems.
+         * @memberof ImageryProvider.prototype
+         * @type {Number}
+         */
+        minimumLevel : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the tiling scheme used by the provider.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         */
+        tileDiscardPolicy : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error..  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof ImageryProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery. This function should
+         * not be called before {@link ImageryProvider#ready} returns true.
+         * @memberof ImageryProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof ImageryProvider.prototype
+         * @type {Proxy}
+         */
+        proxy : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
