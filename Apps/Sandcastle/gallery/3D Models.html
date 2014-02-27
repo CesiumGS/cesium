@@ -69,7 +69,7 @@ require(['Cesium'], function(Cesium) {
     handler.setInputAction(
         function (movement) {
             var pick = scene.pick(movement.endPosition);
-            if (Cesium.defined(pick)) {
+            if (Cesium.defined(pick) && Cesium.defined(pick.node) && Cesium.defined(pick.mesh)) {
                 // Output glTF node and mesh under the mouse. 
                 console.log('node: ' + pick.node.name + '. mesh: ' + pick.mesh.name);
             }
