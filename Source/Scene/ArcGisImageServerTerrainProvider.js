@@ -132,7 +132,7 @@ define([
         /**
          * Gets the tiling scheme used by this provider.  This function should
          * not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
-         * @memberof
+         * @memberof ArcGisImageServerTerrainProvider.prototype
          * @type {GeographicTilingScheme}
          */
         tilingScheme : {

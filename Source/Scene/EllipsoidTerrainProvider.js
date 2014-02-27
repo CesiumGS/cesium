@@ -89,7 +89,7 @@ define([
         /**
          * Gets the tiling scheme used by this provider.  This function should
          * not be called before {@link EllipsoidTerrainProvider#ready} returns true.
-         * @memberof
+         * @memberof EllipsoidTerrainProvider.prototype
          * @type {GeographicTilingScheme}
          */
         tilingScheme : {
