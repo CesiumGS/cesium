@@ -70,7 +70,7 @@ define([
     defineProperties(EllipsoidTangentPlane.prototype, {
         /**
          * Gets the ellipsoid.
-         * @memberof EllipsoidTangentPlane
+         * @memberof EllipsoidTangentPlane.prototype
          * @type {Ellipsoid}
          */
         ellipsoid : {
@@ -81,7 +81,7 @@ define([
 
         /**
          * Gets the origin.
-         * @memberof EllipsoidTangentPlane
+         * @memberof EllipsoidTangentPlane.prototype
          * @type {Cartesian3}
          */
         origin : {

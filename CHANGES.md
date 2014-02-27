@@ -40,10 +40,6 @@ Beta Releases
       * `getEllipsoid` -> `ellipsoid`
     * `WebMercatorProjection`
       * `getEllipsoid` -> `ellipsoid`
-    * `GeographicTilingScheeme`
-      * `getEllipsoid` -> `ellipsoid`
-      * `getExtent` -> `extent`
-      * `getProjection` -> `projection`
     * `SceneTransitioner`
       * `getScene` -> `scene`
       * `getEllipsoid` -> `ellipsoid`
@@ -51,7 +47,7 @@ Beta Releases
       * `getEllipsoid`, `setEllipsoid` -> `ellipsoid`
     * `SkyAtmosphere`
       * `getEllipsoid` -> `ellipsoid`
-    * `WebMercatorTilingSheme`
+    * `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingSheme`
       * `getEllipsoid` -> `ellipsoid`
       * `getExtent` -> `extent`
       * `getProjection` -> `projection`

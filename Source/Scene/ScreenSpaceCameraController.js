@@ -274,7 +274,10 @@ define([
                 return this._ellipsoid;
             },
             set : function(ellipsoid) {
-                ellipsoid = ellipsoid || Ellipsoid.WGS84;
+                if (!defined(ellipsoid)) {
+                    throw new DeveloperError('ellipsoid is required');
+                }
+                ellipsoid = ellipsoid;
                 var radius = ellipsoid.maximumRadius;
                 this._ellipsoid = ellipsoid;
                 this._rotateFactor = 1.0 / radius;
