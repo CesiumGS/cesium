@@ -871,7 +871,7 @@ define([
 
         var ellipsoid = controller._ellipsoid;
         var minHeight = controller.minimumZoomDistance * 0.25;
-        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
+        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.positionWC).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
@@ -898,7 +898,6 @@ define([
 
         // CAMERA TODO: Remove the need for camera access
         var camera = cameraController._camera;
-        center = camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;

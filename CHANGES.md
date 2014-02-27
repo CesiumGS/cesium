@@ -109,6 +109,7 @@ Beta Releases
 * Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
 * View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
 * Fixed viewing an extent. [#1431](https://github.com/AnalyticalGraphicsInc/cesium/issues/1431)
+* Fixed camera tilt in ICRF. [#544](https://github.com/AnalyticalGraphicsInc/cesium/issues/544)
 * Fixed developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
 * Fixed `WallGeometry` bug that failed by removing positions that were less close together by less than 6 decimal places. [#1483](https://github.com/AnalyticalGraphicsInc/cesium/pull/1483)
 * Fixed `EllipsoidGeometry` texture coordinates. [#1454](https://github.com/AnalyticalGraphicsInc/cesium/issues/1454)
