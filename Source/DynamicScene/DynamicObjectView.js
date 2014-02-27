@@ -157,7 +157,7 @@ define([
                 camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
             }
 
-            that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);
@@ -184,7 +184,7 @@ define([
 
             var controller = that._screenSpaceCameraController;
             controller.enableTranslate = false;
-            controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
             controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
             var position = camera.position;

@@ -134,7 +134,7 @@ define([
      * @returns {Extent} The extent.
      */
     GridImageryProvider.prototype.getExtent = function() {
-        return this._tilingScheme.getExtent();
+        return this._tilingScheme.extent;
     };
 
     /**

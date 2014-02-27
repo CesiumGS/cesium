@@ -422,7 +422,7 @@ define([
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = tile.tilingScheme.ellipsoid;
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;

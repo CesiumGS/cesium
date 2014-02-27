@@ -201,7 +201,7 @@ define([
         Cartesian3.normalize(position, position);
 
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
         var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
         projection.project(sunCartographic, uniformState._sunPositionColumbusView);
     }
@@ -1138,7 +1138,7 @@ define([
         var cartographic = projection.unproject(p, view2Dto3DCartographicScratch);
         cartographic.longitude = CesiumMath.clamp(cartographic.longitude, -Math.PI, Math.PI);
         cartographic.latitude = CesiumMath.clamp(cartographic.latitude, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
         var position3D = ellipsoid.cartographicToCartesian(cartographic, view2Dto3DCartesian3Scratch);
 
         // Compute the rotation from the local ENU at the real world camera position to the fixed axes.

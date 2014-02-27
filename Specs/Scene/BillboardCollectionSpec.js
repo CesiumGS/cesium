@@ -1256,7 +1256,7 @@ defineSuite([
         billboards.setTextureAtlas(atlas);
 
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
             imageIndex : 0,
@@ -1282,7 +1282,7 @@ defineSuite([
         billboards.setTextureAtlas(atlas);
 
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
             imageIndex : 0,
@@ -1315,7 +1315,7 @@ defineSuite([
         billboards.setTextureAtlas(atlas);
 
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
             imageIndex : 0,
