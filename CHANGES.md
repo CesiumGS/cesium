@@ -92,12 +92,13 @@ Beta Releases
   * Modified `CameraFlightPath` functions to take place in the camera's current reference frame. The arguments to the function now need to be given in world coordinates and an optional reference frame can be given when the flight is completed.
   * `PixelDatatype` properties are now JavaScript numbers, not `Enumeration` instances.
   * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
-* Added `Model` for drawing 3D models using glTF.
+* Added `Model` for drawing 3D models using glTF.  See the [tutorial](http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/) and [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html&label=Showcases).
 * DynamicScene now makes use of [Geometry and Appearances](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/), which provides a tremendous improvements to DataSource visualization (CZML, GeoJSON, etc..).  Extruded geometries are now supported and in many use cases performance is an order of magnitude faster.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by [STK Terrain Server](https://groups.google.com/forum/#!topic/cesium-dev/cP01iP7YOCU).
 * Fixed rendering artifact on translucent objects when zooming in or out.
 * Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`.  Also see the [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html&label=Showcases).
+* Improved compatibility with Internet Explorer 11.
 * `DynamicEllipse`, `DynamicPolygon`, and `DynamicEllipsoid` now have properties matching their geometry counterpart, i.e. `EllipseGeometry`, `EllipseOutlineGeometry`, etc. These properties are also available in CZML.
 * Added a `definitionChanged` event to the `Property` interface as well as most `DynamicScene` objects.  This makes it easy for a client to observe when new data is loaded into a property or object.
 * Added an `isConstant` property to the `Property` interface.  Constant properties do not change in regards to simulation time, i.e. `Property.getValue` will always return the same result for all times.
@@ -116,7 +117,6 @@ Beta Releases
 * Added `AssociativeArray`, which is a helper class for maintaining a hash of objects that also needs to be iterated often.
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
 * Added `Intersections2D` class containing operations on 2D triangles.
-* Improved compatibility with Internet Explorer 11.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
 ### b25 - 2014-02-03
