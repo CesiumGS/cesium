@@ -4,6 +4,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/HeightmapTessellator',
         './createTaskProcessorWorker'
     ], function(
@@ -11,6 +12,7 @@ define([
         Ellipsoid,
         EllipsoidalOccluder,
         Extent,
+        FeatureDetection,
         HeightmapTessellator,
         createTaskProcessorWorker) {
     "use strict";
@@ -27,7 +29,10 @@ define([
         }
 
         var vertices = new Float32Array(arrayWidth * arrayHeight * numberOfAttributes);
-        transferableObjects.push(vertices.buffer);
+
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(vertices.buffer);
+        }
 
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.extent = Extent.clone(parameters.extent);
