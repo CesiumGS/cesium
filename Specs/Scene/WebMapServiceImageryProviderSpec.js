@@ -199,7 +199,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.

@@ -357,7 +357,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.getExtent();
+                return this._tilingScheme.extent;
             }
         },
 

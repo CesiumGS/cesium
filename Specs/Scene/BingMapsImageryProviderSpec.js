@@ -143,7 +143,7 @@ defineSuite([
             expect(provider.maximumLevel).toEqual(20);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
         });
 
         waitsFor(function() {

@@ -114,7 +114,7 @@ defineSuite([
 
     it('gets ellipsoid', function() {
         var s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
-        expect(s.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(s.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     it('isDestroyed', function() {

@@ -16,13 +16,13 @@ defineSuite([
 
     it('construct0', function() {
         var projection = new GeographicProjection();
-        expect(projection.getEllipsoid()).toEqual(Ellipsoid.WGS84);
+        expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('construct1', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var projection = new GeographicProjection(ellipsoid);
-        expect(projection.getEllipsoid()).toEqual(ellipsoid);
+        expect(projection.ellipsoid).toEqual(ellipsoid);
     });
 
     it('project0', function() {

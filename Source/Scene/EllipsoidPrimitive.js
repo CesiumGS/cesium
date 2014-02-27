@@ -282,6 +282,10 @@ define([
         if (!defined(this._rs) || translucencyChanged) {
             this._translucent = translucent;
 
+            // If this render state is ever updated to use a non-default
+            // depth range, the hard-coded values in EllipsoidVS.glsl need
+            // to be updated as well.
+
             this._rs = context.createRenderState({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.

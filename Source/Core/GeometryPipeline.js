@@ -623,7 +623,7 @@ define([
 
         var attribute = geometry.attributes[attributeName];
         projection = (defined(projection)) ? projection : new GeographicProjection();
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         // Project original values to 2D.
         var values3D = attribute.values;

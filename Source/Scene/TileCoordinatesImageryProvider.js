@@ -117,7 +117,7 @@ define([
          */
         extent : {
             get : function() {
-                return this._tilingScheme.getExtent();
+                return this._tilingScheme.extent;
             }
         },
 

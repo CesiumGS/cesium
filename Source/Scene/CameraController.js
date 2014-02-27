@@ -730,7 +730,7 @@ define([
 
     function setPositionCartographic3D(controller, cartographic) {
         var camera = controller._camera;
-        var ellipsoid = controller._projection.getEllipsoid();
+        var ellipsoid = controller._projection.ellipsoid;
 
         ellipsoid.cartographicToCartesian(cartographic, camera.position);
         Cartesian3.negate(camera.position, camera.direction);
@@ -774,7 +774,7 @@ define([
     function getHeading3D(controller) {
         var camera = controller._camera;
 
-        var ellipsoid = controller._projection.getEllipsoid();
+        var ellipsoid = controller._projection.ellipsoid;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid, scratchHeadingMatrix4);
         var transform = Matrix4.getRotation(toFixedFrame, scratchHeadingMatrix3);
         Matrix3.transpose(transform, transform);
@@ -1122,7 +1122,7 @@ define([
         //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE3D) {
-            return extentCameraPosition3D(this._camera, extent, this._projection.getEllipsoid(), result, true);
+            return extentCameraPosition3D(this._camera, extent, this._projection.ellipsoid, result, true);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return extentCameraPositionColumbusView(this._camera, extent, this._projection, result, true);
         } else if (this._mode === SceneMode.SCENE2D) {
@@ -1180,7 +1180,7 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().cartographicToCartesian(cart, result);
+        return projection.ellipsoid.cartographicToCartesian(cart, result);
     }
 
     var pickEllipsoidCVRay = new Ray();
@@ -1196,7 +1196,7 @@ define([
             return undefined;
         }
 
-        return projection.getEllipsoid().cartographicToCartesian(cart, result);
+        return projection.ellipsoid.cartographicToCartesian(cart, result);
     }
 
     /**

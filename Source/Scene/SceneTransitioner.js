@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -20,6 +21,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -152,21 +154,30 @@ define([
         this._completeMorph = undefined;
     };
 
-    /**
-     * @memberof SceneTransitioner
-     * @returns {Scene} The scene to be transitioned.
-     */
-    SceneTransitioner.prototype.getScene = function() {
-        return this._scene;
-    };
 
-    /**
-     * @memberof SceneTransitioner
-     * @returns {Ellipsoid} The ellipsoid to be transitioned.
-     */
-    SceneTransitioner.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(SceneTransitioner.prototype, {
+        /**
+         * Gets the ellipsoid to be transitioned.
+         * @memberof SceneTransitioner.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the scene to be transitioned.
+         * @memberof SceneTransitioner.prototype
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        }
+    });
 
     /**
      * Instantly transitions the scene to 2D.

@@ -33,6 +33,24 @@ Beta Releases
     * `EllipsoidalOccluder`
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
+    * `EllipsoidTangentPlane`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getOrigin` -> `origin`
+    * `GeographicProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `WebMercatorProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `SceneTransitioner`
+      * `getScene` -> `scene`
+      * `getEllipsoid` -> `ellipsoid`
+    * `ScreenSpaceCameraController`
+      * `getEllipsoid`, `setEllipsoid` -> `ellipsoid`
+    * `SkyAtmosphere`
+      * `getEllipsoid` -> `ellipsoid`
+    * `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingSheme`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getExtent` -> `extent`
+      * `getProjection` -> `projection`
     * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `GridImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileCoordinatesImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
       * `getProxy` -> `proxy`
       * `getTileWidth` -> `tileWidth`
@@ -95,6 +113,7 @@ Beta Releases
 * Added `AssociativeArray`, which is a helper class for maintaining a hash of objects that also needs to be iterated often.
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
 * Added `Intersections2D` class containing operations on 2D triangles.
+* Improved compatibility with Internet Explorer 11.
 
 ### b25 - 2014-02-03
 

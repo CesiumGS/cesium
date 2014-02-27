@@ -35,7 +35,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
 
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;

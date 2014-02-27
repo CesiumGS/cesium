@@ -160,7 +160,7 @@ defineSuite([
 
     it('pick in 2D', function() {
         var context = scene.context;
-        var ellipsoid = scene.scene2D.projection.getEllipsoid();
+        var ellipsoid = scene.scene2D.projection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
@@ -191,7 +191,7 @@ defineSuite([
 
     it('pick in 2D when rotated', function() {
         var context = scene.context;
-        var ellipsoid = scene.scene2D.projection.getEllipsoid();
+        var ellipsoid = scene.scene2D.projection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);

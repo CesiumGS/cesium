@@ -112,7 +112,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.

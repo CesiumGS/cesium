@@ -119,7 +119,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -316,13 +316,13 @@ defineSuite([
 
         runs(function() {
             expect(provider.extent.west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
-            expect(provider.extent.west).toBeGreaterThanOrEqualTo(provider.tilingScheme.getExtent().west);
+            expect(provider.extent.west).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.west);
             expect(provider.extent.east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
-            expect(provider.extent.east).toBeLessThanOrEqualTo(provider.tilingScheme.getExtent().east);
+            expect(provider.extent.east).toBeLessThanOrEqualTo(provider.tilingScheme.extent.east);
             expect(provider.extent.south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.extent.south).toBeGreaterThanOrEqualTo(provider.tilingScheme.getExtent().south);
+            expect(provider.extent.south).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.south);
             expect(provider.extent.north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.extent.north).toBeLessThanOrEqualTo(provider.tilingScheme.getExtent().north);
+            expect(provider.extent.north).toBeLessThanOrEqualTo(provider.tilingScheme.extent.north);
         });
     });
 

@@ -155,17 +155,17 @@ define([
             }
 
             // The extent must not be outside the bounds allowed by the tiling scheme.
-            if (that._extent.west < tilingScheme.getExtent().west) {
-                that._extent.west = tilingScheme.getExtent().west;
+            if (that._extent.west < tilingScheme.extent.west) {
+                that._extent.west = tilingScheme.extent.west;
             }
-            if (that._extent.east > tilingScheme.getExtent().east) {
-                that._extent.east = tilingScheme.getExtent().east;
+            if (that._extent.east > tilingScheme.extent.east) {
+                that._extent.east = tilingScheme.extent.east;
             }
-            if (that._extent.south < tilingScheme.getExtent().south) {
-                that._extent.south = tilingScheme.getExtent().south;
+            if (that._extent.south < tilingScheme.extent.south) {
+                that._extent.south = tilingScheme.extent.south;
             }
-            if (that._extent.north > tilingScheme.getExtent().north) {
-                that._extent.north = tilingScheme.getExtent().north;
+            if (that._extent.north > tilingScheme.extent.north) {
+                that._extent.north = tilingScheme.extent.north;
             }
 
             // Check the number of tiles at the minimum level.  If it's more than four,
@@ -188,7 +188,7 @@ define([
             that._minimumLevel = defaultValue(description.minimumLevel, 0);
             that._maximumLevel = defaultValue(description.maximumLevel, 18);
             that._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme());
-            that._extent = defaultValue(description.extent, that._tilingScheme.getExtent());
+            that._extent = defaultValue(description.extent, that._tilingScheme.extent);
             that._ready = true;
         });
 

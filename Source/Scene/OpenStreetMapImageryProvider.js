@@ -76,7 +76,7 @@ define([
         this._minimumLevel = defaultValue(description.minimumLevel, 0);
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
-        this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
+        this._extent = defaultValue(description.extent, this._tilingScheme.extent);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
