@@ -64,7 +64,9 @@ Beta Releases
       * `isReady` -> `ready`
       * `getCredit` -> `credit`
     * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
-      * `getUrl` -> `url
+      * `getUrl` -> `url`
+    * `ArcGisMapServerImageryProvider`
+      * `isUsingPrecachedTiles` - > `usingPrecachedTiles`
     * `BingMapsImageryProvider`
       * `getKey` -> `key`
       * `getMapStyle` -> `mapStyle`
