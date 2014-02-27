@@ -98,7 +98,7 @@ defineSuite([
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -179,7 +179,7 @@ defineSuite([
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -244,7 +244,7 @@ defineSuite([
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeUndefined();
             expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
-            expect(provider.isUsingPrecachedTiles()).toEqual(false);
+            expect(provider.usingPrecachedTiles).toEqual(false);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toMatch(baseUrl);
@@ -329,7 +329,7 @@ defineSuite([
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
             expect(provider.proxy).toEqual(proxy);
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {

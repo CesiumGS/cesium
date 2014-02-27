@@ -365,23 +365,23 @@ define([
             get : function() {
                 return this._credit;
             }
+        },
+
+        /**
+         * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
+         * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link ArcGisMapServerImageryProvider#ready}), this function
+         * will return the value of `description.usePreCachedTilesIfAvailable`, even if the MapServer does
+         * not have pre-cached tiles.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @returns {Boolean}
+         */
+        usingPrecachedTiles : {
+            get : function() {
+                return this._useTiles;
+            }
         }
     });
 
-    /**
-     * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
-     * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link ArcGisMapServerImageryProvider#ready}), this function
-     * will return the value of `description.usePreCachedTilesIfAvailable`, even if the MapServer does
-     * not have pre-cached tiles.
-     *
-     * @memberof ArcGisMapServerImageryProvider
-     *
-     * @returns {Boolean} true if this imagery provider is using pre-cached tiles from the ArcGIS MapServer;
-     *          otherwise, false.
-     */
-    ArcGisMapServerImageryProvider.prototype.isUsingPrecachedTiles = function() {
-        return this._useTiles;
-    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
