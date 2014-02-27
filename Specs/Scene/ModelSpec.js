@@ -91,7 +91,7 @@ defineSuite([
                 camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
                 var controller = scene.screenSpaceCameraController;
-                controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+                controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
                 controller.enableTilt = false;
 
                 // Zoom in
