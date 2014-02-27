@@ -33,6 +33,28 @@ Beta Releases
     * `EllipsoidalOccluder`
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
+    * `EllipsoidTangentPlane`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getOrigin` -> `origin`
+    * `GeographicProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `WebMercatorProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `GeographicTilingScheeme`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getExtent` -> `extent`
+      * `getProjection` -> `projection`
+    * `SceneTransitioner`
+      * `getScene` -> `scene`
+      * `getEllipsoid` -> `ellipsoid`
+    * `ScreenSpaceCameraController`
+      * `getEllipsoid`, `setEllipsoid` -> `ellipsoid`
+    * `SkyAtmosphere`
+      * `getEllipsoid` -> `ellipsoid`
+    * `WebMercatorTilingSheme`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getExtent` -> `extent`
+      * `getProjection` -> `projection`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
   * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
