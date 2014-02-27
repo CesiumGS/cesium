@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -9,76 +9,68 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var PixelDatatype = {
         /**
-         * DOC_TBA
+         * 0x1401. 8-bit unsigned byte.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1401
          */
-        UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
+        UNSIGNED_BYTE : 0x1401,
 
         /**
-         * An unsigned short pixel datatype used for depth textures with 16-bit depth values.
+         * 0x1403. An unsigned short pixel datatype used for depth textures with 16-bit depth values.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1403
          */
-        UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
+        UNSIGNED_SHORT : 0x1403,
 
         /**
-         * An unsigned int pixel datatype used for depth textures with 32-bit depth values.
+         * 0x1405. An unsigned int pixel datatype used for depth textures with 32-bit depth values.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1405
          */
-        UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT'),
+        UNSIGNED_INT : 0x1405,
 
         /**
-         * DOC_TBA
+         * 0x1406. 32-bit floating-point.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x1406
          */
-        FLOAT : new Enumeration(0x1406, 'FLOAT'),
+        FLOAT : 0x1406,
 
         /**
-         * An unsigned int pixel datatype used for depth-stencil textures with 24-bit depth and 8-bit stencil values.
+         * 0x84FA. An unsigned int pixel datatype used for depth-stencil textures with 24-bit depth and 8-bit stencil values.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x84FA
          */
-        UNSIGNED_INT_24_8_WEBGL : new Enumeration(0x84FA, 'UNSIGNED_INT_24_8_WEBGL'),
+        UNSIGNED_INT_24_8_WEBGL : 0x84FA,
 
         /**
-         * DOC_TBA
+         * 0x8033. An unsigned short pixel datatype with 4 bytes for each R, G, B, and A component.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x8033
          */
-        UNSIGNED_SHORT_4_4_4_4 : new Enumeration(0x8033, 'UNSIGNED_SHORT_4_4_4_4'),
+        UNSIGNED_SHORT_4_4_4_4 : 0x8033,
 
         /**
-         * DOC_TBA
+         * 0x8034. An unsigned short pixel datatype with 5 bits for R, G, and B components, and 1 byte for A.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x8034
          */
-        UNSIGNED_SHORT_5_5_5_1 : new Enumeration(0x8034, 'UNSIGNED_SHORT_5_5_5_1'),
+        UNSIGNED_SHORT_5_5_5_1 : 0x8034,
 
         /**
-         * DOC_TBA
+         * 0x8363. An unsigned short pixel datatype with 5 bits for R, 6 for G, and 5 for B.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0x8063
          */
-        UNSIGNED_SHORT_5_6_5 : new Enumeration(0x8363, 'UNSIGNED_SHORT_5_6_5'),
+        UNSIGNED_SHORT_5_6_5 : 0x8363,
 
         /**
          * DOC_TBA

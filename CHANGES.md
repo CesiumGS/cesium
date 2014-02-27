@@ -13,7 +13,7 @@ Beta Releases
       * `getContext` -> `context`
       * `getPrimitives` -> `primitives`
       * `getCamera` -> `camera`
-      * `getScreenSpaceCameraController`  -> `screenSpaceController`
+      * `getScreenSpaceCameraController`  -> `screenSpaceCameraController`
       * `getFrameState` -> `frameState`
       * `getAnimations` -> `animations`
     * `CompositePrimitive`
@@ -52,7 +52,6 @@ Beta Releases
       * `getExtent` -> `extent`
       * `getProjection` -> `projection`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
-  * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
   * The `propertyChanged` on DynamicScene objects has been renamed to `definitionChanged`.  Also, the event is now raised in the case of an existing property being modified as well as having a new property assigned (previously only property assignment would raise the event).
   * The `visualizerTypes` parameter to the `DataSouceDisplay` has been changed to a callback function that creates an array of visualizer instances.
@@ -60,7 +59,9 @@ Beta Releases
   * `VisualizerCollection` has been removed.  It is superseded by `DataSourceDisplay`.
   * `DynamicEllipsoidVisualizer`, `DynamicPolygonVisualizer`, and `DynamicPolylineVisualizer` have been removed.  They are superseded by `GeometryVisualizer` and corresponding `GeometryUpdater` implementations; `EllipsoidGeometryUpdater`, `PolygonGeometryUpdater`, `PolylineGeometryUpdater`.
   * Modified `CameraFlightPath` functions to take place in the camera's current reference frame. The arguments to the function now need to be given in world coordinates and an optional reference frame can be given when the flight is completed.
+  * `PixelDatatype` properties are now JavaScript numbers, not `Enumeration` instances.
   * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
+* Added `Model` for drawing 3D models using glTF.
 * DynamicScene now makes use of [Geometry and Appearances](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/), which provides a tremendous improvements to DataSource visualization (CZML, GeoJSON, etc..).  Extruded geometries are now supported and in many use cases performance is an order of magnitude faster.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
 * `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by [STK Terrain Server](https://groups.google.com/forum/#!topic/cesium-dev/cP01iP7YOCU).
@@ -85,6 +86,7 @@ Beta Releases
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
 * Added `Intersections2D` class containing operations on 2D triangles.
 * Improved compatibility with Internet Explorer 11.
+* Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
 ### b25 - 2014-02-03
 
