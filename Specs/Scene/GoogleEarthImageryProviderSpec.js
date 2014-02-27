@@ -95,7 +95,7 @@ defineSuite([
             expect(provider.getVersion()).toEqual(version);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
         });
 
         waitsFor(function() {
@@ -350,7 +350,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
         });
     });
 
@@ -385,7 +385,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
         });
     });
 

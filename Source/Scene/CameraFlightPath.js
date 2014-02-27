@@ -195,7 +195,7 @@ define([
 
     function createUpdate3D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.getEllipsoid();
+        var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
         var start = Matrix4.multiplyByPoint(camera.transform, camera.position, scratchStartPosition);
         var startDirection = Matrix4.multiplyByPointAsVector(camera.transform, camera.direction, scratchStartDirection);
@@ -314,7 +314,7 @@ define([
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.getEllipsoid();
+        var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
         var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
         var orientations = createOrientations2D(camera, path, direction, up);
@@ -340,7 +340,7 @@ define([
 
     function createUpdate2D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.getEllipsoid();
+        var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
         var start = Cartesian3.clone(camera.position);
         start.z = camera.frustum.right - camera.frustum.left;
@@ -569,7 +569,7 @@ define([
         var frameState = scene.frameState;
         var projection = frameState.scene2D.projection;
         if (frameState.mode === SceneMode.SCENE3D) {
-            var ellipsoid = projection.getEllipsoid();
+            var ellipsoid = projection.ellipsoid;
             ellipsoid.cartographicToCartesian(destination, c3destination);
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             projection.project(destination, c3destination);

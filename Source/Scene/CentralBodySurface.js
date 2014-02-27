@@ -101,7 +101,7 @@ define([
         // even if this value is 0.
         this._loadQueueTimeSlice = 5;
 
-        var ellipsoid = terrainTilingScheme.getEllipsoid();
+        var ellipsoid = terrainTilingScheme.ellipsoid;
         this._ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO);
 
         this._debug = {
@@ -370,7 +370,7 @@ define([
 
         var cameraPosition = frameState.camera.positionWC;
 
-        var ellipsoid = surface._terrainProvider.getTilingScheme().getEllipsoid();
+        var ellipsoid = surface._terrainProvider.getTilingScheme().ellipsoid;
         var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCamera);
 
         surface._ellipsoidalOccluder.cameraPosition = cameraPosition;

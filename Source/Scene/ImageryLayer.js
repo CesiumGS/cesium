@@ -954,9 +954,9 @@ define([
         // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.getTilingScheme();
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var latitudeFactor = !(layer._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
-        var tilingSchemeExtent = tilingScheme.getExtent();
+        var tilingSchemeExtent = tilingScheme.extent;
         var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
