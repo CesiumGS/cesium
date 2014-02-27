@@ -581,7 +581,6 @@ define(['../Core/Cartesian3',
             material = this._material;
             appearance = new MaterialAppearance({
                 material : material,
-                faceForward : true,
                 translucent : material.isTranslucent(),
                 closed : true
             });

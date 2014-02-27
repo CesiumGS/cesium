@@ -71,7 +71,7 @@ defineSuite([
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, false));
         expect(a.vertexFormat).toEqual(PerInstanceColorAppearance.VERTEX_FORMAT);
         expect(a.flat).toEqual(false);
-        expect(a.faceForward).toEqual(false);
+        expect(a.faceForward).toEqual(true);
         expect(a.translucent).toEqual(true);
         expect(a.closed).toEqual(false);
     });
