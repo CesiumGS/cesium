@@ -88,7 +88,7 @@ require(['Cesium'], function(Cesium) {
         height : 5000.0
     }, {
         text : 'Ground vehicle',
-        url : '../models/CesiumGround/Cesium_Ground.json',
+        url : '../models/CesiumGround/Cesium_Ground.json'
     }, {
         text : 'Skinned character',
         url : '../models/CesiumMan/Cesium_Man.json'
@@ -96,7 +96,7 @@ require(['Cesium'], function(Cesium) {
     createModel(options[0].url, options[0].height);
     
     Sandcastle.addToolbarMenu(options, function() {
-        var option = options[this.selectedIndex] 
+        var option = options[this.selectedIndex];
         createModel(option.url, option.height);
     });
     Sandcastle.finishedLoading();
