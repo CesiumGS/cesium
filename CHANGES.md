@@ -118,6 +118,7 @@ Beta Releases
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
 * Added `Intersections2D` class containing operations on 2D triangles.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
+* Fixed camera tilt in ICRF. [544](https://github.com/AnalyticalGraphicsInc/cesium/issues/544)
 
 ### b25 - 2014-02-03
 
