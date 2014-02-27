@@ -25,6 +25,11 @@ define([
         var data = event.data;
         var id = data.id;
 
+        if (!defined(id)) {
+            // This is not one of ours.
+            return;
+        }
+
         var deferreds = processor._deferreds;
         var deferred = deferreds[id];
 
@@ -122,6 +127,8 @@ define([
         this._nextID = 0;
     };
 
+    var emptyTransferableObjectArray = [];
+
     /**
      * Schedule a task to be processed by the web worker asynchronously.  If there are currently more
      * tasks active than the maximum set by the constructor, will immediately return undefined.
@@ -158,6 +165,10 @@ define([
         }
 
         ++this._activeTasks;
+
+        if (!defined(transferableObjects)) {
+            transferableObjects = emptyTransferableObjectArray;
+        }
 
         var id = this._nextID++;
         var deferred = when.defer();

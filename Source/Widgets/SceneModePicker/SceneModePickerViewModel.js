@@ -49,7 +49,7 @@ define([
          * Gets or sets the current SceneMode.  This property is observable.
          * @type {SceneMode}
         */
-        this.sceneMode = transitioner.getScene().mode;
+        this.sceneMode = transitioner.scene.mode;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.

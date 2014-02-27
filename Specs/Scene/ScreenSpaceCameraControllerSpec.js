@@ -76,9 +76,9 @@ defineSuite([
     });
 
     it('get/set ellipsoid', function() {
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.WGS84);
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(controller.ellipsoid).toEqual(Ellipsoid.WGS84);
+        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        expect(controller.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     function updateController(frameState) {
@@ -763,7 +763,7 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).toBeDefined();
     });
 
@@ -775,7 +775,7 @@ defineSuite([
 
         camera.controller.lookRight(CesiumMath.PI_OVER_TWO);
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).not.toBeDefined();
 
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);

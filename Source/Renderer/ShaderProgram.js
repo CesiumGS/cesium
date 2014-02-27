@@ -449,28 +449,36 @@ define([
             switch (activeUniform.type) {
             case _gl.FLOAT:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        _gl.uniform1f(_locations[i], this.value[i]);
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        _gl.uniform1f(_locations[i], value[i]);
                     }
                 };
             case _gl.FLOAT_VEC2:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         _gl.uniform2f(_locations[i], v.x, v.y);
                     }
                 };
             case _gl.FLOAT_VEC3:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         _gl.uniform3f(_locations[i], v.x, v.y, v.z);
                     }
                 };
             case _gl.FLOAT_VEC4:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
 
                         if (defined(v.red)) {
                             _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
@@ -484,60 +492,76 @@ define([
             case _gl.SAMPLER_2D:
             case _gl.SAMPLER_CUBE:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var value = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         var index = this.textureUnitIndex + i;
                         _gl.activeTexture(_gl.TEXTURE0 + index);
-                        _gl.bindTexture(value._getTarget(), value._getTexture());
+                        _gl.bindTexture(v._getTarget(), v._getTexture());
                     }
                 };
             case _gl.INT:
             case _gl.BOOL:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        _gl.uniform1i(_locations[i], this.value[i]);
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        _gl.uniform1i(_locations[i], value[i]);
                     }
                 };
             case _gl.INT_VEC2:
             case _gl.BOOL_VEC2:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         _gl.uniform2i(_locations[i], v.x, v.y);
                     }
                 };
             case _gl.INT_VEC3:
             case _gl.BOOL_VEC3:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         _gl.uniform3i(_locations[i], v.x, v.y, v.z);
                     }
                 };
             case _gl.INT_VEC4:
             case _gl.BOOL_VEC4:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        var v = this.value[i];
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        var v = value[i];
                         _gl.uniform4i(_locations[i], v.x, v.y, v.z, v.w);
                     }
                 };
             case _gl.FLOAT_MAT2:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(this.value[i], scratchUniformMatrix2));
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(value[i], scratchUniformMatrix2));
                     }
                 };
             case _gl.FLOAT_MAT3:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(this.value[i], scratchUniformMatrix3));
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
                     }
                 };
             case _gl.FLOAT_MAT4:
                 return function() {
-                    for (var i = 0; i < _locations.length; ++i) {
-                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(this.value[i], scratchUniformMatrix4));
+                    var value = this.value;
+                    var length = value.length;
+                    for (var i = 0; i < length; ++i) {
+                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
                     }
                 };
             default:
@@ -549,12 +573,13 @@ define([
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
 
-                for (var i = 0; i < _locations.length; ++i) {
+                var length = _locations.length;
+                for (var i = 0; i < length; ++i) {
                     var index = textureUnitIndex + i;
                     _gl.uniform1i(_locations[i], index);
                 }
 
-                return textureUnitIndex + _locations.length;
+                return textureUnitIndex + length;
             };
         }
     };

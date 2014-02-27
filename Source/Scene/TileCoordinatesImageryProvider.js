@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Color',
         '../Core/Event',
         './GeographicTilingScheme'
     ], function(
         defaultValue,
+        defineProperties,
         Color,
         Event,
         GeographicTilingScheme) {
@@ -34,133 +36,141 @@ define([
         this._tileHeight = defaultValue(description.tileHeight, 256);
     };
 
-    /**
-     * Gets the proxy used by this provider.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Proxy} This provider does not use a proxy so undefined is always returned.
-     */
-    TileCoordinatesImageryProvider.prototype.getProxy = function() {
-        return undefined;
-    };
 
-    /**
-     * Gets the width of each tile, in pixels.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Number} The width.
-     *
-     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
-     */
-    TileCoordinatesImageryProvider.prototype.getTileWidth = function() {
-        return this._tileWidth;
-    };
+    defineProperties(TileCoordinatesImageryProvider.prototype, {
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Proxy}
+         */
+        proxy : {
+            get : function() {
+                return undefined;
+            }
+        },
 
-    /**
-     * Gets the height of each tile, in pixels.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Number} The height.
-     */
-    TileCoordinatesImageryProvider.prototype.getTileHeight = function() {
-        return this._tileHeight;
-    };
+        /**
+         * Gets the width of each tile, in pixels. This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Number}
+         */
+        tileWidth : {
+            get : function() {
+                return this._tileWidth;
+            }
+        },
 
-    /**
-     * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link TileCoordinatesImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Number} The maximum level.
-     */
-    TileCoordinatesImageryProvider.prototype.getMaximumLevel = function() {
-        return undefined;
-    };
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Number}
+         */
+        tileHeight: {
+            get : function() {
+                return this._tileHeight;
+            }
+        },
 
-    /**
-     * Gets the minimum level-of-detail that can be requested.  This function should
-     * not be called before {@link TileCoordinatesImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Number} The minimum level.
-     */
-    TileCoordinatesImageryProvider.prototype.getMinimumLevel = function() {
-        return undefined;
-    };
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Number}
+         */
+        maximumLevel : {
+            get : function() {
+                return undefined;
+            }
+        },
 
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {TilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     */
-    TileCoordinatesImageryProvider.prototype.getTilingScheme = function() {
-        return this._tilingScheme;
-    };
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Number}
+         */
+        minimumLevel : {
+            get : function() {
+                return undefined;
+            }
+        },
 
-    /**
-     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Extent} The extent.
-     */
-    TileCoordinatesImageryProvider.prototype.getExtent = function() {
-        return this._tilingScheme.getExtent();
-    };
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                return this._tilingScheme;
+            }
+        },
 
-    /**
-     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-     * returns undefined, no tiles are filtered.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {TileDiscardPolicy} The discard policy.
-     *
-     * @see DiscardMissingTileImagePolicy
-     * @see NeverTileDiscardPolicy
-     */
-    TileCoordinatesImageryProvider.prototype.getTileDiscardPolicy = function() {
-        return undefined;
-    };
+        /**
+         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                return this._tilingScheme.extent;
+            }
+        },
 
-    /**
-     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Event} The event.
-     */
-    TileCoordinatesImageryProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         */
+        tileDiscardPolicy : {
+            get : function() {
+                return undefined;
+            }
+        },
 
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    TileCoordinatesImageryProvider.prototype.isReady = function() {
-        return true;
-    };
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return true;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
+         * @memberof TileCoordinatesImageryProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return undefined;
+            }
+        }
+    });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -181,7 +191,7 @@ define([
 
     /**
      * Requests the image for a given tile.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
      *
      * @memberof TileCoordinatesImageryProvider
      *
@@ -215,18 +225,6 @@ define([
         context.fillText(label, 124, 124);
 
         return canvas;
-    };
-
-    /**
-     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-     * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof TileCoordinatesImageryProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    TileCoordinatesImageryProvider.prototype.getCredit = function() {
-        return undefined;
     };
 
     return TileCoordinatesImageryProvider;
