@@ -1,82 +1,80 @@
 /*global define*/
 define([
-        './DeveloperError',
         './defaultValue',
         './defined'
     ], function(
-        DeveloperError,
         defaultValue,
         defined) {
     "use strict";
 
     /**
-     * Merges object properties into a new combined object. When two objects have the same
-     * property, the value of the object that comes earlier in the array is used.
+     * Merges two objects, copying their properties onto a new combined object. When two objects have the same
+     * property, the value of the property on the first object is used.  If either object is undefined,
+     * it will be treated as an empty object.
      *
      * @example
      * var object1 = {
-     *     one : 1,
-     *     deep : {
+     *     propOne : 1,
+     *     propTwo : {
      *         value1 : 10
      *     }
      * }
      * var object2 = {
-     *     two : 2
+     *     propTwo : 2
      * }
-     * var object3 = {
-     *     deep : {
-     *         value1 : 5,
-     *         value2 : 11
-     *     }
-     * }
-     * var final = Cesium.combine([object1,object2, object3], true, true);
+     * var final = Cesium.combine(object1, object2);
      *
      * // final === {
-     * //     one : 1,
-     * //     two : 2,
-     * //     deep : {
-     * //         value1 : 10,
-     * //         value2 : 11
+     * //     propOne : 1,
+     * //     propTwo : {
+     * //         value1 : 10
      * //     }
      * // }
      *
-     * @param {Array} objects Array of objects that get merged together.
-     * @param {Boolean} [deep = true] Perform a recursive merge.
-     * @param {Boolean} [allowDuplicates = true] An error gets thrown if allowDuplicates is false and two objects contain the same property.
+     * @param {Object} [object1] The first object to merge.
+     * @param {Object} [object2] The second object to merge.
+     * @param {Boolean} [deep=false] Perform a recursive merge.
      *
-     * @returns {Object} combined object
+     * @returns {Object} The combined object containing all properties from both objects.
      *
      * @exports combine
-     *
-     * @exception {DeveloperError} Duplicate member.
      */
+    var combine = function(object1, object2, deep) {
+        deep = defaultValue(deep, false);
 
-    var combine = function(objects, deep, allowDuplicates) {
-        deep = defaultValue(deep, true);
-        allowDuplicates = defaultValue(allowDuplicates, true);
+        var result = {};
 
-        var combined = {};
-        for (var i = 0; i < objects.length; i++) {
-            combineTwoObjects(combined, objects[i], deep, allowDuplicates);
-        }
-        return combined;
-    };
-    var combineTwoObjects = function(object1, object2, deep, allowDuplicates) {
-        for (var property in object2) {
-            if (object2.hasOwnProperty(property)) {
-                if (object1.hasOwnProperty(property) && (defined(object1[property]))) {
-                    if (!allowDuplicates) {
-                        throw new DeveloperError('Duplicate member: ' + property);
+        var object1Defined = defined(object1);
+        var object2Defined = defined(object2);
+        var property;
+        var object1Value;
+        var object2Value;
+        if (object1Defined) {
+            for (property in object1) {
+                if (object1.hasOwnProperty(property)) {
+                    object1Value = object1[property];
+                    if (object2Defined && deep && typeof object1Value === 'object' && object2.hasOwnProperty(property)) {
+                        object2Value = object2[property];
+                        if (typeof object2Value === 'object') {
+                            result[property] = combine(object1Value, object2Value, deep);
+                        } else {
+                            result[property] = object1Value;
+                        }
+                    } else {
+                        result[property] = object1Value;
                     }
-                    if (deep && typeof object1[property] === 'object' && typeof object2[property] === 'object') {
-                        combineTwoObjects(object1[property], object2[property], deep, allowDuplicates);
-                    }
-                }
-                else {
-                    object1[property] = object2[property];
                 }
             }
         }
+        if (object2Defined) {
+            for (property in object2) {
+                if (object2.hasOwnProperty(property) && !result.hasOwnProperty(property)) {
+                    object2Value = object2[property];
+                    result[property] = object2Value;
+                }
+            }
+        }
+        return result;
     };
 
     return combine;

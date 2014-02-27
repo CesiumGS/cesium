@@ -21,8 +21,6 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
      *
-     * @exception {DeveloperError} point, p0, p1, and p2 are required.
-     *
      * @example
      * // Returns true
      * var p = new Cesium.Cartesian2(0.25, 0.25);

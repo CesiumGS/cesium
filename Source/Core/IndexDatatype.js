@@ -52,8 +52,6 @@ define([
      *
      * @returns {Number} The size in bytes.
      *
-     * @exception {DeveloperError} indexDatatype is required and must be a valid IndexDatatype constant.
-     *
      * @example
      * // Returns 2
      * var size = Cesium.IndexDatatype.getSizeInBytes(Cesium.IndexDatatype.UNSIGNED_SHORT);
@@ -100,8 +98,6 @@ define([
      * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
      *
      * @returns {Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
-     *
-     * @exception {DeveloperError} center is required.
      *
      * @example
      * this.indices = Cesium.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);

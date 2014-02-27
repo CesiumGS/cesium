@@ -35,8 +35,6 @@ define([
      * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {DeveloperError} description.url is required.
-     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -301,6 +299,23 @@ define([
      */
     SingleTileImageryProvider.prototype.isReady = function() {
         return this._ready;
+    };
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    SingleTileImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
     };
 
     /**

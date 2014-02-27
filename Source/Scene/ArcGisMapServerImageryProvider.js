@@ -54,8 +54,6 @@ define([
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
      *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see OpenStreetMapImageryProvider
@@ -388,6 +386,23 @@ define([
      */
     ArcGisMapServerImageryProvider.prototype.isReady = function() {
         return this._ready;
+    };
+
+    /**
+     * Gets the credits to be displayed when a given tile is displayed.
+     *
+     * @memberof ArcGisMapServerImageryProvider
+     *
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
+     *
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
+     */
+    ArcGisMapServerImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
     };
 
     /**

@@ -82,7 +82,7 @@ defineSuite([
     function switchTo2D() {
         frameState.mode = SceneMode.SCENE2D;
         var frustum = new OrthographicFrustum();
-        frustum.right = Ellipsoid.WGS84.getMaximumRadius() * Math.PI;
+        frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
@@ -137,7 +137,7 @@ defineSuite([
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
-            var layerCollection = cb.getImageryLayers();
+            var layerCollection = cb.imageryLayerCollection;
 
             layerCollection.removeAll();
             var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -163,7 +163,7 @@ defineSuite([
         });
 
         it('adding a layer adds it to all tiles after update', function() {
-            var layerCollection = cb.getImageryLayers();
+            var layerCollection = cb.imageryLayerCollection;
 
             layerCollection.removeAll();
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -199,7 +199,7 @@ defineSuite([
         });
 
         it('moving a layer moves the corresponding TileImagery instances on every tile', function() {
-            var layerCollection = cb.getImageryLayers();
+            var layerCollection = cb.imageryLayerCollection;
 
             layerCollection.removeAll();
             var layer1 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -254,7 +254,7 @@ defineSuite([
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -269,7 +269,7 @@ defineSuite([
     });
 
     it('renders in 2D web mercator', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -284,7 +284,7 @@ defineSuite([
     });
 
     it('renders in Columbus View geographic', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -299,7 +299,7 @@ defineSuite([
     });
 
     it('renders in Columbus View web mercator', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -314,7 +314,7 @@ defineSuite([
     });
 
     it('renders in 3D', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -328,7 +328,7 @@ defineSuite([
     });
 
     it('renders in 3D and then Columbus View', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -351,7 +351,7 @@ defineSuite([
     });
 
     it('renders even if imagery root tiles fail to load', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
 
         var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
@@ -371,7 +371,7 @@ defineSuite([
     });
 
     it('passes layer adjustment values as uniforms', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -415,7 +415,7 @@ defineSuite([
     });
 
     it('passes functional layer adjustment values as uniforms', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -470,7 +470,7 @@ defineSuite([
     });
 
     it('skips layer with uniform alpha value of zero', function() {
-        var layerCollection = cb.getImageryLayers();
+        var layerCollection = cb.imageryLayerCollection;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 

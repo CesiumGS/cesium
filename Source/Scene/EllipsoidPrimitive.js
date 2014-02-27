@@ -190,7 +190,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -358,7 +358,7 @@ define([
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
-            colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
+            colorCommand.uniformMap = combine(this._uniforms, this.material._uniforms);
             colorCommand.executeInClosestFrustum = translucent;
             colorCommand.owner = defaultValue(this._owner, this);
         }
@@ -403,7 +403,7 @@ define([
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._pickUniforms), this.material._uniforms);
                 pickCommand.executeInClosestFrustum = translucent;
                 pickCommand.owner = defaultValue(this._owner, this);
             }

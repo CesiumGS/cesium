@@ -227,7 +227,6 @@ define([
      * @param value The number whose hyperbolic sine is to be returned.
      *
      * @returns The hyperbolic sine of {@code value}.
-     *
      */
     CesiumMath.sinh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -617,8 +616,6 @@ define([
      * @memberof CesiumMath
      *
      * @param {Number} seed An integer used as the seed.
-     *
-     * @exception {DeveloperError} seed is required.
      */
     CesiumMath.setRandomNumberSeed = function(seed) {
         //>>includeStart('debug', pragmas.debug);

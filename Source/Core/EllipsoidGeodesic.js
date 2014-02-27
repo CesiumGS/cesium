@@ -21,8 +21,8 @@ define([
 
     function setConstants(ellipsoidGeodesic) {
         var uSquared= ellipsoidGeodesic._uSquared;
-        var a = ellipsoidGeodesic._ellipsoid.getMaximumRadius();
-        var b = ellipsoidGeodesic._ellipsoid.getMinimumRadius();
+        var a = ellipsoidGeodesic._ellipsoid.maximumRadius;
+        var b = ellipsoidGeodesic._ellipsoid.minimumRadius;
         var f = (a - b) / a;
 
         var cosineHeading = Math.cos(ellipsoidGeodesic._startHeading);
@@ -182,7 +182,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.getMaximumRadius(), ellipsoid.getMinimumRadius(),
+        vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
                 start.longitude, start.latitude, end.longitude, end.latitude);
 
         start.height = 0;
@@ -246,9 +246,6 @@ define([
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
-     *
-     * @exception {DeveloperError} start cartographic position is required
-     * @exception {DeveloperError} end cartographic position is required
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
         //>>includeStart('debug', pragmas.debug);

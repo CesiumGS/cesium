@@ -180,8 +180,6 @@ define([
      * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
      * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
-     * @exception {DeveloperError} boundingRectangle is required.
-     *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
      * var box = Cesium.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
@@ -284,9 +282,6 @@ define([
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
         //>>includeStart('debug', pragmas.debug);

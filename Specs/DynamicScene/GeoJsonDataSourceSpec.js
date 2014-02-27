@@ -400,6 +400,21 @@ defineSuite([
         });
     });
 
+    it('Generates description', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(topoJson);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 2;
+        });
+        runs(function() {
+            var objects = dynamicObjectCollection.getObjects();
+            var polygon = objects[0];
+            expect(polygon.description).toBeDefined();
+        });
+    });
+
     it('Works with geometrycollection', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(geometryCollection);

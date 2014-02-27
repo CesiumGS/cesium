@@ -19,8 +19,6 @@ define([
         Material) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     /**
      * DOC_TBA
      *
@@ -30,7 +28,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
     var Polyline = function(options, polylineCollection) {
-        options = defaultValue(options, EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._show = defaultValue(options.show, true);
         this._width = defaultValue(options.width, 1.0);
@@ -108,8 +106,6 @@ define([
      *
      * @param {Boolean} value Indicates if this polyline will be shown.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Polyline#getShow
      */
     Polyline.prototype.setShow = function(value) {
@@ -144,8 +140,6 @@ define([
      * @memberof Polyline
      *
      * @param {Array} value The positions of the polyline.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Polyline#getPositions
      *
@@ -233,8 +227,6 @@ define([
      *
      * @param {Material} material The material
      *
-     * @exception {DeveloperError} material is required.
-     *
      * @see Polyline#getMaterial
      */
     Polyline.prototype.setMaterial = function(material) {
@@ -274,8 +266,6 @@ define([
      *
      * @param {Number} value The width of the polyline.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Polyline#getWidth
      *
      * @example
@@ -314,6 +304,7 @@ define([
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
                 primitive : defaultValue(this._pickIdThis, this),
+                collection: this._polylineCollection,
                 id : this._id
             });
         }

@@ -217,7 +217,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -433,7 +433,6 @@ define([
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see BillboardCollection#getLength

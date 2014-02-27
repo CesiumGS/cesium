@@ -91,7 +91,6 @@ define([
          * @param {Number} radius The radius in meters.
          * @param {Number} [granularity] The angular distance between points on the circle.
          *
-         * @exception {DeveloperError} ellipsoid, center, and radius are required.
          * @exception {DeveloperError} radius must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *
@@ -141,7 +140,6 @@ define([
          * @param {Number} [rotation] The angle from north (clockwise) in radians. The default is zero.
          * @param {Number} [granularity] The angular distance between points on the circle.
          *
-         * @exception {DeveloperError} ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.
          * @exception {DeveloperError} Semi-major and semi-minor axes must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *

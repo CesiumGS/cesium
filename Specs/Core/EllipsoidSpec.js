@@ -32,46 +32,46 @@ defineSuite([
 
     it('default constructor creates zero Ellipsoid', function() {
         var ellipsoid = new Ellipsoid();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getMinimumRadius()).toEqual(0.0);
-        expect(ellipsoid.getMaximumRadius()).toEqual(0.0);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiToTheFourth).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.minimumRadius).toEqual(0.0);
+        expect(ellipsoid.maximumRadius).toEqual(0.0);
     });
 
     it('fromCartesian3 creates zero Ellipsoid with no parameters', function() {
         var ellipsoid = Ellipsoid.fromCartesian3();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getMinimumRadius()).toEqual(0.0);
-        expect(ellipsoid.getMaximumRadius()).toEqual(0.0);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiToTheFourth).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.minimumRadius).toEqual(0.0);
+        expect(ellipsoid.maximumRadius).toEqual(0.0);
     });
 
     it('constructor computes correct values', function() {
         var ellipsoid = new Ellipsoid(radii.x, radii.y, radii.z);
-        expect(ellipsoid.getRadii()).toEqual(radii);
-        expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
-        expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(oneOverRadiiSquared);
-        expect(ellipsoid.getMinimumRadius()).toEqual(minimumRadius);
-        expect(ellipsoid.getMaximumRadius()).toEqual(maximumRadius);
+        expect(ellipsoid.radii).toEqual(radii);
+        expect(ellipsoid.radiiSquared).toEqual(radiiSquared);
+        expect(ellipsoid.radiiToTheFourth).toEqual(radiiToTheFourth);
+        expect(ellipsoid.oneOverRadii).toEqual(oneOverRadii);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(oneOverRadiiSquared);
+        expect(ellipsoid.minimumRadius).toEqual(minimumRadius);
+        expect(ellipsoid.maximumRadius).toEqual(maximumRadius);
     });
 
     it('fromCartesian3 computes correct values', function() {
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        expect(ellipsoid.getRadii()).toEqual(radii);
-        expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
-        expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(oneOverRadiiSquared);
-        expect(ellipsoid.getMinimumRadius()).toEqual(minimumRadius);
-        expect(ellipsoid.getMaximumRadius()).toEqual(maximumRadius);
+        expect(ellipsoid.radii).toEqual(radii);
+        expect(ellipsoid.radiiSquared).toEqual(radiiSquared);
+        expect(ellipsoid.radiiToTheFourth).toEqual(radiiToTheFourth);
+        expect(ellipsoid.oneOverRadii).toEqual(oneOverRadii);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(oneOverRadiiSquared);
+        expect(ellipsoid.minimumRadius).toEqual(minimumRadius);
+        expect(ellipsoid.maximumRadius).toEqual(maximumRadius);
     });
 
     it('geodeticSurfaceNormalCartographic works without a result parameter', function() {

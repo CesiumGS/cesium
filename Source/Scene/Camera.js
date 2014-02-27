@@ -35,8 +35,6 @@ define([
      *
      * @alias Camera
      *
-     * @exception {DeveloperError} context is required.
-     *
      * @constructor
      *
      * @example
@@ -73,7 +71,7 @@ define([
         this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
 
         /**
@@ -252,12 +250,10 @@ define([
     defineProperties(Camera.prototype, {
         /**
          * Gets the inverse camera transform.
+         * @memberof Camera.prototype
          *
-         * @memberof Camera
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Camera#transform
          */
         inverseTransform : {
             get : function () {
@@ -267,9 +263,9 @@ define([
         },
 
         /**
-         * The view matrix.
+         * Gets the view matrix.
+         * @memberof Camera.prototype
          *
-         * @memberof Camera
          * @type {Matrix4}
          *
          * @see UniformState#getView
@@ -284,9 +280,9 @@ define([
         },
 
         /**
-         * The inverse view matrix.
+         * Gets the inverse view matrix.
+         * @memberof Camera.prototype
          *
-         * @memberof Camera
          * @type {Matrix4}
          *
          * @see UniformState#getInverseView
@@ -301,9 +297,8 @@ define([
         },
 
         /**
-         * The position of the camera in world coordinates.
-         *
-         * @memberof Camera
+         * Gets the position of the camera in world coordinates.
+         * @memberof Camera.prototype
          * @type {Cartesian3}
          */
         positionWC : {
@@ -314,9 +309,8 @@ define([
         },
 
         /**
-         * The view direction of the camera in world coordinates.
-         *
-         * @memberof Camera
+         * Gets the view direction of the camera in world coordinates.
+         * @memberof Camera.prototype
          * @type {Cartesian3}
          */
         directionWC : {
@@ -327,9 +321,8 @@ define([
         },
 
         /**
-         * The up direction of the camera in world coordinates.
-         *
-         * @memberof Camera
+         * Gets the up direction of the camera in world coordinates.
+         * @memberof Camera.prototype
          * @type {Cartesian3}
          */
         upWC : {
@@ -340,9 +333,8 @@ define([
         },
 
         /**
-         * The right direction of the camera in world coordinates.
-         *
-         * @memberof Camera
+         * Gets the right direction of the camera in world coordinates.
+         * @memberof Camera.prototype
          * @type {Cartesian3}
          */
         rightWC : {
@@ -378,8 +370,6 @@ define([
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
      *
-     * @exception {DeveloperError} cartesian is required.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
@@ -398,8 +388,6 @@ define([
      *
      * @param {Cartesian4} vector The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
-     * @exception {DeveloperError} cartesian is required.
      *
      * @returns {Cartesian4} The transformed vector or point.
      */

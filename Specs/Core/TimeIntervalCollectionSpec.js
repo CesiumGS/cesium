@@ -28,6 +28,7 @@ defineSuite([
         expect(intervals.getStart()).toBeUndefined();
         expect(intervals.getStop()).toBeUndefined();
         expect(intervals.isEmpty()).toEqual(true);
+        expect(intervals.getChangedEvent()).toBeDefined();
     });
 
     it('contains works for a simple interval collection.', function() {
@@ -566,5 +567,26 @@ defineSuite([
         expect(function() {
             intervals.intersectInterval(undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('changed event is raised as expected', function() {
+        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true);
+
+        var intervals = new TimeIntervalCollection();
+
+        var listener = jasmine.createSpy('listener');
+        intervals.getChangedEvent().addEventListener(listener);
+
+        intervals.addInterval(interval);
+        expect(listener).toHaveBeenCalledWith(intervals);
+        listener.reset();
+
+        intervals.removeInterval(interval);
+        expect(listener).toHaveBeenCalledWith(intervals);
+
+        intervals.addInterval(interval);
+        listener.reset();
+        intervals.clear();
+        expect(listener).toHaveBeenCalledWith(intervals);
     });
 });

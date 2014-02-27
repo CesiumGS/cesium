@@ -32,6 +32,7 @@ define([
 
     var actualPosition = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
+    var viewProjectionScratch;
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -45,15 +46,12 @@ define([
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} position is required.
-     *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
-     * var ellipsoid = widget.centralBody.getEllipsoid();
+     * var ellipsoid = widget.centralBody.ellipsoid;
      * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -69,7 +67,7 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
+        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
 
         if (!defined(actualPosition)) {
             result = undefined;
@@ -77,10 +75,11 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.getUniformState().getViewProjection();
-        Matrix4.multiplyByVector(viewProjection, actualPosition, positionCC);
+        var camera = scene.camera;
+        viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
+        Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
 
-        return SceneTransforms.clipToWindowCoordinates(scene.getContext(), positionCC, result);
+        return SceneTransforms.clipToWindowCoordinates(scene.context, positionCC, result);
     };
 
     /**
@@ -95,15 +94,12 @@ define([
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} position is required.
-     *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
-     * var ellipsoid = widget.centralBody.getEllipsoid();
+     * var ellipsoid = widget.centralBody.ellipsoid;
      * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
@@ -120,17 +116,17 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
+        SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPosition);
 
         if (!defined(actualPosition)) {
             return undefined;
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.getUniformState().getViewProjection();
+        var viewProjection = scene.context.getUniformState().getViewProjection();
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
-        return SceneTransforms.clipToDrawingBufferCoordinates(scene.getContext(), positionCC, result);
+        return SceneTransforms.clipToDrawingBufferCoordinates(scene.context, positionCC, result);
     };
 
     var projectedPosition = new Cartesian3();

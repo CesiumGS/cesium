@@ -34,7 +34,6 @@ define([
      * @memberof Buffer
      * @param {Number} [offsetInBytes=0] DOC_TBA
      *
-     * @exception {DeveloperError} arrayView is required.
      * @exception {DeveloperError} This buffer is not large enough.
      * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
      */

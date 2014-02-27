@@ -28,8 +28,6 @@ define([
      *
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
-     * @exception {DeveloperError} point, p0, p1, and p2 are required.
-     *
      * @example
      * // Returns Cartesian3.UNIT_X
      * var p = new Cesium.Cartesian3(-1.0, 0.0, 0.0);

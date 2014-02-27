@@ -184,6 +184,7 @@ define([
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
                     billboard._id = label._id;
+                    billboard._collection = label._labelCollection;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
@@ -352,7 +353,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -518,7 +519,6 @@ define([
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see LabelCollection#getLength

@@ -11,46 +11,53 @@
 }
 
 .cesium-viewer-cesiumWidgetContainer {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 .cesium-viewer-timelineContainer {
-	position: absolute;
-	bottom: 0;
-	left: 169px;
-	right: 29px;
-	height: 27px;
-	padding: 0;
-	margin: 0;
-	overflow: hidden;
-	font-size: 14px;
+    position: absolute;
+    bottom: 0;
+    left: 169px;
+    right: 29px;
+    height: 27px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: 14px;
 }
 
 .cesium-viewer-animationContainer {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	padding: 0;
-	width: 169px;
-	height: 112px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    padding: 0;
+    width: 169px;
+    height: 112px;
 }
 
 .cesium-viewer-fullscreenContainer {
-	position: absolute;
-	bottom: 0;
-	right: 0;
-	padding: 0;
-	width: 29px;
-	height: 29px;
-	overflow: hidden;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
 }
 
 .cesium-viewer-toolbar {
-	display: block;
-	position: absolute;
-	top: 5px;
-	right: 5px;
+    display: block;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+.cesium-viewer-cesiumInspectorContainer {
+    display: block;
+    position: absolute;
+    top: 5px;
+    left: 5px;
 }
 
 .cesium-viewer-geocoderContainer {

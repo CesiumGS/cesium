@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/ConstantPositionProperty',
+defineSuite(['DynamicScene/ConstantPositionProperty',
              'DynamicScene/PositionProperty',
              'Core/Cartesian3',
              'Core/JulianDate',
@@ -17,7 +16,7 @@ defineSuite([
     var time = new JulianDate();
 
     it('Constructor sets expected defaults', function() {
-        var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
+        var property = new ConstantPositionProperty();
         expect(property.referenceFrame).toBe(ReferenceFrame.FIXED);
 
         property = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
@@ -52,6 +51,16 @@ defineSuite([
         expect(result).toEqual(valueFixed);
     });
 
+    it('getValue works with undefined fixed value', function() {
+        var property = new ConstantPositionProperty(undefined);
+        expect(property.getValue(time)).toBeUndefined();
+    });
+
+    it('getValue work swith undefined inertial value', function() {
+        var property = new ConstantPositionProperty(undefined, ReferenceFrame.INERTIAL);
+        expect(property.getValue(time)).toBeUndefined();
+    });
+
     it('getValueInReferenceFrame works without a result parameter', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantPositionProperty(value);
@@ -71,6 +80,30 @@ defineSuite([
         expect(expected).toEqual(PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED));
     });
 
+    it('setValue rasies definitionChanged event', function() {
+        var property = new ConstantPositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+        property.setValue(new Cartesian3(1, 2, 3));
+        expect(listener).toHaveBeenCalledWith(property);
+    });
+
+    it('setValue does not raise definitionChanged event with equal data', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(0, 0, 0));
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+        property.setValue(new Cartesian3(0, 0, 0));
+        expect(listener.callCount).toBe(0);
+    });
+
+    it('setValue raises definitionChanged when referenceFrame changes', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(0, 0, 0), ReferenceFrame.FIXED);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+        property.setValue(new Cartesian3(0, 0, 0), ReferenceFrame.INERTIAL);
+        expect(listener).toHaveBeenCalledWith(property);
+    });
+
     it('equals works', function() {
         var left = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
         var right = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
@@ -84,12 +117,6 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
     });
 
-    it('constructor throws with undefined value', function() {
-        expect(function() {
-            return new ConstantPositionProperty(undefined);
-        }).toThrowDeveloperError();
-    });
-
     it('getValue throws without time parameter', function() {
         var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
         expect(function() {
@@ -99,7 +126,6 @@ defineSuite([
 
     it('getValueInReferenceFrame throws with no referenceFrame parameter', function() {
         var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
-        var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
