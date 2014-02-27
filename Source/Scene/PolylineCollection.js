@@ -1049,7 +1049,7 @@ define([
         this.pickShaderProgram = undefined;
         this.mode = mode;
         this.projection = projection;
-        this.ellipsoid = projection.getEllipsoid();
+        this.ellipsoid = projection.ellipsoid;
         this.modelMatrix = modelMatrix;
     };
 

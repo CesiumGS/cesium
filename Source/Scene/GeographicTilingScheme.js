@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Cartesian2',
@@ -12,6 +13,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         CesiumMath,
         Cartesian2,
@@ -47,38 +49,41 @@ define([
         this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
     };
 
-    /**
-     * Gets the ellipsoid that is tiled by this tiling scheme.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    GeographicTilingScheme.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
 
-    /**
-     * Gets the extent, in radians, covered by this tiling scheme.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @returns {Extent} The extent.
-     */
-    GeographicTilingScheme.prototype.getExtent = function() {
-        return this._extent;
-    };
+    defineProperties(GeographicTilingScheme.prototype, {
+        /**
+         * Gets the ellipsoid that is tiled by this tiling scheme.
+         * @memberof GeographicTilingScheme.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
 
-    /**
-     * Gets the map projection used by this tiling scheme.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @returns {Projection} The map projection.
-     */
-    GeographicTilingScheme.prototype.getProjection = function() {
-        return this._projection;
-    };
+        /**
+         * Gets the extent, in radians, covered by this tiling scheme.
+         * @memberof GeographicTilingScheme.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                return this._extent;
+            }
+        },
+
+        /**
+         * Gets the map projection used by this tiling scheme.
+         * @memberof GeographicTilingScheme.prototype
+         * @type {Projection}
+         */
+        projection : {
+            get : function() {
+                return this._projection;
+            }
+        }
+    });
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.

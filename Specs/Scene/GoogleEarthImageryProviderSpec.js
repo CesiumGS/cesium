@@ -77,33 +77,33 @@ defineSuite([
             path: path
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getPath()).toEqual(path);
-        expect(provider.getChannel()).toEqual(channel);
+        expect(provider.url).toEqual(url);
+        expect(provider.path).toEqual(path);
+        expect(provider.channel).toEqual(channel);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(23);
-            expect(provider.getMinimumLevel()).toEqual(0);
-            expect(provider.getVersion()).toEqual(version);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(23);
+            expect(provider.minimumLevel).toEqual(0);
+            expect(provider.version).toEqual(version);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.tileDiscardPolicy).toBeUndefined();
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
         });
 
         waitsFor(function() {
-            return defined(provider.getCredit());
+            return defined(provider.credit);
         }, 'logo to become ready');
 
         runs(function() {
-            expect(provider.getCredit()).toBeInstanceOf(Object);
+            expect(provider.credit).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if(url.indexOf('blob:') !== 0) {
@@ -173,13 +173,13 @@ defineSuite([
             channel: channel
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getPath()).toEqual(path);
-        expect(provider.getVersion()).toEqual(version);
-        expect(provider.getChannel()).toEqual(channel);
+        expect(provider.url).toEqual(url);
+        expect(provider.path).toEqual(path);
+        expect(provider.version).toEqual(version);
+        expect(provider.channel).toEqual(channel);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
     });
 
@@ -198,12 +198,12 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getPath()).toEqual(path);
-        expect(provider.getProxy()).toEqual(proxy);
+        expect(provider.url).toEqual(url);
+        expect(provider.path).toEqual(path);
+        expect(provider.proxy).toEqual(proxy);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -240,17 +240,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf(url) >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -268,7 +268,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -299,7 +299,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -345,12 +345,12 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
         });
     });
 
@@ -380,12 +380,12 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
         });
     });
 
@@ -415,12 +415,12 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getExtent()).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.extent).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
     });
 
@@ -435,17 +435,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf('Could not find layer with channel') >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -461,17 +461,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf('Could not find a version in channel') >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -487,17 +487,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf('Unsupported projection') >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });

@@ -174,5 +174,32 @@ define([
         return typeof ArrayBuffer !== 'undefined';
     };
 
+    var supportsTransferringArrayBuffersResult;
+
+    /**
+     * Detects whether the current browser can transfer an ArrayBuffer
+     * to / from a web worker.
+     *
+     * @returns true if the browser can transfer ArrayBuffers; otherwise, false.
+     */
+    FeatureDetection.supportsTransferringArrayBuffers = function() {
+        if (!defined(supportsTransferringArrayBuffersResult)) {
+            if (!FeatureDetection.supportsTypedArrays()) {
+                supportsTransferringArrayBuffersResult = false;
+                return;
+            }
+
+            var arrayBuffer = new ArrayBuffer(1);
+            try {
+                /*global postMessage*/
+                postMessage({ value : arrayBuffer }, [arrayBuffer]);
+                supportsTransferringArrayBuffersResult = true;
+            } catch(e) {
+                supportsTransferringArrayBuffersResult = false;
+            }
+        }
+        return supportsTransferringArrayBuffersResult;
+    };
+
     return FeatureDetection;
 });

@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/loadArrayBuffer',
         '../Core/loadJson',
         '../Core/throttleRequestByServer',
@@ -23,6 +24,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         loadArrayBuffer,
         loadJson,
         throttleRequestByServer,
@@ -72,7 +74,7 @@ define([
         });
 
         this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
@@ -318,7 +320,7 @@ define([
 
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link CesiumTerrainProvider#isReady} returns true.  The result must include terrain data and
+     * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      *
      * @memberof CesiumTerrainProvider
@@ -333,7 +335,7 @@ define([
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
     CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
@@ -382,18 +384,67 @@ define([
         });
     };
 
-    /**
-     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof CesiumTerrainProvider
-     *
-     * @returns {Event} The event.
-     */
-    CesiumTerrainProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
+    defineProperties(CesiumTerrainProvider.prototype, {
+        /**
+         * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('credit must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._credit;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {GeographicTilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        }
+    });
 
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
@@ -408,50 +459,6 @@ define([
     };
 
     /**
-     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#isReady} returns true.
-     *
-     * @memberof CesiumTerrainProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credix exists
-     *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
-     *            returns true.
-     */
-    CesiumTerrainProvider.prototype.getCredit = function() {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('getCredit must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._credit;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link CesiumTerrainProvider#isReady} returns true.
-     *
-     * @memberof CesiumTerrainProvider
-     *
-     * @returns {GeographicTilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
-     *            returns true.
-     */
-    CesiumTerrainProvider.prototype.getTilingScheme = function() {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('getTilingScheme must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme;
-    };
-
-    /**
      * Gets a value indicating whether or not the provider includes a water mask.  The water mask
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.
@@ -460,7 +467,7 @@ define([
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#isReady}
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
     CesiumTerrainProvider.prototype.hasWaterMask = function() {
@@ -471,17 +478,6 @@ define([
         //>>includeEnd('debug');
 
         return this._hasWaterMask;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof CesiumTerrainProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    CesiumTerrainProvider.prototype.isReady = function() {
-        return this._ready;
     };
 
     function getChildMaskForTile(terrainProvider, level, x, y) {

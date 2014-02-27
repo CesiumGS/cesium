@@ -14,7 +14,7 @@ define([
     /**
      * The culling volume defined by planes.
      *
-     * @alias OrthographicFrustum
+     * @alias CullingVolume
      * @constructor
      *
      * @param Array planes An array of clipping planes.

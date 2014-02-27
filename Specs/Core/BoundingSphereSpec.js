@@ -434,7 +434,7 @@ defineSuite([
         var positions2D = [];
         for (var i = 0; i < positions.length; ++i) {
             var position = positions[i];
-            var cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            var cartographic = projection.ellipsoid.cartesianToCartographic(position);
             positions2D.push(projection.project(cartographic));
         }
 
@@ -455,7 +455,7 @@ defineSuite([
         var positions2D = [];
         for (var i = 0; i < positions.length; ++i) {
             var position = positions[i];
-            var cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            var cartographic = projection.ellipsoid.cartesianToCartographic(position);
             positions2D.push(projection.project(cartographic));
         }
 

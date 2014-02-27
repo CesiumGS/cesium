@@ -98,16 +98,23 @@ define([
         this.creditDisplay = creditDisplay;
 
         /**
-         * An array of {@link Event} instances to raise at the end of the frame.
+         * An array of functions to be called at the end of the frame.  This array
+         * will be cleared after each frame.
+         * <p>
          * This allows queueing up events in <code>update</code> functions and
          * firing them at a time when the subscribers are free to change the
          * scene state, e.g., manipulate the camera, instead of firing events
          * directly in <code>update</code> functions.
+         * </p>
          *
          * @type {Array}
-         * @default []
+         *
+         * @example
+         * frameState.afterRender.push(function() {
+         *   // take some action, raise an event, etc.
+         * });
          */
-        this.events = [];
+        this.afterRender = [];
     };
 
     return FrameState;

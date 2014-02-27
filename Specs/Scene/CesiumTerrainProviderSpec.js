@@ -72,11 +72,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            var tilingScheme = provider.getTilingScheme();
+            var tilingScheme = provider.tilingScheme;
             expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
         });
     });
@@ -85,8 +85,8 @@ defineSuite([
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getErrorEvent()).toBeDefined();
-        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+        expect(provider.errorEvent).toBeDefined();
+        expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 
     it('returns reasonable geometric error for various levels', function() {
@@ -107,11 +107,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit()).toBeUndefined();
+            expect(provider.credit).toBeUndefined();
         });
     });
 
@@ -124,11 +124,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit()).toBeDefined();
+            expect(provider.credit).toBeDefined();
         });
     });
 
@@ -140,7 +140,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
@@ -156,7 +156,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -177,7 +177,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -198,7 +198,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -219,7 +219,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -240,11 +240,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit().getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider.credit.getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 
@@ -267,7 +267,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loaded = false;
@@ -300,7 +300,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loadedData;
@@ -336,7 +336,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loadedData;
@@ -375,7 +375,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             runs(function() {

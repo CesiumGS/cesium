@@ -17,21 +17,21 @@ defineSuite([
     it('constructor defaults to WGS84', function() {
         var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0, 0);
         var tangentPlane = new EllipsoidTangentPlane(origin);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.WGS84);
-        expect(tangentPlane.getOrigin()).toEqual(origin);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.WGS84);
+        expect(tangentPlane.origin).toEqual(origin);
     });
 
     it('constructor sets expected values', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getOrigin()).toEqual(Cartesian3.UNIT_X);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
+        expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
     });
 
     it('fromPoints sets expected values', function() {
         var points = [new Cartesian3(2, 0, 0), new Cartesian3(0, 0, 0)];
         var tangentPlane = EllipsoidTangentPlane.fromPoints(points, Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getOrigin()).toEqual(Cartesian3.UNIT_X);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
+        expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
     });
 
     it('projectPointOntoPlane returns undefined for points not on the plane', function () {

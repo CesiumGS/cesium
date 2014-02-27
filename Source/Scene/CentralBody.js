@@ -387,10 +387,10 @@ define([
             return;
         }
 
-        if (!terrainProvider.isReady()) {
+        if (!terrainProvider.ready) {
             return;
         }
-        var terrainMaxExtent = terrainProvider.getTilingScheme().getExtent();
+        var terrainMaxExtent = terrainProvider.tilingScheme.extent;
 
         var viewProjMatrix = context.getUniformState().getViewProjection();
         var viewport = viewportScratch;
@@ -647,7 +647,7 @@ define([
                 });
         }
 
-        if (this._surface._terrainProvider.isReady() &&
+        if (this._surface._terrainProvider.ready &&
             this._surface._terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
@@ -664,7 +664,7 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
-        var hasWaterMask = this._surface._terrainProvider.isReady() && this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 

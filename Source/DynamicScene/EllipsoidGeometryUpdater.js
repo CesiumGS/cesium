@@ -581,7 +581,6 @@ define(['../Core/Cartesian3',
             material = this._material;
             appearance = new MaterialAppearance({
                 material : material,
-                faceForward : true,
                 translucent : material.isTranslucent(),
                 closed : true
             });
@@ -644,6 +643,13 @@ define(['../Core/Cartesian3',
         }
 
         if (in3D) {
+            //Since we are scaling a unit sphere, we can't let any of the values go to zero.
+            //Instead we clamp them to a small value.  To the naked eye, this produces the same results
+            //that you get passing EllipsoidGeometry a radii with a zero component.
+            radiiScratch.x = Math.max(radiiScratch.x, 0.001);
+            radiiScratch.y = Math.max(radiiScratch.y, 0.001);
+            radiiScratch.z = Math.max(radiiScratch.z, 0.001);
+
             modelMatrix = Matrix4.multiplyByScale(modelMatrix, radiiScratch, modelMatrix);
             this._primitive.modelMatrix = modelMatrix;
             this._outlinePrimitive.modelMatrix = modelMatrix;
