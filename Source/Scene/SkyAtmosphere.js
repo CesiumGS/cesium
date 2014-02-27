@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
@@ -19,6 +20,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Cartesian3,
         EllipsoidGeometry,
         destroyObject,
@@ -106,16 +108,18 @@ define([
         };
     };
 
-    /**
-     * Gets the ellipsoid the atmosphere is drawn around.
-     *
-     * @memberof SkyAtmosphere
-     *
-     * @returns {Ellipsoid}
-     */
-    SkyAtmosphere.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(SkyAtmosphere.prototype, {
+        /**
+         * Gets the ellipsoid the atmosphere is drawn around.
+         * @memberof SkyAtmosphere.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        }
+    });
 
     /**
      * @private

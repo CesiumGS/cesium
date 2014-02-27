@@ -28,7 +28,7 @@ defineSuite([
                 numberOfLevelZeroTilesX : 1,
                 numberOfLevelZeroTilesY : 1
             });
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);
             expect(extent.west).toEqualEpsilon(tilingSchemeExtent.west, CesiumMath.EPSILON10);
             expect(extent.south).toEqualEpsilon(tilingSchemeExtent.south, CesiumMath.EPSILON10);
@@ -41,7 +41,7 @@ defineSuite([
                 numberOfLevelZeroTilesX : 1,
                 numberOfLevelZeroTilesY : 1
             });
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
             var result = new Extent(0.0, 0.0, 0.0);
             var extent = tilingScheme.tileXYToExtent(0, 0, 0, result);
             expect(result).toEqual(extent);
@@ -102,7 +102,7 @@ defineSuite([
 
     it('uses a GeographicProjection', function() {
         var tilingScheme = new GeographicTilingScheme();
-        expect(tilingScheme.getProjection()).toBeInstanceOf(GeographicProjection);
+        expect(tilingScheme.projection).toBeInstanceOf(GeographicProjection);
     });
 
     describe('extentToNativeExtent', function() {

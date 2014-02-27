@@ -198,6 +198,12 @@ define(['../Core/createGuid',
          */
         label : createDynamicPropertyDescriptor('label'),
         /**
+         * Gets or sets the model.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicLabel}
+         */
+        model : createDynamicPropertyDescriptor('model', '_model'),
+        /**
          * Gets or sets the parent object.
          * @memberof DynamicObject.prototype
          * @type {DynamicObject}

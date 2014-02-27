@@ -119,7 +119,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(18);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -316,13 +316,13 @@ defineSuite([
 
         runs(function() {
             expect(provider.getExtent().west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
-            expect(provider.getExtent().west).toBeGreaterThanOrEqualTo(provider.getTilingScheme().getExtent().west);
+            expect(provider.getExtent().west).toBeGreaterThanOrEqualTo(provider.getTilingScheme().extent.west);
             expect(provider.getExtent().east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
-            expect(provider.getExtent().east).toBeLessThanOrEqualTo(provider.getTilingScheme().getExtent().east);
+            expect(provider.getExtent().east).toBeLessThanOrEqualTo(provider.getTilingScheme().extent.east);
             expect(provider.getExtent().south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.getExtent().south).toBeGreaterThanOrEqualTo(provider.getTilingScheme().getExtent().south);
+            expect(provider.getExtent().south).toBeGreaterThanOrEqualTo(provider.getTilingScheme().extent.south);
             expect(provider.getExtent().north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.getExtent().north).toBeLessThanOrEqualTo(provider.getTilingScheme().getExtent().north);
+            expect(provider.getExtent().north).toBeLessThanOrEqualTo(provider.getTilingScheme().extent.north);
         });
     });
 

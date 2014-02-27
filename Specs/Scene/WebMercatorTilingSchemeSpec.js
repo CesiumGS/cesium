@@ -33,20 +33,20 @@ defineSuite([
 
     it('default constructing uses WGS84 ellipsoid', function() {
         var tilingScheme = new WebMercatorTilingScheme();
-        expect(tilingScheme.getEllipsoid()).toEqual(Ellipsoid.WGS84);
+        expect(tilingScheme.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('uses specified ellipsoid', function() {
         var tilingScheme = new WebMercatorTilingScheme({
             ellipsoid : Ellipsoid.UNIT_SPHERE
         });
-        expect(tilingScheme.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(tilingScheme.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     describe('Conversions from tile indices to cartographic extents', function() {
         it('tileXYToExtent returns full extent for single root tile.', function() {
             var extent = tilingScheme.tileXYToExtent(0, 0, 0);
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
             expect(extent.west).toEqualEpsilon(tilingSchemeExtent.west, CesiumMath.EPSILON10);
             expect(extent.south).toEqualEpsilon(tilingSchemeExtent.south, CesiumMath.EPSILON10);
             expect(extent.east).toEqualEpsilon(tilingSchemeExtent.east, CesiumMath.EPSILON10);
@@ -54,7 +54,7 @@ defineSuite([
         });
 
         it('tileXYToExtent uses result parameter if provided', function() {
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
             var result = new Extent(0.0, 0.0, 0.0);
             var extent = tilingScheme.tileXYToExtent(0, 0, 0, result);
             expect(result).toEqual(extent);
@@ -108,7 +108,7 @@ defineSuite([
     describe('Conversions from cartographic positions to tile indices', function() {
         it('calculates correct tile indices for 4 corners at level 0', function() {
             var coordinates;
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
 
             coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSouthwest(), 0);
             expect(coordinates.x).toEqual(0);
@@ -129,7 +129,7 @@ defineSuite([
 
         it('calculates correct tile indices for 4 corners at level 1', function() {
             var coordinates;
-            var tilingSchemeExtent = tilingScheme.getExtent();
+            var tilingSchemeExtent = tilingScheme.extent;
 
             coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSouthwest(), 1);
             expect(coordinates.x).toEqual(0);
@@ -187,7 +187,7 @@ defineSuite([
 
     it('uses a WebMercatorProjection', function() {
         var tilingScheme = new WebMercatorTilingScheme();
-        expect(tilingScheme.getProjection()).toBeInstanceOf(WebMercatorProjection);
+        expect(tilingScheme.projection).toBeInstanceOf(WebMercatorProjection);
     });
 
     describe('extentToNativeExtent', function() {
@@ -264,7 +264,7 @@ defineSuite([
         it('does not return tile outside valid range', function() {
             var tilingScheme = new WebMercatorTilingScheme();
 
-            var southeastCorner = tilingScheme.getExtent().getSoutheast();
+            var southeastCorner = tilingScheme.extent.getSoutheast();
             expect(tilingScheme.positionToTileXY(southeastCorner, 1)).toEqual(new Cartesian2(1, 1));
         });
 

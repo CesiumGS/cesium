@@ -529,11 +529,11 @@ define([
         frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
         frameState.frameNumber = frameNumber;
-        frameState.time = time;
+        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
-        frameState.events.length = 0;
+        frameState.afterRender.length = 0;
 
         clearPasses(frameState.passes);
     }
@@ -1358,14 +1358,14 @@ define([
         }
     }
 
-    function executeEvents(frameState) {
-        // Events are queued up during primitive update and executed here in case
-        // the callback modifies scene state that should remain constant over the frame.
-        var events = frameState.events;
-        var length = events.length;
-        for (var i = 0; i < length; ++i) {
-            events[i].raiseEvent();
+    function callAfterRenderFunctions(frameState) {
+        // Functions are queued up during primitive update and executed here in case
+        // the function modifies scene state that should remain constant over the frame.
+        var functions = frameState.afterRender;
+        for (var i = 0, length = functions.length; i < length; ++i) {
+            functions[i]();
         }
+        functions.length = 0;
     }
 
     /**
@@ -1437,7 +1437,7 @@ define([
         }
 
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -1583,7 +1583,7 @@ define([
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
         return object;
     };
 

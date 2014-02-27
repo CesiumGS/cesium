@@ -39,7 +39,7 @@ define([
         var camera = scene.camera;
         var controller = scene.screenSpaceCameraController;
 
-        controller.setEllipsoid(ellipsoid);
+        controller.ellipsoid = ellipsoid;
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
         var context = scene.context;
