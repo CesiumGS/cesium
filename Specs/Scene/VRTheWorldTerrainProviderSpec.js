@@ -78,8 +78,8 @@ defineSuite([
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getErrorEvent()).toBeDefined();
-        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+        expect(provider.errorEvent).toBeDefined();
+        expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 
     it('returns reasonable geometric error for various levels', function() {
@@ -88,7 +88,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'provider to be ready');
 
         runs(function() {
@@ -114,7 +114,7 @@ defineSuite([
         });
 
         expect(function() {
-            provider.getTilingScheme();
+            var t = provider.tilingScheme;
         }).toThrow();
     });
 
@@ -122,7 +122,7 @@ defineSuite([
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getCredit()).toBeUndefined();
+        expect(provider.credit).toBeUndefined();
     });
 
     it('logo is defined if credit is provided', function() {
@@ -130,7 +130,7 @@ defineSuite([
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
-        expect(provider.getCredit()).toBeDefined();
+        expect(provider.credit).toBeDefined();
     });
 
     it('does not have a water mask', function() {
@@ -144,7 +144,7 @@ defineSuite([
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.isReady()).toBe(false);
+        expect(provider.ready).toBe(false);
     });
 
     it('raises an error if the SRS is not supported', function() {
@@ -181,7 +181,7 @@ defineSuite([
         });
 
         var errorRaised = false;
-        terrainProvider.getErrorEvent().addEventListener(function() {
+        terrainProvider.errorEvent.addEventListener(function() {
             errorRaised = true;
         });
 
@@ -219,7 +219,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             runs(function() {
@@ -251,13 +251,13 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loadedData;
 
             runs(function() {
-                expect(terrainProvider.getTilingScheme() instanceof GeographicTilingScheme).toBe(true);
+                expect(terrainProvider.tilingScheme instanceof GeographicTilingScheme).toBe(true);
                 var promise = terrainProvider.requestTileGeometry(0, 0, 0);
 
                 when(promise, function(terrainData) {
@@ -289,7 +289,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-               return terrainProvider.isReady();
+               return terrainProvider.ready;
             });
 
             runs(function() {

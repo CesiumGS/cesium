@@ -51,6 +51,37 @@ Beta Releases
       * `getEllipsoid` -> `ellipsoid`
       * `getExtent` -> `extent`
       * `getProjection` -> `projection`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `GridImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileCoordinatesImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getProxy` -> `proxy`
+      * `getTileWidth` -> `tileWidth`
+      * `getTileHeight` -> `tileHeight`
+      * `getMaximumLevel` -> `maximumLevel`
+      * `getMinimumLevel` -> `minimumLevel`
+      * `getTilingScheme` -> `tilingScheme`
+      * `getExtent` -> `extent`
+      * `getTileDiscardPolicy` -> `tileDiscardPolicy`
+      * `getErrorEvent` -> `errorEvent`
+      * `isReady` -> `ready`
+      * `getCredit` -> `credit`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getUrl` -> `url`
+    * `ArcGisMapServerImageryProvider`
+      * `isUsingPrecachedTiles` - > `usingPrecachedTiles`
+    * `BingMapsImageryProvider`
+      * `getKey` -> `key`
+      * `getMapStyle` -> `mapStyle`
+    * `GoogleEarthImageryProvider`
+      * `getPath` -> `path`
+      * `getChannel` -> `channel`
+      * `getVersion` -> `version`
+      * `getRequestType` -> `requestType`
+    * `WebMapServiceImageryProvider`
+      * `getLayers` -> `layers`
+    * `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `ArcGisImageServerTerrainProvider`, `VRTheWorldTerrainProvider`
+      * `getErrorEvent` -> `errorEvent`
+      * `getCredit` -> `credit`
+      * `getTilingScheme` -> `tilingScheme`
+      * `isReady` -> `ready`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
   * The `propertyChanged` on DynamicScene objects has been renamed to `definitionChanged`.  Also, the event is now raised in the case of an existing property being modified as well as having a new property assigned (previously only property assignment would raise the event).
