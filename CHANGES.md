@@ -33,6 +33,35 @@ Beta Releases
     * `EllipsoidalOccluder`
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `GridImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileCoordinatesImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getProxy` -> `proxy`
+      * `getTileWidth` -> `tileWidth`
+      * `getTileHeight` -> `tileHeight`
+      * `getMaximumLevel` -> `maximumLevel`
+      * `getMinimumLevel` -> `minimumLevel`
+      * `getTilingScheme` -> `tilingScheme`
+      * `getExtent` -> `extent`
+      * `getTileDiscardPolicy` -> `tileDiscardPolicy`
+      * `getErrorEvent` -> `errorEvent`
+      * `isReady` -> `ready`
+      * `getCredit` -> `credit`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getUrl` -> `url
+    * `BingMapsImageryProvider`
+      * `getKey` -> `key`
+      * `getMapStyle` -> `mapStyle`
+    * `GoogleEarthImageryProvider`
+      * `getPath` -> `path`
+      * `getChannel` -> `channel`
+      * `getVersion` -> `version`
+      * `getRequestType` -> `requestType`
+    * `WebMapServiceImageryProvider`
+      * `getLayers` -> `layers`
+    * `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `ArcGisImageServerTerrainProvider`, `VRTheWorldTerrainProvider`
+      * `getErrorEvent` -> `errorEvent`
+      * `getCredit` -> `credit`
+      * `getTilingScheme` -> `tilingScheme`
+      * `isReady` -> `ready`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
   * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
