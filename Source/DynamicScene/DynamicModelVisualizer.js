@@ -186,7 +186,7 @@ define([
 
         var model = dynamicObject._modelPrimitive;
         var showProperty = dynamicModel._show;
-        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
+        var show = dynamicObject.uiShow && dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         var uri = uriProperty.getValue(time, context);
         if (!show || !defined(uri)) {
