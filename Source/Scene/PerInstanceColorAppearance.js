@@ -26,7 +26,7 @@ define([
      * @constructor
      *
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
-     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
      * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
@@ -163,7 +163,7 @@ define([
          *
          * @default false
          */
-        this.faceForward = defaultValue(options.faceForward, false);
+        this.faceForward = defaultValue(options.faceForward, !closed);
 
         /**
          * When <code>true</code>, the geometry is expected to appear translucent so

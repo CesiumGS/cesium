@@ -823,8 +823,7 @@ require(['Cesium'], function(Cesium) {
     scene.primitives.add(new Cesium.Primitive({
         geometryInstances : wallInstance,
         appearance : new Cesium.MaterialAppearance({
-            material : wallMaterial,
-            faceForward : true
+            material : wallMaterial
         })
     }));
 
@@ -886,8 +885,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [corridor, extrudedCorridor, corridorFill],
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : true,
-            closed : true,
-            faceForward : true
+            closed : true
         })
     }));
 
