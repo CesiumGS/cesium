@@ -277,7 +277,6 @@ define([
                 if (!defined(ellipsoid)) {
                     throw new DeveloperError('ellipsoid is required');
                 }
-                ellipsoid = ellipsoid;
                 var radius = ellipsoid.maximumRadius;
                 this._ellipsoid = ellipsoid;
                 this._rotateFactor = 1.0 / radius;
