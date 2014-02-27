@@ -15,15 +15,11 @@ void main()
     v_positionEC = (czm_modelView * p).xyz;     // position in eye coordinates
     gl_Position = czm_modelViewProjection * p;  // position in clip coordinates
 
-    // IE11 doesn't support gl_depthRange.
-    // No matter, it's currently always 0.0, 1.0.
-#ifdef gl_depthRange
-    float depthRangeNear = gl_depthRange.near;
-    float depthRangeFar = gl_depthRange.far;
-#else
+    // IE11 doesn't support gl_DepthRange, so we're hard-coding the values here.
+    // If the RenderState in EllipsoidPrimitive.js is ever changed to have a non-default
+    // depth range, this needs to be updated as well.
     float depthRangeNear = 0.0;
     float depthRangeFar = 1.0;
-#endif
 
     // With multi-frustum, when the ellipsoid primitive is positioned on the intersection of two frustums 
     // and close to terrain, the terrain (writes depth) in the closest frustum can overwrite part of the 
