@@ -166,12 +166,23 @@ define([
 
         /**
          * Gets a value indicating whether or not the provider is ready for use.
-         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @memberof GridImageryProvider.prototype
          * @type {Boolean}
          */
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return undefined;
             }
         }
     });

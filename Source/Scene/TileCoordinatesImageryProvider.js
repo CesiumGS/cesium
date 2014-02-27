@@ -73,7 +73,6 @@ define([
             }
         },
 
-
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.

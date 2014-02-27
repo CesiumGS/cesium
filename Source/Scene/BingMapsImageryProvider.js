@@ -208,7 +208,7 @@ define([
 
     defineProperties(BingMapsImageryProvider.prototype, {
         /**
-         * Gets the URL of the ArcGIS MapServer.
+         * Gets the name of the BingMaps server url hosting the imagery.
          * @memberof BingMapsImageryProvider.prototype
          * @type {String}
          */
@@ -407,8 +407,8 @@ define([
 
         /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-         * the source of the imagery.  This function should not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
-         * @memberof ArcGisMapServerImageryProvider.prototype
+         * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
          * @type {Credit}
          */
         credit : {
