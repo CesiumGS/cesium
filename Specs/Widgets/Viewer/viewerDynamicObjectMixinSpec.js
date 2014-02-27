@@ -108,12 +108,11 @@ defineSuite([
     });
 
     it('throws if selectedObject property already added by another mixin.', function() {
-        var viewer = new Viewer(container);
+        viewer = new Viewer(container);
         viewer.selectedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
-        }).toThrow();
-        viewer.destroy();
+        }).toThrowDeveloperError();
     });
 
     it('returns to home when a tracked object is removed', function() {

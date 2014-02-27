@@ -147,6 +147,33 @@ define([
         }
     };
 
+    var setTransformPosition = new Cartesian3();
+    var setTransformUp = new Cartesian3();
+    var setTransformDirection = new Cartesian3();
+
+    /**
+     * Sets the camera's transform without changing the current view.
+     *
+     * @memberof CameraController
+     *
+     * @param {Matrix4} The camera transform.
+     */
+    CameraController.prototype.setTransform = function(transform) {
+        var camera = this._camera;
+
+        var position = Cartesian3.clone(camera.positionWC, setTransformPosition);
+        var up = Cartesian3.clone(camera.upWC, setTransformUp);
+        var direction = Cartesian3.clone(camera.directionWC, setTransformDirection);
+
+        Matrix4.clone(transform, camera.transform);
+        var inverse = camera.inverseTransform;
+
+        Matrix4.multiplyByPoint(inverse, position, camera.position);
+        Matrix4.multiplyByPointAsVector(inverse, direction, camera.direction);
+        Matrix4.multiplyByPointAsVector(inverse, up, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
+    };
+
     function clampMove2D(controller, position) {
         var maxX = controller._maxCoord.x * controller.maximumTranslateFactor;
         if (position.x > maxX) {
@@ -164,7 +191,6 @@ define([
             position.y = -maxY;
         }
     }
-
     var moveScratch = new Cartesian3();
     /**
      * Translates the camera's position by <code>amount</code> along <code>direction</code>.
@@ -407,53 +433,23 @@ define([
         this.look(this._camera.direction, -amount);
     };
 
-    var appendTransformPosition = new Cartesian3();
-    var appendTransformUp = new Cartesian3();
-    var appendTransformRight = new Cartesian3();
-    var appendTransformDirection = new Cartesian3();
     var appendTransformMatrix = new Matrix4();
+    var appendTransformNewMatrix = new Matrix4();
 
     function appendTransform(controller, transform) {
         var camera = controller._camera;
         var oldTransform;
         if (defined(transform)) {
-            var position = Cartesian3.clone(camera.positionWC, appendTransformPosition);
-            var up = Cartesian3.clone(camera.upWC, appendTransformUp);
-            var right = Cartesian3.clone(camera.rightWC, appendTransformRight);
-            var direction = Cartesian3.clone(camera.directionWC, appendTransformDirection);
-
-            oldTransform = camera.transform;
-            camera.transform = Matrix4.multiplyTransformation(transform, oldTransform, appendTransformMatrix);
-
-            var invTransform = camera.inverseTransform;
-            Matrix4.multiplyByPoint(invTransform, position, camera.position);
-            Matrix4.multiplyByPointAsVector(invTransform, up, camera.up);
-            Matrix4.multiplyByPointAsVector(invTransform, right, camera.right);
-            Matrix4.multiplyByPointAsVector(invTransform, direction, camera.direction);
+            oldTransform = Matrix4.clone(camera.transform, appendTransformMatrix);
+            Matrix4.multiplyTransformation(transform, oldTransform, appendTransformNewMatrix);
+            controller.setTransform(appendTransformNewMatrix);
         }
         return oldTransform;
     }
 
-    var revertTransformPosition = new Cartesian3();
-    var revertTransformUp = new Cartesian3();
-    var revertTransformRight = new Cartesian3();
-    var revertTransformDirection = new Cartesian3();
-
     function revertTransform(controller, transform) {
         if (defined(transform)) {
-            var camera = controller._camera;
-            var position = Cartesian3.clone(camera.positionWC, revertTransformPosition);
-            var up = Cartesian3.clone(camera.upWC, revertTransformUp);
-            var right = Cartesian3.clone(camera.rightWC, revertTransformRight);
-            var direction = Cartesian3.clone(camera.directionWC, revertTransformDirection);
-
-            camera.transform = transform;
-            transform = camera.inverseTransform;
-
-            Matrix4.multiplyByPoint(transform, position, camera.position);
-            Matrix4.multiplyByPointAsVector(transform, up, camera.up);
-            Matrix4.multiplyByPointAsVector(transform, right, camera.right);
-            Matrix4.multiplyByPointAsVector(transform, direction, camera.direction);
+            controller.setTransform(transform);
         }
     }
 
