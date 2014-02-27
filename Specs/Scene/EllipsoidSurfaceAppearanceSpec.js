@@ -71,7 +71,7 @@ defineSuite([
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, true));
         expect(a.vertexFormat).toEqual(EllipsoidSurfaceAppearance.VERTEX_FORMAT);
         expect(a.flat).toEqual(false);
-        expect(a.faceForward).toEqual(true);
+        expect(a.faceForward).toEqual(false);
         expect(a.translucent).toEqual(true);
         expect(a.aboveGround).toEqual(false);
         expect(a.closed).toEqual(false);
