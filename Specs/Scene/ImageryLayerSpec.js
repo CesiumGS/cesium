@@ -84,7 +84,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -149,7 +149,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -212,11 +212,11 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -256,11 +256,11 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -304,11 +304,11 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var level0 = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
             var level1 = level0[0].getChildren();
             var level2 = level1[0].getChildren();
             var level3 = level2[0].getChildren();

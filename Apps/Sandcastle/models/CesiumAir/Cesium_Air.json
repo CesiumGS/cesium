@@ -1,47 +1,30 @@
 {
     "accessors": {
-        "accessor_10": {
-            "bufferView": "bufferView_87",
-            "byteOffset": 640,
-            "count": 80,
-            "type": 35666
-        },
-        "accessor_11": {
-            "bufferView": "bufferView_87",
-            "byteOffset": 320,
-            "count": 80,
-            "type": 5126
-        },
-        "accessor_12": {
-            "bufferView": "bufferView_87",
-            "byteOffset": 1920,
-            "count": 80,
-            "type": 35666
-        },
-        "accessor_9": {
-            "bufferView": "bufferView_87",
+        "accessor_29": {
+            "bufferView": "bufferView_86",
             "byteOffset": 0,
-            "count": 80,
-            "type": 5126
+            "byteStride": 0,
+            "count": 17088,
+            "type": 5123
         },
-        "attribute_31": {
+        "accessor_31": {
             "bufferView": "bufferView_85",
             "byteOffset": 0,
             "byteStride": 12,
             "count": 4180,
             "max": [
-                12.8683,
-                5.46406,
-                13.3969
+                5.06626,
+                2.15121,
+                5.27437
             ],
             "min": [
-                -12.8683,
-                -2.296,
-                -8.0047
+                -5.06626,
+                -0.903937,
+                -3.15146
             ],
             "type": 35665
         },
-        "attribute_33": {
+        "accessor_33": {
             "bufferView": "bufferView_85",
             "byteOffset": 50160,
             "byteStride": 12,
@@ -58,7 +41,7 @@
             ],
             "type": 35665
         },
-        "attribute_35": {
+        "accessor_35": {
             "bufferView": "bufferView_85",
             "byteOffset": 100320,
             "byteStride": 8,
@@ -73,24 +56,38 @@
             ],
             "type": 35664
         },
-        "attribute_78": {
+        "accessor_73": {
+            "bufferView": "bufferView_86",
+            "byteOffset": 34176,
+            "byteStride": 0,
+            "count": 72,
+            "type": 5123
+        },
+        "accessor_76": {
+            "bufferView": "bufferView_86",
+            "byteOffset": 34320,
+            "byteStride": 0,
+            "count": 360,
+            "type": 5123
+        },
+        "accessor_78": {
             "bufferView": "bufferView_85",
             "byteOffset": 133760,
             "byteStride": 12,
             "count": 103,
             "max": [
-                1.60231,
-                1.60235,
-                2.28882e-05
+                0.630831,
+                0.630846,
+                9.0111e-06
             ],
             "min": [
-                -1.60238,
-                -1.60234,
-                -0.589514
+                -0.630858,
+                -0.630843,
+                -0.232092
             ],
             "type": 35665
         },
-        "attribute_80": {
+        "accessor_80": {
             "bufferView": "bufferView_85",
             "byteOffset": 134996,
             "byteStride": 12,
@@ -107,7 +104,7 @@
             ],
             "type": 35665
         },
-        "attribute_82": {
+        "accessor_82": {
             "bufferView": "bufferView_85",
             "byteOffset": 136232,
             "byteStride": 8,
@@ -122,191 +119,282 @@
             ],
             "type": 35664
         },
-        "indices_29": {
-            "bufferView": "bufferView_86",
+        "animAccessor_0": {
+            "bufferView": "bufferView_87",
             "byteOffset": 0,
-            "count": 17088,
-            "type": 5123
+            "count": 101,
+            "type": 5126
         },
-        "indices_73": {
-            "bufferView": "bufferView_86",
-            "byteOffset": 34176,
-            "count": 72,
-            "type": 5123
+        "animAccessor_1": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 404,
+            "count": 101,
+            "type": 35665
         },
-        "indices_76": {
-            "bufferView": "bufferView_86",
-            "byteOffset": 34320,
-            "count": 360,
-            "type": 5123
+        "animAccessor_2": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 1616,
+            "count": 101,
+            "type": 35665
+        },
+        "animAccessor_3": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 2828,
+            "count": 101,
+            "type": 35666
+        },
+        "animAccessor_4": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 4444,
+            "count": 101,
+            "type": 35665
+        },
+        "animAccessor_5": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 5656,
+            "count": 101,
+            "type": 35665
+        },
+        "animAccessor_6": {
+            "bufferView": "bufferView_87",
+            "byteOffset": 6868,
+            "count": 101,
+            "type": 35666
         }
     },
     "animations": {
         "animation_0": {
             "channels": [
                 {
+                    "sampler": "animation_0_scale_sampler",
+                    "target": {
+                        "id": "node-Prop",
+                        "path": "scale"
+                    }
+                },
+                {
+                    "sampler": "animation_0_translation_sampler",
+                    "target": {
+                        "id": "node-Prop",
+                        "path": "translation"
+                    }
+                },
+                {
                     "sampler": "animation_0_rotation_sampler",
                     "target": {
-                        "id": "Geometry-mesh097Node",
+                        "id": "node-Prop",
                         "path": "rotation"
                     }
                 }
             ],
-            "count": 80,
+            "count": 101,
             "parameters": {
-                "TIME": "accessor_9",
-                "rotation": "accessor_10"
+                "TIME": "animAccessor_0",
+                "rotation": "animAccessor_3",
+                "scale": "animAccessor_1",
+                "translation": "animAccessor_2"
             },
             "samplers": {
                 "animation_0_rotation_sampler": {
                     "input": "TIME",
                     "interpolation": "LINEAR",
                     "output": "rotation"
+                },
+                "animation_0_scale_sampler": {
+                    "input": "TIME",
+                    "interpolation": "LINEAR",
+                    "output": "scale"
+                },
+                "animation_0_translation_sampler": {
+                    "input": "TIME",
+                    "interpolation": "LINEAR",
+                    "output": "translation"
                 }
             }
         },
         "animation_1": {
             "channels": [
                 {
+                    "sampler": "animation_1_scale_sampler",
+                    "target": {
+                        "id": "node-Prop__2_",
+                        "path": "scale"
+                    }
+                },
+                {
+                    "sampler": "animation_1_translation_sampler",
+                    "target": {
+                        "id": "node-Prop__2_",
+                        "path": "translation"
+                    }
+                },
+                {
                     "sampler": "animation_1_rotation_sampler",
                     "target": {
-                        "id": "meshInst384Node",
+                        "id": "node-Prop__2_",
                         "path": "rotation"
                     }
                 }
             ],
-            "count": 80,
+            "count": 101,
             "parameters": {
-                "TIME": "accessor_11",
-                "rotation": "accessor_12"
+                "TIME": "animAccessor_0",
+                "rotation": "animAccessor_6",
+                "scale": "animAccessor_4",
+                "translation": "animAccessor_5"
             },
             "samplers": {
                 "animation_1_rotation_sampler": {
                     "input": "TIME",
                     "interpolation": "LINEAR",
                     "output": "rotation"
+                },
+                "animation_1_scale_sampler": {
+                    "input": "TIME",
+                    "interpolation": "LINEAR",
+                    "output": "scale"
+                },
+                "animation_1_translation_sampler": {
+                    "input": "TIME",
+                    "interpolation": "LINEAR",
+                    "output": "translation"
                 }
             }
         }
     },
     "asset": {
-        "generator": "collada2gltf@1b9793fc50310c7532ba229f759f6a9882e3febc"
+        "extras": {
+            "premultipliedAlpha": true
+        },
+        "generator": "collada2gltf@580a9f322ea51166b2e2102a4a8bee0510581b0c"
     },
     "bufferViews": {
         "bufferView_85": {
-            "buffer": "CesiumAir",
+            "buffer": "Cesium_Air3",
             "byteLength": 137056,
             "byteOffset": 0,
             "target": 34962
         },
         "bufferView_86": {
-            "buffer": "CesiumAir",
+            "buffer": "Cesium_Air3",
             "byteLength": 35040,
             "byteOffset": 137056,
             "target": 34963
         },
         "bufferView_87": {
-            "buffer": "CesiumAir",
-            "byteLength": 3200,
+            "buffer": "Cesium_Air3",
+            "byteLength": 8484,
             "byteOffset": 172096
         }
     },
     "buffers": {
-        "CesiumAir": {
-            "byteLength": 175296,
-            "path": "CesiumAir.bin",
+        "Cesium_Air3": {
+            "byteLength": 180580,
+            "path": "Cesium_Air3.bin",
             "type": "arraybuffer"
         }
     },
     "images": {
         "image_0": {
-            "path": "Cesium_Air.png"
+            "path": "0_Cesium_Air.png"
         },
         "image_1": {
-            "path": "Cesium_Air_Prop.png"
+            "path": "1_Cesium_Air_Prop.png"
+        }
+    },
+    "lights": {
+        "EnvironmentAmbientLight": {
+            "ambient": {
+                "color": [
+                    0,
+                    0,
+                    0
+                ]
+            },
+            "type": "ambient"
         }
     },
     "materials": {
-        "Effect-cesium_air": {
+        "effect_Material-cesium_air": {
             "instanceTechnique": {
                 "technique": "technique1",
                 "values": {
-                    "diffuse": "texture_image_0",
-                    "shininess": 256,
-                    "specular": [
+                    "ambient": [
                         0.2,
                         0.2,
                         0.2,
                         1
-                    ]
+                    ],
+                    "diffuse": "texture_image_0",
+                    "shininess": 256
                 }
             },
-            "name": "cesium_air"
+            "name": "effect_Material-cesium_air"
         },
-        "Effect-prop": {
+        "effect_Material-prop": {
             "instanceTechnique": {
                 "technique": "technique2",
                 "values": {
-                    "diffuse": "texture_image_1",
-                    "shininess": 256,
-                    "specular": [
+                    "ambient": [
                         0.2,
                         0.2,
                         0.2,
                         1
-                    ]
+                    ],
+                    "diffuse": "texture_image_1",
+                    "shininess": 256
                 }
             },
-            "name": "prop"
+            "name": "effect_Material-prop"
         }
     },
     "meshes": {
-        "Geometry-mesh090": {
-            "name": "Cesium_Air",
+        "geometry21": {
+            "name": "geometry21",
             "primitives": [
                 {
                     "attributes": {
-                        "NORMAL": "attribute_33",
-                        "POSITION": "attribute_31",
-                        "TEXCOORD_0": "attribute_35"
+                        "NORMAL": "accessor_33",
+                        "POSITION": "accessor_31",
+                        "TEXCOORD_0": "accessor_35"
                     },
-                    "indices": "indices_29",
-                    "material": "Effect-cesium_air",
+                    "indices": "accessor_29",
+                    "material": "effect_Material-cesium_air",
                     "primitive": 4
                 }
             ]
         },
-        "Geometry-mesh097": {
-            "name": "Prop",
+        "geometry26": {
+            "name": "geometry26",
             "primitives": [
                 {
                     "attributes": {
-                        "NORMAL": "attribute_80",
-                        "POSITION": "attribute_78",
-                        "TEXCOORD_0": "attribute_82"
+                        "NORMAL": "accessor_80",
+                        "POSITION": "accessor_78",
+                        "TEXCOORD_0": "accessor_82"
                     },
-                    "indices": "indices_73",
-                    "material": "Effect-prop",
+                    "indices": "accessor_73",
+                    "material": "effect_Material-prop",
                     "primitive": 4
                 },
                 {
                     "attributes": {
-                        "NORMAL": "attribute_80",
-                        "POSITION": "attribute_78",
-                        "TEXCOORD_0": "attribute_82"
+                        "NORMAL": "accessor_80",
+                        "POSITION": "accessor_78",
+                        "TEXCOORD_0": "accessor_82"
                     },
-                    "indices": "indices_76",
-                    "material": "Effect-cesium_air",
+                    "indices": "accessor_76",
+                    "material": "effect_Material-cesium_air",
                     "primitive": 4
                 }
             ]
         }
     },
     "nodes": {
-        "Geometry-mesh090Node": {
+        "node-Cesium_Air": {
             "children": [
-                "Geometry-mesh097Node",
-                "meshInst384Node"
+                "node-Prop",
+                "node-Prop__2_"
             ],
             "matrix": [
                 1,
@@ -327,38 +415,12 @@
                 1
             ],
             "meshes": [
-                "Geometry-mesh090"
+                "geometry21"
             ],
             "name": "Cesium_Air"
         },
-        "Geometry-mesh097Node": {
+        "node-Cesium_Air_Prop__Image___Texture_": {
             "children": [],
-            "meshes": [
-                "Geometry-mesh097"
-            ],
-            "name": "Prop",
-            "rotation": [
-                0,
-                0,
-                1,
-                0.349066
-            ],
-            "scale": [
-                1,
-                1,
-                1
-            ],
-            "translation": [
-                3.40935,
-                0.684087,
-                -1.91915
-            ]
-        },
-        "groupLocator008Node": {
-            "children": [
-                "txtrLocator017Node",
-                "txtrLocator010Node"
-            ],
             "matrix": [
                 1,
                 0,
@@ -377,32 +439,9 @@
                 0,
                 1
             ],
-            "name": "Texture_Group"
+            "name": "Cesium_Air_Prop__Image___Texture_"
         },
-        "meshInst384Node": {
-            "children": [],
-            "meshes": [
-                "Geometry-mesh097"
-            ],
-            "name": "Prop__2_",
-            "rotation": [
-                0.906308,
-                0.422618,
-                -0,
-                3.14159
-            ],
-            "scale": [
-                -1,
-                -1,
-                -1
-            ],
-            "translation": [
-                -3.40935,
-                0.684087,
-                -1.91915
-            ]
-        },
-        "txtrLocator010Node": {
+        "node-Cesium_Air__Image___Texture_": {
             "children": [],
             "matrix": [
                 1,
@@ -424,8 +463,57 @@
             ],
             "name": "Cesium_Air__Image___Texture_"
         },
-        "txtrLocator017Node": {
+        "node-Prop": {
             "children": [],
+            "meshes": [
+                "geometry26"
+            ],
+            "name": "Prop",
+            "rotation": [
+                0,
+                0,
+                1,
+                0.349066
+            ],
+            "scale": [
+                1,
+                1,
+                1
+            ],
+            "translation": [
+                1.34226,
+                0.269326,
+                -0.755571
+            ]
+        },
+        "node-Prop__2_": {
+            "children": [],
+            "meshes": [
+                "geometry26"
+            ],
+            "name": "Prop__2_",
+            "rotation": [
+                0,
+                0,
+                1,
+                0.872664
+            ],
+            "scale": [
+                -1,
+                -1,
+                -1
+            ],
+            "translation": [
+                -1.34226,
+                0.269326,
+                -0.755571
+            ]
+        },
+        "node-Texture_Group": {
+            "children": [
+                "node-Cesium_Air_Prop__Image___Texture_",
+                "node-Cesium_Air__Image___Texture_"
+            ],
             "matrix": [
                 1,
                 0,
@@ -444,7 +532,55 @@
                 0,
                 1
             ],
-            "name": "Cesium_Air_Prop__Image___Texture_"
+            "name": "Texture_Group"
+        },
+        "node-upaxis": {
+            "children": [
+                "node-Cesium_Air",
+                "node-Texture_Group"
+            ],
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                -4.37114e-08,
+                1,
+                0,
+                0,
+                -1,
+                -4.37114e-08,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "upaxis"
+        },
+        "node33": {
+            "children": [],
+            "light": "EnvironmentAmbientLight",
+            "matrix": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+            ],
+            "name": "EnvironmentAmbientLight"
         }
     },
     "profile": "WebGL 1.0.2",
@@ -455,8 +591,8 @@
                 "a_position",
                 "a_texcoord0"
             ],
-            "fragmentShader": "CesiumAir0FS",
-            "vertexShader": "CesiumAir0VS"
+            "fragmentShader": "Cesium_Air30FS",
+            "vertexShader": "Cesium_Air30VS"
         },
         "program_1": {
             "attributes": [
@@ -464,14 +600,14 @@
                 "a_position",
                 "a_texcoord0"
             ],
-            "fragmentShader": "CesiumAir2FS",
-            "vertexShader": "CesiumAir2VS"
+            "fragmentShader": "Cesium_Air32FS",
+            "vertexShader": "Cesium_Air32VS"
         }
     },
     "samplers": {
         "sampler_0": {
             "magFilter": 9729,
-            "minFilter": 9987,
+            "minFilter": 9729,
             "wrapS": 10497,
             "wrapT": 10497
         }
@@ -480,29 +616,36 @@
     "scenes": {
         "defaultScene": {
             "nodes": [
-                "Geometry-mesh090Node",
-                "groupLocator008Node"
+                "node33",
+                "node-upaxis"
             ]
         }
     },
     "shaders": {
-        "CesiumAir0FS": {
-            "path": "CesiumAir0FS.glsl"
+        "Cesium_Air30FS": {
+            "path": "Cesium_Air30FS.glsl",
+            "type": 35632
         },
-        "CesiumAir0VS": {
-            "path": "CesiumAir0VS.glsl"
+        "Cesium_Air30VS": {
+            "path": "Cesium_Air30VS.glsl",
+            "type": 35633
         },
-        "CesiumAir2FS": {
-            "path": "CesiumAir2FS.glsl"
+        "Cesium_Air32FS": {
+            "path": "Cesium_Air32FS.glsl",
+            "type": 35632
         },
-        "CesiumAir2VS": {
-            "path": "CesiumAir2VS.glsl"
+        "Cesium_Air32VS": {
+            "path": "Cesium_Air32VS.glsl",
+            "type": 35633
         }
     },
     "skins": {},
     "techniques": {
         "technique1": {
             "parameters": {
+                "ambient": {
+                    "type": 35666
+                },
                 "diffuse": {
                     "type": 35678
                 },
@@ -529,9 +672,6 @@
                 "shininess": {
                     "type": 5126
                 },
-                "specular": {
-                    "type": 35666
-                },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": 35664
@@ -547,12 +687,12 @@
                             },
                             "lightingModel": "Phong",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
-                                "shininess",
-                                "specular"
+                                "shininess"
                             ],
                             "texcoordBindings": {
                                 "diffuse": "TEXCOORD_0"
@@ -568,12 +708,12 @@
                         },
                         "program": "program_0",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
-                            "u_shininess": "shininess",
-                            "u_specular": "specular"
+                            "u_shininess": "shininess"
                         }
                     },
                     "states": {
@@ -587,6 +727,9 @@
         },
         "technique2": {
             "parameters": {
+                "ambient": {
+                    "type": 35666
+                },
                 "diffuse": {
                     "type": 35678
                 },
@@ -613,9 +756,6 @@
                 "shininess": {
                     "type": 5126
                 },
-                "specular": {
-                    "type": 35666
-                },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": 35664
@@ -627,16 +767,16 @@
                     "details": {
                         "commonProfile": {
                             "extras": {
-                                "doubleSided": false
+                                "doubleSided": true
                             },
                             "lightingModel": "Phong",
                             "parameters": [
+                                "ambient",
                                 "diffuse",
                                 "modelViewMatrix",
                                 "normalMatrix",
                                 "projectionMatrix",
-                                "shininess",
-                                "specular"
+                                "shininess"
                             ],
                             "texcoordBindings": {
                                 "diffuse": "TEXCOORD_0"
@@ -652,23 +792,18 @@
                         },
                         "program": "program_1",
                         "uniforms": {
+                            "u_ambient": "ambient",
                             "u_diffuse": "diffuse",
                             "u_modelViewMatrix": "modelViewMatrix",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
-                            "u_shininess": "shininess",
-                            "u_specular": "specular"
+                            "u_shininess": "shininess"
                         }
                     },
                     "states": {
                         "blendEnable": 1,
-                        "blendEquation": 32774,
-                        "blendFunc": {
-                            "dfactor": 771,
-                            "sfactor": 770
-                        },
                         "cullFaceEnable": 0,
-                        "depthMask": 0,
+                        "depthMask": 1,
                         "depthTestEnable": 1
                     }
                 }
@@ -681,14 +816,16 @@
             "internalFormat": 6408,
             "sampler": "sampler_0",
             "source": "image_0",
-            "target": 3553
+            "target": 3553,
+            "type": 5121
         },
         "texture_image_1": {
             "format": 6408,
             "internalFormat": 6408,
             "sampler": "sampler_0",
             "source": "image_1",
-            "target": 3553
+            "target": 3553,
+            "type": 5121
         }
     }
 }

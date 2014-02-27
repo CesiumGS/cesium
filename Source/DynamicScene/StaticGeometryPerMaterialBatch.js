@@ -80,7 +80,6 @@ define(['../Core/defined',
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : MaterialProperty.getValue(time, this.materialProperty, this.material),
-                        faceForward : true,
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
                     })

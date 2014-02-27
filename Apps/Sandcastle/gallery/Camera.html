@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -119,7 +119,7 @@ require(['Cesium'], function(Cesium) {
         camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
-        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
+        controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
         controller.enableTilt = false;
 
         // Zoom in
@@ -180,7 +180,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Cartesian3.UNIT_Z);
 
         var controller = scene.screenSpaceCameraController;
-        controller.setEllipsoid(ellipsoid);
+        controller.ellipsoid = ellipsoid;
         controller.enableTilt = true;
     }
 

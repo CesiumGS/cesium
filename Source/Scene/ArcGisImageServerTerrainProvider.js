@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/loadImage',
         '../Core/getImagePixels',
         '../Core/throttleRequestByServer',
@@ -18,6 +19,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         loadImage,
         getImagePixels,
         throttleRequestByServer,
@@ -79,7 +81,7 @@ define([
         }
 
         this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
@@ -101,9 +103,59 @@ define([
         this._credit = credit;
     };
 
+    defineProperties(ArcGisImageServerTerrainProvider.prototype, {
+        /**
+         * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {GeographicTilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return true;
+            }
+        }
+    });
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result includes terrain
+     * {@link ArcGisImageServerTerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
      *
      * @memberof ArcGisImageServerTerrainProvider
@@ -160,19 +212,6 @@ define([
     };
 
     /**
-     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Event} The event.
-     */
-    ArcGisImageServerTerrainProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
      * @memberof ArcGisImageServerTerrainProvider
@@ -182,34 +221,6 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    ArcGisImageServerTerrainProvider.prototype.getCredit = function() {
-        return this._credit;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {GeographicTilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
-     */
-    ArcGisImageServerTerrainProvider.prototype.getTilingScheme = function() {
-        return this._tilingScheme;
     };
 
     /**
@@ -223,17 +234,6 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.hasWaterMask = function() {
         return false;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    ArcGisImageServerTerrainProvider.prototype.isReady = function() {
-        return true;
     };
 
     return ArcGisImageServerTerrainProvider;

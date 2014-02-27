@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         './Tile'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         Tile) {
     "use strict";
@@ -26,32 +28,35 @@ define([
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
     };
 
-    /**
-     * Gets the ellipsoid that is tiled by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    TilingScheme.prototype.getEllipsoid = DeveloperError.throwInstantiationError;
+    defineProperties(TilingScheme.prototype, {
+        /**
+         * Gets the ellipsoid that is tiled by the tiling scheme.
+         * @memberof TilingScheme.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid: {
+            get : DeveloperError.throwInstantiationError
+        },
 
-    /**
-     * Gets the extent, in radians, covered by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Extent} The extent.
-     */
-    TilingScheme.prototype.getExtent = DeveloperError.throwInstantiationError;
+        /**
+         * Gets the extent, in radians, covered by this tiling scheme.
+         * @memberof TilingScheme.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : DeveloperError.throwInstantiationError
+        },
 
-    /**
-     * Gets the map projection used by this tiling scheme.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Projection} The map projection.
-     */
-    TilingScheme.prototype.getProjection = DeveloperError.throwInstantiationError;
+
+        /**
+         * Gets the map projection used by the tiling scheme.
+         * @memberof TilingScheme.prototype
+         * @type {Projection}
+         */
+        projection : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
