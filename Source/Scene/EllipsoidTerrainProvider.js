@@ -45,7 +45,7 @@ define([
 
         // Note: the 64 below does NOT need to match the actual vertex dimensions, because
         // the ellipsoid is significantly smoother than actual terrain.
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var width = 16;
         var height = 16;

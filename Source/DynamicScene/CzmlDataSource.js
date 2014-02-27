@@ -46,6 +46,7 @@ define(['../Core/Cartesian2',
         './DynamicEllipsoid',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './DynamicModel',
         './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPath',
@@ -110,6 +111,7 @@ define(['../Core/Cartesian2',
         DynamicEllipsoid,
         GridMaterialProperty,
         ImageMaterialProperty,
+        DynamicModel,
         DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
@@ -213,6 +215,16 @@ define(['../Core/Cartesian2',
 
     function unwrapImageInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapUriInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
@@ -359,6 +371,8 @@ define(['../Core/Cartesian2',
                 }
             }
             return unitQuaternion;
+        case Uri:
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
@@ -1051,6 +1065,27 @@ define(['../Core/Cartesian2',
         processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri);
     }
 
+    function processModel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var modelData = packet.model;
+        if (typeof modelData === 'undefined') {
+            return;
+        }
+
+        var interval = modelData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var model = dynamicObject.model;
+        if (!defined(model)) {
+            dynamicObject.model = model = new DynamicModel();
+        }
+
+        processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri);
+        processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri);
+        processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri);
+    }
+
     function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
@@ -1364,6 +1399,7 @@ define(['../Core/Cartesian2',
     processEllipsoid, //
     processCone, //
     processLabel, //
+    processModel, //
     processName, //
     processDescription, //
     processPath, //
