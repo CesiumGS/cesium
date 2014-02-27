@@ -43,7 +43,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 
     // Edges taken from RimLightingMaterial.glsl
     // See http://www.fundza.com/rman_shaders/surface/fake_rim/fake_rim1.html
-    float dRim = 1.0 - dot(materialInput.normalEC, normalize(materialInput.positionToEyeEC));
+    float dRim = 1.0 - abs(dot(materialInput.normalEC, normalize(materialInput.positionToEyeEC)));
     float sRim = smoothstep(0.8, 1.0, dRim);
     value *= (1.0 - sRim);
 
