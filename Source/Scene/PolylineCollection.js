@@ -1121,9 +1121,13 @@ define([
 
             for ( var j = 0; j < positionsLength; ++j) {
                 if (j === 0) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[0], positions[1], position);
-                    Cartesian3.add(positions[0], position, position);
+                    if (polyline._loop) {
+                        position = positions[positionsLength - 2];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[0], positions[1], position);
+                        Cartesian3.add(positions[0], position, position);
+                    }
                 } else {
                     position = positions[j - 1];
                 }
@@ -1138,9 +1142,13 @@ define([
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
                 if (j === positionsLength - 1) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
-                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                    if (polyline._loop) {
+                        position = positions[1];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                        Cartesian3.add(positions[positionsLength - 1], position, position);
+                    }
                 } else {
                     position = positions[j + 1];
                 }
@@ -1206,9 +1214,13 @@ define([
             for ( var j = 0; j < positionsLength; ++j) {
                 var prevPosition;
                 if (j === 0) {
-                    prevPosition = morphVectorScratch;
-                    Cartesian3.subtract(positions[0], positions[1], prevPosition);
-                    Cartesian3.add(positions[0], prevPosition, prevPosition);
+                    if (polyline._loop) {
+                        prevPosition = positions[positionsLength - 2];
+                    } else {
+                        prevPosition = morphVectorScratch;
+                        Cartesian3.subtract(positions[0], positions[1], prevPosition);
+                        Cartesian3.add(positions[0], prevPosition, prevPosition);
+                    }
                 } else {
                     prevPosition = positions[j - 1];
                 }
@@ -1219,9 +1231,13 @@ define([
 
                 var nextPosition;
                 if (j === positionsLength - 1) {
-                    nextPosition = morphVectorScratch;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
-                    Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                    if (polyline._loop) {
+                        nextPosition = positions[1];
+                    } else {
+                        nextPosition = morphVectorScratch;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
+                        Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                    }
                 } else {
                     nextPosition = positions[j + 1];
                 }
@@ -1437,9 +1453,13 @@ define([
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
                 if (i === 0) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[0], positions[1], position);
-                    Cartesian3.add(positions[0], position, position);
+                    if (polyline._loop) {
+                        position = positions[positionsLength - 2];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[0], positions[1], position);
+                        Cartesian3.add(positions[0], position, position);
+                    }
                 } else {
                     position = positions[i - 1];
                 }
@@ -1454,9 +1474,13 @@ define([
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
                 if (i === positionsLength - 1) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
-                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                    if (polyline._loop) {
+                        position = positions[1];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                        Cartesian3.add(positions[positionsLength - 1], position, position);
+                    }
                 } else {
                     position = positions[i + 1];
                 }
