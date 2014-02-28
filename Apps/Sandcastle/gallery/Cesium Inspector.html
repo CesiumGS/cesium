@@ -87,7 +87,7 @@ require(['Cesium'], function(Cesium) {
         var textureAtlas = scene.context.createTextureAtlas({
             image : image
         });
-        billboards.setTextureAtlas(textureAtlas);
+        billboards.textureAtlas = textureAtlas;
 
         billboards.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 150000)),

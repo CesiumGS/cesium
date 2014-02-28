@@ -681,7 +681,7 @@ define([
      * @memberof Billboard
      *
      * @see Billboard#setImageIndex
-     * @see BillboardCollection#setTextureAtlas
+     * @see BillboardCollection#textureAtlas
      */
     Billboard.prototype.getImageIndex = function() {
         return this._imageIndex;
@@ -693,7 +693,7 @@ define([
      * @memberof Billboard
      *
      * @see Billboard#getImageIndex
-     * @see BillboardCollection#setTextureAtlas
+     * @see BillboardCollection#textureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
         //>>includeStart('debug', pragmas.debug);

@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -37,7 +37,7 @@ require(['Cesium'], function(Cesium) {
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
             var textureAtlas = scene.context.createTextureAtlas({image : image});
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
             billboard = billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 imageIndex : 0

@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -35,7 +35,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
@@ -54,7 +54,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             billboards.add({
                 show : true, // default
@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             // add() returns a Billboard object containing functions to change
             // the billboard's position and appearance.
@@ -118,7 +118,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 images : images
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             // Logo
             billboards.add({
@@ -150,7 +150,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
@@ -170,7 +170,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
@@ -194,7 +194,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 images : images
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             // As viewer zooms closer to facility billboard,
             // increase pixelOffset on CesiumLogo billboard to this height
@@ -242,7 +242,7 @@ require(['Cesium'], function(Cesium) {
         var textureAtlas = scene.context.createTextureAtlas({
             image : canvas
         });
-        billboards.setTextureAtlas(textureAtlas);
+        billboards.textureAtlas = textureAtlas;
 
         billboards.add({
             position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
@@ -328,7 +328,7 @@ require(['Cesium'], function(Cesium) {
             { x : 103, y : 103, width : 22, height : 22 },
             { x : 101, y : 101, width : 26, height : 26 }]);
 
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             // Add several billboards based on the above marker definitions.
             billboards.add({
@@ -374,7 +374,7 @@ require(['Cesium'], function(Cesium) {
             var textureAtlas = scene.context.createTextureAtlas({
                 image : image
             });
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
 
             var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
             billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);

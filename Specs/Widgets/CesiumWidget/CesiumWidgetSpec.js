@@ -100,7 +100,7 @@ defineSuite([
         };
         widget = new CesiumWidget(container, options);
         var imageryLayers = widget.centralBody.imageryLayerCollection;
-        expect(imageryLayers.getLength()).toEqual(1);
+        expect(imageryLayers.length).toEqual(1);
         expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
     });
 
@@ -109,7 +109,7 @@ defineSuite([
             imageryProvider : false
         });
         var imageryLayers = widget.centralBody.imageryLayerCollection;
-        expect(imageryLayers.getLength()).toEqual(0);
+        expect(imageryLayers.length).toEqual(0);
     });
 
     it('sets expected options terrainProvider', function() {

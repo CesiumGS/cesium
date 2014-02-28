@@ -58,7 +58,7 @@ define(['./Property',
     var TimeIntervalCollectionProperty = function() {
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
-        this._intervals.getChangedEvent().addEventListener(TimeIntervalCollectionProperty.prototype._intervalsChanged, this);
+        this._intervals.changedEvent.addEventListener(TimeIntervalCollectionProperty.prototype._intervalsChanged, this);
     };
 
     defineProperties(TimeIntervalCollectionProperty.prototype, {
@@ -70,7 +70,7 @@ define(['./Property',
          */
         isConstant : {
             get : function() {
-                return this._intervals.isEmpty();
+                return this._intervals.empty;
             }
         },
         /**
