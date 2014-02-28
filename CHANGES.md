@@ -119,6 +119,7 @@ Beta Releases
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
 * Added `Intersections2D` class containing operations on 2D triangles.
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
+* Added a loop property to `Polyline`s to join the first and last point. [#960](https://github.com/AnalyticalGraphicsInc/cesium/issues/960)
 
 ### b25 - 2014-02-03
 
