@@ -1,22 +1,16 @@
 /*global define*/
-define(['../Core/Cartesian3',
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/Shapes',
         './createDynamicPropertyDescriptor'
     ], function(
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         Event,
-        Shapes,
         createDynamicPropertyDescriptor) {
     "use strict";
 

@@ -1,13 +1,11 @@
 /*global define*/
 define([
         './Cartesian3',
-        './Ellipsoid',
         './Math',
         './Matrix3',
         './Quaternion'
     ], function(
         Cartesian3,
-        Ellipsoid,
         CesiumMath,
         Matrix3,
         Quaternion) {
@@ -65,7 +63,7 @@ define([
 
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
-        for ( var i = 0; i < length; i += 3) {
+        for (var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);

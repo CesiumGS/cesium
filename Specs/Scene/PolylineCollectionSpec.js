@@ -73,13 +73,15 @@ defineSuite([
         expect(p.getWidth()).toEqual(1.0);
         expect(p.getMaterial().uniforms.color).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(p.getId()).not.toBeDefined();
+        expect(p.getLoop()).toEqual(false);
     });
 
     it('explicitly constructs a polyline', function() {
         var material = Material.fromType(Material.PolylineOutlineType);
         var p = polylines.add({
             show : false,
-            positions : [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)],
+            positions : [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0), new Cartesian3(7.0, 8.0, 9.0)],
+            loop : true,
             width : 2,
             material : material,
             id : 'id'
@@ -88,6 +90,9 @@ defineSuite([
         expect(p.getShow()).toEqual(false);
         expect(p.getPositions()[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.getPositions()[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(p.getPositions()[2]).toEqual(new Cartesian3(7.0, 8.0, 9.0));
+        expect(p.getPositions().length).toEqual(4);
+        expect(p.getLoop()).toEqual(true);
         expect(p.getWidth()).toEqual(2);
         expect(p.getMaterial().uniforms.color).toEqual(material.uniforms.color);
         expect(p.getMaterial().uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
@@ -99,17 +104,39 @@ defineSuite([
         var material = Material.fromType(Material.PolylineOutlineType);
         var p = polylines.add();
         p.setShow(false);
-        p.setPositions([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0)]);
+        p.setPositions([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(4.0, 5.0, 6.0), new Cartesian3(7.0, 8.0, 9.0)]);
+        p.setLoop(true);
         p.setWidth(2);
         p.setMaterial(material);
 
         expect(p.getShow()).toEqual(false);
         expect(p.getPositions()[0]).toEqual(new Cartesian3(1.0, 2.0, 3.0));
         expect(p.getPositions()[1]).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(p.getPositions()[2]).toEqual(new Cartesian3(7.0, 8.0, 9.0));
+        expect(p.getPositions().length).toEqual(4);
+        expect(p.getLoop()).toEqual(true);
         expect(p.getWidth()).toEqual(2);
         expect(p.getMaterial().uniforms.color).toEqual(material.uniforms.color);
         expect(p.getMaterial().uniforms.outlineColor).toEqual(material.uniforms.outlineColor);
         expect(p.getMaterial().uniforms.outlineWidth).toEqual(material.uniforms.outlineWidth);
+    });
+
+    it('constructor sets loop only when number of positions is greater than 2', function() {
+        var p = polylines.add({
+            positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0)],
+            loop : true
+        });
+
+        expect(p.getPositions().length).toEqual(2);
+    });
+
+    it('sets loop only when number of positions is greater than 2', function() {
+        var p = polylines.add({
+            positions : [new Cartesian3(0.0, 1.0, 2.0), new Cartesian3(3.0, 4.0, 5.0)]
+        });
+        p.setLoop(true);
+
+        expect(p.getPositions().length).toEqual(2);
     });
 
     it('sets removed polyline properties', function() {

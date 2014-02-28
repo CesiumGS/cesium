@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../../Core/BingMapsApi',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -9,7 +8,6 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Extent',
         '../../Core/jsonp',
-        '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
@@ -19,7 +17,6 @@ define([
         '../../ThirdParty/when'
     ], function(
         BingMapsApi,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -27,7 +24,6 @@ define([
         Ellipsoid,
         Extent,
         jsonp,
-        Matrix3,
         Matrix4,
         CameraColumbusViewMode,
         CameraFlightPath,

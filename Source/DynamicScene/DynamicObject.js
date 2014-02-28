@@ -5,8 +5,6 @@ define(['../Core/createGuid',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/TimeInterval',
         './createDynamicPropertyDescriptor'
     ], function(
         createGuid,
@@ -15,8 +13,6 @@ define(['../Core/createGuid',
         defineProperties,
         DeveloperError,
         Event,
-        JulianDate,
-        TimeInterval,
         createDynamicPropertyDescriptor) {
     "use strict";
 
