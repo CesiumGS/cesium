@@ -1,12 +1,8 @@
 /*global define*/
 define(['../Core/AssociativeArray',
         '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/PolylineColorAppearance',
-        '../Scene/MaterialAppearance',
-        '../Scene/PolylineMaterialAppearance',
+        '../Core/DeveloperError',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
@@ -14,12 +10,8 @@ define(['../Core/AssociativeArray',
     ], function(
         AssociativeArray,
         defined,
-        DeveloperError,
         destroyObject,
-        PerInstanceColorAppearance,
-        PolylineColorAppearance,
-        MaterialAppearance,
-        PolylineMaterialAppearance,
+        DeveloperError,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
@@ -204,11 +196,9 @@ define(['../Core/AssociativeArray',
         var changed = changedObjects.values;
 
         var i;
-        var g;
         var dynamicObject;
         var id;
         var updater;
-        var batch;
 
         for (i = removed.length - 1; i > -1; i--) {
             dynamicObject = removed[i];
@@ -312,8 +302,8 @@ define(['../Core/AssociativeArray',
         var dynamicObject = updater.dynamicObject;
         var id = dynamicObject.id;
 
-        if (!defined(removedObjects.get(id)) && !defined(this._changedObjects.get(id))) {
-            this._changedObjects.set(id, dynamicObject);
+        if (!defined(removedObjects.get(id)) && !defined(changedObjects.get(id))) {
+            changedObjects.set(id, dynamicObject);
         }
     };
 

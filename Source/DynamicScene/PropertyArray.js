@@ -1,18 +1,14 @@
 /*global define*/
-define(['../Core/defaultValue',
-        '../Core/defined',
+define(['../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/EventHelper',
         './Property'
     ], function(
-        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         EventHelper,
         Property) {

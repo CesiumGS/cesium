@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Ellipsoid',
-        '../Core/Extent',
         '../Core/FeatureDetection',
         '../Core/Math',
         './createTaskProcessorWorker'
@@ -11,7 +10,6 @@ define([
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        Extent,
         FeatureDetection,
         CesiumMath,
         createTaskProcessorWorker) {

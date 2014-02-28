@@ -1,33 +1,31 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
-        '../Core/Math',
         '../Core/EncodedCartesian3',
-        '../Core/BoundingRectangle',
-        '../Core/Transforms',
+        '../Core/Math',
+        '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Simon1994PlanetaryPositions',
+        '../Core/Transforms',
         '../Scene/SceneMode'
     ], function(
-        defaultValue,
-        Matrix3,
-        Matrix4,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         defined,
-        CesiumMath,
         EncodedCartesian3,
-        BoundingRectangle,
-        Transforms,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
         Simon1994PlanetaryPositions,
+        Transforms,
         SceneMode) {
     "use strict";
 
@@ -522,7 +520,6 @@ define([
         this.getView3D();
         return this._viewRotation3D;
     };
-
 
     /**
      * Returns the 4x4 inverse-view matrix that transforms from eye to world coordinates.

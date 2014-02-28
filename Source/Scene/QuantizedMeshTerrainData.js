@@ -1,37 +1,25 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
+        '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/TaskProcessor',
-        './GeographicTilingScheme',
-        './HeightmapTerrainData',
         './TerrainMesh',
-        './TerrainProvider',
         '../ThirdParty/when'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
+        defaultValue,
+        defined,
         DeveloperError,
-        Ellipsoid,
-        HeightmapTessellator,
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
         TerrainMesh,
-        TerrainProvider,
         when) {
     "use strict";
 
@@ -359,7 +347,6 @@ define([
         var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
-        var that = this;
         return when(upsamplePromise, function(result) {
             return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),

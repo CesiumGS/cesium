@@ -3,35 +3,33 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadImage',
-        '../Core/getImagePixels',
-        '../Core/throttleRequestByServer',
-        '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getImagePixels',
+        '../Core/loadImage',
+        '../Core/Math',
+        '../Core/throttleRequestByServer',
         './Credit',
-        './TerrainProvider',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
+        './TerrainProvider',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        loadImage,
-        getImagePixels,
-        throttleRequestByServer,
-        writeTextToCanvas,
         DeveloperError,
-        CesiumMath,
         Ellipsoid,
         Event,
+        getImagePixels,
+        loadImage,
+        CesiumMath,
+        throttleRequestByServer,
         Credit,
-        TerrainProvider,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        TerrainProvider,
         when) {
     "use strict";
 
@@ -86,13 +84,13 @@ define([
         this._proxy = description.proxy;
 
         this._terrainDataStructure = {
-                heightScale : 1.0 / 1000.0,
-                heightOffset : -1000.0,
-                elementsPerHeight : 3,
-                stride : 4,
-                elementMultiplier : 256.0,
-                isBigEndian : true
-            };
+            heightScale : 1.0 / 1000.0,
+            heightOffset : -1000.0,
+            elementsPerHeight : 3,
+            stride : 4,
+            elementMultiplier : 256.0,
+            isBigEndian : true
+        };
 
         this._errorEvent = new Event();
 
