@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Math',
-        './Cartesian3',
-        './Visibility',
         './Ellipsoid',
-        './BoundingSphere'
+        './Math',
+        './Visibility'
     ], function(
+        BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        CesiumMath,
-        Cartesian3,
-        Visibility,
         Ellipsoid,
-        BoundingSphere) {
+        CesiumMath,
+        Visibility) {
     "use strict";
 
     /**

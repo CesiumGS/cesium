@@ -1,24 +1,22 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defined',
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/Cartesian2',
         '../Core/KeyboardEventModifier',
         './CameraEventType'
     ], function(
+        Cartesian2,
         defined,
-        defaultValue,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         CesiumMath,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        Cartesian2,
         KeyboardEventModifier,
         CameraEventType) {
     "use strict";
@@ -111,7 +109,7 @@ define([
         update[key] = true;
 
         var movement = aggregator._movement[key];
-        if(!defined(movement)) {
+        if (!defined(movement)) {
             movement = aggregator._movement[key] = {};
         }
 

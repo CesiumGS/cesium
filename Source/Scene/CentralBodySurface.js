@@ -1,13 +1,12 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defined',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
         '../Core/FeatureDetection',
@@ -27,14 +26,13 @@ define([
         './TileState',
         '../ThirdParty/when'
     ], function(
-        defaultValue,
-        defined,
-        destroyObject,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defined,
+        destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
         FeatureDetection,
@@ -458,8 +456,6 @@ define([
         if (frameState.mode === SceneMode.SCENE2D) {
             return screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile);
         }
-
-        var extent = tile.extent;
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
 

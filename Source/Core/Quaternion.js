@@ -262,7 +262,7 @@ define([
         Quaternion.unpack(packedArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
         Quaternion.conjugate(sampledQuaternionQuaternion0Conjugate, sampledQuaternionQuaternion0Conjugate);
 
-        for ( var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
+        for (var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
             var offset = i * 3;
             Quaternion.unpack(packedArray, (startingIndex + i) * 4, sampledQuaternionTempQuaternion);
 
@@ -528,7 +528,6 @@ define([
         return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w;
     };
 
-
     /**
      * Computes the product of two quaternions.
      * @memberof Quaternion
@@ -593,7 +592,7 @@ define([
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Quaternion(quaternion.x * scalar,  quaternion.y * scalar, quaternion.z * scalar, quaternion.w * scalar);
+            return new Quaternion(quaternion.x * scalar, quaternion.y * scalar, quaternion.z * scalar, quaternion.w * scalar);
         }
         result.x = quaternion.x * scalar;
         result.y = quaternion.y * scalar;
@@ -793,8 +792,6 @@ define([
 
         return Cartesian3.multiplyByScalar(quaternion, thetaOverSinTheta, result);
     };
-
-    var expScratch = new Cartesian3();
 
     /**
      * The exponential quaternion function.
