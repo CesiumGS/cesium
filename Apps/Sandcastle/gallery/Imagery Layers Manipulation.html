@@ -83,34 +83,26 @@ require([
                 'Bing Maps Road',
                 new Cesium.BingMapsImageryProvider({
                     url: '//dev.virtualearth.net',
-                    mapStyle: Cesium.BingMapsStyle.ROAD,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+                    mapStyle: Cesium.BingMapsStyle.ROAD
                 }));
         addBaseLayerOption(
                 'ArcGIS World Street Maps',
                 new Cesium.ArcGisMapServerImageryProvider({
-                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 }));
         addBaseLayerOption(
                 'OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider({
-                    proxy: new Cesium.DefaultProxy('/proxy/')
-                }));
+                new Cesium.OpenStreetMapImageryProvider());
         addBaseLayerOption(
                 'MapQuest OpenStreetMaps',
                 new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
                 }));
         addBaseLayerOption(
                 'Stamen Maps',
                 new Cesium.OpenStreetMapImageryProvider({
                     url: 'http://tile.stamen.com/watercolor/',
                     fileExtension: 'jpg',
-                    proxy: new Cesium.DefaultProxy('/proxy/'),
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption(

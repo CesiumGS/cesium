@@ -25,10 +25,6 @@ define([
      * @private
      */
     function createDefaultBaseLayers() {
-        var proxy = new DefaultProxy('http://cesiumjs.org/proxy/');
-        //While some sites have CORS on, not all browsers implement it properly, so a proxy is needed anyway;
-        var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
-
         var providerViewModels = [];
         providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Aerial',
@@ -37,8 +33,7 @@ define([
             creationFunction : function() {
                 return new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL,
-                    proxy : proxyIfNeeded
+                    mapStyle : BingMapsStyle.AERIAL
                 });
             }
         }));
@@ -50,8 +45,7 @@ define([
             creationFunction : function() {
                 return new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS,
-                    proxy : proxyIfNeeded
+                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
                 });
             }
         }));
@@ -63,8 +57,7 @@ define([
             creationFunction : function() {
                 return new BingMapsImageryProvider({
                     url : '//dev.virtualearth.net',
-                    mapStyle : BingMapsStyle.ROAD,
-                    proxy : proxyIfNeeded
+                    mapStyle : BingMapsStyle.ROAD
                 });
             }
         }));
@@ -82,8 +75,7 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-                    proxy : proxy
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
                 });
             }
         }));
@@ -98,8 +90,7 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-                    proxy : proxy
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 });
             }
         }));
@@ -113,8 +104,7 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
-                    proxy : proxy
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/'
                 });
             }
         }));
@@ -126,8 +116,7 @@ mapping applications.\nhttp://www.esri.com',
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.openstreetmap.org/',
-                    proxy : proxyIfNeeded
+                    url : 'http://tile.openstreetmap.org/'
                 });
             }
         }));
@@ -140,8 +129,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
                     url : 'http://tile.stamen.com/watercolor/',
-                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
-                    proxy : proxyIfNeeded
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
         }));
@@ -153,8 +141,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
                     url : 'http://tile.stamen.com/toner/',
-                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.',
-                    proxy : proxyIfNeeded
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
         }));
@@ -166,8 +153,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy : proxyIfNeeded
+                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
                 });
             }
         }));
@@ -181,8 +167,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 return new TileMapServiceImageryProvider({
                     url : 'http://cesiumjs.org/blackmarble',
                     maximumLevel : 8,
-                    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
-                    proxy : proxyIfNeeded
+                    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
                 });
             }
         }));
