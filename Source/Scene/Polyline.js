@@ -35,8 +35,9 @@ define([
 
         this._material = options.material;
         if (!defined(this._material)) {
-            this._material = Material.fromType(Material.ColorType);
-            this._material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+            this._material = Material.fromType(Material.ColorType, {
+                color : new Color(1.0, 1.0, 1.0, 1.0)
+            });
         }
 
         var positions = options.positions;
