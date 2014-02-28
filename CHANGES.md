@@ -82,6 +82,18 @@ Beta Releases
       * `getCredit` -> `credit`
       * `getTilingScheme` -> `tilingScheme`
       * `isReady` -> `ready`
+    * `TimeIntervalCollection`
+      * `getChangedEvent` -> `changedEvent`
+      * `getStart` -> `start`
+      * `getStop` -> `stop`
+      * `getLength` -> `length`
+      * `isEmpty` -> `empty`
+    * `DataSourceCollection`, `ImageryLayerCollection`, `LabelCollection`, `PolylineCollection`, `SensorVolumeCollection`
+      * `getLength` -> `length`
+    * `BillboardCollection`
+      * `getLength` -> `length`
+      * `getTextureAtlas`, `setTextureAtlas` -> `textureAtlas`
+      * `getDestroyTextureAtlas`, `setDestroyTextureAtlas` -> `destroyTextureAtlas`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
   * The `propertyChanged` on DynamicScene objects has been renamed to `definitionChanged`.  Also, the event is now raised in the case of an existing property being modified as well as having a new property assigned (previously only property assignment would raise the event).
