@@ -57,7 +57,7 @@ define([
         }
 
         this._positions = positions;
-        if (this._loop && positions.length > 0 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+        if (this._loop && positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
             positions.push(Cartesian3.clone(positions[0]));
         }
 
@@ -175,7 +175,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (this._loop && value.length > 0 && !Cartesian3.equals(value[0], value[value.length - 1])) {
+        if (this._loop && value.length > 2 && !Cartesian3.equals(value[0], value[value.length - 1])) {
             value.push(Cartesian3.clone(value[0]));
         }
 
@@ -338,11 +338,11 @@ define([
         if (value !== this._loop) {
             var positions = this._positions;
             if (value) {
-                if (positions.length > 0 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                if (positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
                     positions.push(Cartesian3.clone(positions[0]));
                 }
             } else {
-                if (positions.length > 0 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
                     positions.pop();
                 }
             }
