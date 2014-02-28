@@ -68,6 +68,18 @@ require(['Cesium'], function(Cesium) {
         glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 1.0);
         coloredPolyline.setMaterial(glowMaterial);
         coloredPolyline.setWidth(10.0);
+        
+        // A polyline loop
+        var loopPolyline = polylines.add();
+        Sandcastle.declare(loopPolyline);   // For highlighting on mouseover in Sandcastle.
+        loopPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-105.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-105.0, 25.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 22.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 28.0)
+        ]));
+        loopPolyline.setWidth(3.0);
+        loopPolyline.setLoop(true);
 
         primitives.add(polylines);
 
