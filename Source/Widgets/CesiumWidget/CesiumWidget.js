@@ -216,7 +216,7 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
+                centralBody.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.

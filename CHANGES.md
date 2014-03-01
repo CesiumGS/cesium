@@ -29,7 +29,7 @@ Beta Releases
       * `getMaximumRadius` -> `maximumRadius`
     * `CentralBody`
       * `getEllipsoid` -> `ellipsoid`
-      * `getImageryLayers` -> `imageryLayerCollection`
+      * `getImageryLayers` -> `imageryLayers`
     * `EllipsoidalOccluder`
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
