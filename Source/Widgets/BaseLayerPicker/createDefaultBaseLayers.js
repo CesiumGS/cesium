@@ -2,8 +2,6 @@
 define([
         '../BaseLayerPicker/ImageryProviderViewModel',
         '../../Core/buildModuleUrl',
-        '../../Core/FeatureDetection',
-        '../../Core/DefaultProxy',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/ArcGisMapServerImageryProvider',
@@ -12,8 +10,6 @@ define([
     ], function(
         ImageryProviderViewModel,
         buildModuleUrl,
-        FeatureDetection,
-        DefaultProxy,
         BingMapsImageryProvider,
         BingMapsStyle,
         ArcGisMapServerImageryProvider,
