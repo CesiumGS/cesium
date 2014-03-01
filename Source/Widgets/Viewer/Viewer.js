@@ -397,7 +397,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
-                var numDataSources = dataSourceCollection.getLength();
+                var numDataSources = dataSourceCollection.length;
                 if (automaticallyTrackDataSourceClocks && numDataSources > 0) {
                     that.clockTrackedDataSource = dataSourceCollection.get(numDataSources - 1);
                 } else {

@@ -1168,7 +1168,7 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         var interval = TimeInterval.fromIso8601(packet1.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
 
         var packet2 = {
@@ -1178,7 +1178,7 @@ defineSuite([
 
         dataSource.process(packet2);
         interval = TimeInterval.fromIso8601(packet2.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
     });
 
@@ -1194,7 +1194,7 @@ defineSuite([
 
         var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
         var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
 
@@ -1206,7 +1206,7 @@ defineSuite([
 
         interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
         interval2 = TimeInterval.fromIso8601(packet2.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
     });

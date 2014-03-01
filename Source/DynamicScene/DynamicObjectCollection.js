@@ -136,8 +136,8 @@ define(['../Core/AssociativeArray',
             var object = dynamicObjects[i];
             var availability = object.availability;
             if (defined(availability)) {
-                var start = availability.getStart();
-                var stop = availability.getStop();
+                var start = availability.start;
+                var stop = availability.stop;
                 if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
                     startTime = start;
                 }

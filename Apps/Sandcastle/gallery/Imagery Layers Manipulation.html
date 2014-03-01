@@ -193,7 +193,7 @@ require([
 
     function updateUserInterface() {
         document.getElementById('layerTable').innerHTML = '';
-        for (var i = imageryLayerCollection.getLength() - 1; i >= 0; --i) {
+        for (var i = imageryLayerCollection.length - 1; i >= 0; --i) {
             var layer = imageryLayerCollection.get(i);
 
             domConstruct.place('<tr><td id="layerToggle' + i + '"></td><td id="layerLabel' + i + '"></td><td id="layerSlider' + i + '"></td><td id="layerUpArrow' + i + '"></td><td id="layerDownArrow' + i + '"></td></tr>', 'layerTable');
@@ -227,7 +227,7 @@ require([
             }
         }).placeAt('layerSlider' + layerIndex);
 
-        var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
+        var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.length - 1;
         var showLower = layerIndex > 0;
 
         new Button({

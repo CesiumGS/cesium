@@ -253,7 +253,7 @@ defineSuite([
 
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(1);
+        expect(polylineCollection.length).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.id).toEqual(testObject);
 

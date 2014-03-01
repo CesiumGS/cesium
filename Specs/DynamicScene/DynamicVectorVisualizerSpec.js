@@ -91,7 +91,7 @@ defineSuite([
         visualizer.update(new JulianDate());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(0);
+        expect(polylineCollection.length).toEqual(0);
     });
 
     it('object with no vertexPosition does not create a vector.', function() {
@@ -105,7 +105,7 @@ defineSuite([
         visualizer.update(new JulianDate());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(0);
+        expect(polylineCollection.length).toEqual(0);
     });
 
     it('A DynamicVector causes a primtive to be created and updated.', function() {
@@ -175,7 +175,7 @@ defineSuite([
         visualizer.update(time);
 
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(1);
+        expect(polylineCollection.length).toEqual(1);
         var primitive = polylineCollection.get(0);
 
         visualizer.update(time);
@@ -205,7 +205,7 @@ defineSuite([
 
         visualizer.update(time);
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(1);
+        expect(polylineCollection.length).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.id).toEqual(testObject);
     });
@@ -238,7 +238,7 @@ defineSuite([
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
-        expect(polylineCollection.getLength()).toEqual(1);
+        expect(polylineCollection.length).toEqual(1);
         var primitive = polylineCollection.get(0);
         expect(primitive.id).toEqual(testObject);
 
