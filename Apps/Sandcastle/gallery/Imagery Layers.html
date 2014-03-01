@@ -28,8 +28,7 @@ require(['Cesium'], function(Cesium) {
 
     var widget = new Cesium.CesiumWidget('cesiumContainer', {
         imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
-            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-            proxy : new Cesium.DefaultProxy('/proxy/')
+            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
         })
     });
 
