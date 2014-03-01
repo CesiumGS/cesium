@@ -32,7 +32,7 @@ require(['Cesium'], function(Cesium) {
         })
     });
 
-    var layers = widget.centralBody.imageryLayerCollection;
+    var layers = widget.centralBody.imageryLayers;
     var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
         url : 'http://cesiumjs.org/blackmarble',
         maximumLevel : 8,

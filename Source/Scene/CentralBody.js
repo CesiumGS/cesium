@@ -285,7 +285,7 @@ define([
          * @memberof CentralBody.prototype
          * @type {ImageryLayerCollection}
          */
-        imageryLayerCollection : {
+        imageryLayers: {
             get : function() {
                 return this._imageryLayerCollection;
             }

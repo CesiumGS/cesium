@@ -67,11 +67,11 @@ require([
         checked: Cesium.defined(tileBoundariesLayer),
         onChange: function(b) {
             if (b && !Cesium.defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.imageryLayerCollection.addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
+                tileBoundariesLayer = centralBody.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
                     tilingScheme : centralBody.terrainProvider.tilingScheme
                 }));
             } else if (!b && Cesium.defined(tileBoundariesLayer)) {
-                centralBody.imageryLayerCollection.remove(tileBoundariesLayer);
+                centralBody.imageryLayers.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
 

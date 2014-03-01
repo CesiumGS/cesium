@@ -61,7 +61,7 @@ require([
 {
     "use strict";
 
-    var imageryLayerCollection;
+    var imageryLayers;
     var brightnessSlider;
     var contrastSlider;
     var hueSlider;
@@ -77,69 +77,69 @@ require([
         });
         document.getElementById('toolbar').appendChild(tp.domNode);
         brightnessSlider = new HorizontalSlider({
-            value : imageryLayerCollection.get(0).brightness,
+            value : imageryLayers.get(0).brightness,
             minimum : 0.0,
             maximum : 3.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                imageryLayerCollection.get(0).brightness = value;
+                imageryLayers.get(0).brightness = value;
             }
         });
         brightnessSlider.placeAt('brightnessSlider');
 
         contrastSlider = new HorizontalSlider({
-            value : imageryLayerCollection.get(0).contrast,
+            value : imageryLayers.get(0).contrast,
             minimum : 0.0,
             maximum : 3.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                imageryLayerCollection.get(0).contrast = value;
+                imageryLayers.get(0).contrast = value;
             }
         });
         contrastSlider.placeAt('contrastSlider');
 
         hueSlider = new HorizontalSlider({
-            value : imageryLayerCollection.get(0).hue,
+            value : imageryLayers.get(0).hue,
             minimum : -Math.PI,
             maximum : Math.PI,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                imageryLayerCollection.get(0).hue = value;
+                imageryLayers.get(0).hue = value;
             }
         });
         hueSlider.placeAt('hueSlider');
 
         saturationSlider = new HorizontalSlider({
-            value : imageryLayerCollection.get(0).saturation,
+            value : imageryLayers.get(0).saturation,
             minimum : 0.0,
             maximum : 3.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                imageryLayerCollection.get(0).saturation = value;
+                imageryLayers.get(0).saturation = value;
             }
         });
         saturationSlider.placeAt('saturationSlider');
 
         gammaSlider = new HorizontalSlider({
-            value : imageryLayerCollection.get(0).gamma,
+            value : imageryLayers.get(0).gamma,
             minimum : 0.0,
             maximum : 3.0,
             intermediateChanges : true,
             style : "width:150px;",
             onChange : function(value) {
-                imageryLayerCollection.get(0).gamma = value;
+                imageryLayers.get(0).gamma = value;
             }
         });
         gammaSlider.placeAt('gammaSlider');
     }
 
     function updateSliders() {
-        if (imageryLayerCollection.getLength() > 0) {
-            var layer = imageryLayerCollection.get(0);
+        if (imageryLayers.getLength() > 0) {
+            var layer = imageryLayers.get(0);
             brightnessSlider.set('value', layer.brightness);
             contrastSlider.set('value', layer.contrast);
             hueSlider.set('value', layer.hue);
@@ -150,13 +150,13 @@ require([
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    imageryLayerCollection = widget.centralBody.imageryLayerCollection;
+    imageryLayers = widget.centralBody.imageryLayers;
 
     createAdjustmentUserInterface();
 
-    imageryLayerCollection.layerAdded.addEventListener(updateSliders);
-    imageryLayerCollection.layerRemoved.addEventListener(updateSliders);
-    imageryLayerCollection.layerMoved.addEventListener(updateSliders);
+    imageryLayers.layerAdded.addEventListener(updateSliders);
+    imageryLayers.layerRemoved.addEventListener(updateSliders);
+    imageryLayers.layerMoved.addEventListener(updateSliders);
 
     Sandcastle.finishedLoading();
 });
