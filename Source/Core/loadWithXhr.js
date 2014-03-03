@@ -74,8 +74,61 @@ define([
         });
     };
 
+    var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+
+    function decodeDataUriText(isBase64, data) {
+        var result = decodeURIComponent(data);
+        if (isBase64) {
+            return atob(result);
+        }
+        return result;
+    }
+
+    function decodeDataUriArrayBuffer(isBase64, data) {
+        var byteString = decodeDataUriText(isBase64, data);
+        var buffer = new ArrayBuffer(byteString.length);
+        var view = new Uint8Array(buffer);
+        for (var i = 0; i < byteString.length; i++) {
+            view[i] = byteString.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+    function decodeDataUri(dataUriRegexResult, responseType) {
+        responseType = defaultValue(responseType, '');
+        var mimeType = dataUriRegexResult[1];
+        var isBase64 = !!dataUriRegexResult[2];
+        var data = dataUriRegexResult[3];
+
+        switch (responseType) {
+        case '':
+        case 'text':
+            return decodeDataUriText(isBase64, data);
+        case 'arraybuffer':
+            return decodeDataUriArrayBuffer(isBase64, data);
+        case 'blob':
+            var buffer = decodeDataUriArrayBuffer(isBase64, data);
+            return new Blob([buffer], {
+                type : mimeType
+            });
+        case 'document':
+            var parser = new DOMParser();
+            return parser.parseFromString(decodeDataUriText(isBase64, data), mimeType);
+        case 'json':
+            return JSON.parse(decodeDataUriText(isBase64, data));
+        default:
+            throw new DeveloperError('Unhandled responseType: ' + responseType);
+        }
+    }
+
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var dataUriRegexResult = dataUriRegex.exec(url);
+        if (dataUriRegexResult !== null) {
+            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
         var xhr = new XMLHttpRequest();
 
         if (defined(overrideMimeType)) {
