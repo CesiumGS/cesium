@@ -27,6 +27,7 @@ define([
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
@@ -62,19 +63,25 @@ define([
         var method = defaultValue(options.method, 'GET');
         var data = options.data;
         var headers = options.headers;
+        var overrideMimeType = options.overrideMimeType;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
 
             return deferred.promise;
         });
     };
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var xhr = new XMLHttpRequest();
+
+        if (defined(overrideMimeType)) {
+            xhr.overrideMimeType(overrideMimeType);
+        }
+
         xhr.open(method, url, true);
 
         if (defined(headers)) {
