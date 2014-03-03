@@ -1,19 +1,19 @@
 /*global define*/
 define(['../Core/createGuid',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        './DynamicObject',
-        './DynamicObjectCollection'
-    ], function(
-        createGuid,
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath,
-        DynamicObject,
-        DynamicObjectCollection) {
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Math',
+    './DynamicObject',
+    './DynamicObjectCollection'
+], function(
+    createGuid,
+    defined,
+    defineProperties,
+    DeveloperError,
+    CesiumMath,
+    DynamicObject,
+    DynamicObjectCollection) {
     "use strict";
 
     var propertyIdScratch = new Array(3);
@@ -33,7 +33,7 @@ define(['../Core/createGuid',
             var composite = that._composite;
             var compositeObject = composite.getById(id);
             var compositeProperty = compositeObject[propertyName];
-            var collections = that._collectionsCopy;
+            var collections = that._collections;
             var collectionsLength = collections.length;
             for ( var q = collectionsLength - 1; q >= 0; q--) {
                 var object = collections[q].getById(dynamicObject.id);
@@ -63,7 +63,7 @@ define(['../Core/createGuid',
             unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
             subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
 
-            var collections = that._collectionsCopy;
+            var collections = that._collections;
             var collectionsLength = collections.length;
             var firstTime = true;
             for ( var q = collectionsLength - 1; q >= 0; q--) {
@@ -290,7 +290,7 @@ define(['../Core/createGuid',
             this._collections.splice(index, 0, collection);
         }
 
-            recomposite(this);
+        recomposite(this);
     };
 
     /**
