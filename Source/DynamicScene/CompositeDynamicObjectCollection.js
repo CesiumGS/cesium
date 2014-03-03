@@ -1,19 +1,19 @@
 /*global define*/
 define(['../Core/createGuid',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Math',
-    './DynamicObject',
-    './DynamicObjectCollection'
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Math',
+        './DynamicObject',
+        './DynamicObjectCollection'
 ], function(
-    createGuid,
-    defined,
-    defineProperties,
-    DeveloperError,
-    CesiumMath,
-    DynamicObject,
-    DynamicObjectCollection) {
+        createGuid,
+        defined,
+        defineProperties,
+        DeveloperError,
+        CesiumMath,
+        DynamicObject,
+        DynamicObjectCollection) {
     "use strict";
 
     var propertyIdScratch = new Array(3);
@@ -530,7 +530,7 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {Object} id The id of the object to retrieve.
-     * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
+     * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection is required.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
         return this._composite.getById(id);
