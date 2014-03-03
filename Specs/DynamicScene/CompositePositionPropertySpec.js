@@ -1,6 +1,5 @@
 /*global defineSuite*/
-defineSuite([
-             'DynamicScene/CompositePositionProperty',
+defineSuite(['DynamicScene/CompositePositionProperty',
              'DynamicScene/ConstantPositionProperty',
              'DynamicScene/PositionProperty',
              'Core/Cartesian3',
@@ -25,6 +24,7 @@ defineSuite([
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
         expect(property.referenceFrame).toBe(ReferenceFrame.FIXED);
+        expect(property.isConstant).toBe(true);
     });
 
     it('constructor sets expected values', function() {
@@ -46,6 +46,7 @@ defineSuite([
         var property = new CompositePositionProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var result1 = property.getValue(interval1.start);
         expect(result1).not.toBe(interval1.data.getValue(interval1.start));
@@ -63,6 +64,7 @@ defineSuite([
         var property = new CompositePositionProperty();
         property.intervals.addInterval(interval1);
         property.intervals.addInterval(interval2);
+        expect(property.isConstant).toBe(false);
 
         var expected = new Cartesian3();
         var result1 = property.getValue(interval1.start, expected);
@@ -172,5 +174,51 @@ defineSuite([
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('raises definitionChanged event in all cases', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantPositionProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantPositionProperty(new Cartesian3(4, 5, 6)));
+
+        var property = new CompositePositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval1);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.addInterval(interval2);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.removeInterval(interval2);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        interval1.data.setValue(new Cartesian3());
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.clear();
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+    });
+
+    it('does not raise definitionChanged for an overwritten interval', function() {
+        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, new ConstantPositionProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, new ConstantPositionProperty(new Cartesian3(4, 5, 6)));
+
+        var property = new CompositePositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+        expect(listener.callCount).toBe(2);
+
+        //interval2 overwrites interval1, so callCount should not increase.
+        interval1.data.setValue(new Cartesian3());
+        expect(listener.callCount).toBe(2);
     });
 });

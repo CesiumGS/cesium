@@ -1,29 +1,29 @@
 /*global define*/
-define([
+define(['./Property',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration',
-        '../Core/TimeIntervalCollection',
-        './Property'
+        '../Core/Event',
+        '../Core/isArray',
+        '../Core/TimeIntervalCollection'
     ], function(
+        Property,
         defined,
         defineProperties,
         DeveloperError,
         Enumeration,
-        TimeIntervalCollection,
-        Property) {
+        Event,
+        isArray,
+        TimeIntervalCollection) {
     "use strict";
 
     /**
-     * A {@link Property} which is defined by a TimeIntervalCollection, where the
+     * A {@link Property} which is defined by a {@link TimeIntervalCollection}, where the
      * data property of each {@link TimeInterval} represents the value at time.
      *
      * @alias TimeIntervalCollectionProperty
      * @constructor
-     *
-     * @param {Function} [clone=value.clone] A function which takes the value and a result parameter and clones it.
-     * This parameter is only required if the value is not a number or string and does not have a clone function.
      *
      * @example
      * //Create a Cartesian2 interval property which contains data on August 1st, 2012
@@ -36,26 +36,55 @@ define([
      *
      * @example
      * //Create a TimeIntervalCollectionProperty that contains user-defined objects.
-     * var myObject = {
-     *     value : 6
-     * };
-     * var myObject2 = {
-     *     value : 12
-     * };
      * function cloneMyObject(value, result) {
      *     return {
      *         value : value.value
      *     };
      * }
-     * var composite = new Cesium.TimeIntervalCollectionProperty(cloneMyObject);
+     *
+     * var myObject = {
+     *     value : 6,
+     *     clone : cloneMyObject
+     * };
+     * var myObject2 = {
+     *     value : 12,
+     *     clone : cloneMyObject
+     * };
+     *
+     * var composite = new Cesium.TimeIntervalCollectionProperty();
      * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T06:00:00.00Z', true, false, myObject));
      * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T06:00:00.00Z/2012-08-01T12:00:00.00Z', true, false, myObject2));
      */
     var TimeIntervalCollectionProperty = function() {
+        this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
+        this._intervals.getChangedEvent().addEventListener(TimeIntervalCollectionProperty.prototype._intervalsChanged, this);
     };
 
     defineProperties(TimeIntervalCollectionProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof TimeIntervalCollectionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._intervals.isEmpty();
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof TimeIntervalCollectionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the interval collection.
          * @memberof TimeIntervalCollectionProperty.prototype
@@ -87,7 +116,7 @@ define([
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration))) {
+        if (defined(value) && (typeof value === 'object' && !isArray(value) && !(value instanceof Enumeration))) {
             return value.clone(result);
         }
         return value;
@@ -105,6 +134,13 @@ define([
         return this === other || //
                (other instanceof TimeIntervalCollectionProperty && //
                this._intervals.equals(other._intervals, Property.equals));
+    };
+
+    /**
+     * @private
+     */
+    TimeIntervalCollectionProperty.prototype._intervalsChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return TimeIntervalCollectionProperty;

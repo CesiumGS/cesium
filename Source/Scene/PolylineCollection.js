@@ -1049,7 +1049,7 @@ define([
         this.pickShaderProgram = undefined;
         this.mode = mode;
         this.projection = projection;
-        this.ellipsoid = projection.getEllipsoid();
+        this.ellipsoid = projection.ellipsoid;
         this.modelMatrix = modelMatrix;
     };
 
@@ -1398,13 +1398,27 @@ define([
         return scratchSegments;
     };
 
+    var scratchPositionsArray;
+    var scratchTexCoordArray;
+
     PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer) {
         var mode = this.mode;
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             index += this.getPolylineStartIndex(polyline);
-            var positionArray = new Float32Array(6 * positionsLength * 3);
-            var texCoordExpandWidthAndShowArray = new Float32Array(positionsLength * 4);
+
+            var positionArray = scratchPositionsArray;
+            var texCoordExpandWidthAndShowArray = scratchTexCoordArray;
+
+            var positionsArrayLength = 6 * positionsLength * 3;
+
+            if (!defined(positionArray) || positionArray.length < positionsArrayLength) {
+                positionArray = scratchPositionsArray = new Float32Array(positionsArrayLength);
+                texCoordExpandWidthAndShowArray = scratchTexCoordArray = new Float32Array(positionsLength * 4);
+            } else if (positionArray.length > positionsArrayLength) {
+                positionArray = new Float32Array(positionArray.buffer, 0, positionsArrayLength);
+                texCoordExpandWidthAndShowArray = new Float32Array(texCoordExpandWidthAndShowArray.buffer, 0, positionsLength * 4);
+            }
 
             var positionIndex = 0;
             var texCoordExpandWidthAndShowIndex = 0;

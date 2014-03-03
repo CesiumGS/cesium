@@ -97,7 +97,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().extent);
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -178,7 +178,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().extent);
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -243,7 +243,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().extent);
             expect(provider.isUsingPrecachedTiles()).toEqual(false);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -327,7 +327,7 @@ defineSuite([
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().extent);
             expect(provider.getProxy()).toEqual(proxy);
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 

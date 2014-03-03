@@ -76,9 +76,9 @@ defineSuite([
     });
 
     it('get/set ellipsoid', function() {
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.WGS84);
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(controller.ellipsoid).toEqual(Ellipsoid.WGS84);
+        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        expect(controller.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     function updateController(frameState) {
@@ -758,12 +758,12 @@ defineSuite([
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON14);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).toBeDefined();
     });
 
@@ -775,15 +775,15 @@ defineSuite([
 
         camera.controller.lookRight(CesiumMath.PI_OVER_TWO);
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).not.toBeDefined();
 
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON14);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
     it('does not tilt in the wrong direction', function() {
@@ -816,7 +816,7 @@ defineSuite([
         var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position).height;
         expect(height).toBeLessThan(controller.minimumZoomDistance);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
     it('looks in 3D', function() {

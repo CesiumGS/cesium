@@ -31,13 +31,10 @@ define([
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
      */
     var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
@@ -104,7 +101,7 @@ define([
     DynamicPointVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -215,7 +212,7 @@ define([
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard.dynamicObject = dynamicObject;
+            billboard.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);

@@ -56,7 +56,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getTilingScheme().getExtent()).toEqual(extent);
+            expect(provider.getTilingScheme().extent).toEqual(extent);
             expect(provider.getTileWidth()).toEqual(16);
             expect(provider.getTileHeight()).toEqual(16);
             expect(provider.getMaximumLevel()).toEqual(0);

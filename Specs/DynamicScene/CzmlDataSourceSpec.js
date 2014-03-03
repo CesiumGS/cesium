@@ -11,6 +11,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Quaternion',
+        'Core/ReferenceFrame',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicObject',
@@ -35,6 +36,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Quaternion,
+        ReferenceFrame,
         Spherical,
         DynamicBillboard,
         DynamicObject,
@@ -771,6 +773,62 @@ defineSuite([
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
+    it('Can set reference frame', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        czml = {
+            position : {
+                referenceFrame : "FIXED",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('Default reference frame on existing interval does not reset value to FIXED.', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : "INERTIAL",
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.process(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        var czml2 = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+        dataSource.process(czml2);
+
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+    });
+
     it('CZML sampled cartographicRadians positions work.', function() {
         var epoch = new JulianDate();
 
@@ -1305,6 +1363,10 @@ defineSuite([
                         }
                     }
                 },
+                height : 1,
+                extrudedHeight : 2,
+                granularity : 3,
+                stRotation : 4,
                 show : true
             }
         };
@@ -1316,6 +1378,10 @@ defineSuite([
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(dynamicObject.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        expect(dynamicObject.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
+        expect(dynamicObject.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+        expect(dynamicObject.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1689,5 +1755,54 @@ defineSuite([
         dataSource.load(packets);
 
         expect(spy.callCount).toEqual(1);
+    });
+
+    it('CZML materials work with composite interval', function() {
+        var before = JulianDate.fromIso8601("2012-03-15T09:23:59Z");
+        var solid = JulianDate.fromIso8601("2012-03-15T10:00:00Z");
+        var grid1 = JulianDate.fromIso8601("2012-03-15T11:00:00Z");
+        var grid2 = JulianDate.fromIso8601("2012-03-15T12:00:00Z");
+        var after = JulianDate.fromIso8601("2012-03-15T12:00:01Z");
+
+        var packet = {
+            polygon : {
+                material : [{
+                    interval : '2012-03-15T10:00:00Z/2012-03-15T11:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T10:00:00Z',
+                    solidColor : {
+                        color : {
+                            rgba : [240, 0, 0, 0]
+                        }
+                    }
+                }, {
+                    interval : '2012-03-15T11:00:00Z/2012-03-15T12:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T11:00:00Z',
+                    grid : {
+                        color : {
+                            rgba : [240, 255, 255, 255]
+                        },
+                        cellAlpha : 0,
+                        rowCount : 36,
+                        rowThickness : 1,
+                        columnCount : 9,
+                        columnThickness : 1
+                    }
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.polygon.material.getType(solid)).toBe('Color');
+        expect(dynamicObject.polygon.material.getType(grid1)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(grid2)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(before)).toBeUndefined();
+        expect(dynamicObject.polygon.material.getType(after)).toBeUndefined();
+
     });
 });

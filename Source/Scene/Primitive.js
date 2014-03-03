@@ -16,6 +16,7 @@ define([
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
         '../Core/clone',
+        '../Core/isArray',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/DrawCommand',
@@ -43,6 +44,7 @@ define([
         TaskProcessor,
         GeographicProjection,
         clone,
+        isArray,
         BufferUsage,
         VertexLayout,
         DrawCommand,
@@ -399,7 +401,11 @@ define([
             var name = match[1];
 
             var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
-            forwardDecl += functionName + ';\n';
+
+            // Don't forward-declare czm_computePosition because computePosition.glsl already does.
+            if (functionName !== 'vec4 czm_computePosition()') {
+                forwardDecl += functionName + ';\n';
+            }
 
             if (!primitive.allow3DOnly) {
                 attributes +=
@@ -523,7 +529,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {
@@ -554,7 +560,7 @@ define([
                 if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
                 } else if (this._state === PrimitiveState.READY) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
                     var promises = [];
@@ -587,7 +593,7 @@ define([
                         that._state = PrimitiveState.FAILED;
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
                     geometries = this._geometries.concat(this._createdGeometries);
@@ -606,7 +612,7 @@ define([
                         task : 'combineGeometry',
                         instances : clonedInstances,
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                        ellipsoid : projection.getEllipsoid(),
+                        ellipsoid : projection.ellipsoid,
                         isGeographic : projection instanceof GeographicProjection,
                         elementIndexUintSupported : context.getElementIndexUint(),
                         allow3DOnly : this.allow3DOnly,
@@ -633,7 +639,7 @@ define([
                     });
                 }
             } else {
-                instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                 length = instances.length;
                 geometries = this._createdGeometries;
 
@@ -665,7 +671,7 @@ define([
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                    ellipsoid : projection.getEllipsoid(),
+                    ellipsoid : projection.ellipsoid,
                     projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this.allow3DOnly,

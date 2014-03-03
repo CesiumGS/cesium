@@ -569,7 +569,7 @@ defineSuite([
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrowDeveloperError();
+            }).toThrow();
         }
     });
 

@@ -19,8 +19,6 @@ define([
         Material) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     /**
      * DOC_TBA
      *
@@ -30,7 +28,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
     var Polyline = function(options, polylineCollection) {
-        options = defaultValue(options, EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._show = defaultValue(options.show, true);
         this._width = defaultValue(options.width, 1.0);

@@ -553,7 +553,7 @@ defineSuite([
         expect(composite2.getById(id).position).toBe(dynamicObject2.position);
     });
 
-    it('suspend events suspends recompositing', function () {
+    it('suspend events suspends recompositing', function() {
         var id = 'test';
         var collection1 = new DynamicObjectCollection();
         var dynamicObject1 = new DynamicObject(id);
@@ -580,8 +580,6 @@ defineSuite([
         composite.resumeEvents();
 
         expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
-
-
     });
 
     it('prevents names from colliding between property events and object events', function() {
