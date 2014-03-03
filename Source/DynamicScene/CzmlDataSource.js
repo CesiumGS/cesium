@@ -1225,7 +1225,7 @@ define(['../Core/Cartesian2',
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
-    function processdirectionData(pyramid, directions, interval, sourceUri) {
+    function processDirectionData(pyramid, directions, interval, sourceUri) {
         var i;
         var len;
         var values = [];
@@ -1277,10 +1277,10 @@ define(['../Core/Cartesian2',
             if (isArray(directions)) {
                 var length = directions.length;
                 for (var i = 0; i < length; i++) {
-                    processdirectionData(pyramid, directions[i], interval, sourceUri);
+                    processDirectionData(pyramid, directions[i], interval, sourceUri);
                 }
             } else {
-                processdirectionData(pyramid, directions, interval, sourceUri);
+                processDirectionData(pyramid, directions, interval, sourceUri);
             }
         }
     }
