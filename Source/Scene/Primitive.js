@@ -780,12 +780,16 @@ define([
                 this._backFaceRS = this._frontFaceRS;
             }
 
+            var pickRS;
             if (allowPicking) {
-                // Only need backface pass for picking when two-pass rendering is used.
-                this._pickRS = this._backFaceRS;
+                pickRS = clone(renderState, false);
+                pickRS.cull = {
+                    enabled : false
+                };
+                this._pickRS = context.createRenderState(pickRS);
             } else {
                 // Still occlude if not pickable.
-                var pickRS = clone(renderState, false);
+                pickRS = clone(renderState, false);
                 pickRS.colorMask = {
                     red : false,
                     green : false,
