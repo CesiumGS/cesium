@@ -321,7 +321,8 @@ define([
         this._backFaceRS = undefined;
         this._sp = undefined;
 
-        this._pickRS = undefined;
+        this._pickBackFaceRS = undefined;
+        this._pickFrontFaceRS= undefined;
         this._pickSP = undefined;
         this._pickIds = [];
 
@@ -764,9 +765,10 @@ define([
 
         if (createRS) {
             var renderState = appearance.getRenderState();
+            var rs;
 
             if (twoPasses) {
-                var rs = clone(renderState, false);
+                rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -780,23 +782,31 @@ define([
                 this._backFaceRS = this._frontFaceRS;
             }
 
-            var pickRS;
             if (allowPicking) {
-                pickRS = clone(renderState, false);
-                pickRS.cull = {
-                    enabled : false
-                };
-                this._pickRS = context.createRenderState(pickRS);
+                this._pickBackFaceRS = this._backFaceRS;
+                this._pickFrontFaceRS = this._frontFaceRS;
             } else {
-                // Still occlude if not pickable.
-                pickRS = clone(renderState, false);
-                pickRS.colorMask = {
+                rs = clone(renderState, false);
+                renderState.colorMask = {
                     red : false,
                     green : false,
                     blue : false,
                     alpha : false
                 };
-                this._pickRS = context.createRenderState(pickRS);
+
+                if (twoPasses) {
+                    rs.cull = {
+                        enabled : true,
+                        face : CullFace.BACK
+                    };
+                    this._pickFrontFaceRS = context.createRenderState(rs);
+
+                    rs.cull.face = CullFace.FRONT;
+                    this._pickBackFaceRS = context.createRenderState(rs);
+                } else {
+                    this._pickFrontFaceRS = context.createRenderState(renderState);
+                    this._pickBackFaceRS = this._pickFrontFaceRS;
+                }
             }
         }
 
@@ -827,11 +837,10 @@ define([
             var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
             colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
-            pickCommands.length = this._va.length;
+            pickCommands.length = this._va.length * (twoPasses ? 2 : 1);
 
             length = colorCommands.length;
             var vaIndex = 0;
-            var m = 0;
             for (i = 0; i < length; ++i) {
                 if (twoPasses) {
                     colorCommand = colorCommands[i];
@@ -845,6 +854,18 @@ define([
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
                     colorCommand.pass = pass;
+
+                    pickCommand = pickCommands[i];
+                    if (!defined(pickCommand)) {
+                        pickCommand = pickCommands[i] = new DrawCommand();
+                    }
+                    pickCommand.owner = this;
+                    pickCommand.primitiveType = this._primitiveType;
+                    pickCommand.vertexArray = this._va[vaIndex];
+                    pickCommand.renderState = this._pickBackFaceRS;
+                    pickCommand.shaderProgram = this._pickSP;
+                    pickCommand.uniformMap = uniforms;
+                    pickCommand.pass = pass;
 
                     ++i;
                 }
@@ -861,18 +882,17 @@ define([
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
-                pickCommand = pickCommands[m];
+                pickCommand = pickCommands[i];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[m] = new DrawCommand();
+                    pickCommand = pickCommands[i] = new DrawCommand();
                 }
                 pickCommand.owner = this;
                 pickCommand.primitiveType = this._primitiveType;
                 pickCommand.vertexArray = this._va[vaIndex];
-                pickCommand.renderState = this._pickRS;
+                pickCommand.renderState = this._pickFrontFaceRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
                 pickCommand.pass = pass;
-                ++m;
 
                 ++vaIndex;
             }
