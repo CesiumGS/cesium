@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b27 - 2014-04-01
+
+* Breaking changes:
+  * ...
+* Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
+
 ### b26 - 2014-03-03
 
 * Breaking changes:
