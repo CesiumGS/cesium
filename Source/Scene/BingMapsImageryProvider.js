@@ -2,11 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/jsonp',
         '../Core/BingMapsApi',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
+        '../Core/Math',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
@@ -17,11 +20,14 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         jsonp,
         BingMapsApi,
         Cartesian2,
         DeveloperError,
         Event,
+        Extent,
+        CesiumMath,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
@@ -45,6 +51,8 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        Bing Maps imagery without creating a separate key for your application.
+     * @param {String} [description.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+     *        By default, tiles are loaded using the same protocol as the page.
      * @param {Enumeration} [description.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
@@ -59,8 +67,6 @@ define([
      *        parameter.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
-     *
-     * @exception {DeveloperError} <code>description.url</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthImageryProvider
@@ -91,6 +97,7 @@ define([
         this._key = BingMapsApi.getKey(description.key);
 
         this._url = description.url;
+        this._tileProtocol = description.tileProtocol;
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
@@ -125,7 +132,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -138,6 +145,15 @@ define([
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
 
+            var tileProtocol = that._tileProtocol;
+            if (!defined(tileProtocol)) {
+                // use the document's protocol, unless it's not http or https
+                var documentProtocol = document.location.protocol;
+                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
+            }
+
+            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
+
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
@@ -145,6 +161,29 @@ define([
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
                     disableCheckIfAllPixelsAreTransparent : true
                 });
+            }
+
+            var attributionList = that._attributionList = resource.imageryProviders;
+            if (!attributionList) {
+                attributionList = that._attributionList = [];
+            }
+
+            for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+                var attribution = attributionList[attributionIndex];
+
+                attribution.credit = new Credit(attribution.attribution);
+
+                var coverageAreas = attribution.coverageAreas;
+
+                for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
+                    var area = coverageAreas[areaIndex];
+                    var bbox = area.bbox;
+                    area.bbox = new Extent(
+                            CesiumMath.toRadians(bbox[1]),
+                            CesiumMath.toRadians(bbox[0]),
+                            CesiumMath.toRadians(bbox[3]),
+                            CesiumMath.toRadians(bbox[2]));
+                }
             }
 
             that._ready = true;
@@ -167,226 +206,245 @@ define([
         requestMetadata();
     };
 
-    /**
-     * Gets the name of the Bing Maps server url hosting the imagery.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {String} The url.
-     */
-    BingMapsImageryProvider.prototype.getUrl = function() {
-        return this._url;
-    };
+    defineProperties(BingMapsImageryProvider.prototype, {
+        /**
+         * Gets the name of the BingMaps server url hosting the imagery.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {String}
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
 
-    /**
-     * Gets the proxy used by this provider.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Proxy} The proxy.
-     *
-     * @see DefaultProxy
-     */
-    BingMapsImageryProvider.prototype.getProxy = function() {
-        return this._proxy;
-    };
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Proxy}
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
+            }
+        },
 
-    /**
-     * Gets the Bing Maps key.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {String} The key.
-     */
-    BingMapsImageryProvider.prototype.getKey = function() {
-        return this._key;
-    };
 
-    /**
-     * Gets the type of Bing Maps imagery to load.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {BingMapsStyle} The style.
-     */
-    BingMapsImageryProvider.prototype.getMapStyle = function() {
-        return this._mapStyle;
-    };
+        /**
+         * Gets the Bing Maps key.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {String}
+         */
+        key : {
+            get : function() {
+                return this._key;
+            }
+        },
 
-    /**
-     * Gets the width of each tile, in pixels.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Number} The width.
-     *
-     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getTileWidth = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        /**
+         * Gets the type of Bing Maps imagery to load.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {BingMapsStyle}
+         */
+        mapStyle : {
+            get : function() {
+                return this._mapStyle;
+            }
+        },
+
+        /**
+         * Gets the width of each tile, in pixels. This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Number}
+         */
+        tileWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileWidth;
+            }
+        },
+
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Number}
+         */
+        tileHeight: {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileHeight;
+            }
+        },
+
+
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Number}
+         */
+        maximumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._maximumLevel;
+            }
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Number}
+         */
+        minimumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return 0;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme.extent;
+            }
+        },
+
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         */
+        tileDiscardPolicy : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileDiscardPolicy;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#ready} returns true.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
-        //>>includeEnd('debug');
+    });
 
-        return this._tileWidth;
-    };
+    var extentScratch = new Extent();
 
     /**
-     * Gets the height of each tile, in pixels.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     * Gets the credits to be displayed when a given tile is displayed.
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {Number} The height.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
      *
-     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
-    BingMapsImageryProvider.prototype.getTileHeight = function() {
-        //>>includeStart('debug', pragmas.debug);
+    BingMapsImageryProvider.prototype.getTileCredits = function(x, y, level) {
         if (!this._ready) {
-            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
+            throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
-        //>>includeEnd('debug');
 
-        return this._tileHeight;
-    };
-
-    /**
-     * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Number} The maximum level.
-     *
-     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getMaximumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._maximumLevel;
-    };
-
-    /**
-     * Gets the minimum level-of-detail that can be requested.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Number} The minimum level.
-     *
-     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getMinimumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return 0;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {TilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getTilingScheme = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme;
-    };
-
-    /**
-     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Extent} The extent.
-     *
-     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getExtent = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme.getExtent();
-    };
-
-    /**
-     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-     * returns undefined, no tiles are filtered.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {TileDiscardPolicy} The discard policy.
-     *
-     * @see DiscardMissingTileImagePolicy
-     * @see NeverTileDiscardPolicy
-     *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
-     */
-    BingMapsImageryProvider.prototype.getTileDiscardPolicy = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tileDiscardPolicy;
-    };
-
-    /**
-     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Event} The event.
-     */
-    BingMapsImageryProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    BingMapsImageryProvider.prototype.isReady = function() {
-        return this._ready;
+        var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
+        return getExtentAttribution(this._attributionList, level, extent);
     };
 
     /**
      * Requests the image for a given tile.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     * not be called before {@link BingMapsImageryProvider#ready} returns true.
      *
      * @memberof BingMapsImageryProvider
      *
@@ -399,7 +457,7 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
+     * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     BingMapsImageryProvider.prototype.requestImage = function(x, y, level) {
         //>>includeStart('debug', pragmas.debug);
@@ -412,19 +470,7 @@ define([
         return ImageryProvider.loadImage(this, url);
     };
 
-    /**
-     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-     * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#isReady} returns true.
-     *
-     * @memberof BingMapsImageryProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    BingMapsImageryProvider.prototype.getCredit = function() {
-        return this._credit;
-    };
-
-    BingMapsImageryProvider._logoData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADwAAAAWCAYAAACcy/8iAAAABGdBTUEAAK/INwWK6QAAAAlwSFlzAAAOwgAADsIBFShKgAAAABp0RVh0U29mdHdhcmUAUGFpbnQuTkVUIHYzLjUuMTAw9HKhAAAL+UlEQVRYR9WYeVSXZRbHFZB9kX0H2UQBWUQFFJcKl9GOVIBLWDNKc7JSUxwVbFxGBBcUaVGSpCI7ogKOWohWipKC4oqaC4KyCIoCssiOznzuD36NecypM/8095zn/F7e57n3ud/7fO997ksvpLeamppq37591U1NTbXNzc31LCwsdE1MTDQMDQ2ZUlORRb8m6urqKkZGRn0Y2mZmZgaMvujqoaulo6PThyW9e8YfQ8RhAwMDDSsrK4MBAwbYeHh4OLi5udnZ29sb47g282osUzr9iyG6AFOXADk6OloNGjTIZfDgwQMRB1tbW9RNtAGt+izdp8bz5Fnr5RAUQ19fX/VZA0yqHIIqvsk60ekWTU1NVU5F19XV1TY2bk3Y7t2ZK1K/+jrSy8vLldM2RVFHV1dXw9jYWFMGADT09PTUed9HhHfa/fr1M5sW/OKI/RuC4wqSX965bWXIHG9vb1dLS0sjdNXZQw2dPqIrwRU7BEpD5sQObkhQlI79DEjmZC/REx3R1dbW1tDS0tJEV4s5Hd7rKQcM1ZXgc3h61tbWOvxqE3jRVWNObPbqhXIfABtxsh5nz57PevTocVdjY2PD0KFDx6IwEND2DGuebWTwbMUwx4AJTgt9TVxcXJyz4kas79ph3fl4h/mj+lSHW2sXTA5nMztSxZANjdjDFGeIgaXCFs/W8jemTDgJfcBoAUZdgghATd7pYdpI9kKs0LORwbM1e8uvPfadnJ2dOSvX/vjg6ODgYEPwrWGbYvC3OcOQd5rsr0rge8sJq4sz0NC3oODM4X8hjY1Nzb6+vtOdnJyCoOmoYcOGjfLz8xstg+dAHx8fP2jvaWNj44SubOS5dfGoFRUpHsV1X7vXXdzsczQibEwYUXbDSXFqIIwZQhADsaGwhZ2R7BFAnH1wyBkAloA0IoiGADLDtj0+DSJF/GRtj85odEbh02hPT8+gxYuXRKSnZ6zOzNyz6tOtye9GRkaOPnPmzPtnz559X35zc3NnJCYmeuCfHimqTvBVBLAGkTQnSsNOnjx1tBtwY3NwcPD8zz//YvPFi5e+v3PnToFyVFZW5l+9eu27AweyP8WBsYAZjnMjJk4Y++aWtQu2bouL+DIhdkkC9iba2dmNIDgvxcdvjCwoOJ1ZXl6ep7RTVVV16saN4qOHDx9Jff318FCA+3FiAwDugk0vgvPinj17E69du/4De55S6pWVleWfOlWQfeFCYc7du9UlDx8+bHz4sLnxVMGZb8PDw8devnw5/vjx44uqq6v31tfXHzl06NB4Trsvvkg6dQOGchZQwj8/vxtwa2tr+4MHD+o6OzvbeW5B8XZV1Z3rbHxVnltaWpuY67h3v6Z8x460LSNHjgxftGjxUhyo7OjoaL18+adTnED4zFmz5ty8eesK71oY7U1NTfeQ4h47FS0tLY1ip6Gh8f7Ro7np06dPf8PL23vSpsQPl1dU3L7a2dnV0dbW3sraqtu3K69WV98rbmxqqu1CHiM9vrY0Nzc3pKSkrOjfv79vRkbGlJiYmFFFRUWrCwsL56elpQ2Dqfpywr8KWKSr61EXm17bu3d/Skho6BQiHjRkyJCg114LCUtL27mpuLjkgmza2trW9sMPh//5wQd/j6mpqa0RXRhwYd68ectu3Sq9Jn/j8P38kyezoeB7sGKC1IdJkyaFpKZ+FX/lytV8QAuGrry8/O8XLly4jJMsEzwNDQ21Bw8e2hkePuMvUFn0Xl62fEU09gvQ6RTbly79dDEx8aNE/HoFhrjANsljK0DKsIAthoDVIr3UqN6KHFYAJjq/AFxWXlG0YEHkfN6PwYY7BcZJhjwTnMCIiL/OLi6+eUXWcgrtO9J27rp/v0YJuHD//m8y2ts7hCHNe/ft3xEYODIUhwaT0/2x44wdN5wZMXly8J+vF924LHowpy07++C3ytPD5hcEKAQ9P6g+EL1BUHPUjBlvzC0puVkoa+rq6u4uW7Y8CpBDyX0LhgFFUXJWj7W6vNdCrw/FubtKS9Eih80kh58EvGHDpniS/SXmXKGCCcOACOlzFZhSW5xl448//iS+DbSy/tr1ohLw1sozp3bpxIkT38mznO7q2LjlOO1PPbJGv6+YYhjjnCOOBW7btu0jWSty/nyhAogILHgXvSAOxIP19hQdJ/wZTAGciv0sCQx0biLW68hTd+bFTQ2CowZoNYKqxjtVDQ0N5XWnuJakwzKl6fCFUod69vpXWFjYHBRG4qQD14UBTYYWwdHi/sNG336cVMBKpL6+oV7W375dVf0k4Ly8vO/lGcD3YmPXRGFrkIDFjjrbihMaBM4MQD5JSUlrZa0IutceIfK8Oz3jK39//zAJFreBsMyLAI15++3ZkRUVFUWypra2rnz58pURvHcErLbYZigB/geoUgChRgQN4btbRmZmonKzrKzs3QRhItHyxDEbQJoBXobcgR5QfXxW1oF0Uk+xPv9kwWko/UzAa9asW4zTAwmWHlsqHCKI0rQYw5RBycnJcbJWZN/+b7JuV1aWCqspUA+OHcvdN2tWxFvk8ERy+JX18RtiqO7nZF/k8YHsg9vd3d0DCYg1BNTA9i87q6eFQKsCQroT26ioqBlE7gqbPaJy1lGBk4KDXwkjZ/2gjA8U9+b+DZg06eXXtmz5NEHyU2gFUECtTVAWracBr18f/zdOwJUT1mVLBWDAS/cjBcUdSq+WtSLJyZ+lRC9duhJQhdSAlvb29jZoW3Pnzt0S8rWCPRtlTzKp48SJvNwxY8ZIg+NN7MywL+zpztXniIosJDcMyWMPnJtzq7T0nFRBrpJONr6UmZn50a5du9bt2rV7LcUoiaJ0WhyRNVLJY2JW/yM6eukKAN8Xp3sAK3KYSludkJD4PsFy6qGc4gTopgSwAUWlf2pq6kpZK7J1a/Jm2BNMnk5OSfkylvv2m9LSslzu8BOlpaX55eUVl9txTECXlZWXUFgjsT0E/y2kBe2x/1zpLacMaKlmFtDYY8mS6HC6lFSagxIpSkIfACoEjF1cRe3cy2U5OTlfREdHvw0DgqKiot8jj29xt7aeO3f+JHP75fnevfslmzZ9OBOnbGGSFvspAFM7VDkVqaL227dvj2Qpy1takpK2xvBuODXCmzTzpasKkO6K8QJNzISQkNCZOUeP7ZPrUAJEcI+PGz9+AteOHZTW7LH/X0VFVVVVjRPQkTYTmjkEBgb6E70pcXFx75Bjy47k5Oz48ccTGVBueWxsLG3cwmkBAQH+5KBcF84vvPDi0BUrVk5Zs2bNW7NnvzN95syZU6H5W+iHkhae0M4Yh5SUE0rLZ6Um+qZ0SP4bNya8uXbtulmkSxD7+wDYjVrRHxY4MRwYjvgmrerwiRMnRtDc5AlgusKa5ORtUQTH+QkG/SbpTd8un1byHawnwCWvEWcp+Zy8F72tF89u8o45O5wwpZgZMgxwzphKbMmcHb/9+O0HGDtOy5K1hsxrsU5ZQUUUeQwAbQCass6WX5dx48YPj176wdSoqKXTaSYEvAd0dURXPkSc8WsIpz0tPz8/W2jd3NzSmJ6euZo73eX3AhYRZ1Sgm3Ql0nvqsIk+GxqBzZjNeDSRBt+A09GVnKHKy6Xeh7VyzWgzJzq6Mi/FENpqMacu4HrsK6U3e6hILrNWi3UGxMf6k082v07Tc76yquoneub0qVOnSdH0J4hezA+lzoxbtSpmFalSISdMu1kE26YSGPsnUuZ3S28orgIYFa5NVQGkHHKN9bwTwwp69qyXQqTCdSMB+3nIO2qEct3TotDFpnywa+Kzydy5814qKrpxkLohRbPt5s2bF/iI2fjqq6+Gz5+/YC4fG3sePKivliuJktLG3CquJW8YZPpEyvxPonDqGeN58lvWPCkKeuO0HmnjGBoWFpSTcyyltra2hDr2kMuiU+jbXTw7Ovh8raFyn05M/HARYH04fSspgNh5MmX+0CKNiPy7SIMCaERF78fXli83TjgfL+tpPj7j+/br/PyTXx45krOVU42G6n8iOPJNbglYLhnFHfx/AVYpiusR0PLvH32Am0NxR3LWnWbHh+tpCN/Mvjx7U6BcAWoLI6TH1xEqSwqKjW5Tvya9ev0bEj8/qn9c7kYAAAAASUVORK5CYII=';
+    BingMapsImageryProvider._logoData = 'data:image/png;base64,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';
 
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
@@ -508,6 +554,38 @@ define([
         }
 
         return imageUrl;
+    }
+
+    var intersectionScratch = new Extent();
+
+    function getExtentAttribution(attributionList, level, extent) {
+        // Bing levels start at 1, while ours start at 0.
+        ++level;
+
+        var result = [];
+
+        for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
+            var attribution = attributionList[attributionIndex];
+            var coverageAreas = attribution.coverageAreas;
+
+            var included = false;
+
+            for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
+                var area = coverageAreas[areaIndex];
+                if (level >= area.zoomMin && level <= area.zoomMax) {
+                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
+                    if (!intersection.isEmpty()) {
+                        included = true;
+                    }
+                }
+            }
+
+            if (included) {
+                result.push(attribution.credit);
+            }
+        }
+
+        return result;
     }
 
     return BingMapsImageryProvider;

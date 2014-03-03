@@ -26,9 +26,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
-    InterpolationAlgorithm.getRequiredDataPoints = function(degree) {
-        throw new DeveloperError('This function defines an interface and should not be called directly.');
-    };
+    InterpolationAlgorithm.getRequiredDataPoints = DeveloperError.throwInstantiationError;
 
     /**
      * Interpolates values.
@@ -49,9 +47,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *
      * @returns The array of interpolated values, or the result parameter if one was provided.
      */
-    InterpolationAlgorithm.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
-        throw new DeveloperError('This function defines an interface and should not be called directly.');
-    };
+    InterpolationAlgorithm.interpolateOrderZero = DeveloperError.throwInstantiationError;
 
     return InterpolationAlgorithm;
 });

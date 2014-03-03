@@ -22,7 +22,7 @@ define(['../Core/createGuid',
     function clean(dynamicObject) {
         var propertyNames = dynamicObject.propertyNames;
         var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
+        for (var i = 0; i < propertyNamesLength; i++) {
             dynamicObject[propertyNames[i]] = undefined;
         }
     }
@@ -33,9 +33,9 @@ define(['../Core/createGuid',
             var composite = that._composite;
             var compositeObject = composite.getById(id);
             var compositeProperty = compositeObject[propertyName];
-            var collections = that._collectionsCopy;
+            var collections = that._collections;
             var collectionsLength = collections.length;
-            for ( var q = collectionsLength - 1; q >= 0; q--) {
+            for (var q = collectionsLength - 1; q >= 0; q--) {
                 var object = collections[q].getById(dynamicObject.id);
                 if (defined(object)) {
                     var objectProperty = object[propertyName];
@@ -63,10 +63,10 @@ define(['../Core/createGuid',
             unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
             subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
 
-            var collections = that._collectionsCopy;
+            var collections = that._collections;
             var collectionsLength = collections.length;
             var firstTime = true;
-            for ( var q = collectionsLength - 1; q >= 0; q--) {
+            for (var q = collectionsLength - 1; q >= 0; q--) {
                 var object = collections[q].getById(dynamicObject.id);
                 if (defined(object)) {
                     var property = object[propertyName];
@@ -92,12 +92,12 @@ define(['../Core/createGuid',
     }
 
     function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
-        if (defined(property) && defined(property.propertyChanged)) {
-            var subpropertyChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
+        if (defined(property) && defined(property.definitionChanged)) {
+            var subdefinitionChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
             propertyIdScratch[0] = collectionId;
             propertyIdScratch[1] = dynamicObject.id;
             propertyIdScratch[2] = propertyName;
-            eventHash[JSON.stringify(propertyIdScratch)] = property.propertyChanged.addEventListener(subpropertyChanged);
+            eventHash[JSON.stringify(propertyIdScratch)] = property.definitionChanged.addEventListener(subdefinitionChanged);
         }
     }
 
@@ -116,11 +116,11 @@ define(['../Core/createGuid',
     function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
         dynamicObjectIdScratch[0] = collectionId;
         dynamicObjectIdScratch[1] = dynamicObject.id;
-        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.propertyChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
+        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.definitionChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var propertyName = properties[i];
             subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
         }
@@ -135,13 +135,18 @@ define(['../Core/createGuid',
 
         var properties = dynamicObject.propertyNames;
         var length = properties.length;
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             var propertyName = properties[i];
             unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
         }
     }
 
     function recomposite(that) {
+        that._shouldRecomposite = true;
+        if (that._suspendCount !== 0) {
+            return;
+        }
+
         var collections = that._collections;
         var collectionsLength = collections.length;
 
@@ -202,7 +207,6 @@ define(['../Core/createGuid',
             composite.add(newObjectsArray[i]);
         }
         composite.resumeEvents();
-        return true;
     }
 
     /**
@@ -220,11 +224,13 @@ define(['../Core/createGuid',
      */
     var CompositeDynamicObjectCollection = function(collections) {
         this._composite = new DynamicObjectCollection();
+        this._suspendCount = 0;
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
         this._id = createGuid();
         this._eventHash = {};
         recomposite(this);
+        this._shouldRecomposite = false;
     };
 
     defineProperties(CompositeDynamicObjectCollection.prototype, {
@@ -261,7 +267,6 @@ define(['../Core/createGuid',
      * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
      *                         added on top of all existing collections.
      *
-     * @exception {DeveloperError} collection is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
      */
     CompositeDynamicObjectCollection.prototype.addCollection = function(collection, index) {
@@ -344,8 +349,6 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {Number} index the index to retrieve.
-     *
-     * @exception {DeveloperError} index is required.
      */
     CompositeDynamicObjectCollection.prototype.getCollection = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -468,18 +471,22 @@ define(['../Core/createGuid',
      * until a corresponding call is made to {@link DynamicObjectCollection#resumeEvents}, at which
      * point a single event will be raised that covers all suspended operations.
      * This allows for many items to be added and removed efficiently.
+     * While events are suspended, recompositing of the collections will
+     * also be suspended, as this can be a costly operation.
      * This function can be safely called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
      * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.suspendEvents = function() {
+        this._suspendCount++;
         this._composite.suspendEvents();
     };
 
     /**
      * Resumes raising {@link DynamicObjectCollection#collectionChanged} events immediately
      * when an item is added or removed.  Any modifications made while while events were suspended
-     * will be triggered as a single event when this function is called.
+     * will be triggered as a single event when this function is called.  This function also ensures
+     * the collection is recomposited if events are also resumed.
      * This function is reference counted and can safely be called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
      * @memberof CompositeDynamicObjectCollection
@@ -487,7 +494,22 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
      */
     CompositeDynamicObjectCollection.prototype.resumeEvents = function() {
+        //>>includeStart('debug', pragmas.debug);
+        if (this._suspendCount === 0) {
+            throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
+        }
+        //>>includeEnd('debug');
+
+        this._suspendCount--;
+        // recomposite before triggering events (but only if required for performance) that might depend on a composited collection
+        if (this._shouldRecomposite && this._suspendCount === 0) {
+            recomposite(this);
+            this._shouldRecomposite = false;
+
+        }
+
         this._composite.resumeEvents();
+
     };
 
     /**
@@ -509,8 +531,6 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
         return this._composite.getById(id);

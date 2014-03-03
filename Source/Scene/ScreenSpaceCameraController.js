@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -11,6 +12,7 @@ define([
         '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
+        '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Ray',
@@ -22,6 +24,7 @@ define([
         './SceneMode'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -32,6 +35,7 @@ define([
         KeyboardEventModifier,
         FAR,
         IntersectionTests,
+        isArray,
         CesiumMath,
         Matrix4,
         Ray,
@@ -50,9 +54,6 @@ define([
      *
      * @param {HTMLCanvasElement} canvas The canvas to listen for events.
      * @param {CameraController} cameraController The camera controller used to modify the camera.
-     *
-     * @exception {DeveloperError} canvas is required.
-     * @exception {DeveloperError} cameraController is required.
      */
     var ScreenSpaceCameraController = function(canvas, cameraController) {
         //>>includeStart('debug', pragmas.debug);
@@ -250,7 +251,7 @@ define([
         this._horizontalRotationAxis = undefined;
 
         // Constants, Make any of these public?
-        var radius = this._ellipsoid.getMaximumRadius();
+        var radius = this._ellipsoid.maximumRadius;
         this._zoomFactor = 5.0;
         this._rotateFactor = 1.0 / radius;
         this._rotateRateRangeAdjustment = radius;
@@ -261,27 +262,30 @@ define([
         this._maximumZoomRate = FAR;
     };
 
-    /**
-     * Gets the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
-     * as well as how fast to rotate the camera based on the distance to its surface.
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    ScreenSpaceCameraController.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
-
-    /**
-     * Sets the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
-     * as well as how fast to rotate the camera based on the distance to its surface.
-     * @param {Ellipsoid} [ellipsoid=WGS84] The ellipsoid.
-     */
-    ScreenSpaceCameraController.prototype.setEllipsoid = function(ellipsoid) {
-        ellipsoid = ellipsoid || Ellipsoid.WGS84;
-        var radius = ellipsoid.getMaximumRadius();
-        this._ellipsoid = ellipsoid;
-        this._rotateFactor = 1.0 / radius;
-        this._rotateRateRangeAdjustment = radius;
-    };
+    defineProperties(ScreenSpaceCameraController.prototype, {
+        /**
+         * Gets and sets the ellipsoid. The ellipsoid is used to determine the size of the map in 2D and Columbus view
+         * as well as how fast to rotate the camera based on the distance to its surface.
+         * @memberof ScreenSpaceCameraController.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            },
+            set : function(ellipsoid) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(ellipsoid)) {
+                    throw new DeveloperError('ellipsoid is required');
+                }
+                //>>includeEnd('debug');
+                var radius = ellipsoid.maximumRadius;
+                this._ellipsoid = ellipsoid;
+                this._rotateFactor = 1.0 / radius;
+                this._rotateRateRangeAdjustment = radius;
+            }
+        }
+    });
 
     function decay(time, coefficient) {
         if (time < 0) {
@@ -371,7 +375,7 @@ define([
 
         var aggregator = controller._aggregator;
 
-        if (!Array.isArray(eventTypes)) {
+        if (!isArray(eventTypes)) {
             scratchEventTypeArray[0] = eventTypes;
             eventTypes = scratchEventTypeArray;
         }
@@ -446,9 +450,11 @@ define([
         var p1 = Cartesian3.subtract(end, position, scratchTranslateP1);
         var direction = Cartesian3.subtract(p0, p1, scratchTranslateP0);
         var distance = Cartesian3.magnitude(direction);
-        Cartesian3.normalize(direction, direction);
 
-        cameraController.move(direction, distance);
+        if (distance > 0.0) {
+            Cartesian3.normalize(direction, direction);
+            cameraController.move(direction, distance);
+        }
     }
 
     function zoom2D(controller, movement) {
@@ -592,11 +598,11 @@ define([
         var transform = Matrix4.fromTranslation(center, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
 
-        controller.setEllipsoid(oldEllipsoid);
+        controller.ellipsoid = oldEllipsoid;
     }
 
     var zoomCVWindowPos = new Cartesian2();
@@ -865,7 +871,7 @@ define([
 
         var ellipsoid = controller._ellipsoid;
         var minHeight = controller.minimumZoomDistance * 0.25;
-        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.position).height;
+        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.positionWC).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
@@ -892,16 +898,15 @@ define([
 
         // CAMERA TODO: Remove the need for camera access
         var camera = cameraController._camera;
-        center = camera.worldToCameraCoordinates(center, center);
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
 
         var oldEllipsoid = controller._ellipsoid;
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
-        controller.setEllipsoid(oldEllipsoid);
+        controller.ellipsoid = oldEllipsoid;
     }
 
     var look3DStartPos = new Cartesian2();

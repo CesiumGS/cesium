@@ -293,8 +293,6 @@ define([
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
      *
-     * @exception {DeveloperError} color is required.
-     *
      * @example
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
@@ -359,9 +357,6 @@ define([
      * @param {Color} value The value to pack.
      * @param {Array} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} array is required.
      */
     Color.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -387,8 +382,6 @@ define([
      * @param {Array} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
-     *
-     * @exception {DeveloperError} array is required.
      */
     Color.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

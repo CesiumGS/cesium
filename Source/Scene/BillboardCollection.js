@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/defaultValue',
@@ -26,6 +27,7 @@ define([
         '../Shaders/BillboardCollectionFS'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         Color,
         defaultValue,
@@ -102,7 +104,7 @@ define([
      * <br /><br />
      * Billboards are added and removed from the collection using {@link BillboardCollection#add}
      * and {@link BillboardCollection#remove}.  All billboards in a collection reference images
-     * from the same texture atlas, which is assigned using {@link BillboardCollection#setTextureAtlas}.
+     * from the same texture atlas, which is assigned using {@link BillboardCollection#textureAtlas}.
      *
      * @alias BillboardCollection
      * @constructor
@@ -118,7 +120,7 @@ define([
      *
      * @see BillboardCollection#add
      * @see BillboardCollection#remove
-     * @see BillboardCollection#setTextureAtlas
+     * @see BillboardCollection#textureAtlas
      * @see Billboard
      * @see TextureAtlas
      * @see LabelCollection
@@ -127,7 +129,7 @@ define([
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
      * var atlas = context.createTextureAtlas({images : images});
-     * billboards.setTextureAtlas(atlas);
+     * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
      *   imageIndex : 0
@@ -254,6 +256,87 @@ define([
             }
         };
     };
+
+    defineProperties(BillboardCollection.prototype, {
+        /**
+         * Returns the number of billboards in this collection.  This is commonly used with
+         * {@link BillboardCollection#get} to iterate over all the billboards
+         * in the collection.
+         * @memberof BillboardCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                removeBillboards(this);
+                return this._billboards.length;
+            }
+        },
+
+        /**
+         * Gets and sets the textureAtlas.
+         * @memberof BillboardCollection.prototype
+         * @type {TextureAtlas}
+         *
+         * @example
+         * // Set the texture atlas
+         * // Assigns a texture atlas with two images to a billboard collection.
+         * // Two billboards, each referring to one of the images, are then
+         * // added to the collection.
+         * var billboards = new Cesium.BillboardCollection();
+         * var images = [image0, image1];
+         * var atlas = context.createTextureAtlas({images : images});
+         * billboards.textureAtlas = atlas;
+         * billboards.add({
+         *   // ...
+         *   imageIndex : 0
+         * });
+         * billboards.add({
+         *   // ...
+         *   imageIndex : 1
+         * });
+         */
+        textureAtlas : {
+            get : function() {
+                return this._textureAtlas;
+            },
+            set : function(value) {
+                if (this._textureAtlas !== value) {
+                    this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
+                    this._textureAtlas = value;
+                    this._createVertexArray = true; // New per-billboard texture coordinates
+                }
+            }
+        },
+
+        /**
+         * Gets and sets the destroyTextureAtlas, which determines if the texture atlas is
+         * destroyed when the collection is destroyed.
+         *
+         * If the texture atlas is used by more than one collection, set this to <code>false</code>,
+         * and explicitly destroy the atlas to avoid attempting to destroy it multiple times.
+         *
+         * @memberof BillboardCollection.prototype
+         * @type {Boolean}
+         *
+         * @example
+         * // Set destroyTextureAtlas
+         * // Destroy a billboard collection but not its texture atlas.
+         *
+         * var atlas = context.createTextureAtlas({images : images});
+         * billboards.textureAtlas = atlas;
+         * billboards.destroyTextureAtlas = false;
+         * billboards = billboards.destroy();
+         * console.log(atlas.isDestroyed()); // False
+         */
+        destroyTextureAtlas : {
+            get : function() {
+                return this._destroyTextureAtlas;
+            },
+            set : function(value) {
+                this._destroyTextureAtlas = value;
+            }
+        }
+    });
 
     /**
      * Creates and adds a billboard with the specified initial properties to the collection.
@@ -420,7 +503,7 @@ define([
      * Returns the billboard in the collection at the specified index.  Indices are zero-based
      * and increase as billboards are added.  Removing a billboard shifts all billboards after
      * it to the left, changing their indices.  This function is commonly used with
-     * {@link BillboardCollection#getLength} to iterate over all the billboards
+     * {@link BillboardCollection#length} to iterate over all the billboards
      * in the collection.
      *
      * @memberof BillboardCollection
@@ -433,14 +516,13 @@ define([
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see BillboardCollection#getLength
+     * @see BillboardCollection#length
      *
      * @example
      * // Toggle the show property of every billboard in the collection
-     * var len = billboards.getLength();
+     * var len = billboards.length;
      * for (var i = 0; i < len; ++i) {
      *   var b = billboards.get(i);
      *   b.setShow(!b.getShow());
@@ -457,129 +539,6 @@ define([
         return this._billboards[index];
     };
 
-    /**
-     * Returns the number of billboards in this collection.  This is commonly used with
-     * {@link BillboardCollection#get} to iterate over all the billboards
-     * in the collection.
-     *
-     * @memberof BillboardCollection
-     *
-     * @returns {Number} The number of billboards in this collection.
-     *
-     * @performance Expected constant time.  If billboards were removed from the collection and
-     * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
-     * operation is performed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#get
-     *
-     * @example
-     * // Toggle the show property of every billboard in the collection
-     * var len = billboards.getLength();
-     * for (var i = 0; i < len; ++i) {
-     *   var b = billboards.get(i);
-     *   b.setShow(!b.getShow());
-     * }
-     */
-    BillboardCollection.prototype.getLength = function() {
-        removeBillboards(this);
-        return this._billboards.length;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof BillboardCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#setTextureAtlas
-     * @see Billboard#setImageIndex
-     */
-    BillboardCollection.prototype.getTextureAtlas = function() {
-        return this._textureAtlas;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof BillboardCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#getTextureAtlas
-     * @see Billboard#setImageIndex
-     *
-     * @example
-     * // Assigns a texture atlas with two images to a billboard collection.
-     * // Two billboards, each referring to one of the images, are then
-     * // added to the collection.
-     * var billboards = new Cesium.BillboardCollection();
-     * var images = [image0, image1];
-     * var atlas = context.createTextureAtlas({images : images});
-     * billboards.setTextureAtlas(atlas);
-     * billboards.add({
-     *   // ...
-     *   imageIndex : 0
-     * });
-     * billboards.add({
-     *   // ...
-     *   imageIndex : 1
-     * });
-     */
-    BillboardCollection.prototype.setTextureAtlas = function(value) {
-        if (this._textureAtlas !== value) {
-            this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
-            this._textureAtlas = value;
-            this._createVertexArray = true; // New per-billboard texture coordinates
-        }
-    };
-
-    /**
-     * Returns <code>true</code> if the texture atlas is destroyed when the collection is
-     * destroyed; otherwise, <code>false</code>.
-     *
-     * @memberof BillboardCollection
-     *
-     * @returns <code>true</code> if the texture atlas is destroyed when the collection is
-     * destroyed; otherwise, <code>false</code>.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#setDestroyTextureAtlas
-     */
-    BillboardCollection.prototype.getDestroyTextureAtlas = function() {
-        return this._destroyTextureAtlas;
-    };
-
-    /**
-     * Determines if the texture atlas is destroyed when the collection is destroyed.  If the texture
-     * atlas is used by more than one collection, set this to <code>false</code>, and explicitly
-     * destroy the atlas to avoid attempting to destroy it multiple times.
-     *
-     * @memberof BillboardCollection
-     *
-     * @param {Boolean} value Indicates if the texture atlas is destroyed when the collection is destroyed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see BillboardCollection#getDestroyTextureAtlas
-     * @see BillboardCollection#setTextureAtlas
-     * @see BillboardCollection#destroy
-     *
-     * @example
-     * // Destroy a billboard collection but not its texture atlas.
-     *
-     * var atlas = context.createTextureAtlas({images : images});
-     * billboards.setTextureAtlas(atlas);
-     * billboards.setDestroyTextureAtlas(false);
-     * billboards = billboards.destroy();
-     * console.log(atlas.isDestroyed()); // False
-     */
-    BillboardCollection.prototype.setDestroyTextureAtlas = function(value) {
-        this._destroyTextureAtlas = value;
-    };
 
     function getDirectionsVertexBuffer(context) {
         var sixteenK = 16 * 1024;

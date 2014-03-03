@@ -166,13 +166,13 @@ defineSuite([
     });
 
     it('has zero labels when constructed', function() {
-        expect(labels.getLength()).toEqual(0);
+        expect(labels.length).toEqual(0);
     });
 
     it('can add a label', function() {
         var label = labels.add();
 
-        expect(labels.getLength()).toEqual(1);
+        expect(labels.length).toEqual(1);
         expect(labels.get(0)).toBe(label);
     });
 
@@ -204,17 +204,17 @@ defineSuite([
 
     it('returns false when removing undefined', function() {
         labels.add();
-        expect(labels.getLength()).toEqual(1);
+        expect(labels.length).toEqual(1);
         expect(labels.remove(undefined)).toEqual(false);
-        expect(labels.getLength()).toEqual(1);
+        expect(labels.length).toEqual(1);
     });
 
     it('returns false when removing a previously removed label', function() {
         var label = labels.add();
-        expect(labels.getLength()).toEqual(1);
+        expect(labels.length).toEqual(1);
         expect(labels.remove(label)).toEqual(true);
         expect(labels.remove(label)).toEqual(false);
-        expect(labels.getLength()).toEqual(0);
+        expect(labels.length).toEqual(0);
     });
 
     it('isDestroyed returns false', function() {
@@ -237,11 +237,11 @@ defineSuite([
         expect(labels.contains(two)).toEqual(false);
         expect(labels.contains(three)).toEqual(true);
 
-        expect(labels.getLength()).toEqual(1);
+        expect(labels.length).toEqual(1);
         expect(labels.get(0)).toBe(three);
 
         var four = labels.add();
-        expect(labels.getLength()).toEqual(2);
+        expect(labels.length).toEqual(2);
         expect(labels.get(0)).toBe(three);
         expect(labels.get(1)).toBe(four);
         expect(labels.contains(three)).toEqual(true);
@@ -255,10 +255,10 @@ defineSuite([
         labels.add({
             position : new Cartesian3(4.0, 5.0, 6.0)
         });
-        expect(labels.getLength()).toEqual(2);
+        expect(labels.length).toEqual(2);
 
         labels.removeAll();
-        expect(labels.getLength()).toEqual(0);
+        expect(labels.length).toEqual(0);
     });
 
     it('can check if it contains a label', function() {
@@ -782,15 +782,15 @@ defineSuite([
             text : 'abc'
         });
         labels.update(context, frameState, []);
-        expect(labels._billboardCollection.getLength()).toEqual(3);
+        expect(labels._billboardCollection.length).toEqual(3);
 
         label.setText('a');
         labels.update(context, frameState, []);
-        expect(labels._billboardCollection.getLength()).toEqual(3);
+        expect(labels._billboardCollection.length).toEqual(3);
 
         label.setText('def');
         labels.update(context, frameState, []);
-        expect(labels._billboardCollection.getLength()).toEqual(3);
+        expect(labels._billboardCollection.length).toEqual(3);
     });
 
     describe('Label', function() {
@@ -974,12 +974,12 @@ defineSuite([
             });
             labels.update(context, frameState, []);
             expect(label._glyphs.length).toEqual(3);
-            expect(labels._billboardCollection.getLength()).toEqual(3);
+            expect(labels._billboardCollection.length).toEqual(3);
 
             label.setText(' ab c');
             labels.update(context, frameState, []);
             expect(label._glyphs.length).toEqual(5);
-            expect(labels._billboardCollection.getLength()).toEqual(3);
+            expect(labels._billboardCollection.length).toEqual(3);
         });
 
         function getGlyphBillboardVertexTranslate(label, index) {
@@ -1294,7 +1294,7 @@ defineSuite([
 
     it('computes bounding sphere in 3D', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
@@ -1317,7 +1317,7 @@ defineSuite([
 
     it('computes bounding sphere in Columbus view', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
@@ -1347,7 +1347,7 @@ defineSuite([
 
     it('computes bounding sphere in 2D', function() {
         var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
             position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
@@ -1358,7 +1358,7 @@ defineSuite([
             text : 'two'
         });
 
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         var orthoFrustum = new OrthographicFrustum();
         orthoFrustum.right = maxRadii * Math.PI;
         orthoFrustum.left = -orthoFrustum.right;

@@ -11,6 +11,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Quaternion',
+        'Core/ReferenceFrame',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicObject',
@@ -35,6 +36,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Quaternion,
+        ReferenceFrame,
         Spherical,
         DynamicBillboard,
         DynamicObject,
@@ -532,11 +534,11 @@ defineSuite([
         var clockPacket = {
             id : 'notTheDocument',
             clock : {
-                interval : "2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-                currentTime : "2012-03-15T10:00:00Z",
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
                 multiplier : 60.0,
-                range : "LOOP_STOP",
-                step : "SYSTEM_CLOCK_MULTIPLIER"
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
             }
         };
 
@@ -769,6 +771,62 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(new JulianDate());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+    });
+
+    it('Can set reference frame', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : 'INERTIAL',
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        czml = {
+            position : {
+                referenceFrame : 'FIXED',
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(czml);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('Default reference frame on existing interval does not reset value to FIXED.', function() {
+        var epoch = new JulianDate();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                referenceFrame : 'INERTIAL',
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.process(czml);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
+
+        var czml2 = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+        dataSource.process(czml2);
+
+        expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
     });
 
     it('CZML sampled cartographicRadians positions work.', function() {
@@ -1073,6 +1131,21 @@ defineSuite([
         dataSource.load(packet);
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
         expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
+
+        packet = {
+            vertexPositions : [{
+                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                cartesian : [1.0, 2.0, 3.0]
+            }, {
+                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian : [4.0, 5.0, 6.0]
+            }]
+        };
+        dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
+        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual([new Cartesian3(4.0, 5.0, 6.0)]);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1090,7 +1163,7 @@ defineSuite([
 
     it('CZML description works.', function() {
         var packet = {
-            description : "this is a description"
+            description : 'this is a description'
         };
 
         var dataSource = new CzmlDataSource();
@@ -1110,7 +1183,7 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         var interval = TimeInterval.fromIso8601(packet1.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
 
         var packet2 = {
@@ -1120,7 +1193,7 @@ defineSuite([
 
         dataSource.process(packet2);
         interval = TimeInterval.fromIso8601(packet2.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
     });
 
@@ -1136,7 +1209,7 @@ defineSuite([
 
         var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
         var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
 
@@ -1148,7 +1221,7 @@ defineSuite([
 
         interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
         interval2 = TimeInterval.fromIso8601(packet2.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
     });
@@ -1305,6 +1378,10 @@ defineSuite([
                         }
                     }
                 },
+                height : 1,
+                extrudedHeight : 2,
+                granularity : 3,
+                stRotation : 4,
                 show : true
             }
         };
@@ -1316,6 +1393,10 @@ defineSuite([
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(dynamicObject.polygon.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1);
+        expect(dynamicObject.polygon.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(2);
+        expect(dynamicObject.polygon.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+        expect(dynamicObject.polygon.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1447,6 +1528,29 @@ defineSuite([
         expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
+    });
+
+    it('pyramid directions supports intervals.', function() {
+        var pyramidPacket = {
+            pyramid : {
+                directions : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    unitSpherical : [1.0, 2.0]
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    unitSpherical : [3.0, 4.0]
+                }]
+            }
+        };
+
+        var expected1 = [new Spherical(pyramidPacket.pyramid.directions[0].unitSpherical[0], pyramidPacket.pyramid.directions[0].unitSpherical[1])];
+        var expected2 = [new Spherical(pyramidPacket.pyramid.directions[1].unitSpherical[0], pyramidPacket.pyramid.directions[1].unitSpherical[1])];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(pyramidPacket);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(expected1);
+        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(expected2);
     });
 
     it('CZML adds data for constrained pyramid.', function() {
@@ -1689,5 +1793,54 @@ defineSuite([
         dataSource.load(packets);
 
         expect(spy.callCount).toEqual(1);
+    });
+
+    it('CZML materials work with composite interval', function() {
+        var before = JulianDate.fromIso8601('2012-03-15T09:23:59Z');
+        var solid = JulianDate.fromIso8601('2012-03-15T10:00:00Z');
+        var grid1 = JulianDate.fromIso8601('2012-03-15T11:00:00Z');
+        var grid2 = JulianDate.fromIso8601('2012-03-15T12:00:00Z');
+        var after = JulianDate.fromIso8601('2012-03-15T12:00:01Z');
+
+        var packet = {
+            polygon : {
+                material : [{
+                    interval : '2012-03-15T10:00:00Z/2012-03-15T11:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T10:00:00Z',
+                    solidColor : {
+                        color : {
+                            rgba : [240, 0, 0, 0]
+                        }
+                    }
+                }, {
+                    interval : '2012-03-15T11:00:00Z/2012-03-15T12:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T11:00:00Z',
+                    grid : {
+                        color : {
+                            rgba : [240, 255, 255, 255]
+                        },
+                        cellAlpha : 0,
+                        rowCount : 36,
+                        rowThickness : 1,
+                        columnCount : 9,
+                        columnThickness : 1
+                    }
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.polygon.material.getType(solid)).toBe('Color');
+        expect(dynamicObject.polygon.material.getType(grid1)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(grid2)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(before)).toBeUndefined();
+        expect(dynamicObject.polygon.material.getType(after)).toBeUndefined();
+
     });
 });

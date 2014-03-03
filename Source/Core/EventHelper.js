@@ -42,9 +42,6 @@ define([
      * @returns {Function} A function that will remove this event listener when invoked.
      *
      * @see Event#addEventListener
-     *
-     * @exception {DeveloperError} event is required and must be a function.
-     * @exception {DeveloperError} listener is required and must be a function.
      */
     EventHelper.prototype.add = function(event, listener, scope) {
         //>>includeStart('debug', pragmas.debug);

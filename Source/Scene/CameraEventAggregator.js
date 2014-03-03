@@ -1,24 +1,22 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defined',
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/Cartesian2',
         '../Core/KeyboardEventModifier',
         './CameraEventType'
     ], function(
+        Cartesian2,
         defined,
-        defaultValue,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         CesiumMath,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        Cartesian2,
         KeyboardEventModifier,
         CameraEventType) {
     "use strict";
@@ -111,7 +109,7 @@ define([
         update[key] = true;
 
         var movement = aggregator._movement[key];
-        if(!defined(movement)) {
+        if (!defined(movement)) {
             movement = aggregator._movement[key] = {};
         }
 
@@ -245,8 +243,6 @@ define([
      *
      * @param {HTMLCanvasElement} canvas DOC_TBA
      *
-     * @exception {DeveloperError} canvas is required.
-     *
      * @see ScreenSpaceEventHandler
      */
     var CameraEventAggregator = function(canvas) {
@@ -296,8 +292,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isMoving = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
@@ -317,8 +311,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getMovement = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
@@ -339,8 +331,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getLastMovement = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
@@ -365,8 +355,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Boolean} Whether the mouse button is down or a touch has started.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isButtonDown = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
@@ -400,8 +388,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Date} The time the button was pressed or the touch was started.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonPressTime = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);
@@ -421,8 +407,6 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Date} The time the button was released or the touch was ended.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonReleaseTime = function(type, modifier) {
         //>>includeStart('debug', pragmas.debug);

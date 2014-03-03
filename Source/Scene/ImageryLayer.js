@@ -389,7 +389,7 @@ define([
             insertionPoint = tile.imagery.length;
         }
 
-        if (!imageryProvider.isReady()) {
+        if (!imageryProvider.ready) {
             // The imagery provider is not ready, so we can't create skeletons, yet.
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
@@ -402,7 +402,7 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the extent.  The imagery TilingScheme's extent
         // always fully contains the ImageryProvider's extent.
-        var extent = tile.extent.intersectWith(imageryProvider.getExtent());
+        var extent = tile.extent.intersectWith(imageryProvider.extent);
         extent = extent.intersectWith(this._extent);
 
         if (extent.east <= extent.west || extent.north <= extent.south) {
@@ -413,7 +413,7 @@ define([
                 return false;
             }
 
-            var baseImageryExtent = imageryProvider.getExtent().intersectWith(this._extent);
+            var baseImageryExtent = imageryProvider.extent.intersectWith(this._extent);
             var baseTerrainExtent = tile.extent;
 
             if (baseTerrainExtent.south >= baseImageryExtent.north) {
@@ -444,19 +444,19 @@ define([
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = getLevelWithMaximumTexelSpacing(this, targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, imageryLevel);
-        var maximumLevel = imageryProvider.getMaximumLevel();
+        var maximumLevel = imageryProvider.maximumLevel;
         if (imageryLevel > maximumLevel) {
             imageryLevel = maximumLevel;
         }
 
-        if (defined(imageryProvider.getMinimumLevel)) {
-            var minimumLevel = imageryProvider.getMinimumLevel();
+        if (defined(imageryProvider.minimumLevel)) {
+            var minimumLevel = imageryProvider.minimumLevel;
             if (imageryLevel < minimumLevel) {
                 imageryLevel = minimumLevel;
             }
         }
 
-        var imageryTilingScheme = imageryProvider.getTilingScheme();
+        var imageryTilingScheme = imageryProvider.tilingScheme;
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
 
@@ -612,7 +612,7 @@ define([
             that._requestImageError = TileProviderError.handleError(
                     that._requestImageError,
                     imageryProvider,
-                    imageryProvider.getErrorEvent(),
+                    imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
                     doRequest);
@@ -626,6 +626,10 @@ define([
                 // Too many parallel requests, so postpone loading tile.
                 imagery.state = ImageryState.UNLOADED;
                 return;
+            }
+
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
             }
 
             when(imagePromise, success, failure);
@@ -648,8 +652,8 @@ define([
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
-        if (defined(imageryProvider.getTileDiscardPolicy)) {
-            var discardPolicy = imageryProvider.getTileDiscardPolicy();
+        if (defined(imageryProvider.tileDiscardPolicy)) {
+            var discardPolicy = imageryProvider.tileDiscardPolicy;
             if (defined(discardPolicy)) {
                 // If the discard policy is not ready yet, transition back to the
                 // RECEIVED state and we'll try again next time.
@@ -694,7 +698,7 @@ define([
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
+        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
             (extent.east - extent.west) / texture.getWidth() > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();
@@ -949,11 +953,11 @@ define([
     function getLevelWithMaximumTexelSpacing(layer, texelSpacing, latitudeClosestToEquator) {
         // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
         var imageryProvider = layer._imageryProvider;
-        var tilingScheme = imageryProvider.getTilingScheme();
-        var ellipsoid = tilingScheme.getEllipsoid();
-        var latitudeFactor = Math.cos(latitudeClosestToEquator);
-        var tilingSchemeExtent = tilingScheme.getExtent();
-        var levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
+        var tilingScheme = imageryProvider.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var tilingSchemeExtent = tilingScheme.extent;
+        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);

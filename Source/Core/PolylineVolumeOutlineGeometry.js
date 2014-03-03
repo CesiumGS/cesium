@@ -1,47 +1,43 @@
 /*global define*/
 define([
+        './BoundingRectangle',
+        './BoundingSphere',
+        './ComponentDatatype',
+        './CornerType',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './CornerType',
-        './ComponentDatatype',
         './Ellipsoid',
         './Geometry',
-        './GeometryPipeline',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
-        './BoundingRectangle',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './WindingOrder'
     ], function(
+        BoundingRectangle,
+        BoundingSphere,
+        ComponentDatatype,
+        CornerType,
+        defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        CornerType,
-        ComponentDatatype,
         Ellipsoid,
         Geometry,
-        GeometryPipeline,
+        GeometryAttribute,
+        GeometryAttributes,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
-        defaultValue,
-        BoundingSphere,
-        BoundingRectangle,
-        GeometryAttribute,
-        GeometryAttributes,
         WindingOrder) {
     "use strict";
 
-    function computeAttributes(positions, shape, boundingRectangle, ellipsoid) {
+    function computeAttributes(positions, shape) {
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -104,9 +100,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
-     *
-     * @exception {DeveloperError} options.polylinePositions is required.
-     * @exception {DeveloperError} options.shapePositions is required.
      *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
@@ -174,7 +167,7 @@ define([
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
 
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry, false);
-        return computeAttributes(computedPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry._ellipsoid);
+        return computeAttributes(computedPositions, shape2D);
     };
 
     return PolylineVolumeOutlineGeometry;

@@ -26,22 +26,15 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPolyline
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicVectorVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -52,9 +45,9 @@ define([
 
         this._scene = scene;
         this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.getPrimitives().add(polylineCollection);
+        scene.primitives.add(polylineCollection);
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -101,13 +94,11 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicVectorVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -173,7 +164,7 @@ define([
      */
     DynamicVectorVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };
 
@@ -209,12 +200,12 @@ define([
                 vectorVisualizerIndex = unusedIndexes.pop();
                 polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
             } else {
-                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.getLength();
+                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.length;
                 polyline = dynamicVectorVisualizer._polylineCollection.add();
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);

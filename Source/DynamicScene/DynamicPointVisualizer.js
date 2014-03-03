@@ -26,22 +26,16 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPoint
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -54,10 +48,10 @@ define([
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
-        billboardCollection.setTextureAtlas(atlas);
-        scene.getPrimitives().add(billboardCollection);
+        billboardCollection.textureAtlas = atlas;
+        scene.primitives.add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -103,13 +97,11 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicPointVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -172,7 +164,7 @@ define([
      */
     DynamicPointVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._billboardCollection);
+        this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
@@ -216,11 +208,11 @@ define([
                 pointVisualizerIndex = unusedIndexes.pop();
                 billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
             } else {
-                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.getLength();
+                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.length;
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard.dynamicObject = dynamicObject;
+            billboard.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);

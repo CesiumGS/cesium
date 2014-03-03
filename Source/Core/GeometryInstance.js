@@ -3,16 +3,12 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Matrix4',
-        './Geometry',
-        './GeometryInstanceAttribute'
+        './Matrix4'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        Matrix4,
-        Geometry,
-        GeometryInstanceAttribute) {
+        Matrix4) {
     "use strict";
 
     /**
@@ -28,8 +24,6 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
      * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
-     *
-     * @exception {DeveloperError} options.geometry is required.
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.

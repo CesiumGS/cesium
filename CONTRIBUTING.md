@@ -1,8 +1,13 @@
-This document describes how we merge pull requests.  See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to get the code and setup a development environment, and see [CONTRIBUTORS.md](CONTRIBUTORS.md) for the current list of contributors.
+We love pull requests.  We strive to promptly review them, provide feedback, and merge.  This document describes how to get yours merged quickly.
 
 ## License
 
-We love pull requests.  We promptly [review](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Code-Review-Tips) them, provide feedback, and merge.  We use the [Apache 2.0 License](LICENSE.md).  Before we can merge a pull request, we require a signed [Contributor License Agreement](http://producingoss.com/en/copyright-assignment.html#copyright-assignment-cla) (CLA).  This can be emailed to cla@agi.com, and only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  There is a CLA for [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).  Please email completed CLAs and related questions to [cla@agi.com](mailto:cla@agi.com).
+We use the [Apache 2.0 License](LICENSE.md).  Before we can merge a pull request, we require a signed Contributor License Agreement.  This can be emailed to cla@agi.com, and only needs to be completed once.  The CLA ensures you retain copyright to your contributions, and we have the right to use them and incorporate them into Cesium.  There is a CLA for:
+
+* [individuals](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt) and 
+* [corporations](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt).
+
+Please email a completed CLA and related questions to [cla@agi.com](mailto:cla@agi.com).
 
 ## Development Best Practices
 
@@ -16,3 +21,7 @@ If new public classes, functions, or properties were added, also:
    * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
    * Update [CHANGES.md](CHANGES.md).
    * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
+
+## Resources
+
+See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to get the code and setup a development environment, and see [CONTRIBUTORS.md](CONTRIBUTORS.md) for the current list of contributors.

@@ -48,23 +48,20 @@ define([
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.level The tile level-of-detail.
      * @param {Tile} description.parent The parent of this tile in a tile tree system.
-     *
-     * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
-     * @exception {DeveloperError} description.level is required.
      */
     var Tile = function(description) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(description)) {
             throw new DeveloperError('description is required.');
         }
-        if (!defined(description.x) || !defined(description.y)) {
-            if (!defined(description.extent)) {
-                throw new DeveloperError('Either description.extent is required or description.x and description.y are required.');
-            }
+        if (!defined(description.x)) {
+            throw new DeveloperError('description.x is required.');
+        } else if (!defined(description.y)) {
+            throw new DeveloperError('description.y is required.');
         } else if (description.x < 0 || description.y < 0) {
             throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
         }
-        if (!defined(description.level) || description.zoom < 0) {
+        if (!defined(description.level)) {
             throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
         }
         if (!defined(description.tilingScheme)) {
@@ -370,7 +367,7 @@ define([
 
             if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
                 var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.getImageryProvider().isReady()) {
+                if (imageryLayer.getImageryProvider().ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
                     tileImagery.freeResources();
@@ -418,14 +415,14 @@ define([
         }
 
         // Map imagery tiles to this terrain tile
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for (var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 layer._createTileImagerySkeletons(tile, terrainProvider);
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = tile.tilingScheme.ellipsoid;
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;

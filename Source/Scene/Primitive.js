@@ -1,61 +1,61 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/clone',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Matrix4',
-        '../Core/BoundingSphere',
+        '../Core/DeveloperError',
+        '../Core/isArray',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
-        '../Core/ComponentDatatype',
+        '../Core/Matrix4',
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
-        '../Core/clone',
         '../Renderer/BufferUsage',
-        '../Renderer/VertexLayout',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/CullFace',
+        '../Renderer/DrawCommand',
         '../Renderer/Pass',
+        '../Renderer/VertexLayout',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
         '../ThirdParty/when'
     ], function(
+        BoundingSphere,
+        clone,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
-        Matrix4,
-        BoundingSphere,
+        DeveloperError,
+        isArray,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
         GeometryInstanceAttribute,
-        ComponentDatatype,
+        Matrix4,
         TaskProcessor,
         GeographicProjection,
-        clone,
         BufferUsage,
-        VertexLayout,
-        DrawCommand,
         createShaderSource,
         CullFace,
+        DrawCommand,
         Pass,
+        VertexLayout,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
         when) {
     "use strict";
-
-    var EMPTY_ARRAY = [];
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
@@ -110,7 +110,7 @@ define([
      *     material : Cesium.Material.fromType('Checkerboard')
      *   })
      * });
-     * scene.getPrimitives().add(primitive);
+     * scene.primitives.add(primitive);
      *
      * // 2. Draw different instances each with a unique color
      * var extentInstance = new Cesium.GeometryInstance({
@@ -143,7 +143,7 @@ define([
      *   geometryInstances : [extentInstance, ellipsoidInstance],
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
-     * scene.getPrimitives().add(primitive);
+     * scene.primitives.add(primitive);
      *
      * // 3. Create the geometry on the main thread.
      * var primitive = new Cesium.Primitive({
@@ -161,7 +161,7 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
-     * scene.getPrimitives().add(primitive);
+     * scene.primitives.add(primitive);
      *
      * @see GeometryInstance
      * @see Appearance
@@ -399,7 +399,11 @@ define([
             var name = match[1];
 
             var functionName = 'vec4 czm_compute' + name[0].toUpperCase() + name.substr(1) + '()';
-            forwardDecl += functionName + ';\n';
+
+            // Don't forward-declare czm_computePosition because computePosition.glsl already does.
+            if (functionName !== 'vec4 czm_computePosition()') {
+                forwardDecl += functionName + ';\n';
+            }
 
             if (!primitive.allow3DOnly) {
                 attributes +=
@@ -523,7 +527,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
-            (defined(this.geometryInstances) && Array.isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
+            (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length === 0) ||
             (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this.allow3DOnly) ||
             (!frameState.passes.render && !frameState.passes.pick)) {
@@ -554,7 +558,7 @@ define([
                 if (this._state === PrimitiveState.FAILED) {
                     throw this._error;
                 } else if (this._state === PrimitiveState.READY) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
                     length = instances.length;
                     var promises = [];
@@ -587,7 +591,7 @@ define([
                         that._state = PrimitiveState.FAILED;
                     });
                 } else if (this._state === PrimitiveState.CREATED) {
-                    instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                    instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                     clonedInstances = new Array(instances.length);
 
                     geometries = this._geometries.concat(this._createdGeometries);
@@ -606,7 +610,7 @@ define([
                         task : 'combineGeometry',
                         instances : clonedInstances,
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                        ellipsoid : projection.getEllipsoid(),
+                        ellipsoid : projection.ellipsoid,
                         isGeographic : projection instanceof GeographicProjection,
                         elementIndexUintSupported : context.getElementIndexUint(),
                         allow3DOnly : this.allow3DOnly,
@@ -633,7 +637,7 @@ define([
                     });
                 }
             } else {
-                instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+                instances = (isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
                 length = instances.length;
                 geometries = this._createdGeometries;
 
@@ -665,7 +669,7 @@ define([
                 var result = PrimitivePipeline.combineGeometry({
                     instances : clonedInstances,
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
-                    ellipsoid : projection.getEllipsoid(),
+                    ellipsoid : projection.ellipsoid,
                     projection : projection,
                     elementIndexUintSupported : context.getElementIndexUint(),
                     allow3DOnly : this.allow3DOnly,
@@ -721,7 +725,7 @@ define([
                 this.geometryInstances = undefined;
             }
 
-            this._geomtries = undefined;
+            this._geometries = undefined;
             this._createdGeometries = undefined;
             this._state = PrimitiveState.COMPLETE;
         }
@@ -976,7 +980,6 @@ define([
      *
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
-     * @exception {DeveloperError} id is required.
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
      *
      * @example

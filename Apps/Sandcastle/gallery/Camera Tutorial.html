@@ -60,31 +60,28 @@ require(['Cesium'], function(Cesium) {
         negativeZ : skyBoxBaseUrl + '_mz.jpg'
     });
 
-    var primitives = scene.getPrimitives();
+    var primitives = scene.primitives;
 
     // Bing Maps
     var bing = new Cesium.BingMapsImageryProvider({
-        url : 'http://dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+        url : '//dev.virtualearth.net',
+        mapStyle : Cesium.BingMapsStyle.AERIAL
     });
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
     var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.getImageryLayers().addImageryProvider(bing);
+    centralBody.imageryLayers.addImageryProvider(bing);
 
-    primitives.setCentralBody(centralBody);
+    primitives.centralBody = centralBody;
 
     var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
     // disable the default event handlers
-    scene.getScreenSpaceCameraController().enableRotate = false;
-    scene.getScreenSpaceCameraController().enableTranslate = false;
-    scene.getScreenSpaceCameraController().enableZoom = false;
-    scene.getScreenSpaceCameraController().enableTilt = false;
-    scene.getScreenSpaceCameraController().enableLook = false;
+    scene.screenSpaceCameraController.enableRotate = false;
+    scene.screenSpaceCameraController.enableTranslate = false;
+    scene.screenSpaceCameraController.enableZoom = false;
+    scene.screenSpaceCameraController.enableTilt = false;
+    scene.screenSpaceCameraController.enableLook = false;
 
     var startMousePosition;
     var mousePosition;
@@ -99,7 +96,7 @@ require(['Cesium'], function(Cesium) {
     };
 
     function animate() {
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         var controller = camera.controller;
 
         if (flags.looking) {
@@ -213,7 +210,7 @@ require(['Cesium'], function(Cesium) {
 
         canvas.width = width;
         canvas.height = height;
-        scene.getCamera().frustum.aspectRatio = width / height;
+        scene.camera.frustum.aspectRatio = width / height;
     };
     window.addEventListener('resize', onResize, false);
     onResize();

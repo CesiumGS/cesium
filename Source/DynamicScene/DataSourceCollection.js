@@ -2,11 +2,13 @@
 define([
         '../Core/DeveloperError',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Event'
     ], function(
         DeveloperError,
         defined,
+        defineProperties,
         destroyObject,
         Event) {
     "use strict";
@@ -34,13 +36,24 @@ define([
         this.dataSourceRemoved = new Event();
     };
 
+    defineProperties(DataSourceCollection.prototype, {
+        /**
+         * Gets the number of data sources in this collection.
+         * @memberof DataSourceCollection.prototype
+         * @type {Event}
+         */
+        length : {
+            get : function() {
+                return this._dataSources.length;
+            }
+        }
+    });
+
     /**
      * Adds a data source to the collection.
      * @memberof DataSourceCollection
      *
      * @param {DataSource} dataSource The data source to add.
-     *
-     * @exception {DeveloperError} dataSource is required.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
         //>>includeStart('debug', pragmas.debug);
@@ -127,7 +140,6 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     DataSourceCollection.prototype.get = function(index) {
@@ -138,17 +150,6 @@ define([
         //>>includeEnd('debug');
 
         return this._dataSources[index];
-    };
-
-    /**
-     * Gets the number of data sources in this collection.
-     *
-     * @memberof DataSourceCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.getLength = function() {
-        return this._dataSources.length;
     };
 
     /**

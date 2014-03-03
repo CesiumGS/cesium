@@ -29,8 +29,6 @@ define([
         SceneTransforms) {
     "use strict";
 
-    var EMPTY_OBJECT = {};
-
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
      * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
@@ -65,7 +63,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
      */
     var Billboard = function(options, billboardCollection) {
-        options = defaultValue(options, EMPTY_OBJECT);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
@@ -100,6 +98,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._id = options.id;
+        this._collection = defaultValue(options.collection, billboardCollection);
 
         this._pickId = undefined;
         this._pickIdThis = options._pickIdThis;
@@ -136,6 +135,7 @@ define([
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
                 primitive : defaultValue(this._pickIdThis, this),
+                collection : this._collection,
                 id : this._id
             });
         }
@@ -164,8 +164,6 @@ define([
      * @memberof Billboard
      *
      * @param {Boolean} value Indicates if this billboard will be shown.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getShow
      */
@@ -206,8 +204,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian3} value The Cartesian position.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getPosition
      *
@@ -282,8 +278,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian2} value The 2D Cartesian pixel offset.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getPixelOffset
      * @see Label#setPixelOffset
@@ -528,8 +522,6 @@ define([
      *
      * @param {Cartesian3} value The 3D Cartesian offset in eye coordinates.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getEyeOffset
      */
     Billboard.prototype.setEyeOffset = function(value) {
@@ -570,8 +562,6 @@ define([
      * @memberof Billboard
      *
      * @param {HorizontalOrigin} value The horizontal origin.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getHorizontalOrigin
      * @see Billboard#setVerticalOrigin
@@ -618,8 +608,6 @@ define([
      * @memberof Billboard
      *
      * @param {VerticalOrigin} value The vertical origin.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getVerticalOrigin
      * @see Billboard#setHorizontalOrigin
@@ -671,8 +659,6 @@ define([
      *
      * @param {Number} value The scale used to size the billboard.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getScale
      * @see Billboard#setImageIndex
      */
@@ -695,7 +681,7 @@ define([
      * @memberof Billboard
      *
      * @see Billboard#setImageIndex
-     * @see BillboardCollection#setTextureAtlas
+     * @see BillboardCollection#textureAtlas
      */
     Billboard.prototype.getImageIndex = function() {
         return this._imageIndex;
@@ -707,7 +693,7 @@ define([
      * @memberof Billboard
      *
      * @see Billboard#getImageIndex
-     * @see BillboardCollection#setTextureAtlas
+     * @see BillboardCollection#textureAtlas
      */
     Billboard.prototype.setImageIndex = function(value) {
         //>>includeStart('debug', pragmas.debug);
@@ -757,8 +743,6 @@ define([
      * @memberof Billboard
      *
      * @param {Object} value The color's red, green, blue, and alpha components.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#getColor
      *
@@ -815,8 +799,6 @@ define([
      *
      * @param {Number} value The rotation angle in radians.
      *
-     * @exception {DeveloperError} value is required.
-     *
      * @see Billboard#getRotation
      * @see Billboard#getAlignedAxis
      * @see Billboard#setAlignedAxis
@@ -857,8 +839,6 @@ define([
      * @memberof Billboard
      *
      * @param {Cartesian3} value The aligned axis.
-     *
-     * @exception {DeveloperError} value is required.
      *
      * @see Billboard#setRotation
      * @see Billboard#getRotation
@@ -1024,14 +1004,12 @@ define([
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} frameState is required.
      *
      * @see Billboard#setEyeOffset
      * @see Billboard#setPixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
+     * console.log(b.computeScreenSpacePosition(scene.context, scene.frameState).toString());
      */
     var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {

@@ -1,28 +1,26 @@
 /*global define*/
 define([
-        './freezeObject',
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Math',
-        './Cartesian3',
-        './Cartographic'
-       ], function(
-         freezeObject,
-         defaultValue,
-         defined,
-         DeveloperError,
-         Ellipsoid,
-         CesiumMath,
-         Cartesian3,
-         Cartographic) {
+        './Math'
+    ], function(
+        Cartesian3,
+        Cartographic,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
 
     function setConstants(ellipsoidGeodesic) {
-        var uSquared= ellipsoidGeodesic._uSquared;
-        var a = ellipsoidGeodesic._ellipsoid.getMaximumRadius();
-        var b = ellipsoidGeodesic._ellipsoid.getMinimumRadius();
+        var uSquared = ellipsoidGeodesic._uSquared;
+        var a = ellipsoidGeodesic._ellipsoid.maximumRadius;
+        var b = ellipsoidGeodesic._ellipsoid.minimumRadius;
         var f = (a - b) / a;
 
         var cosineHeading = Math.cos(ellipsoidGeodesic._startHeading);
@@ -51,8 +49,8 @@ define([
         var a2 = (1.0 - 3.0 * u2Over4 + 35.0 * u4Over16 / 4.0);
         var a3 = (1.0 - 5.0 * u2Over4);
 
-        var distanceRatio =  a0 * sigma - a1 * Math.sin(2.0 * sigma) * u2Over4 / 2.0 - a2 * Math.sin(4.0 * sigma) * u4Over16 / 16.0 -
-            a3 * Math.sin(6.0 * sigma) * u6Over64 / 48.0 - Math.sin(8.0 * sigma) * 5.0 * u8Over256 / 512;
+        var distanceRatio = a0 * sigma - a1 * Math.sin(2.0 * sigma) * u2Over4 / 2.0 - a2 * Math.sin(4.0 * sigma) * u4Over16 / 16.0 -
+                            a3 * Math.sin(6.0 * sigma) * u6Over64 / 48.0 - Math.sin(8.0 * sigma) * 5.0 * u8Over256 / 512;
 
         var constants = ellipsoidGeodesic._constants;
 
@@ -149,7 +147,7 @@ define([
             }
 
             lambda = l + computeDeltaLambda(eff, sineAlpha, cosineSquaredAlpha,
-                sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
+                                            sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
         } while (Math.abs(lambda - lambdaDot) > CesiumMath.EPSILON12);
 
         var uSquared = cosineSquaredAlpha * (major * major - minor * minor) / (minor * minor);
@@ -157,7 +155,7 @@ define([
         var B = uSquared * (256.0 + uSquared * (uSquared * (74.0 - 47.0 * uSquared) - 128.0)) / 1024.0;
 
         var cosineSquaredTwiceSigmaMidpoint = cosineTwiceSigmaMidpoint * cosineTwiceSigmaMidpoint;
-        var deltaSigma =  B * sineSigma * (cosineTwiceSigmaMidpoint + B * (cosineSigma *
+        var deltaSigma = B * sineSigma * (cosineTwiceSigmaMidpoint + B * (cosineSigma *
                 (2.0 * cosineSquaredTwiceSigmaMidpoint - 1.0) - B * cosineTwiceSigmaMidpoint *
                 (4.0 * sineSigma * sineSigma - 3.0) * (4.0 * cosineSquaredTwiceSigmaMidpoint - 3.0) / 6.0) / 4.0);
 
@@ -174,7 +172,7 @@ define([
 
     function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
         var firstCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(start, scratchCart2), scratchCart1);
-        var lastCartesian  = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end,   scratchCart2), scratchCart2);
+        var lastCartesian = Cartesian3.normalize(ellipsoid.cartographicToCartesian(end, scratchCart2), scratchCart2);
 
         //>>includeStart('debug', pragmas.debug);
         if (Math.abs(Math.abs(Cartesian3.angleBetween(firstCartesian, lastCartesian)) - Math.PI) < 0.0125) {
@@ -182,8 +180,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.getMaximumRadius(), ellipsoid.getMinimumRadius(),
-                start.longitude, start.latitude, end.longitude, end.latitude);
+        vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.maximumRadius, ellipsoid.minimumRadius,
+                               start.longitude, start.latitude, end.longitude, end.latitude);
 
         start.height = 0;
         end.height = 0;
@@ -246,9 +244,6 @@ define([
      *
      * @param {Cartographic} start The initial planetodetic point on the path.
      * @param {Cartographic} end The final planetodetic point on the path.
-     *
-     * @exception {DeveloperError} start cartographic position is required
-     * @exception {DeveloperError} end cartographic position is required
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
         //>>includeStart('debug', pragmas.debug);
@@ -389,7 +384,7 @@ define([
         var lambda = Math.atan2(sineSigma * constants.sineHeading, cc - ss * constants.cosineHeading);
 
         var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha,
-            sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
+                                            sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
 
         if (defined(result)) {
             result.longitude = this._start.longitude + l;

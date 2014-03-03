@@ -282,6 +282,10 @@ define([
         if (!defined(this._rs) || translucencyChanged) {
             this._translucent = translucent;
 
+            // If this render state is ever updated to use a non-default
+            // depth range, the hard-coded values in EllipsoidVS.glsl need
+            // to be updated as well.
+
             this._rs = context.createRenderState({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
@@ -358,7 +362,7 @@ define([
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
-            colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
+            colorCommand.uniformMap = combine(this._uniforms, this.material._uniforms);
             colorCommand.executeInClosestFrustum = translucent;
             colorCommand.owner = defaultValue(this._owner, this);
         }
@@ -403,7 +407,7 @@ define([
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._pickUniforms), this.material._uniforms);
                 pickCommand.executeInClosestFrustum = translucent;
                 pickCommand.owner = defaultValue(this._owner, this);
             }

@@ -18,13 +18,13 @@ defineSuite([
 
     it('construct0', function() {
         var projection = new WebMercatorProjection();
-        expect(projection.getEllipsoid()).toEqual(Ellipsoid.WGS84);
+        expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('construct1', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var projection = new WebMercatorProjection(ellipsoid);
-        expect(projection.getEllipsoid()).toEqual(ellipsoid);
+        expect(projection.ellipsoid).toEqual(ellipsoid);
     });
 
     it('project0', function() {
@@ -41,8 +41,8 @@ defineSuite([
         // expected equations from Wolfram MathWorld:
         // http://mathworld.wolfram.com/MercatorProjection.html
         var expected = new Cartesian3(
-                ellipsoid.getMaximumRadius() * cartographic.longitude,
-                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                ellipsoid.maximumRadius * cartographic.longitude,
+                ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
         var projection = new WebMercatorProjection(ellipsoid);
@@ -56,8 +56,8 @@ defineSuite([
         // expected equations from Wolfram MathWorld:
         // http://mathworld.wolfram.com/MercatorProjection.html
         var expected = new Cartesian3(
-                ellipsoid.getMaximumRadius() * cartographic.longitude,
-                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                ellipsoid.maximumRadius * cartographic.longitude,
+                ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
         var projection = new WebMercatorProjection(ellipsoid);
@@ -71,8 +71,8 @@ defineSuite([
         // expected equations from Wolfram MathWorld:
         // http://mathworld.wolfram.com/MercatorProjection.html
         var expected = new Cartesian3(
-                ellipsoid.getMaximumRadius() * cartographic.longitude,
-                ellipsoid.getMaximumRadius() * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
+                ellipsoid.maximumRadius * cartographic.longitude,
+                ellipsoid.maximumRadius * Math.log(Math.tan(Math.PI / 4.0 + cartographic.latitude / 2.0)),
                 0.0);
 
         var projection = new WebMercatorProjection(ellipsoid);

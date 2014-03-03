@@ -1,22 +1,23 @@
 /*global define*/
-define([
+define(['./PositionProperty',
+        './Property',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/ReferenceFrame',
-        '../Core/TimeIntervalCollection',
-        './PositionProperty',
-        './Property'
+        '../Core/TimeIntervalCollection'
     ], function(
+        PositionProperty,
+        Property,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         ReferenceFrame,
-        TimeIntervalCollection,
-        PositionProperty,
-        Property) {
+        TimeIntervalCollection) {
     "use strict";
 
     /**
@@ -28,11 +29,36 @@ define([
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
+        this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
+        this._intervals.changedEvent.addEventListener(TimeIntervalCollectionPositionProperty.prototype._intervalsChanged, this);
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     };
 
     defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._intervals.empty;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the interval collection.
          * @memberof TimeIntervalCollectionPositionProperty.prototype
@@ -63,8 +89,6 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     TimeIntervalCollectionPositionProperty.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
@@ -78,9 +102,6 @@ define([
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} referenceFrame is required.
      */
     TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -112,6 +133,13 @@ define([
                (other instanceof TimeIntervalCollectionPositionProperty && //
                 this._intervals.equals(other._intervals, Property.equals) && //
                 this._referenceFrame === other._referenceFrame);
+    };
+
+    /**
+     * @private
+     */
+    TimeIntervalCollectionPositionProperty.prototype._intervalsChanged = function() {
+        this._definitionChanged.raiseEvent(this);
     };
 
     return TimeIntervalCollectionPositionProperty;

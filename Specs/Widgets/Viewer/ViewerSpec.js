@@ -298,7 +298,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene.getContext();
+        var context = viewer.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -321,8 +321,8 @@ defineSuite([
         viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
+        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
     });
 
@@ -331,8 +331,8 @@ defineSuite([
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
+        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -341,8 +341,8 @@ defineSuite([
         viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
+        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });
@@ -431,6 +431,118 @@ defineSuite([
         expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
         expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
         expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+    });
+
+    it('sets the clock for multiple data sources', function() {
+        var dataSource1 = new MockDataSource();
+        dataSource1.clock = new DynamicClock();
+        dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+
+        viewer = new Viewer(container);
+        viewer.dataSources.add(dataSource1);
+
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        var dataSource2 = new MockDataSource();
+        dataSource2.clock = new DynamicClock();
+        dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+
+        viewer.dataSources.add(dataSource2);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+
+        var dataSource3 = new MockDataSource();
+        dataSource3.clock = new DynamicClock();
+        dataSource3.clock.startTime = JulianDate.fromIso8601('2015-08-01T18:00Z');
+        dataSource3.clock.stopTime = JulianDate.fromIso8601('2015-08-21T02:00Z');
+        dataSource3.clock.currentTime = JulianDate.fromIso8601('2015-08-02T00:00Z');
+
+        viewer.dataSources.add(dataSource3);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource3);
+        expect(viewer.clock.startTime).toEqual(dataSource3.clock.startTime);
+
+        // Removing the last dataSource moves the clock to second-last.
+        viewer.dataSources.remove(dataSource3);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+
+        // Removing the first data source has no effect, because it's not active.
+        viewer.dataSources.remove(dataSource1);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource2);
+        expect(viewer.clock.startTime).toEqual(dataSource2.clock.startTime);
+    });
+
+    it('updates the clock when the data source changes', function() {
+        var dataSource = new MockDataSource();
+        dataSource.clock = new DynamicClock();
+        dataSource.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+        dataSource.clock.clockRange = ClockRange.CLAMPED;
+        dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
+        dataSource.clock.multiplier = 20.0;
+
+        viewer = new Viewer(container);
+        viewer.dataSources.add(dataSource);
+
+        dataSource.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+        dataSource.clock.clockRange = ClockRange.UNBOUNDED;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 20.0;
+
+        dataSource.changedEvent.raiseEvent(dataSource);
+
+        expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
+        expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
+        expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
+        expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+    });
+
+    it('can manually control the clock tracking', function() {
+        var dataSource1 = new MockDataSource();
+        dataSource1.clock = new DynamicClock();
+        dataSource1.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+
+        viewer = new Viewer(container, { automaticallyTrackDataSourceClocks : false });
+        viewer.dataSources.add(dataSource1);
+
+        // Because of the above Viewer option, data sources are not automatically
+        // selected for clock tracking.
+        expect(viewer.clockTrackedDataSource).not.toBeDefined();
+        // The mock data source time is in the past, so will not be the default time.
+        expect(viewer.clock.startTime).not.toEqual(dataSource1.clock.startTime);
+
+        // Manually set the first data source as the tracked data source.
+        viewer.clockTrackedDataSource = dataSource1;
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        var dataSource2 = new MockDataSource();
+        dataSource2.clock = new DynamicClock();
+        dataSource2.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
+        dataSource2.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
+        dataSource2.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
+
+        // Adding a second data source in manual mode still leaves the first one tracked.
+        viewer.dataSources.add(dataSource2);
+        expect(viewer.clockTrackedDataSource).toBe(dataSource1);
+        expect(viewer.clock.startTime).toEqual(dataSource1.clock.startTime);
+
+        // Removing the tracked data source in manual mode turns off tracking, even
+        // if other data sources remain available for tracking.
+        viewer.dataSources.remove(dataSource1);
+        expect(viewer.clockTrackedDataSource).not.toBeDefined();
     });
 
     it('shows the error panel when render throws', function() {

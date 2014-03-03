@@ -70,6 +70,7 @@ define([
      *                  otherwise, false.
      *
      * @see TerrainData
+     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
@@ -153,7 +154,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var nativeExtent = tilingScheme.tileXYToNativeExtent(x, y, level);
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 

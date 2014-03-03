@@ -50,7 +50,7 @@ defineSuite([
 
     afterEach(function() {
         scene.debugCommandFilter = undefined;
-        scene.getPrimitives().removeAll();
+        scene.primitives.removeAll();
     });
 
     afterAll(function() {
@@ -58,16 +58,15 @@ defineSuite([
     });
 
     it('constructor has expected defaults', function() {
-        expect(scene.getCanvas()).toBeInstanceOf(HTMLCanvasElement);
-        expect(scene.getContext()).toBeInstanceOf(Context);
-        expect(scene.getPrimitives()).toBeInstanceOf(CompositePrimitive);
-        expect(scene.getCamera()).toBeInstanceOf(Camera);
-        expect(scene.getUniformState()).toBeInstanceOf(UniformState);
-        expect(scene.getScreenSpaceCameraController()).toBeInstanceOf(ScreenSpaceCameraController);
-        expect(scene.getFrameState()).toBeInstanceOf(FrameState);
-        expect(scene.getAnimations()).toBeInstanceOf(AnimationCollection);
+        expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
+        expect(scene.context).toBeInstanceOf(Context);
+        expect(scene.primitives).toBeInstanceOf(CompositePrimitive);
+        expect(scene.camera).toBeInstanceOf(Camera);
+        expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
+        expect(scene.frameState).toBeInstanceOf(FrameState);
+        expect(scene.animations).toBeInstanceOf(AnimationCollection);
 
-        var contextAttributes = scene.getContext()._gl.getContextAttributes();
+        var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
         expect(contextAttributes.stencil).toEqual(false);
@@ -89,7 +88,7 @@ defineSuite([
             webgl : webglOptions
         });
 
-        var contextAttributes = s.getContext()._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
@@ -103,45 +102,38 @@ defineSuite([
     it('draws background color', function() {
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    function getMockPrimitive(options) {
-        return {
+    it('calls afterRender functions', function() {
+        var spyListener = jasmine.createSpy('listener');
+
+        var primitive = {
             update : function(context, frameState, commandList) {
-                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-                if (defined(options.command)) {
-                    commandList.push(options.command);
-                }
-
-                if (defined(options.event)) {
-                    frameState.events.push(options.event);
-                }
+                frameState.afterRender.push(spyListener);
             },
             destroy : function() {
             }
         };
-    }
-
-    it('fires FrameState events', function() {
-        var spyListener = jasmine.createSpy('listener');
-        var event = new Event();
-        event.addEventListener(spyListener);
-
-        scene.getPrimitives().add(getMockPrimitive({
-            event : event
-        }));
+        scene.primitives.add(primitive);
 
         scene.initializeFrame();
         scene.render();
         expect(spyListener).toHaveBeenCalled();
     });
+
+    function CommandMockPrimitive(command) {
+        this.update = function(context, frameState, commandList) {
+            commandList.push(command);
+        };
+        this.destroy = function() {
+        };
+    }
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand();
@@ -149,9 +141,7 @@ defineSuite([
         c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
             return command !== c;   // Do not execute command
@@ -168,9 +158,7 @@ defineSuite([
         c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.initializeFrame();
@@ -185,26 +173,22 @@ defineSuite([
         c.debugShowBoundingVolume = true;
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
         var c = new DrawCommand();
         c.execute = function() {};
         c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene.getContext().getShaderCache().getShaderProgram(
+        c.shaderProgram = scene.context.getShaderCache().getShaderProgram(
             'void main() { gl_Position = vec4(1.0); }',
             'void main() { gl_FragColor = vec4(1.0); }');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugShowCommands = true;
         scene.initializeFrame();
@@ -217,6 +201,7 @@ defineSuite([
         scene.debugShowFramesPerSecond = true;
         scene.render();
         expect(scene._performanceDisplay).toBeDefined();
+        scene.debugShowFramesPerSecond = false;
     });
 
     it('opaque/translucent render order (1)', function() {
@@ -235,15 +220,15 @@ defineSuite([
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.getCamera().controller.viewExtent(extent);
+        scene.camera.controller.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -252,7 +237,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene.getContext().readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -274,15 +259,15 @@ defineSuite([
         });
         extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var primitives = scene.getPrimitives();
+        var primitives = scene.primitives;
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.getCamera().controller.viewExtent(extent);
+        scene.camera.controller.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -291,7 +276,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene.getContext().readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

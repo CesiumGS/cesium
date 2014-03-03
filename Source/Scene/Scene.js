@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
@@ -48,6 +49,7 @@ define([
         Color,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         GeographicProjection,
@@ -117,7 +119,7 @@ define([
             creditContainer.style.bottom = '0';
             creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
             creditContainer.style.color = '#ffffff';
-            creditContainer.style['font-size'] = '10pt';
+            creditContainer.style['font-size'] = '10px';
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
@@ -344,72 +346,86 @@ define([
         this.initializeFrame();
     };
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCanvas = function() {
-        return this._canvas;
-    };
+    defineProperties(Scene.prototype, {
+        /**
+         * Gets the canvas element to which this scene is bound.
+         * @memberof Scene.prototype
+         * @type {Element}
+         */
+        canvas : {
+            get : function() {
+                return this._canvas;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getContext = function() {
-        return this._context;
-    };
+        /**
+         * Gets the context.
+         * @memberof Scene.prototype
+         * @type {Context}
+         */
+        context : {
+            get : function() {
+                return this._context;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getPrimitives = function() {
-        return this._primitives;
-    };
+        /**
+         * Gets the collection of primitives.
+         * @memberof Scene.prototype
+         * @type {CompositePrimitive}
+         */
+        primitives : {
+            get : function() {
+                return this._primitives;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getCamera = function() {
-        return this._camera;
-    };
-    // TODO: setCamera
+        /**
+         * Gets the camera.
+         * @memberof Scene.prototype
+         * @type {Camera}
+         */
+        camera : {
+            get : function() {
+                return this._camera;
+            }
+        },
+        // TODO: setCamera
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getScreenSpaceCameraController = function() {
-        return this._screenSpaceCameraController;
-    };
+        /**
+         * Gets the controller for camera input handling.
+         * @memberof Scene.prototype
+         * @type {ScreenSpaceCameraController}
+         */
+        screenSpaceCameraController : {
+            get : function() {
+                return this._screenSpaceCameraController;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getUniformState = function() {
-        return this._context.getUniformState();
-    };
+        /**
+         * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
+         * function, the previous frame's state is returned.
+         * @memberof Scene.prototype
+         * @type {FrameState}
+         */
+        frameState : {
+            get: function() {
+                return this._frameState;
+            }
+        },
 
-    /**
-     * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
-     * function, the previous frame's state is returned.
-     *
-     * @memberof Scene
-     */
-    Scene.prototype.getFrameState = function() {
-        return this._frameState;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
-    Scene.prototype.getAnimations = function() {
-        return this._animations;
-    };
+        /**
+         * Gets the collection of animations taking place in the scene.
+         * @memberof Scene.prototype
+         * @type {AnimationCollection}
+         */
+        animations : {
+            get : function() {
+                return this._animations;
+            }
+        }
+    });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -417,10 +433,10 @@ define([
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.getCentralBody();
+        var cb = scene._primitives.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.getEllipsoid();
-            scratchOccluderBoundingSphere.radius = ellipsoid.getMinimumRadius();
+            var ellipsoid = cb.ellipsoid;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
@@ -441,11 +457,11 @@ define([
         frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
         frameState.frameNumber = frameNumber;
-        frameState.time = time;
+        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
-        frameState.events.length = 0;
+        frameState.afterRender.length = 0;
 
         clearPasses(frameState.passes);
     }
@@ -455,11 +471,6 @@ define([
         for (var m = 0; m < numFrustums; ++m) {
             var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
             var curFar = Math.min(far, farToNearRatio * curNear);
-
-            if (m !== 0) {
-                // Avoid tearing artifacts between adjacent frustums
-                curNear *= 0.99;
-            }
 
             var frustumCommands = frustumCommandsList[m];
             if (!defined(frustumCommands)) {
@@ -820,6 +831,11 @@ define([
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
 
+            if (index !== 0) {
+                // Avoid tearing artifacts between adjacent frustums
+                frustum.near *= 0.99;
+            }
+
             us.updateFrustum(frustum);
 
             var j;
@@ -828,6 +844,9 @@ define([
             for (j = 0; j < length; ++j) {
                 executeCommand(commands[j], scene, context, passState);
             }
+
+            frustum.near = frustumCommands.near;
+            us.updateFrustum(frustum);
 
             commands = frustumCommands.translucentCommands;
             length = commands.length = frustumCommands.translucentIndex;
@@ -858,14 +877,14 @@ define([
         }
     }
 
-    function executeEvents(frameState) {
-        // Events are queued up during primitive update and executed here in case
-        // the callback modifies scene state that should remain constant over the frame.
-        var events = frameState.events;
-        var length = events.length;
-        for (var i = 0; i < length; ++i) {
-            events[i].raiseEvent();
+    function callAfterRenderFunctions(frameState) {
+        // Functions are queued up during primitive update and executed here in case
+        // the function modifies scene state that should remain constant over the frame.
+        var functions = frameState.afterRender;
+        for (var i = 0, length = functions.length; i < length; ++i) {
+            functions[i]();
         }
+        functions.length = 0;
     }
 
     /**
@@ -893,7 +912,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -937,7 +956,7 @@ define([
         }
 
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -1048,7 +1067,6 @@ define([
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
-     *
      */
     Scene.prototype.pick = function(windowPosition) {
         //>>includeStart('debug', pragmas.debug);
@@ -1058,7 +1076,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.getUniformState();
+        var us = this.context.getUniformState();
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
@@ -1084,7 +1102,7 @@ define([
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
         return object;
     };
 

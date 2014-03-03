@@ -91,7 +91,7 @@ defineSuite([
     it('can provide a root tile', function() {
         var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -127,31 +127,31 @@ defineSuite([
             mapStyle : mapStyle
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getKey()).toBeDefined();
-        expect(provider.getMapStyle()).toEqual(mapStyle);
+        expect(provider.url).toEqual(url);
+        expect(provider.key).toBeDefined();
+        expect(provider.mapStyle).toEqual(mapStyle);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(20);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(20);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
         });
 
         waitsFor(function() {
-            return defined(provider.getCredit());
+            return defined(provider.credit);
         }, 'logo to become ready');
 
         runs(function() {
-            expect(provider.getCredit()).toBeInstanceOf(Object);
+            expect(provider.credit).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -186,7 +186,7 @@ defineSuite([
     it('routes requests through a proxy if one is specified', function() {
         var url = 'http://foo.bar.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -224,11 +224,11 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getProxy()).toEqual(proxy);
+        expect(provider.url).toEqual(url);
+        expect(provider.proxy).toEqual(proxy);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -271,17 +271,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf(url) >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -323,7 +323,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -354,7 +354,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;

@@ -99,8 +99,8 @@ defineSuite([
             imageryProvider : new TileCoordinatesImageryProvider()
         };
         widget = new CesiumWidget(container, options);
-        var imageryLayers = widget.centralBody.getImageryLayers();
-        expect(imageryLayers.getLength()).toEqual(1);
+        var imageryLayers = widget.centralBody.imageryLayers;
+        expect(imageryLayers.length).toEqual(1);
         expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
     });
 
@@ -108,8 +108,8 @@ defineSuite([
         widget = new CesiumWidget(container, {
             imageryProvider : false
         });
-        var imageryLayers = widget.centralBody.getImageryLayers();
-        expect(imageryLayers.getLength()).toEqual(0);
+        var imageryLayers = widget.centralBody.imageryLayers;
+        expect(imageryLayers.length).toEqual(0);
     });
 
     it('sets expected options terrainProvider', function() {
@@ -155,7 +155,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene.getContext();
+        var context = widget.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);

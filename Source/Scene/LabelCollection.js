@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/defined',
         '../Core/destroyObject',
@@ -14,6 +15,7 @@ define([
         './VerticalOrigin'
     ], function(
         defaultValue,
+        defineProperties,
         DeveloperError,
         defined,
         destroyObject,
@@ -184,6 +186,7 @@ define([
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
                     billboard._id = label._id;
+                    billboard._collection = label._labelCollection;
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
@@ -306,7 +309,7 @@ define([
         this._textureAtlas = undefined;
 
         this._billboardCollection = new BillboardCollection();
-        this._billboardCollection.setDestroyTextureAtlas(false);
+        this._billboardCollection.destroyTextureAtlas = false;
 
         this._spareBillboards = [];
         this._glyphTextureCache = {};
@@ -361,6 +364,21 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
     };
+
+    defineProperties(LabelCollection.prototype, {
+        /**
+         * Returns the number of labels in this collection.  This is commonly used with
+         * {@link LabelCollection#get} to iterate over all the labels
+         * in the collection.
+         * @memberof LabelCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._labels.length;
+            }
+        }
+    });
 
     /**
      * Creates and adds a label with the specified initial properties to the collection.
@@ -518,14 +536,13 @@ define([
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see LabelCollection#getLength
      *
      * @example
      * // Toggle the show property of every label in the collection
-     * var len = labels.getLength();
+     * var len = labels.length;
      * for (var i = 0; i < len; ++i) {
      *   var l = billboards.get(i);
      *   l.setShow(!l.getShow());
@@ -542,35 +559,6 @@ define([
     };
 
     /**
-     * Returns the number of labels in this collection.  This is commonly used with
-     * {@link LabelCollection#get} to iterate over all the labels
-     * in the collection.
-     *
-     * @memberof LabelCollection
-     *
-     * @returns {Number} The number of labels in this collection.
-     *
-     * @performance Expected constant time.  If labels were removed from the collection and
-     * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
-     * operation is performed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see LabelCollection#get
-     *
-     * @example
-     * // Toggle the show property of every label in the collection
-     * var len = labels.getLength();
-     * for (var i = 0; i < len; ++i) {
-     *   var l = billboards.get(i);
-     *   l.setShow(!l.getShow());
-     * }
-     */
-    LabelCollection.prototype.getLength = function() {
-        return this._labels.length;
-    };
-
-    /**
      * @private
      */
     LabelCollection.prototype.update = function(context, frameState, commandList) {
@@ -581,7 +569,7 @@ define([
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = context.createTextureAtlas();
-            billboardCollection.setTextureAtlas(this._textureAtlas);
+            billboardCollection.textureAtlas = this._textureAtlas;
         }
 
         var labelsToUpdate = this._labelsToUpdate;

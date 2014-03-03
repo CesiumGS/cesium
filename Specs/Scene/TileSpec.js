@@ -157,9 +157,7 @@ defineSuite([
                     requestTileGeometry : function(x, y, level) {
                         return undefined;
                     },
-                    getTilingScheme : function() {
-                        return tilingScheme;
-                    },
+                    tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
                     }
@@ -171,9 +169,7 @@ defineSuite([
                         deferred.reject();
                         return deferred.promise;
                     },
-                    getTilingScheme : function() {
-                        return tilingScheme;
-                    },
+                    tilingScheme : tilingScheme,
                     hasWaterMask : function() {
                         return true;
                     }
@@ -189,7 +185,13 @@ defineSuite([
         });
 
         beforeEach(function() {
+            waitsFor(function() {
+                return realTerrainProvider.ready;
+            });
+
             tilingScheme = new WebMercatorTilingScheme();
+            alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
+            alwaysFailTerrainProvider.tilingScheme = tilingScheme;
             rootTiles = tilingScheme.createLevelZeroTiles();
             rootTile = rootTiles[0];
             imageryLayerCollection = new ImageryLayerCollection();
@@ -508,9 +510,7 @@ defineSuite([
                             return terrainData;
                         });
                     },
-                    getTilingScheme : function() {
-                        return realTerrainProvider.getTilingScheme();
-                    },
+                    tilingScheme :  realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
                     }
@@ -547,9 +547,7 @@ defineSuite([
                             return terrainData;
                         });
                     },
-                    getTilingScheme : function() {
-                        return realTerrainProvider.getTilingScheme();
-                    },
+                    tilingScheme : realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
                         return realTerrainProvider.hasWaterMask();
                     }

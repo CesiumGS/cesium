@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Core/TaskProcessor',
+        'Core/FeatureDetection',
         'require',
         'Specs/waitsForPromise'
     ], function(
         TaskProcessor,
+        FeatureDetection,
         require,
         waitsForPromise) {
     "use strict";
@@ -63,6 +65,11 @@ defineSuite([
     });
 
     it('can transfer array buffer', function() {
+        if (!FeatureDetection.supportsTransferringArrayBuffers()) {
+            // This browser cannot transer array buffers at all.
+            return;
+        }
+
         taskProcessor = new TaskProcessor('returnByteLength');
 
         var byteLength = 100;
@@ -81,6 +88,11 @@ defineSuite([
     });
 
     it('can transfer array buffer back from worker', function() {
+        if (!FeatureDetection.supportsTransferringArrayBuffers()) {
+            // This browser cannot transer array buffers at all.
+            return;
+        }
+
         taskProcessor = new TaskProcessor('transferArrayBuffer');
 
         var byteLength = 100;

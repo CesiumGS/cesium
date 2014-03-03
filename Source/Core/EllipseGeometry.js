@@ -566,7 +566,6 @@ define([
     }
 
     /**
-     *
      * A description of an ellipse on an ellipsoid.
      *
      * @alias EllipseGeometry
@@ -583,9 +582,6 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} semiMajorAxis is required.
-     * @exception {DeveloperError} semiMinorAxis is required.
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
