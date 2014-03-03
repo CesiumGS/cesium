@@ -530,7 +530,7 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      *
      * @param {Object} id The id of the object to retrieve.
-     * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection is required.
+     * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
         return this._composite.getById(id);
