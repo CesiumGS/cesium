@@ -6,7 +6,7 @@ define(['../Core/createGuid',
         '../Core/Math',
         './DynamicObject',
         './DynamicObjectCollection'
-], function(
+    ], function(
         createGuid,
         defined,
         defineProperties,
