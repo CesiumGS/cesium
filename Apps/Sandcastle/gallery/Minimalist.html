@@ -33,7 +33,7 @@
     });
 
     var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
+    centralBody.imageryLayers.addImageryProvider(imageryProvider);
     primitives.centralBody = centralBody;
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
     var skyBoxBaseUrl = imageryUrl + 'SkyBox/tycho2t3_80';

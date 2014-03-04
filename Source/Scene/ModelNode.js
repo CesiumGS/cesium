@@ -2,15 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
-        '../Core/Cartesian3',
-        '../Core/Matrix4',
-        '../Core/Quaternion'
+        '../Core/Matrix4'
     ], function(
         defaultValue,
         defineProperties,
-        Cartesian3,
-        Matrix4,
-        Quaternion) {
+        Matrix4) {
     "use strict";
 
     /**
@@ -67,7 +63,7 @@ define([
          * @type {Matrix4}
          */
         matrix : {
-            get : function () {
+            get : function() {
                 return this._matrix;
             },
             set : function(value) {

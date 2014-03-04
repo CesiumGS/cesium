@@ -351,27 +351,39 @@ define([
      * Shorthand for: new Material({fabric : {type : type}});
      *
      * @param {String} type The base material type.
+     * @param {Object} [uniforms] Overrides for the default uniforms.
      *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Cesium.Material.fromType('Color');
-     * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
+     * var material = Cesium.Material.fromType('Color', {
+     *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
+     * });
      */
-    Material.fromType = function(type) {
+    Material.fromType = function(type, uniforms) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         //>>includeEnd('debug');
 
-        return new Material({
+        var material = new Material({
             fabric : {
                 type : type
             }
         });
+
+        if (defined(uniforms)) {
+            for (var name in uniforms) {
+                if (uniforms.hasOwnProperty(name)) {
+                    material.uniforms[name] = uniforms[name];
+                }
+            }
+        }
+
+        return material;
     };
 
     Material.prototype.isTranslucent = function() {

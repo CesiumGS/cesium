@@ -86,7 +86,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(new JulianDate());
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
     });
 
     it('object with no position does not create a billboard.', function() {
@@ -99,7 +99,7 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
     });
 
     it('A DynamicPoint causes a Billboard to be created and updated.', function() {
@@ -109,7 +109,7 @@ defineSuite([
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
 
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -124,7 +124,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
 
         var bb = billboardCollection.get(0);
 
@@ -164,7 +164,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var time = new JulianDate();
 
@@ -173,7 +173,7 @@ defineSuite([
         point.show = new ConstantProperty(true);
         visualizer.update(time);
 
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
 
         visualizer.update(time);
@@ -188,7 +188,7 @@ defineSuite([
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
 
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -199,7 +199,7 @@ defineSuite([
         point.show = new ConstantProperty(true);
 
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
     });
@@ -223,13 +223,13 @@ defineSuite([
         var billboardCollection = scene.primitives.get(0);
 
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject2);
     });

@@ -73,7 +73,7 @@ define([
         var billboardCollection = this._billboardCollection = new BillboardCollection();
         var atlas = this._textureAtlas = scene.context.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
-        billboardCollection.setTextureAtlas(atlas);
+        billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -237,7 +237,7 @@ define([
                 billboardVisualizerIndex = unusedIndexes.pop();
                 billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
             } else {
-                billboardVisualizerIndex = dynamicBillboardVisualizer._billboardCollection.getLength();
+                billboardVisualizerIndex = dynamicBillboardVisualizer._billboardCollection.length;
                 billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;

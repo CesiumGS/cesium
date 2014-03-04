@@ -200,7 +200,7 @@ define([
                 vectorVisualizerIndex = unusedIndexes.pop();
                 polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
             } else {
-                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.getLength();
+                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.length;
                 polyline = dynamicVectorVisualizer._polylineCollection.add();
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }

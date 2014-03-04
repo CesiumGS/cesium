@@ -211,15 +211,12 @@ define([
             var imageryProvider = options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net',
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesiumjs.org/proxy/')
+                    url : '//dev.virtualearth.net'
                 });
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
+                centralBody.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.

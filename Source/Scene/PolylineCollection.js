@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/destroyObject',
@@ -29,6 +30,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Color,
         destroyObject,
@@ -190,6 +192,22 @@ define([
         this._texCoordExpandWidthAndShowBuffer = undefined;
     };
 
+    defineProperties(PolylineCollection.prototype, {
+        /**
+         * Returns the number of polylines in this collection.  This is commonly used with
+         * {@link PolylineCollection#get} to iterate over all the polylines
+         * in the collection.
+         * @memberof PolylineCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                removePolylines(this);
+                return this._polylines.length;
+            }
+        }
+    });
+
     /**
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
@@ -338,7 +356,7 @@ define([
      *
      * @example
      * // Toggle the show property of every polyline in the collection
-     * var len = polylines.getLength();
+     * var len = polylines.length;
      * for (var i = 0; i < len; ++i) {
      *   var p = polylines.get(i);
      *   p.setShow(!p.getShow());
@@ -353,36 +371,6 @@ define([
 
         removePolylines(this);
         return this._polylines[index];
-    };
-
-    /**
-     * Returns the number of polylines in this collection.  This is commonly used with
-     * {@link PolylineCollection#get} to iterate over all the polylines
-     * in the collection.
-     *
-     * @memberof PolylineCollection
-     *
-     * @returns {Number} The number of polylines in this collection.
-     *
-     * @performance If polylines were removed from the collection and
-     * {@link PolylineCollection#update} was not called, an implicit <code>O(n)</code>
-     * operation is performed.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see PolylineCollection#get
-     *
-     * @example
-     * // Toggle the show property of every polyline in the collection
-     * var len = polylines.getLength();
-     * for (var i = 0; i < len; ++i) {
-     *   var p = polylines.get(i);
-     *   p.setShow(!p.getShow());
-     * }
-     */
-    PolylineCollection.prototype.getLength = function() {
-        removePolylines(this);
-        return this._polylines.length;
     };
 
     /**
@@ -1121,9 +1109,13 @@ define([
 
             for ( var j = 0; j < positionsLength; ++j) {
                 if (j === 0) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[0], positions[1], position);
-                    Cartesian3.add(positions[0], position, position);
+                    if (polyline._loop) {
+                        position = positions[positionsLength - 2];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[0], positions[1], position);
+                        Cartesian3.add(positions[0], position, position);
+                    }
                 } else {
                     position = positions[j - 1];
                 }
@@ -1138,9 +1130,13 @@ define([
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
                 if (j === positionsLength - 1) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
-                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                    if (polyline._loop) {
+                        position = positions[1];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                        Cartesian3.add(positions[positionsLength - 1], position, position);
+                    }
                 } else {
                     position = positions[j + 1];
                 }
@@ -1206,9 +1202,13 @@ define([
             for ( var j = 0; j < positionsLength; ++j) {
                 var prevPosition;
                 if (j === 0) {
-                    prevPosition = morphVectorScratch;
-                    Cartesian3.subtract(positions[0], positions[1], prevPosition);
-                    Cartesian3.add(positions[0], prevPosition, prevPosition);
+                    if (polyline._loop) {
+                        prevPosition = positions[positionsLength - 2];
+                    } else {
+                        prevPosition = morphVectorScratch;
+                        Cartesian3.subtract(positions[0], positions[1], prevPosition);
+                        Cartesian3.add(positions[0], prevPosition, prevPosition);
+                    }
                 } else {
                     prevPosition = positions[j - 1];
                 }
@@ -1219,9 +1219,13 @@ define([
 
                 var nextPosition;
                 if (j === positionsLength - 1) {
-                    nextPosition = morphVectorScratch;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
-                    Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                    if (polyline._loop) {
+                        nextPosition = positions[1];
+                    } else {
+                        nextPosition = morphVectorScratch;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], nextPosition);
+                        Cartesian3.add(positions[positionsLength - 1], nextPosition, nextPosition);
+                    }
                 } else {
                     nextPosition = positions[j + 1];
                 }
@@ -1437,9 +1441,13 @@ define([
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {
                 if (i === 0) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[0], positions[1], position);
-                    Cartesian3.add(positions[0], position, position);
+                    if (polyline._loop) {
+                        position = positions[positionsLength - 2];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[0], positions[1], position);
+                        Cartesian3.add(positions[0], position, position);
+                    }
                 } else {
                     position = positions[i - 1];
                 }
@@ -1454,9 +1462,13 @@ define([
                 scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
 
                 if (i === positionsLength - 1) {
-                    position = scratchWriteVector;
-                    Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
-                    Cartesian3.add(positions[positionsLength - 1], position, position);
+                    if (polyline._loop) {
+                        position = positions[1];
+                    } else {
+                        position = scratchWriteVector;
+                        Cartesian3.subtract(positions[positionsLength - 1], positions[positionsLength - 2], position);
+                        Cartesian3.add(positions[positionsLength - 1], position, position);
+                    }
                 } else {
                     position = positions[i + 1];
                 }

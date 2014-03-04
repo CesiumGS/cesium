@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        './DeveloperError',
+        './Cartesian2',
+        './defaultValue',
         './defined',
         './destroyObject',
-        './Cartesian2',
+        './DeveloperError',
         './ScreenSpaceEventType',
-        './KeyboardEventModifier',
-        './defaultValue'
+        './KeyboardEventModifier'
     ], function(
-        DeveloperError,
+        Cartesian2,
+        defaultValue,
         defined,
         destroyObject,
-        Cartesian2,
+        DeveloperError,
         ScreenSpaceEventType,
-        KeyboardEventModifier,
-        defaultValue) {
+        KeyboardEventModifier) {
     "use strict";
 
     /**
@@ -47,8 +47,6 @@ define([
 
         register(this);
     };
-
-    var scratchPosition = new Cartesian2();
 
     function getPosition(screenSpaceEventHandler, event, result) {
         if (screenSpaceEventHandler._element === document) {
@@ -422,7 +420,7 @@ define([
                 pos = getPosition(screenSpaceEventHandler, event.touches[1], touchMovementEvent.startPosition);
                 pos2 = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.endPosition);
             } else {
-                pos = getPosition(screenSpaceEventHandler, event.touches[0],touchMovementEvent.startPosition);
+                pos = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.startPosition);
                 pos2 = getPosition(screenSpaceEventHandler, event.touches[1], touchMovementEvent.endPosition);
             }
 
@@ -569,7 +567,7 @@ define([
             }
         });
 
-        for ( var i = 0; i < screenSpaceEventHandler._callbacks.length; i++) {
+        for (var i = 0; i < screenSpaceEventHandler._callbacks.length; i++) {
             var cback = screenSpaceEventHandler._callbacks[i];
             if (cback.onDoc) {
                 document.addEventListener(cback.name, cback.action, false);
@@ -580,7 +578,7 @@ define([
     }
 
     ScreenSpaceEventHandler.prototype._unregister = function() {
-        for ( var i = 0; i < this._callbacks.length; i++) {
+        for (var i = 0; i < this._callbacks.length; i++) {
             var cback = this._callbacks[i];
             if (cback.onDoc) {
                 document.removeEventListener(cback.name, cback.action, false);

@@ -142,7 +142,7 @@ define([
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var index = startingIndex;
         var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.getLength(); i++) {
+        for ( var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(0);
             if (interval.start.lessThanOrEquals(stop)) {
                 var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -158,7 +158,7 @@ define([
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var index = startingIndex;
         var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.getLength(); i++) {
+        for ( var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(0);
             if (interval.start.lessThanOrEquals(stop)) {
                 var intervalProperty = interval.data;
@@ -272,8 +272,8 @@ define([
                 }
 
                 if (hasAvailability) {
-                    var start = availability.getStart();
-                    var stop = availability.getStop();
+                    var start = availability.start;
+                    var stop = availability.stop;
 
                     if (!hasTrailTime || start.greaterThan(sampleStart)) {
                         sampleStart = start;
@@ -306,7 +306,7 @@ define([
                 pathVisualizerIndex = unusedIndexes.pop();
                 polyline = this._polylineCollection.get(pathVisualizerIndex);
             } else {
-                pathVisualizerIndex = this._polylineCollection.getLength();
+                pathVisualizerIndex = this._polylineCollection.length;
                 polyline = this._polylineCollection.add();
             }
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;

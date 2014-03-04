@@ -6,9 +6,7 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
-        '../Core/Extent',
         '../Core/FeatureDetection',
-        '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
         '../Core/Math',
         './createTaskProcessorWorker'
@@ -19,9 +17,7 @@ define([
         defined,
         Ellipsoid,
         EllipsoidalOccluder,
-        Extent,
         FeatureDetection,
-        HeightmapTessellator,
         Intersections2D,
         CesiumMath,
         createTaskProcessorWorker) {
@@ -406,7 +402,7 @@ define([
             indices.push(polygonVertices[0].newIndex);
             indices.push(polygonVertices[1].newIndex);
             indices.push(polygonVertices[2].newIndex);
-        } else if (numVertices === 4){
+        } else if (numVertices === 4) {
             // A quad - two triangles.
             indices.push(polygonVertices[0].newIndex);
             indices.push(polygonVertices[1].newIndex);

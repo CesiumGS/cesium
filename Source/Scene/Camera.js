@@ -1,23 +1,21 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
+        '../Core/Math',
         '../Core/Matrix4',
         './CameraController',
         './PerspectiveFrustum'
     ], function(
+        Cartesian3,
         defined,
         defineProperties,
         DeveloperError,
-        CesiumMath,
         Ellipsoid,
-        Cartesian3,
-        Cartesian4,
+        CesiumMath,
         Matrix4,
         CameraController,
         PerspectiveFrustum) {
@@ -256,7 +254,7 @@ define([
          * @default {@link Matrix4.IDENTITY}
          */
         inverseTransform : {
-            get : function () {
+            get : function() {
                 update(this);
                 return this._invTransform;
             }
@@ -273,7 +271,7 @@ define([
          * @see Camera#inverseViewMatrix
          */
         viewMatrix : {
-            get : function () {
+            get : function() {
                 update(this);
                 return this._viewMatrix;
             }
@@ -290,7 +288,7 @@ define([
          * @see Camera#viewMatrix
          */
         inverseViewMatrix : {
-            get : function () {
+            get : function() {
                 update(this);
                 return this._invViewMatrix;
             }

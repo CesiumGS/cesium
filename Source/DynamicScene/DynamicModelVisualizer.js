@@ -1,28 +1,24 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/Quaternion',
+        '../Core/DeveloperError',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Scene/Model',
-        '../Scene/Material'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError,
-         destroyObject,
-         Cartesian3,
-         Color,
-         Quaternion,
-         Matrix3,
-         Matrix4,
-         Model,
-         Material) {
+        '../Core/Quaternion',
+        '../Scene/Model'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        destroyObject,
+        DeveloperError,
+        Matrix3,
+        Matrix4,
+        Quaternion,
+        Model) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();

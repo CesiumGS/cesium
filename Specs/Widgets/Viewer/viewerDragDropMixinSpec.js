@@ -121,7 +121,7 @@ defineSuite([
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
-            return viewer.dataSources.getLength() === 1;
+            return viewer.dataSources.length === 1;
         });
 
         runs(function() {
@@ -156,7 +156,7 @@ defineSuite([
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
-            return viewer.dataSources.getLength() === 2;
+            return viewer.dataSources.length === 2;
         });
 
         runs(function() {
@@ -194,7 +194,7 @@ defineSuite([
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
-            return viewer.dataSources.getLength() === 2;
+            return viewer.dataSources.length === 2;
         });
 
         runs(function() {
@@ -212,7 +212,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return viewer.dataSources.getLength() === 4;
+            return viewer.dataSources.length === 4;
         });
 
         runs(function() {
@@ -231,7 +231,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return viewer.dataSources.getLength() === 2;
+            return viewer.dataSources.length === 2;
         });
 
         runs(function() {

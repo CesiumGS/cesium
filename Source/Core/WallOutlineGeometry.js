@@ -1,33 +1,31 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
         './Math',
         './PrimitiveType',
         './WallGeometryLibrary'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
         CesiumMath,
         PrimitiveType,
         WallGeometryLibrary) {
@@ -233,7 +231,7 @@ define([
         });
 
         var numVertices = size / 3;
-        size = 2*numVertices - 4 + numVertices;
+        size = 2 * numVertices - 4 + numVertices;
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;

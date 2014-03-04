@@ -1,12 +1,11 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeographicProjection',
@@ -20,13 +19,12 @@ define([
         './SceneMode',
         '../ThirdParty/Tween'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,

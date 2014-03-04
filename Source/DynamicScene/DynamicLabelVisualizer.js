@@ -216,7 +216,7 @@ define([
                 labelVisualizerIndex = unusedIndexes.pop();
                 label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
             } else {
-                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.getLength();
+                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.length;
                 label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;

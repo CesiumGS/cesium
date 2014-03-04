@@ -3,11 +3,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../Core/BoundingRectangle',
-        '../../Core/Color',
         '../../Core/DeveloperError',
-        '../../Scene/PerformanceDisplay',
-        '../../Scene/DebugModelMatrixPrimitive',
         '../getElement',
         './CesiumInspectorViewModel',
         '../../ThirdParty/knockout'
@@ -15,11 +11,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
-        BoundingRectangle,
-        Color,
         DeveloperError,
-        PerformanceDisplay,
-        DebugModelMatrixPrimitive,
         getElement,
         CesiumInspectorViewModel,
         knockout) {
@@ -330,8 +322,8 @@ define([
      */
     CesiumInspector.prototype.destroy = function() {
         knockout.cleanNode(this._element);
-        var container = this._container;
-        container.removeChild(this._element);
+        this._container.removeChild(this._element);
+
         return destroyObject(this);
     };
 

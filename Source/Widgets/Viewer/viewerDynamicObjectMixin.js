@@ -232,7 +232,7 @@ define(['../../Core/BoundingSphere',
 
         // Subscribe to current data sources
         var dataSources = viewer.dataSources;
-        var dataSourceLength = dataSources.getLength();
+        var dataSourceLength = dataSources.length;
         for (var i = 0; i < dataSourceLength; i++) {
             dataSourceAdded(dataSources, dataSources.get(i));
         }
@@ -334,7 +334,7 @@ define(['../../Core/BoundingSphere',
 
             // Unsubscribe from data sources
             var dataSources = viewer.dataSources;
-            var dataSourceLength = dataSources.getLength();
+            var dataSourceLength = dataSources.length;
             for (i = 0; i < dataSourceLength; i++) {
                 dataSourceRemoved(dataSources, dataSources.get(i));
             }
