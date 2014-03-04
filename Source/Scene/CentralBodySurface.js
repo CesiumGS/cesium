@@ -86,6 +86,7 @@ define([
         this._levelZeroTiles = undefined;
 
         this._tilesToRenderByTextureCount = [];
+        this._generalTilesToRender = [];
         this._tileCommands = [];
         this._tileCommandUniformMaps = [];
         this._tileTraversalQueue = new Queue();
@@ -127,6 +128,7 @@ define([
 
     CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
+
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
@@ -323,6 +325,129 @@ define([
     }
 
     var scratchCamera = new Cartographic();
+
+    function selectGeneralTilesForRendering(surface, context, frameState) {
+        var debug = surface._debug;
+
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        var i, len;
+
+        // Clear the render list.
+        var tilesToRender = surface._generalTilesToRender;
+        tilesToRender.length = 0;
+
+        var traversalQueue = surface._tileTraversalQueue;
+        traversalQueue.clear();
+
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.texturesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        surface._tileLoadQueue.length = 0;
+        surface._tileReplacementQueue.markStartOfRenderFrame();
+
+        // We can't render anything before the level zero tiles exist.
+        if (!defined(surface._levelZeroTiles)) {
+            if (surface._terrainProvider.ready) {
+                var terrainTilingScheme = surface._terrainProvider.tilingScheme;
+                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+            } else {
+                // Nothing to do until the terrain provider is ready.
+                return;
+            }
+        }
+
+        var cameraPosition = frameState.camera.positionWC;
+
+        var ellipsoid = surface._terrainProvider.tilingScheme.ellipsoid;
+        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCamera);
+
+        surface._ellipsoidalOccluder.cameraPosition = cameraPosition;
+
+        var tile;
+
+        // Enqueue the root tiles that are renderable and visible.
+        var levelZeroTiles = surface._levelZeroTiles;
+        for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
+            tile = levelZeroTiles[i];
+            surface._tileReplacementQueue.markTileRendered(tile);
+            if (tile.state !== TileState.READY) {
+                queueTileLoad(surface, tile);
+            }
+            if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
+                traversalQueue.enqueue(tile);
+            } else {
+                ++debug.tilesCulled;
+                if (!tile.isRenderable) {
+                    ++debug.tilesWaitingForChildren;
+                }
+            }
+        }
+
+        // Traverse the tiles in breadth-first order.
+        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
+        // This maximizes the average detail across the scene and results in fewer sharp transitions
+        // between very different LODs.
+        while (defined((tile = traversalQueue.dequeue()))) {
+            ++debug.tilesVisited;
+
+            surface._tileReplacementQueue.markTileRendered(tile);
+
+            if (tile.level > debug.maxDepth) {
+                debug.maxDepth = tile.level;
+            }
+
+            // There are a few different algorithms we could use here.
+            // This one doesn't load children unless we refine to them.
+            // We may want to revisit this in the future.
+
+            if (screenSpaceError(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) < surface._maximumScreenSpaceError) {
+                // This tile meets SSE requirements, so render it.
+                addTileToRenderList(surface, tile);
+            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile)) {
+                // SSE is not good enough and children are loaded, so refine.
+                var children = tile.children;
+                // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
+                for (i = 0, len = children.length; i < len; ++i) {
+                    if (isTileVisible(surface, frameState, children[i])) {
+                        traversalQueue.enqueue(children[i]);
+                    } else {
+                        ++debug.tilesCulled;
+                    }
+                }
+            } else {
+                ++debug.tilesWaitingForChildren;
+                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                addTileToRenderList(surface, tile);
+            }
+        }
+
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.texturesRendered !== debug.lastTexturesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
+
+                /*global console*/
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Textures: ' + debug.texturesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTexturesRendered = debug.texturesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
+        }
+    }
 
     function selectTilesForRendering(surface, context, frameState) {
         var debug = surface._debug;

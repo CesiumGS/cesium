@@ -121,6 +121,10 @@ define([
         return TilingScheme.createRectangleOfLevelZeroTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
     };
 
+    GeographicTilingScheme.prototype.createLevelZeroQuadtreeTiles = function() {
+        return TilingScheme.createRectangleOfLevelZeroQuadtreeTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
+    };
+
     /**
      * Transforms an extent specified in geodetic radians to the native coordinate system
      * of this tiling scheme.

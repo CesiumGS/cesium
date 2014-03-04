@@ -3,11 +3,13 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        './QuadtreeTile',
         './Tile'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        QuadtreeTile,
         Tile) {
     "use strict";
 
@@ -181,6 +183,34 @@ define([
         for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
             for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
                 result[index++] = new Tile({
+                    tilingScheme : tilingScheme,
+                    x : x,
+                    y : y,
+                    level : 0
+                });
+            }
+        }
+
+        return result;
+    };
+
+    TilingScheme.createRectangleOfLevelZeroQuadtreeTiles = function(tilingScheme, numberOfLevelZeroTilesX, numberOfLevelZeroTilesY) {
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (!defined(numberOfLevelZeroTilesX)) {
+            throw new DeveloperError('numberOfLevelZeroTilesX is required.');
+        }
+        if (!defined(numberOfLevelZeroTilesY)) {
+            throw new DeveloperError('numberOfLevelZeroTilesY is required.');
+        }
+
+        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+
+        var index = 0;
+        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+                result[index++] = new QuadtreeTile({
                     tilingScheme : tilingScheme,
                     x : x,
                     y : y,
