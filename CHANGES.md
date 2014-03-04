@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
   *
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
+* Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
 
 ### b26 - 2014-03-03
