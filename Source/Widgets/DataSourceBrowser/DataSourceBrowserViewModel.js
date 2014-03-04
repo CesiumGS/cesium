@@ -184,7 +184,7 @@ define([
             return this._dataSourceViewModels.length > 0 ? '' : 'Empty globe.';
         });
 
-        for (var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+        for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
     };
@@ -416,7 +416,7 @@ define([
         this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = removalFunc;
 
         this._dataSourceViewModels.push(dataSourceViewModel);
-        this._dataSourcesLength = this.dataSources.getLength();
+        this._dataSourcesLength = this.dataSources.length;
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
@@ -433,7 +433,7 @@ define([
                 dataSourceViewModels.splice(i, 1);
                 dataSourceViewModel.destroy();
 
-                this._dataSourcesLength = this.dataSources.getLength();
+                this._dataSourcesLength = this.dataSources.length;
 
                 return;
             }
