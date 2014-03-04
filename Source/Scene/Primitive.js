@@ -321,8 +321,7 @@ define([
         this._backFaceRS = undefined;
         this._sp = undefined;
 
-        this._pickBackFaceRS = undefined;
-        this._pickFrontFaceRS= undefined;
+        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
 
@@ -783,11 +782,18 @@ define([
             }
 
             if (allowPicking) {
-                this._pickBackFaceRS = this._backFaceRS;
-                this._pickFrontFaceRS = this._frontFaceRS;
+                if (twoPasses) {
+                    rs = clone(renderState, false);
+                    rs.cull = {
+                        enabled : false
+                    };
+                    this._pickRS = context.createRenderState(rs);
+                } else {
+                    this._pickRS = this._frontFaceRS;
+                }
             } else {
                 rs = clone(renderState, false);
-                renderState.colorMask = {
+                rs.colorMask = {
                     red : false,
                     green : false,
                     blue : false,
@@ -796,16 +802,11 @@ define([
 
                 if (twoPasses) {
                     rs.cull = {
-                        enabled : true,
-                        face : CullFace.BACK
+                        enabled : false
                     };
-                    this._pickFrontFaceRS = context.createRenderState(rs);
-
-                    rs.cull.face = CullFace.FRONT;
-                    this._pickBackFaceRS = context.createRenderState(rs);
+                    this._pickRS = context.createRenderState(rs);
                 } else {
-                    this._pickFrontFaceRS = context.createRenderState(renderState);
-                    this._pickBackFaceRS = this._pickFrontFaceRS;
+                    this._pickRS = context.createRenderState(rs);
                 }
             }
         }
@@ -837,9 +838,10 @@ define([
             var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
             colorCommands.length = this._va.length * (twoPasses ? 2 : 1);
-            pickCommands.length = this._va.length * (twoPasses ? 2 : 1);
+            pickCommands.length = this._va.length;
 
             length = colorCommands.length;
+            var m = 0;
             var vaIndex = 0;
             for (i = 0; i < length; ++i) {
                 if (twoPasses) {
@@ -854,18 +856,6 @@ define([
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
                     colorCommand.pass = pass;
-
-                    pickCommand = pickCommands[i];
-                    if (!defined(pickCommand)) {
-                        pickCommand = pickCommands[i] = new DrawCommand();
-                    }
-                    pickCommand.owner = this;
-                    pickCommand.primitiveType = this._primitiveType;
-                    pickCommand.vertexArray = this._va[vaIndex];
-                    pickCommand.renderState = this._pickBackFaceRS;
-                    pickCommand.shaderProgram = this._pickSP;
-                    pickCommand.uniformMap = uniforms;
-                    pickCommand.pass = pass;
 
                     ++i;
                 }
@@ -882,17 +872,18 @@ define([
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
-                pickCommand = pickCommands[i];
+                pickCommand = pickCommands[m];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[i] = new DrawCommand();
+                    pickCommand = pickCommands[m] = new DrawCommand();
                 }
                 pickCommand.owner = this;
                 pickCommand.primitiveType = this._primitiveType;
                 pickCommand.vertexArray = this._va[vaIndex];
-                pickCommand.renderState = this._pickFrontFaceRS;
+                pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
                 pickCommand.pass = pass;
+                ++m;
 
                 ++vaIndex;
             }
