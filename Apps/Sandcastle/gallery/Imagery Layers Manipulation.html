@@ -68,7 +68,7 @@ require([
 {
     "use strict";
 
-    var imageryLayerCollection;
+    var imageryLayers;
     var baseLayers = [];
 
     function setupLayers() {
@@ -83,34 +83,26 @@ require([
                 'Bing Maps Road',
                 new Cesium.BingMapsImageryProvider({
                     url: '//dev.virtualearth.net',
-                    mapStyle: Cesium.BingMapsStyle.ROAD,
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
+                    mapStyle: Cesium.BingMapsStyle.ROAD
                 }));
         addBaseLayerOption(
                 'ArcGIS World Street Maps',
                 new Cesium.ArcGisMapServerImageryProvider({
-                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 }));
         addBaseLayerOption(
                 'OpenStreetMaps',
-                new Cesium.OpenStreetMapImageryProvider({
-                    proxy: new Cesium.DefaultProxy('/proxy/')
-                }));
+                new Cesium.OpenStreetMapImageryProvider());
         addBaseLayerOption(
                 'MapQuest OpenStreetMaps',
                 new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/',
-                    proxy: new Cesium.DefaultProxy('/proxy/')
+                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
                 }));
         addBaseLayerOption(
                 'Stamen Maps',
                 new Cesium.OpenStreetMapImageryProvider({
                     url: 'http://tile.stamen.com/watercolor/',
                     fileExtension: 'jpg',
-                    proxy: new Cesium.DefaultProxy('/proxy/'),
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption(
@@ -172,7 +164,7 @@ require([
     function addBaseLayerOption(name, imageryProvider) {
         var layer;
         if (typeof imageryProvider === 'undefined') {
-            layer = imageryLayerCollection.get(0);
+            layer = imageryLayers.get(0);
         } else {
             layer = new Cesium.ImageryLayer(imageryProvider);
         }
@@ -182,7 +174,7 @@ require([
     }
 
     function addAdditionalLayerOption(name, imageryProvider, alpha, show) {
-        var layer = imageryLayerCollection.addImageryProvider(imageryProvider);
+        var layer = imageryLayers.addImageryProvider(imageryProvider);
         layer.alpha = Cesium.defaultValue(alpha, 0.5);
         layer.show = Cesium.defaultValue(show, true);
         layer.name = name;
@@ -196,13 +188,13 @@ require([
             open: false
         });
         document.getElementById("toolbar").appendChild(tp.domNode);
-        updateUserInterface(imageryLayerCollection);
+        updateUserInterface(imageryLayers);
     }
 
     function updateUserInterface() {
         document.getElementById('layerTable').innerHTML = '';
-        for (var i = imageryLayerCollection.getLength() - 1; i >= 0; --i) {
-            var layer = imageryLayerCollection.get(i);
+        for (var i = imageryLayers.length - 1; i >= 0; --i) {
+            var layer = imageryLayers.get(i);
 
             domConstruct.place('<tr><td id="layerToggle' + i + '"></td><td id="layerLabel' + i + '"></td><td id="layerSlider' + i + '"></td><td id="layerUpArrow' + i + '"></td><td id="layerDownArrow' + i + '"></td></tr>', 'layerTable');
 
@@ -235,7 +227,7 @@ require([
             }
         }).placeAt('layerSlider' + layerIndex);
 
-        var showRaise = layerIndex >= 0 && layerIndex < imageryLayerCollection.getLength() - 1;
+        var showRaise = layerIndex >= 0 && layerIndex < imageryLayers.length - 1;
         var showLower = layerIndex > 0;
 
         new Button({
@@ -245,7 +237,7 @@ require([
             style: (showRaise ? "" : "visibility:hidden"),
             onClick: function() {
                 if (showRaise) {
-                    imageryLayerCollection.raise(layer);
+                    imageryLayers.raise(layer);
                     updateUserInterface();
                 }
             }
@@ -258,7 +250,7 @@ require([
             style: (showLower ? "" : "visibility:hidden"),
             onClick: function() {
                 if (showLower) {
-                  imageryLayerCollection.lower(layer);
+                  imageryLayers.lower(layer);
                   updateUserInterface();
                 }
             }
@@ -284,8 +276,8 @@ require([
         return new MenuItem({
             label : baseLayer.name,
             onClick : function() {
-                imageryLayerCollection.remove(activeLayer, false);
-                imageryLayerCollection.add(baseLayer, activeLayerIndex);
+                imageryLayers.remove(activeLayer, false);
+                imageryLayers.add(baseLayer, activeLayerIndex);
                 updateUserInterface();
             }
         });
@@ -293,7 +285,7 @@ require([
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    imageryLayerCollection = widget.centralBody.imageryLayerCollection;
+    imageryLayers = widget.centralBody.imageryLayers;
 
     setupLayers();
 

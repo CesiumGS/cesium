@@ -297,7 +297,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         var baseLayerPicker;
         if (createBaseLayerPicker) {
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.imageryLayerCollection, providerViewModels);
+            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.imageryLayers, providerViewModels);
             baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
 
             //Grab the dropdown for resize code.
@@ -397,7 +397,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
-                var numDataSources = dataSourceCollection.getLength();
+                var numDataSources = dataSourceCollection.length;
                 if (automaticallyTrackDataSourceClocks && numDataSources > 0) {
                     that.clockTrackedDataSource = dataSourceCollection.get(numDataSources - 1);
                 } else {
