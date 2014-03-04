@@ -25,7 +25,7 @@ define([
      * // load a single URL asynchronously
      * Cesium.loadBlob('some/url').then(function(blob) {
      *     // use the data
-     * }, function() {
+     * }, function(error) {
      *     // an error occurred
      * });
      */

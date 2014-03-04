@@ -22,8 +22,8 @@ define([
      * Cesium.loadXML('http://someUrl.com/someXML.xml', {
      *   'X-Custom-Header' : 'some value'
      * }).then(function(document) {
-     *     //Do something with the document
-     * }, function() {
+     *     // Do something with the document
+     * }, function(error) {
      *     // an error occurred
      * });
      *
