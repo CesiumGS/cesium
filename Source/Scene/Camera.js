@@ -569,14 +569,12 @@ define([
      * @param {Matrix4} The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
-        updateMembers(this);
-
-        var position = Cartesian3.clone(this._positionWC, setTransformPosition);
-        var up = Cartesian3.clone(this._upWC, setTransformUp);
-        var direction = Cartesian3.clone(this._directionWC, setTransformDirection);
+        var position = Cartesian3.clone(this.positionWC, setTransformPosition);
+        var up = Cartesian3.clone(this.upWC, setTransformUp);
+        var direction = Cartesian3.clone(this.directionWC, setTransformDirection);
 
         Matrix4.clone(transform, this.transform);
-        var inverse = this._invTransform;
+        var inverse = this.inverseTransform;
 
         Matrix4.multiplyByPoint(inverse, position, this.position);
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);
@@ -1468,11 +1466,11 @@ define([
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         if (this._mode === SceneMode.SCENE3D) {
-            extentCameraPosition3D(this, extent, ellipsoid, this._camera.position);
+            extentCameraPosition3D(this, extent, ellipsoid, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            extentCameraPositionColumbusView(this, extent, this._projection, this._camera.position);
+            extentCameraPositionColumbusView(this, extent, this._projection, this.position);
         } else if (this._mode === SceneMode.SCENE2D) {
-            extentCameraPosition2D(this, extent, this._projection, this._camera.position);
+            extentCameraPosition2D(this, extent, this._projection, this.position);
         }
     };
 
