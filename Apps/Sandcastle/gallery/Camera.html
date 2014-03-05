@@ -172,7 +172,7 @@ require(['Cesium'], function(Cesium) {
             return;
         }
 
-        camera.transform = Cesium.Matrix4.IDENTITY;
+        Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY, camera.transform);
         camera.constrainedAxis = undefined;
         camera.lookAt(
                 Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
