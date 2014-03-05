@@ -16,7 +16,6 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
-        './CameraController',
         './PerspectiveFrustum',
         './SceneMode',
         '../ThirdParty/Tween'
@@ -37,7 +36,6 @@ define([
         Quaternion,
         Ray,
         Transforms,
-        CameraController,
         PerspectiveFrustum,
         SceneMode,
         Tween) {
@@ -459,7 +457,7 @@ define([
 
         /**
          * Gets or sets the camera heading in radians.
-         * @memberof CameraController.prototype
+         * @memberof Camera.prototype
          * @type {Number}
          */
         heading : {
@@ -491,7 +489,7 @@ define([
 
         /**
          * Gets or sets the camera tilt in radians
-         * @memberof CameraController.prototype
+         * @memberof Camera.prototype
          * @type {Number}
          */
         tilt : {

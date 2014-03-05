@@ -867,7 +867,7 @@ define([
 
         var ellipsoid = controller._ellipsoid;
         var minHeight = controller.minimumZoomDistance * 0.25;
-        var height = ellipsoid.cartesianToCartographic(controller._cameraController._camera.positionWC).height;
+        var height = ellipsoid.cartesianToCartographic(camera.positionWC).height;
         if (height - minHeight - 1.0 < CesiumMath.EPSILON3 &&
                 movement.endPosition.y - movement.startPosition.y < 0) {
             return;
