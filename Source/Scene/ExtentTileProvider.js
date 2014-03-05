@@ -181,41 +181,34 @@ define([
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    ExtentTileProvider.prototype.loadTile = function(context, x, y, level, tile) {
-        var extent = this.tilingScheme.tileXYToExtent(x, y, level);
-        var color = Color.fromBytes(255, 0, 0, 255);
-//        return new Primitive({
-//            geometryInstances : new GeometryInstance({
-//                geometry : new ExtentGeometry({
-//                    extent : extent,
-//                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
-//                }),
-//                attributes : {
-//                    color : ColorGeometryInstanceAttribute.fromColor(color)
-//                }
-//            }),
-//            appearance : new PerInstanceColorAppearance()
-//        });
+    ExtentTileProvider.prototype.loadTile = function(context, frameState, x, y, level, tile) {
+        if (!defined(tile)) {
+            var extent = this.tilingScheme.tileXYToExtent(x, y, level);
+            var color = Color.fromBytes(255, 0, 0, 255);
 
-        return new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new ExtentOutlineGeometry({
-                    extent : extent
+            return new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : new ExtentOutlineGeometry({
+                        extent : extent
+                    }),
+                    attributes : {
+                        color : ColorGeometryInstanceAttribute.fromColor(color)
+                    }
                 }),
-                attributes : {
-                    color : ColorGeometryInstanceAttribute.fromColor(color)
-                }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                flat : true,
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    },
-                    lineWidth : 1.0
-                }
-            })
-        });
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    renderState : {
+                        depthTest : {
+                            enabled : true
+                        },
+                        lineWidth : 1.0
+                    }
+                })
+            });
+        } else {
+            tile.update(context, frameState, []);
+            return tile;
+        }
     };
 
     /**
@@ -229,7 +222,7 @@ define([
      * @returns {QuadtreeTileState} The current state of the tile.
      */
     ExtentTileProvider.prototype.getTileState = function(tile) {
-        return defined(tile) ? QuadtreeTileState.READY : QuadtreeTileState.LOADING;
+        return defined(tile) && tile.isReady() ? QuadtreeTileState.READY : QuadtreeTileState.LOADING;
     };
 
     /**
@@ -244,7 +237,7 @@ define([
      * @returns {Boolean} true if the tile is renderable; otherwise, false.
      */
     ExtentTileProvider.prototype.isTileRenderable = function(tile) {
-        return defined(tile);
+        return defined(tile) && tile.isReady();
     };
 
     /**
@@ -260,10 +253,11 @@ define([
      * @returns {Boolean} true if the tile is visible; otherwise, false.
      */
     ExtentTileProvider.prototype.isTileVisible = function(tile, frameState) {
-        if (!defined(tile._boundingSphere)) {
-            return true;
+        var boundingSphere = tile.getBoundingSphere();
+        if (!defined(boundingSphere)) {
+            return false;
         } else {
-            return frameState.cullingVolume.getVisibility(tile._boundingSphere) !== Intersect.OUTSIDE;
+            return frameState.cullingVolume.getVisibility(boundingSphere) !== Intersect.OUTSIDE;
         }
     };
 
@@ -279,9 +273,7 @@ define([
      * @param {Command[]} commandList The list of rendering commands.  This method should add additional commands to this list.
      */
     ExtentTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
-        if (defined(tile)) {
-            tile.update(context, frameState, commandList);
-        }
+        tile.update(context, frameState, commandList);
     };
 
     var cartesian3Scratch = new Cartesian3();
@@ -298,11 +290,7 @@ define([
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     ExtentTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
-        if (!defined(tile._boundingSphere)) {
-            return 1e308;
-        } else {
-            return Math.max(0.0, Cartesian3.magnitude(Cartesian3.subtract(tile._boundingSphere.center, frameState.camera.position)) - tile._boundingSphere.radius);
-        }
+        return Math.max(0.0, Cartesian3.magnitude(Cartesian3.subtract(tile.getBoundingSphere().center, frameState.camera.position)) - tile._boundingSphere.radius);
     };
 
     ExtentTileProvider.prototype.divideTile = function() {

@@ -125,7 +125,7 @@ define([
             if (tileProvider.getTileState(tile.data) === QuadtreeTileState.LOADING) {
                 queueTileLoad(QuadtreePrimitive, tile);
             }
-            if (tileProvider.isTileRenderable(tile.data) && isTileVisible(QuadtreePrimitive, frameState, tile)) {
+            if (tileProvider.isTileRenderable(tile.data) && isTileVisible(QuadtreePrimitive, frameState, tile.data)) {
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
@@ -160,7 +160,7 @@ define([
                 var children = tile.children;
                 // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
-                    if (isTileVisible(QuadtreePrimitive, frameState, children[i])) {
+                    if (isTileVisible(QuadtreePrimitive, frameState, children[i].data)) {
                         traversalQueue.enqueue(children[i]);
                     } else {
                         ++debug.tilesCulled;
@@ -275,7 +275,7 @@ define([
         for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             QuadtreePrimitive._tileReplacementQueue.markTileRendered(tile);
-            tile.data = tileProvider.loadTile(context, tile.x, tile.y, tile.level, tile.data);
+            tile.data = tileProvider.loadTile(context, frameState, tile.x, tile.y, tile.level, tile.data);
             if (getTimestamp() >= endTime) {
                 break;
             }

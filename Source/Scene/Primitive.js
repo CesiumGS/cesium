@@ -1038,6 +1038,31 @@ define([
     };
 
     /**
+     * Returns true if this object is ready to be rendered.  This is especially useful when the primitive is created
+     * asynchronously.
+     *
+     * @memberof Primitive
+     *
+     * @returns {Boolean} true if the primitive is ready to be rendered; otherwise, false.
+     */
+    Primitive.prototype.isReady = function() {
+        return this._state === PrimitiveState.COMPLETE;
+    };
+
+    /**
+     * Returns the bounding sphere for this primitive.  This function may returned undefined before the primitive
+     * {@link Primitive#isReady}.
+     *
+     * @memberof Primitive
+     *
+     * @returns {BoundingSphere} The bounding sphere of the primitive, or undefined if the primitive's bounding sphere
+     *          has not yet been computed.
+     */
+    Primitive.prototype.getBoundingSphere = function() {
+        return this._boundingSphere;
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <p>
      * If this object was destroyed, it should not be used; calling any function other than
