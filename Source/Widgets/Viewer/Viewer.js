@@ -738,8 +738,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         var panelMaxHeight = height - 125;
-
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
+
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
         }
@@ -748,12 +748,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             this._infoBox.viewModel.maxHeight = panelMaxHeight;
         }
 
-        var timelineExists = defined(this._timeline);
+        if (defined(this._dataSourceBrowser)) {
+            this._dataSourceBrowser.viewModel.maxHeight = panelMaxHeight;
+        }
+
+        var timeline = this._timeline;
+        var timelineExists = defined(timeline);
         var animationExists = defined(this._animation);
         var animationContainer;
-
         var resizeWidgets = !animationExists;
         var animationWidth = 0;
+
         if (animationExists) {
             var lastWidth = this._lastWidth;
             animationContainer = this._animation.container;
@@ -785,12 +790,18 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         if (resizeWidgets) {
             var logoBottom = 0;
             var logoLeft = animationWidth + 5;
-
             if (timelineExists) {
-                logoBottom = this._timeline.container.clientHeight + 3;
-                this._timeline.container.style.left = animationWidth + 'px';
-            }
+                var fullscreenButton = this._fullscreenButton;
+                var timelineContainer = timeline.container;
+                var timelineStyle = timelineContainer.style;
 
+                logoBottom = timelineContainer.clientHeight + 3;
+                timelineStyle.left = animationWidth + 'px';
+
+                if (defined(fullscreenButton)) {
+                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
+                }
+            }
             if (timelineExists || animationExists) {
                 var creditContainer = cesiumWidget.creditContainer;
                 creditContainer.style.bottom = logoBottom + 'px';
@@ -799,7 +810,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (timelineExists) {
-            this._timeline.resize();
+            timeline.resize();
         }
 
         this._lastWidth = width;
