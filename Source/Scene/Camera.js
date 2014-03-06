@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
@@ -22,6 +23,7 @@ define([
     ], function(
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         defaultValue,
         defined,
@@ -88,6 +90,8 @@ define([
         this.transform = Matrix4.clone(Matrix4.IDENTITY);
         this._transform = Matrix4.clone(Matrix4.IDENTITY);
         this._invTransform = Matrix4.clone(Matrix4.IDENTITY);
+        this._actualTransform = Matrix4.clone(Matrix4.IDENTITY);
+        this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
@@ -205,10 +209,19 @@ define([
         this._context = context;
 
         this._mode = SceneMode.SCENE3D;
+        this._modeChanged = true;
         this._projection = new GeographicProjection();
         this._maxCoord = new Cartesian3();
         this._max2Dfrustum = undefined;
     };
+
+    Camera.TRANSFORM_2D = new Matrix4(
+        0.0, 0.0, 1.0, 0.0,
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1.0);
+
+    Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D);
 
     function updateViewMatrix(camera) {
         var r = camera._right;
@@ -234,8 +247,67 @@ define([
         viewMatrix[14] = Cartesian3.dot(d, e);
         viewMatrix[15] = 1.0;
 
-        Matrix4.multiply(viewMatrix, camera._invTransform, camera._viewMatrix);
+        Matrix4.multiply(viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
+    }
+
+    var scratchCartographic = new Cartographic();
+    var scratchCartesian3Projection = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4Origin = new Cartesian4();
+    var scratchCartesian4NewOrigin = new Cartesian4();
+    var scratchCartesian4NewXAxis = new Cartesian4();
+    var scratchCartesian4NewYAxis = new Cartesian4();
+    var scratchCartesian4NewZAxis = new Cartesian4();
+
+    function convertTransformForColumbusView(camera) {
+        var projection = camera._projection;
+        var ellipsoid = projection.ellipsoid;
+
+        var origin = Matrix4.getColumn(camera._transform, 3, scratchCartesian4Origin);
+        var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
+
+        var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
+        var newOrigin = scratchCartesian4NewOrigin;
+        newOrigin.x = projectedPosition.z;
+        newOrigin.y = projectedPosition.x;
+        newOrigin.z = projectedPosition.y;
+        newOrigin.w = 1.0;
+
+        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0), origin, scratchCartesian3);
+        ellipsoid.cartesianToCartographic(xAxis, cartographic);
+
+        projection.project(cartographic, projectedPosition);
+        var newXAxis = scratchCartesian4NewXAxis;
+        newXAxis.x = projectedPosition.z;
+        newXAxis.y = projectedPosition.x;
+        newXAxis.z = projectedPosition.y;
+        newXAxis.w = 0.0;
+
+        Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
+        Cartesian3.normalize(newXAxis, newXAxis);
+
+        var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1), origin, scratchCartesian3);
+        ellipsoid.cartesianToCartographic(yAxis, cartographic);
+
+        projection.project(cartographic, projectedPosition);
+        var newYAxis = scratchCartesian4NewYAxis;
+        newYAxis.x = projectedPosition.z;
+        newYAxis.y = projectedPosition.x;
+        newYAxis.z = projectedPosition.y;
+        newYAxis.w = 0.0;
+
+        Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
+        Cartesian3.normalize(newYAxis, newYAxis);
+
+        var newZAxis = scratchCartesian4NewZAxis;
+        Cartesian3.cross(newXAxis, newYAxis, newZAxis);
+        Cartesian3.normalize(newZAxis, newZAxis);
+
+        Matrix4.setColumn(camera._actualTransform, 0, newXAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 1, newYAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 2, newZAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 3, newOrigin, camera._actualTransform);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -265,12 +337,29 @@ define([
             right = Cartesian3.clone(camera.right, camera._right);
         }
 
-        var transform = camera._transform;
-        var transformChanged = !Matrix4.equals(transform, camera.transform);
+        var transformChanged = !Matrix4.equals(camera._transform, camera.transform) || camera._modeChanged;
         if (transformChanged) {
-            transform = Matrix4.clone(camera.transform, camera._transform);
+            Matrix4.clone(camera.transform, camera._transform);
             Matrix4.inverseTransformation(camera._transform, camera._invTransform);
+
+            if (camera._mode === SceneMode.COLUMBUS_VIEW || camera._mode === SceneMode.SCENE2D) {
+                if (Matrix4.equals(Matrix4.IDENTITY, camera._transform)) {
+                    Matrix4.clone(Camera.TRANSFORM_2D, camera._actualTransform);
+                } else if (camera._mode === SceneMode.COLUMBUS_VIEW) {
+                    convertTransformForColumbusView(camera);
+                } else {
+                    //convertTransformFor2D(camera);
+                }
+            } else {
+                Matrix4.clone(camera._transform, camera._actualTransform);
+            }
+
+            Matrix4.inverseTransformation(camera._actualTransform, camera._actualInvTransform);
+
+            camera._modeChanged = false;
         }
+
+        var transform = camera._actualTransform;
 
         if (positionChanged || transformChanged) {
             camera._positionWC = Matrix4.multiplyByPoint(transform, position, camera._positionWC);
@@ -528,6 +617,9 @@ define([
     Camera.prototype.update = function(mode, scene2D) {
         var updateFrustum = false;
         if (mode !== this._mode) {
+            this._modeChanged = (this._mode !== SceneMode.SCENE2D && this._mode !== SceneMode.COLUMBUS_VIEW);
+            this._modeChanged = this._modeChanged && (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW);
+
             this._mode = mode;
             updateFrustum = this._mode === SceneMode.SCENE2D;
         }
@@ -1729,7 +1821,8 @@ define([
     var normalScratch = new Cartesian3();
     var centerScratch = new Cartesian3();
     var posScratch = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian3Subtract = new Cartesian3();
+
     function createAnimationCV(camera, duration) {
         var position = camera.position;
         var direction = camera.direction;
@@ -1743,7 +1836,7 @@ define([
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
-        var distToC = Cartesian3.magnitude(Cartesian3.subtract(position, center, scratchCartesian3));
+        var distToC = Cartesian3.magnitude(Cartesian3.subtract(position, center, scratchCartesian3Subtract));
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 
