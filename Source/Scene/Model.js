@@ -559,8 +559,9 @@ define([
                     ++model._loadResources.pendingBufferLoads;
                     var bufferPath = model.basePath + buffer.path;
                     loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
+                } else if (buffer.type === 'text') {
+                    // GLTF_SPEC: Load compressed .bin with loadText.  https://github.com/KhronosGroup/glTF/issues/230
                 }
-                // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/233
             }
         }
     }
