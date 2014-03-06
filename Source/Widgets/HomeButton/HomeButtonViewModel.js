@@ -9,7 +9,6 @@ define([
         '../../Core/Extent',
         '../../Core/Matrix4',
         '../../Scene/Camera',
-        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../createCommand',
@@ -24,7 +23,6 @@ define([
         Extent,
         Matrix4,
         Camera,
-        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         createCommand,
@@ -36,7 +34,6 @@ define([
         var controller = scene.screenSpaceCameraController;
 
         controller.ellipsoid = ellipsoid;
-        controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
         var context = scene.context;
         if (defined(transitioner) && mode === SceneMode.MORPHING) {

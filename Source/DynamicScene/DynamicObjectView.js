@@ -13,7 +13,6 @@ define([
         '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/Transforms',
-        '../Scene/CameraColumbusViewMode',
         '../Scene/SceneMode'
        ], function(
          defaultValue,
@@ -29,7 +28,6 @@ define([
          Matrix4,
          Ellipsoid,
          Transforms,
-         CameraColumbusViewMode,
          SceneMode) {
     "use strict";
 
@@ -185,7 +183,6 @@ define([
             var controller = that._screenSpaceCameraController;
             controller.enableTranslate = false;
             controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
-            controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);

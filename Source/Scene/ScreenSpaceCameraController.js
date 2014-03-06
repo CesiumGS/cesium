@@ -20,7 +20,6 @@ define([
         './AnimationCollection',
         './CameraEventAggregator',
         './CameraEventType',
-        './CameraColumbusViewMode',
         './SceneMode'
     ], function(
         defined,
@@ -43,7 +42,6 @@ define([
         AnimationCollection,
         CameraEventAggregator,
         CameraEventType,
-        CameraColumbusViewMode,
         SceneMode) {
     "use strict";
 
@@ -144,12 +142,6 @@ define([
          * @default 0.1
          */
         this.maximumMovementRatio = 0.1;
-        /**
-         * Sets the behavior in Columbus view.
-         * @type {CameraColumbusViewMode}
-         * @default {@link CameraColumbusViewMode.FREE}
-         */
-        this.columbusViewMode = CameraColumbusViewMode.FREE;
         /**
          * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
          * @type {Number}
@@ -636,7 +628,7 @@ define([
     }
 
     function updateCV(controller) {
-        if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
                 reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
                 reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {

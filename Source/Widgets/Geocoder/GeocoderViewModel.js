@@ -9,7 +9,6 @@ define([
         '../../Core/Extent',
         '../../Core/jsonp',
         '../../Core/Matrix4',
-        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../createCommand',
@@ -25,7 +24,6 @@ define([
         Extent,
         jsonp,
         Matrix4,
-        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         createCommand,
@@ -267,7 +265,6 @@ define([
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
-                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 },
                 endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
             };
