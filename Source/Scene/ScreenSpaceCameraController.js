@@ -579,6 +579,8 @@ define([
     var rotateCVWindowRay = new Ray();
     var rotateCVCenter = new Cartesian3();
     var rotateTransform = new Matrix4();
+    var rotateCVCart = new Cartographic();
+
     function rotateCV(controller, movement) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
@@ -595,7 +597,15 @@ define([
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
-        var transform = Matrix4.fromTranslation(center, rotateTransform);
+
+        var projection = controller._camera._projection;
+        var ellipsoid = projection.ellipsoid;
+
+        Cartesian3.fromElements(center.y, center.z, center.x, center);
+        var cart = projection.unproject(center, rotateCVCart);
+        ellipsoid.cartographicToCartesian(cart, center);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
         controller.ellipsoid = Ellipsoid.UNIT_SPHERE;

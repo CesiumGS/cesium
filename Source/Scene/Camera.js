@@ -972,14 +972,12 @@ define([
     };
 
     var appendTransformMatrix = new Matrix4();
-    var appendTransformNewMatrix = new Matrix4();
 
     function appendTransform(camera, transform) {
         var oldTransform;
         if (defined(transform)) {
             oldTransform = Matrix4.clone(camera.transform, appendTransformMatrix);
-            Matrix4.multiplyTransformation(transform, oldTransform, appendTransformNewMatrix);
-            camera.setTransform(appendTransformNewMatrix);
+            camera.setTransform(transform);
         }
         return oldTransform;
     }
