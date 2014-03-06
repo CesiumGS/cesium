@@ -617,10 +617,8 @@ define([
     Camera.prototype.update = function(mode, scene2D) {
         var updateFrustum = false;
         if (mode !== this._mode) {
-            this._modeChanged = (this._mode !== SceneMode.SCENE2D && this._mode !== SceneMode.COLUMBUS_VIEW);
-            this._modeChanged = this._modeChanged && (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW);
-
             this._mode = mode;
+            this._modeChanged = mode !== SceneMode.MORPHING;
             updateFrustum = this._mode === SceneMode.SCENE2D;
         }
 
@@ -666,7 +664,8 @@ define([
         var direction = Cartesian3.clone(this.directionWC, setTransformDirection);
 
         Matrix4.clone(transform, this.transform);
-        var inverse = this.inverseTransform;
+        updateMembers(this);
+        var inverse = this._actualInvTransform;
 
         Matrix4.multiplyByPoint(inverse, position, this.position);
         Matrix4.multiplyByPointAsVector(inverse, direction, this.direction);

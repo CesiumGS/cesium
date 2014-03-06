@@ -184,9 +184,9 @@ require(['Cesium'], function(Cesium) {
         controller.enableTilt = true;
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
 
-    var scene = widget.scene;
+    var scene = viewer.scene;
 
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset(scene);
