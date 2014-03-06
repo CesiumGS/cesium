@@ -7,7 +7,14 @@ Beta Releases
 ### b27 - 2014-04-01
 
 * Breaking changes:
-  *
+  * All `CameraController` functions have been moved up to the `Camera`. Removed `CameraController`. For example, code that looked like:
+
+           scene.camera.controller.viewExtent(extent);
+
+    should now look like:
+
+           scene.camera.viewExtent(extent);
+
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)

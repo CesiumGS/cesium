@@ -55,13 +55,13 @@ require(['Cesium'], function(Cesium) {
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
             var camera = scene.camera;
             camera.transform = transform;
-            camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+            camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             var controller = scene.screenSpaceCameraController;
             controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
             controller.enableTilt = false;
             var r = 1.25 * Math.max(worldBoundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.25;
-            camera.controller.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
+            camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });
     }
     

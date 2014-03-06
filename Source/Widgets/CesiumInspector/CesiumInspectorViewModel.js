@@ -413,7 +413,7 @@ define([
         var selectTile = function(e) {
             var selectedTile;
             var ellipsoid = centralBody.ellipsoid;
-            var cartesian = that._scene.camera.controller.pickEllipsoid({
+            var cartesian = that._scene.camera.pickEllipsoid({
                 x : e.clientX,
                 y : e.clientY
             }, ellipsoid);

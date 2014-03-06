@@ -112,7 +112,6 @@ require(['Cesium'], function(Cesium) {
 
     viewer.clock.onTick.addEventListener(function(clock) {
         var camera = scene.camera;
-        var controller = camera.controller;
 
         if (flags.looking) {
             var width = canvas.clientWidth;
@@ -123,8 +122,8 @@ require(['Cesium'], function(Cesium) {
             var y = -(mousePosition.y - startMousePosition.y) / height;
 
             var lookFactor = 0.05;
-            controller.lookRight(x * lookFactor);
-            controller.lookUp(y * lookFactor);
+            camera.lookRight(x * lookFactor);
+            camera.lookUp(y * lookFactor);
         }
 
         // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
@@ -132,22 +131,22 @@ require(['Cesium'], function(Cesium) {
         var moveRate = cameraHeight / 100.0;
 
         if (flags.moveForward) {
-            controller.moveForward(moveRate);
+            camera.moveForward(moveRate);
         }
         if (flags.moveBackward) {
-            controller.moveBackward(moveRate);
+            camera.moveBackward(moveRate);
         }
         if (flags.moveUp) {
-            controller.moveUp(moveRate);
+            camera.moveUp(moveRate);
         }
         if (flags.moveDown) {
-            controller.moveDown(moveRate);
+            camera.moveDown(moveRate);
         }
         if (flags.moveLeft) {
-            controller.moveLeft(moveRate);
+            camera.moveLeft(moveRate);
         }
         if (flags.moveRight) {
-            controller.moveRight(moveRate);
+            camera.moveRight(moveRate);
         }
     });
 
