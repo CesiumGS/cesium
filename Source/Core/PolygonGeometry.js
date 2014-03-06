@@ -393,6 +393,8 @@ define([
         });
     }
 
+    var createGeometryFromPositionsExtrudedPositions = [];
+
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight) {
         var topGeo = createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight).geometry;
         var edgePoints = topGeo.attributes.position.values;
@@ -433,10 +435,14 @@ define([
 
         geos.walls = [];
         var outerRing = hierarchy.outerRing;
-        var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(outerRing, createGeometryFromPositionsExtrudedPositions);
+
+        var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing = outerRing.reverse();
+            outerRing.reverse();
         }
+
         var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
@@ -445,10 +451,15 @@ define([
         var holes = hierarchy.holes;
         for (i = 0; i < holes.length; i++) {
             var hole = holes[i];
-            windingOrder = PolygonPipeline.computeWindingOrder2D(hole);
-            if (windingOrder !== WindingOrder.CLOCKWISE) {
-                hole = hole.reverse();
+
+            tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
+            positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
+
+            windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (windingOrder === WindingOrder.CLOCKWISE) {
+                hole.reverse();
             }
+
             wallGeo = computeWallIndices(hole, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo

@@ -218,7 +218,7 @@ define([
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
 
-            camera.controller.setTransform(currentFrame);
+            camera.setTransform(currentFrame);
         };
 
         return update;
@@ -332,7 +332,7 @@ define([
             camera.up = Matrix3.getRow(rotMatrix, 1, camera.up);
             camera.direction = Cartesian3.negate(Matrix3.getRow(rotMatrix, 2, camera.direction), camera.direction);
 
-            camera.controller.setTransform(currentFrame);
+            camera.setTransform(currentFrame);
         };
 
         return update;
@@ -440,7 +440,7 @@ define([
 
         var referenceFrame = description.endReferenceFrame;
         if (defined(referenceFrame)) {
-            scene.camera.controller.setTransform(referenceFrame);
+            scene.camera.setTransform(referenceFrame);
         }
 
         var frustum = frameState.camera.frustum;
@@ -618,7 +618,7 @@ define([
 
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
-        camera.controller.getExtentCameraCoordinates(extent, c3destination);
+        camera.getExtentCameraCoordinates(extent, c3destination);
 
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(scene, createAnimationDescription);

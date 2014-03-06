@@ -377,7 +377,7 @@ defineSuite([
         }));
 
         var billboards = new BillboardCollection();
-        billboards.setTextureAtlas(atlas);
+        billboards.textureAtlas = atlas;
         billboards.add({
             position : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic.fromDegrees(-75.10, 39.57)),
             imageIndex : 0

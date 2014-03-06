@@ -1064,7 +1064,7 @@ define([
         }
 
         var imageryLayerCollection = surface._imageryLayerCollection;
-        for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for ( var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 if (layer.getImageryProvider().ready) {

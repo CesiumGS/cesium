@@ -224,7 +224,7 @@ defineSuite([
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.camera.controller.viewExtent(extent);
+        scene.camera.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();
@@ -263,7 +263,7 @@ defineSuite([
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.camera.controller.viewExtent(extent);
+        scene.camera.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();

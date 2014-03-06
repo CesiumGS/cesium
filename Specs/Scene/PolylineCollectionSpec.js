@@ -147,7 +147,7 @@ defineSuite([
     });
 
     it('has zero polylines when constructed', function() {
-        expect(polylines.getLength()).toEqual(0);
+        expect(polylines.length).toEqual(0);
     });
 
     it('adds a polyline', function() {
@@ -163,7 +163,7 @@ defineSuite([
             }]
         });
 
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
         expect(polylines.get(0) === p).toEqual(true);
     });
 
@@ -191,11 +191,11 @@ defineSuite([
             }]
         });
 
-        expect(polylines.getLength()).toEqual(2);
+        expect(polylines.length).toEqual(2);
 
         expect(polylines.remove(one)).toEqual(true);
 
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
         expect(polylines.get(0) === two).toEqual(true);
     });
 
@@ -223,11 +223,11 @@ defineSuite([
             }]
         });
 
-        expect(polylines.getLength()).toEqual(2);
+        expect(polylines.length).toEqual(2);
 
         expect(polylines.remove(two)).toEqual(true);
 
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
         expect(polylines.get(0) === one).toEqual(true);
     });
 
@@ -243,13 +243,13 @@ defineSuite([
                 z : 4.0
             }]
         });
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
 
         expect(polylines.remove(p)).toEqual(true);
-        expect(polylines.getLength()).toEqual(0);
+        expect(polylines.length).toEqual(0);
 
         expect(polylines.remove(p)).toEqual(false);
-        expect(polylines.getLength()).toEqual(0);
+        expect(polylines.length).toEqual(0);
     });
 
     it('returns false when removing undefined', function() {
@@ -264,10 +264,10 @@ defineSuite([
                 z : 4.0
             }]
         });
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
 
         expect(polylines.remove(undefined)).toEqual(false);
-        expect(polylines.getLength()).toEqual(1);
+        expect(polylines.length).toEqual(1);
     });
 
     it('adds and removes polylines', function() {
@@ -293,7 +293,7 @@ defineSuite([
                 z : 4.0
             }]
         });
-        expect(polylines.getLength()).toEqual(2);
+        expect(polylines.length).toEqual(2);
         expect(polylines.get(0) === one).toEqual(true);
         expect(polylines.get(1) === two).toEqual(true);
 
@@ -309,7 +309,7 @@ defineSuite([
                 z : 4.0
             }]
         });
-        expect(polylines.getLength()).toEqual(2);
+        expect(polylines.length).toEqual(2);
         expect(polylines.get(0) === one).toEqual(true);
         expect(polylines.get(1) === three).toEqual(true);
     });
@@ -337,10 +337,10 @@ defineSuite([
                 z : 4.0
             }]
         });
-        expect(polylines.getLength()).toEqual(2);
+        expect(polylines.length).toEqual(2);
 
         polylines.removeAll();
-        expect(polylines.getLength()).toEqual(0);
+        expect(polylines.length).toEqual(0);
     });
 
     it('can check if it contains a polyline', function() {

@@ -23,27 +23,31 @@
     var canvas = document.createElement('canvas');
     canvas.className = "fullSize";
     document.getElementById('cesiumContainer').appendChild(canvas);
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
+
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.primitives;
+    var centralBody = new Cesium.CentralBody();
+    primitives.centralBody = centralBody;
 
     var imageryUrl = '../../../Source/Assets/Textures/';
     var imageryProvider = new Cesium.TileMapServiceImageryProvider({
         url : imageryUrl + 'NaturalEarthII'
     });
 
-    var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
-    primitives.centralBody = centralBody;
+    centralBody.imageryLayers.addImageryProvider(imageryProvider);
+
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+
     var skyBoxBaseUrl = imageryUrl + 'SkyBox/tycho2t3_80';
     scene.skyBox = new Cesium.SkyBox({
-        positiveX : skyBoxBaseUrl + '_px.jpg',
-        negativeX : skyBoxBaseUrl + '_mx.jpg',
-        positiveY : skyBoxBaseUrl + '_py.jpg',
-        negativeY : skyBoxBaseUrl + '_my.jpg',
-        positiveZ : skyBoxBaseUrl + '_pz.jpg',
-        negativeZ : skyBoxBaseUrl + '_mz.jpg'
+        sources : {
+            positiveX : skyBoxBaseUrl + '_px.jpg',
+            negativeX : skyBoxBaseUrl + '_mx.jpg',
+            positiveY : skyBoxBaseUrl + '_py.jpg',
+            negativeY : skyBoxBaseUrl + '_my.jpg',
+            positiveZ : skyBoxBaseUrl + '_pz.jpg',
+            negativeZ : skyBoxBaseUrl + '_mz.jpg'
+        }
     });
 
     function animate() {

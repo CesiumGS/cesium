@@ -93,7 +93,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(new JulianDate());
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
     });
 
     it('object with no position does not create a label.', function() {
@@ -107,7 +107,7 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
     });
 
     it('object with no text does not create a label.', function() {
@@ -121,7 +121,7 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
     });
 
     it('A DynamicLabel causes a label to be created and updated.', function() {
@@ -129,7 +129,7 @@ defineSuite([
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
 
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -155,7 +155,7 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(labelCollection.getLength()).toEqual(1);
+        expect(labelCollection.length).toEqual(1);
 
         l = labelCollection.get(0);
 
@@ -218,7 +218,7 @@ defineSuite([
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
 
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -230,7 +230,7 @@ defineSuite([
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
 
-        expect(labelCollection.getLength()).toEqual(1);
+        expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.getShow()).toEqual(true);
 
@@ -246,7 +246,7 @@ defineSuite([
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
 
         var labelCollection = scene.primitives.get(0);
-        expect(labelCollection.getLength()).toEqual(0);
+        expect(labelCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -257,7 +257,7 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.text = new ConstantProperty('lorum ipsum');
         visualizer.update(time);
-        expect(labelCollection.getLength()).toEqual(1);
+        expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
     });
@@ -283,13 +283,13 @@ defineSuite([
         var labelCollection = scene.primitives.get(0);
 
         visualizer.update(time);
-        expect(labelCollection.getLength()).toEqual(1);
+        expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(labelCollection.getLength()).toEqual(1);
+        expect(labelCollection.length).toEqual(1);
         l = labelCollection.get(0);
         expect(l.id).toEqual(testObject2);
     });

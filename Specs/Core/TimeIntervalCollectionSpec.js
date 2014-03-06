@@ -24,11 +24,11 @@ defineSuite([
 
     it('constructing a default interval collection has expected property values.', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.getLength()).toEqual(0);
-        expect(intervals.getStart()).toBeUndefined();
-        expect(intervals.getStop()).toBeUndefined();
-        expect(intervals.isEmpty()).toEqual(true);
-        expect(intervals.getChangedEvent()).toBeDefined();
+        expect(intervals.length).toEqual(0);
+        expect(intervals.start).toBeUndefined();
+        expect(intervals.stop).toBeUndefined();
+        expect(intervals.empty).toEqual(true);
+        expect(intervals.changedEvent).toBeDefined();
     });
 
     it('contains works for a simple interval collection.', function() {
@@ -132,43 +132,43 @@ defineSuite([
         var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, false);
         intervals.addInterval(interval1);
         intervals.addInterval(interval2);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval2.stop);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval2.stop);
     });
 
     it('isEmpty and clear return expected values', function() {
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.empty).toEqual(false);
         intervals.clear();
-        expect(intervals.isEmpty()).toEqual(true);
+        expect(intervals.empty).toEqual(true);
     });
 
     it('getLength returns the correct interval length when adding intervals with different data', function() {
         var intervals = new TimeIntervalCollection();
-        expect(intervals.getLength()).toEqual(0);
+        expect(intervals.length).toEqual(0);
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, 1));
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 2));
-        expect(intervals.getLength()).toEqual(3);
+        expect(intervals.length).toEqual(3);
 
         intervals.clear();
-        expect(intervals.getLength()).toEqual(0);
+        expect(intervals.length).toEqual(0);
     });
 
     it('getLength returns the correct length after two intervals with the same data are merged.', function() {
         var intervals = new TimeIntervalCollection();
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, 1));
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 1));
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
 
         intervals.clear();
-        expect(intervals.getLength()).toEqual(0);
+        expect(intervals.length).toEqual(0);
     });
 
     it('addInterval and findIntervalContainingDate work when using non-overlapping intervals', function() {
@@ -179,30 +179,30 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
 
         intervals.addInterval(interval1);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
 
         intervals.addInterval(interval2);
 
-        expect(intervals.getLength()).toEqual(2);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval2.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(2);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval2.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval2.stop)).toEqual(interval2);
 
         intervals.addInterval(interval3);
-        expect(intervals.getLength()).toEqual(3);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval3.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(3);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval3.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
@@ -219,30 +219,30 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
 
         intervals.addInterval(interval1);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(1);
 
         intervals.addInterval(interval2);
 
-        expect(intervals.getLength()).toEqual(2);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval2.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(2);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval2.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(2);
         expect(intervals.findIntervalContainingDate(interval2.stop).data).toEqual(2);
 
         intervals.addInterval(interval3);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval3.start);
-        expect(intervals.getStop()).toEqual(interval3.stop);
-        expect(intervals.isEmpty()).toEqual(false);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval3.start);
+        expect(intervals.stop).toEqual(interval3.stop);
+        expect(intervals.empty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(3);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(3);
@@ -278,27 +278,27 @@ defineSuite([
         var interval4 = new TimeInterval(JulianDate.fromTotalDays(3), JulianDate.fromTotalDays(4), true, true, new TestObject(3));
 
         intervals.addInterval(interval1, TestObject.equals);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
         expect(intervals.get(0).data.value).toEqual(2);
 
         intervals.addInterval(interval2, TestObject.equals);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
         expect(intervals.get(0).data.value).toEqual(2);
 
         intervals.addInterval(interval3, TestObject.equals);
-        expect(intervals.getLength()).toEqual(1);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.length).toEqual(1);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
         expect(intervals.get(0).data.value).toEqual(2);
 
         intervals.addInterval(interval4, TestObject.equals);
-        expect(intervals.getLength()).toEqual(2);
-        expect(intervals.getStart()).toEqual(interval1.start);
-        expect(intervals.getStop()).toEqual(interval1.stop);
+        expect(intervals.length).toEqual(2);
+        expect(intervals.start).toEqual(interval1.start);
+        expect(intervals.stop).toEqual(interval1.stop);
         expect(intervals.get(0).start).toEqual(interval1.start);
         expect(intervals.get(0).stop).toEqual(interval4.start);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
@@ -319,7 +319,7 @@ defineSuite([
         intervals.addInterval(interval);
         expect(intervals.removeInterval(removedInterval)).toEqual(true);
 
-        expect(intervals.getLength()).toEqual(2);
+        expect(intervals.length).toEqual(2);
         expect(intervals.get(0).start).toEqual(interval.start);
         expect(intervals.get(0).stop).toEqual(removedInterval.start);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
@@ -336,14 +336,14 @@ defineSuite([
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, false);
 
         intervals.addInterval(interval);
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
         expect(intervals.get(0).start).toEqual(interval.start);
         expect(intervals.get(0).stop).toEqual(interval.stop);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
         expect(intervals.get(0).isStopIncluded).toEqual(false);
 
         intervals.removeInterval(interval);
-        expect(intervals.getLength()).toEqual(0);
+        expect(intervals.length).toEqual(0);
     });
 
     it('removeInterval with an empty interval has no affect.', function() {
@@ -351,7 +351,7 @@ defineSuite([
         var interval = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true);
         intervals.addInterval(interval);
 
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
         expect(intervals.get(0).start).toEqual(interval.start);
         expect(intervals.get(0).stop).toEqual(interval.stop);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
@@ -359,7 +359,7 @@ defineSuite([
 
         expect(intervals.removeInterval(TimeInterval.EMPTY)).toEqual(false);
 
-        expect(intervals.getLength()).toEqual(1);
+        expect(intervals.length).toEqual(1);
         expect(intervals.get(0).start).toEqual(interval.start);
         expect(intervals.get(0).stop).toEqual(interval.stop);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
@@ -374,7 +374,7 @@ defineSuite([
         intervals.addInterval(interval);
         expect(intervals.removeInterval(removedInterval)).toEqual(true);
 
-        expect(intervals.getLength()).toEqual(2);
+        expect(intervals.length).toEqual(2);
         expect(intervals.get(0).start).toEqual(interval.start);
         expect(intervals.get(0).stop).toEqual(interval.start);
         expect(intervals.get(0).isStartIncluded).toEqual(true);
@@ -390,7 +390,7 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true));
         intervals = intervals.intersectInterval(TimeInterval.EMPTY);
-        expect(intervals.getLength()).toEqual(0);
+        expect(intervals.length).toEqual(0);
     });
 
     it('intersectInterval works non-overlapping intervals', function() {
@@ -398,7 +398,7 @@ defineSuite([
         leftIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
         var rightIntervals = new TimeIntervalCollection();
         rightIntervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true));
-        expect(leftIntervals.intersectInterval(rightIntervals).getLength()).toEqual(0);
+        expect(leftIntervals.intersectInterval(rightIntervals).length).toEqual(0);
     });
 
     it('intersectInterval works with intersecting intervals an no merge callback', function() {
@@ -410,7 +410,7 @@ defineSuite([
 
         var intersectedIntervals = intervals.intersectInterval(intersectInterval);
 
-        expect(intersectedIntervals.getLength()).toEqual(1);
+        expect(intersectedIntervals.length).toEqual(1);
         expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
         expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
         expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
@@ -426,7 +426,7 @@ defineSuite([
 
         var intersectedIntervals = intervals.intersectInterval(intersectInterval, TestObject.equals, TestObject.merge);
 
-        expect(intersectedIntervals.getLength()).toEqual(1);
+        expect(intersectedIntervals.length).toEqual(1);
         expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
         expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
         expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
@@ -445,9 +445,9 @@ defineSuite([
 
         var intersectedIntervals = intervals.intersect(intervals2, TestObject.equals, TestObject.merge);
 
-        expect(intersectedIntervals.getLength()).toEqual(1);
-        expect(intersectedIntervals.get(0).start).toEqual(intervals2.getStart());
-        expect(intersectedIntervals.get(0).stop).toEqual(intervals2.getStop());
+        expect(intersectedIntervals.length).toEqual(1);
+        expect(intersectedIntervals.get(0).start).toEqual(intervals2.start);
+        expect(intersectedIntervals.get(0).stop).toEqual(intervals2.stop);
         expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
         expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
         expect(intersectedIntervals.get(0).data.value).toEqual(3);
@@ -575,7 +575,7 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
 
         var listener = jasmine.createSpy('listener');
-        intervals.getChangedEvent().addEventListener(listener);
+        intervals.changedEvent.addEventListener(listener);
 
         intervals.addInterval(interval);
         expect(listener).toHaveBeenCalledWith(intervals);

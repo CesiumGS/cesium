@@ -88,7 +88,7 @@ defineSuite([
                 // View in east-north-up frame
                 var camera = scene.camera;
                 camera.transform = transform;
-                camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+                camera.constrainedAxis = Cartesian3.UNIT_Z;
 
                 var controller = scene.screenSpaceCameraController;
                 controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -96,7 +96,7 @@ defineSuite([
 
                 // Zoom in
                 var r = Math.max(worldBoundingSphere.radius, camera.frustum.near);
-                camera.controller.lookAt(
+                camera.lookAt(
                     new Cartesian3(0.0, -r, r),
                     Cartesian3.ZERO,
                     Cartesian3.UNIT_Z);

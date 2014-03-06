@@ -1001,7 +1001,6 @@ define([
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
                 }
-                // The glTF spec also allows 3D matrices for skinning of 2D models, but we do not support it.
 
                 var bindShapeMatrix;
                 if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
@@ -1182,10 +1181,7 @@ define([
         }
     }
 
-    // The glTF spec allows both mat4 (3D) and mat3 (2D) affine transforms and
-    // mat3 (3D) and mat2 (2D) rotations.  We only support 3D.
-    //
-    // This also doesn't support LOCAL, which we could add if it is ever used.
+    // This doesn't support LOCAL, which we could add if it is ever used.
     var gltfSemanticUniforms = {
         MODEL : function(uniformState) {
             return function() {
