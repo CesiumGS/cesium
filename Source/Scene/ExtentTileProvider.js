@@ -253,7 +253,7 @@ define([
      * @returns {Boolean} true if the tile is visible; otherwise, false.
      */
     ExtentTileProvider.prototype.isTileVisible = function(tile, frameState) {
-        var boundingSphere = tile.getBoundingSphere();
+        var boundingSphere = tile.getBoundingSphere(frameState);
         if (!defined(boundingSphere)) {
             return false;
         } else {
@@ -290,7 +290,7 @@ define([
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     ExtentTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
-        return Math.max(0.0, Cartesian3.magnitude(Cartesian3.subtract(tile.getBoundingSphere().center, frameState.camera.position)) - tile._boundingSphere.radius);
+        return Math.max(0.0, Cartesian3.magnitude(Cartesian3.subtract(tile.getBoundingSphere(frameState).center, frameState.camera.position)) - tile._boundingSphere.radius);
     };
 
     ExtentTileProvider.prototype.divideTile = function() {
