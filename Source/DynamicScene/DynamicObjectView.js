@@ -31,58 +31,16 @@ define([
          SceneMode) {
     "use strict";
 
-    function update2D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid, projection) {
-        var viewDistance;
-        var scene = that.scene;
-        var modeChanged = scene.mode !== that._mode;
+    var updateTransformMatrix3Scratch1 = new Matrix3();
+    var updateTransformMatrix3Scratch2 = new Matrix3();
+    var updateTransformMatrix3Scratch3 = new Matrix3();
+    var updateTransformCartesian3Scratch1 = new Cartesian3();
+    var updateTransformCartesian3Scratch2 = new Cartesian3();
+    var updateTransformCartesian3Scratch3 = new Cartesian3();
 
-        if (modeChanged) {
-            that._mode = scene.mode;
-            that._screenSpaceCameraController.enableTranslate = false;
-            viewDistance = Cartesian3.magnitude(offset);
-        } else if (objectChanged) {
-            viewDistance = Cartesian3.magnitude(offset);
-        } else {
-            viewDistance = camera.position.z;
-        }
-
-        var cartesian = positionProperty.getValue(time, that._lastCartesian);
-        if (defined(cartesian)) {
-            var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
-            //We are assigning the position of the camera, not of the object, so modify the height appropriately.
-            cartographic.height = viewDistance;
-            if (objectChanged || modeChanged) {
-                camera.setPositionCartographic(cartographic);
-
-                //z is always zero in 2D for up and right
-                camera.up.z = 0;
-                Cartesian3.normalize(camera.up, camera.up);
-                camera.right.z = 0;
-                Cartesian3.normalize(camera.right, camera.right);
-
-                //Remember what up was when we started, so we
-                //can detect rotation when we are finished.
-                Cartesian2.clone(camera.right, that._first2dUp);
-            } else {
-                camera.position = projection.project(cartographic);
-            }
-
-            //Store last view distance and up vector.
-            that._lastDistance = camera.frustum.right - camera.frustum.left;
-            Cartesian2.clone(camera.right, that._last2dUp);
-        }
-    }
-
-    var update3DTransform = new Matrix4();
-    var update3DMatrix3Scratch1 = new Matrix3();
-    var update3DMatrix3Scratch2 = new Matrix3();
-    var update3DMatrix3Scratch3 = new Matrix3();
-    var update3DCartesian3Scratch1 = new Cartesian3();
-    var update3DCartesian3Scratch2 = new Cartesian3();
-    var update3DCartesian3Scratch3 = new Cartesian3();
-
-    function update3D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
-        update3DController(that, camera, objectChanged, offset);
+    function updateTransform(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
+        // TODO: update lookAt to work as closely as possible in all scene modes.
+        //updateController(that, camera, objectChanged, offset);
 
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
@@ -91,23 +49,23 @@ define([
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
             var deltaTime = time.addSeconds(0.01);
-            var deltaCartesian = positionProperty.getValue(deltaTime, update3DCartesian3Scratch1);
+            var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
             if (defined(deltaCartesian) && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
-                var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
-                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
+                var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
+                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, updateTransformMatrix3Scratch2);
                 var toFixed;
 
                 if (!defined(toInertial) || !defined(toInertialDelta)) {
-                    toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, update3DMatrix3Scratch3);
-                    toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
-                    toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, update3DMatrix3Scratch2);
+                    toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, updateTransformMatrix3Scratch3);
+                    toInertial = Matrix3.transpose(toFixed, updateTransformMatrix3Scratch1);
+                    toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, updateTransformMatrix3Scratch2);
                     Matrix3.transpose(toInertialDelta, toInertialDelta);
                 } else {
-                    toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+                    toFixed = Matrix3.transpose(toInertial, updateTransformMatrix3Scratch3);
                 }
 
                 // Z along the position
-                var zBasis = update3DCartesian3Scratch2;
+                var zBasis = updateTransformCartesian3Scratch2;
                 Cartesian3.normalize(cartesian, zBasis);
                 Cartesian3.normalize(deltaCartesian, deltaCartesian);
 
@@ -115,10 +73,10 @@ define([
                 Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
 
                 // Y is along the angular momentum vector (e.g. "orbit normal")
-                var yBasis = Cartesian3.cross(zBasis, deltaCartesian, update3DCartesian3Scratch3);
+                var yBasis = Cartesian3.cross(zBasis, deltaCartesian, updateTransformCartesian3Scratch3);
                 if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                     // X is along the cross of y and z (right handed basis / in the direction of motion)
-                    var xBasis = Cartesian3.cross(yBasis, zBasis, update3DCartesian3Scratch1);
+                    var xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
 
                     Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
                     Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
@@ -162,10 +120,10 @@ define([
         }
     }
 
-    var update3DControllerQuaternion = new Quaternion();
-    var update3DControllerMatrix3 = new Matrix3();
+    var updateControllerQuaternion = new Quaternion();
+    var updateControllerMatrix3 = new Matrix3();
 
-    function update3DController(that, camera, objectChanged, offset) {
+    function updateController(that, camera, objectChanged, offset) {
         var scene = that.scene;
 
         if (objectChanged) {
@@ -192,8 +150,8 @@ define([
                 first2dUp.y = 0.0;
 
                 var theta = endTheta - startTheta;
-                var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, update3DControllerQuaternion);
-                Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, update3DControllerMatrix3), offset, offset);
+                var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, updateControllerQuaternion);
+                Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, updateControllerMatrix3), offset, offset);
             }
             Cartesian3.multiplyByScalar(Cartesian3.normalize(offset, offset), that._lastDistance, offset);
             camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
@@ -321,11 +279,8 @@ define([
             Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
         }
 
-        var mode = scene.mode;
-        if (mode === SceneMode.SCENE2D) {
-            update2D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
-        } else if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
-            update3D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
+        if (scene.mode !== SceneMode.MORPHING) {
+            updateTransform(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
         }
     };
 

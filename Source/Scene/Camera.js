@@ -312,6 +312,68 @@ define([
         Matrix4.setColumn(camera._actualTransform, 3, newOrigin, camera._actualTransform);
     }
 
+    function convertTransformFor2D(camera) {
+        var projection = camera._projection;
+        var ellipsoid = projection.ellipsoid;
+
+        var origin = Matrix4.getColumn(camera._transform, 3, scratchCartesian4Origin);
+        var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
+
+        var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
+        var newOrigin = scratchCartesian4NewOrigin;
+        newOrigin.x = projectedPosition.z;
+        newOrigin.y = projectedPosition.x;
+        newOrigin.z = projectedPosition.y;
+        newOrigin.w = 1.0;
+
+        var newZAxis = Cartesian4.clone(Cartesian4.UNIT_X, scratchCartesian4NewZAxis);
+
+        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0), origin, scratchCartesian3);
+        ellipsoid.cartesianToCartographic(xAxis, cartographic);
+
+        projection.project(cartographic, projectedPosition);
+        var newXAxis = scratchCartesian4NewXAxis;
+        newXAxis.x = projectedPosition.z;
+        newXAxis.y = projectedPosition.x;
+        newXAxis.z = projectedPosition.y;
+        newXAxis.w = 0.0;
+
+        Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
+        newXAxis.x = 0.0;
+
+        var newYAxis = scratchCartesian4NewYAxis;
+        if (Cartesian3.magnitudeSquared(newXAxis) > CesiumMath.EPSILON10) {
+            Cartesian3.cross(newZAxis, newXAxis, newYAxis);
+        } else {
+            var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1), origin, scratchCartesian3);
+            ellipsoid.cartesianToCartographic(yAxis, cartographic);
+
+            projection.project(cartographic, projectedPosition);
+            newYAxis.x = projectedPosition.z;
+            newYAxis.y = projectedPosition.x;
+            newYAxis.z = projectedPosition.y;
+            newYAxis.w = 0.0;
+
+            Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
+            newYAxis.x = 0.0;
+
+            if (Cartesian3.magnitudeSquared(newYAxis) < CesiumMath.EPSILON10) {
+                Cartesian4.clone(Cartesian4.UNIT_Y, newXAxis);
+                Cartesian4.clone(Cartesian4.UNIT_Z, newYAxis);
+            }
+        }
+
+        Cartesian3.cross(newYAxis, newZAxis, newXAxis);
+        Cartesian3.normalize(newXAxis, newXAxis);
+        Cartesian3.cross(newZAxis, newXAxis, newYAxis);
+        Cartesian3.normalize(newYAxis, newYAxis);
+
+        Matrix4.setColumn(camera._actualTransform, 0, newXAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 1, newYAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 2, newZAxis, camera._actualTransform);
+        Matrix4.setColumn(camera._actualTransform, 3, newOrigin, camera._actualTransform);
+    }
+
     var scratchCartesian = new Cartesian3();
 
     function updateMembers(camera) {
@@ -350,7 +412,7 @@ define([
                 } else if (camera._mode === SceneMode.COLUMBUS_VIEW) {
                     convertTransformForColumbusView(camera);
                 } else {
-                    //convertTransformFor2D(camera);
+                    convertTransformFor2D(camera);
                 }
             } else {
                 Matrix4.clone(camera._transform, camera._actualTransform);
